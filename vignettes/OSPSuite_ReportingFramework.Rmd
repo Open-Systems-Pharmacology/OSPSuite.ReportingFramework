@@ -1,0 +1,45 @@
+---
+title: "OSPSuite_ReportingFramework"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{OSPSuite_ReportingFramework}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(OSPSuite.ReportingFramework)
+```
+
+## OSPSuite.ReportingFramework
+
+The aim of this package is to support project workflows with the OSPSuite R tollboxes.
+
+The setup and simulation is based on the EsqlabR package.
+
+## Template
+
+
+
+##  Log file creation
+
+The logging functionality in this package allows users to capture messages, warnings, and errors during their workflows. This section describes the key functions and their usage for configuring and utilizing the logging capabilities.
+
+To set up the folder for the logs, use the function \code{\link[OSPSuite.ReportingFramework]{initLogfunction}}
+
+Now you are able to write messages to the specified file in the previous initialized logfile folder with the function \code{\link[OSPSuite.ReportingFramework]{writeToLog}}
+
+To catch errors, warnings and messages you can call use the function \code{\link[OSPSuite.ReportingFramework]{logCatch}}
+
+If you want to save the Session Info, call \code{\link[OSPSuite.ReportingFramework]{saveSessionInfo}}.
+This call should be at the end of the workflow, to include all packages which were loaded to the namesspace during the workflow
+
+
+
