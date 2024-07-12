@@ -47,22 +47,91 @@ initProject <- function(projectPath = ".",
 }
 
 
-
-
 #' Create a default `ProjectConfiguration`
 #'
-#' wraps (esqlabsR::createDefaultProjectConfiguration())
+#' wrap of (esqlabsR::createDefaultProjectConfiguration())
 #'
 #' @param path Full path of an XLS/XLSX file
 #'
 #' @return Object of type ProjectConfiguration
 #'
 #' @export
-createProjectConfiguration <- function(path) {
+createDefaultProjectConfiguration.wrapped <- function(path) {
   logCatch({
-    projectConfig <- esqlabsR::createDefaultProjectConfiguration(path = path)
-    message(projectConfig)
-  }  )
+    projectConfiguration <- esqlabsR::createDefaultProjectConfiguration(path = path)
 
-  return(projectConfig)
+    message(paste(utils::capture.output(projectConfiguration),collapse = '\n'))
+  })
+
+  return(projectConfiguration)
 }
+
+
+#' Create Scenario objects from 'ScenarioConfiguration' objects
+#'
+#' wrap of (esqlabsR::createDefaultProjectConfiguration()) with esqlabsR::createScenarios as input
+#'
+#' @param A ProjectConfiguration object holding base information
+#' @param scenarioNames Names of the scenarios that are defined in the excel file.
+#' If NULL (default), all scenarios specified in the excel file will be created.
+#'
+#' @return  Named list of Scenario objects.
+#' @export
+createScenarios.wrapped <- function(projectConfiguration,
+                                    scenarioNames = NULL){
+  logCatch({
+    scenarioList <-
+      esqlabsR::createScenarios(
+        esqlabsR::readScenarioConfigurationFromExcel(
+          scenarioNames = scenarioNames,
+          projectConfiguration = projectConfiguration
+        )
+      )
+  })
+  return(scenarioList)
+}
+
+#' Run a set of scenarios.
+#'
+#' wrap of esqlabsR::runScenarios
+#'
+#' @param scenarioList  Named list of Scenario objects.
+#'
+#' @return
+#' @export
+runScenarios.wrapped <- function(scenarioList,...){
+
+  logCatch(
+    scenarioResults <- esqlabsR::runScenarios(scenarios = scenarioList,...)
+  )
+
+  return(scenarioResults)
+
+}
+
+#' Save results of scenario simulations to csv.
+#'
+#' wrap of esqlabsR::saveScenarioResults
+#'
+#' @param simulatedScenariosResults Named list with simulation, results, outputValues, and population as produced by runScenarios()
+#' @param projectConfiguration An instance of ProjectConfiguration
+#' @param saveSimulationsToPKML If TRUE (default), simulations corresponding to the results are saved to PKML along with the results.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+saveScenarioResults.wrapped <-function(simulatedScenariosResults,
+                                       projectConfiguration){
+  logCatch({
+    outputFolder = file.path(projectConfiguration$outputFolder,'simulatedResults')
+    esqlabsR::saveScenarioResults(scenarioResults,
+                                  projectConfiguration = projectConfiguration,
+                                  outputFolder = outputFolder
+    )
+  })
+}
+
+
+
+

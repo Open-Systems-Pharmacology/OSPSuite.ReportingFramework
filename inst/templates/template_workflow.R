@@ -31,7 +31,7 @@ projectPath <- initProject(
 initLogfunction(projectPath)
 
 # get paths of all relevant project files
-projectConfig <- createProjectConfiguration(path = file.path(projectPath, "ProjectConfiguration.xlsx"))
+projectConfiguration <- createProjectConfiguration(path = file.path(projectPath, "ProjectConfiguration.xlsx"))
 
 
 # Simulations ------------------------------------------------------
@@ -39,15 +39,15 @@ projectConfig <- createProjectConfiguration(path = file.path(projectPath, "Proje
 scenarioList <- esqlabsR::createScenarios(
   readScenarioConfigurationFromExcel(
     scenarioNames = "MyScenario",
-    projectConfiguration = projectConfig
+    projectConfiguration = projectConfiguration
   )
 )
 
 scenarioResults <- esqlabsR::runScenarios(scenarioList)
 
 esqlabsR::saveScenarioResults(scenarioResults,
-  projectConfiguration = projectConfig,
-  outputFolder = projectConfig$outputFolder
+  projectConfiguration = projectConfiguration,
+  outputFolder = projectConfiguration$outputFolder
 )
 
 
@@ -55,20 +55,20 @@ esqlabsR::saveScenarioResults(scenarioResults,
 #  (see vignette xxx)
 Vision::runSensitivityAnalysis(
   scenario = "MyScenario",
-  configTable = projectConfig$SensitivityParameter
+  configTable = projectConfiguration$SensitivityParameter
 )
 
 
 # Read observedData -------------------------------------------------------
 # (see vignette xxx)
-datacombined <- Vision::readObservedData(projectConfig = projectConfig)
+datacombined <- Vision::readObservedData(projectConfiguration = projectConfiguration)
 
 # Create Output Plots -----------------------------------------------------
 # (see vignette xxx)
 
 Vision::runPlot(
   functionKey = "Demographics",
-  projectConfg = projectConfig,
+  projectConfg = projectConfiguration,
   inputs = list(
     configTable = "Demographics",
     observedAsAggregated = TRUE,
@@ -78,7 +78,7 @@ Vision::runPlot(
 
 Vision::runPlot(
   functionKey = "TimeProfile",
-  projectConfg = projectConfig,
+  projectConfg = projectConfiguration,
   inputs = list(
     configTable = "TimeProfiles",
     datacombined = datacombined,
@@ -89,13 +89,13 @@ Vision::runPlot(
 
 Vision::runPlot(
   functionKey = "PKParameter",
-  projectConfg = projectConfig,
+  projectConfg = projectConfiguration,
   inputs = list(configTable = "PKParameter")
 )
 
 Vision::runPlot(
   functionKey = "DDIRatio",
-  projectConfg = projectConfig,
+  projectConfg = projectConfiguration,
   inputs = list(configTable = "DDIRatio")
 )
 
@@ -103,7 +103,7 @@ Vision::runPlot(
   functionKey = NULL,
   plotFunction = myProjectSpecificfunction(),
   subfolder = "myFigures",
-  projectConfg = projectConfig,
+  projectConfg = projectConfiguration,
   inputs = list()
 )
 
@@ -153,7 +153,7 @@ projectPath <- initProject(
 logfilefolder <<- iniLogFile(projectPath)
 
 # get pathes of all relevant project files
-projectConfig <-
+projectConfiguration <-
   esqlabsR::createDefaultProjectConfiguration(path = "./ProjectConfiguration.xlsx")
 
 
@@ -162,15 +162,15 @@ projectConfig <-
 scenarioList <- esqlabsR::createScenarios(
   readScenarioConfigurationFromExcel(
     scenarioNames = "MyScenario",
-    projectConfiguration = projectConfig
+    projectConfiguration = projectConfiguration
   )
 )
 
 scenarioResults <- esqlabsR::runScenarios(scenarioList)
 
 esqlabsR::saveScenarioResults(scenarioResults,
-  projectConfiguration = projectConfig,
-  outputFolder = projectConfig$outputFolder
+  projectConfiguration = projectConfiguration,
+  outputFolder = projectConfiguration$outputFolder
 )
 
 
@@ -178,20 +178,20 @@ esqlabsR::saveScenarioResults(scenarioResults,
 #  (see vignette xxx)
 Vision::runSensitivityAnalysis(
   scenario = "MyScenario",
-  configTable = projectConfig$SensitivityParameter
+  configTable = projectConfiguration$SensitivityParameter
 )
 
 
 # Read observedData -------------------------------------------------------
 # (see vignette xxx)
-datacombined <- Vision::readObservedData(projectConfig = projectConfig)
+datacombined <- Vision::readObservedData(projectConfiguration = projectConfiguration)
 
 # Create Output Plots -----------------------------------------------------
 # (see vignette xxx)
 
 Vision::runPlot(
   functionKey = "Demographics",
-  projectConfg = projectConfig,
+  projectConfg = projectConfiguration,
   inputs = list(
     configTable = "Demographics",
     observedAsAggregated = TRUE,
@@ -201,7 +201,7 @@ Vision::runPlot(
 
 Vision::runPlot(
   functionKey = "TimeProfile",
-  projectConfg = projectConfig,
+  projectConfg = projectConfiguration,
   inputs = list(
     configTable = "TimeProfiles",
     datacombined = datacombined,
@@ -212,13 +212,13 @@ Vision::runPlot(
 
 Vision::runPlot(
   functionKey = "PKParameter",
-  projectConfg = projectConfig,
+  projectConfg = projectConfiguration,
   inputs = list(configTable = "PKParameter")
 )
 
 Vision::runPlot(
   functionKey = "DDIRatio",
-  projectConfg = projectConfig,
+  projectConfg = projectConfiguration,
   inputs = list(configTable = "DDIRatio")
 )
 
@@ -226,7 +226,7 @@ Vision::runPlot(
   functionKey = NULL,
   plotFunction = myProjectSpecificfunction(),
   subfolder = "myFigures",
-  projectConfg = projectConfig,
+  projectConfg = projectConfiguration,
   inputs = list()
 )
 

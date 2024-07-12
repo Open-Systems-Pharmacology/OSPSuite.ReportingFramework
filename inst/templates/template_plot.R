@@ -1,11 +1,11 @@
 #' Template for a plot function called by the Vision::plotRun function
 #'
-#' @param projectConfig projectConfiguration is mandatory
+#' @param projectConfiguration projectConfiguration is mandatory
 #' @param resultDirectory path of resultdirectory is mandatory
 #' @param ... # instead of ... you can add your own inputs
 #'
 #' @return object of class rmdContainer, needed for markdown generation
-myPlotFunction <- function(projectConfig, resultDirectory, ...) {
+myPlotFunction <- function(projectConfiguration, resultDirectory, ...) {
   # check if all needed library are loaded
   require(tidyr)
   require(data.table)

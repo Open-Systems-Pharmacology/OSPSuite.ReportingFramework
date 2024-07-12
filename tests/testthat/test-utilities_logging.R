@@ -29,7 +29,7 @@ test_that("writeToLog appends log message to file", {
 })
 
 
-# Unit tests for logCatch
+# Unit tests for logCatch Message
 test_that("logCatch function catches only messages to display", {
   myMessage <- "Hide message"
   initLogfunction(
@@ -49,6 +49,25 @@ test_that("logCatch function catches only messages to display", {
   myMessageShow <- "Show message"
   suppressMessages(logCatch(expr = myFunction(msg = myMessageShow)))
   log_file <- readLines(file.path(logfilefolder, "run.log"))
+  expect_true(length(grep(myMessageShow, log_file)) > 0) # The message should not be logged
+})
+
+
+# Unit tests errors and warnings
+test_that("logCatch function catches only messages to display", {
+  initLogfunction(
+    projectPath = projectPath,
+    verbose = FALSE
+  )
+
+  logfilefolder <- getOption("OSPSuite.REF.logfilefolder")
+
+  logCatch(expr = warning('Warning message'))
+  suppressWarnings(log_file <- readLines(file.path(logfilefolder, "run.log")))
+  expect_true(length(grep('Warning message', log_file)) > 0) # The message should not be logged
+
+  expect_error(logCatch(expr = stop('Error message')))
+  suppressWarnings(log_file <- readLines(file.path(logfilefolder, "run.log")))
   expect_true(length(grep(myMessageShow, log_file)) > 0) # The message should not be logged
 })
 

@@ -95,7 +95,26 @@ logCatch <- function(expr) {
       withCallingHandlers(
         expr,
         error = function(e) {
-          errorMessage <- utils::capture.output(traceback())
+
+          calls <- sys.calls()
+          errorTrace <- "Error Trace:"
+          for (call in calls) {
+            textCall <- deparse(call, nlines = 1)
+            callNotDisplayed <- any(sapply(
+              c("logCatch", "qualificationCatch", "stop", "tryCatch", "withCallingHandlers", "simpleError", "eval\\(ei, envir\\)"),
+              FUN = function(pattern) {
+                grepl(textCall, pattern = pattern, ignore.case = TRUE)
+              }
+            ))
+            if (callNotDisplayed) {
+              next
+            }
+            errorTrace <- c(errorTrace,textCall)
+          }
+          errorMessage <- paste0(paste(c(
+            e$message,
+            errorTrace
+          ), collapse = '\n'),'\n')
           writeToLog(
             type = 'Error',
             msg = errorMessage
@@ -104,9 +123,12 @@ logCatch <- function(expr) {
         },
         warning = function(w) {
           if (!(gsub("\n", "", w$message) %in% warningsNotDisplayed)) {
+            warningMessage <- paste0(paste(c(
+              w$message), collapse = '\n'),'\n')
+
             writeToLog(
               type = 'Warning',
-              msg = w$message
+              msg = warningMessage
             )
           }
           if (!verbose) {
@@ -127,12 +149,7 @@ logCatch <- function(expr) {
       )
     },
     error = function(e) {
-      errorMessage <- utils::capture.output(traceback())
-      writeToLog(
-        type = 'Error',
-        msg = errorMessage,
-        filename = "error.log"
-      )
+      stop(e$message, call. = FALSE)
       stop(e)
     }
   )
@@ -165,10 +182,9 @@ writeToLog <- function(type, msg, filename = NULL) {
   checkmate::assertDirectoryExists(logfilefolder)
   checkmate::assertCharacter(filename, len = 1, any.missing = FALSE)
 
-  cat(
-    format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+  cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
     paste0(type, ":"),
-    msg,
+    paste(msg,collapse = '\n'),
     file = file.path(logfilefolder, filename),
     append = TRUE
   )

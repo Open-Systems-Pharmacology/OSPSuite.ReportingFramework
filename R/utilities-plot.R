@@ -1,6 +1,6 @@
 #' #' Title
 #' #'
-#' #' @param projectConfig
+#' #' @param projectConfiguration
 #' #' @param functionKey
 #' #' @param plotFunction
 #' #' @param subfolder
@@ -10,7 +10,7 @@
 #' #' @export
 #' #'
 #' #' @examples
-#' runPlot <- function(projectConfig,
+#' runPlot <- function(projectConfiguration,
 #'                     functionKey = NULL,
 #'                     plotFunction = NULL,
 #'                     subfolder = functionKey,
@@ -22,13 +22,13 @@
 #'     plotFunction <- getFunctionByKey(functionKey)
 #'   }
 #'
-#'   resultDirectory = file.path(projectConfig$figures,'subfolder')
+#'   resultDirectory = file.path(projectConfiguration$figures,'subfolder')
 #'
 #'   # execute plotfunction
 #'   rmdContainer = do.call(what = plotFunction,
-#'           args = c(projectConfig,resultDirectory,inputs))
+#'           args = c(projectConfiguration,resultDirectory,inputs))
 #'
 #'   # create rmd
-#'   rmdContainer$createRmd(projectConfig$figures)
+#'   rmdContainer$createRmd(projectConfiguration$figures)
 #'
 #' }
