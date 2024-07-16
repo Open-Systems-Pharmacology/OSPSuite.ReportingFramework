@@ -1,0 +1,23 @@
+---
+title: "Report"
+output:
+  word_document
+---
+ 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,warning = FALSE,results = "asis",error = FALSE,message = FALSE)
+```
+ 
+```{r}
+rmdfolder = "C:\Users\4d9c14ed\AppData\Local\Temp\2\RtmpYL7x01"
+ 
+dev <- ospsuite.plots::getOspsuite.plots.option(optionKey = ospsuite.plots::OptionKeys$export.device)
+ 
+figureNumber <- 0
+tableNumber <- 0
+```
+  
+  
+  
+# Level 1  
+  

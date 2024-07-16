@@ -1,17 +1,20 @@
 #' Template for a plot function called by the Vision::plotRun function
 #'
-#' @param projectConfiguration projectConfiguration is mandatory
-#' @param resultDirectory path of resultdirectory is mandatory
+#' @param projectConfiguration projectConfiguration
+#' @param subfolder is name of subfolder in the project/to/path/report directory
+#'    each function should have its own subfolder, so each function is responsible to keep figureKeys unique within this folder
 #' @param ... # instead of ... you can add your own inputs
 #'
 #' @return object of class rmdContainer, needed for markdown generation
-myPlotFunction <- function(projectConfiguration, resultDirectory, ...) {
+myPlotFunction <- function(projectConfiguration, subfolder, ...) {
   # check if all needed library are loaded
   require(tidyr)
   require(data.table)
 
   # initialize Container for RMD generation for .Rmd generation
-  rmdContainer <- RmdContainer$new()
+  rmdContainer <- RmdContainer$new(
+    rmdfolder = file.path(projectConfiguration$projectConfigurationDirPath,'report'),
+    subfolder = subfolder)
 
   ## add your own code below are examples how to add headers, figures and tables --------
 
@@ -25,9 +28,9 @@ myPlotFunction <- function(projectConfiguration, resultDirectory, ...) {
 
   rmdContainer$addAndExportFigure(
     plotObject = plotObject,
-    path = resultDirectory,
     caption = "My captiontxt",
-    figurename = "x_vs_y"
+    footNoteLines = NULL,
+    figureKey = "x_vs_y"
   )
 
   # add a table
