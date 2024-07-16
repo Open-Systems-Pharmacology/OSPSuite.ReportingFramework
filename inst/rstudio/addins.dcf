@@ -1,10 +1,10 @@
 Name: Open Template Workflow
 Description: Open a template script for the default workflow
-Binding: open_workflow_template
+Binding: openWorkflowTemplate
 Interactive: false
 
 Name: Open Template Plotfunction
 Description: Open a template function for a userdeifned plotfunction
-Binding: open_figure_template
+Binding: openFigureTemplate
 Interactive: false
 

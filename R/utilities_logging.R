@@ -1,10 +1,10 @@
 #' Initializing a Log Function
 #'
 #' This function initialize the logging during a workflow. It is called at the start of the workflow script.
-#' It is used to configure options for the logfilefolder, warningsNotDisplayed which should not logged and messages which should not logged.
+#' It is used to configure options for the logFileFolder, warningsNotDisplayed which should not logged and messages which should not logged.
 #'
 #' @param projectPath The path where the default logfile folder is generated.
-#' @param logfilefolder Optional. If NULL, a default logfile folder is generated in the projectPath/logs/timestamp.
+#' @param logFileFolder Optional. If NULL, a default logfile folder is generated in the projectPath/logs/timestamp.
 #' @param warningsNotDisplayed A list of warnings that should not be logged.
 #' @param messagesNotDisplayed A list of messages that should not be logged.
 #' @param verbose boolean, if true log message will be shown on the console
@@ -17,7 +17,7 @@
 #'
 #' @export
 initLogfunction <- function(projectPath,
-                            logfilefolder = NULL,
+                            logFileFolder = NULL,
                             warningsNotDisplayed = c(
                               "introduced infinite values",
                               "Each group consists of only one observation",
@@ -33,25 +33,25 @@ initLogfunction <- function(projectPath,
                               "Each group consists of only one observation"
                             ),
                             verbose = TRUE) {
-  if (is.null(logfilefolder)) checkmate::assertDirectoryExists(projectPath)
-  checkmate::assertCharacter(logfilefolder, len = 1, null.ok = TRUE)
+  if (is.null(logFileFolder)) checkmate::assertDirectoryExists(projectPath)
+  checkmate::assertCharacter(logFileFolder, len = 1, null.ok = TRUE)
   checkmate::assertCharacter(warningsNotDisplayed)
   checkmate::assertCharacter(messagesNotDisplayed)
 
-  if (is.null(logfilefolder)) {
+  if (is.null(logFileFolder)) {
     # Create the logfile subfolder with a timestamp
     timestamp <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
-    logfilefolder <- file.path(projectPath, "logs", timestamp)
+    logFileFolder <- file.path(projectPath, "logs", timestamp)
   }
 
   # Create the logfile subfolder if it doesn't exist
-  if (!file.exists(logfilefolder)) {
-    dir.create(logfilefolder, recursive = TRUE)
+  if (!file.exists(logFileFolder)) {
+    dir.create(logFileFolder, recursive = TRUE)
   }
 
   # set inputs to options for use in logCatch function and writeToLog
   options(list(
-    OSPSuite.REF.logfilefolder = logfilefolder,
+    OSPSuite.REF.logFileFolder = logFileFolder,
     OSPSuite.REF.warningsNotDisplayed = warningsNotDisplayed,
     OSPSuite.REF.messagesNotDisplayed = messagesNotDisplayed,
     OSPSuite.REF.verbose = verbose
@@ -95,7 +95,6 @@ logCatch <- function(expr) {
       withCallingHandlers(
         expr,
         error = function(e) {
-
           calls <- sys.calls()
           errorTrace <- "Error Trace:"
           for (call in calls) {
@@ -109,14 +108,14 @@ logCatch <- function(expr) {
             if (callNotDisplayed) {
               next
             }
-            errorTrace <- c(errorTrace,textCall)
+            errorTrace <- c(errorTrace, textCall)
           }
           errorMessage <- paste0(paste(c(
             e$message,
             errorTrace
-          ), collapse = '\n'),'\n')
+          ), collapse = "\n"), "\n")
           writeToLog(
-            type = 'Error',
+            type = "Error",
             msg = errorMessage
           )
           stop(e)
@@ -124,10 +123,11 @@ logCatch <- function(expr) {
         warning = function(w) {
           if (!(gsub("\n", "", w$message) %in% warningsNotDisplayed)) {
             warningMessage <- paste0(paste(c(
-              w$message), collapse = '\n'),'\n')
+              w$message
+            ), collapse = "\n"), "\n")
 
             writeToLog(
-              type = 'Warning',
+              type = "Warning",
               msg = warningMessage
             )
           }
@@ -138,7 +138,7 @@ logCatch <- function(expr) {
         message = function(m) {
           if (!(gsub("\n", "", m$message) %in% messagesNotDisplayed)) {
             writeToLog(
-              type = 'Info',
+              type = "Info",
               msg = m$message
             )
           }
@@ -174,18 +174,18 @@ logCatch <- function(expr) {
 #' }
 #'
 writeToLog <- function(type, msg, filename = NULL) {
-  logfilefolder <- getOption("OSPSuite.REF.logfilefolder")
+  logFileFolder <- getOption("OSPSuite.REF.logFileFolder")
   if (is.null(filename)) filename <- "run.log"
 
   checkmate::assertCharacter(type, len = 1, any.missing = FALSE)
   checkmate::assertCharacter(msg)
-  checkmate::assertDirectoryExists(logfilefolder)
+  checkmate::assertDirectoryExists(logFileFolder)
   checkmate::assertCharacter(filename, len = 1, any.missing = FALSE)
 
   cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
     paste0(type, ":"),
-    paste(msg,collapse = '\n'),
-    file = file.path(logfilefolder, filename),
+    paste(msg, collapse = "\n"),
+    file = file.path(logFileFolder, filename),
     append = TRUE
   )
 }

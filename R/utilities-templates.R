@@ -5,14 +5,14 @@
 #' set the path to the template via option options(OSPSuite.REF.PathForWorkflowTemplate = 'myTemplateDirectory')
 #'
 #' @export
-open_workflow_template <- function() {
+openWorkflowTemplate <- function() {
   rstudioapi::callFun("sendToConsole", "createWorkflowTemplate()")
 }
 
 #' Opens the  template for figure creation as new document
 #'
 #' @export
-open_figure_template <- function() {
+openFigureTemplate <- function() {
   rstudioapi::callFun("sendToConsole", "createDocumentFromTemplate(template = 'template_plot')")
 }
 

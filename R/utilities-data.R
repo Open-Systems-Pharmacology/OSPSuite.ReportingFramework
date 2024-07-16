@@ -8,15 +8,18 @@
 readObservedDataByDictionary <- function(projectConfiguration) {
   checkmate::assertFileExists(projectConfiguration$dataImporterConfigurationFile)
 
+  # initialize variables used in data.table to avoid message during package build
+  weighting <- NULL
+
   logCatch({
-    dataList <- readExcel(projectConfiguration$dataImporterConfigurationFile, sheet = "DataFiles")
+    dataList <- esqlabsR::readExcel(projectConfiguration$dataImporterConfigurationFile, sheet = "DataFiles")
     # delete description line
     dataList <- dataList[-1, ]
     dataList <- dataList[rowSums(is.na(dataList)) < ncol(dataList), ]
 
     data <- data.table()
     dict <- list()
-    for (d in split(dataList, seq(nrow(dataList)))) {
+    for (d in split(dataList, nrow(dataList))) {
       tmpData <- data.table::fread(fs::path_abs(
         start = projectConfiguration$projectConfigurationDirPath,
         path = d$DataFile
@@ -29,13 +32,13 @@ readObservedDataByDictionary <- function(projectConfiguration) {
       )
 
       data <- rbind(data,
-                    convertDataByDictionary(
-                      data = tmpData,
-                      dataFilter = d$DataFilter,
-                      dict = tmpdict,
-                      dictionaryName = d$Dictionary
-                    ),
-                    fill = TRUE
+        convertDataByDictionary(
+          data = tmpData,
+          dataFilter = d$DataFilter,
+          dict = tmpdict,
+          dictionaryName = d$Dictionary
+        ),
+        fill = TRUE
       )
 
       # get unique dictionary for columnType
@@ -60,7 +63,7 @@ readObservedDataByDictionary <- function(projectConfiguration) {
       data.table::setattr(data[[dc]], "columnType", dict[[dc]])
     }
 
-    validateObservedData(data,stopIfValidationFails = FALSE)
+    validateObservedData(data, stopIfValidationFails = FALSE)
   })
 
   return(data)
@@ -73,35 +76,42 @@ readObservedDataByDictionary <- function(projectConfiguration) {
 #'
 #' @param data The observed dataset
 #' @param stopIfValidationFails Flag to indicate whether to stop if validation fails
-validateObservedData <- function(data,stopIfValidationFails = TRUE){
-
-
-  .returnMessage = function(msg,stopIfValidationFails){
+validateObservedData <- function(data, stopIfValidationFails = TRUE) {
+  .returnMessage <- function(msg, stopIfValidationFails) {
     if (stopIfValidationFails) stop(msg)
     warning(msg)
   }
 
   # check data validity
-  colIdentifier <- c("individualId", "groupId", "outputPathId", "time")
+  colIdentifier <-
+    c("individualId", "groupId", "outputPathId", "time")
   if (any(duplicated(data %>%
                      dplyr::select(dplyr::all_of(colIdentifier))))) {
-    .returnMessage(paste("data is not unique in columns", paste(colIdentifier, collapse = ", ")),
-                   stopIfValidationFails)
+    .returnMessage(
+      paste(
+        "data is not unique in columns",
+        paste(colIdentifier, collapse = ", ")
+      ),
+      stopIfValidationFails
+    )
   }
   for (col in setdiff(names(data), c("lloq", "dvUnit"))) {
     if (any(is.na(data[[col]]) | data[[col]] == "")) {
-      .returnMessage(paste("data contains NAs or empty values in column", col),
-                     stopIfValidationFails)
+      .returnMessage(
+        paste("data contains NAs or empty values in column", col),
+        stopIfValidationFails
+      )
       print(paste("empty entries in", col))
       print(data[is.na(get(col)) | get(col) == ""])
     }
   }
   colIdentifier <- c("groupId", "outputPathId")
-  if (any(data[,.(N = dplyr::n_distinct(dvUnit)),by = "outputPathId"]$N > 1)) {
-    .returnMessage(paste("data is not unique in columns", paste(colIdentifier, collapse = ", ")),
-                   stopIfValidationFails)
+  if (any(data[, .(N = dplyr::n_distinct(dvUnit)), by = "outputPathId"]$N > 1)) { # nolint
+    .returnMessage(
+      paste("data is not unique in columns", paste(colIdentifier, collapse = ", ")),
+      stopIfValidationFails
+    )
   }
-
 }
 
 #' Read data dictionary
@@ -113,7 +123,10 @@ validateObservedData <- function(data,stopIfValidationFails = TRUE){
 #' @param data The data to be used with the dictionary
 #' @return The data dictionary
 readDataDictionary <- function(dictionaryFile, sheet, data) {
-  dict <- readExcel(dictionaryFile, sheet = sheet) %>%
+  # initialize variables used fo data.tables
+  sourceColumn <- NULL
+
+  dict <- esqlabsR::readExcel(dictionaryFile, sheet = sheet) %>%
     data.table::setDT()
   dict <- dict[-1, ]
   dict <- dict[rowSums(is.na(dict)) < ncol(dict), ]
@@ -157,13 +170,16 @@ convertDataByDictionary <- function(data,
                                     dataFilter,
                                     dict,
                                     dictionaryName) {
+  # initialize variables used fo data.tables
+  targetColumn <- sourceColumn <- timeUnit <- NULL
+
   # execute data Filter
   if (!is.na(dataFilter) & dataFilter != "") data <- data[eval(parse(text = dataFilter))]
 
   # execute all filters
   dictFilters <- dict[!is.na(filter)]
 
-  for (myFilter in split(dictFilters, seq(nrow(dictFilters)))) {
+  for (myFilter in split(dictFilters, nrow(dictFilters))) {
     data[
       eval(parse(text = myFilter$filter)),
       (myFilter$targetColumn) := eval(parse(text = myFilter$filterValue))
@@ -198,8 +214,8 @@ convertDataByDictionary <- function(data,
   )
 
   for (col in intersect(names(biometricUnits), dict$targetColumn)) {
-    unitFactor <- toUnit(
-      quantityOrDimension = getDimensionForUnit(biometricUnits[[col]]),
+    unitFactor <- ospsuite::toUnit(
+      quantityOrDimension = ospsuite::getDimensionForUnit(biometricUnits[[col]]),
       values = 1,
       targetUnit = biometricUnits[[col]],
       sourceUnit = dict[targetColumn == col]$sourceUnit[1]
@@ -210,5 +226,3 @@ convertDataByDictionary <- function(data,
 
   return(data)
 }
-
-

@@ -56,11 +56,11 @@ initProject <- function(projectPath = ".",
 #' @return Object of type ProjectConfiguration
 #'
 #' @export
-createDefaultProjectConfiguration.wrapped <- function(path) {
+createDefaultProjectConfiguration.wrapped <- function(path) { # nolint
   logCatch({
     projectConfiguration <- esqlabsR::createDefaultProjectConfiguration(path = path)
 
-    message(paste(utils::capture.output(projectConfiguration),collapse = '\n'))
+    message(paste(utils::capture.output(projectConfiguration), collapse = "\n"))
   })
 
   return(projectConfiguration)
@@ -77,8 +77,8 @@ createDefaultProjectConfiguration.wrapped <- function(path) {
 #'
 #' @return  Named list of Scenario objects.
 #' @export
-createScenarios.wrapped <- function(projectConfiguration,
-                                    scenarioNames = NULL){
+createScenarios.wrapped <- function(projectConfiguration, # nolint
+                                    scenarioNames = NULL) {
   logCatch({
     scenarioList <-
       esqlabsR::createScenarios(
@@ -97,16 +97,14 @@ createScenarios.wrapped <- function(projectConfiguration,
 #'
 #' @param scenarioList  Named list of Scenario objects.
 #'
-#' @return
+#' @return  Named list of simulation results
 #' @export
-runScenarios.wrapped <- function(scenarioList,...){
-
+runScenarios.wrapped <- function(scenarioList, ...) { # nolint
   logCatch(
-    scenarioResults <- esqlabsR::runScenarios(scenarios = scenarioList,...)
+    scenarioResults <- esqlabsR::runScenarios(scenarios = scenarioList, ...)
   )
 
   return(scenarioResults)
-
 }
 
 #' Save results of scenario simulations to csv.
@@ -121,17 +119,14 @@ runScenarios.wrapped <- function(scenarioList,...){
 #' @export
 #'
 #' @examples
-saveScenarioResults.wrapped <-function(simulatedScenariosResults,
-                                       projectConfiguration){
+saveScenarioResults.wrapped <- function(simulatedScenariosResults, # nolint
+                                        projectConfiguration) {
   logCatch({
-    outputFolder = file.path(projectConfiguration$outputFolder,'simulatedResults')
-    esqlabsR::saveScenarioResults(scenarioResults,
-                                  projectConfiguration = projectConfiguration,
-                                  outputFolder = outputFolder
+    outputFolder <- file.path(projectConfiguration$outputFolder, "SimulationResults")
+    esqlabsR::saveScenarioResults(
+      simulatedScenariosResults = simulatedScenariosResults,
+      projectConfiguration = projectConfiguration,
+      outputFolder = outputFolder
     )
   })
 }
-
-
-
-
