@@ -13,7 +13,7 @@ myPlotFunction <- function(projectConfiguration, subfolder, ...) {
 
   # initialize Container for RMD generation for .Rmd generation
   rmdContainer <- RmdContainer$new(
-    rmdfolder = file.path(projectConfiguration$projectConfigurationDirPath,'report'),
+    rmdfolder = file.path(projectConfiguration$outputFolder),
     subfolder = subfolder)
 
   ## add your own code below are examples how to add headers, figures and tables --------
@@ -23,14 +23,15 @@ myPlotFunction <- function(projectConfiguration, subfolder, ...) {
   rmdContainer$addHeader("My Sub Section", level = 2)
 
   # add a figure
-  plotObject <- ggplot(data.table(x = seq(1:3), y = seq(2:4))) +
-    geom_point(aes(x = x, y = y))
+  plotObject <- ospsuite.plots::plotHistogram(
+    data = data.frame(x = rnorm(100)),
+    mapping = ggplot2::aes(x = x))
 
   rmdContainer$addAndExportFigure(
     plotObject = plotObject,
     caption = "My captiontxt",
     footNoteLines = NULL,
-    figureKey = "x_vs_y"
+    figureKey = "myHistogram"
   )
 
   # add a table
@@ -41,9 +42,10 @@ myPlotFunction <- function(projectConfiguration, subfolder, ...) {
   ) %>%
     .[, as.list(quantile(x)), by = "class"]
 
+  # change digits of significance from 3 (default) to 4
+  rmdContainer$digitsOfSignificance <- 4
 
-
-  rmdContainer$addAndExportTable(plotObject,
+  rmdContainer$addAndExportTable(dt = dt,
     path = resultDirectory,
     caption = "My captiontxt",
     tablename = "quantiles"

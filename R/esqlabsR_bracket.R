@@ -7,9 +7,9 @@
 #'
 #' @param projectPath A string defining the path where to initialize the project.
 #'  default to current working directory.
-#' @param sourceFolder path of tempalte directory available is
-#'    templateDirectory() default path of OSPSuite.ReportingFramework
-#'    esqlabsR:::example_directory("TestProject")  defaultPath fro Esqlabs Projects
+#' @param sourceFolder path of template directory available is
+#'    `templateDirectory()` default path of `OSPSuite.ReportingFramework`
+#'    `esqlabsR:::example_directory("TestProject")`  default path for Esqlabs-projects
 #' @param overwrite A boolean, if TRUE existing files will be overwritten
 #'
 #' @returns path of project
@@ -49,7 +49,7 @@ initProject <- function(projectPath = ".",
 
 #' Create a default `ProjectConfiguration`
 #'
-#' wrap of (esqlabsR::createDefaultProjectConfiguration())
+#' wrap of 'esqlabsR::createDefaultProjectConfiguration()'
 #'
 #' @param path Full path of an XLS/XLSX file
 #'
@@ -67,11 +67,11 @@ createDefaultProjectConfiguration.wrapped <- function(path) { # nolint
 }
 
 
-#' Create Scenario objects from 'ScenarioConfiguration' objects
+#' Create Scenario objects from `ScenarioConfiguration` objects
 #'
-#' wrap of (esqlabsR::createDefaultProjectConfiguration()) with esqlabsR::createScenarios as input
+#' wrap of `esqlabsR::createDefaultProjectConfiguration()` with `esqlabsR::createScenarios()` as input
 #'
-#' @param A ProjectConfiguration object holding base information
+#' @param projectConfiguration A `ProjectConfiguration` object holding base information
 #' @param scenarioNames Names of the scenarios that are defined in the excel file.
 #' If NULL (default), all scenarios specified in the excel file will be created.
 #'
@@ -93,7 +93,7 @@ createScenarios.wrapped <- function(projectConfiguration, # nolint
 
 #' Run a set of scenarios.
 #'
-#' wrap of esqlabsR::runScenarios
+#' wrap of `esqlabsR::runScenarios`
 #'
 #' @param scenarioList  Named list of Scenario objects.
 #'
@@ -107,26 +107,24 @@ runScenarios.wrapped <- function(scenarioList, ...) { # nolint
   return(scenarioResults)
 }
 
-#' Save results of scenario simulations to csv.
+#' Save results of scenario simulations to .csv file
 #'
-#' wrap of esqlabsR::saveScenarioResults
+#' wrap of `esqlabsR::saveScenarioResults`
 #'
-#' @param simulatedScenariosResults Named list with simulation, results, outputValues, and population as produced by runScenarios()
+#' @param simulatedScenariosResults Named list with `simulation`, `results`, `outputValues`, and `population` as produced by runScenarios()
 #' @param projectConfiguration An instance of ProjectConfiguration
-#' @param saveSimulationsToPKML If TRUE (default), simulations corresponding to the results are saved to PKML along with the results.
+#' @param ... arguments passed to esqlabsR::saveScenarioResults
 #'
-#' @return
 #' @export
-#'
-#' @examples
 saveScenarioResults.wrapped <- function(simulatedScenariosResults, # nolint
-                                        projectConfiguration) {
+                                        projectConfiguration,...) {
   logCatch({
     outputFolder <- file.path(projectConfiguration$outputFolder, "SimulationResults")
     esqlabsR::saveScenarioResults(
       simulatedScenariosResults = simulatedScenariosResults,
       projectConfiguration = projectConfiguration,
-      outputFolder = outputFolder
+      outputFolder = outputFolder,
+      ...
     )
   })
 }

@@ -1,10 +1,10 @@
 #' Initializing a Log Function
 #'
 #' This function initialize the logging during a workflow. It is called at the start of the workflow script.
-#' It is used to configure options for the logFileFolder, warningsNotDisplayed which should not logged and messages which should not logged.
+#' It is used to configure options for the log file folder, warning swhich should not logged and messages which should not logged.
 #'
-#' @param projectPath The path where the default logfile folder is generated.
-#' @param logFileFolder Optional. If NULL, a default logfile folder is generated in the projectPath/logs/timestamp.
+#' @param projectPath The path where the default log file folder is generated.
+#' @param logFileFolder Optional. If NULL, a default log file folder is generated in the `projectPath/logs/timestamp`.
 #' @param warningsNotDisplayed A list of warnings that should not be logged.
 #' @param messagesNotDisplayed A list of messages that should not be logged.
 #' @param verbose boolean, if true log message will be shown on the console
@@ -39,22 +39,22 @@ initLogfunction <- function(projectPath,
   checkmate::assertCharacter(messagesNotDisplayed)
 
   if (is.null(logFileFolder)) {
-    # Create the logfile subfolder with a timestamp
+    # Create the log file sub-folder with a time stamp
     timestamp <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
     logFileFolder <- file.path(projectPath, "logs", timestamp)
   }
 
-  # Create the logfile subfolder if it doesn't exist
+  # Create the log file sub-folder if it doesn't exist
   if (!file.exists(logFileFolder)) {
     dir.create(logFileFolder, recursive = TRUE)
   }
 
-  # set inputs to options for use in logCatch function and writeToLog
+  # set inputs to options for use in `logCatch` function and `writeToLog`
   options(list(
-    OSPSuite.REF.logFileFolder = logFileFolder,
-    OSPSuite.REF.warningsNotDisplayed = warningsNotDisplayed,
-    OSPSuite.REF.messagesNotDisplayed = messagesNotDisplayed,
-    OSPSuite.REF.verbose = verbose
+    OSPSuite.RF.logFileFolder = logFileFolder,
+    OSPSuite.RF.warningsNotDisplayed = warningsNotDisplayed,
+    OSPSuite.RF.messagesNotDisplayed = messagesNotDisplayed,
+    OSPSuite.RF.verbose = verbose
   ))
 
 
@@ -64,10 +64,10 @@ initLogfunction <- function(projectPath,
 
 #' Used to add message to log file
 #'
-#' This function is for the usage outside a logCatch bracket.
-#' Inside message(messageText) can be used
+#' This function is for the usage outside a `logCatch` bracket.
+#' Inside the bracket `message("my message Text")` can be used
 #'
-#' @param messageText character whit message text
+#' @param messageText character with message text
 #'
 #' @export
 addMessageToLog <- function(messageText) {
@@ -86,9 +86,9 @@ addMessageToLog <- function(messageText) {
 #'
 #' @export
 logCatch <- function(expr) {
-  warningsNotDisplayed <- getOption("OSPSuite.REF.warningsNotDisplayed", default = c())
-  messagesNotDisplayed <- getOption("OSPSuite.REF.messagesNotDisplayed", default = c())
-  verbose <- getOption("OSPSuite.REF.verbose", default = TRUE)
+  warningsNotDisplayed <- getOption("OSPSuite.RF.warningsNotDisplayed", default = c())
+  messagesNotDisplayed <- getOption("OSPSuite.RF.messagesNotDisplayed", default = c())
+  verbose <- getOption("OSPSuite.RF.verbose", default = TRUE)
 
   tryCatch(
     {
@@ -174,7 +174,7 @@ logCatch <- function(expr) {
 #' }
 #'
 writeToLog <- function(type, msg, filename = NULL) {
-  logFileFolder <- getOption("OSPSuite.REF.logFileFolder")
+  logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
   if (is.null(filename)) filename <- "run.log"
 
   checkmate::assertCharacter(type, len = 1, any.missing = FALSE)
@@ -196,7 +196,7 @@ writeToLog <- function(type, msg, filename = NULL) {
 #'
 #' @export
 setShowLogMessages <- function(verbose = TRUE) {
-  options(OSPSuite.REF.verbose = verbose)
+  options(OSPSuite.RF.verbose = verbose)
 }
 
 
@@ -206,7 +206,7 @@ setShowLogMessages <- function(verbose = TRUE) {
 #'
 #' This function can be called at the end of your script to save the session information,
 #' including the loaded packages and R version, into a log file.
-#' The path for the logfile has to be initilaized by  the initLogfunction
+#' The path for the log file has to be initialized by  the `initLogfunction`
 #'
 #'
 #' @examples

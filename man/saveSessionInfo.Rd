@@ -9,7 +9,7 @@ saveSessionInfo()
 \description{
 This function can be called at the end of your script to save the session information,
 including the loaded packages and R version, into a log file.
-The path for the logfile has to be initilaized by  the initLogfunction
+The path for the log file has to be initialized by  the `initLogfunction`
 }
 \examples{
 \dontrun{

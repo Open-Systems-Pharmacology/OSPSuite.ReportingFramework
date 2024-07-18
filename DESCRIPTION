@@ -13,7 +13,7 @@ Maintainer: The package maintainer <katrin.coboeken@bayer.com>
 Description: This package uses the EsqlabsR package to set up simulations and scenerios.
     It provides functions to generate default graphics and tables.
     This figures are included in .Rmd files which are then merged 
-    to the selected output fromat e.g. a Report.docx.
+    to the selected output format e.g. a "Report.docx".
 License: GPL-2 | file LICENSE
 Language: en-US
 Encoding: UTF-8
@@ -26,9 +26,17 @@ Imports:
     rmarkdown,
     fs,
     esqlabsR,
-    ospsuite.utils
+    ospsuite,
+    ospsuite.plots,
+    scales,
+    tidyr,
+    cowplot,
+    dplyr,
+    stats
 Suggests: 
     rstudioapi,
+    officer,
+    ggplot2,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr

@@ -1,0 +1,19 @@
+---
+title: "data_import_by_dictionary"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{data_import_by_dictionary}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(OSPSuite.ReportingFramework)
+```

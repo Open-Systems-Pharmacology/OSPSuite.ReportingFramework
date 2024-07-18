@@ -2,7 +2,7 @@
 #'
 #' Per default the workflow template of the package is loaded.
 #' To customize it save the file with name "template_workflow.R" in your template directory and
-#' set the path to the template via option options(OSPSuite.REF.PathForWorkflowTemplate = 'myTemplateDirectory')
+#' set the path to the template via option `options(OSPSuite.RF.PathForWorkflowTemplate = 'myTemplateDirectory'`)
 #'
 #' @export
 openWorkflowTemplate <- function() {
@@ -23,7 +23,7 @@ createWorkflowTemplate <- function() {
   createDocumentFromTemplate(
     template = "template_workflow",
     templatePath = getOption(
-      "OSPSuite.REF.PathForWorkflowTemplate",
+      "OSPSuite.RF.PathForWorkflowTemplate",
       default = system.file("templates", package = "OSPSuite.ReportingFramework")
     )
   )

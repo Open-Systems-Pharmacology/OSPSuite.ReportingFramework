@@ -1,7 +1,5 @@
 # initialize logging. Is always needed
-projectPath <- tempdir()
-if (!dir.exists(projectPath)) dir.create(projectPath)
-initLogfunction(projectPath = projectPath, verbose = FALSE)
+projectPath <- iniLogFileForTest()
 
 test_that("It should read and process data based on the provided project configuration", {
   # Create a sample project configuration for testing
@@ -25,7 +23,7 @@ test_that("It should read and process data based on the provided project configu
   # Add your assertions here to test the processed data
   # For example:
   expect_true(data.table::is.data.table(observedData), "Processed data should be a data table")
-  expect_equal(nrow(observedData), expected = 80,label =  "Processed data should have the expected number of rows")
+  expect_equal(nrow(observedData), expected = 80, label = "Processed data should have the expected number of rows")
 })
 
 
@@ -80,7 +78,4 @@ test_that("It should check the validity of the observed dataset", {
   ))
 })
 
-unlink(projectPath, recursive = TRUE)
-options(OSPSuite.REF.logFileFolder = NULL)
-options(OSPSuite.REF.warningsNotDisplayed = NULL)
-options(OSPSuite.REF.messagesNotDisplayed = NULL)
+cleanupLogFileForTest(projectPath)

@@ -1,23 +1,23 @@
-projectPath <- tempdir()
-if (!dir.exists(projectPath)) dir.create(projectPath)
+# set up directory with figures
+projectPath <- iniLogFileForTest()
 
 # Unit tests for initLogfunction
-test_that("initLogfunction creates default logfile folder when logFileFolder is NULL", {
+test_that("initLogfunction creates default log file folder when logFileFolder is NULL", {
   suppressMessages(initLogfunction(projectPath))
   expect_true(file.exists(file.path(projectPath, "logs")))
 })
 
-test_that("initLogfunction creates logfile folder with specified path", {
+test_that("initLogfunction creates log file folder with specified path", {
   logFileFolder <- file.path(projectPath, "custom_logs")
   suppressMessages(initLogfunction(projectPath, logFileFolder))
   expect_true(file.exists(logFileFolder))
 })
 
-#  tests for writeToLog
+#  tests for `writeToLog`
 test_that("writeToLog appends log message to file", {
   suppressMessages(initLogfunction(projectPath))
 
-  logFileFolder <- getOption("OSPSuite.REF.logFileFolder")
+  logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
 
   filename <- "test.log"
   type <- "Info"
@@ -37,7 +37,7 @@ test_that("logCatch function catches only messages to display", {
     messagesNotDisplayed = myMessage, verbose = FALSE
   )
 
-  logFileFolder <- getOption("OSPSuite.REF.logFileFolder")
+  logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
   myFunction <- function(msg) {
     message(msg)
   }
@@ -60,7 +60,7 @@ test_that("logCatch function catches only messages to display", {
     verbose = FALSE
   )
 
-  logFileFolder <- getOption("OSPSuite.REF.logFileFolder")
+  logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
 
   logCatch(expr = warning("Warning message"))
   suppressWarnings(logFile <- readLines(file.path(logFileFolder, "run.log")))
@@ -79,7 +79,7 @@ test_that("saveSessionInfo writes session info to log file", {
   saveSessionInfo()
 
   # Check if the log file was created and contains the session info
-  logFileFolder <- getOption("OSPSuite.REF.logFileFolder")
+  logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
 
   suppressWarnings(logContent <- readLines(file.path(logFileFolder, "SessionInfo.log")))
   expect_true(length(logContent) > 0, "Log file was created")
@@ -98,10 +98,4 @@ test_that("logCatch logs messages when verbose is TRUE", {
   expect_true(output == myMessage)
 })
 
-
-
-# Clean up: delete the temporary directories and files
-unlink(projectPath, recursive = TRUE)
-options(OSPSuite.REF.logFileFolder = NULL)
-options(OSPSuite.REF.warningsNotDisplayed = NULL)
-options(OSPSuite.REF.messagesNotDisplayed = NULL)
+cleanupLogFileForTest(projectPath)

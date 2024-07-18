@@ -7,9 +7,9 @@
 addMessageToLog(messageText)
 }
 \arguments{
-\item{messageText}{character whit message text}
+\item{messageText}{character with message text}
 }
 \description{
-This function is for the usage outside a logCatch bracket.
-Inside message(messageText) can be used
+This function is for the usage outside a `logCatch` bracket.
+Inside the bracket `message("my message Text")` can be used
 }

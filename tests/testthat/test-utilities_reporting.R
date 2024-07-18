@@ -1,40 +1,39 @@
 # set up directory with figures
 projectPath <- iniLogFileForTest()
 
-getValidFilename <- function(x){x}
+test_that("Rendering", {
+  rmdContainer <- RmdContainer$new(rmdfolder = projectPath, "timeProfiles")
 
-figurePath = file.path(projectPath,'results','figures')
-subFigurePath = file.path(projectPath,'results','figures','timeprofiles')
+  rmdContainer$addHeader("Section 1")
 
+  plotObject <- ggplot2::ggplot(data.frame(x = seq(1:3), y = seq(2:4))) +
+    ggplot2::geom_point(ggplot2::aes(x = x, y = y))
 
-dir.create(figurePath,recursive = TRUE)
-dir.create(subFigurePath,recursive = TRUE)
+  rmdContainer$addAndExportFigure(
+    plotObject = plotObject,
+    caption = "My First Figure with footnotes",
+    footNoteLines = c("footnote 1", "footnote 2"),
+    figureKey = "Fig1"
+  )
 
+  tableKey <- "quantiles"
+  dt <- data.table(
+    x = rnorm(1000),
+    class = sample(c("Female", "Male"), size = 1000, replace = TRUE)
+  ) %>%
+    .[, as.list(quantile(x)), by = "class"]
 
-plotObject = ggplot2::ggplot(pressure) +
-  ggplot2::geom_point(ggplot2::aes(x=temperature, y = pressure))
+  rmdContainer$addAndExportTable(
+    table = dt,
+    caption = "my Table",
+    tableKey = 'myTable'
+  )
 
-figureKey = 'myFigure1'
+  testPath <- file.path(projectPath, "Test.Rmd")
+  rmdContainer$writeRmd(basename(testPath))
 
-ospsuite.plots::exportPlot(plotObject = plotObject,
-                           filepath = subFigurePath,
-                           filename = paste0(figureKey,'.png'))
-
-writeLines(text = "Footnote1.\n Footnote2",
-           con =  file.path(subFigurePath,paste0(figureKey,'.footnote')))
-
-
-writeLines(text = "This is my caption.",
-           con =  file.path(subFigurePath,paste0(figureKey,'.caption')))
-
-renderWord(fileName = file.path(figurePath,'MyResults.Rmd'),
-           wordConversionTemplate = file.path(projectPath,'Appendix.docx'),
-           clean = FALSE)
-
-
-
-test_that("multiplication works", {
-  expect_equal(2 * 2, 4)
+  renderWord(testPath,quiet = TRUE)
+  expect_true(file.exists(file.path(projectPath, "Test.docx")))
 })
 
 cleanupLogFileForTest(projectPath)

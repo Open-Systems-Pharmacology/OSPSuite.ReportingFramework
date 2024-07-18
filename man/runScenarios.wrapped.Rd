@@ -9,6 +9,9 @@ runScenarios.wrapped(scenarioList, ...)
 \arguments{
 \item{scenarioList}{Named list of Scenario objects.}
 }
+\value{
+Named list of simulation results
+}
 \description{
 wrap of esqlabsR::runScenarios
 }

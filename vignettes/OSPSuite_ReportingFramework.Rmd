@@ -20,9 +20,9 @@ library(OSPSuite.ReportingFramework)
 
 ## OSPSuite.ReportingFramework
 
-The aim of this package is to support project workflows with the OSPSuite R tollboxes.
+The aim of this package is to support project workflows with the OSPSuite R toolboxes.
 
-The setup and simulation is based on the EsqlabR package.
+The setup and simulation is based on the EsqlabsR package.
 
 ## Template
 
@@ -39,7 +39,7 @@ Now you are able to write messages to the specified file in the previous initial
 To catch errors, warnings and messages you can call use the function \code{\link[OSPSuite.ReportingFramework]{logCatch}}
 
 If you want to save the Session Info, call \code{\link[OSPSuite.ReportingFramework]{saveSessionInfo}}.
-This call should be at the end of the workflow, to include all packages which were loaded to the namesspace during the workflow
+This call should be at the end of the workflow, to include all packages which were loaded to the namespace during the workflow
 
 
 

@@ -6,7 +6,7 @@
 \usage{
 initLogfunction(
   projectPath,
-  logfilefolder = NULL,
+  logFileFolder = NULL,
   warningsNotDisplayed = c("introduced infinite values",
     "Each group consists of only one observation", "rows containing non-finite values",
     "rows containing missing values", "Ignoring unknown parameters",
@@ -17,9 +17,9 @@ initLogfunction(
 )
 }
 \arguments{
-\item{projectPath}{The path where the default logfile folder is generated.}
+\item{projectPath}{The path where the default log file folder is generated.}
 
-\item{logfilefolder}{Optional. If NULL, a default logfile folder is generated in the projectPath/logs/timestamp.}
+\item{logFileFolder}{Optional. If NULL, a default log file folder is generated in the `projectPath/logs/timestamp`.}
 
 \item{warningsNotDisplayed}{A list of warnings that should not be logged.}
 
@@ -29,7 +29,7 @@ initLogfunction(
 }
 \description{
 This function initialize the logging during a workflow. It is called at the start of the workflow script.
-It is used to configure options for the logfilefolder, warningsNotDisplayed which should not logged and messages which should not logged.
+It is used to configure options for the log file folder, warningswhich should not logged and messages which should not logged.
 }
 \examples{
 \dontrun{

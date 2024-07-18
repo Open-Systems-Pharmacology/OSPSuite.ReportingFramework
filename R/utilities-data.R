@@ -7,7 +7,6 @@
 #' @export
 readObservedDataByDictionary <- function(projectConfiguration) {
   checkmate::assertFileExists(projectConfiguration$dataImporterConfigurationFile)
-
   # initialize variables used in data.table to avoid message during package build
   weighting <- NULL
 
@@ -50,7 +49,7 @@ readObservedDataByDictionary <- function(projectConfiguration) {
       dict <- utils::modifyList(
         dict,
         as.list(tmpdict$type) %>%
-          setNames(tmpdict$targetColumn)
+          stats::setNames(tmpdict$targetColumn)
       )
     }
 
@@ -77,6 +76,9 @@ readObservedDataByDictionary <- function(projectConfiguration) {
 #' @param data The observed dataset
 #' @param stopIfValidationFails Flag to indicate whether to stop if validation fails
 validateObservedData <- function(data, stopIfValidationFails = TRUE) {
+  # initialize variables used fo data.tables
+  dvUnit <- NULL
+
   .returnMessage <- function(msg, stopIfValidationFails) {
     if (stopIfValidationFails) stop(msg)
     warning(msg)
@@ -124,7 +126,7 @@ validateObservedData <- function(data, stopIfValidationFails = TRUE) {
 #' @return The data dictionary
 readDataDictionary <- function(dictionaryFile, sheet, data) {
   # initialize variables used fo data.tables
-  sourceColumn <- NULL
+  sourceColumn <- filter <- NULL
 
   dict <- esqlabsR::readExcel(dictionaryFile, sheet = sheet) %>%
     data.table::setDT()
@@ -177,13 +179,15 @@ convertDataByDictionary <- function(data,
   if (!is.na(dataFilter) & dataFilter != "") data <- data[eval(parse(text = dataFilter))]
 
   # execute all filters
-  dictFilters <- dict[!is.na(filter)]
+  if (any(!is.na(dict$filter))){
+    dictFilters <- dict[!is.na(filter)]
 
-  for (myFilter in split(dictFilters, nrow(dictFilters))) {
-    data[
-      eval(parse(text = myFilter$filter)),
-      (myFilter$targetColumn) := eval(parse(text = myFilter$filterValue))
-    ]
+    for (myFilter in split(dictFilters, nrow(dictFilters))) {
+      data[
+        eval(parse(text = myFilter$filter)),
+        (myFilter$targetColumn) := eval(parse(text = myFilter$filterValue))
+      ]
+    }
   }
 
   # Rename columns to target columns

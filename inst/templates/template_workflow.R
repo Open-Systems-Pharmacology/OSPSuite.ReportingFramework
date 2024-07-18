@@ -27,7 +27,7 @@ projectPath <- initProject(
   sourceFolder = templateDirectory()
 )
 
-# initialize Logfile
+# initialize log file
 initLogfunction(projectPath)
 
 # get paths of all relevant project files
@@ -149,10 +149,10 @@ projectPath <- initProject(
   sourceFolder = templateDirectory()
 )
 
-# initialize Logfile
+# initialize log file
 logfilefolder <<- iniLogFile(projectPath)
 
-# get pathes of all relevant project files
+# get paths of all relevant project files
 projectConfiguration <-
   esqlabsR::createDefaultProjectConfiguration(path = "./ProjectConfiguration.xlsx")
 
@@ -174,22 +174,22 @@ esqlabsR::saveScenarioResults(scenarioResults,
 )
 
 
-# SensitivityAnalysis -----------------------------------------------------
-#  (see vignette xxx)
-Vision::runSensitivityAnalysis(
-  scenario = "MyScenario",
-  configTable = projectConfiguration$SensitivityParameter
-)
+# # SensitivityAnalysis -----------------------------------------------------
+# #  (see vignette xxx)
+# Vision::runSensitivityAnalysis(
+#   scenario = "MyScenario",
+#   configTable = projectConfiguration$SensitivityParameter
+# )
 
 
 # Read observedData -------------------------------------------------------
 # (see vignette xxx)
-datacombined <- Vision::readObservedData(projectConfiguration = projectConfiguration)
+datacombined <- readObservedData(projectConfiguration = projectConfiguration)
 
 # Create Output Plots -----------------------------------------------------
 # (see vignette xxx)
 
-Vision::runPlot(
+runPlot(
   functionKey = "Demographics",
   projectConfg = projectConfiguration,
   inputs = list(
@@ -199,7 +199,7 @@ Vision::runPlot(
   )
 )
 
-Vision::runPlot(
+runPlot(
   functionKey = "TimeProfile",
   projectConfg = projectConfiguration,
   inputs = list(
@@ -210,19 +210,19 @@ Vision::runPlot(
   )
 )
 
-Vision::runPlot(
+runPlot(
   functionKey = "PKParameter",
   projectConfg = projectConfiguration,
   inputs = list(configTable = "PKParameter")
 )
 
-Vision::runPlot(
+runPlot(
   functionKey = "DDIRatio",
   projectConfg = projectConfiguration,
   inputs = list(configTable = "DDIRatio")
 )
 
-Vision::runPlot(
+runPlot(
   functionKey = NULL,
   plotFunction = myProjectSpecificfunction(),
   subfolder = "myFigures",
@@ -233,16 +233,16 @@ Vision::runPlot(
 
 
 # Create Report document --------------------------------------------------
-Vision::mergeRmds(
+mergeRmds(
   newName = "appendix",
   title = "Appendix",
   sourceRmds = c("Demographics", "TimeProfile", "PKParameter", "DDIRatio", "myFigures")
 )
 
-vision::renderReport(rmd = "appendix")
+renderReport(rmd = "appendix")
 
-# finalise workflow---------------------
-addMessageToLog("finalise workflow")
+# finalize workflow---------------------
+addMessageToLog("finalize workflow")
 
-# save Session Infos including the loaded packages and R version, into a log file
+# save Session infos including the loaded packages and R version, into session.log
 saveSessionInfo()

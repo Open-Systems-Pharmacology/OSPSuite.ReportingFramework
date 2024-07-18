@@ -4,14 +4,18 @@
 \alias{saveScenarioResults.wrapped}
 \title{Save results of scenario simulations to csv.}
 \usage{
-saveScenarioResults.wrapped(simulatedScenariosResults, projectConfiguration)
+saveScenarioResults.wrapped(
+  simulatedScenariosResults,
+  projectConfiguration,
+  ...
+)
 }
 \arguments{
-\item{simulatedScenariosResults}{Named list with simulation, results, outputValues, and population as produced by runScenarios()}
+\item{simulatedScenariosResults}{Named list with `simulation`, `results`, `outputValues`, and `population` as produced by runScenarios()}
 
 \item{projectConfiguration}{An instance of ProjectConfiguration}
 
-\item{saveSimulationsToPKML}{If TRUE (default), simulations corresponding to the results are saved to PKML along with the results.}
+\item{...}{arguments passed to esqlabsR::saveScenarioResults}
 }
 \description{
 wrap of esqlabsR::saveScenarioResults

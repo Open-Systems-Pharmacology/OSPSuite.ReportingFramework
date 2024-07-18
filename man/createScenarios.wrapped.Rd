@@ -7,14 +7,14 @@
 createScenarios.wrapped(projectConfiguration, scenarioNames = NULL)
 }
 \arguments{
+\item{projectConfiguration}{A ProjectConfiguration object holding base information}
+
 \item{scenarioNames}{Names of the scenarios that are defined in the excel file.
 If NULL (default), all scenarios specified in the excel file will be created.}
-
-\item{A}{ProjectConfiguration object holding base information}
 }
 \value{
 Named list of Scenario objects.
 }
 \description{
-wrap of (esqlabsR::createDefaultProjectConfiguration()) with esqlabsR::createScenarios as input
+wrap of `esqlabsR::createDefaultProjectConfiguration()` with `esqlabsR::createScenarios()` as input
 }

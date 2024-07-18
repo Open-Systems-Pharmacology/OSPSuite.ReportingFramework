@@ -6,7 +6,7 @@
 \alias{OSPSuite.ReportingFramework-package}
 \title{OSPSuite.ReportingFramework: Provides a framework for report generation with the ospsuite}
 \description{
-This package uses the EsqlabsR package to set up simulations and scenerios. It provides functions to generate default graphics and tables. This figures are included in .Rmd files which are then merged to the selected output fromat e.g. a Report.docx.
+This package uses the EsqlabsR package to set up simulations and scenerios. It provides functions to generate default graphics and tables. This figures are included in .Rmd files which are then merged to the selected output format e.g. a Report.docx.
 }
 \author{
 \strong{Maintainer}: Katrin Coboeken \email{katrin.coboeken@bayer.com}
