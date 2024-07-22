@@ -6,7 +6,7 @@
 \usage{
 createDocumentFromTemplate(
   template = "template_workflow",
-  templatePath = system.file("templates", package = "OSPSuite.ReportingFramework")
+  templatePath = system.file("templates", package = "ospsuite.reportingframework")
 )
 }
 \arguments{

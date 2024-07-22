@@ -8,7 +8,7 @@
 #' @param projectPath A string defining the path where to initialize the project.
 #'  default to current working directory.
 #' @param sourceFolder path of template directory available is
-#'    `templateDirectory()` default path of `OSPSuite.ReportingFramework`
+#'    `templateDirectory()` default path of `ospsuite.reportingframework`
 #'    `esqlabsR:::example_directory("TestProject")`  default path for Esqlabs-projects
 #' @param overwrite A boolean, if TRUE existing files will be overwritten
 #'
@@ -96,6 +96,7 @@ createScenarios.wrapped <- function(projectConfiguration, # nolint
 #' wrap of `esqlabsR::runScenarios`
 #'
 #' @param scenarioList  Named list of Scenario objects.
+#' @param ... passed to esqlabsR::runScenarios
 #'
 #' @return  Named list of simulation results
 #' @export
@@ -117,7 +118,7 @@ runScenarios.wrapped <- function(scenarioList, ...) { # nolint
 #'
 #' @export
 saveScenarioResults.wrapped <- function(simulatedScenariosResults, # nolint
-                                        projectConfiguration,...) {
+                                        projectConfiguration, ...) {
   logCatch({
     outputFolder <- file.path(projectConfiguration$outputFolder, "SimulationResults")
     esqlabsR::saveScenarioResults(

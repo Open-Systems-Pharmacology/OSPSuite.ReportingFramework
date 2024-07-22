@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(OSPSuite.ReportingFramework)
+library(ospsuite.reportingframework)
 
-test_check("OSPSuite.ReportingFramework")
+test_check("ospsuite.reportingframework")

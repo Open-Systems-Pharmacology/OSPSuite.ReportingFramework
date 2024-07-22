@@ -12,9 +12,10 @@ myPlotFunction <- function(projectConfiguration, subfolder, ...) {
   require(data.table)
 
   # initialize Container for RMD generation for .Rmd generation
-  rmdContainer <- RmdContainer$new(
-    rmdfolder = file.path(projectConfiguration$outputFolder),
-    subfolder = subfolder)
+  rmdContainer <-
+    RmdContainer$new(
+      rmdfolder = file.path(projectConfiguration$outputFolder),
+      subfolder = subfolder)
 
   ## add your own code below are examples how to add headers, figures and tables --------
 
@@ -23,9 +24,10 @@ myPlotFunction <- function(projectConfiguration, subfolder, ...) {
   rmdContainer$addHeader("My Sub Section", level = 2)
 
   # add a figure
-  plotObject <- ospsuite.plots::plotHistogram(
-    data = data.frame(x = rnorm(100)),
-    mapping = ggplot2::aes(x = x))
+  plotObject <-
+    ospsuite.plots::plotHistogram(
+      data = data.frame(x = rnorm(100)),
+      mapping = ggplot2::aes(x = x))
 
   rmdContainer$addAndExportFigure(
     plotObject = plotObject,

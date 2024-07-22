@@ -174,7 +174,7 @@ adds and exports tables with caption and footnote
 
 \item{\code{footNoteLines}}{character text of figure footnotes}
 
-\item{\code{...}}{parameters passed to utils::write.csv}
+\item{\code{...}}{parameters passed to `utils::write.csv`}
 }
 \if{html}{\out{</div>}}
 }

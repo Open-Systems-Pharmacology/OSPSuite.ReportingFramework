@@ -4,10 +4,12 @@
 \alias{readObservedDataByDictionary}
 \title{Read data by dictionary}
 \usage{
-readObservedDataByDictionary(projectConfiguration)
+readObservedDataByDictionary(projectConfiguration, dataType = unlist(DATATYPE))
 }
 \arguments{
-\item{projectConfiguration}{The project configuration data}
+\item{projectConfiguration}{The project configuration}
+
+\item{dataType}{type of data, available `r paste0('"',paste(unlist(DATATYPE),collapse = '", "'),'"')`}
 }
 \value{
 Processed data based on the dictionary

@@ -2,12 +2,12 @@
 % Please edit documentation in R/esqlabsR_bracket.R
 \name{createScenarios.wrapped}
 \alias{createScenarios.wrapped}
-\title{Create Scenario objects from 'ScenarioConfiguration' objects}
+\title{Create Scenario objects from `ScenarioConfiguration` objects}
 \usage{
 createScenarios.wrapped(projectConfiguration, scenarioNames = NULL)
 }
 \arguments{
-\item{projectConfiguration}{A ProjectConfiguration object holding base information}
+\item{projectConfiguration}{A `ProjectConfiguration` object holding base information}
 
 \item{scenarioNames}{Names of the scenarios that are defined in the excel file.
 If NULL (default), all scenarios specified in the excel file will be created.}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/esqlabsR_bracket.R
 \name{saveScenarioResults.wrapped}
 \alias{saveScenarioResults.wrapped}
-\title{Save results of scenario simulations to csv.}
+\title{Save results of scenario simulations to .csv file}
 \usage{
 saveScenarioResults.wrapped(
   simulatedScenariosResults,
@@ -18,5 +18,5 @@ saveScenarioResults.wrapped(
 \item{...}{arguments passed to esqlabsR::saveScenarioResults}
 }
 \description{
-wrap of esqlabsR::saveScenarioResults
+wrap of `esqlabsR::saveScenarioResults`
 }

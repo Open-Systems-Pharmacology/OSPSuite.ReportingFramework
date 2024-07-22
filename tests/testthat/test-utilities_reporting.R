@@ -26,13 +26,13 @@ test_that("Rendering", {
   rmdContainer$addAndExportTable(
     table = dt,
     caption = "my Table",
-    tableKey = 'myTable'
+    tableKey = "myTable"
   )
 
   testPath <- file.path(projectPath, "Test.Rmd")
   rmdContainer$writeRmd(basename(testPath))
 
-  renderWord(testPath,quiet = TRUE)
+  renderWord(testPath, quiet = TRUE)
   expect_true(file.exists(file.path(projectPath, "Test.docx")))
 })
 

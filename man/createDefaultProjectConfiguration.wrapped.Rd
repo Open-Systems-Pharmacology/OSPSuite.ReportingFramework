@@ -13,5 +13,5 @@ createDefaultProjectConfiguration.wrapped(path)
 Object of type ProjectConfiguration
 }
 \description{
-wrap of (esqlabsR::createDefaultProjectConfiguration())
+wrap of 'esqlabsR::createDefaultProjectConfiguration()'
 }

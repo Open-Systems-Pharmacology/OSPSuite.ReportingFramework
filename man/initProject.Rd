@@ -11,7 +11,7 @@ initProject(projectPath = ".", sourceFolder, overwrite = FALSE)
 default to current working directory.}
 
 \item{sourceFolder}{path of template directory available is
-`templateDirectory()` default path of `OSPSuite.ReportingFramework`
+`templateDirectory()` default path of `ospsuite.reportingframework`
 `esqlabsR:::example_directory("TestProject")`  default path for Esqlabs-projects}
 
 \item{overwrite}{A boolean, if TRUE existing files will be overwritten}

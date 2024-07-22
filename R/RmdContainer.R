@@ -17,7 +17,8 @@ RmdContainer <- R6::R6Class( # nolint
       private$.rmdfolder <- rmdfolder
       private$.subfolder <- subfolder
       checkmate::assert_path_for_output(file.path(private$.rmdfolder, private$.subfolder),
-                                        overwrite = TRUE)
+        overwrite = TRUE
+      )
 
       if (!dir.exists(file.path(private$.rmdfolder, private$.subfolder))) {
         dir.create(file.path(private$.rmdfolder, private$.subfolder), recursive = TRUE)
@@ -100,21 +101,24 @@ RmdContainer <- R6::R6Class( # nolint
 
       ospsuite.plots::exportPlot(
         plotObject = plotObject,
-        filepath = file.path(private$.rmdfolder,private$.subfolder),
+        filepath = file.path(private$.rmdfolder, private$.subfolder),
         filename = paste0(figureKey),
         ...
       )
 
-      private$.exportLines(textLines = caption,
-                           key = figureKey,
-                           extension = '.caption')
+      private$.exportLines(
+        textLines = caption,
+        key = figureKey,
+        extension = ".caption"
+      )
 
-      private$.exportLines(textLines = footNoteLines,
-                           key = figureKey,
-                           extension = '.footnote')
+      private$.exportLines(
+        textLines = footNoteLines,
+        key = figureKey,
+        extension = ".footnote"
+      )
 
       private$.addKeyToList(key = figureKey)
-
     },
     #' @description adds and exports tables with caption and footnote
     #'
@@ -126,34 +130,39 @@ RmdContainer <- R6::R6Class( # nolint
     #' @param ... parameters passed to `utils::write.csv`
     #'
     addAndExportTable = function(table,
-                                  caption,
-                                  tableKey,
-                                  footNoteLines = NULL,
-                                  ...) {
+                                 caption,
+                                 tableKey,
+                                 footNoteLines = NULL,
+                                 ...) {
       private$.checkKeyIsUnique(key = tableKey)
-      checkmate::assertCharacter(names(table),unique = TRUE)
+      checkmate::assertCharacter(names(table), unique = TRUE)
 
-      #export
+      # export
       utils::write.csv(
         x = table,
-        file = file.path(private$.rmdfolder,
-                         private$.subfolder,
-                         ospsuite.plots::validateFilename(paste0(tableKey, ".csv"))),
+        file = file.path(
+          private$.rmdfolder,
+          private$.subfolder,
+          ospsuite.plots::validateFilename(paste0(tableKey, ".csv"))
+        ),
         na = "",
         row.names = FALSE,
-        fileEncoding = 'UTF-8',...
+        fileEncoding = "UTF-8", ...
       )
 
-      private$.exportLines(textLines = caption,
-                           key = tableKey,
-                           extension = '.caption')
+      private$.exportLines(
+        textLines = caption,
+        key = tableKey,
+        extension = ".caption"
+      )
 
-      private$.exportLines(textLines = footNoteLines,
-                           key = tableKey,
-                           extension = '.footnote')
+      private$.exportLines(
+        textLines = footNoteLines,
+        key = tableKey,
+        extension = ".footnote"
+      )
 
       private$.addKeyToList(key = tableKey)
-
     }
   ),
   active = list(
@@ -161,10 +170,11 @@ RmdContainer <- R6::R6Class( # nolint
     digitsOfSignificance = function(value) {
       if (missing(value)) {
         value <- private$.digitsOfSignificance
-      } else{
-        checkmate::assertInt(value,lower = 1,.var.name = digitsOfSignificance)
-        if (private$.digitsOfSignificance != value)
-        private$.closeFigureKeys()
+      } else {
+        checkmate::assertInt(value, lower = 1, .var.name = digitsOfSignificance)
+        if (private$.digitsOfSignificance != value) {
+          private$.closeFigureKeys()
+        }
       }
       private$.digitsOfSignificance <- value
     }
@@ -225,7 +235,7 @@ RmdContainer <- R6::R6Class( # nolint
         paste0('            subfolder = "', private$.subfolder, '",'),
         "            numbersOf = numbersOf,",
         "            customStyles = params$customStyles,",
-        paste0("            digitsOfSignificance = ",self$digitsOfSignificance,")"),
+        paste0("            digitsOfSignificance = ", self$digitsOfSignificance, ")"),
         "```",
         "  "
       )
@@ -240,25 +250,28 @@ RmdContainer <- R6::R6Class( # nolint
       return(invisible())
     },
     # writes caption and footnotes
-    .exportLines = function(textLines,key,extension){
-      if (is.null(textLines))  return(invisible())
+    .exportLines = function(textLines, key, extension) {
+      if (is.null(textLines)) {
+        return(invisible())
+      }
       writeLines(
         text = textLines,
-        con = file.path(private$.rmdfolder,private$.subfolder,paste0(key,extension))
+        con = file.path(private$.rmdfolder, private$.subfolder, paste0(key, extension))
       )
 
       return(invisible())
     },
     # add key to lists
-    .addKeyToList = function(key){
+    .addKeyToList = function(key) {
       private$.keyCollectionIsOpen <- TRUE
       private$.listOfKeys <- append(private$.listOfKeys, key)
       private$.listOfALLKeys <- append(private$.listOfKeys, key)
     },
     # only export if key is unique
-    .checkKeyIsUnique = function(key){
-      if (key %in% private$.listOfALLKeys)
+    .checkKeyIsUnique = function(key) {
+      if (key %in% private$.listOfALLKeys) {
         stop(paste0('key "', key, '" was already added. The figure and table keys must be unique'))
+      }
     }
   )
 )

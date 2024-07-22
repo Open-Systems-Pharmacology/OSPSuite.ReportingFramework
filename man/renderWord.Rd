@@ -14,7 +14,7 @@ renderWord(
 )
 }
 \arguments{
-\item{fileName}{name of .Rmd file to convert to word format (docx)}
+\item{fileName}{name of .Rmd file to convert to word format (".docx")}
 
 \item{wordConversionTemplate}{template used for conversion}
 

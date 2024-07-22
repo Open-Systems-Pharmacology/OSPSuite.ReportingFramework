@@ -140,25 +140,31 @@ mdFigure <- function(
     subfolder,
     addNewPage = TRUE,
     customStyles = list()) {
-  validateMdFigureTableInputs(subfolder = subfolder,
-                              importFile = figureFile,
-                              captionFile = captionFile,
-                              customStyles = list())
+  validateMdFigureTableInputs(
+    subfolder = subfolder,
+    importFile = figureFile,
+    captionFile = captionFile,
+    customStyles = list()
+  )
   # add figure link
   mdNewline()
   mdLink(label = "", filename = utils::URLencode(figureFile), folder = subfolder, prefix = "!")
   mdNewline()
 
   # figure footnote
-  mdFootNote(subfolder = subfolder,
-             footNoteFile = footNoteFile,
-             footNoteCustomStyle = customStyles$FigureFootnote)
+  mdFootNote(
+    subfolder = subfolder,
+    footNoteFile = footNoteFile,
+    footNoteCustomStyle = customStyles$FigureFootnote
+  )
 
   #  figure caption
-  mdCaption(subfolder = subfolder,
-            captionFile = captionFile,
-            captionPrefix = paste0("Figure", figureNumber, ":"),
-            captionStyle = customStyles$FigureCaption)
+  mdCaption(
+    subfolder = subfolder,
+    captionFile = captionFile,
+    captionPrefix = paste0("Figure", figureNumber, ":"),
+    captionStyle = customStyles$FigureCaption
+  )
 
   if (addNewPage) mdNewpage()
 
@@ -201,18 +207,22 @@ mdTable <- function(tableNumber,
                     customStyles,
                     digitsOfSignificance = 3,
                     ...) {
-  validateMdFigureTableInputs(subfolder = subfolder,
-                              importFile = tableCsv,
-                              captionFile = captionFile,
-                              customStyles = customStyles)
+  validateMdFigureTableInputs(
+    subfolder = subfolder,
+    importFile = tableCsv,
+    captionFile = captionFile,
+    customStyles = customStyles
+  )
 
   #  table caption
-  mdCaption(subfolder = subfolder,
-            captionFile = captionFile,
-            captionPrefix = paste0("Table", tableNumber, ":"),
-            captionStyle = customStyles$FigureCaption)
+  mdCaption(
+    subfolder = subfolder,
+    captionFile = captionFile,
+    captionPrefix = paste0("Table", tableNumber, ":"),
+    captionStyle = customStyles$FigureCaption
+  )
 
-  dt = data.table::fread(file.path(subfolder,tableCsv))
+  dt <- data.table::fread(file.path(subfolder, tableCsv))
   if (!is.null(digitsOfSignificance)) {
     colsToConvert <-
       names(dt)[unlist(lapply(names(dt), function(col) {
@@ -226,9 +236,11 @@ mdTable <- function(tableNumber,
   mdNewline()
 
   # table footnote
-  mdFootNote(subfolder = subfolder,
-             footNoteFile = footNoteFile,
-             footNoteCustomStyle = customStyles$FigureFootnote)
+  mdFootNote(
+    subfolder = subfolder,
+    footNoteFile = footNoteFile,
+    footNoteCustomStyle = customStyles$FigureFootnote
+  )
 
 
   return(invisible())
@@ -238,19 +250,18 @@ mdTable <- function(tableNumber,
 #'
 #' @inheritParams mdFigure
 #' @param footNoteCustomStyle a character describing custom style footnotes
-mdFootNote <- function(subfolder,footNoteFile,footNoteCustomStyle = NULL){
-
+mdFootNote <- function(subfolder, footNoteFile, footNoteCustomStyle = NULL) {
   if (file.exists(file.path(subfolder, footNoteFile))) {
     footnoteLines <- readLines(file.path(subfolder, footNoteFile))
 
     if (length(footnoteLines) > 0) {
       mdNewline()
       for (fL in footnoteLines) {
-        if (!is.null(footNoteCustomStyle) && footNoteCustomStyle != ''){
+        if (!is.null(footNoteCustomStyle) && footNoteCustomStyle != "") {
           mdPaste('<div custom-style="', footNoteCustomStyle, '">')
           mdPaste(fL)
           mdPaste("</div>")
-        } else{
+        } else {
           mdPaste(fL)
         }
       }
@@ -267,15 +278,17 @@ mdFootNote <- function(subfolder,footNoteFile,footNoteCustomStyle = NULL){
 #' @param captionPrefix 'a character which starts the caption like 'Figure 1:'
 #' @param captionStyle 'custom-style for captions'
 #'
-mdCaption <- function(subfolder,captionFile,captionPrefix,captionStyle = NULL){
-  caption <- paste(captionPrefix,
-                   paste(readLines(file.path(subfolder, captionFile)), collapse = "\n"))
+mdCaption <- function(subfolder, captionFile, captionPrefix, captionStyle = NULL) {
+  caption <- paste(
+    captionPrefix,
+    paste(readLines(file.path(subfolder, captionFile)), collapse = "\n")
+  )
 
-  if (!is.null(captionStyle) && captionStyle != '') {
+  if (!is.null(captionStyle) && captionStyle != "") {
     mdPaste('<div custom-style="', captionStyle, '">')
     mdPaste(caption)
     mdPaste("</div>")
-  } else{
+  } else {
     mdPaste0("**", caption, "**")
   }
   mdNewline()
@@ -288,16 +301,16 @@ mdCaption <- function(subfolder,captionFile,captionPrefix,captionStyle = NULL){
 #' @inherit mdFigure
 #' @param importFile figure file or table .csv file
 #'
-validateMdFigureTableInputs <- function(subfolder,importFile,captionFile,customStyles){
+validateMdFigureTableInputs <- function(subfolder, importFile, captionFile, customStyles) {
   checkmate::assertFileExists(file.path(subfolder, importFile))
   checkmate::assertFileExists(file.path(subfolder, captionFile))
   checkmate::assertList(customStyles)
   if (length(customStyles) > 0) {
     checkmate::assertNames(names(customStyles),
-                           subset.of = c(
-                             "FigureCaption", "FigureFootnote",
-                             "TableCaption", "TableFootnote"
-                           )
+      subset.of = c(
+        "FigureCaption", "FigureFootnote",
+        "TableCaption", "TableFootnote"
+      )
     )
   }
   return(invisible())
@@ -324,7 +337,7 @@ addFiguresAndTables <- function(keyList,
 
   for (key in keyList) {
     figureFile <- paste(key, dev, sep = ".")
-    tableCsv <- paste(key, 'csv', sep = ".")
+    tableCsv <- paste(key, "csv", sep = ".")
     if (figureFile %in% folderFiles) {
       numbersOf$figures <- numbersOf$figures + 1
 
@@ -336,7 +349,7 @@ addFiguresAndTables <- function(keyList,
         subfolder = subfolder,
         customStyles = customStyles
       )
-    } else if(tableCsv %in% folderFiles){
+    } else if (tableCsv %in% folderFiles) {
       numbersOf$tables <- numbersOf$tables + 1
       mdTable(
         tableNumber = numbersOf$tables,
@@ -347,9 +360,8 @@ addFiguresAndTables <- function(keyList,
         customStyles = customStyles,
         digitsOfSignificance = 3
       )
-
     } else {
-      stop(paste('No file exists for key. There should be either',figureFile,'or',tableCsv))
+      stop(paste("No file exists for key. There should be either", figureFile, "or", tableCsv))
     }
   }
 
@@ -381,7 +393,7 @@ addFiguresAndTables <- function(keyList,
 #' @return `data.table` prepared for display
 #'
 #' @export
-prepareDTForPrinting <- function(
+prepareDTForPrinting <- function( # nolint cyclocomp_linter
     dt,
     replaceLinebreaksIn = "!guess",
     replaceLinebreaksBy = " ",
@@ -399,7 +411,6 @@ prepareDTForPrinting <- function(
   checkmate::assertCharacter(convertToPercent, null.ok = TRUE)
   checkmate::assertNumber(percentAccuracy, lower = 0)
   checkmate::assertCharacter(convertToYesNo, null.ok = TRUE)
-  checkmate::assertNumber(digits, lower = 0, null.ok = TRUE)
   checkmate::assertCharacter(skip, null.ok = TRUE)
 
   dt <- data.table::copy(data.table::setDT(dt))
@@ -421,7 +432,7 @@ prepareDTForPrinting <- function(
     )
   )
 
-  if (length(unassignedColumns) >  0) {
+  if (length(unassignedColumns) > 0) {
     if (!is.null(replaceLinebreaksIn) && all(replaceLinebreaksIn == "!guess")) {
       replaceLinebreaksIn <- names(which(sapply(dt[, ..unassignedColumns], is.character)))
     }
@@ -439,7 +450,7 @@ prepareDTForPrinting <- function(
     if (all(convertToYesNo == "!guess")) {
       convertToYesNo <- names(which(sapply(dt[, ..unassignedColumns], is.logical)))
     }
-  } else{
+  } else {
     variables <- c("replaceLinebreaksIn", "convertToComma", "convertToPercent", "convertToYesNo")
 
     for (variable in variables) {
@@ -452,7 +463,7 @@ prepareDTForPrinting <- function(
   requiredColumns <- unique(c(replaceLinebreaksIn, convertToComma, convertToPercent, convertToYesNo))
 
   if (!is.null(requiredColumns) && length(requiredColumns) > 0) {
-    checkmate::assertNames(requiredColumns,subset.of = names(dt))
+    checkmate::assertNames(requiredColumns, subset.of = names(dt))
   }
 
   for (column in setdiff(replaceLinebreaksIn, skip)) {
@@ -469,9 +480,8 @@ prepareDTForPrinting <- function(
   }
 
   for (column in setdiff(convertToYesNo, skip)) {
-    dt[, (column) := if_else(get(column), "yes", "no")]
+    dt[, (column) := ifelse(get(column), "yes", "no")]
   }
 
   return(dt)
 }
-

@@ -8,10 +8,12 @@ runScenarios.wrapped(scenarioList, ...)
 }
 \arguments{
 \item{scenarioList}{Named list of Scenario objects.}
+
+\item{...}{passed to esqlabsR::runScenarios}
 }
 \value{
 Named list of simulation results
 }
 \description{
-wrap of esqlabsR::runScenarios
+wrap of `esqlabsR::runScenarios`
 }

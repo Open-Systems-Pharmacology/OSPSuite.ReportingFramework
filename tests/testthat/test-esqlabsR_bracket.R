@@ -58,19 +58,7 @@ projectPath <- iniLogFileForTest()
 
 test_that("initProject creates project folder structure", {
   # Call the function being tested
-  myProjectPath <- initProject(
-    projectPath = file.path(projectPath, "TestProject"),
-    sourceFolder = templateDirectory(),
-    overwrite = FALSE
-  )
-
-  # Perform assertions
-  expect_true(dir.exists(myProjectPath))
-
-  projectConfiguration <-
-    createDefaultProjectConfiguration.wrapped(
-      path = file.path(myProjectPath, "ProjectConfiguration.xlsx")
-    )
+  projectConfiguration <- setUpTestProject(projectPath)
 
   expect_s3_class(projectConfiguration, "ProjectConfiguration")
 

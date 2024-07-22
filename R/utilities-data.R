@@ -2,23 +2,29 @@
 #'
 #' This function reads and processes data based on the provided project configuration.
 #'
-#' @param projectConfiguration The project configuration data
+#' @param projectConfiguration The project configuration
+#' @param dataType type of data, available `r paste0('"',paste(unlist(DATATYPE),collapse = '", "'),'"')`
+#'
 #' @return Processed data based on the dictionary
 #' @export
-readObservedDataByDictionary <- function(projectConfiguration) {
+readObservedDataByDictionary <- function(projectConfiguration,
+                                         dataType = unlist(DATATYPE)) { # nolint
   checkmate::assertFileExists(projectConfiguration$dataImporterConfigurationFile)
-  # initialize variables used in data.table to avoid message during package build
-  weighting <- NULL
+  dataType <- match.arg(dataType)
 
   logCatch({
-    dataList <- esqlabsR::readExcel(projectConfiguration$dataImporterConfigurationFile, sheet = "DataFiles")
-    # delete description line
+    dataList <- xlsxReadData(wb = projectConfiguration$dataImporterConfigurationFile, sheetName =  "DataFiles")
+    # delete description line and empty lines
     dataList <- dataList[-1, ]
     dataList <- dataList[rowSums(is.na(dataList)) < ncol(dataList), ]
 
+    # filter for DataType
+    dataList <- dataList[dataList$DataType == dataType]
+
+    # loop on selected datafiles
     data <- data.table()
     dict <- list()
-    for (d in split(dataList, nrow(dataList))) {
+    for (d in split(dataList, seq_len(nrow(dataList)))) {
       tmpData <- data.table::fread(fs::path_abs(
         start = projectConfiguration$projectConfigurationDirPath,
         path = d$DataFile
@@ -27,7 +33,8 @@ readObservedDataByDictionary <- function(projectConfiguration) {
       tmpdict <- readDataDictionary(
         dictionaryFile = projectConfiguration$dataImporterConfigurationFile,
         sheet = d$Dictionary,
-        data = tmpData
+        data = tmpData,
+        dataType = dataType
       )
 
       data <- rbind(data,
@@ -53,9 +60,6 @@ readObservedDataByDictionary <- function(projectConfiguration) {
       )
     }
 
-    # set weighting variable
-    data[, weighting := 1]
-
     # add dictionary as attributes
     dict[["timeUnit"]] <- "timeprofile"
     for (dc in names(dict)) {
@@ -63,6 +67,9 @@ readObservedDataByDictionary <- function(projectConfiguration) {
     }
 
     validateObservedData(data, stopIfValidationFails = FALSE)
+
+    # update sheet DataGroupId
+    updateDataGroupId(projectConfiguration, data)
   })
 
   return(data)
@@ -122,16 +129,26 @@ validateObservedData <- function(data, stopIfValidationFails = TRUE) {
 #'
 #' @param dictionaryFile The file containing the data dictionary
 #' @param sheet The sheet within the data dictionary file
+#' @param dataType type of data
 #' @param data The data to be used with the dictionary
+#'
 #' @return The data dictionary
-readDataDictionary <- function(dictionaryFile, sheet, data) {
+readDataDictionary <- function(dictionaryFile, sheet, data, dataType) {
   # initialize variables used fo data.tables
-  sourceColumn <- filter <- NULL
+  sourceColumn <- filter <- targetColumn <- NULL
 
-  dict <- esqlabsR::readExcel(dictionaryFile, sheet = sheet) %>%
+  dict <- xlsxReadData(wb = dictionaryFile, sheetName = sheet) %>%
     data.table::setDT()
   dict <- dict[-1, ]
   dict <- dict[rowSums(is.na(dict)) < ncol(dict), ]
+  dict[,targetColumn := trimws(targetColumn)]
+  dict[,sourceColumn := trimws(sourceColumn)]
+  dict[,sourceColumn := ifelse(sourceColumn == '',NA,sourceColumn)]
+
+  # filter for Type
+  if (dataType == DATATYPE$individual) {
+    dict <- dict[!(targetColumn %in% c("yErrorValues", "yErrorType", "n_belowLLOQ")), ]
+  }
 
   checkmate::assertNames(
     dict$targetColumn,
@@ -179,10 +196,10 @@ convertDataByDictionary <- function(data,
   if (!is.na(dataFilter) & dataFilter != "") data <- data[eval(parse(text = dataFilter))]
 
   # execute all filters
-  if (any(!is.na(dict$filter))){
+  if (any(!is.na(dict$filter))) {
     dictFilters <- dict[!is.na(filter)]
 
-    for (myFilter in split(dictFilters, nrow(dictFilters))) {
+    for (myFilter in split(dictFilters, seq_len(nrow(dictFilters)))) {
       data[
         eval(parse(text = myFilter$filter)),
         (myFilter$targetColumn) := eval(parse(text = myFilter$filterValue))
@@ -208,8 +225,25 @@ convertDataByDictionary <- function(data,
   data <- data %>%
     dplyr::select(unique(dict$targetColumn))
 
-  # add time unit and convert biometrics to appropriate columns
+  # add time unit
   data[, timeUnit := dict[targetColumn == "time"]$sourceUnit]
+
+
+  data <- convertBiometrics(data,dict)
+
+  return(data)
+}
+
+
+#' converts biomertic columns to default unit
+#'
+#' @inheritParams convertDataByDictionary
+#'
+#' @return `data.table` with converted columns
+convertBiometrics <- function(data, dict,dictionaryName) {
+
+  # initialize variables used fo data.tables
+  targetColumn <- NULL
 
   biometricUnits <- list(
     age = "year(s)",
@@ -228,5 +262,263 @@ convertDataByDictionary <- function(data,
     data[, (col) := get(col) * unitFactor]
   }
 
+  if ('gender' %in% dict$targetColumn){
+
+    data[,gender := ifelse(gender == 1,'MALE',gender)]
+    data[,gender := ifelse(gender == 2,'FEMALE',gender)]
+    data[,gender := toupper(gender)]
+
+    data[,gender := ifelse(gender != 'MALE' & gender != 'FEMALE','UNKNOWN',gender)]
+
+    if (any(data$gender == 'UNKNOWN'))
+      warning(paste('Unknown gender in data set'))
+
+  }
+
   return(data)
 }
+
+#' Add group ids of observed data to configration sheet
+#'
+#' @param projectConfiguration The project configuration
+#' @param data `data.table`with observed Data
+updateDataGroupId <- function(projectConfiguration, data) {
+  # initialize variables used fo data.tables
+  studyId <- groupId <- NULL
+
+  wb <- openxlsx::loadWorkbook(projectConfiguration$dataImporterConfigurationFile)
+
+  dtDataGroupIds <- xlsxReadData(wb = wb, sheetName = "DataGroupID")
+
+  dtDataGroupIdsNew <- data[, c("studyId", "groupId")] %>%
+    unique() %>%
+    dplyr::mutate(studyId = as.character(studyId)) %>%
+    dplyr::mutate(groupId = as.character(groupId))
+
+  dtDataGroupIds <- rbind(dtDataGroupIds,
+    dtDataGroupIdsNew,
+    fill = TRUE
+  )
+
+  dtDataGroupIds <- dtDataGroupIds[!duplicated(dtDataGroupIds[, c("studyId", "groupId")])]
+
+  xlsxWriteData(wb = wb, sheetName = "DataGroupID", dt = dtDataGroupIds)
+  openxlsx::saveWorkbook(wb, projectConfiguration$dataImporterConfigurationFile, overwrite = TRUE)
+
+  return(invisible())
+}
+
+
+#' coverts data.table with observed to `DataCombined` object
+#'
+#' data.table must be formatted like a table produced by `readObservedDataByDictionary`
+#'
+#' @param dataDT `data.table`to convert
+#'
+#' @return object of class `DataCombined`
+#' @export
+convertDataTableToDataCombined <- function(dataDT) {
+  if (any(is.null(unlist(lapply(dataDT, attr, "columnType"))))) {
+    stop(paste(
+      "There are some data columns without attribute columnType.",
+      "Please use a table generated by readObservedDataByDictionary"
+    ))
+  }
+
+  groupedData <- groupDataByIdentifier(dataDT)
+
+  dataCombined <- ospsuite::DataCombined$new()
+
+  for (groupData in groupedData) {
+    dataSet <- createDataSets(groupData)
+    dataSet <- addMetaDataToDataSet(dataSet, groupData)
+
+    dataCombined$addDataSets(
+      dataSets = dataSet,
+      groups = as.character(groupData$groupId[1])
+    )
+  }
+
+  return(dataCombined)
+}
+
+
+#' groups the data by identifier
+#'
+#' @param dataDT `data.table` to be grouped
+#'
+#' @return list with grouped data
+groupDataByIdentifier <- function(dataDT) {
+  checkmate::assert_disjunct(names(dataDT), ".groupBy")
+  .groupBy <- NULL
+
+  # group data by identifier
+  groupBy <- getColumnsForColumnType(dt = dataDT, columnTypes = "identifier")
+
+  # use a copy, to keep the data.table outside the function unchanged
+  dataDT <- data.table::copy(dataDT) %>%
+    dplyr::group_by_at(dplyr::vars(dplyr::all_of(groupBy))) %>%
+    dplyr::mutate(.groupBy = paste(!!!dplyr::syms(groupBy), sep = "_")) %>%
+    dplyr::ungroup()
+
+  groupedData <- dataDT %>%
+    dplyr::group_split(.groupBy)
+
+  # Create a named list with.groupBy as names
+  names(groupedData) <- unlist(lapply(groupedData, function(x) {
+    unique(x[[".groupBy"]])
+  }))
+
+  return(groupedData)
+}
+
+
+#' select all columns where the attribute `columnType` matches the requirement
+#'
+#' @param dt `data.table` with attributes (e.g. imported by `readObservedDataByDictionary`)
+#' @param columnTypes vector with required types
+#'
+#' @return vector with column names
+#' @export
+getColumnsForColumnType <- function(dt, columnTypes) {
+  columnsWithAttributes <- unlist(lapply(dt, attr, "columnType"))
+
+  columnNames <-
+    names(columnsWithAttributes[columnsWithAttributes %in% columnTypes])
+  return(columnNames)
+}
+
+
+#' Function to create data sets from grouped data
+#'
+#' @param groupData data.table unique for identifier
+#'
+#' @return object of class 'DataSet'
+createDataSets <- function(groupData) {
+  # initialize variables used fo data.tables
+  lloq <- NULL
+
+  groupData <- data.table::as.data.table(groupData)
+  groupName <- groupData$.groupBy[1]
+  dataSet <- ospsuite::DataSet$new(groupName)
+  dataSet$setValues(
+    xValues = groupData$time,
+    yValues = groupData$dv
+  )
+
+  if (dplyr::n_distinct(groupData$dvUnit) > 1) {
+    stop(paste(
+      "DataDT to combinedData: dv Unit for dataset",
+      groupName, "is not unique"
+    ))
+  }
+  dataSet$yUnit <- groupData$dvUnit[1]
+
+  if (dplyr::n_distinct(groupData$timeUnit) > 1) {
+    stop(paste(
+      "DataDT to combinedData: time Unit for dataset",
+      groupName, "is not unique"
+    ))
+  }
+  dataSet$xUnit <- groupData$timeUnit[1]
+
+  if (all(is.na(groupData$lloq))) {
+    lLOQ <- NA
+  } else {
+    lLOQ <- groupData[!is.na(lloq)]$lloq
+    if (dplyr::n_distinct(lLOQ) > 1) {
+      warning(paste(
+        "DataDT to combinedData: More then one LLOQ for dataset",
+        groupName,
+        "is set to minimal"
+      ))
+    }
+    lLOQ <- min(lLOQ)
+  }
+  dataSet$LLOQ <- lLOQ
+
+
+  return(dataSet)
+}
+
+#' add meta data to a data set
+#'
+#' @param dataSet `DataSet` with observed data
+#' @param groupData corresponding datatable with metadat
+#'
+#' @return `DataSet` with observed data with added metadata
+addMetaDataToDataSet <- function(dataSet, groupData) {
+  metaColumns <-
+    getColumnsForColumnType(
+      dt = groupData,
+      columnTypes = c("covariate", "biometrics", "identifier")
+    )
+  metaData <- groupData %>%
+    dplyr::select(dplyr::all_of(metaColumns)) %>%
+    unique() %>%
+    as.list()
+
+  for (col in metaColumns) {
+    dataSet$addMetaData(name = col, value = as.character(metaData[[col]]))
+  }
+
+  return(dataSet)
+}
+
+
+
+#' add Biometric information to config
+#'
+#' @inheritParams source readObservedDataByDictionary
+#' @param observedData `data.table` with oberved data
+#'#' @export
+addBiometricsToConfig <- function(projectConfiguration, observedData, overwrite = FALSE) {
+  checkmate::assertFileExists(projectConfiguration$individualsFile)
+
+  # initialize variables used fo data.tables
+  gender <- NULL
+
+  wb <- openxlsx::loadWorkbook(projectConfiguration$individualsFile)
+
+  dtIndividualBiometrics <- xlsxReadData(wb = wb,sheetName = "IndividualBiometrics")
+
+  biometrics <-
+    observedData %>%
+    dplyr::select(
+      c(
+        "individualId",
+        names(observedData)[unlist(lapply(observedData, attr, "columnType")) == "biometrics"]
+      )
+    ) %>%
+    unique()
+
+  for (col in names(biometrics)) {
+    newName <- grep(col, names(dtIndividualBiometrics), ignore.case = TRUE, value = TRUE)
+    if (newName != "") {
+      data.table::setnames(biometrics, old = col, new = newName)
+    }
+  }
+
+  if (!("Species" %in% names(biometrics))) biometrics[["Species"]] <- ospsuite::Species$Human
+
+  # merge old an new tables
+  dtIndividualBiometrics <-
+    rbind(dtIndividualBiometrics,
+          biometrics,
+          fill = TRUE
+    )
+
+  # if overwrite FALSE take original located at the top, otherwise take new rows located at the bottom
+  dtIndividualBiometrics <-
+    dtIndividualBiometrics[!duplicated(dtIndividualBiometrics,
+                                      by = 'IndividualId',
+                                      fromLast = overwrite)]
+
+  xlsxWriteData(wb = wb, sheetName = "IndividualBiometrics", dt = dtIndividualBiometrics)
+
+  openxlsx::saveWorkbook(wb, projectConfiguration$individualsFile, overwrite = TRUE)
+
+  return(invisible())
+}
+
+

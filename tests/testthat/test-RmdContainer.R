@@ -29,7 +29,6 @@ test_that("Headers, newlines", {
 })
 
 test_that("Figure export", {
-
   rmdContainer <- RmdContainer$new(rmdfolder = projectPath, "timeProfiles")
 
   rmdContainer$addHeader("Section 1")
@@ -45,9 +44,9 @@ test_that("Figure export", {
   )
 
   # files are exported
-  expect_true(file.exists(file.path(projectPath,"timeProfiles",'Fig1.png')))
-  expect_true(file.exists(file.path(projectPath,"timeProfiles",'Fig1.caption')))
-  expect_true(file.exists(file.path(projectPath,"timeProfiles",'Fig1.footnote')))
+  expect_true(file.exists(file.path(projectPath, "timeProfiles", "Fig1.png")))
+  expect_true(file.exists(file.path(projectPath, "timeProfiles", "Fig1.caption")))
+  expect_true(file.exists(file.path(projectPath, "timeProfiles", "Fig1.footnote")))
 
   # it should not be possible to add the same key twice
   expect_error(
@@ -71,7 +70,6 @@ test_that("Figure export", {
 
   testPath <- file.path(projectPath, "Test.Rmd")
   expect_no_error(rmdContainer$writeRmd(basename(testPath)))
-
 })
 
 
@@ -90,18 +88,20 @@ test_that("Table export export", {
   rmdContainer$addAndExportTable(
     table = dt,
     caption = "my Table",
-    tableKey = 'myTable'
+    tableKey = "myTable"
   )
 
-  dt = data.table( d = c(pi,pi*1e-1,pi*100),
-                   d2 = c(pi,pi*1e-2,pi*100),
-                   d3 = c(pi,pi*1e-6,pi*100),
-                   i = seq(1,3))
+  dt <- data.table(
+    d = c(pi, pi * 1e-1, pi * 100),
+    d2 = c(pi, pi * 1e-2, pi * 100),
+    d3 = c(pi, pi * 1e-6, pi * 100),
+    i = seq(1, 3)
+  )
 
   rmdContainer$addAndExportTable(
     table = dt,
     caption = "my Table",
-    tableKey = 'myTable2'
+    tableKey = "myTable2"
   )
 
   # change digits of significance from 3 (default) to not allowed number
@@ -113,14 +113,11 @@ test_that("Table export export", {
   rmdContainer$addAndExportTable(
     table = dt,
     caption = "my Table",
-    tableKey = 'myTabledetailed'
+    tableKey = "myTabledetailed"
   )
 
   testPath <- file.path(projectPath, "Test.Rmd")
   expect_no_error(rmdContainer$writeRmd(basename(testPath)))
-
-
-
 })
 
 

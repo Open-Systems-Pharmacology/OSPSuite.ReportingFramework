@@ -48,7 +48,7 @@ renderWord <- function(fileName,
   }
   if (is.null(wordConversionTemplate)) {
     wordConversionTemplate <-
-      system.file("extdata", "reference.docx", package = "OSPSuite.ReportingFramework")
+      system.file("extdata", "reference.docx", package = "ospsuite.reportingframework")
     doAppendDocToTemplate <- FALSE
   }
   checkmate::assertFileExists(wordConversionTemplate)

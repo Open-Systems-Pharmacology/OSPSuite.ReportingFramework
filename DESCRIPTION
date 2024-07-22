@@ -1,4 +1,4 @@
-Package: OSPSuite.ReportingFramework
+Package: ospsuite.reportingframework
 Type: Package
 Title: Provides a framework for report generation with the ospsuite
 Version: 0.1.0
@@ -30,13 +30,15 @@ Imports:
     ospsuite.plots,
     scales,
     tidyr,
-    cowplot,
+    openxlsx,
     dplyr,
     stats
 Suggests: 
     rstudioapi,
     officer,
     ggplot2,
+    cowplot,
+    spelling,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr

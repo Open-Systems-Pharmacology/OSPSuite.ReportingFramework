@@ -24,7 +24,7 @@ createWorkflowTemplate <- function() {
     template = "template_workflow",
     templatePath = getOption(
       "OSPSuite.RF.PathForWorkflowTemplate",
-      default = system.file("templates", package = "OSPSuite.ReportingFramework")
+      default = system.file("templates", package = "ospsuite.reportingframework")
     )
   )
 }
@@ -37,7 +37,7 @@ createWorkflowTemplate <- function() {
 #'
 #' @export
 createDocumentFromTemplate <- function(template = "template_workflow",
-                                       templatePath = system.file("templates", package = "OSPSuite.ReportingFramework")) {
+                                       templatePath = system.file("templates", package = "ospsuite.reportingframework")) {
   templateFile <- file.path(
     templatePath,
     paste0(template, ".R")
@@ -58,7 +58,7 @@ templateDirectory <- function() {
   system.file(
     "templates",
     "TemplateProject",
-    package = "OSPSuite.ReportingFramework",
+    package = "ospsuite.reportingframework",
     mustWork = TRUE
   )
 }
