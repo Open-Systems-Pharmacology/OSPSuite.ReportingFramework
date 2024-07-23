@@ -40,24 +40,28 @@ randomObservedData <- function() {
       dataDT <- rbind(
         dataDT,
         data.table(
-          studyId = stud, subjectId = subject, individualId = paste0(stud, subject),
-          groupId = stud, outputPathId = "output",
-          time = seq(0, 24, 4), dv = rnorm(7, 40, 2), dvUnit = "ng/L", timeUnit = "h",
+          StudyId = as.character(stud), SubjectId = as.character(subject),
+          IndividualId = paste0(stud, subject),
+          group = as.character(stud), OutputPathId = "output",
+          xValues = seq(0, 24, 4), yValues = rnorm(7, 40, 2), yUnit = "ng/L", xUnit = "h",
           lloq = c(rep(10, 6), NA),
           age = age, weight = weight, height = height, gender = gender, population = "population"
         )
       )
     }
   }
-  for (dc in c("studyId", "subjectId", "individualId", "groupId", "outputPathId")) {
+
+  for (dc in c("StudyId", "SubjectId", "IndividualId", "group", "OutputPathId")) {
     data.table::setattr(dataDT[[dc]], "columnType", "identifier")
   }
-  for (dc in c("time", "dv", "dvUnit", "timeUnit", "lloq")) {
+  for (dc in c("xValues", "yValues", "yUnit", "xUnit", "lloq")) {
     data.table::setattr(dataDT[[dc]], "columnType", "timeprofile")
   }
   for (dc in c("age", "weight", "height", "gender", "population")) {
     data.table::setattr(dataDT[[dc]], "columnType", "covariate")
   }
+
+
 
   return(dataDT)
 }
@@ -118,12 +122,13 @@ setDataDictionary <- function(projectConfiguration) {
 
   tpDictionary <- tpDictionary[targetColumn != "population"]
 
-  tpDictionary[targetColumn == "subjectId"]$sourceColumn <- "SID"
-  tpDictionary[targetColumn == "individualId"]$filterValue <- "paste(STUD,SID,sep = '_')"
-  tpDictionary[targetColumn == "groupId"]$sourceColumn <- "STUD"
-  tpDictionary[targetColumn == "outputPathId"]$sourceColumn <- "MOLECULE"
-  tpDictionary[targetColumn == "time"]$sourceColumn <- "Time"
-  tpDictionary[targetColumn == "dvUnit"]$sourceColumn <- "DV unit"
+  tpDictionary[targetColumn == "SubjectId"]$sourceColumn <- "SID"
+  tpDictionary[targetColumn == "IndividualId"]$filterValue <- "paste(STUD,SID,sep = '_')"
+  tpDictionary[targetColumn == "group"]$sourceColumn <- "STUD"
+  tpDictionary[targetColumn == "OutputPathId"]$sourceColumn <- "MOLECULE"
+  tpDictionary[targetColumn == "xValues"]$sourceColumn <- "Time"
+  tpDictionary[targetColumn == "yValues"]$sourceColumn <- "DV"
+  tpDictionary[targetColumn == "yUnit"]$sourceColumn <- "DVUNIT"
   tpDictionary[targetColumn == "lloq"]$sourceColumn <- ""
   tpDictionary[targetColumn == "lloq"]$filter <- "TRUE"
   tpDictionary[targetColumn == "lloq"]$filterValue <- NA
@@ -134,7 +139,7 @@ setDataDictionary <- function(projectConfiguration) {
 
   tpDictionary <- rbind(
     tpDictionary,
-    tpDictionary[targetColumn == "individualId"] %>%
+    tpDictionary[targetColumn == "IndividualId"] %>%
       dplyr::mutate(targetColumn = "population") %>%
       dplyr::mutate(type = "biometrics") %>%
       dplyr::mutate(filterValue = '"European_ICRP_2002"')
@@ -169,7 +174,7 @@ addRandomSourceData <- function(projectConfiguration) {
           dt,
           data.table(
             SID = sid, STUD = stud,
-            Time = seq(0, 24, 4), "Time unit" = "h", DV = rnorm(7, 40, 2), "DV unit" = "ng/L",
+            Time = seq(0, 24, 4), "Time unit" = "h", DV = rnorm(7, 40, 2), "DVUNIT" = "ng/L",
             Gender = gender, Age = age, Weight = weight, Height = height,
             MOLECULE = molecule, COUNTRY = "Germany"
           )

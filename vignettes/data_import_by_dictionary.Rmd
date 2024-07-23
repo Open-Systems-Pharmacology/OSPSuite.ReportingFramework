@@ -32,17 +32,25 @@ To use the `readObservedDataByDictionary` function, follow these steps:
 
 - Data importer configuration file: Ensure that the Excel template containing the data dictionary and data file information is available and accessible to the function. The data dictionary in the Excel template defines the mapping and conversion rules for the observed data.
 
-- Invoke the Function: Call the `readObservedDataByDictionary` function, passing the project configuration as an argument. The function will read the data files and process the observed data based on the provided dictionary and configuration.
+- Invoke the Function: Call the `readObservedDataByDictionary` function, passing the project configuration as an argument. The function will read the data files and process the observed data based on the provided dictionary and configuration. The function will return the observed data 'as.data.table' based on the dictionary, ready for further analysis.   
 
-- Observed Data: Upon successful execution, the function will return the observed data based on the dictionary, ready for further analysis and validation.
+- Data which is used in other configuration files is also updated: 
 
-- Data Group Id:Additionally the sheet "DataGroupID"  was updated, all missing combination studyId, groupId were added. Here you can add properties like the displayname forthe report.  
+  - Sheet "DataGroupId" in the dataImportConfiguration file. All missing combinations of StudyId, group were added. Here you can add properties like the displayname for the report.  
+  - Sheet "OutputPaths" in the Scenario definition file. All missing OutputPathIds are added. Her you can add output paths, molweights and display names for report.  
+  - Sheet "IndividualBiometrics" in the Individual parameter file. All biometrics contained in the data are added.  
+  
+- Convert the data to the dataCombined format: Call `convertDataTableToDataCombined(dataDT)` 
+  
 
 ```{r readObservedDataByDictionary, eval = FALSE, echo = TRUE}
 # Call the readObservedDataByDictionary function
-processedData <- readObservedDataByDictionary(projectConfiguration,
+dataDT <- readObservedDataByDictionary(projectConfiguration,
   dataType = DATATYPE$individual
 )
+
+dataCombined <- convertDataTableToDataCombined(dataDT)
+
 ```
 
 
@@ -50,16 +58,16 @@ processedData <- readObservedDataByDictionary(projectConfiguration,
 
 To effectively fill the Excel table for use with the `readObservedDataByDictionary` function, follow these guidelines:
 
-## DataFiles Sheet: 
+## "DataFiles" Sheet: 
 
 In the "DataFiles" sheet of the Excel template, provide the following information:
 
-- DataFile: Path of the CSV file relative to the configuration XLSX.
-- Dictionary: Sheet name for the data dictionary.
-- DataFilter: An R executable expression that filters relevant data for the study. If empty, no filter is applied.
-- DataType: type of Data, available is `r paste0('"',paste(unlist(DATATYPE),collapse = '", "'),'"')`
+- **DataFile**: Path of the CSV file relative to the configuration XLSX.
+- **Dictionary**: Sheet name for the data dictionary.
+- **DataFilter**: An R executable expression that filters relevant data for the study. If empty, no filter is applied.
+- **DataType**: type of Data, available is `r paste0('"',paste(unlist(DATATYPE),collapse = '", "'),'"')`
 
-## tpDictionary Sheet: 
+## "tpDictionary" Sheet: 
 
 In the "tpDictionary" sheet, define the data dictionary with the following columns:
 
@@ -69,23 +77,23 @@ In the "tpDictionary" sheet, define the data dictionary with the following colum
       
       - **identifier** all identifiers are mandatory:  
       
-         - studyId: id of study
-         - subjectId: id of subject with the study
-         - individualId: unique individual id over all studies
-         - groupId: identifier for data group, typically a study arm
-         - outputPathId: identifier for the output.
+         - StudyId: id of study
+         - SubjectId: id of subject with the study
+         - IndividualId: unique individual id over all studies
+         - group: identifier for data group, typically a study arm
+         - OutputPathId: identifier for the output.
          
       - **timeprofile** columns used to process time profiles.
-         The columns 'time','dv','dvUnit','lloq' are alyways mandatory, 
-         for aggregated data the columns yErrorValues, yErrorType, n_belowLLOQ are also needed:
+         The columns 'xValues','yValues','yUnit','lloq' are alyways mandatory, 
+         for aggregated data the columns yErrorValues, yErrorType, nBelowLLOQ are also needed:
       
         - time: time values, unit is specified in dictionary
-        - dv: data value
-        - dvUnit: unit of data value, (is also valid for all corresponding columns like lloq, yErrorValues)
-        - lloq: lower limit for quantification,  for values below lloq set dv to lloq/2, if not available set to NA  
+        - yValues: data value
+        - yUnit: unit of data value, (is also valid for all corresponding columns like lloq, yErrorValues)
+        - lloq: lower limit for quantification,  for values below lloq set yValues to lloq/2, if not available set to NA  
         - yErrorValues: value of aggregation range, 
         - yErrorType: type of aggregation range 
-        - n_belowLLOQ: number of values below lloq
+        - nBelowLLOQ: number of values below lloq
 
       - **biometrics** columns used to create individuals, can be used also for covariate analysis 
       All columns are optional, The values are transferred to the 'Individual.xlsx' for further use. 
@@ -99,7 +107,7 @@ In the "tpDictionary" sheet, define the data dictionary with the following colum
         - population: population make sure to translate to one of the available PK-Sim Populations
         (see ospsuite::HumanPopulation)
 
-      - **covariate** columns used for covariate anaylsis, this is the only column type where the name of the
+      - **covariate** columns used for covariate analysis, this is the only column type where the name of the
       targetcolumn can be freely assigned by the user.
 
   - **sourceColumn**: Name of the column in the source CSV.  
@@ -109,7 +117,7 @@ In the "tpDictionary" sheet, define the data dictionary with the following colum
 
 By filling out the Excel table with the required information, you can ensure that the `readObservedDataByDictionary` function can effectively read and process the observed data based on the provided data dictionary and configuration.  
 
-## DataGroupID sheet:  
+## "DataGroupId" sheet:  
 
 
 This sheet is not needed by the function call `readObservedDataByDictionary`. It provides a set of columns to customize the plots, tables and electronic package exports relating to the `groupId` of the data
@@ -170,7 +178,7 @@ knitr::kable(tpDictionary)
 
 This sheet is used for individual data. Th columns yErrorValues, yErrorType and n_belowLLOQ are missing.  
 
-The individualId was contructed as concatenation of study Id and Individual id. 
+The individualId was contsructed as concatenation of study Id and Individual id. 
 As we want to do this for all rows filter was set to `TRUE` and the r expression, which does the concatenation was placed in the column `filterValue`.
 
 The dictionary contains two rows for the target column population. With the first row all data rows where the source columnn `RACENAME` is "White" are set to "European_ICRP_2002", with the second row Asians are set to "Asian_Tanaka_1996".

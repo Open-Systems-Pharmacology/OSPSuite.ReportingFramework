@@ -1,6 +1,6 @@
 #' adds a new sheet to a workbook
 #'
-#' wrappes openxlsx::addWorksheet, and adds new data to the sheet
+#' wrapps `openxlsx::addWorksheet`, and adds new data to the sheet
 #'
 #' @inheritParams openxlsx::addWorksheet
 #' @param dt `data.table`  to attach
@@ -21,7 +21,7 @@ xlsxAddSheet <- function(wb, sheetName, dt) {
 
 #' adds data to worksheet
 #'
-#' wrappes openxlsx::writeData, but delete before all current content
+#' wrapps `openxlsx::writeData`, but delete before all current content
 #'
 #' @inheritParams openxlsx::writeData
 #' @param dt `data.table` to write
@@ -40,7 +40,7 @@ xlsxWriteData <- function(wb, sheetName, dt) {
 
 #' create a clone of a sheet and set new contet
 #'
-#' wrappes openxlsx::cloneWorksheet but set new content
+#' wrapps openxlsx::cloneWorksheet but set new content
 #'
 #' @inheritParams openxlsx::cloneWorksheet
 #' @param dt `data.table` with new content
@@ -63,21 +63,45 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 
 #' reads data
 #'
-#' wrappes openxlsx::read.xlsx but returns data as data.table()
+#' wrapps `openxlsx::read.xlsx` but returns data as data.table()
 #'
 #'
 #' @param wb workbook or xlsxfile
 #' @param sheetName sheet name
+#' @param skipDescriptionRow `boolean`if TRUE first line is interpreted as a description and skipped
+#' @param alwaysCharacter vector with column names which should be returned as character (typically identifier)
 #'
 #' @return `data.table` with sheet data
 #' @export
-xlsxReadData <- function(wb, sheetName) {
+xlsxReadData <- function(wb, sheetName,
+                         skipDescriptionRow = FALSE,
+                         alwaysCharacter = c('IndividualId','StudyId','group','OutputPathId')) {
   dt <- data.table::setDT(openxlsx::read.xlsx(
     xlsxFile = wb,
     sheet = sheetName,
     sep.names = " ",
     skipEmptyRows = TRUE
   ))
+
+  if (skipDescriptionRow){
+    dt <- dt[-1, ]
+  }
+
+  # Convert columns to character or numeric
+  alwaysCharacter <- intersect(names(dt),alwaysCharacter)
+  if (length(alwaysCharacter) > 0)
+    dt[, (alwaysCharacter) := lapply(.SD, as.character), .SDcols = alwaysCharacter]
+
+  numericCols <- names(dt)[sapply(dt, is.numeric)] %>%
+    setdiff(alwaysCharacter)
+  if (length(numericCols) > 0)
+    dt[, (numericCols) := lapply(.SD, as.numeric), .SDcols = numericCols]
+
+  characterCols <- setdiff(names(dt),numericCols)
+  if (length(characterCols) > 0)
+    dt[, (characterCols) := lapply(.SD, trimws), .SDcols = characterCols]
+
+  dt[dt == ""] <- NA
 
   return(dt)
 }

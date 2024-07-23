@@ -4,12 +4,12 @@
 \alias{validateObservedData}
 \title{Validate observed data}
 \usage{
-validateObservedData(data, stopIfValidationFails = TRUE)
+validateObservedData(dataDT, stopIfValidationFails = TRUE)
 }
 \arguments{
-\item{data}{The observed dataset}
-
 \item{stopIfValidationFails}{Flag to indicate whether to stop if validation fails}
+
+\item{data}{The observed dataset}
 }
 \description{
 This function checks the validity of the observed dataset.

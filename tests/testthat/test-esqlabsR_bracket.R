@@ -58,25 +58,25 @@ projectPath <- iniLogFileForTest()
 
 test_that("initProject creates project folder structure", {
   # Call the function being tested
-  projectConfiguration <- setUpTestProject(projectPath)
+  projectConfiguration <- suppressMessages(setUpTestProject(projectPath))
 
   expect_s3_class(projectConfiguration, "ProjectConfiguration")
 
   scenarioList <-
-    createScenarios.wrapped(projectConfiguration = projectConfiguration)
+    suppressWarnings(createScenarios.wrapped(projectConfiguration = projectConfiguration))
 
   # Perform assertions
   expect_true(length(scenarioList) > 0)
 
-  resultList <- runScenarios.wrapped(scenarioList = scenarioList)
+  suppressMessages(runAndSaveScenarios(projectConfiguration = projectConfiguration,
+                      scenarioList = scenarioList,
+                      simulationRunOptions = SimulationRunOptions$new(
+                        numberOfCores = NULL,
+                        checkForNegativeValues = NULL,
+                        showProgress = TRUE
+                      )))
 
-  # Perform assertions
-  expect_true(length(resultList) > 0)
 
-  saveScenarioResults.wrapped(
-    simulatedScenariosResults = resultList,
-    projectConfiguration = projectConfiguration
-  )
 
   expect_true(length(list.files(file.path(projectConfiguration$outputFolder, "SimulationResults"))) > 0)
 })

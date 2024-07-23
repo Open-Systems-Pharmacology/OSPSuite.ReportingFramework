@@ -4,75 +4,83 @@
 #'
 #' @param projectConfiguration The project configuration
 #' @param dataType type of data, available `r paste0('"',paste(unlist(DATATYPE),collapse = '", "'),'"')`
+#' @param addBiometricsToConfigFlag if TRUE inividual biometrics are added  to Individualxlsx,
+#    needed if you want to create individuals bases on this data
 #'
 #' @return Processed data based on the dictionary
 #' @export
 readObservedDataByDictionary <- function(projectConfiguration,
-                                         dataType = unlist(DATATYPE)) { # nolint
+                                         dataType = unlist(DATATYPE),
+                                         addBiometricsToConfigFlag = TRUE) { # nolint
   checkmate::assertFileExists(projectConfiguration$dataImporterConfigurationFile)
   dataType <- match.arg(dataType)
 
-  logCatch({
-    dataList <- xlsxReadData(wb = projectConfiguration$dataImporterConfigurationFile, sheetName =  "DataFiles")
-    # delete description line and empty lines
-    dataList <- dataList[-1, ]
-    dataList <- dataList[rowSums(is.na(dataList)) < ncol(dataList), ]
+  dataList <- xlsxReadData(wb = projectConfiguration$dataImporterConfigurationFile,
+                           sheetName =  "DataFiles",
+                           skipDescriptionRow = TRUE)
 
-    # filter for DataType
-    dataList <- dataList[dataList$DataType == dataType]
+  # filter for DataType
+  dataList <- dataList[dataList$DataType == dataType]
 
-    # loop on selected datafiles
-    data <- data.table()
-    dict <- list()
-    for (d in split(dataList, seq_len(nrow(dataList)))) {
-      tmpData <- data.table::fread(fs::path_abs(
-        start = projectConfiguration$projectConfigurationDirPath,
-        path = d$DataFile
-      ))
+  # loop on selected datafiles
+  dataDT <- data.table()
+  dict <- list()
+  for (d in split(dataList, seq_len(nrow(dataList)))) {
+    tmpData <- data.table::fread(fs::path_abs(
+      start = projectConfiguration$projectConfigurationDirPath,
+      path = d$DataFile
+    ))
 
-      tmpdict <- readDataDictionary(
-        dictionaryFile = projectConfiguration$dataImporterConfigurationFile,
-        sheet = d$Dictionary,
-        data = tmpData,
-        dataType = dataType
-      )
+    tmpdict <- readDataDictionary(
+      dictionaryFile = projectConfiguration$dataImporterConfigurationFile,
+      sheet = d$Dictionary,
+      data = tmpData,
+      dataType = dataType
+    )
 
-      data <- rbind(data,
-        convertDataByDictionary(
-          data = tmpData,
-          dataFilter = d$DataFilter,
-          dict = tmpdict,
-          dictionaryName = d$Dictionary
-        ),
-        fill = TRUE
-      )
+    dataDT <- rbind(dataDT,
+                  convertDataByDictionary(
+                    data = tmpData,
+                    dataFilter = d$DataFilter,
+                    dict = tmpdict,
+                    dictionaryName = d$Dictionary
+                  ),
+                  fill = TRUE
+    )
 
-      # get unique dictionary for columnType
-      tmpdict <-
-        tmpdict %>%
-        dplyr::select(c("targetColumn", "type")) %>%
-        unique()
+    # get unique dictionary for columnType
+    tmpdict <-
+      tmpdict %>%
+      dplyr::select(c("targetColumn", "type")) %>%
+      unique()
 
-      dict <- utils::modifyList(
-        dict,
-        as.list(tmpdict$type) %>%
-          stats::setNames(tmpdict$targetColumn)
-      )
-    }
+    dict <- utils::modifyList(
+      dict,
+      as.list(tmpdict$type) %>%
+        stats::setNames(tmpdict$targetColumn)
+    )
+  }
 
-    # add dictionary as attributes
-    dict[["timeUnit"]] <- "timeprofile"
-    for (dc in names(dict)) {
-      data.table::setattr(data[[dc]], "columnType", dict[[dc]])
-    }
-
-    validateObservedData(data, stopIfValidationFails = FALSE)
-
-    # update sheet DataGroupId
-    updateDataGroupId(projectConfiguration, data)
+  # add dictionary as attributes
+  dict[["xUnit"]] <- "timeprofile"
+  lapply(names(dict), function(dc) {
+    data.table::setattr(dataDT[[dc]], "columnType", dict[[dc]])
   })
 
-  return(data)
+  validateObservedData(dataDT = dataDT, stopIfValidationFails = FALSE)
+
+  # spread data to other tables
+  updateDataGroupId(projectConfiguration = projectConfiguration,
+                    dataDT = dataDT)
+
+  updateOutputPathId(projectConfiguration = projectConfiguration,
+                     dataDT = dataDT)
+
+  if (addBiometricsToConfigFlag)
+    addBiometricsToConfig(observedData = dataDT,
+                          projectConfiguration = projectConfiguration)
+
+  return(dataDT)
 }
 
 
@@ -82,20 +90,34 @@ readObservedDataByDictionary <- function(projectConfiguration,
 #'
 #' @param data The observed dataset
 #' @param stopIfValidationFails Flag to indicate whether to stop if validation fails
-validateObservedData <- function(data, stopIfValidationFails = TRUE) {
+validateObservedData <- function(dataDT, stopIfValidationFails = TRUE) {
   # initialize variables used fo data.tables
-  dvUnit <- NULL
+  yUnit <- NULL
 
   .returnMessage <- function(msg, stopIfValidationFails) {
     if (stopIfValidationFails) stop(msg)
     warning(msg)
   }
 
+  # check colIdentifier
+  columnsWithAttributes <- lapply(dataDT, attr, "columnType")
+  columnsWithAttributes <-
+    names(columnsWithAttributes)[unlist(lapply(columnsWithAttributes, function(col) {
+      !is.null(col)
+    }))]
+  if (!all(names(dataDT) %in% columnsWithAttributes))
+    .returnMessage(
+      paste0(
+        'Some data columns have no attribute: "',
+        paste(setdiff(names(dataDT),columnsWithAttributes), collapse = '", "'),
+        '"'
+      ),
+      stopIfValidationFails
+    )
   # check data validity
   colIdentifier <-
-    c("individualId", "groupId", "outputPathId", "time")
-  if (any(duplicated(data %>%
-                     dplyr::select(dplyr::all_of(colIdentifier))))) {
+    c("IndividualId", "group", "OutputPathId", "xValues")
+  if (any(duplicated(dataDT , by = colIdentifier))) {
     .returnMessage(
       paste(
         "data is not unique in columns",
@@ -104,18 +126,18 @@ validateObservedData <- function(data, stopIfValidationFails = TRUE) {
       stopIfValidationFails
     )
   }
-  for (col in setdiff(names(data), c("lloq", "dvUnit"))) {
-    if (any(is.na(data[[col]]) | data[[col]] == "")) {
+  for (col in setdiff(names(dataDT), c("lloq", "yUnit"))) {
+    if (any(is.na(dataDT[[col]]) | dataDT[[col]] == "")) {
       .returnMessage(
         paste("data contains NAs or empty values in column", col),
         stopIfValidationFails
       )
       print(paste("empty entries in", col))
-      print(data[is.na(get(col)) | get(col) == ""])
+      print(dataDT[is.na(get(col)) | get(col) == ""])
     }
   }
-  colIdentifier <- c("groupId", "outputPathId")
-  if (any(data[, .(N = dplyr::n_distinct(dvUnit)), by = "outputPathId"]$N > 1)) { # nolint
+  colIdentifier <- c("group", "OutputPathId")
+  if (any(dataDT[, .(N = dplyr::n_distinct(yUnit)), by = "OutputPathId"]$N > 1)) { # nolint
     .returnMessage(
       paste("data is not unique in columns", paste(colIdentifier, collapse = ", ")),
       stopIfValidationFails
@@ -137,28 +159,22 @@ readDataDictionary <- function(dictionaryFile, sheet, data, dataType) {
   # initialize variables used fo data.tables
   sourceColumn <- filter <- targetColumn <- NULL
 
-  dict <- xlsxReadData(wb = dictionaryFile, sheetName = sheet) %>%
-    data.table::setDT()
-  dict <- dict[-1, ]
-  dict <- dict[rowSums(is.na(dict)) < ncol(dict), ]
-  dict[,targetColumn := trimws(targetColumn)]
-  dict[,sourceColumn := trimws(sourceColumn)]
-  dict[,sourceColumn := ifelse(sourceColumn == '',NA,sourceColumn)]
+  dict <- xlsxReadData(wb = dictionaryFile, sheetName = sheet,skipDescriptionRow = TRUE)
 
   # filter for Type
   if (dataType == DATATYPE$individual) {
-    dict <- dict[!(targetColumn %in% c("yErrorValues", "yErrorType", "n_belowLLOQ")), ]
+    dict <- dict[!(targetColumn %in% c("yErrorValues", "yErrorType", "nBelowLLOQ")), ]
   }
 
   checkmate::assertNames(
     dict$targetColumn,
     must.include = c(
-      "individualId",
-      "groupId",
-      "outputPathId",
-      "time",
-      "dv",
-      "dvUnit"
+      "IndividualId",
+      "group",
+      "OutputPathId",
+      "xValues",
+      "yValues",
+      "yUnit"
     ), .var.name = paste("Check for missing targetColumns in  dictionary", sheet)
   )
 
@@ -169,7 +185,8 @@ readDataDictionary <- function(dictionaryFile, sheet, data, dataType) {
 
   checkmate::assertNames(
     x = dict[!is.na(sourceColumn)]$sourceColumn,
-    subset.of = names(data)
+    subset.of = names(data),
+    .var.name = paste('Source column of',sheet)
   )
 
   return(dict)
@@ -190,7 +207,7 @@ convertDataByDictionary <- function(data,
                                     dict,
                                     dictionaryName) {
   # initialize variables used fo data.tables
-  targetColumn <- sourceColumn <- timeUnit <- NULL
+  targetColumn <- sourceColumn <- xUnit <- NULL
 
   # execute data Filter
   if (!is.na(dataFilter) & dataFilter != "") data <- data[eval(parse(text = dataFilter))]
@@ -226,8 +243,11 @@ convertDataByDictionary <- function(data,
     dplyr::select(unique(dict$targetColumn))
 
   # add time unit
-  data[, timeUnit := dict[targetColumn == "time"]$sourceUnit]
+  data[, xUnit := dict[targetColumn == "xValues"]$sourceUnit]
 
+  # transfer identifier to character
+  identifierCols <- dict[type == 'identifier']$targetColumn
+  data[, (identifierCols) := lapply(.SD, as.character), .SDcols = identifierCols]
 
   data <- convertBiometrics(data,dict)
 
@@ -278,32 +298,63 @@ convertBiometrics <- function(data, dict,dictionaryName) {
   return(data)
 }
 
-#' Add group ids of observed data to configration sheet
+#' Add group ids of observed data to configuration sheet
 #'
 #' @param projectConfiguration The project configuration
 #' @param data `data.table`with observed Data
-updateDataGroupId <- function(projectConfiguration, data) {
+updateDataGroupId <- function(projectConfiguration, dataDT) {
   # initialize variables used fo data.tables
-  studyId <- groupId <- NULL
+  StudyId <- group <- NULL
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$dataImporterConfigurationFile)
 
   dtDataGroupIds <- xlsxReadData(wb = wb, sheetName = "DataGroupID")
 
-  dtDataGroupIdsNew <- data[, c("studyId", "groupId")] %>%
+  dtDataGroupIdsNew <- dataDT[, c("StudyId", "group")] %>%
     unique() %>%
-    dplyr::mutate(studyId = as.character(studyId)) %>%
-    dplyr::mutate(groupId = as.character(groupId))
+    dplyr::mutate(StudyId = as.character(StudyId)) %>%
+    dplyr::mutate(group = as.character(group))
 
   dtDataGroupIds <- rbind(dtDataGroupIds,
-    dtDataGroupIdsNew,
-    fill = TRUE
+                          dtDataGroupIdsNew,
+                          fill = TRUE
   )
 
-  dtDataGroupIds <- dtDataGroupIds[!duplicated(dtDataGroupIds[, c("studyId", "groupId")])]
+  dtDataGroupIds <- dtDataGroupIds[!duplicated(dtDataGroupIds[, c("StudyId", "group")])]
 
   xlsxWriteData(wb = wb, sheetName = "DataGroupID", dt = dtDataGroupIds)
   openxlsx::saveWorkbook(wb, projectConfiguration$dataImporterConfigurationFile, overwrite = TRUE)
+
+  return(invisible())
+}
+
+
+#' Add outputpath ids of observed data to configuration sheet
+#'
+#' @param projectConfiguration The project configuration
+#' @param data `data.table`with observed Data
+updateOutputPathId <- function(projectConfiguration, dataDT) {
+  # initialize variables used fo data.tables
+  OutputPathId <- NULL
+
+  wb <- openxlsx::loadWorkbook(projectConfiguration$scenarioDefinitionFile)
+
+  dtOutputPaths <- xlsxReadData(wb = wb, sheetName = "OutputPaths")
+
+  dtOutputPathsNew <- dataDT[, c("OutputPathId")] %>%
+    unique() %>%
+    dplyr::mutate(OutputPathId = as.character(OutputPathId))  %>%
+    data.table::setnames('OutputPathId','OutputPathId')
+
+  dtOutputPaths <- rbind(dtOutputPaths,
+                          dtOutputPathsNew,
+                          fill = TRUE
+  )
+
+  dtOutputPaths <- dtOutputPaths[!duplicated(dtOutputPaths,by = 'OutputPathId')]
+
+  xlsxWriteData(wb = wb, sheetName = "OutputPaths", dt = dtOutputPaths)
+  openxlsx::saveWorkbook(wb, projectConfiguration$scenarioDefinitionFile, overwrite = TRUE)
 
   return(invisible())
 }
@@ -318,6 +369,7 @@ updateDataGroupId <- function(projectConfiguration, data) {
 #' @return object of class `DataCombined`
 #' @export
 convertDataTableToDataCombined <- function(dataDT) {
+
   if (any(is.null(unlist(lapply(dataDT, attr, "columnType"))))) {
     stop(paste(
       "There are some data columns without attribute columnType.",
@@ -335,7 +387,7 @@ convertDataTableToDataCombined <- function(dataDT) {
 
     dataCombined$addDataSets(
       dataSets = dataSet,
-      groups = as.character(groupData$groupId[1])
+      groups = as.character(groupData$displayName[1])
     )
   }
 
@@ -350,7 +402,24 @@ convertDataTableToDataCombined <- function(dataDT) {
 #' @return list with grouped data
 groupDataByIdentifier <- function(dataDT) {
   checkmate::assert_disjunct(names(dataDT), ".groupBy")
-  .groupBy <- NULL
+  checkmate::assert_disjunct(names(dataDT), "displayName")
+  .groupBy <- displayName <- NULL
+
+
+  dtDataGroupIds <- xlsxReadData(wb = projectConfiguration$dataImporterConfigurationFile,
+                                 sheetName = 'DataGroupID')
+
+  checkmate::assertCharacter(dtDataGroupIds[!is.na(dtDataGroupIds$displayName)]$displayName,
+                             unique = TRUE,.var.name = 'display Name of data group')
+
+  dataDT <- data.table::copy(dataDT) %>%
+    merge(dtDataGroupIds,
+          by = c('StudyId','group'),
+          all.x = TRUE)
+  lapply(c('StudyId','group'), function(col) {
+    data.table::setattr(dataDT[[col]], "columnType", 'identifier')
+  })
+
 
   # group data by identifier
   groupBy <- getColumnsForColumnType(dt = dataDT, columnTypes = "identifier")
@@ -359,7 +428,8 @@ groupDataByIdentifier <- function(dataDT) {
   dataDT <- data.table::copy(dataDT) %>%
     dplyr::group_by_at(dplyr::vars(dplyr::all_of(groupBy))) %>%
     dplyr::mutate(.groupBy = paste(!!!dplyr::syms(groupBy), sep = "_")) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
+    dplyr::mutate(displayName := ifelse(is.na(displayName),.groupBy,displayName))
 
   groupedData <- dataDT %>%
     dplyr::group_split(.groupBy)
@@ -402,29 +472,28 @@ createDataSets <- function(groupData) {
   groupName <- groupData$.groupBy[1]
   dataSet <- ospsuite::DataSet$new(groupName)
   dataSet$setValues(
-    xValues = groupData$time,
-    yValues = groupData$dv
+    xValues = groupData$xValues,
+    yValues = groupData$yValues
   )
 
-  if (dplyr::n_distinct(groupData$dvUnit) > 1) {
+  if (dplyr::n_distinct(groupData$yUnit) > 1) {
     stop(paste(
       "DataDT to combinedData: dv Unit for dataset",
       groupName, "is not unique"
     ))
   }
-  dataSet$yUnit <- groupData$dvUnit[1]
+  dataSet$yDimension <- ospsuite::getDimensionForUnit(groupData$yUnit[1])
+  dataSet$yUnit <- groupData$yUnit[1]
 
-  if (dplyr::n_distinct(groupData$timeUnit) > 1) {
+  if (dplyr::n_distinct(groupData$xUnit) > 1) {
     stop(paste(
       "DataDT to combinedData: time Unit for dataset",
       groupName, "is not unique"
     ))
   }
-  dataSet$xUnit <- groupData$timeUnit[1]
+  dataSet$xUnit <- groupData$xUnit[1]
 
-  if (all(is.na(groupData$lloq))) {
-    lLOQ <- NA
-  } else {
+  if (any(!is.na(groupData$lloq))) {
     lLOQ <- groupData[!is.na(lloq)]$lloq
     if (dplyr::n_distinct(lLOQ) > 1) {
       warning(paste(
@@ -434,8 +503,8 @@ createDataSets <- function(groupData) {
       ))
     }
     lLOQ <- min(lLOQ)
+    dataSet$LLOQ <- lLOQ
   }
-  dataSet$LLOQ <- lLOQ
 
 
   return(dataSet)
@@ -443,8 +512,8 @@ createDataSets <- function(groupData) {
 
 #' add meta data to a data set
 #'
-#' @param dataSet `DataSet` with observed data
-#' @param groupData corresponding datatable with metadat
+#' @param dataSet `DataSet` object with observed data
+#' @param groupData corresponding `data.table` with meta data
 #'
 #' @return `DataSet` with observed data with added metadata
 addMetaDataToDataSet <- function(dataSet, groupData) {
@@ -467,16 +536,20 @@ addMetaDataToDataSet <- function(dataSet, groupData) {
 
 
 
-#' add Biometric information to config
+#' add bio-metrics   information to config
 #'
-#' @inheritParams source readObservedDataByDictionary
-#' @param observedData `data.table` with oberved data
-#'#' @export
+#' @param projectConfiguration The project configuration
+#' @param observedData `data.table` with observed data
+#' @param overwrite if TRUE existing rows will be overwritten
+#'
+#' @export
 addBiometricsToConfig <- function(projectConfiguration, observedData, overwrite = FALSE) {
   checkmate::assertFileExists(projectConfiguration$individualsFile)
 
   # initialize variables used fo data.tables
   gender <- NULL
+
+  validateObservedData(dataDT = dataDT, stopIfValidationFails = FALSE)
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$individualsFile)
 
@@ -486,7 +559,7 @@ addBiometricsToConfig <- function(projectConfiguration, observedData, overwrite 
     observedData %>%
     dplyr::select(
       c(
-        "individualId",
+        "IndividualId",
         names(observedData)[unlist(lapply(observedData, attr, "columnType")) == "biometrics"]
       )
     ) %>%
@@ -511,8 +584,8 @@ addBiometricsToConfig <- function(projectConfiguration, observedData, overwrite 
   # if overwrite FALSE take original located at the top, otherwise take new rows located at the bottom
   dtIndividualBiometrics <-
     dtIndividualBiometrics[!duplicated(dtIndividualBiometrics,
-                                      by = 'IndividualId',
-                                      fromLast = overwrite)]
+                                       by = 'IndividualId',
+                                       fromLast = overwrite)]
 
   xlsxWriteData(wb = wb, sheetName = "IndividualBiometrics", dt = dtIndividualBiometrics)
 

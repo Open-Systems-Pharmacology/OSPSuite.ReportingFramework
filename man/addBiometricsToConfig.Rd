@@ -7,7 +7,11 @@
 addBiometricsToConfig(projectConfiguration, observedData, overwrite = FALSE)
 }
 \arguments{
-\item{overwrite}{}
+\item{projectConfiguration}{The project configuration}
+
+\item{observedData}{`data.table` with observed data}
+
+\item{overwrite}{if TRUE existing rows will be overwritten}
 }
 \description{
 add Biometric information to config

@@ -57,11 +57,9 @@ initProject <- function(projectPath = ".",
 #'
 #' @export
 createDefaultProjectConfiguration.wrapped <- function(path) { # nolint
-  logCatch({
     projectConfiguration <- esqlabsR::createDefaultProjectConfiguration(path = path)
 
     message(paste(utils::capture.output(projectConfiguration), collapse = "\n"))
-  })
 
   return(projectConfiguration)
 }
@@ -79,53 +77,48 @@ createDefaultProjectConfiguration.wrapped <- function(path) { # nolint
 #' @export
 createScenarios.wrapped <- function(projectConfiguration, # nolint
                                     scenarioNames = NULL) {
-  logCatch({
-    scenarioList <-
-      esqlabsR::createScenarios(
-        esqlabsR::readScenarioConfigurationFromExcel(
-          scenarioNames = scenarioNames,
-          projectConfiguration = projectConfiguration
-        )
+  scenarioList <-
+    esqlabsR::createScenarios(
+      esqlabsR::readScenarioConfigurationFromExcel(
+        scenarioNames = scenarioNames,
+        projectConfiguration = projectConfiguration
       )
-  })
+    )
+
   return(scenarioList)
 }
 
 #' Run a set of scenarios.
 #'
-#' wrap of `esqlabsR::runScenarios`
+#' uses `esqlabsR::runScenarios` and `esqlabsR::saveScenarioResults
+#' runs the simulations and save the result`
 #'
-#' @param scenarioList  Named list of Scenario objects.
-#' @param ... passed to esqlabsR::runScenarios
-#'
-#' @return  Named list of simulation results
-#' @export
-runScenarios.wrapped <- function(scenarioList, ...) { # nolint
-  logCatch(
-    scenarioResults <- esqlabsR::runScenarios(scenarios = scenarioList, ...)
-  )
-
-  return(scenarioResults)
-}
-
-#' Save results of scenario simulations to .csv file
-#'
-#' wrap of `esqlabsR::saveScenarioResults`
-#'
-#' @param simulatedScenariosResults Named list with `simulation`, `results`, `outputValues`, and `population` as produced by runScenarios()
 #' @param projectConfiguration An instance of ProjectConfiguration
+#' @param scenarioList  Named list of Scenario objects.
+#' @param simulationRunOptions Object of type SimulationRunOptions that will be passed to simulation runs.
+#' If NULL, default options are used.
 #' @param ... arguments passed to esqlabsR::saveScenarioResults
 #'
 #' @export
-saveScenarioResults.wrapped <- function(simulatedScenariosResults, # nolint
-                                        projectConfiguration, ...) {
-  logCatch({
-    outputFolder <- file.path(projectConfiguration$outputFolder, "SimulationResults")
+runAndSaveScenarios <- function(projectConfiguration,
+                                 scenarioList,
+                                 simulationRunOptions = NULL,
+                                 ...) { # nolint
+
+  outputFolder <- file.path(projectConfiguration$outputFolder, "SimulationResults")
+
+  for (sc in names(scenarioList)){
+    message(paste('Start simulation of',sc))
+
+    scenarioResults <- esqlabsR::runScenarios(scenarios = scenarioList[sc], ...)
+
     esqlabsR::saveScenarioResults(
-      simulatedScenariosResults = simulatedScenariosResults,
+      simulatedScenariosResults = scenarioResults,
       projectConfiguration = projectConfiguration,
       outputFolder = outputFolder,
       ...
     )
-  })
+  }
+
+  return(invisible())
 }

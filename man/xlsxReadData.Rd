@@ -4,12 +4,21 @@
 \alias{xlsxReadData}
 \title{reads data}
 \usage{
-xlsxReadData(wb, sheetName)
+xlsxReadData(
+  wb,
+  sheetName,
+  skipDescriptionRow = FALSE,
+  alwaysCharacter = c("IndividualId", "StudyId", "group", "OutputPathId")
+)
 }
 \arguments{
 \item{wb}{workbook or xlsxfile}
 
 \item{sheetName}{sheet name}
+
+\item{skipDescriptionRow}{`boolean`if TRUE first line is interpreted as a description and skipped}
+
+\item{alwaysCharacter}{vector with column names which should be returned as character (typically identifier)}
 }
 \value{
 `data.table` with sheet data

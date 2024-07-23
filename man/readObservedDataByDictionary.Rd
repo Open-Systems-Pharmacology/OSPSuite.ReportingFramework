@@ -4,12 +4,18 @@
 \alias{readObservedDataByDictionary}
 \title{Read data by dictionary}
 \usage{
-readObservedDataByDictionary(projectConfiguration, dataType = unlist(DATATYPE))
+readObservedDataByDictionary(
+  projectConfiguration,
+  dataType = unlist(DATATYPE),
+  addBiometricsToConfigFlag = TRUE
+)
 }
 \arguments{
 \item{projectConfiguration}{The project configuration}
 
 \item{dataType}{type of data, available `r paste0('"',paste(unlist(DATATYPE),collapse = '", "'),'"')`}
+
+\item{addBiometricsToConfigFlag}{if TRUE inividual biometrics are added  to Individualxlsx,}
 }
 \value{
 Processed data based on the dictionary

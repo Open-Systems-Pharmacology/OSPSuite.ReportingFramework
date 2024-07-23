@@ -30,113 +30,114 @@ projectPath <- initProject(
 # initialize log file
 initLogfunction(projectPath)
 
-# get paths of all relevant project files
-projectConfiguration <-
-  createDefaultProjectConfiguration.wrapped(
-    path = file.path(myProjectPath, "ProjectConfiguration.xlsx")
+logCatch({
+
+  # get paths of all relevant project files
+  projectConfiguration <-
+    createDefaultProjectConfiguration.wrapped(
+      path = file.path(projectPath, "ProjectConfiguration.xlsx")
+    )
+
+  # Read observedData -------------------------------------------------------
+  # (see vignette('data_import_by_dictionary'))
+
+  # read data as data.table
+  dataDT <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,
+                                         addBiometricsToConfigFlag = TRUE)
+
+  # convert data.table to dataCombined format
+  # edit DataGroupID in the data Configuration to get proper names
+  # edit OutputpathID in the scenario Configuration to get molweights
+  dataCombined <- convertDataTableToDataCombined(dataDT)
+
+
+  # Simulations ------------------------------------------------------
+  # (see vignette xxx)
+  scenarioList <-
+    createScenarios.wrapped(projectConfiguration = projectConfiguration)
+
+  runAndSaveScenarios(projectConfiguration = projectConfiguration,
+                      scenarioList = scenarioList,
+                      simulationRunOptions = SimulationRunOptions$new(
+                        numberOfCores = NULL,
+                        checkForNegativeValues = NULL,
+                        showProgress = TRUE
+                      ))
+
+  # SensitivityAnalysis -----------------------------------------------------
+  #  (see vignette xxx)
+  # TODO
+  # runSensitivityAnalysis(
+  #   scenario = "MyScenario",
+  #   configTable = projectConfiguration$SensitivityParameter
+  # )
+
+
+  # Create Output Plots -----------------------------------------------------
+  # (see vignette xxx)
+
+  # TODO
+  # runPlot(
+  #   functionKey = "Demographics",
+  #   projectConfg = projectConfiguration,
+  #   inputs = list(
+  #     configTable = "Demographics",
+  #     observedAsAggregated = TRUE,
+  #     prepareElectronicPackage = TRUE
+  #   )
+  # )
+
+  # Timeprofile Plots
+  # see vignette xxx
+  runPlot(
+    functionKey = "TimeProfile",
+    projectConfg = projectConfiguration,
+    inputs = list(
+      configTable = "TimeProfiles",
+      dataCombined = dataCombined,
+      prepareElectronicPackage = TRUE
+    )
   )
 
-
-# Read observedData -------------------------------------------------------
-# (see vignette('data_import_by_dictionary'))
-
-# read data as dta.table
-dataDT <- readObservedDataByDictionary(projectConfiguration = projectConfiguration)
-
-# if you want to create individuals base on this data call
-addBiometricsToConfig(observedData = observedData,
-                      projectConfiguration = projectConfiguration)
-
-# convert data.table to dataCombined format
-dataCombined <- convertDataTableToDataCombined()
+  #TODO
+  # runPlot(
+  #   functionKey = "PKParameter",
+  #   projectConfg = projectConfiguration,
+  #   inputs = list(configTable = "PKParameter")
+  # )
 
 
-# Simulations ------------------------------------------------------
-# (see vignette xxx)
-scenarioList <-
-  createScenarios.wrapped(projectConfiguration = projectConfiguration)
+  #TODO
+  # runPlot(
+  #   functionKey = "DDIRatio",
+  #   projectConfg = projectConfiguration,
+  #   inputs = list(configTable = "DDIRatio")
+  # )
 
-scenarioResults <- runScenarios.wrapped(scenarioList = scenarioList)
-
-saveScenarioResults.wrapped(
-  simulatedScenariosResults = resultList,
-  projectConfiguration = projectConfiguration
-)
-
-
-# SensitivityAnalysis -----------------------------------------------------
-#  (see vignette xxx)
-# TODO
-# runSensitivityAnalysis(
-#   scenario = "MyScenario",
-#   configTable = projectConfiguration$SensitivityParameter
-# )
-
-
-# Create Output Plots -----------------------------------------------------
-# (see vignette xxx)
-
-# TODO
-# runPlot(
-#   functionKey = "Demographics",
-#   projectConfg = projectConfiguration,
-#   inputs = list(
-#     configTable = "Demographics",
-#     observedAsAggregated = TRUE,
-#     prepareElectronicPackage = TRUE
-#   )
-# )
-
-# TODO
-# runPlot(
-#   functionKey = "TimeProfile",
-#   projectConfg = projectConfiguration,
-#   inputs = list(
-#     configTable = "TimeProfiles",
-#     datacombined = datacombined,
-#     observedAsAggregated = TRUE,
-#     prepareElectronicPackage = TRUE
-#   )
-# )
-
-#TODO
-# runPlot(
-#   functionKey = "PKParameter",
-#   projectConfg = projectConfiguration,
-#   inputs = list(configTable = "PKParameter")
-# )
-
-
-#TODO
-# runPlot(
-#   functionKey = "DDIRatio",
-#   projectConfg = projectConfiguration,
-#   inputs = list(configTable = "DDIRatio")
-# )
-
-#TODO
-# runPlot(
-#   functionKey = NULL,
-#   plotFunction = myProjectSpecificfunction(),
-#   subfolder = "myFigures",
-#   projectConfg = projectConfiguration,
-#   inputs = list()
-# )
+  #TODO
+  # runPlot(
+  #   functionKey = NULL,
+  #   plotFunction = myProjectSpecificfunction(),
+  #   subfolder = "myFigures",
+  #   projectConfg = projectConfiguration,
+  #   inputs = list()
+  # )
 
 
 
-# Create Report document --------------------------------------------------
-#TODO
-# mergeRmds(
-#   newName = "appendix",
-#   title = "Appendix",
-#   sourceRmds = c("Demographics", "TimeProfile", "PKParameter", "DDIRatio", "myFigures")
-# )
+  # Create Report document --------------------------------------------------
+  #TODO
+  # mergeRmds(
+  #   newName = "appendix",
+  #   title = "Appendix",
+  #   sourceRmds = c("Demographics", "TimeProfile", "PKParameter", "DDIRatio", "myFigures")
+  # )
 
-renderWord(fileName = file.path(projectConfiguration$outputFolder,"appendix.rmd"))
+  renderWord(fileName = file.path(projectConfiguration$outputFolder,"appendix.rmd"))
 
-# finalize workflow---------------------
-addMessageToLog("finalize workflow")
+  # finalize workflow---------------------
+  addMessageToLog("finalize workflow")
 
+})
 # save Session Infos including the loaded packages and R version, into a log file
 saveSessionInfo()
