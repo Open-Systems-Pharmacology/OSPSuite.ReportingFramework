@@ -7,9 +7,9 @@
 addMetaDataToDataSet(dataSet, groupData)
 }
 \arguments{
-\item{dataSet}{`DataSet` with observed data}
+\item{dataSet}{`DataSet` object with observed data}
 
-\item{groupData}{corresponding datatable with metadat}
+\item{groupData}{corresponding `data.table` with meta data}
 }
 \value{
 `DataSet` with observed data with added metadata

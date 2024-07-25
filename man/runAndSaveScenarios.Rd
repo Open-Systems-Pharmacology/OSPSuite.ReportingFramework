@@ -12,7 +12,7 @@ runAndSaveScenarios(
 )
 }
 \arguments{
-\item{projectConfiguration}{An instance of ProjectConfiguration}
+\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 
 \item{scenarioList}{Named list of Scenario objects.}
 

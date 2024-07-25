@@ -94,7 +94,7 @@ setUpTestProject <- function(projectPath) {
 
 #' adjust datadictionary ready to use
 #'
-#' @param projectConfiguration configuration of test project
+#' @template projectConfig
 setDataDictionary <- function(projectConfiguration) {
   targetColumn <- NULL
 
@@ -160,7 +160,7 @@ setDataDictionary <- function(projectConfiguration) {
 
 #' generates random observed data to test import
 #'
-#' @param projectConfiguration temporyr configuration
+#' @template projectConfig
 addRandomSourceData <- function(projectConfiguration) {
   dt <- data.table()
   for (sid in seq(1001, 1005)) {

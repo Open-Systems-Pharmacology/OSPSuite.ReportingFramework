@@ -7,7 +7,7 @@
 updateOutputPathId(projectConfiguration, dataDT)
 }
 \arguments{
-\item{projectConfiguration}{The project configuration}
+\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 
 \item{data}{`data.table`with observed Data}
 }

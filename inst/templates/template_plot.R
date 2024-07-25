@@ -1,6 +1,6 @@
 #' Template for a plot function called by the Vision::plotRun function
 #'
-#' @param projectConfiguration projectConfiguration
+#' @template projectConfig
 #' @param subfolder is name of subfolder in the project/to/path/report directory
 #'    each function should have its own subfolder, so each function is responsible to keep figureKeys unique within this folder
 #' @param ... # instead of ... you can add your own inputs

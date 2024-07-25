@@ -75,7 +75,7 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 #' @export
 xlsxReadData <- function(wb, sheetName,
                          skipDescriptionRow = FALSE,
-                         alwaysCharacter = c('IndividualId','StudyId','group','OutputPathId')) {
+                         alwaysCharacter = c('IndividualId','StudyId','group','OutputPathId','DataGroupIds')) {
   dt <- data.table::setDT(openxlsx::read.xlsx(
     xlsxFile = wb,
     sheet = sheetName,
@@ -104,4 +104,23 @@ xlsxReadData <- function(wb, sheetName,
   dt[dt == ""] <- NA
 
   return(dt)
+}
+
+#' Split the elements of a vector by comma
+#'
+#' This function takes an original vector as input and splits its elements by comma.
+#'
+#' @param originalVector The original vector to be split
+#' @return A vector containing the split elements
+#' @examples
+#' originalVector <- c('group1, group2', 'group3')
+#' splitInputs(originalVector)
+#' # Result: c('group1', 'group2', 'group3')
+#' @export
+splitInputs <- function(originalVector){
+  if (all(is.na(originalVector))) return(NULL)
+  originalVector <- originalVector[!is.na(originalVector)]
+  splitVector <- trimws(unlist(strsplit(originalVector, ',')))
+
+  return(splitVector)
 }

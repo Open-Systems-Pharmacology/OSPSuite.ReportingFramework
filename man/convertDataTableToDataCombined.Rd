@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-data.R
 \name{convertDataTableToDataCombined}
 \alias{convertDataTableToDataCombined}
-\title{coverts data.table with observed to `DataCombined` object}
+\title{converts data.table with observed data to `DataCombined` object}
 \usage{
 convertDataTableToDataCombined(dataDT)
 }

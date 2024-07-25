@@ -69,14 +69,19 @@ createDefaultProjectConfiguration.wrapped <- function(path) { # nolint
 #'
 #' wrap of `esqlabsR::createDefaultProjectConfiguration()` with `esqlabsR::createScenarios()` as input
 #'
-#' @param projectConfiguration A `ProjectConfiguration` object holding base information
+#' @template projectConfig
 #' @param scenarioNames Names of the scenarios that are defined in the excel file.
 #' If NULL (default), all scenarios specified in the excel file will be created.
+#' @param doCheckScenarioNameValidity `boolean` If TRUE scenario names will be check if they
+#'  can be used as file names in an electronic package
 #'
 #' @return  Named list of Scenario objects.
 #' @export
 createScenarios.wrapped <- function(projectConfiguration, # nolint
-                                    scenarioNames = NULL) {
+                                    scenarioNames = NULL,
+                                    doCheckScenarioNameValidity = TRUE) {
+  if (doCheckScenarioNameValidity) checkScenarioNameValidity(projectConfiguration)
+
   scenarioList <-
     esqlabsR::createScenarios(
       esqlabsR::readScenarioConfigurationFromExcel(
@@ -93,7 +98,7 @@ createScenarios.wrapped <- function(projectConfiguration, # nolint
 #' uses `esqlabsR::runScenarios` and `esqlabsR::saveScenarioResults
 #' runs the simulations and save the result`
 #'
-#' @param projectConfiguration An instance of ProjectConfiguration
+#' @template projectConfig
 #' @param scenarioList  Named list of Scenario objects.
 #' @param simulationRunOptions Object of type SimulationRunOptions that will be passed to simulation runs.
 #' If NULL, default options are used.

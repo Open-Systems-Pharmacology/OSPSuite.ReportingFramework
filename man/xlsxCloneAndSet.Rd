@@ -19,5 +19,5 @@ xlsxCloneAndSet(wb, clonedSheet, sheetName, dt)
 workbook with cloned sheet
 }
 \description{
-wrappes openxlsx::cloneWorksheet but set new content
+wrapps openxlsx::cloneWorksheet but set new content
 }

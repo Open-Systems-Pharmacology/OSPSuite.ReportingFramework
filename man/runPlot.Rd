@@ -13,6 +13,8 @@ runPlot(
 )
 }
 \arguments{
+\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+
 \item{inputs}{}
 }
 \description{

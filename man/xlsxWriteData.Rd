@@ -12,5 +12,5 @@ xlsxWriteData(wb, sheetName, dt)
 \item{dt}{`data.table` to write}
 }
 \description{
-wrappes openxlsx::writeData, but delete before all current content
+wrapps `openxlsx::writeData`, but delete before all current content
 }

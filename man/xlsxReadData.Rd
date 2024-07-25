@@ -8,7 +8,7 @@ xlsxReadData(
   wb,
   sheetName,
   skipDescriptionRow = FALSE,
-  alwaysCharacter = c("IndividualId", "StudyId", "group", "OutputPathId")
+  alwaysCharacter = c("IndividualId", "StudyId", "group", "OutputPathId", "DataGroupIds")
 )
 }
 \arguments{
@@ -24,5 +24,5 @@ xlsxReadData(
 `data.table` with sheet data
 }
 \description{
-wrappes openxlsx::read.xlsx but returns data as data.table()
+wrapps `openxlsx::read.xlsx` but returns data as data.table()
 }

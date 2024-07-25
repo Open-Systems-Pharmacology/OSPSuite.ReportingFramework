@@ -144,7 +144,7 @@ test_that("addMetaDataToDataSet function test", {
   expect_equal(length(dataSetWithMeta$metaData), 10)
   expect_contains(names(dataSetWithMeta$metaData),
     c(
-      "StudyId", "SubjectId", "IndividualId", "group", "OutputPathId",
+      "StudyId", "SubjectId", "IndividualIdObserved", "group", "OutputPathId",
       "age", "weight", "height", "gender", "population"
     ))
 })
@@ -157,8 +157,6 @@ test_that("convertDataTableToDataCombined function test", {
 
   # Add assertions based on the expected output of the function
   expect_s3_class(dataCombined, "DataCombined")
-  # Add more specific assertions based on the expected properties of DataCombined object
 })
-
 
 cleanupLogFileForTest(projectPath)

@@ -14,5 +14,5 @@ xlsxAddSheet(wb, sheetName, dt)
 \item{dt}{`data.table`  to attach}
 }
 \description{
-wrappes openxlsx::addWorksheet, and adds new data to the sheet
+wrapps `openxlsx::addWorksheet`, and adds new data to the sheet
 }

@@ -2,17 +2,17 @@
 % Please edit documentation in R/utilities-data.R
 \name{addBiometricsToConfig}
 \alias{addBiometricsToConfig}
-\title{add Biometric information to config}
+\title{add bio-metrics   information to config}
 \usage{
-addBiometricsToConfig(projectConfiguration, observedData, overwrite = FALSE)
+addBiometricsToConfig(projectConfiguration, dataDT, overwrite = FALSE)
 }
 \arguments{
-\item{projectConfiguration}{The project configuration}
+\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 
-\item{observedData}{`data.table` with observed data}
+\item{dataDT}{`data.table` with observed data}
 
 \item{overwrite}{if TRUE existing rows will be overwritten}
 }
 \description{
-add Biometric information to config
+add bio-metrics   information to config
 }

@@ -11,7 +11,7 @@ readObservedDataByDictionary(
 )
 }
 \arguments{
-\item{projectConfiguration}{The project configuration}
+\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 
 \item{dataType}{type of data, available `r paste0('"',paste(unlist(DATATYPE),collapse = '", "'),'"')`}
 

@@ -48,13 +48,17 @@ logCatch({
   # convert data.table to dataCombined format
   # edit DataGroupID in the data Configuration to get proper names
   # edit OutputpathID in the scenario Configuration to get molweights
-  dataCombined <- convertDataTableToDataCombined(dataDT)
+  dataCombined <-
+    convertDataTableToDataCombined(projectConfiguration = projectConfiguration,
+                                   dataDT = dataDT)
 
 
   # Simulations ------------------------------------------------------
   # (see vignette xxx)
   scenarioList <-
-    createScenarios.wrapped(projectConfiguration = projectConfiguration)
+    createScenarios.wrapped(projectConfiguration = projectConfiguration,
+                            scenarioNames = NULL,
+                            doCheckScenarioNameValidity = TRUE)
 
   runAndSaveScenarios(projectConfiguration = projectConfiguration,
                       scenarioList = scenarioList,
