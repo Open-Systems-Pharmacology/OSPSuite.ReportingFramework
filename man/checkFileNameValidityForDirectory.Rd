@@ -7,7 +7,7 @@
 checkFileNameValidityForDirectory(directory_path)
 }
 \arguments{
-\item{directory_path}{}
+\item{directory_path}{path to the driectory where the electronic package is filed}
 }
 \description{
 Checks if all files and all files of datasets of a directory fullfill conditions for file names for electronic package

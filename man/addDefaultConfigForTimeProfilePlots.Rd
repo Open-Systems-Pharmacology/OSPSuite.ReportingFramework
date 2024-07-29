@@ -6,7 +6,7 @@
 \usage{
 addDefaultConfigForTimeProfilePlots(
   projectConfiguration,
-  sheetName = "TimeProfiles",
+  sheetName = "TimeProfile_Panel",
   overwrite = FALSE
 )
 }
@@ -15,7 +15,7 @@ addDefaultConfigForTimeProfilePlots(
 
 \item{sheetName}{name of sheet in plot configuration table}
 
-\item{overwrite}{`boolean` if TRUE existing configurations will be overwrtitten}
+\item{overwrite}{`boolean` if TRUE existing configurations will be overwritten}
 }
 \description{
 Adds a default sheet to the plot configuration table

@@ -26,6 +26,8 @@ The setup and simulation is based on the EsqlabsR package.
 
 ## Template
 
+### Valid Mode
+
 
 
 ##  Log file creation

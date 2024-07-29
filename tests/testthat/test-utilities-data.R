@@ -8,22 +8,21 @@ test_that("It should read and process data based on the provided project configu
   addRandomSourceData(projectConfiguration)
 
   # Call the function and test the output
-  observedData <- readObservedDataByDictionary(projectConfiguration, dataType = DATATYPE$individual)
-
+  observedData <- readObservedDataByDictionary(projectConfiguration)
   # Add your assertions here to test the processed data
   # For example:
   expect_true(data.table::is.data.table(observedData), "Processed data should be a data table")
   expect_equal(nrow(observedData), expected = 140, label = "Processed data should have the expected number of rows")
 
   # extract biometrics
-  dtIndividualBiometrics <- xlsxReadData(wb = projectConfiguration$individualsFile,
-                                         sheetName = "IndividualBiometrics")
+  dtIndividualBiometrics <- xlsxReadData(
+    wb = projectConfiguration$individualsFile,
+    sheetName = "IndividualBiometrics"
+  )
   expect_gte(nrow(dtIndividualBiometrics), 10)
 
-  dtOutputPaths <- xlsxReadData(wb = projectConfiguration$scenarioDefinitionFile,
-                                sheetName = "OutputPaths")
-  expect_contains(dtOutputPaths$OutputPathId, c('PARENT','METABOLITE'))
-
+  dtOutputPaths <- getOutputPathIds(projectConfiguration)
+  expect_contains(dtOutputPaths$OutputPathId, c("PARENT", "METABOLITE"))
 })
 
 
@@ -103,7 +102,7 @@ test_that("getColumnsForColumnType function test", {
 
   #
   expect_equal(length(columnNames), 5)
-  expect_contains(columnNames , c("StudyId", "SubjectId", "IndividualId", "group", "OutputPathId"))
+  expect_contains(columnNames, c("StudyId", "SubjectId", "IndividualId", "group", "OutputPathId"))
 })
 
 # Unit tests for createDataSets function
@@ -142,11 +141,13 @@ test_that("addMetaDataToDataSet function test", {
   # Add assertions based on the expected output of the function
   expect_s3_class(dataSetWithMeta, "DataSet")
   expect_equal(length(dataSetWithMeta$metaData), 10)
-  expect_contains(names(dataSetWithMeta$metaData),
+  expect_contains(
+    names(dataSetWithMeta$metaData),
     c(
       "StudyId", "SubjectId", "IndividualIdObserved", "group", "OutputPathId",
       "age", "weight", "height", "gender", "population"
-    ))
+    )
+  )
 })
 
 # Unit tests for convertDataTableToDataCombined function

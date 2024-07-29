@@ -45,11 +45,7 @@ To use the `readObservedDataByDictionary` function, follow these steps:
 
 ```{r readObservedDataByDictionary, eval = FALSE, echo = TRUE}
 # Call the readObservedDataByDictionary function
-dataDT <- readObservedDataByDictionary(projectConfiguration,
-  dataType = DATATYPE$individual
-)
-
-dataCombined <- convertDataTableToDataCombined(dataDT)
+observedData <- readObservedDataByDictionary(projectConfiguration)
 
 ```
 
@@ -65,7 +61,6 @@ In the "DataFiles" sheet of the Excel template, provide the following informatio
 - **DataFile**: Path of the CSV file relative to the configuration XLSX.
 - **Dictionary**: Sheet name for the data dictionary.
 - **DataFilter**: An R executable expression that filters relevant data for the study. If empty, no filter is applied.
-- **DataType**: type of Data, available is `r paste0('"',paste(unlist(DATATYPE),collapse = '", "'),'"')`
 
 ## "tpDictionary" Sheet: 
 
@@ -117,11 +112,6 @@ In the "tpDictionary" sheet, define the data dictionary with the following colum
 
 By filling out the Excel table with the required information, you can ensure that the `readObservedDataByDictionary` function can effectively read and process the observed data based on the provided data dictionary and configuration.  
 
-## "DataGroupId" sheet:  
-
-
-This sheet is not needed by the function call `readObservedDataByDictionary`. It provides a set of columns to customize the plots, tables and electronic package exports relating to the `groupId` of the data
-
 
 # Example Sheets
 
@@ -132,7 +122,6 @@ templateFilePath <- system.file("templates", "templateProject", "Data", "dataImp
 
 dataFilesSheet <- esqlabsR::readExcel(path = templateFilePath, sheet = "DataFiles")
 tpDictionary <- esqlabsR::readExcel(path = templateFilePath, sheet = "tpDictionary")
-dtDataGroupID <- esqlabsR::readExcel(path = templateFilePath, sheet = "DataGroupID")
 ```
 
 
@@ -154,8 +143,7 @@ dataFilesSheet <- rbind(
       "tpDictionary",
       "tpDictionaryAggregated"
     ),
-    DataFilter = c("", "PKValue == 1", "STUD != 1234"),
-    DataType = c(DATATYPE$individual, DATATYPE$individual, DATATYPE$aggregated)
+    DataFilter = c("", "PKValue == 1", "STUD != 1234")
   )
 )
 
@@ -176,18 +164,13 @@ tpDictionary <- tpDictionary %>%
 knitr::kable(tpDictionary)
 ```
 
-This sheet is used for individual data. Th columns yErrorValues, yErrorType and n_belowLLOQ are missing.  
+This sheet is used for individual data. Th columns yErrorValues, yErrorType and n_belowLLOQ are set to NA .  
 
-The individualId was contsructed as concatenation of study Id and Individual id. 
+The `individualId` was constructed as concatenation of study Id and Individual id. 
 As we want to do this for all rows filter was set to `TRUE` and the r expression, which does the concatenation was placed in the column `filterValue`.
 
 The dictionary contains two rows for the target column population. With the first row all data rows where the source columnn `RACENAME` is "White" are set to "European_ICRP_2002", with the second row Asians are set to "Asian_Tanaka_1996".
 
 
-### `DataGroupID` Sheet
-
-```{r, echo=FALSE}
-knitr::kable(dtDataGroupID)
-```
 
  

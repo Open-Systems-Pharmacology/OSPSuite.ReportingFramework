@@ -4,7 +4,7 @@
 \alias{readDataDictionary}
 \title{Read data dictionary}
 \usage{
-readDataDictionary(dictionaryFile, sheet, data, dataType)
+readDataDictionary(dictionaryFile, sheet, data)
 }
 \arguments{
 \item{dictionaryFile}{The file containing the data dictionary}
@@ -12,8 +12,6 @@ readDataDictionary(dictionaryFile, sheet, data, dataType)
 \item{sheet}{The sheet within the data dictionary file}
 
 \item{data}{The data to be used with the dictionary}
-
-\item{dataType}{type of data}
 }
 \value{
 The data dictionary

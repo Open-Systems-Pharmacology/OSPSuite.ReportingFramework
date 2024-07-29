@@ -1,33 +1,41 @@
 #' Title
 #'
 #' @template projectConfig
-#' @param functionKey
-#' @param plotFunction
-#' @param subfolder
-#' @param inputs
+#' @param functionKey keyword which select plot function, if NULL plotfunction is needed
+#' @param plotFunction function which is used for plotting, if not null, it overwrites functionKey selection
+#' @param subfolder subfolder where results are filed, if functionKey is used, as default value the sheetname of the plotconfiguartion is used
+#' @param inputs additionally inputs for the
 #'
 #' @return
 #' @export
 #'
 #' @examples
 runPlot <- function(projectConfiguration,
-                    functionKey = NULL,
+                    functionKey = c("TimeProfile"),
                     plotFunction = NULL,
-                    subfolder = functionKey,
-                    inputs = list()){
-  # get function
-  if (!is.null(functionKey)){
+                    subfolder = NULL,
+                    inputs = list()) {
+  # validate inputs
+  if (is.null(plotFunction)) {
+    functionKey <- match.arg(functionKey)
     plotFunction <- getFunctionByKey(functionKey)
+    if (is.null(subfolder)) subfolder <- inputs$configTableSheet
   }
   checkmate::assertFunction(plotFunction)
+  checkmate::assertCharacter(subfolder, null.ok = FALSE)
 
-  resultDirectory = file.path(projectConfiguration$figures,subfolder)
-  if (!dir.exists(resultDirectory))
+  message(paste0('Start plotting "', subfolder, '"'))
+
+  resultDirectory <- file.path(projectConfiguration$figures, subfolder)
+  if (!dir.exists(resultDirectory)) {
     dir.create(resultDirectory, recursive = TRUE)
+  }
 
   # execute plotfunction
-  rmdContainer = do.call(what = plotFunction,
-          args = c(projectConfiguration,resultDirectory,inputs))
+  rmdContainer <- do.call(
+    what = plotFunction,
+    args = c(projectConfiguration, resultDirectory, inputs)
+  )
 
   # create rmd
   rmdContainer$createRmd(projectConfiguration$figures)
@@ -42,11 +50,12 @@ runPlot <- function(projectConfiguration,
 #'
 #' @return
 #' @export
-getFunctionByKey <- function(key){
+getFunctionByKey <- function(key) {
   plotFunction <-
     switch(key,
-           TimeProfile = plotTimeProfilePanels,
-           stop('unkown function key'))
+      TimeProfile_Panel = plotTimeProfilePanels,
+      stop("unkown function key")
+    )
 }
 
 
@@ -63,12 +72,11 @@ getFunctionByKey <- function(key){
 #'
 #' @return Plotconfiguration file
 #' @export
-addConfigToTemplate <- function(wb,templateSheet,sheetName,dtNewConfig){
-
+addConfigToTemplate <- function(wb, templateSheet, sheetName, dtNewConfig) {
   # get template
-  if (templateSheet %in% wb$sheet_names){
-    templateConfiguration <- xlsxReadData(wb = wb,sheetName  = templateSheet)
-  } else{
+  if (templateSheet %in% wb$sheet_names) {
+    templateConfiguration <- xlsxReadData(wb = wb, sheetName = templateSheet)
+  } else {
     templateConfiguration <-
       xlsxReadData(
         wb = system.file(
@@ -79,39 +87,213 @@ addConfigToTemplate <- function(wb,templateSheet,sheetName,dtNewConfig){
           package = "ospsuite.reportingframework",
           mustWork = TRUE
         ),
-        sheetName  = templateSheet
+        sheetName = templateSheet
       )
   }
 
-  dtNewConfig <- rbind(templateConfiguration[1,],
-                     dtNewConfig,
-                     fill = TRUE)
+  dtNewConfig <- rbind(templateConfiguration[1, ],
+    dtNewConfig,
+    fill = TRUE
+  )
 
-  if (templateSheet != sheetName){
-    xlsxCloneAndSet(wb = wb,clonedSheet = templateSheet,sheetName = sheetName,dt = dtNewConfig)
-  } else{
-    xlsxWriteData(wb = wb,sheetName = sheetName,dt = dtNewConfig)
+  if (templateSheet != sheetName) {
+    xlsxCloneAndSet(wb = wb, clonedSheet = templateSheet, sheetName = sheetName, dt = dtNewConfig)
+  } else {
+    xlsxWriteData(wb = wb, sheetName = sheetName, dt = dtNewConfig)
   }
 
   return(wb)
+}
 
+# validation ----------------
+
+
+#' checks if config table header and plot rows are strict separated
+#'
+#' @param configTable `data.table` configuration table to check
+#'
+#' @return configuration table without header lines
+#' @export
+validateHeaders <- function(configTable) {
+  configTableHeader <- configTable[!is.na(Level)]
+  checkmate::assertIntegerish(configTableHeader$Level, lower = 1, any.missing = FALSE)
+  checkmate::assertCharacter(configTableHeader$Header, any.missing = FALSE)
+
+  if (any(!is.na(configTableHeader %>%  dplyr::select(setdiff(
+    names(configTableHeader), c('Level', 'Header')
+  ))))) {
+    stop(
+      "Invalid plot configuration table. For Rows with headers all other columns must be empty."
+    )
+  }
+
+  configTablePlots <- configTable[is.na(Level)]
+  if (!all(configTablePlots[, lapply(.SD, function(x) all(is.na(x))),
+    .SDcols = "Header"
+  ])) {
+    stop("Invalid plot configuration table. Missing header for level")
+  }
+
+  return(configTablePlots)
+}
+
+#' validate types of plot configuration tables
+#'
+#' @template configTablePlots
+#' @param charactersWithoutMissing vector with character columns, where no missing value is allowed
+#' @param charactersWithMissing  vector with character column, where values may missing
+#' @param numericColumns  vector with numeric columns
+#' @param logicalColumns vector with booleans
+#' @param numericRangeColumns vector with columns where entries must be evaluate to a numeric of length 2
+#' @param subsetList  list where each entry is a list:
+#'  list(cols = 'vector with columns',
+#'  allowedValues = vector with allowed values)
+#'
+validateConfigTablePlots <- function(configTablePlots,
+                                     charactersWithoutMissing = NULL,
+                                     charactersWithMissing = NULL,
+                                     numericColumns = NULL,
+                                     logicalColumns = NULL,
+                                     numericRangeColumns = NULL,
+                                     subsetList = list()) {
+  # character columns without missing values
+  if (!is.null(charactersWithoutMissing)) {
+    invisible(lapply(
+      charactersWithoutMissing,
+      function(col) {
+        checkmate::assertCharacter(
+          configTablePlots[[col]],
+          any.missing = FALSE,
+          .var.name = paste("Plotconfiguration column", col)
+        )
+      }
+    ))
+  }
+
+  # character columns with missing values
+  if (!is.null(charactersWithMissing)) {
+    invisible(lapply(
+      charactersWithMissing,
+      function(col) {
+        checkmate::assertCharacter(
+          configTablePlots[[col]],
+          any.missing = TRUE,
+          .var.name = paste("Plotconfiguration column", col)
+        )
+      }
+    ))
+  }
+
+  # numeric columns
+  if (!is.null(numericColumns)) {
+    invisible(lapply(
+      numericColumns,
+      function(col) {
+        checkmate::assertNumeric(
+          configTablePlots[[col]],
+          .var.name = paste("Plotconfiguration column", col)
+        )
+      }
+    ))
+  }
+
+  # columns is a logical
+  if (!is.null(logicalColumns)) {
+    invisible(lapply(
+      logicalColumns,
+      function(col) {
+        checkmate::assertLogical(
+          as.logical(configTablePlots[!is.na(get(col))][[col]]),
+          any.missing = FALSE,
+          .var.name = paste("Plotconfiguration column", col)
+        )
+      }
+    ))
+  }
+
+  # valid selection
+  checkmate::assertList(subsetList,types = 'list')
+  for (subsetCheck in subsetList) {
+    checkmate::assertList(subsetCheck,types = 'character',names = 'named')
+    checkmate::assertNames(names(subsetCheck),permutation.of = c('cols','allowedValues'))
+    invisible(lapply(
+      subsetCheck$cols,
+      function(col) {
+        if (any(!is.na(configTablePlots[[col]]))) {
+          checkmate::assertNames(
+            gsub("[()]", "", splitInputs(configTablePlots[!is.na(get(col))][[col]])),
+            subset.of = subsetCheck$allowedValues,
+            .var.name = paste("Plotconfiguration column", col)
+          )
+        }
+      }
+    ))
+  }
+
+  # is numeric range
+  if (!is.null(numericRangeColumns)) {
+    tryCatch(
+      {
+        for (col in numericRangeColumns) {
+          if (any(!is.na(configTablePlots[[col]]))) {
+            x <- configTablePlots[!is.na(get(col)), ][[col]]
+            if (length(x) > 0) {
+              valid <-
+                is.numeric(eval(parse(text = x))) &&
+                length(eval(parse(text = x))) == 2
+            }
+            if (!all(valid)) {
+              stop(paste("invalid inputs in plot configuration column", col))
+            }
+          }
+        }
+      },
+      error = function(err) {
+        stop(paste("invalid inputs in plot configuration column", col))
+      }
+    )
+  }
+
+  return(invisible())
+}
+
+#' check if at least one of the following columns is selected
+#'
+#' @template configTablePlots
+#' @param columnVector vector of columns to check
+#'
+validateAtleastOneEntry <- function(configTablePlots, columnVector) {
+  if (nrow(configTablePlots[rowSums(is.na(configTablePlots)) == length(columnVector), ]) > 0) {
+    stop(paste(
+      "Invalid configTable, each plot row needs at least one entry in one of the columns",
+      paste(columnVector, collapse = ", ")
+    ))
+  }
+
+  return(invisible())
 }
 
 
 #' Validation of data.table with outputPath Ids
 #'
 #' @param dtOutputPaths data.table with outputPath Ids
-validateOutputIdsForPlot <- function(dtOutputPaths){
-
-  checkmate::assertCharacter(dtOutputPaths$OutputPathId,any.missing = FALSE)
+validateOutputIdsForPlot <- function(dtOutputPaths) {
+  checkmate::assertCharacter(dtOutputPaths$OutputPathId, any.missing = FALSE)
 
   # Check for unique values for outputpathids
-  uniqueColumns <- c('DisplayName','DisplayUnit')
+  uniqueColumns <- c("DisplayName", "DisplayUnit")
   uniqueIDValues <-
-    dtOutputPaths[, lapply(.SD, function(x)
-      length(unique(x))), by = OutputPathId, .SDcols = uniqueColumns]
-  tmp <-lapply(uniqueColumns,function(col){
-    if (any(uniqueIDValues[[col]]>1)) stop(paste('values for',col, 'should be the same within OutputPathId'))})
+    dtOutputPaths[, lapply(.SD, function(x) {
+      length(unique(x))
+    }), by = OutputPathId, .SDcols = uniqueColumns]
+  tmp <- lapply(uniqueColumns, function(col) {
+    if (any(uniqueIDValues[[col]] > 1)) stop(paste("values for", col, "should be the same within OutputPathId"))
+  })
 
   return(invisible())
 }
+
+
+
+
+

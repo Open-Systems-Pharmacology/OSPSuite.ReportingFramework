@@ -11,12 +11,9 @@ library(esqlabsR)
 # (see vignette TODO)
 ospsuite.plots::setDefaults()
 
-# all plots will be configured with watermark
-setOspsuite.plots.option(
-  optionKey = OptionKeys$watermark_enabled,
-  value = TRUE
-)
-
+# set otpions to switch between non-Valid and valid mode
+# (see vignette TODO)
+setRunModeIsValid(FALSE)
 
 # Setup project structure -------------------------------------------------
 # creates project directory (see vignette TODO Esqlabs)

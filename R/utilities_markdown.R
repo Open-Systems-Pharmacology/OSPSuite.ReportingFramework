@@ -393,7 +393,8 @@ addFiguresAndTables <- function(keyList,
 #' @return `data.table` prepared for display
 #'
 #' @export
-prepareDTForPrinting <- function( # nolint cyclocomp_linter
+prepareDTForPrinting <- function(
+    # nolint cyclocomp_linter
     dt,
     replaceLinebreaksIn = "!guess",
     replaceLinebreaksBy = " ",

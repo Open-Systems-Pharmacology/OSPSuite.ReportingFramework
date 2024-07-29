@@ -16,7 +16,7 @@ A vector containing the split elements
 This function takes an original vector as input and splits its elements by comma.
 }
 \examples{
-originalVector <- c('group1, group2', 'group3')
+originalVector <- c("group1, group2", "group3")
 splitInputs(originalVector)
 # Result: c('group1', 'group2', 'group3')
 }

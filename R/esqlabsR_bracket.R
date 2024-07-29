@@ -57,9 +57,9 @@ initProject <- function(projectPath = ".",
 #'
 #' @export
 createDefaultProjectConfiguration.wrapped <- function(path) { # nolint
-    projectConfiguration <- esqlabsR::createDefaultProjectConfiguration(path = path)
+  projectConfiguration <- esqlabsR::createDefaultProjectConfiguration(path = path)
 
-    message(paste(utils::capture.output(projectConfiguration), collapse = "\n"))
+  message(paste(utils::capture.output(projectConfiguration), collapse = "\n"))
 
   return(projectConfiguration)
 }
@@ -106,14 +106,14 @@ createScenarios.wrapped <- function(projectConfiguration, # nolint
 #'
 #' @export
 runAndSaveScenarios <- function(projectConfiguration,
-                                 scenarioList,
-                                 simulationRunOptions = NULL,
-                                 ...) { # nolint
+                                scenarioList,
+                                simulationRunOptions = NULL,
+                                ...) { # nolint
 
   outputFolder <- file.path(projectConfiguration$outputFolder, "SimulationResults")
 
-  for (sc in names(scenarioList)){
-    message(paste('Start simulation of',sc))
+  for (sc in names(scenarioList)) {
+    message(paste("Start simulation of", sc))
 
     scenarioResults <- esqlabsR::runScenarios(scenarios = scenarioList[sc], ...)
 

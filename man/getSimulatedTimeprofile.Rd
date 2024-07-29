@@ -5,14 +5,16 @@
 \title{loads simulated result and convert for plotting}
 \usage{
 getSimulatedTimeprofile(
+  projectConfiguration,
   simulatedResult,
   outputs,
-  dtOutputPaths,
   targetTimeUnit,
   timeOffset
 )
 }
 \arguments{
+\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+
 \item{simulatedResult}{simulation result for one scenario}
 
 \item{outputs}{`outputPathsIds` selected for scenario}

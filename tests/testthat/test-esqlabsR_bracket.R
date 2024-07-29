@@ -68,13 +68,15 @@ test_that("initProject creates project folder structure", {
   # Perform assertions
   expect_true(length(scenarioList) > 0)
 
-  suppressMessages(runAndSaveScenarios(projectConfiguration = projectConfiguration,
-                      scenarioList = scenarioList,
-                      simulationRunOptions = SimulationRunOptions$new(
-                        numberOfCores = NULL,
-                        checkForNegativeValues = NULL,
-                        showProgress = TRUE
-                      )))
+  suppressMessages(runAndSaveScenarios(
+    projectConfiguration = projectConfiguration,
+    scenarioList = scenarioList,
+    simulationRunOptions = SimulationRunOptions$new(
+      numberOfCores = NULL,
+      checkForNegativeValues = NULL,
+      showProgress = TRUE
+    )
+  ))
 
 
 

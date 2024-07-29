@@ -1,6 +1,16 @@
-#' @title enumeration keys for data type
+#' @title enumeration keys for type of facetting
 #' @export
-DATATYPE <- ospsuite.utils::enum(c( # nolint
-  individual = "Individual time profiles",
-  aggregated = "Aggregated time profiles"
+FACETTYPE <- ospsuite.utils::enum(c( # nolint
+  byOrder = "by order",
+  vsOutput = "Scenario vs Output",
+  vsTimeRange = "Scenario vs TimeRange"
+))
+
+
+#' @title enumeration keys for Timerange shortcut
+#' @export
+TIMERANGE <- ospsuite.utils::enum(c( # nolint
+  total = "total",
+  firstApplication = "firstApplication",
+  lastApplication = "lastApplication"
 ))

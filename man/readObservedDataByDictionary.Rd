@@ -6,14 +6,11 @@
 \usage{
 readObservedDataByDictionary(
   projectConfiguration,
-  dataType = unlist(DATATYPE),
   addBiometricsToConfigFlag = TRUE
 )
 }
 \arguments{
 \item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
-
-\item{dataType}{type of data, available `r paste0('"',paste(unlist(DATATYPE),collapse = '", "'),'"')`}
 
 \item{addBiometricsToConfigFlag}{if TRUE inividual biometrics are added  to Individualxlsx,}
 }

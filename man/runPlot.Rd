@@ -6,16 +6,22 @@
 \usage{
 runPlot(
   projectConfiguration,
-  functionKey = NULL,
+  functionKey = c("TimeProfile"),
   plotFunction = NULL,
-  subfolder = functionKey,
+  subfolder = NULL,
   inputs = list()
 )
 }
 \arguments{
 \item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 
-\item{inputs}{}
+\item{functionKey}{keyword which select plot function, if NULL plotfunction is needed}
+
+\item{plotFunction}{function which is used for plotting, if not null, it overwrites functionKey selection}
+
+\item{subfolder}{subfolder where results are filed, if functionKey is used, as default value the sheetname of the plotconfiguartion is used}
+
+\item{inputs}{additionally inputs for the}
 }
 \description{
 Title

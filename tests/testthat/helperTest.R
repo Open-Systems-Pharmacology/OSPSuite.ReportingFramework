@@ -84,8 +84,10 @@ setUpTestProject <- function(projectPath) {
       path = file.path(projectPath, "ProjectConfiguration.xlsx")
     )
 
-  file.copy(from =   system.file("extdata", "Aciclovir.pkml", package = "ospsuite"),
-            to = file.path(projectConfiguration$modelFolder,'Aciclovir.pkml'))
+  file.copy(
+    from = system.file("extdata", "Aciclovir.pkml", package = "ospsuite"),
+    to = file.path(projectConfiguration$modelFolder, "Aciclovir.pkml")
+  )
 
 
 
@@ -109,8 +111,7 @@ setDataDictionary <- function(projectConfiguration) {
     data.table(
       DataFile = file.path("Data", "data.csv"),
       Dictionary = "tpDictionary",
-      DataFilter = "",
-      DataType = "Individual time profiles"
+      DataFilter = ""
     )
   )
 

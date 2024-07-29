@@ -4,8 +4,10 @@ projectPath <- iniLogFileForTest()
 # Unit tests for checkFileNameValidity function
 test_that("checkFileNameValidity function returns the correct results", {
   files <- c("file1.xml", "file2.txt", "file3.csv", "invalid_file.pdf")
-  dataSets <- c("dataset1.txt", "dataset2.txt",
-                "invalid_dataset_with_a_veryveryveryveryveryveryveryverylongName.pdf")
+  dataSets <- c(
+    "dataset1.txt", "dataset2.txt",
+    "invalid_dataset_with_a_veryveryveryveryveryveryveryverylongName.pdf"
+  )
 
   inValidFileNames <- checkFileNameValidity(files, dataSets)
 
@@ -14,8 +16,6 @@ test_that("checkFileNameValidity function returns the correct results", {
   files <- c("File1.xml", "fi-le2.txt", "fi,&le3.csv")
   inValidFileNames <- checkFileNameValidity(files)
   expect_contains(inValidFileNames, files)
-
-
 })
 
 

@@ -9,7 +9,7 @@
 xlsxAddSheet <- function(wb, sheetName, dt) {
   if (sheetName %in% wb$sheet_names) {
     warning(paste(sheetName, "already exist"))
-    #clear sheet by reading
+    # clear sheet by reading
     invisible(xlsxReadData(wb, sheetName))
   } else {
     openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
@@ -75,7 +75,12 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 #' @export
 xlsxReadData <- function(wb, sheetName,
                          skipDescriptionRow = FALSE,
-                         alwaysCharacter = c('IndividualId','StudyId','group','OutputPathId','DataGroupIds')) {
+                         alwaysCharacter = c("IndividualId",
+                                             "StudyId",
+                                             "group",
+                                             "OutputPathId",
+                                             "DataGroupIds",
+                                             "DataGroupId")) {
   dt <- data.table::setDT(openxlsx::read.xlsx(
     xlsxFile = wb,
     sheet = sheetName,
@@ -83,23 +88,29 @@ xlsxReadData <- function(wb, sheetName,
     skipEmptyRows = TRUE
   ))
 
-  if (skipDescriptionRow){
+  if (skipDescriptionRow) {
     dt <- dt[-1, ]
   }
 
   # Convert columns to character or numeric
-  alwaysCharacter <- intersect(names(dt),alwaysCharacter)
-  if (length(alwaysCharacter) > 0)
+  alwaysCharacter <- intersect(names(dt), alwaysCharacter)
+  if (length(alwaysCharacter) > 0) {
     dt[, (alwaysCharacter) := lapply(.SD, as.character), .SDcols = alwaysCharacter]
+  }
 
-  numericCols <- names(dt)[sapply(dt, is.numeric)] %>%
-    setdiff(alwaysCharacter)
-  if (length(numericCols) > 0)
+  convertibleCols <-
+    suppressWarnings(names(dt)[sapply(dt, function(x) {
+      all(is.na(x) | !is.na(as.numeric(x)))
+    })])
+  numericCols <- setdiff(convertibleCols, alwaysCharacter)
+  if (length(numericCols) > 0) {
     dt[, (numericCols) := lapply(.SD, as.numeric), .SDcols = numericCols]
+  }
 
-  characterCols <- setdiff(names(dt),numericCols)
-  if (length(characterCols) > 0)
+  characterCols <- setdiff(names(dt), numericCols)
+  if (length(characterCols) > 0) {
     dt[, (characterCols) := lapply(.SD, trimws), .SDcols = characterCols]
+  }
 
   dt[dt == ""] <- NA
 
@@ -113,14 +124,58 @@ xlsxReadData <- function(wb, sheetName,
 #' @param originalVector The original vector to be split
 #' @return A vector containing the split elements
 #' @examples
-#' originalVector <- c('group1, group2', 'group3')
+#' originalVector <- c("group1, group2", "group3")
 #' splitInputs(originalVector)
 #' # Result: c('group1', 'group2', 'group3')
 #' @export
-splitInputs <- function(originalVector){
-  if (all(is.na(originalVector))) return(NULL)
+splitInputs <- function(originalVector) {
+  if (all(is.na(originalVector))) {
+    return(NULL)
+  }
   originalVector <- originalVector[!is.na(originalVector)]
-  splitVector <- trimws(unlist(strsplit(originalVector, ',')))
+  splitVector <- trimws(unlist(strsplit(originalVector, ",")))
 
   return(splitVector)
+}
+
+#' load the properties for data groups
+#'
+#' @template projectConfig
+#'
+#' @return `data.table` with datagroupIds
+#' @export
+getDataGroups <- function(projectConfiguration) {
+  return(xlsxReadData(
+    wb = projectConfiguration$plotsFile,
+    sheetName = "DataGroupID",
+    skipDescriptionRow = TRUE
+  ))
+}
+
+#' load the scenario definitions
+#'
+#' @template projectConfig
+#'
+#' @return `data.table` with scenario definitions
+#' @export
+getScenarioDefinitions <- function(projectConfiguration) {
+  return(xlsxReadData(
+    wb = projectConfiguration$scenarioDefinitionFile,
+    sheetName = "Scenarios",
+    skipDescriptionRow = FALSE
+  ))
+}
+
+#' load the output configurations
+#'
+#' @template projectConfig
+#'
+#' @return `data.table` with output configurations
+#' @export
+getOutputPathIds <- function(projectConfiguration) {
+  return(xlsxReadData(
+    wb = projectConfiguration$plotsFile,
+    sheetName = "Outputs",
+    skipDescriptionRow = TRUE
+  ))
 }

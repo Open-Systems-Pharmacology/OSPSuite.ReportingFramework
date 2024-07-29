@@ -6,17 +6,12 @@
 \usage{
 validateConfigTableForTimeProfiles(
   configTable,
-  dtScenarios,
-  dtOutputPaths,
-  observedData
+  observedData,
+  projectConfiguration
 )
 }
 \arguments{
 \item{configTable}{plot Configuration table}
-
-\item{dtScenarios}{data.table with scenario definitions}
-
-\item{dtOutputPaths}{data.table with output definitions}
 
 \item{observedData}{observed data as data.table}
 }
