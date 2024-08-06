@@ -98,7 +98,6 @@ RmdContainer <- R6::R6Class( # nolint
       private$.checkKeyIsUnique(key = figureKey)
 
       dev <- ospsuite.plots::getOspsuite.plots.option(optionKey = ospsuite.plots::OptionKeys$export.device)
-
       ospsuite.plots::exportPlot(
         plotObject = plotObject,
         filepath = file.path(private$.rmdfolder, private$.subfolder),

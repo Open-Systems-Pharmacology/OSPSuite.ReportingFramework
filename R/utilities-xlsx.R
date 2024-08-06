@@ -147,7 +147,7 @@ splitInputs <- function(originalVector) {
 getDataGroups <- function(projectConfiguration) {
   return(xlsxReadData(
     wb = projectConfiguration$plotsFile,
-    sheetName = "DataGroupID",
+    sheetName = "DataGroups",
     skipDescriptionRow = TRUE
   ))
 }

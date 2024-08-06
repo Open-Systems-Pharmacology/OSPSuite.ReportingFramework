@@ -59,9 +59,9 @@ configTable <-
                               '(output1, output2, output3)'))
 
 
-test_that("getPlotIDTable function test", {
+test_that("getPlotIdTable function test", {
   plotIdTable <- getPlotIdTable(configTable)
 
-  expect_contains(levels(plotIdTable$PlotID),c("P1","P2","P3","P4","P5","P6","P7"))
+  expect_contains(levels(plotIdTable$PlotId),c("P1","P2","P3","P4","P5","P6","P7"))
   expect_equal(nrow(plotIdTable),12)
 })

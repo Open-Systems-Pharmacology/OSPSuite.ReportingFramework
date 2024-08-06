@@ -19,6 +19,7 @@ openFigureTemplate <- function() {
 
 #' Opens the workflow template as new document
 #'
+#' @export
 createWorkflowTemplate <- function() {
   createDocumentFromTemplate(
     template = "template_workflow",

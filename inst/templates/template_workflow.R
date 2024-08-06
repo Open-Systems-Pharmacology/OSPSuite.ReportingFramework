@@ -10,8 +10,9 @@ library(esqlabsR)
 # set graphic all defaults
 # (see vignette TODO)
 ospsuite.plots::setDefaults()
+theme_update(panel.background = element_rect(linetype = 'solid'))
 
-# set otpions to switch between non-Valid and valid mode
+# set options to switch between non-Valid and valid mode
 # (see vignette TODO)
 setRunModeIsValid(FALSE)
 
