@@ -19,7 +19,7 @@ initLogfunction(
 \arguments{
 \item{projectPath}{The path where the default log file folder is generated.}
 
-\item{logFileFolder}{Optional. If NULL, a default log file folder is generated in the `projectPath/logs/timestamp`.}
+\item{logFileFolder}{Optional. If NULL, a default log file folder is generated in the `projectPath/Logs/timestamp`.}
 
 \item{warningsNotDisplayed}{A list of warnings that should not be logged.}
 

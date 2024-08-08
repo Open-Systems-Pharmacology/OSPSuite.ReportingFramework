@@ -4,7 +4,7 @@
 \alias{validatePanelConsistency}
 \title{check if panel columns ar filled consistently}
 \usage{
-validatePanelConsistency(configTablePlots, panelColumns)
+validatePanelConsistency(configTablePlots, panelColumns, dtOutputPaths)
 }
 \arguments{
 \item{configTablePlots}{`data.table` ConfigurationTable without header lines}

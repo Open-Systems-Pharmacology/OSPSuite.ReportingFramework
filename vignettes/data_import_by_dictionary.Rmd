@@ -103,7 +103,9 @@ In the "tpDictionary" sheet, define the data dictionary with the following colum
         (see ospsuite::HumanPopulation)
 
       - **covariate** columns used for covariate analysis, this is the only column type where the name of the
-      targetcolumn can be freely assigned by the user.
+      targetcolumn can be freely assigned by the user. Covariates are optional rows
+      - **metadata** columns used to add information in the DataGroup sheet in the Plotconfiguration table. 
+      The information is used to generate the data import for PK-Sim
 
   - **sourceColumn**: Name of the column in the source CSV.  
   - **sourceUnit**: Unit of the column in the source CSV.  
@@ -111,6 +113,8 @@ In the "tpDictionary" sheet, define the data dictionary with the following colum
   - **filterValue**: An R executable expression to set a value for the filtered rows.  
 
 By filling out the Excel table with the required information, you can ensure that the `readObservedDataByDictionary` function can effectively read and process the observed data based on the provided data dictionary and configuration.  
+
+**!!! ATTENTION, Do not use single quotes ' to capture strings. At the beginning of an excel cell single quotes will be ignored. Use double quotes ".**
 
 
 # Example Sheets

@@ -1,5 +1,6 @@
 # initialize logging. Is always needed
 projectPath <- iniLogFileForTest()
+setShowLogMessages(FALSE)
 
 test_that("It should read and process data based on the provided project configuration", {
   # Create a sample project configuration for testing
@@ -159,5 +160,22 @@ test_that("convertDataTableToDataCombined function test", {
   # Add assertions based on the expected output of the function
   expect_s3_class(dataCombined, "DataCombined")
 })
+
+
+test_that("convertIdentifierColumns function works as expected", {
+  test_dt <- data.table(col1 = c("a,b,c", "d,e,f"), col2 = c("x,y,z", "1,2,3"), col3 = c("1,2,3", "4,5,6"))
+
+  identifierCols <- c("col1", "col2")
+  updated_dt <- suppressWarnings(convertIdentifierColumns(test_dt, identifierCols))
+
+  # Check if commas were replaced by underscores
+  expect_equal(updated_dt$col1[1], "a_b_c")
+  expect_equal(updated_dt$col2[1], "x_y_z")
+
+
+  expect_warning(updated_dt <- convertIdentifierColumns(test_dt, 'col1'))
+
+})
+
 
 cleanupLogFileForTest(projectPath)

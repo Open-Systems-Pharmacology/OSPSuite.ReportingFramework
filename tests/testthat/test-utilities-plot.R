@@ -71,10 +71,10 @@ test_that("validateConfigTablePlots function test", {
 
   # Test if the function correctly validates logical columns
   expect_error(validateConfigTablePlots(configTablePlots,
-                                        logicalColumns = "NumericColumn1"))
+                                        logicalColumns = "CharacterColumn1"))
 
   # Test if the function correctly validates numeric range columns
-  expect_error(validateConfigTablePlots(configTablePlots, logicalColumns = "NumericColumn1"))
+  expect_error(validateConfigTablePlots(configTablePlots, numericRangeColumns = "NumericColumn1"))
 
   # Test if the function correctly validates subset list
   expect_error(validateConfigTablePlots(configTablePlots,

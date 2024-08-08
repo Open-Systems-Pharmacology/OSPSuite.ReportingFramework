@@ -5,6 +5,7 @@
 # load libraries and source project specific code
 library(ospsuite.reportingframework)
 library(ospsuite.plots)
+library(ggplot2)
 library(esqlabsR)
 
 # set graphic all defaults
@@ -12,15 +13,18 @@ library(esqlabsR)
 ospsuite.plots::setDefaults()
 theme_update(panel.background = element_rect(linetype = 'solid'))
 
-# set options to switch between non-Valid and valid mode
+# set options to enable watermarks
 # (see vignette TODO)
-setRunModeIsValid(FALSE)
+setOspsuite.plots.option(
+  optionKey = OptionKeys$watermark_enabled,
+  value = TRUE
+)
 
 # Setup project structure -------------------------------------------------
 # creates project directory (see vignette TODO Esqlabs)
 # and help initProject for source Folder Selection
 projectPath <- initProject(
-  projectPath = ".",
+  projectPath = "..",
   overwrite = FALSE,
   sourceFolder = templateDirectory()
 )
@@ -40,15 +44,8 @@ logCatch({
   # (see vignette('data_import_by_dictionary'))
 
   # read data as data.table
-  dataDT <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,
+  dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,
                                          addBiometricsToConfigFlag = TRUE)
-
-  # convert data.table to dataCombined format
-  # edit DataGroupID in the data Configuration to get proper names
-  # edit OutputpathID in the scenario Configuration to get molweights
-  dataCombined <-
-    convertDataTableToDataCombined(projectConfiguration = projectConfiguration,
-                                   dataDT = dataDT)
 
 
   # Simulations ------------------------------------------------------

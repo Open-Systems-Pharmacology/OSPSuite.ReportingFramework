@@ -1,7 +1,5 @@
 projectPath <- iniLogFileForTest()
-
-
-library(testthat)
+projectConfiguration <- suppressMessages(setUpTestProject(projectPath))
 
 # Create example data for testing
 configTablePlots <- data.table(
@@ -50,18 +48,3 @@ test_that("validateTimeRangeColumns function test", {
 
 })
 
-
-configTable <-
-  data.table(Scenario = c('scenario1','scenario1','scenario2','scenario3'),
-             OutputPathId = c('output1, output2',
-                              '(output1, output2), output3',
-                              '(output1, output2), (output2,output3)',
-                              '(output1, output2, output3)'))
-
-
-test_that("getPlotIdTable function test", {
-  plotIdTable <- getPlotIdTable(configTable)
-
-  expect_contains(levels(plotIdTable$PlotId),c("P1","P2","P3","P4","P5","P6","P7"))
-  expect_equal(nrow(plotIdTable),12)
-})

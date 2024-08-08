@@ -4,7 +4,7 @@
 #' It is used to configure options for the log file folder, warning swhich should not logged and messages which should not logged.
 #'
 #' @param projectPath The path where the default log file folder is generated.
-#' @param logFileFolder Optional. If NULL, a default log file folder is generated in the `projectPath/logs/timestamp`.
+#' @param logFileFolder Optional. If NULL, a default log file folder is generated in the `projectPath/Logs/timestamp`.
 #' @param warningsNotDisplayed A list of warnings that should not be logged.
 #' @param messagesNotDisplayed A list of messages that should not be logged.
 #' @param verbose boolean, if true log message will be shown on the console
@@ -41,7 +41,7 @@ initLogfunction <- function(projectPath,
   if (is.null(logFileFolder)) {
     # Create the log file sub-folder with a time stamp
     timestamp <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
-    logFileFolder <- file.path(projectPath, "logs", timestamp)
+    logFileFolder <- file.path(projectPath, "Logs", timestamp)
   }
 
   # Create the log file sub-folder if it doesn't exist
@@ -176,7 +176,6 @@ logCatch <- function(expr) {
 writeToLog <- function(type, msg, filename = NULL) {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
   if (is.null(filename)) filename <- "run.log"
-
   checkmate::assertCharacter(type, len = 1, any.missing = FALSE)
   checkmate::assertCharacter(msg)
   checkmate::assertDirectoryExists(logFileFolder)
@@ -189,6 +188,29 @@ writeToLog <- function(type, msg, filename = NULL) {
     append = TRUE
   )
 }
+
+#' write a table to the logfile
+#'
+#' @param dt table to log
+#' @param filename filename of log
+#'
+#' @export
+writeTableToLog <- function(dt, filename = "run.log") {
+  logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
+  verbose <- getOption("OSPSuite.RF.verbose", default = TRUE)
+
+  checkmate::assertDataFrame(dt)
+  checkmate::assertDirectoryExists(logFileFolder)
+  checkmate::assertCharacter(filename, len = 1, any.missing = FALSE)
+
+  sink(file.path(logFileFolder, filename),append = TRUE,split = verbose)
+
+  print(dt)
+
+  sink()
+
+}
+
 
 #' Function to switch the display of log messages on the console on and off
 #'

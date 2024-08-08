@@ -3,13 +3,11 @@
 #' @template projectConfig
 #' @param subfolder is name of subfolder in the project/to/path/report directory
 #' @param configTableSheet name of sheet in plot configuration xlsx, which defines the plot
-#' @param observedData either data.table or object of class `DataCombined`
+#' @template observedData
 #' @param nFacetColumns maximal number of facet columns (default 2) used in for facet type "by Order"
 #'
 #' @return object of class `rmdContainer`
 #' @export
-#'
-#' @examples
 plotTimeProfilePanels <- function(projectConfiguration,
                                   subfolder,
                                   configTableSheet,
@@ -85,7 +83,7 @@ plotTimeProfilePanels <- function(projectConfiguration,
 #'
 #' @template projectConfig
 #' @param panelConfig  part of configuration table which defines the plot
-#' @param observedData `data.table`
+#' @template observedDataDT
 #' @param rmdContainer object of class `rmdContainer`
 #'
 #' @return object of class `rmdContainer` with added figures
@@ -257,13 +255,11 @@ plotOfOneTimeProfilePanel <- function(projectConfiguration,
 
 
 
-#' COllects all data neede for this plots
-#'
-#' add colums for facet
+#' Collects all observed and simulated data needed for this plots
 #'
 #' @template projectConfig
-#' @param panelConfig
-#' @param observedData
+#' @param panelConfig configuration table for one plot
+#' @template observedDataDT
 #'
 #' @return `data.table` with plotData and attribute metaData
 #' @export
@@ -416,11 +412,12 @@ loadSimulatedResultsForTimeProfilePanelPlot <- function(projectConfiguration,
 
 #' load observed data used in this panel
 #'
-#' @param panelConfig
-#' @param observedData
-#' @param dtUnit
+#' @param panelConfig `data.table` with configuration for this plot
+#' @template observedDataDT
+#' @param dtUnit `data.table` with unit information
 #'
-#' @return
+#' @return `data.table` with observed data used in this plot
+#'
 #' @export
 getObservedDataForTimeProfilePanelPlot <- function(observedData,
                                                    panelConfig,
@@ -682,12 +679,10 @@ getCaptionTimeProfile = function(dtPlotId,
 #' constructs footnote lines for aggregated data and data references
 #'
 #' @template projectConfig
-#' @param observedData
+#' @template observedData
 #'
-#' @return
+#' @return vector of characters, each entry is one footnote line
 #' @export
-#'
-#' @examples
 getFootNoteLines = function(observedData,
                             projectConfiguration){
   footnoteLines = c()
@@ -725,7 +720,7 @@ getFootNoteLines = function(observedData,
 #'
 #' @teamplate projectConfig
 #' @param configTable plot Configuration table
-#' @param observedData observed data as data.table
+#' @template observedDataDT
 #'
 #' @export
 validateConfigTableForTimeProfiles <- function(configTable, observedData, projectConfiguration) {

@@ -6,14 +6,14 @@
 #'
 #' @export
 openWorkflowTemplate <- function() {
-  rstudioapi::callFun("sendToConsole", "createWorkflowTemplate()")
+  rstudioapi::callFun("sendToConsole", "ospsuite.reportingframework::createWorkflowTemplate()")
 }
 
 #' Opens the  template for figure creation as new document
 #'
 #' @export
 openFigureTemplate <- function() {
-  rstudioapi::callFun("sendToConsole", "createDocumentFromTemplate(template = 'template_plot')")
+  rstudioapi::callFun("sendToConsole", "ospsuite.reportingframework::createDocumentFromTemplate(template = 'template_plot')")
 }
 
 
@@ -21,7 +21,7 @@ openFigureTemplate <- function() {
 #'
 #' @export
 createWorkflowTemplate <- function() {
-  createDocumentFromTemplate(
+  ospsuite.reportingframework::createDocumentFromTemplate(
     template = "template_workflow",
     templatePath = getOption(
       "OSPSuite.RF.PathForWorkflowTemplate",

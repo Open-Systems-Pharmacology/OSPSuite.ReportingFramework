@@ -82,6 +82,13 @@ readObservedDataByDictionary <- function(projectConfiguration,
     )
   }
 
+  # logging
+  message('Observed Data:')
+  writeTableToLog(dataDT[,.('No of data points' = .N,
+                            'No of individuals' = dplyr::n_distinct(IndividualId),
+                            'No of outputs' = dplyr::n_distinct(OutputPathId)),
+                         by = c('StudyId','group') ])
+
   return(dataDT)
 }
 
@@ -248,9 +255,9 @@ convertDataByDictionary <- function(data,
   # add time unit
   data[, xUnit := dict[targetColumn == "xValues"]$sourceUnit]
 
-  # transfer identifier to character
-  identifierCols <- dict[type == "identifier"]$targetColumn
-  data[, (identifierCols) := lapply(.SD, as.character), .SDcols = identifierCols]
+  # transfer identifier to character without commas
+  data <- convertIdentifierColumns(dt = data,
+                                   identifierCols = dict[type == "identifier"]$targetColumn)
 
   data <- convertBiometrics(data, dict)
 
@@ -311,15 +318,15 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
 
   dtDataGroupIds <- xlsxReadData(wb = wb, sheetName = "DataGroups")
 
-  dtDataGroupIdsNew <- dataDT[, c("StudyId", "group")] %>%
+  colsSelected <- unique(c("StudyId", "group"),
+    getColumnsForColumnType(dt = dataDT,columnTypes = 'metadata'))
+
+  dtDataGroupIdsNew <- dataDT %>%
+    dplyr::select(all_of(colsSelected)) %>%
     unique() %>%
     dplyr::mutate(StudyId = as.character(StudyId)) %>%
     dplyr::mutate(group = as.character(group))
 
-  checkAlphanumericalIDs(
-    vector = dtDataGroupIdsNew$group,
-    failureMessage = "group identifier should by alphanumerical, check group: "
-  )
 
   dtDataGroupIds <- rbind(dtDataGroupIds,
     dtDataGroupIdsNew,
@@ -353,10 +360,6 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
     dplyr::mutate(OutputPathId = as.character(OutputPathId)) %>%
     data.table::setnames("OutputPathId", "OutputPathId")
 
-  checkAlphanumericalIDs(
-    vector = dtOutputPathsNew$OutputPathId,
-    failureMessage = "output identifier should by alphanumerical, check OutputPahId: "
-  )
 
   dtOutputPaths <- rbind(dtOutputPaths,
     dtOutputPathsNew,
@@ -577,6 +580,7 @@ addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALS
 #' converst object of class dataCombined to data.table with atttributes
 #'
 #' format correspondends to data.table produced by `readObservedDataByDictionary`
+#' if the metaData does not contain `StudyId` StudyId 0 will be added.
 #'
 #' @param datacombined
 #'
@@ -589,6 +593,10 @@ convertDataCombinedToDataTable <- function(datacombined) {
 
   # delete columns not needed
   dataDT <- dataDT[, which(colSums(is.na(dataDT)) != nrow(dataDT)), with = FALSE]
+
+  # add columns needed
+  if (!('StudyId' %in% names (dataDT)))
+    dataDT[, StudyId := 0]
 
   data.table::setnames(dataDT, "IndividualIdObserved", "IndividualID", skip_absent = TRUE)
 }
@@ -665,19 +673,27 @@ getColumnsForColumnType <- function(dt, columnTypes) {
 }
 
 
-#' check if a vector of ids is alphanumerical
+#' Update identifier columns in a data.table
 #'
-#' @param vector vector of ids
-#' @param failureMessage message to plot on failure
+#' This function updates the specified identifier columns in a data.table by replacing commas with underscores.
+#' It also checks for the presence of commas in the columns and generates a warning message if found.
+#'
+#' @param dt The input data.table
+#' @param identifierCols A character vector specifying the columns to be updated
+#' @return The updated data.table
+#' @examples
+#' dt <- data.table(col1 = c("a,b,c", "d,e,f"), col2 = c("x,y,z", "1,2,3"))
+#' identifierCols <- c("col1", "col2")
+#' updatedDt <- updateIdentifierColumns(dt, identifierCols)
 #' @export
-checkAlphanumericalIDs <- function(vector,
-                                   failureMessage) {
-  if (!all(grepl("^[a-zA-Z0-9_]*$", vector))) {
-    stop(paste(
-      failureMessage,
-      paste(vector[!grepl("^[a-zA-Z0-9_]*$", vector)], collapse = ",")
-    ))
+convertIdentifierColumns <- function(dt, identifierCols) {
+  for (col in identifierCols) {
+    dt[[col]] <- as.character(dt[[col]])
+    if (any(grepl(",", dt[[col]]))) {
+      warning(paste("Warning: Column", col, "commas were replace by _"))
+    }
+    dt[[col]] <- gsub(",", "_", dt[[col]])
   }
-
-  return(invisible())
+  return(dt)
 }
+

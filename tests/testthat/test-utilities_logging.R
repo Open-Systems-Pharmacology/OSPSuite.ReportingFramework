@@ -4,7 +4,7 @@ projectPath <- iniLogFileForTest()
 # Unit tests for initLogfunction
 test_that("initLogfunction creates default log file folder when logFileFolder is NULL", {
   suppressMessages(initLogfunction(projectPath))
-  expect_true(file.exists(file.path(projectPath, "logs")))
+  expect_true(file.exists(file.path(projectPath, "Logs")))
 })
 
 test_that("initLogfunction creates log file folder with specified path", {
@@ -88,7 +88,7 @@ test_that("saveSessionInfo writes session info to log file", {
 
 
 # Test for verbose = FALSE
-test_that("logCatch logs messages when verbose is TRUE", {
+test_that("logCatch Logs messages when verbose is TRUE", {
   myMessage <- "Test message"
 
   initLogfunction(projectPath = projectPath, verbose = FALSE)
@@ -96,6 +96,25 @@ test_that("logCatch logs messages when verbose is TRUE", {
   output <- utils::capture.output(logCatch(message(myMessage)), type = "message")
 
   expect_true(output == myMessage)
+})
+
+
+# Define the example data
+example_data <- data.table(x = 1:5, y = letters[1:5])
+
+# Write the unit test
+test_that("writeTableToLog function works as expected", {
+
+  # Call the function with example data
+  writeTableToLog(example_data,filename = 'table.log')
+
+  # Verify that the log file has been created
+  # Check if the log file was created and contains the session info
+  logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
+
+  suppressWarnings(logContent <- readLines(file.path(logFileFolder, "table.log")))
+  expect_true(length(logContent) > 0, "Log file was created")
+
 })
 
 cleanupLogFileForTest(projectPath)
