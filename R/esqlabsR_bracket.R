@@ -15,7 +15,7 @@
 #' @returns path of project
 #'
 #' @export
-initProject <- function(projectPath = ".",
+initProject <- function(projectPath = "..",
                         sourceFolder,
                         overwrite = FALSE) {
   projectPath <- fs::path_abs(projectPath)
@@ -57,6 +57,7 @@ initProject <- function(projectPath = ".",
 #'
 #' @export
 createDefaultProjectConfiguration.wrapped <- function(path) { # nolint
+  checkmate::assertFileExists(path)
   projectConfiguration <- esqlabsR::createDefaultProjectConfiguration(path = path)
 
   message(paste(utils::capture.output(projectConfiguration), collapse = "\n"))

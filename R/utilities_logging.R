@@ -3,8 +3,8 @@
 #' This function initialize the logging during a workflow. It is called at the start of the workflow script.
 #' It is used to configure options for the log file folder, warning swhich should not logged and messages which should not logged.
 #'
-#' @param projectPath The path where the default log file folder is generated.
-#' @param logFileFolder Optional. If NULL, a default log file folder is generated in the `projectPath/Logs/timestamp`.
+#' @param loggingFolder The path where the default log file folder is generated.
+#' @param logFileSubFolder Optional. If NULL, a default log file folder is generated in the `loggingFolder`timestamp`.
 #' @param warningsNotDisplayed A list of warnings that should not be logged.
 #' @param messagesNotDisplayed A list of messages that should not be logged.
 #' @param verbose boolean, if true log message will be shown on the console
@@ -16,8 +16,8 @@
 #' }
 #'
 #' @export
-initLogfunction <- function(projectPath,
-                            logFileFolder = NULL,
+initLogfunction <- function(loggingFolder = file.path('Logs'),
+                            logFileSubFolder = NULL,
                             warningsNotDisplayed = c(
                               "introduced infinite values",
                               "Each group consists of only one observation",
@@ -33,19 +33,30 @@ initLogfunction <- function(projectPath,
                               "Each group consists of only one observation"
                             ),
                             verbose = TRUE) {
-  if (is.null(logFileFolder)) checkmate::assertDirectoryExists(projectPath)
-  checkmate::assertCharacter(logFileFolder, len = 1, null.ok = TRUE)
+  checkmate::assertCharacter(logFileSubFolder, len = 1, null.ok = TRUE)
   checkmate::assertCharacter(warningsNotDisplayed)
   checkmate::assertCharacter(messagesNotDisplayed)
 
-  if (is.null(logFileFolder)) {
+  if (is.null(logFileSubFolder)) {
+    if (!dir.exists(loggingFolder)) dir.create(loggingFolder,recursive = TRUE)
     # Create the log file sub-folder with a time stamp
+
+    # Get the name of the original script
+    script_name <- tryCatch({
+      script <- sys.frame(1)$ofile
+      sub(".R$", "", basename(script))
+    }, error = function(e) {
+      return(NULL)
+    })
+
     timestamp <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
-    logFileFolder <- file.path(projectPath, "Logs", timestamp)
+    logFileSubFolder <- paste(script_name,timestamp,sep = '_')
   }
 
+  logFileFolder <- fs::path_abs(file.path(loggingFolder,logFileSubFolder))
+
   # Create the log file sub-folder if it doesn't exist
-  if (!file.exists(logFileFolder)) {
+  if (!dir.exists(logFileFolder)) {
     dir.create(logFileFolder, recursive = TRUE)
   }
 
@@ -203,11 +214,13 @@ writeTableToLog <- function(dt, filename = "run.log") {
   checkmate::assertDirectoryExists(logFileFolder)
   checkmate::assertCharacter(filename, len = 1, any.missing = FALSE)
 
-  sink(file.path(logFileFolder, filename),append = TRUE,split = verbose)
-
+  sink(file.path(logFileFolder, filename),append = TRUE,split = FALSE)
   print(dt)
-
   sink()
+
+  if (verbose) {
+    print(dt)
+  }
 
 }
 

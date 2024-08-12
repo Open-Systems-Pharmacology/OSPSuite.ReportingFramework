@@ -30,7 +30,7 @@ projectPath <- initProject(
 )
 
 # initialize log file
-initLogfunction(projectPath)
+initLogfunction(file.path(projectPath,'Outputs','Logs'))
 
 logCatch({
 

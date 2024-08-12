@@ -14,3 +14,10 @@ TIMERANGE <- ospsuite.utils::enum(c( # nolint
   firstApplication = "firstApplication",
   lastApplication = "lastApplication"
 ))
+
+#' @title enumeration keys for DataClass
+#' @export
+DATACLASS <- ospsuite.utils::enum(c( # nolint
+  tpIndividual = "tp Individual",
+  tpAggregated = "tp Aggregated"
+))

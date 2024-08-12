@@ -32,7 +32,8 @@ readObservedDataByDictionary <- function(projectConfiguration,
     tmpdict <- readDataDictionary(
       dictionaryFile = projectConfiguration$dataImporterConfigurationFile,
       sheet = d$Dictionary,
-      data = tmpData
+      data = tmpData,
+      dataClass = d$DataClass
     )
 
     dataDT <- rbind(dataDT,
@@ -126,7 +127,8 @@ validateObservedData <- function(dataDT, stopIfValidationFails = TRUE) {
   }
   # check data validity
   colIdentifier <-
-    c("IndividualId", "group", "OutputPathId", "xValues")
+    intersect(c("IndividualId", "group", "OutputPathId", "xValues"),
+              names(dataDT))
   if (any(duplicated(dataDT, by = colIdentifier))) {
     .returnMessage(
       paste(
@@ -143,7 +145,7 @@ validateObservedData <- function(dataDT, stopIfValidationFails = TRUE) {
     if (any(is.na(dataDT[[col]]) | dataDT[[col]] == "")) {
       .returnMessage(
         paste("data contains NAs or empty values in column", col),
-        stopIfValidationFails
+        FALSE
       )
       print(paste("empty entries in", col))
       print(dataDT[is.na(get(col)) | get(col) == ""])
@@ -152,9 +154,22 @@ validateObservedData <- function(dataDT, stopIfValidationFails = TRUE) {
   colIdentifier <- c("group", "OutputPathId")
   if (any(dataDT[, .(N = dplyr::n_distinct(yUnit)), by = "OutputPathId"]$N > 1)) { # nolint
     .returnMessage(
-      paste("data is not unique in columns", paste(colIdentifier, collapse = ", ")),
+      paste("dv unit is ambiguous in columns", paste(colIdentifier, collapse = ", ")),
       stopIfValidationFails
     )
+  }
+
+  if ("yErrorType" %in% names(dataDT)){
+    if (dataDT$yErrorType %in%  unlist(ospsuite::DataErrorType)){
+      checkmate::assertNames(
+        names(dataDT),
+        must.include = "yErrorValues")
+    } else {
+      checkmate::assertNames(
+        names(dataDT),
+        must.include = c("yMin","yMax"))
+    }
+
   }
 }
 
@@ -165,32 +180,52 @@ validateObservedData <- function(dataDT, stopIfValidationFails = TRUE) {
 #' @param dictionaryFile The file containing the data dictionary
 #' @param sheet The sheet within the data dictionary file
 #' @param data The data to be used with the dictionary
+#' @param dataClass class of data either "tp Individual" or "tp Aggregated"
 #'
 #' @return The data dictionary
-readDataDictionary <- function(dictionaryFile, sheet, data) {
-  # initialize variables used fo data.tables
-  sourceColumn <- filter <- targetColumn <- NULL
+readDataDictionary <-
+  function(dictionaryFile,
+           sheet,
+           data,
+           dataClass = grep('^tp',unlist(DATACLASS),value = TRUE)) {
+    # initialize variables used fo data.tables
+    sourceColumn <- filter <- targetColumn <- NULL
 
-  dict <- xlsxReadData(wb = dictionaryFile, sheetName = sheet, skipDescriptionRow = TRUE)
+    dict <- xlsxReadData(wb = dictionaryFile, sheetName = sheet, skipDescriptionRow = TRUE)
 
-  checkmate::assertNames(
-    dict$targetColumn,
-    must.include = c(
-      "IndividualId",
-      "group",
-      "OutputPathId",
-      "xValues",
-      "yValues",
-      "yUnit",
-      "yErrorValues",
-      "yErrorType",
-      "nBelowLLOQ"
-    ), .var.name = paste("Check for missing targetColumns in  dictionary", sheet)
-  )
+    dataClass <- match.arg(dataClass)
+
+    if (dataClass == DATACLASS$tpIndividual){
+      checkmate::assertNames(
+        dict$targetColumn,
+        must.include = c(
+          "IndividualId",
+          "group",
+          "OutputPathId",
+          "xValues",
+          "yValues",
+          "yUnit"
+        ), .var.name = paste("Check for missing targetColumns in  dictionary", sheet)
+      )
+    } else if (dataClass == DATACLASS$tpAggregated){
+      checkmate::assertNames(
+        dict$targetColumn,
+        must.include = c(
+          "group",
+          "OutputPathId",
+          "xValues",
+          "yValues",
+          "yUnit",
+          "yErrorType",
+          "nBelowLLOQ"
+        ), .var.name = paste("Check for missing targetColumns in  dictionary", sheet)
+      )
+    }
 
   tmp <- dict[is.na(sourceColumn) & is.na(filter), ]
   if (nrow(tmp) > 0) {
-    stop(paste("Either sourceColumn or Filter on sourceColumn has to be filled in dictionary", sheet))
+    stop(paste0('Either sourceColumn or Filter on sourceColumn has to be filled in dictionary "', sheet,
+               '" for targetColumn(s) "', paste(tmp$targetColumn,collapse = '", "'),'"'))
   }
 
   checkmate::assertNames(
@@ -318,7 +353,9 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
 
   dtDataGroupIds <- xlsxReadData(wb = wb, sheetName = "DataGroups")
 
-  colsSelected <- unique(c("StudyId", "group"),
+  identifierCols <- intersect(names(dataDT),c("group","StudyId","StudyArm"))
+
+  colsSelected <- unique(identifierCols,
     getColumnsForColumnType(dt = dataDT,columnTypes = 'metadata'))
 
   dtDataGroupIdsNew <- dataDT %>%
@@ -333,7 +370,8 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
     fill = TRUE
   )
 
-  dtDataGroupIds <- dtDataGroupIds[!duplicated(dtDataGroupIds[, c("StudyId", "group")])]
+  dtDataGroupIds <- dtDataGroupIds[!duplicated(dtDataGroupIds %>%
+                                                 dplyr::select(all_of(identifierCols)))]
 
 
   xlsxWriteData(wb = wb, sheetName = "DataGroups", dt = dtDataGroupIds)

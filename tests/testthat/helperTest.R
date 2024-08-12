@@ -4,7 +4,7 @@
 iniLogFileForTest <- function() {
   projectPath <- tempdir()
   if (!dir.exists(projectPath)) dir.create(projectPath)
-  initLogfunction(projectPath = projectPath, verbose = FALSE)
+  initLogfunction(loggingFolder = file.path(projectPath,'Outputs','Logs'), verbose = FALSE)
 
   return(projectPath)
 }
@@ -81,20 +81,21 @@ setUpTestProject <- function(projectPath) {
 
   projectConfiguration <-
     createDefaultProjectConfiguration.wrapped(
-      path = file.path(projectPath, "ProjectConfiguration.xlsx")
+      path = file.path(projectPath, "Scripts","ProjectConfiguration.xlsx")
     )
+
+  if (!dir.exists(projectConfiguration$modelFolder))
+    dir.create(projectConfiguration$modelFolder, recursive = TRUE)
 
   file.copy(
     from = system.file("extdata", "Aciclovir.pkml", package = "ospsuite"),
     to = file.path(projectConfiguration$modelFolder, "Aciclovir.pkml")
   )
 
-
-
   return(projectConfiguration)
 }
 
-#' adjust datadictionary ready to use
+#' adjust data dictionary ready to use
 #'
 #' @template projectConfig
 setDataDictionary <- function(projectConfiguration) {
@@ -103,15 +104,16 @@ setDataDictionary <- function(projectConfiguration) {
   wb <- openxlsx::loadWorkbook(projectConfiguration$dataImporterConfigurationFile)
 
 
-  dtDataFiles <- xlsxReadData(wb = wb, sheetName = "DataFiles")
+  dtDataFiles <- xlsxReadData(wb = wb, sheetName = "DataFiles",skipDescriptionRow = FALSE)
   dtDataFiles <- dtDataFiles[c(1)]
 
   dtDataFiles <- rbind(
     dtDataFiles,
     data.table(
-      DataFile = file.path("Data", "data.csv"),
+      DataFile = file.path("..","Data", "data.csv"),
       Dictionary = "tpDictionary",
-      DataFilter = ""
+      DataFilter = "",
+      DataClass = DATACLASS$tpIndividual
     )
   )
 
@@ -122,10 +124,16 @@ setDataDictionary <- function(projectConfiguration) {
   tpDictionary <- xlsxReadData(wb = wb, sheetName = "tpDictionary")
 
   tpDictionary <- tpDictionary[targetColumn != "population"]
+  tpDictionary <- tpDictionary[targetColumn != "nBelowLLOQ"]
+  tpDictionary <- tpDictionary[targetColumn != "yErrorType"]
+  tpDictionary <- tpDictionary[targetColumn != "yErrorValues"]
+  tpDictionary <- tpDictionary[targetColumn != "StudyArm"]
 
   tpDictionary[targetColumn == "SubjectId"]$sourceColumn <- "SID"
   tpDictionary[targetColumn == "IndividualId"]$filterValue <- "paste(STUD,SID,sep = '_')"
   tpDictionary[targetColumn == "group"]$sourceColumn <- "STUD"
+  tpDictionary[targetColumn == "group"]$filter <- NA
+  tpDictionary[targetColumn == "group"]$filterValue <- NA
   tpDictionary[targetColumn == "OutputPathId"]$sourceColumn <- "MOLECULE"
   tpDictionary[targetColumn == "xValues"]$sourceColumn <- "Time"
   tpDictionary[targetColumn == "yValues"]$sourceColumn <- "DV"
@@ -184,7 +192,7 @@ addRandomSourceData <- function(projectConfiguration) {
     }
   }
 
-  data.table::fwrite(dt, file = file.path(projectConfiguration$dataFolder, "data.csv"))
+  data.table::fwrite(dt, file = file.path(projectConfiguration$projectConfigurationDirPath,'..','Data', "data.csv"))
 
   return(invisible())
 }
