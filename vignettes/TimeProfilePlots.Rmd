@@ -1,0 +1,29 @@
+---
+title: "TimeProfilePlots"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{TimeProfilePlots}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(ospsuite.reportingframework)
+```
+
+```{r, eval=FALSE,echo=TRUE}
+#prepare configtable
+  addDefaultConfigForTimeProfilePlots(
+    projectConfiguration = projectConfiguration,
+    sheetName = 'TimeProfiles_1',
+    overwrite = TRUE
+  )
+```
+

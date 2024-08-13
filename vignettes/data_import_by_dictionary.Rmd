@@ -36,9 +36,9 @@ To use the `readObservedDataByDictionary` function, follow these steps:
 
 - Data which is used in other configuration files is also updated: 
 
-  - Sheet "DataGroupId" in the dataImportConfiguration file. All missing combinations of StudyId, group were added. Here you can add properties like the displayname for the report.  
-  - Sheet "OutputPaths" in the Scenario definition file. All missing OutputPathIds are added. Her you can add output paths, molweights and display names for report.  
-  - Sheet "IndividualBiometrics" in the Individual parameter file. All biometrics contained in the data are added.  
+  - Sheet "DataGroups" (plotconfiguration file): All missing combinations of StudyId, group were added. Here you can add properties like the Displayname for the report.  
+  - Sheet "OutputPaths" (plotconfiguration file): All missing OutputPathIds are added. Her you can add output paths and Display names for report.  
+  - Sheet "IndividualBiometrics" (Individual parameter file): All biometrics contained in the data are added.  
   
 - Convert the data to the dataCombined format: Call `convertDataTableToDataCombined(dataDT)` 
   
@@ -61,6 +61,7 @@ In the "DataFiles" sheet of the Excel template, provide the following informatio
 - **DataFile**: Path of the CSV file relative to the configuration XLSX.
 - **Dictionary**: Sheet name for the data dictionary.
 - **DataFilter**: An R executable expression that filters relevant data for the study. If empty, no filter is applied.
+- **DataClass**: Differentiate between aggregated and individual data.
 
 ## "tpDictionary" Sheet: 
 
@@ -73,21 +74,33 @@ In the "tpDictionary" sheet, define the data dictionary with the following colum
       - **identifier** all identifiers are mandatory:  
       
          - StudyId: id of study
-         - SubjectId: id of subject with the study
-         - IndividualId: unique individual id over all studies
-         - group: identifier for data group, typically a study arm
+         - StudyArm: study arm
+         - SubjectId: id of subject with the study (not needed for aggregated data)
+         - IndividualId: unique individual id over all studies (not needed for aggregated data)
+         - group: identifier for data group, is unique over all studies and data classes
          - OutputPathId: identifier for the output.
          
       - **timeprofile** columns used to process time profiles.
          The columns 'xValues','yValues','yUnit','lloq' are alyways mandatory, 
-         for aggregated data the columns yErrorValues, yErrorType, nBelowLLOQ are also needed:
+         for aggregated data the columns yErrorValues, yErrorType, yMin, yMax, nBelowLLOQ are also available:
       
         - time: time values, unit is specified in dictionary
         - yValues: data value
         - yUnit: unit of data value, (is also valid for all corresponding columns like lloq, yErrorValues)
         - lloq: lower limit for quantification,  for values below lloq set yValues to lloq/2, if not available set to NA  
-        - yErrorValues: value of aggregation range, 
         - yErrorType: type of aggregation range 
+          There are two defaults for `yErrorType`:
+         
+           - `ArithmeticStdDev` interpretes `yValues` as mean and `yErrorValues` as standard deviation
+           - `GeometricStdDev` interpretes `yValues` as geomean and `yErrorValues` as geometric standard deviation
+         
+           For the defaults the legend is automatically generated and `yMin` and `yMax` are ignored.
+           For non defaults `yErrorType` is interpreted as legend, 
+           `yErrorValues`are ignored and `yMin` and `yMax` are used.
+          This can be used e.g. for median and percentiles.
+        - yErrorValues: value of aggregation range, 
+        - yMin: lower range of aggregation range,
+        - yMax: upper range of aggregation range
         - nBelowLLOQ: number of values below lloq
 
       - **biometrics** columns used to create individuals, can be used also for covariate analysis 

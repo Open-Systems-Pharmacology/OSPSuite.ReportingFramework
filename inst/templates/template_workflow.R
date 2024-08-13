@@ -37,7 +37,7 @@ logCatch({
   # get paths of all relevant project files
   projectConfiguration <-
     createDefaultProjectConfiguration.wrapped(
-      path = file.path(projectPath, "ProjectConfiguration.xlsx")
+      path = file.path("ProjectConfiguration.xlsx")
     )
 
   # Read observedData -------------------------------------------------------
@@ -88,13 +88,13 @@ logCatch({
 
   # Timeprofile Plots
   # see vignette xxx
+
   runPlot(
-    functionKey = "TimeProfile",
-    projectConfg = projectConfiguration,
+    functionKey = "TimeProfile_Panel",
+    projectConfiguration = projectConfiguration,
     inputs = list(
-      configTable = "TimeProfiles",
-      dataCombined = dataCombined,
-      prepareElectronicPackage = TRUE
+      configTableSheet = "TimeProfiles_1",
+      dataObserved = dataObserved
     )
   )
 

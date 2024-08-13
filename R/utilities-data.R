@@ -88,7 +88,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
   writeTableToLog(dataDT[,.('No of data points' = .N,
                             'No of individuals' = dplyr::n_distinct(IndividualId),
                             'No of outputs' = dplyr::n_distinct(OutputPathId)),
-                         by = c('StudyId','group') ])
+                         by = c('group') ])
 
   return(dataDT)
 }
@@ -148,7 +148,6 @@ validateObservedData <- function(dataDT, stopIfValidationFails = TRUE) {
         FALSE
       )
       print(paste("empty entries in", col))
-      print(dataDT[is.na(get(col)) | get(col) == ""])
     }
   }
   colIdentifier <- c("group", "OutputPathId")
@@ -355,8 +354,8 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
 
   identifierCols <- intersect(names(dataDT),c("group","StudyId","StudyArm"))
 
-  colsSelected <- unique(identifierCols,
-    getColumnsForColumnType(dt = dataDT,columnTypes = 'metadata'))
+  colsSelected <- unique(c(identifierCols,
+    getColumnsForColumnType(dt = dataDT,columnTypes = 'metadata')))
 
   dtDataGroupIdsNew <- dataDT %>%
     dplyr::select(all_of(colsSelected)) %>%
@@ -631,10 +630,6 @@ convertDataCombinedToDataTable <- function(datacombined) {
 
   # delete columns not needed
   dataDT <- dataDT[, which(colSums(is.na(dataDT)) != nrow(dataDT)), with = FALSE]
-
-  # add columns needed
-  if (!('StudyId' %in% names (dataDT)))
-    dataDT[, StudyId := 0]
 
   data.table::setnames(dataDT, "IndividualIdObserved", "IndividualID", skip_absent = TRUE)
 }

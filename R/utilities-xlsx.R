@@ -173,9 +173,14 @@ getScenarioDefinitions <- function(projectConfiguration) {
 #' @return `data.table` with output configurations
 #' @export
 getOutputPathIds <- function(projectConfiguration) {
-  return(xlsxReadData(
+  dtOutputPaths <- xlsxReadData(
     wb = projectConfiguration$plotsFile,
     sheetName = "Outputs",
     skipDescriptionRow = TRUE
-  ))
+  )
+
+  dtOutputPaths[,DisplayUnit := as.character(DisplayUnit)]
+  dtOutputPaths[is.na(DisplayUnit), DisplayUnit := '']
+
+  return(dtOutputPaths)
 }

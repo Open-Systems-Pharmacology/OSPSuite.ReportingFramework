@@ -11,7 +11,7 @@
 #'
 #' @examples
 runPlot <- function(projectConfiguration,
-                    functionKey = c("TimeProfile"),
+                    functionKey = c("TimeProfile_Panel"),
                     plotFunction = NULL,
                     subfolder = NULL,
                     inputs = list()) {
@@ -26,7 +26,7 @@ runPlot <- function(projectConfiguration,
 
   message(paste0('Start plotting "', subfolder, '"'))
 
-  resultDirectory <- file.path(projectConfiguration$figures, subfolder)
+  resultDirectory <- file.path(projectConfiguration$outputFolder, subfolder)
   if (!dir.exists(resultDirectory)) {
     dir.create(resultDirectory, recursive = TRUE)
   }
@@ -34,11 +34,12 @@ runPlot <- function(projectConfiguration,
   # execute plotfunction
   rmdContainer <- do.call(
     what = plotFunction,
-    args = c(projectConfiguration, resultDirectory, inputs)
+    args = c(list(projectConfiguration = projectConfiguration,
+                  subfolder = subfolder), inputs)
   )
 
   # create rmd
-  rmdContainer$createRmd(projectConfiguration$figures)
+  rmdContainer$writeRmd(fileName = paste0(subfolder,'.Rmd'))
 
   return(invisible())
 }
@@ -279,6 +280,8 @@ validateAtleastOneEntry <- function(configTablePlots, columnVector) {
 #' @param dtOutputPaths data.table with outputPath Ids
 validateOutputIdsForPlot <- function(dtOutputPaths) {
   checkmate::assertCharacter(dtOutputPaths$OutputPathId, any.missing = FALSE)
+  checkmate::assertCharacter(dtOutputPaths$OutputPath, any.missing = FALSE)
+  checkmate::assertCharacter(dtOutputPaths$DisplayName, any.missing = FALSE)
 
   # Check for unique values for outputpathids
   uniqueColumns <- c("DisplayName", "DisplayUnit")
@@ -289,6 +292,17 @@ validateOutputIdsForPlot <- function(dtOutputPaths) {
   tmp <- lapply(uniqueColumns, function(col) {
     if (any(uniqueIDValues[[col]] > 1)) stop(paste("values for", col, "should be the same within OutputPathId"))
   })
+
+  # check validity of units
+  invisible(lapply(unique(dtOutputPaths$DisplayUnit),
+         function(unit){
+           tryCatch({
+             suppressMessages(getDimensionForUnit(unit))
+           }, error = function(e) {
+             stop(paste0('Please check sheet Outputs in plotconfiguration file. Unit "',unit,'" is not valid'))
+           })
+         }
+  ))
 
   return(invisible())
 }
