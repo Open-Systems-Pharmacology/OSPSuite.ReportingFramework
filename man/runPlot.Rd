@@ -6,7 +6,7 @@
 \usage{
 runPlot(
   projectConfiguration,
-  functionKey = c("TimeProfile"),
+  functionKey = c("TimeProfile_Panel"),
   plotFunction = NULL,
   subfolder = NULL,
   inputs = list()

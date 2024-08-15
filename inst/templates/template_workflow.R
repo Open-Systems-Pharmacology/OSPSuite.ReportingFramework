@@ -8,10 +8,10 @@ library(ospsuite.plots)
 library(ggplot2)
 library(esqlabsR)
 
-# set graphic all defaults
+# set graphic
 # (see vignette TODO)
 ospsuite.plots::setDefaults()
-theme_update(panel.background = element_rect(linetype = 'solid'))
+theme_update(legend.position = 'top')
 
 # set options to enable watermarks
 # (see vignette TODO)
@@ -23,22 +23,27 @@ setOspsuite.plots.option(
 # Setup project structure -------------------------------------------------
 # creates project directory (see vignette TODO Esqlabs)
 # and help initProject for source Folder Selection
-projectPath <- initProject(
-  projectPath = "..",
-  overwrite = FALSE,
-  sourceFolder = templateDirectory()
+# if you go with default structure defined by  'sourceFolder = templateDirectory()'
+# this workflow file should be saved in scripts/ReportingFramework,
+# root directory  is the two layers up.
+initProject(
+  rootDirectory = file.path("..",'..'),
+  sourceFolder = templateDirectory(),
+  overwrite = FALSE
 )
 
-# initialize log file
-initLogfunction(file.path(projectPath,'Outputs','Logs'))
+
+# get paths of all relevant project files
+projectConfiguration <-
+  esqlabsR::createDefaultProjectConfiguration(
+    path =  file.path("ProjectConfiguration.xlsx"))
+
 
 logCatch({
 
-  # get paths of all relevant project files
-  projectConfiguration <-
-    createDefaultProjectConfiguration.wrapped(
-      path = file.path("ProjectConfiguration.xlsx")
-    )
+  # initialize log file for logCatch, has to be first call in logCatch loop
+  initLogfunction(projectConfiguration)
+
 
   # Read observedData -------------------------------------------------------
   # (see vignette('data_import_by_dictionary'))

@@ -1,10 +1,9 @@
 # initialize logging. Is always needed
-projectPath <- iniLogFileForTest()
-setShowLogMessages(FALSE)
+projectConfiguration <- setUpTestProject()
+initLogfunction(projectConfiguration,verbose = FALSE)
 
 test_that("It should read and process data based on the provided project configuration", {
   # Create a sample project configuration for testing
-  projectConfiguration <- suppressMessages(setUpTestProject(projectPath))
   setDataDictionary(projectConfiguration)
   addRandomSourceData(projectConfiguration)
 
@@ -178,4 +177,4 @@ test_that("convertIdentifierColumns function works as expected", {
 })
 
 
-cleanupLogFileForTest(projectPath)
+cleanupLogFileForTest(projectConfiguration)

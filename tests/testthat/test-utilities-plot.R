@@ -1,8 +1,8 @@
 # initialize logging. Is always needed
-projectPath <- iniLogFileForTest()
+projectConfiguration <- setUpTestProject()
+initLogfunction(projectConfiguration = projectConfiguration,verbose = FALSE)
 
 test_that("generation of default template works", {
-  projectConfiguration <- suppressMessages(setUpTestProject(projectPath))
 
   addDefaultConfigForTimeProfilePlots(
     projectConfiguration = projectConfiguration,
@@ -111,4 +111,4 @@ test_that("validateOutputIdsForPlot function test", {
 })
 
 
-cleanupLogFileForTest(projectPath)
+cleanupLogFileForTest(projectConfiguration)

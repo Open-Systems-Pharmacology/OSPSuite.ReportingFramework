@@ -4,12 +4,13 @@
 \alias{loadSimulatedResultsForTimeProfilePanelPlot}
 \title{load simulated results for all scenarios of this panel}
 \usage{
-loadSimulatedResultsForTimeProfilePanelPlot(projectConfiguration, panelConfig)
+loadSimulatedResultsForTimeProfilePanelPlot(
+  projectConfiguration,
+  onePlotConfig
+)
 }
 \arguments{
 \item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
-
-\item{panelConfig}{}
 }
 \value{
 `data.table` with simulated results

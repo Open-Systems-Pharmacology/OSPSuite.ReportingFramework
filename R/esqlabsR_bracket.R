@@ -5,20 +5,18 @@
 #' Creates the default project folder structure with excels file templates in
 #' the working directory.
 #'
-#' @param projectPath A string defining the path where to initialize the project.
+#' @param rootDirectory A string defining the path where to initialize the project.
 #'  default to current working directory.
 #' @param sourceFolder path of template directory available is
 #'    `templateDirectory()` default path of `ospsuite.reportingframework`
 #'    `esqlabsR:::example_directory("TestProject")`  default path for Esqlabs-projects
 #' @param overwrite A boolean, if TRUE existing files will be overwritten
 #'
-#' @returns path of project
-#'
 #' @export
-initProject <- function(projectPath = "..",
+initProject <- function(rootDirectory = "..",
                         sourceFolder,
                         overwrite = FALSE) {
-  projectPath <- fs::path_abs(projectPath)
+  rootDirectory <- fs::path_abs(rootDirectory)
 
   checkmate::assertDirectoryExists(sourceFolder)
 
@@ -26,43 +24,24 @@ initProject <- function(projectPath = "..",
   dirsToCopy <- fs::path_rel(path = list.dirs(file.path(sourceFolder)), start = sourceFolder)
 
   for (d in dirsToCopy) {
-    if (!dir.exists(file.path(projectPath, d))) {
-      dir.create(file.path(projectPath, d), recursive = TRUE, showWarnings = FALSE)
+    if (!dir.exists(file.path(rootDirectory, d))) {
+      dir.create(file.path(rootDirectory, d), recursive = TRUE, showWarnings = FALSE)
     }
 
     fileList <- fs::path_rel(path = fs::dir_ls(file.path(sourceFolder, d), type = "file"), start = sourceFolder)
 
     for (f in fileList) {
-      if (!file.exists(file.path(projectPath, f)) | overwrite) {
+      if (!file.exists(file.path(rootDirectory, f)) | overwrite) {
         file.copy(
           from = file.path(sourceFolder, f),
-          to = file.path(projectPath, f),
+          to = file.path(rootDirectory, f),
           overwrite = overwrite
         )
       }
     }
   }
 
-  return(projectPath)
-}
-
-
-#' Create a default `ProjectConfiguration`
-#'
-#' wrap of 'esqlabsR::createDefaultProjectConfiguration()'
-#'
-#' @param path Full path of an XLS/XLSX file
-#'
-#' @return Object of type ProjectConfiguration
-#'
-#' @export
-createDefaultProjectConfiguration.wrapped <- function(path) { # nolint
-  checkmate::assertFileExists(path)
-  projectConfiguration <- esqlabsR::createDefaultProjectConfiguration(path = path)
-
-  message(paste(utils::capture.output(projectConfiguration), collapse = "\n"))
-
-  return(projectConfiguration)
+  return(invisible())
 }
 
 

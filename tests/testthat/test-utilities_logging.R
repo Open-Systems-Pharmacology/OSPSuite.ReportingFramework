@@ -1,20 +1,15 @@
 # set up directory with figures
-projectPath <- iniLogFileForTest()
+projectConfiguration <- setUpTestProject()
 
 # Unit tests for initLogfunction
 test_that("initLogfunction creates default log file folder when logFileFolder is NULL", {
-  suppressMessages(initLogfunction(projectPath))
-  expect_true(file.exists(file.path(projectPath, "Outputs", "Logs")))
-})
-
-test_that("initLogfunction creates log file folder with specified path", {
-  suppressMessages(initLogfunction(loggingFolder = projectPath, logFileSubFolder = "custom_logs"))
-  expect_true(dir.exists(file.path(projectPath, "custom_logs")))
+  suppressMessages(initLogfunction(projectConfiguration))
+  expect_true(dir.exists(file.path(projectConfiguration$outputFolder,"Logs")))
 })
 
 #  tests for `writeToLog`
 test_that("writeToLog appends log message to file", {
-  suppressMessages(initLogfunction(projectPath))
+  suppressMessages(initLogfunction(projectConfiguration))
 
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
 
@@ -31,7 +26,7 @@ test_that("writeToLog appends log message to file", {
 # Unit tests errors and warnings
 test_that("logCatch function catches only messages to display", {
   initLogfunction(
-    loggingFolder = file.path(projectPath,'Outputs','Logs'),
+    projectConfiguration = projectConfiguration,
     verbose = FALSE
   )
 
@@ -48,7 +43,7 @@ test_that("logCatch function catches only messages to display", {
 
 test_that("saveSessionInfo writes session info to log file", {
   # Set up log function
-  suppressMessages(initLogfunction( loggingFolder = file.path(projectPath,'Outputs','Logs')))
+  suppressMessages(initLogfunction(projectConfiguration = projectConfiguration))
 
   # Call the saveSessionInfo function
   saveSessionInfo()
@@ -66,7 +61,7 @@ test_that("saveSessionInfo writes session info to log file", {
 test_that("logCatch Logs messages when verbose is TRUE", {
   myMessage <- "Test message"
 
-  initLogfunction( loggingFolder = file.path(projectPath,'Outputs','Logs'), verbose = FALSE)
+  initLogfunction(projectConfiguration = projectConfiguration, verbose = FALSE)
   setShowLogMessages(TRUE)
   output <- utils::capture.output(logCatch(message(myMessage)), type = "message")
 
@@ -93,4 +88,4 @@ test_that("writeTableToLog function works as expected", {
 
 })
 
-cleanupLogFileForTest(projectPath)
+cleanupLogFileForTest(projectConfiguration)

@@ -19,13 +19,21 @@
 ospsuite_plotTimeProfile <- function(plotData,
                                      metaData = NULL,
                                      ...){
-
   if ("DataCombined" %in% class(plotData)) {
     plotData <- plotData$toDataFrame() %>%
       data.table::setDT()
   }
   checkmate::assertDataFrame(plotData)
   checkmate::assertNames(names(plotData),must.include = c('xValues','yValues','group'))
+
+
+  # Capture additional arguments
+  additional_args <- list(...)
+
+  mapping <- additional_args$mapping
+  additional_args$mapping <- NULL
+  observedMapping <- additional_args$mapping
+  additional_args$observedMapping <- NULL
 
   # create a copy, so changes to columns will stay inside function
   plotData = data.table::copy(data.table::setDT(plotData))
@@ -43,21 +51,29 @@ ospsuite_plotTimeProfile <- function(plotData,
     }
   }
 
-
   # create plot Object
-  plotObject <- ospsuite.plots::plotTimeProfile(
-    data = plotData[dataType == 'simulated'],
-    mapping = .getMappingForTimeprofiles(plotData[dataType == 'simulated'],metaData),
-    observedMapping = .getMappingForTimeprofiles(plotData[dataType == 'observed'],metaData),
-    metaData =  metaData,
-    observedData = plotData[dataType == 'observed'],
-    ...)
+  plotObject <- do.call(what = ospsuite.plots::plotTimeProfile,
+                        args = c(list(data = plotData[dataType == 'simulated'],
+                                      mapping = .getMappingForTimeprofiles(
+                                        plotData = plotData[dataType == 'simulated'],
+                                        metaData = metaData,
+                                        userMapping = mapping
+                                      ),
+                                      observedMapping = .getMappingForTimeprofiles(
+                                        plotData = plotData[dataType == 'observed'],
+                                        metaData = metaData,
+                                        userMapping = observedMapping %||% mapping
+                                      ),
+                                      metaData =  metaData,
+                                      observedData = plotData[dataType == 'observed']),
+                                 additional_args)
+  )
 
   return(plotObject)
 }
 
 
-#' construct metadTa out of Data
+#' construct metaData out of Data
 #'
 #' @param plotData
 #'
@@ -89,8 +105,8 @@ ospsuite_plotTimeProfile <- function(plotData,
       unit = yUnit[1]
     )
   )
-  if (length(yUnit) > 2){
-    y2 = list(
+  if (length(yUnit) == 2){
+    metaData[['y2']] = list(
       dimension = yDimension[2],
       unit = yUnit[2]
     )
@@ -107,7 +123,7 @@ ospsuite_plotTimeProfile <- function(plotData,
 #' @param metaData list with metaData for plotData
 #'
 #' @return mapping
-.getMappingForTimeprofiles <- function(plotData,metaData){
+.getMappingForTimeprofiles <- function(plotData,metaData,userMapping){
   mapping <- aes(x = xValues, y = yValues, groupby = group)
 
   # delete columns not needed
@@ -141,11 +157,15 @@ ospsuite_plotTimeProfile <- function(plotData,
     mapping <- structure(c(mapping,
                          eval(parse(
                            text = paste0(
-                             "aes( y2axis = yDimension == '",
-                             metaData[['y2']][['dimension']],"')"
+                             "aes( y2axis = yUnit == '",
+                             metaData[['y2']][['unit']],"')"
                            )))),
                          class = "uneval")
   }
+
+  if (!is.null(userMapping))
+    mapping <- structure(utils::modifyList(mapping, userMapping), class = "uneval")
+
 
   return(mapping)
 

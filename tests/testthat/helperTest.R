@@ -1,21 +1,44 @@
-#' initialize logging. and create test directory
+#' setup an empty testproject
 #'
-#' @return temporary projectPath
-iniLogFileForTest <- function() {
-  projectPath <- tempdir()
-  if (!dir.exists(projectPath)) dir.create(projectPath)
-  initLogfunction(loggingFolder = file.path(projectPath,'Outputs','Logs'), verbose = FALSE)
+#' @param rootDirectory temporyr projectpath
+#'
+#' @return projectConfiguration
+setUpTestProject <- function(withModel = FALSE) {
 
-  return(projectPath)
+  rootDirectory <- tempdir()
+  if (!dir.exists(rootDirectory)) dir.create(rootDirectory)
+  initProject(
+    rootDirectory = rootDirectory,
+    sourceFolder = templateDirectory(),
+    overwrite = FALSE
+  )
+
+  projectConfiguration <-
+    esqlabsR::createDefaultProjectConfiguration(
+      path = file.path(rootDirectory, "Scripts","ReportingFramework","ProjectConfiguration.xlsx")
+    )
+
+  if (withModel){
+    if (!dir.exists(projectConfiguration$modelFolder))
+      dir.create(projectConfiguration$modelFolder, recursive = TRUE)
+
+    file.copy(
+      from = system.file("extdata", "Aciclovir.pkml", package = "ospsuite"),
+      to = file.path(projectConfiguration$modelFolder, "Aciclovir.pkml")
+    )
+  }
+
+  return(projectConfiguration)
 }
-
 
 #
 #' Cleanup of project path and ospsuit options
 #'
-#' @param projectPath temporary projectPath
-cleanupLogFileForTest <- function(projectPath) {
-  unlink(projectPath, recursive = TRUE)
+#' @param rootDirectory temporary rootDirectory
+cleanupLogFileForTest <- function(projectConfiguration) {
+
+  rootDirectory <- file.path(projectConfiguration$projectConfigurationDirPath,'..','..')
+  unlink(rootDirectory, recursive = TRUE)
 
   optionsToNull <- grep("ospsuite",
     names(options()),
@@ -26,6 +49,7 @@ cleanupLogFileForTest <- function(projectPath) {
     eval(parse(text = paste0("options(", opt, " = NULL)")))
   }
 }
+
 #'  generates random observed data for tests
 #'
 #' @return data.table in format as created by readObservedDataByDictionary
@@ -67,33 +91,7 @@ randomObservedData <- function() {
 }
 
 
-#' setup an empty testproject
-#'
-#' @param projectPath temporyr projectpath
-#'
-#' @return projectConfiguration
-setUpTestProject <- function(projectPath) {
-  projectPath <- initProject(
-    projectPath = file.path(projectPath, "testProject"),
-    sourceFolder = templateDirectory(),
-    overwrite = FALSE
-  )
 
-  projectConfiguration <-
-    createDefaultProjectConfiguration.wrapped(
-      path = file.path(projectPath, "Scripts","ProjectConfiguration.xlsx")
-    )
-
-  if (!dir.exists(projectConfiguration$modelFolder))
-    dir.create(projectConfiguration$modelFolder, recursive = TRUE)
-
-  file.copy(
-    from = system.file("extdata", "Aciclovir.pkml", package = "ospsuite"),
-    to = file.path(projectConfiguration$modelFolder, "Aciclovir.pkml")
-  )
-
-  return(projectConfiguration)
-}
 
 #' adjust data dictionary ready to use
 #'
@@ -110,7 +108,7 @@ setDataDictionary <- function(projectConfiguration) {
   dtDataFiles <- rbind(
     dtDataFiles,
     data.table(
-      DataFile = file.path("..","Data", "data.csv"),
+      DataFile = file.path("..","..","Data", "data.csv"),
       Dictionary = "tpDictionary",
       DataFilter = "",
       DataClass = DATACLASS$tpIndividual
@@ -128,6 +126,10 @@ setDataDictionary <- function(projectConfiguration) {
   tpDictionary <- tpDictionary[targetColumn != "yErrorType"]
   tpDictionary <- tpDictionary[targetColumn != "yErrorValues"]
   tpDictionary <- tpDictionary[targetColumn != "StudyArm"]
+  tpDictionary <- tpDictionary[targetColumn != "yMin"]
+  tpDictionary <- tpDictionary[targetColumn != "yMax"]
+  tpDictionary <- tpDictionary[targetColumn != "Dose"]
+  tpDictionary <- tpDictionary[targetColumn != "Route"]
 
   tpDictionary[targetColumn == "SubjectId"]$sourceColumn <- "SID"
   tpDictionary[targetColumn == "IndividualId"]$filterValue <- "paste(STUD,SID,sep = '_')"
@@ -192,7 +194,7 @@ addRandomSourceData <- function(projectConfiguration) {
     }
   }
 
-  data.table::fwrite(dt, file = file.path(projectConfiguration$projectConfigurationDirPath,'..','Data', "data.csv"))
+  data.table::fwrite(dt, file = file.path(projectConfiguration$projectConfigurationDirPath,'..','..','Data', "data.csv"))
 
   return(invisible())
 }

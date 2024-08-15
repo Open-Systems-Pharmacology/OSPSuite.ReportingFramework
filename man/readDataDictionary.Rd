@@ -4,7 +4,12 @@
 \alias{readDataDictionary}
 \title{Read data dictionary}
 \usage{
-readDataDictionary(dictionaryFile, sheet, data)
+readDataDictionary(
+  dictionaryFile,
+  sheet,
+  data,
+  dataClass = grep("^tp", unlist(DATACLASS), value = TRUE)
+)
 }
 \arguments{
 \item{dictionaryFile}{The file containing the data dictionary}
@@ -12,6 +17,8 @@ readDataDictionary(dictionaryFile, sheet, data)
 \item{sheet}{The sheet within the data dictionary file}
 
 \item{data}{The data to be used with the dictionary}
+
+\item{dataClass}{class of data either "tp Individual" or "tp Aggregated"}
 }
 \value{
 The data dictionary

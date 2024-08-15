@@ -1,5 +1,4 @@
-projectPath <- iniLogFileForTest()
-projectConfiguration <- suppressMessages(setUpTestProject(projectPath))
+projectConfiguration <- suppressMessages(setUpTestProject())
 
 # Create example data for testing
 configTablePlots <- data.table(

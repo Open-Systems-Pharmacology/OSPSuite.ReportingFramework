@@ -2,15 +2,20 @@
 % Please edit documentation in R/plotTimeProfilePanels.R
 \name{getCaptionTimeProfile}
 \alias{getCaptionTimeProfile}
-\title{Title}
+\title{creates a caption text}
 \usage{
 getCaptionTimeProfile(dtPlotId, yScale, timeRangeTag, PlotCaptionAddon)
 }
 \arguments{
 \item{dtPlotId}{data.table with one row per plotID}
 
-\item{panelAddon}{}
+\item{yScale}{scale of Y axis}
+
+\item{PlotCaptionAddon}{additional text for plot}
+}
+\value{
+`character` with caption text
 }
 \description{
-Title
+creates a caption text
 }

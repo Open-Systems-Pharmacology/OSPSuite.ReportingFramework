@@ -4,12 +4,10 @@
 \alias{addFacets}
 \title{addFacetColum}
 \usage{
-addFacets(plotObject, panelConfig, nFacetColumns, facetAspectRatio = 0.5)
+addFacets(plotObject, onePlotConfig, nFacetColumns, facetAspectRatio = 0.5)
 }
 \arguments{
 \item{plotObject}{ggplot object}
-
-\item{panelConfig}{configuration table}
 
 \item{nFacetColumns}{maxinaml number of facet used for facettype byOrder}
 }

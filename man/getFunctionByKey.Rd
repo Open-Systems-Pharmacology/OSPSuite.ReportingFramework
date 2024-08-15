@@ -9,6 +9,9 @@ getFunctionByKey(key)
 \arguments{
 \item{key}{character for function selection}
 }
+\value{
+selected `function` for key
+}
 \description{
 select function by key
 }

@@ -1,6 +1,3 @@
-# initialize logging. Is always needed
-projectPath <- iniLogFileForTest()
-
 # Unit tests for checkFileNameValidity function
 test_that("checkFileNameValidity function returns the correct results", {
   files <- c("file1.xml", "file2.txt", "file3.csv", "invalid_file.pdf")
@@ -18,5 +15,3 @@ test_that("checkFileNameValidity function returns the correct results", {
   expect_contains(inValidFileNames, files)
 })
 
-
-cleanupLogFileForTest(projectPath)

@@ -6,10 +6,7 @@
 #' @param subfolder subfolder where results are filed, if functionKey is used, as default value the sheetname of the plotconfiguartion is used
 #' @param inputs additionally inputs for the
 #'
-#' @return
 #' @export
-#'
-#' @examples
 runPlot <- function(projectConfiguration,
                     functionKey = c("TimeProfile_Panel"),
                     plotFunction = NULL,
@@ -49,7 +46,7 @@ runPlot <- function(projectConfiguration,
 #'
 #' @param key character for function selection
 #'
-#' @return
+#' @return selected `function` for key
 #' @export
 getFunctionByKey <- function(key) {
   plotFunction <-
@@ -105,6 +102,51 @@ addConfigToTemplate <- function(wb, templateSheet, sheetName, dtNewConfig) {
 
   return(wb)
 }
+
+# auxiliaries ----
+#' generates named color vectors usable for sclae_color_manual
+#'
+#' @param dt `data.table` with aesthetic an dindex column
+#' @param aesthetic  named `list`, names correspond to aesthic columns,
+#'          entries are either 'dark' or 'light'
+#' @param index name of index column
+#'
+#' @return named list of color vectors
+#' @export
+generateColorScaleVectors <-  function(dt,
+                                       aesthetic = list(color = 'dark',
+                                                        fill = 'light'),
+                                       index = 'colorIndex'){
+
+  n = nrow(dt)
+  scaleVectors = list()
+  for (col in names(aesthetic)){
+
+    for (col2 in c(col,setdiff(names(aesthetic),col))){
+      if (!all(is.na(scaleVectors[[col]]))){
+        scaleVectors[[col]] <- dt[[col2]]
+        break
+      }
+    }
+
+    if (is.null(scaleVectors[[col]] )){
+      if (n <= 10){
+        if (aesthetic[[col]] == 'dark'){
+          scaleVectors[[col]] <- ggsci::pal_d3("category20c")(20)[1:n]
+        } else{
+          scaleVectors[[col]] <- ggsci::pal_d3("category20c")(20)[(n + 1):(n + 10)]
+        }
+
+      } else{
+        scaleVectors[[col]] <- colorMaps[["ospDefault"]][1:n]
+      }
+    }
+    names(scaleVectors[[col]]) <- dt[[index]]
+  }
+  return(scaleVectors)
+
+}
+
 
 # validation ----------------
 
@@ -279,9 +321,12 @@ validateAtleastOneEntry <- function(configTablePlots, columnVector) {
 #'
 #' @param dtOutputPaths data.table with outputPath Ids
 validateOutputIdsForPlot <- function(dtOutputPaths) {
-  checkmate::assertCharacter(dtOutputPaths$OutputPathId, any.missing = FALSE)
+  checkmate::assertFactor(dtOutputPaths$OutputPathId, any.missing = FALSE)
   checkmate::assertCharacter(dtOutputPaths$OutputPath, any.missing = FALSE)
   checkmate::assertCharacter(dtOutputPaths$DisplayName, any.missing = FALSE)
+
+  if (any(!is.na(dtOutputPaths$color)))
+    checkmate::assertCharacter(dtOutputPaths$color, any.missing = FALSE)
 
   # Check for unique values for outputpathids
   uniqueColumns <- c("DisplayName", "DisplayUnit")
@@ -306,7 +351,6 @@ validateOutputIdsForPlot <- function(dtOutputPaths) {
 
   return(invisible())
 }
-
 
 
 

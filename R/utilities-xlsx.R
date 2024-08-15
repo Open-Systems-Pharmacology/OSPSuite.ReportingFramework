@@ -145,11 +145,18 @@ splitInputs <- function(originalVector) {
 #' @return `data.table` with datagroupIds
 #' @export
 getDataGroups <- function(projectConfiguration) {
-  return(xlsxReadData(
+  dtDataGroups <- xlsxReadData(
     wb = projectConfiguration$plotsFile,
     sheetName = "DataGroups",
     skipDescriptionRow = TRUE
-  ))
+  )
+
+  dtDataGroups$group <- factor(dtDataGroups$group,
+                               levels = unique(dtDataGroups$group),
+                               ordered = TRUE)
+
+  return(dtDataGroups)
+
 }
 
 #' load the scenario definitions
@@ -179,8 +186,12 @@ getOutputPathIds <- function(projectConfiguration) {
     skipDescriptionRow = TRUE
   )
 
-  dtOutputPaths[,DisplayUnit := as.character(DisplayUnit)]
+  dtOutputPaths[,DisplayUnit := gsub('Âµ','\u00B5',as.character(DisplayUnit))]
   dtOutputPaths[is.na(DisplayUnit), DisplayUnit := '']
+
+  dtOutputPaths$OutputPathId <- factor(dtOutputPaths$OutputPathId,
+                                       levels = unique(dtOutputPaths$OutputPathId),
+                                       ordered = TRUE)
 
   return(dtOutputPaths)
 }

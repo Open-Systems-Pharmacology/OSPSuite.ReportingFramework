@@ -3,8 +3,7 @@
 #' This function initialize the logging during a workflow. It is called at the start of the workflow script.
 #' It is used to configure options for the log file folder, warning swhich should not logged and messages which should not logged.
 #'
-#' @param loggingFolder The path where the default log file folder is generated.
-#' @param logFileSubFolder Optional. If NULL, a default log file folder is generated in the `loggingFolder`timestamp`.
+#' @template projectConfig
 #' @param warningsNotDisplayed A list of warnings that should not be logged.
 #' @param messagesNotDisplayed A list of messages that should not be logged.
 #' @param verbose boolean, if true log message will be shown on the console
@@ -12,12 +11,11 @@
 #' @examples
 #' \dontrun{
 #' # Initialize the log function
-#' logFunction <- initLogfunction(projectPath = "path/to/project")
+#' logFunction <- initLogfunction(rootDirectory = "path/to/project")
 #' }
 #'
 #' @export
-initLogfunction <- function(loggingFolder = file.path('Logs'),
-                            logFileSubFolder = NULL,
+initLogfunction <- function(projectConfiguration,
                             warningsNotDisplayed = c(
                               "introduced infinite values",
                               "Each group consists of only one observation",
@@ -33,25 +31,25 @@ initLogfunction <- function(loggingFolder = file.path('Logs'),
                               "Each group consists of only one observation"
                             ),
                             verbose = TRUE) {
-  checkmate::assertCharacter(logFileSubFolder, len = 1, null.ok = TRUE)
   checkmate::assertCharacter(warningsNotDisplayed)
   checkmate::assertCharacter(messagesNotDisplayed)
 
-  if (is.null(logFileSubFolder)) {
-    if (!dir.exists(loggingFolder)) dir.create(loggingFolder,recursive = TRUE)
-    # Create the log file sub-folder with a time stamp
+  loggingFolder <- file.path(projectConfiguration$outputFolder,'Logs')
+  if (!dir.exists(loggingFolder)) dir.create(loggingFolder,recursive = TRUE)
 
-    # Get the name of the original script
-    script_name <- tryCatch({
-      script <- sys.frame(1)$ofile
-      sub(".R$", "", basename(script))
-    }, error = function(e) {
-      return(NULL)
-    })
+  # Create the log file sub-folder with a time stamp
 
-    timestamp <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
-    logFileSubFolder <- paste(script_name,timestamp,sep = '_')
-  }
+  # Get the name of the original script
+  script_name <- tryCatch({
+    script <- sys.frame(1)$ofile
+    sub(".R$", "", basename(script))
+  }, error = function(e) {
+    return(NULL)
+  })
+
+  timestamp <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
+  logFileSubFolder <- paste(script_name,timestamp,sep = '_')
+
 
   logFileFolder <- fs::path_abs(file.path(loggingFolder,logFileSubFolder))
 
@@ -71,6 +69,8 @@ initLogfunction <- function(loggingFolder = file.path('Logs'),
 
   # startlogfile
   addMessageToLog("Start run of workflow")
+  addMessageToLog(paste(utils::capture.output(projectConfiguration), collapse = "\n"))
+
 }
 
 #' Used to add message to log file

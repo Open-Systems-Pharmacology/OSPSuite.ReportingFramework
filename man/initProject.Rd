@@ -4,10 +4,10 @@
 \alias{initProject}
 \title{Initialize Project}
 \usage{
-initProject(projectPath = ".", sourceFolder, overwrite = FALSE)
+initProject(rootDirectory = "..", sourceFolder, overwrite = FALSE)
 }
 \arguments{
-\item{projectPath}{A string defining the path where to initialize the project.
+\item{rootDirectory}{A string defining the path where to initialize the project.
 default to current working directory.}
 
 \item{sourceFolder}{path of template directory available is
@@ -15,9 +15,6 @@ default to current working directory.}
 `esqlabsR:::example_directory("TestProject")`  default path for Esqlabs-projects}
 
 \item{overwrite}{A boolean, if TRUE existing files will be overwritten}
-}
-\value{
-path of project
 }
 \description{
 Creates the default project folder structure with excels file templates in

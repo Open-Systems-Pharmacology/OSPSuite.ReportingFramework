@@ -42,7 +42,8 @@ readObservedDataByDictionary <- function(projectConfiguration,
         dataFilter = d$DataFilter,
         dict = tmpdict,
         dictionaryName = d$Dictionary
-      ),
+      ) %>%
+        dplyr::mutate(DataClass = d$DataClass),
       fill = TRUE
     )
 
@@ -159,7 +160,7 @@ validateObservedData <- function(dataDT, stopIfValidationFails = TRUE) {
   }
 
   if ("yErrorType" %in% names(dataDT)){
-    if (dataDT$yErrorType %in%  unlist(ospsuite::DataErrorType)){
+    if (any(dataDT$yErrorType %in%  unlist(ospsuite::DataErrorType))){
       checkmate::assertNames(
         names(dataDT),
         must.include = "yErrorValues")

@@ -11,7 +11,7 @@ test_that("initProject copies files from sourceFolder to destination", {
   invisible(file.create(file.path(sourceFolder, "folder", "file2.txt")))
 
   # Call the initProject function
-  invisible(initProject(projectPath = destinationFolder, sourceFolder = sourceFolder, overwrite = FALSE))
+  invisible(initProject(rootDirectory = destinationFolder, sourceFolder = sourceFolder, overwrite = FALSE))
 
   # Check if the files were copied to the destination folder
   expect_true(file.exists(file.path(destinationFolder, "file1.txt")))
@@ -38,13 +38,13 @@ test_that("initProject does not overwrite existing files when overwrite = FALSE"
   writeLines("This is destination file1 content", file.path(destinationFolder, "file1.txt"))
 
   # Call the initProject function with overwrite = FALSE
-  invisible(initProject(projectPath = destinationFolder, sourceFolder = sourceFolder, overwrite = FALSE))
+  invisible(initProject(rootDirectory = destinationFolder, sourceFolder = sourceFolder, overwrite = FALSE))
 
   # Check if the existing files in the destination folder were not overwritten
   expect_equal(readLines(file.path(destinationFolder, "file1.txt")), "This is destination file1 content")
 
 
-  invisible(initProject(projectPath = destinationFolder, sourceFolder = sourceFolder, overwrite = TRUE))
+  invisible(initProject(rootDirectory = destinationFolder, sourceFolder = sourceFolder, overwrite = TRUE))
 
   # Check if the existing files in the destination folder were not overwritten
   expect_equal(readLines(file.path(destinationFolder, "file1.txt")), "This is source file1 content")
@@ -54,11 +54,9 @@ test_that("initProject does not overwrite existing files when overwrite = FALSE"
 })
 
 # initialize logging. Is always needed
-projectPath <- iniLogFileForTest()
+projectConfiguration <- suppressMessages(setUpTestProject(withModel = TRUE))
 
 test_that("initProject creates project folder structure", {
-  # Call the function being tested
-  projectConfiguration <- suppressMessages(setUpTestProject(projectPath))
 
   expect_s3_class(projectConfiguration, "ProjectConfiguration")
 
@@ -83,4 +81,4 @@ test_that("initProject creates project folder structure", {
   expect_true(length(list.files(file.path(projectConfiguration$outputFolder, "SimulationResults"))) > 0)
 })
 
-cleanupLogFileForTest(projectPath)
+cleanupLogFileForTest(projectConfiguration)

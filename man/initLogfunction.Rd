@@ -5,8 +5,7 @@
 \title{Initializing a Log Function}
 \usage{
 initLogfunction(
-  projectPath,
-  logFileFolder = NULL,
+  projectConfiguration,
   warningsNotDisplayed = c("introduced infinite values",
     "Each group consists of only one observation", "rows containing non-finite values",
     "rows containing missing values", "Ignoring unknown parameters",
@@ -17,9 +16,7 @@ initLogfunction(
 )
 }
 \arguments{
-\item{projectPath}{The path where the default log file folder is generated.}
-
-\item{logFileFolder}{Optional. If NULL, a default log file folder is generated in the `projectPath/Logs/timestamp`.}
+\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 
 \item{warningsNotDisplayed}{A list of warnings that should not be logged.}
 
@@ -34,7 +31,7 @@ It is used to configure options for the log file folder, warning swhich should n
 \examples{
 \dontrun{
 # Initialize the log function
-logFunction <- initLogfunction(projectPath = "path/to/project")
+logFunction <- initLogfunction(rootDirectory = "path/to/project")
 }
 
 }

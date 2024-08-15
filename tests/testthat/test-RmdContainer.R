@@ -1,25 +1,25 @@
-projectPath <- iniLogFileForTest()
+projectConfiguration <- setUpTestProject()
 
 test_that("Creation and print of startlines", {
-  rmdContainer <- RmdContainer$new(rmdfolder = projectPath, "timeProfiles")
+  rmdContainer <- RmdContainer$new(rmdfolder = projectConfiguration$outputFolder, "timeProfiles")
   expect_s3_class(rmdContainer, "RmdContainer")
 
-  testPath <- file.path(projectPath, "Test.Rmd")
-  expect_error(rmdContainer$writeRmd(projectPath))
+  testPath <- file.path(projectConfiguration$outputFolder, "Test.Rmd")
+  expect_error(rmdContainer$writeRmd(projectConfiguration$outputFolder))
 
   rmdContainer$writeRmd(basename(testPath))
   expect_true(file.exists(testPath))
 })
 
 test_that("Headers, newlines", {
-  rmdContainer <- RmdContainer$new(rmdfolder = projectPath, "timeProfiles")
+  rmdContainer <- RmdContainer$new(rmdfolder = projectConfiguration$outputFolder, "timeProfiles")
 
   rmdContainer$addHeader("Level 1")
   rmdContainer$addHeader("Level 2", level = 2)
   rmdContainer$addNewline()
   rmdContainer$addNewpage()
 
-  testPath <- file.path(projectPath, "Test.Rmd")
+  testPath <- file.path(projectConfiguration$outputFolder, "Test.Rmd")
   rmdContainer$writeRmd(basename(testPath))
 
   tmp <- readLines(testPath)
@@ -29,7 +29,7 @@ test_that("Headers, newlines", {
 })
 
 test_that("Figure export", {
-  rmdContainer <- RmdContainer$new(rmdfolder = projectPath, "timeProfiles")
+  rmdContainer <- RmdContainer$new(rmdfolder = projectConfiguration$outputFolder, "timeProfiles")
 
   rmdContainer$addHeader("Section 1")
 
@@ -44,9 +44,9 @@ test_that("Figure export", {
   )
 
   # files are exported
-  expect_true(file.exists(file.path(projectPath, "timeProfiles", "Fig1.png")))
-  expect_true(file.exists(file.path(projectPath, "timeProfiles", "Fig1.caption")))
-  expect_true(file.exists(file.path(projectPath, "timeProfiles", "Fig1.footnote")))
+  expect_true(file.exists(file.path(projectConfiguration$outputFolder, "timeProfiles", "Fig1.png")))
+  expect_true(file.exists(file.path(projectConfiguration$outputFolder, "timeProfiles", "Fig1.caption")))
+  expect_true(file.exists(file.path(projectConfiguration$outputFolder, "timeProfiles", "Fig1.footnote")))
 
   # it should not be possible to add the same key twice
   expect_error(
@@ -68,13 +68,13 @@ test_that("Figure export", {
     )
   }
 
-  testPath <- file.path(projectPath, "Test.Rmd")
+  testPath <- file.path(projectConfiguration$outputFolder, "Test.Rmd")
   expect_no_error(rmdContainer$writeRmd(basename(testPath)))
 })
 
 
 test_that("Table export export", {
-  rmdContainer <- RmdContainer$new(rmdfolder = projectPath, "timeProfiles")
+  rmdContainer <- RmdContainer$new(rmdfolder = projectConfiguration$outputFolder, "timeProfiles")
 
   rmdContainer$addHeader("Section 1")
 
@@ -116,9 +116,9 @@ test_that("Table export export", {
     tableKey = "myTabledetailed"
   )
 
-  testPath <- file.path(projectPath, "Test.Rmd")
+  testPath <- file.path(projectConfiguration$outputFolder, "Test.Rmd")
   expect_no_error(rmdContainer$writeRmd(basename(testPath)))
 })
 
 
-cleanupLogFileForTest(projectPath)
+cleanupLogFileForTest(projectConfiguration)

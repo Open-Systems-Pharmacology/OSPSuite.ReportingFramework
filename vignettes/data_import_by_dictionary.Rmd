@@ -133,7 +133,7 @@ By filling out the Excel table with the required information, you can ensure tha
 # Example Sheets
 
 ```{r load-template, eval=TRUE, echo=FALSE}
-templateFilePath <- system.file("templates", "templateProject", "Data", "dataImportConfiguration.xlsx",
+templateFilePath <- system.file("templates", "templateProject", "Scripts", "ReportingFramework", "dataImportConfiguration.xlsx",
   package = "ospsuite.reportingframework", mustWork = TRUE
 )
 
@@ -160,7 +160,8 @@ dataFilesSheet <- rbind(
       "tpDictionary",
       "tpDictionaryAggregated"
     ),
-    DataFilter = c("", "PKValue == 1", "STUD != 1234")
+    DataFilter = c("", "PKValue == 1", "STUD != 1234"),
+    DataClass = c(DATACLASS$tpIndividual,DATACLASS$tpIndividual,DATACLASS$tpAggregated)
   )
 )
 
