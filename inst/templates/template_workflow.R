@@ -12,6 +12,9 @@ library(esqlabsR)
 # (see vignette TODO)
 ospsuite.plots::setDefaults()
 theme_update(legend.position = 'top')
+# configure panel labels to be used as Tags A,B,...
+theme_update(strip.background = element_rect(fill = NA,color = NA))
+theme_update(strip.text = element_text(hjust = 0,vjust = 1))
 
 # set options to enable watermarks
 # (see vignette TODO)
@@ -23,9 +26,9 @@ setOspsuite.plots.option(
 # Setup project structure -------------------------------------------------
 # creates project directory (see vignette TODO Esqlabs)
 # and help initProject for source Folder Selection
-# if you go with default structure defined by  'sourceFolder = templateDirectory()'
-# this workflow file should be saved in scripts/ReportingFramework,
-# root directory  is the two layers up.
+# if you go with the default structure defined by 'sourceFolder = templateDirectory()'
+# this workflow file should be saved in Scripts/ReportingFramework,
+# root directory is then two layers up.
 initProject(
   rootDirectory = file.path("..",'..'),
   sourceFolder = templateDirectory(),

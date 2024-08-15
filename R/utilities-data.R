@@ -632,6 +632,11 @@ convertDataCombinedToDataTable <- function(datacombined) {
   # delete columns not needed
   dataDT <- dataDT[, which(colSums(is.na(dataDT)) != nrow(dataDT)), with = FALSE]
 
+  # set DataClass
+  dataDT[,DataClass := ifelse(any(!is.na(yErrorValues)),DATACLASS$tpAggregated,DATACLASS$tpAggregated),
+                              by:='group']
+
+  # avoid conflict with population IndividualID
   data.table::setnames(dataDT, "IndividualIdObserved", "IndividualID", skip_absent = TRUE)
 }
 
@@ -666,7 +671,7 @@ setDataTypeAttributes <- function(dataDT, dict = NULL) {
   }
 
   # add dictionary as attributes
-  for (dc in c("dataType")) {
+  for (dc in c("dataType","DataClass")) {
     dict[[dc]] <- "identifier"
   }
 

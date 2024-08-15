@@ -134,7 +134,7 @@ generateColorScaleVectors <-  function(dt,
         if (aesthetic[[col]] == 'dark'){
           scaleVectors[[col]] <- ggsci::pal_d3("category20c")(20)[1:n]
         } else{
-          scaleVectors[[col]] <- ggsci::pal_d3("category20c")(20)[(n + 1):(n + 10)]
+          scaleVectors[[col]] <- ggsci::pal_d3("category20c")(20)[(10 + 1):(10 + n)]
         }
 
       } else{
@@ -147,6 +147,38 @@ generateColorScaleVectors <-  function(dt,
 
 }
 
+
+#' Title
+#'
+#' @param dtCaption `data.table` with caption information must have column PlotTag
+#' @param captionColumn `character`column names which should be sorted to Tags
+#'
+#' @return `character` text for cpation
+pasteFigureTags = function(dtCaption,captionColumn){
+
+  if (dplyr::n_distinct(dtCaption[[captionColumn]]) == 1) {
+
+    captionText <- unique(dtCaption[[captionColumn]])
+
+  } else {
+
+    captionTextVector <- dtCaption[, .(tags = paste0(get(captionColumn),
+                                     ' (', paste(unique(PlotTag), collapse = ', '), ')')),
+                   by = captionColumn]$tags
+
+    allTags <- dtCaption[, .(tags = paste0(' \\(', paste(unique(PlotTag), collapse = ', '), '\\)'))]$tags
+
+    captionTextVector <- gsub(allTags,'',captionTextVector)
+
+    captionText =
+      paste(c(paste(captionTextVector[seq(1, length(captionTextVector) - 1)],
+                    collapse = ', '),
+              tail(captionTextVector, 1)),
+            collapse = ' and ')
+  }
+
+  return(captionText)
+}
 
 # validation ----------------
 
@@ -257,7 +289,7 @@ validateConfigTablePlots <- function(configTablePlots,
   # valid selection
   checkmate::assertList(subsetList,types = 'list')
   for (subsetCheck in subsetList) {
-    checkmate::assertList(subsetCheck,types = 'character',names = 'named')
+    checkmate::assertList(subsetCheck,types = c('character','factor'),names = 'named')
     checkmate::assertNames(names(subsetCheck),permutation.of = c('cols','allowedValues'))
     invisible(lapply(
       subsetCheck$cols,
