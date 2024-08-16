@@ -62,7 +62,7 @@ plotTimeProfilePanels <- function(projectConfiguration,
 
       for (onePlotConfig in split(configTable[seq(iRow,iEnd)], by = "PlotName")) {
         rmdContainer <-
-          plotOfOnePanel(projectConfiguration = projectConfiguration,
+          createPanelPlotsForPlotName(projectConfiguration = projectConfiguration,
                                     onePlotConfig = onePlotConfig,
                                     dataObserved = dataObserved,
                                     rmdContainer = rmdContainer,
@@ -83,7 +83,6 @@ plotTimeProfilePanels <- function(projectConfiguration,
 
 #' function to generate one plot as facet panels
 #'
-#'
 #' @template projectConfig
 #' @template onePlotConfig
 #' @template observedDataDT
@@ -92,7 +91,7 @@ plotTimeProfilePanels <- function(projectConfiguration,
 #' @return object of class `rmdContainer` with added figures
 #' @export
 #'
-plotOfOnePanel <- function(projectConfiguration,
+createPanelPlotsForPlotName <- function(projectConfiguration,
                                       onePlotConfig,
                                       dataObserved,
                                       nFacetColumns,
@@ -112,19 +111,15 @@ plotOfOnePanel <- function(projectConfiguration,
     identifierColumns = getColumnsForColumnType(dt = dataObserved, 'identifier'))
 
   # get table with caption information per plot Id
-  plotData$addDtCaption()
+  plotData$addDtCaption(nFacetColumns)
 
   # setColorIndex
   plotData$setColorIndex()
 
 
   if (as.logical(onePlotConfig$Plot_TimeProfiles[1]))
-    rmdContainer <- plotTPPanel(projectConfiguration,
-                                onePlotConfig,
-                                plotData,
-                                dtPlotId,
+    rmdContainer <- plotTPPanel(plotData,
                                 rmdContainer,
-                                nFacetColumns = nFacetColumns,
                                 facetAspectRatio = facetAspectRatio)
 
   return(rmdContainer)
@@ -135,39 +130,35 @@ plotOfOnePanel <- function(projectConfiguration,
 
 
 #' create the TimeProfile panels
+#' @inheritParams createPanelPlotsForPlotName
+#' @param plotData object of class PlotDataTimeprofile which contains data and informations neede for plotting
 #'
-#' @template projectConfig
-#' @template onePlotConfig
-#' @param plotData
-#' @param dtPlotId
-#' @param rmdContainer
-#' @param nFacetColumns
-#' @param facetAspectRatio
-#'
-#' @return
+#' @return RmdContainer object with added lines
 #' @export
-#'
-#' @examples
-plotTPPanel <- function(projectConfiguration,
-                            onePlotConfig,
-                            plotData,
-                            dtPlotId,
+plotTPPanel <- function(plotData,
                             rmdContainer,
-                            nFacetColumns,
                             facetAspectRatio){
+
 
   if(any(plotData$data$dataType == 'observed')){
     mapSimulatedAndObserved = data.table(
-      simulated = levels(plotData$data$colorIndex),
-      observed = levels(plotData$data$colorIndex),
-      color = plotData$scaleVectors$color,
-      fill = plotData$scaleVectors$fill)
+      simulated = as.character(plotData$data[dataType == 'simulated']$colorIndex) %>% unique(),
+      observed = as.character(plotData$data[dataType == 'observed']$colorIndex) %>% unique(),
+      color =  plotData$scaleVectors$color,
+      fill =  plotData$scaleVectors$fill)
   } else{
     mapSimulatedAndObserved = NULL
   }
 
-  mapping = aes(groupby = colorIndex)
-  groupAesthetics = c("colour", "fill")
+
+  mapping = eval(parse(text = paste(
+    'aes(groupby =', interaction(intersect(
+      names(plotData$data), c('colorIndex', 'shapeIndex')
+    )), ')'
+  )))
+  groupAesthetics = intersect(c('colour','fill','shape'),
+                              ggplot2::standardise_aes_names(names(plotData$scaleVectors)))
+
 
 
   for (yScale in splitInputs(onePlotConfig$yScale[1])){
@@ -191,8 +182,7 @@ plotTPPanel <- function(projectConfiguration,
 
     # add Facet Columns
     plotObject <- addFacets(plotObject = plotObject,
-                            onePlotConfig = onePlotConfig,
-                            nFacetColumns = nFacetColumns,
+                            plotData =  plotData,
                             facetAspectRatio = facetAspectRatio)
 
     plotObject$labels = utils::modifyList(plotObject$labels,
@@ -219,39 +209,27 @@ plotTPPanel <- function(projectConfiguration,
 
 #' addFacetColum
 #'
-#' @param plotObject ggplot object
-#' @param onePlotConfig
+#' @param plotObject ggplot object to which the facet should be added
+#' @inheritParams createPanePlotsForPlotName
 #' @param nFacetColumns maximal number of facet used for facettype byOrder
 #'
 #' @return ggplot Object with facets
 #' @export
 addFacets <- function(plotObject,
-                      onePlotConfig,
-                      nFacetColumns,
+                      plotData,
                       facetAspectRatio = 0.5) {
 
-
-
-  if (onePlotConfig$FacetType[1] == FACETTYPE$byOrder){
+  if (!is.null(plotData$nFacetColumns)){
 
 
     plotObject <- plotObject +
       facet_wrap(facets = vars(PlotTag),
-                 scales = onePlotConfig$FacetScale[1],
-                 ncol = nFacetColumns)
+                 scales = plotData$configTable$FacetScale[1],
+                 ncol = plotData$nFacetColumns) +
+      theme(aspect.ratio = facetAspectRatio)
 
-  } else if(onePlotConfig$FacetType[1] == FACETTYPE$vsOutput){
-    stop('not yet implemented')
-  } else if(onePlotConfig$FacetType[1] == FACETTYPE$vsTimeRange){
-    stop('not yet implemented')
-  } else {
-    stop(paste('unknown facet type. Pleae use one of those:'),
-         paste(FACETTYPE,collapse = ','))
+
   }
-
-  plotObject <- plotObject +
-    theme(aspect.ratio = facetAspectRatio)
-
 
   return(plotObject)
 }
@@ -313,9 +291,9 @@ validateConfigTableForTimeProfiles <- function(configTable, dataObserved, projec
         cols = c("DataGroupIds"),
         allowedValues = unique(dataObserved$group)
       ),
-      OutputPathId = list(
-        cols = c("OutputPathId"),
-        allowedValues = unique(dtOutputPaths$OutputPathId)
+      outputPathId = list(
+        cols = c("outputPathId"),
+        allowedValues = unique(dtOutputPaths$outputPathId)
       ),
       yscale = list(
         cols = c("yscale"),
@@ -387,7 +365,7 @@ validatePanelConsistency <- function(
   configTableList <- split(configTablePlots, by = "PlotName")
   for (configPanel in configTableList) {
     outputs <- gsub("[()]", "", splitInputs(configPanel$OutputPathIds))
-    if (dplyr::n_distinct(dtOutputPaths[OutputPathId %in% outputs]$DisplayUnit) > 2) {
+    if (dplyr::n_distinct(dtOutputPaths[outputPathId %in% outputs]$DisplayUnit) > 2) {
       stop("do not combine more than two yUnits in one Panel")
     }
   }
@@ -466,9 +444,9 @@ validatePlotInput <- function(configTablePlots,plotInputColumns){
 
 validateOutputPathIdFormat <- function(configTablePlots) {
 
-  if(any(length(stringr::str_extract_all(configTablePlots$OutputPathId, "\\([^)]*$")) > 0) ||
-     any(length(stringr::str_extract_all(configTablePlots$OutputPathId, "(?<!\\()\\([^)]+")) > 0))
-    stop('Please check the brackets in column OutputPathId')
+  if(any(length(stringr::str_extract_all(configTablePlots$outputPathId, "\\([^)]*$")) > 0) ||
+     any(length(stringr::str_extract_all(configTablePlots$outputPathId, "(?<!\\()\\([^)]+")) > 0))
+    stop('Please check the brackets in column outputPathId')
 
 }
 
@@ -503,7 +481,7 @@ addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
     PlotName = scenarios$Scenario_name,
     Scenario = scenarios$Scenario_name,
     ScenarioCaptionName = scenarios$Scenario_name,
-    OutputPathIds = paste(unique(dtOutputPaths$OutputPathId), collapse = ", "),
+    OutputPathIds = paste(unique(dtOutputPaths$outputPathId), collapse = ", "),
     TimeUnit = "h",
     TimeOffset = 0,
     TimeOffset_Reference = 0,
@@ -522,8 +500,8 @@ addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
 
   dtNewConfig <- dtNewConfig %>%
     merge(dtDataGroups %>%
-            dplyr::select(c('group','DefaultScenario')) %>%
-            data.table::setnames(old = c('group','DefaultScenario'),
+            dplyr::select(c('Group','DefaultScenario')) %>%
+            data.table::setnames(old = c('Group','DefaultScenario'),
                                  new = c('DataGroupIds','Scenario')),
           by = 'Scenario',
           all.x = TRUE,sort = FALSE)

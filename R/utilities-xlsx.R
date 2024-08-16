@@ -78,7 +78,7 @@ xlsxReadData <- function(wb, sheetName,
                          alwaysCharacter = c("IndividualId",
                                              "StudyId",
                                              "group",
-                                             "OutputPathId",
+                                             "outputPathId",
                                              "DataGroupIds",
                                              "DataGroupId")) {
   dt <- data.table::setDT(openxlsx::read.xlsx(
@@ -186,11 +186,13 @@ getOutputPathIds <- function(projectConfiguration) {
     skipDescriptionRow = TRUE
   )
 
+  data.table::setnames(dtOutputPaths, old = "OutputPathId", new = "outputPathId")
+
   dtOutputPaths[,DisplayUnit := gsub('Âµ','\u00B5',as.character(DisplayUnit))]
   dtOutputPaths[is.na(DisplayUnit), DisplayUnit := '']
 
-  dtOutputPaths$OutputPathId <- factor(dtOutputPaths$OutputPathId,
-                                       levels = unique(dtOutputPaths$OutputPathId),
+  dtOutputPaths$outputPathId <- factor(dtOutputPaths$outputPathId,
+                                       levels = unique(dtOutputPaths$outputPathId),
                                        ordered = TRUE)
 
   return(dtOutputPaths)

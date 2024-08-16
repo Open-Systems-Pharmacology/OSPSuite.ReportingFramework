@@ -4,20 +4,12 @@
 \alias{plotTPPanel}
 \title{create the TimeProfile panels}
 \usage{
-plotTPPanel(
-  projectConfiguration,
-  onePlotConfig,
-  plotData,
-  dtPlotId,
-  rmdContainer,
-  nFacetColumns,
-  facetAspectRatio
-)
+plotTPPanel(plotData, rmdContainer, facetAspectRatio)
 }
 \arguments{
-\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+\item{plotData}{object of class PlotDataTimeprofile which contains data and informations neede for plotting}
 
-\item{facetAspectRatio}{}
+\item{rmdContainer}{object of class `rmdContainer`}
 }
 \description{
 create the TimeProfile panels

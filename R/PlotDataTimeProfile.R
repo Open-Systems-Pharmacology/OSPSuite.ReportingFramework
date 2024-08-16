@@ -23,8 +23,8 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     },
     #' Collects all observed and simulated data needed for this plots
     #'
-    #' @template projectConfig
-    #' @template observedDataDT
+    #' @param projectConfiguration projectConfiguration
+    #' @param observedDataDT 'data.table'  with observed data
     collectData = function(projectConfiguration,
                                 dataObserved) {
       simulatedData <-
@@ -47,14 +47,18 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       return(invisible())
     },
     #' setfactors to plot
-    #'
-    #' @param plotData `data.table`  with all data
     #' @param identifierColumns identifier columns which define sort order
-    #' @template projectConfig
     setOrderAndFactors = function(identifierColumns){
 
-      private$.data$OutputPathId <- factor(private$.data$OutputPathId,
-                                      levels = levels(private$.dtOutputPaths$OutputPathId),
+      # shorten tables to the ones needed in plot
+      private$.dtOutputPaths <-
+        private$.dtOutputPaths[outputPathId %in% private$.data$outputPathId]
+
+      private$.dtDataGroups <-
+        private$.dtDataGroups[ group %in% private$.data$group]
+
+      private$.data$outputPathId <- factor(private$.data$outputPathId,
+                                      levels = levels(private$.dtOutputPaths$outputPathId),
                                       ordered = TRUE)
 
 
@@ -70,26 +74,72 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
     },
     #' Creates PlotId for each scenario outputs group
-    #'
-    addDtCaption = function() {
+    #' @param nFacetColumns  number of maximal facet columns
+    addDtCaption = function(nFacetColumns) {
 
       configTable = data.table::copy(self$configTable) %>%
-        dplyr::select('scenarioIndex', 'OutputPathIds', 'ScenarioCaptionName')
+        dplyr::select('scenarioIndex', 'OutputPathIds', 'ScenarioCaptionName','DataGroupIds')
 
       dtCaption <-
         tidyr::separate_rows(data.table::setDF(configTable),
                              OutputPathIds,
                              sep = ",\\s*|(?<=\\)),\\s*|\\s(?=\\()")  %>%
         data.table::setDT() %>%
-        data.table::setnames('OutputPathIds','OutputPathId')
+        data.table::setnames(old = c('OutputPathIds'),
+                             new = c('outputPathId'))
+      dtCaption[,outputPathId := trimws(outputPathId)]
+
 
 
       # set Plot ID as accumulated sum over difference off number of open and closed brackets
-      dtCaption[, nBracketOpen := cumsum(grepl("\\(", OutputPathId)),]
-      dtCaption[, nBracketClosed := cumsum(grepl("\\)", OutputPathId)),]
+      dtCaption[, nBracketOpen := cumsum(grepl("\\(", outputPathId)),]
+      dtCaption[, nBracketClosed := cumsum(grepl("\\)", outputPathId)),]
       dtCaption[, countAdd := nBracketClosed-nBracketOpen+1,]
       dtCaption[, PlotId := cumsum(data.table::shift(countAdd,fill = 1)),]
       dtCaption[, PlotTag := toupper(letters[PlotId]),]
+
+      # count color per plotID
+      private$.nColorPerPlotID <-
+        dtCaption[, .(N = dplyr::n_distinct(outputPathId)),
+                  by = 'PlotId']$N %>%
+        max()
+
+      # count datagroups per plotID
+      private$.nDataGroupPerPlotID <-
+        dtCaption[, .(N = length(strsplit(DataGroupIds, ",")[[1]])), by = 'DataGroupIds']$N %>%
+        max()
+
+
+      # get columns for plot Scenario vs Output
+      private$.nFacetColumns <- nFacetColumns
+      if (dplyr::n_distinct(dtCaption$PlotId) ==1){
+        private$.nFacetColumns = NULL
+      } else if (private$.configTable$FacetType[1] == FACETTYPE$vsOutput){
+
+        nCol <- dtCaption[, .(nOutputCol = {
+          d <- unique(diff(PlotId))
+          ifelse(length(d) == 1, d, NA)
+        }), by = 'outputPathId']$nOutputCol %>%
+          unique
+        if (all(!is.na(nCol)) &
+          length(nCol) == 1){
+          private$.nFacetColumns = nCol
+        } else{
+          warning(
+            paste0(
+              'Plot "',
+              private$.configTable$PlotName[1],
+              '" is not suited for FacetType"',
+              FACETTYPE$vsOutput,
+              '" use "',
+              FACETTYPE$byOrder,
+              '" instead.'
+            )
+          )
+        }
+
+      }
+
 
       dtCaption$PlotTag <-
         factor(dtCaption$PlotTag,
@@ -97,60 +147,86 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
                levels = unique(dtCaption$PlotTag))
 
       # add display name for caption
-      dtCaption[, OutputPathId := trimws(gsub("[()]",'',OutputPathId)),]
+      dtCaption[, outputPathId := trimws(gsub("[()]",'',outputPathId)),]
 
       dtCaption <- dtCaption %>%
-        merge(private$.dtOutputPaths %>%  dplyr::select(OutputPathId,'DisplayName'),
-              by = 'OutputPathId') %>%
+        merge(private$.dtOutputPaths %>%  dplyr::select(outputPathId,'DisplayName'),
+              by = 'outputPathId') %>%
         data.table::setnames('DisplayName','outputDisplayName') %>%
-        dplyr::select('scenarioIndex','OutputPathId','PlotTag','ScenarioCaptionName','outputDisplayName')
+        dplyr::select('scenarioIndex','outputPathId','PlotTag','ScenarioCaptionName','outputDisplayName')
 
       private$.dtCaption <- dtCaption
 
 
       # add plot ID
       private$.data <- private$.data %>%
-        merge(dtCaption %>%  dplyr::select('scenarioIndex','OutputPathId','PlotTag'),
-              by = c('scenarioIndex','OutputPathId'))
+        merge(dtCaption %>%  dplyr::select('scenarioIndex','outputPathId','PlotTag'),
+              by = c('scenarioIndex','outputPathId'))
 
 
       return(invisible())
     },
     #' add colorIndex column
-    #'
-    #' @template projectConfig
-    #' @template plotDataList
     setColorIndex = function(){
 
-      countGroups <-
-        private$.data[, .(
-          nOutput = dplyr::n_distinct(OutputPathId),
-          nGroup = dplyr::n_distinct(group, na.rm = TRUE)
-        ), by = 'PlotTag'][, .(nOutput = max(nOutput),
-                               nGroup = max(nGroup))]
+      setColorLegend <- private$.nColorPerPlotID > 1 |
+        any(!is.na(private$.dtOutputPaths$color)) |
+        any(!is.na(private$.dtOutputPaths$fill))
 
-      # One data group more the one output
-      if (countGroups$nOutput >= 1 & countGroups$nGroup == 1){
+      setShapeLegend <- private$.nDataGroupPerPlotID > 1 |
+        any(!is.na(private$.dtDataGroups$color)) |
+        any(!is.na(private$.dtDataGroups$fill))
 
-        private$.data[,colorIndex := OutputPathId]
+
+      if (!setColorLegend & !setShapeLegend){
+
+        private$.data[,colorIndex := ifelse(dataType == 'simulated',private$.tpLabelSimulatedMean,
+                                            private$.tpLabelObserved)]
         private$.data$colorIndex = factor(private$.data$colorIndex,
-                                                  levels = private$.dtOutputPaths$OutputPathId,
-                                                  labels = private$.dtOutputPaths$DisplayName,
-                                                  ordered = TRUE)
+                                          levels = c(private$.tpLabelSimulatedMean,
+                                                     private$.tpLabelObserved),
+                                          ordered = TRUE)
 
-        scaleVectors <- generateColorScaleVectors(
-          dt = private$.dtOutputPaths[DisplayName %in% levels(private$.data$colorIndex)],
-          index = 'DisplayName')
+        if (!is.null(private$.tpLabelSimulatedRange)){
+          private$.data[,fillIndex := ifelse(dataType == 'simulated',private$.tpLabelSimulatedRange,
+                                             private$.tpLabelObserved)]
+          private$.data$fillIndex = factor(private$.data$colorIndex,
+                                           levels = c(private$.tpLabelSimulatedRange,
+                                                      private$.tpLabelObserved),
+                                           ordered = TRUE)
+        }
 
-        private$.tpLabels <- list(colour_ggnewscale_1 = 'simulated timeprofile',
-                                  fill_ggnewscale_1 = 'simulated timeprofile',
-                                  fill = 'observed data',
-                                  colour = 'observed data')
+        private$.scaleVectors <- generateColorScaleVectors(
+          dt = data.table(index = private$.tpLabelSimulatedMean),
+          index = 'index')
 
+        private$.tpLabels <- list(colour_ggnewscale_1 = '',
+                                  fill_ggnewscale_1 = '',
+                                  colour = '',
+                                  fill = '')
 
       }
 
-      private$.scaleVectors <- scaleVectors
+      # Create legend for color
+      if (setColorLegend){
+
+        private$.data[,colorIndex := outputPathId]
+        private$.data$colorIndex = factor(private$.data$colorIndex,
+                                                  levels = private$.dtOutputPaths$outputPathId,
+                                                  labels = private$.dtOutputPaths$DisplayName,
+                                                  ordered = TRUE)
+
+        private$.scaleVectors <- generateColorScaleVectors(
+          dt = private$.dtOutputPaths[DisplayName %in% levels(private$.data$colorIndex)],
+          index = 'DisplayName')
+
+        private$.tpLabels <- list(colour_ggnewscale_1 = private$.tpLabelSimulatedMean,
+                                  fill_ggnewscale_1 = private$.tpLabelSimulatedRange,
+                                  colour = private$.tpLabelObserved,
+                                  fill = private$.tpLabelObserved)
+
+      }
+
 
       return(invisible())
 
@@ -176,16 +252,11 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
     },
     #' constructs footnote lines for aggregated data and data references
-    #'
-    #' @template projectConfig
-    #' @template observedData
-    #'
     #' @return vector of characters, each entry is one footnote line
-    #' @export
     getFootNoteLines = function(){
       footnoteLines = c()
       if (any(private$.data$dataType == 'observed')) {
-        if (any(private$.data[dataType == 'observed']$DataClass == DATACLASS$tpAggregated)){
+        if (any(private$.data[dataType == 'observed']$dataClass == DATACLASS$tpAggregated)){
           stop('not implemented yet')
         }
       }
@@ -248,6 +319,10 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     #' @field dtCaption list of time profile labels to add on ggplot
     tpLabels = function() {
       private$.tpLabels
+    },
+    #' @field dtCaption `digits for significance in table display`data.table`with caption information`
+    nFacetColumns = function() {
+      private$.nFacetColumns
     }
   ),
   private = list(
@@ -273,6 +348,12 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     .tpLabelObserved = 'observed data',
     # list of time profile labels
     .tpLabels = list(),
+    # vector of facet columns
+    .nFacetColumns = NULL,
+    # number of colors per panel
+    .nColorPerPlotID = NULL,
+    # number of data groups per panel
+    .nDataGroupPerPlotID = NULL,
     # function to load simulated data
     loadSimulatedResults = function(projectConfiguration) {
       simulatedData <- data.table()
@@ -322,8 +403,8 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         }
       }
 
-      checkmate::assertTRUE(dplyr::n_distinct(simulatedData$DataClass) == 1,
-                            .var.name = 'use only one DataClass in one Plot')
+      checkmate::assertTRUE(dplyr::n_distinct(simulatedData$dataClass) == 1,
+                            .var.name = 'use only one "dataClass" in one Plot')
 
       return(simulatedData)
     },
@@ -337,7 +418,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
                                         timeOffset) {
       dt <- ospsuite::simulationResultsToDataFrame(
         simulationResults = simulatedResult$results,
-        quantitiesOrPaths = unique(private$.dtOutputPaths[OutputPathId %in% outputs]$OutputPath)
+        quantitiesOrPaths = unique(private$.dtOutputPaths[outputPathId %in% outputs]$OutputPath)
       ) %>%
         data.table::setDT()
 
@@ -354,7 +435,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         unique() %>%
         merge(
           private$.dtOutputPaths %>%
-            dplyr::select("OutputPathId", "DisplayUnit", "OutputPath"),
+            dplyr::select("outputPathId", "DisplayUnit", "OutputPath"),
           by.x = "paths",
           by.y = "OutputPath"
         )
@@ -370,7 +451,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       }
 
       dt <- dt %>%
-        merge(dtUnit[, c("paths", "OutputPathId", "unitFactor",'DisplayUnit')] ,
+        merge(dtUnit[, c("paths", "outputPathId", "unitFactor",'DisplayUnit')] ,
               by = "paths"
         )
       dt[, simulationValues := simulationValues * unitFactor]
@@ -379,21 +460,20 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         stop("aggregate")
       } else {
         dt <- dt %>%
-          dplyr::select(c("OutputPathId", "Time", "xUnit","simulationValues",'DisplayUnit')) %>%
+          dplyr::select(c("outputPathId", "Time", "xUnit","simulationValues",'DisplayUnit')) %>%
           data.table::setnames(
             old = c("Time", "simulationValues",'DisplayUnit'),
             new = c("xValues", "yValues",'yUnit')
           ) %>%
-          dplyr::mutate(DataClass = DATACLASS$tpIndividual)
+          dplyr::mutate(dataClass = DATACLASS$tpIndividual)
 
         private$.tpLabelSimulatedMean = 'simulated timeprofile'
-        private$.tpLabelSimulatedRange = ''
       }
 
       dt[, xValues := xValues - timeOffset]
 
       private$upDateDtUnit(dtUnit %>% dplyr::select(c(
-        "OutputPathId", "dimension", "DisplayUnit", "molWeight"
+        "outputPathId", "dimension", "DisplayUnit", "molWeight"
       )))
 
       return(dt)
@@ -418,7 +498,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         if (!is.null(dataGroupIds)) {
           observedDataTmp <-
             dataObserved[group %in% dataGroupIds &
-                           OutputPathId %in% gsub("[()]", "", splitInputs(configList$OutputPathIds))] %>%
+                           outputPathId %in% gsub("[()]", "", splitInputs(configList$OutputPathIds))] %>%
             dplyr::select(dplyr::any_of(getColumnsForColumnType(dataObserved,
                                                                 columnTypes = c("identifier", "timeprofile")))) %>%
             dplyr::mutate(scenarioIndex = scenarioIndex)
@@ -432,10 +512,10 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
           observedDataTmp[,xUnit := configList$TimeUnit]
 
           dtUnitObserved <- observedDataTmp %>%
-            dplyr::select(c("OutputPathId", "yUnit")) %>%
+            dplyr::select(c("outputPathId", "yUnit")) %>%
             unique() %>%
             merge(private$.dtUnit,
-                  by = c("OutputPathId")
+                  by = c("outputPathId")
             )
           for (iRow in seq_len(nrow(dtUnitObserved))){
             dtUnitObserved$unitFactor[iRow] = toUnit(
@@ -450,8 +530,8 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
           observedDataTmp <- observedDataTmp %>%
             merge(dtUnitObserved %>%
-                    dplyr::select(c('OutputPathId','DisplayUnit','unitFactor')),
-                  by = "OutputPathId"
+                    dplyr::select(c('outputPathId','DisplayUnit','unitFactor')),
+                  by = "outputPathId"
             )
           observedDataTmp[, yValues := yValues * unitFactor]
 
@@ -464,8 +544,8 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
                   observedDataTmp)
         }
       }
-      checkmate::assertTRUE(dplyr::n_distinct(observedDataForPlot$DataClass) == 1,
-                            .var.name = 'use only one DataClass per dataType in one plot')
+      checkmate::assertTRUE(dplyr::n_distinct(observedDataForPlot$dataClass) == 1,
+                            .var.name = 'use only one "dataClass" per dataType in one plot')
 
 
       return(observedDataForPlot)

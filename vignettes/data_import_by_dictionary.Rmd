@@ -36,7 +36,7 @@ To use the `readObservedDataByDictionary` function, follow these steps:
 
 - Data which is used in other configuration files is also updated: 
 
-  - Sheet "DataGroups" (plotconfiguration file): All missing combinations of StudyId, group were added. Here you can add properties like the Displayname for the report.  
+  - Sheet "DataGroups" (plotconfiguration file): All missing combinations of studyId, group were added. Here you can add properties like the Displayname for the report.  
   - Sheet "OutputPaths" (plotconfiguration file): All missing OutputPathIds are added. Her you can add output paths and Display names for report.  
   - Sheet "IndividualBiometrics" (Individual parameter file): All biometrics contained in the data are added.  
   
@@ -73,12 +73,12 @@ In the "tpDictionary" sheet, define the data dictionary with the following colum
       
       - **identifier** all identifiers are mandatory:  
       
-         - StudyId: id of study
-         - StudyArm: study arm
-         - SubjectId: id of subject with the study (not needed for aggregated data)
-         - IndividualId: unique individual id over all studies (not needed for aggregated data)
+         - studyId: id of study
+         - studyArm: study arm
+         - subjectId: id of subject with the study (not needed for aggregated data)
+         - individualId: unique individual id over all studies (not needed for aggregated data)
          - group: identifier for data group, is unique over all studies and data classes
-         - OutputPathId: identifier for the output.
+         - outputPathId: identifier for the output.
          
       - **timeprofile** columns used to process time profiles.
          The columns 'xValues','yValues','yUnit','lloq' are alyways mandatory, 

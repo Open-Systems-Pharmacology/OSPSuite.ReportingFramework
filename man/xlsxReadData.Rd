@@ -8,7 +8,7 @@ xlsxReadData(
   wb,
   sheetName,
   skipDescriptionRow = FALSE,
-  alwaysCharacter = c("IndividualId", "StudyId", "group", "OutputPathId", "DataGroupIds",
+  alwaysCharacter = c("IndividualId", "StudyId", "group", "outputPathId", "DataGroupIds",
     "DataGroupId")
 )
 }

@@ -64,9 +64,9 @@ randomObservedData <- function() {
       dataDT <- rbind(
         dataDT,
         data.table(
-          StudyId = as.character(stud), SubjectId = as.character(subject),
-          IndividualId = paste0(stud, subject),
-          group = as.character(stud), OutputPathId = "output",
+          studyId = as.character(stud), subjectId = as.character(subject),
+          individualId = paste0(stud, subject),
+          group = as.character(stud), outputPathId = "output",
           xValues = seq(0, 24, 4), yValues = rnorm(7, 40, 2), yUnit = "ng/L", xUnit = "h",
           lloq = c(rep(10, 6), NA),
           age = age, weight = weight, height = height, gender = gender, population = "population"
@@ -75,7 +75,7 @@ randomObservedData <- function() {
     }
   }
 
-  for (dc in c("StudyId", "SubjectId", "IndividualId", "group", "OutputPathId")) {
+  for (dc in c("studyId", "subjectId", "individualId", "group", "outputPathId")) {
     data.table::setattr(dataDT[[dc]], "columnType", "identifier")
   }
   for (dc in c("xValues", "yValues", "yUnit", "xUnit", "lloq")) {
@@ -125,18 +125,18 @@ setDataDictionary <- function(projectConfiguration) {
   tpDictionary <- tpDictionary[targetColumn != "nBelowLLOQ"]
   tpDictionary <- tpDictionary[targetColumn != "yErrorType"]
   tpDictionary <- tpDictionary[targetColumn != "yErrorValues"]
-  tpDictionary <- tpDictionary[targetColumn != "StudyArm"]
+  tpDictionary <- tpDictionary[targetColumn != "studyArm"]
   tpDictionary <- tpDictionary[targetColumn != "yMin"]
   tpDictionary <- tpDictionary[targetColumn != "yMax"]
-  tpDictionary <- tpDictionary[targetColumn != "Dose"]
-  tpDictionary <- tpDictionary[targetColumn != "Route"]
+  tpDictionary <- tpDictionary[targetColumn != "dose"]
+  tpDictionary <- tpDictionary[targetColumn != "route"]
 
-  tpDictionary[targetColumn == "SubjectId"]$sourceColumn <- "SID"
-  tpDictionary[targetColumn == "IndividualId"]$filterValue <- "paste(STUD,SID,sep = '_')"
+  tpDictionary[targetColumn == "subjectId"]$sourceColumn <- "SID"
+  tpDictionary[targetColumn == "individualId"]$filterValue <- "paste(STUD,SID,sep = '_')"
   tpDictionary[targetColumn == "group"]$sourceColumn <- "STUD"
   tpDictionary[targetColumn == "group"]$filter <- NA
   tpDictionary[targetColumn == "group"]$filterValue <- NA
-  tpDictionary[targetColumn == "OutputPathId"]$sourceColumn <- "MOLECULE"
+  tpDictionary[targetColumn == "outputPathId"]$sourceColumn <- "MOLECULE"
   tpDictionary[targetColumn == "xValues"]$sourceColumn <- "Time"
   tpDictionary[targetColumn == "yValues"]$sourceColumn <- "DV"
   tpDictionary[targetColumn == "yUnit"]$sourceColumn <- "DVUNIT"
@@ -150,7 +150,7 @@ setDataDictionary <- function(projectConfiguration) {
 
   tpDictionary <- rbind(
     tpDictionary,
-    tpDictionary[targetColumn == "IndividualId"] %>%
+    tpDictionary[targetColumn == "individualId"] %>%
       dplyr::mutate(targetColumn = "population") %>%
       dplyr::mutate(type = "biometrics") %>%
       dplyr::mutate(filterValue = '"European_ICRP_2002"')

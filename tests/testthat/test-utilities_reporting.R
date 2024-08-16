@@ -3,7 +3,8 @@ projectConfiguration <- setUpTestProject()
 initLogfunction(projectConfiguration = projectConfiguration,verbose = FALSE)
 
 test_that("Rendering", {
-  rmdContainer <- RmdContainer$new(rmdfolder = rootDirectory, "timeProfiles")
+  rmdfolder <-  projectConfiguration$outputFolder
+  rmdContainer <- RmdContainer$new(rmdfolder = rmdfolder, "timeProfiles")
 
   rmdContainer$addHeader("Section 1")
 
@@ -30,11 +31,11 @@ test_that("Rendering", {
     tableKey = "myTable"
   )
 
-  testPath <- file.path(rootDirectory, "Test.Rmd")
+  testPath <- file.path(rmdfolder, "Test.Rmd")
   rmdContainer$writeRmd(basename(testPath))
 
   renderWord(testPath, quiet = TRUE)
-  expect_true(file.exists(file.path(rootDirectory, "Test.docx")))
+  expect_true(file.exists(file.path(rmdfolder, "Test.docx")))
 })
 
 cleanupLogFileForTest(projectConfiguration)

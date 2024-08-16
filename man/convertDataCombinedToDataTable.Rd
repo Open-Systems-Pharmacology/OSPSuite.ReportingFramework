@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-data.R
 \name{convertDataCombinedToDataTable}
 \alias{convertDataCombinedToDataTable}
-\title{converst object of class dataCombined to data.table with atttributes}
+\title{converts object of class `DataCombined` to data.table with attributes}
 \usage{
 convertDataCombinedToDataTable(datacombined)
 }
@@ -13,6 +13,5 @@ convertDataCombinedToDataTable(datacombined)
 `data.table`
 }
 \description{
-format correspondends to data.table produced by `readObservedDataByDictionary`
-if the metaData does not contain `StudyId` StudyId 0 will be added.
+format correspondents to data.table produced by `readObservedDataByDictionary`
 }

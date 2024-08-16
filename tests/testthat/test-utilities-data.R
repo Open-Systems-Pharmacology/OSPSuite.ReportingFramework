@@ -22,16 +22,16 @@ test_that("It should read and process data based on the provided project configu
   expect_gte(nrow(dtIndividualBiometrics), 10)
 
   dtOutputPaths <- getOutputPathIds(projectConfiguration)
-  expect_contains(dtOutputPaths$OutputPathId, c("PARENT", "METABOLITE"))
+  expect_contains(dtOutputPaths$outputPathId, c("PARENT", "METABOLITE"))
 })
 
 
 test_that("It should check the validity of the observed dataset", {
   # Create a sample observed dataset for testing
   observedData <- data.table(
-    IndividualId = c(1, 2, 3),
+    individualId = c(1, 2, 3),
     group = c(1, 1, 2),
-    OutputPathId = c(101, 102, 103),
+    outputPathId = c(101, 102, 103),
     xValues = c(10, 20, 30),
     yValues = c(5.6, 7.8, 9.1),
     yUnit = c("mg/L", "mg/L", "mg/L"),
@@ -49,7 +49,7 @@ test_that("It should check the validity of the observed dataset", {
   # Add your assertions here to test the validation result
   expect_true(grep("empty entries in weight", validationResult) == 1)
 
-  # Test for uniqueness of IndividualId, group, OutputPathId, and time columns
+  # Test for uniqueness of `individualId`, group, `outputPathId`, and time columns
   expect_error(validateObservedData(
     data = rbind(observedData, observedData),
     stopIfValidationFails = TRUE
@@ -64,10 +64,10 @@ test_that("It should check the validity of the observed dataset", {
     stopIfValidationFails = TRUE
   ))
 
-  # Test for uniqueness of yUnit within each OutputPathId
+  # Test for uniqueness of yUnit within each outputPathId
   observedDataChanged <- data.table::copy(observedData)
   observedDataChanged[1, yUnit := "m"]
-  observedDataChanged[2, OutputPathId := 101]
+  observedDataChanged[2, outputPathId := 101]
 
   expect_error(validateObservedData(
     data = rbind(observedData, observedData),
@@ -102,7 +102,7 @@ test_that("getColumnsForColumnType function test", {
 
   #
   expect_equal(length(columnNames), 5)
-  expect_contains(columnNames, c("StudyId", "SubjectId", "IndividualId", "group", "OutputPathId"))
+  expect_contains(columnNames, c("studyId", "subjectId", "individualId", "group", "outputPathId"))
 })
 
 # Unit tests for createDataSets function
@@ -144,7 +144,7 @@ test_that("addMetaDataToDataSet function test", {
   expect_contains(
     names(dataSetWithMeta$metaData),
     c(
-      "StudyId", "SubjectId", "IndividualIdObserved", "group", "OutputPathId",
+      "studyId", "subjectId", "individualId", "group", "outputPathId",
       "age", "weight", "height", "gender", "population"
     )
   )

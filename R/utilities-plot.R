@@ -353,7 +353,7 @@ validateAtleastOneEntry <- function(configTablePlots, columnVector) {
 #'
 #' @param dtOutputPaths data.table with outputPath Ids
 validateOutputIdsForPlot <- function(dtOutputPaths) {
-  checkmate::assertFactor(dtOutputPaths$OutputPathId, any.missing = FALSE)
+  checkmate::assertFactor(dtOutputPaths$outputPathId, any.missing = FALSE)
   checkmate::assertCharacter(dtOutputPaths$OutputPath, any.missing = FALSE)
   checkmate::assertCharacter(dtOutputPaths$DisplayName, any.missing = FALSE)
 
@@ -365,9 +365,9 @@ validateOutputIdsForPlot <- function(dtOutputPaths) {
   uniqueIDValues <-
     dtOutputPaths[, lapply(.SD, function(x) {
       length(unique(x))
-    }), by = OutputPathId, .SDcols = uniqueColumns]
+    }), by = outputPathId, .SDcols = uniqueColumns]
   tmp <- lapply(uniqueColumns, function(col) {
-    if (any(uniqueIDValues[[col]] > 1)) stop(paste("values for", col, "should be the same within OutputPathId"))
+    if (any(uniqueIDValues[[col]] > 1)) stop(paste("values for", col, "should be the same within outputPathId"))
   })
 
   # check validity of units

@@ -4,12 +4,12 @@
 \alias{addFacets}
 \title{addFacetColum}
 \usage{
-addFacets(plotObject, onePlotConfig, nFacetColumns, facetAspectRatio = 0.5)
+addFacets(plotObject, plotData, facetAspectRatio = 0.5)
 }
 \arguments{
-\item{plotObject}{ggplot object}
+\item{plotObject}{ggplot object to which the facet should be added}
 
-\item{nFacetColumns}{maxinaml number of facet used for facettype byOrder}
+\item{nFacetColumns}{maximal number of facet used for facettype byOrder}
 }
 \value{
 ggplot Object with facets

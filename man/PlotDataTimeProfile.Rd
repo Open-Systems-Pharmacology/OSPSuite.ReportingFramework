@@ -14,20 +14,30 @@ An object to collect plotData and other informations to create a timeprofile plo
 \section{Super class}{
 \code{\link[ospsuite.utils:Printable]{ospsuite.utils::Printable}} -> \code{RmdContainer}
 }
-\section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
-\describe{
-\item{\code{digitsOfSignificance}}{digits for significance in table display
-load observed data used in this panel}
-}
-\if{html}{\out{</div>}}
-}
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
 \item{\code{data}}{data For Plot}
 
-\item{\code{digitsOfSignificance}}{digits for significance in table display
+\item{\code{configTable}}{configuration table for one plot}
+
+\item{\code{dtCaption}}{`digits for significance in table display`data.table`with caption information`}
+
+\item{\code{scaleVectors}}{list with scaling vectors to manually scale aestehtics}
+
+\item{\code{tpLabelSimulatedMean}}{label for simulated mean}
+
+\item{\code{tpLabelSimulatedRange}}{label for simulated range}
+
+\item{\code{tpLabelObserved}}{label for observed data}
+
+\item{\code{dtCaption}}{list of time profile labels to add on ggplot}
+
+\item{\code{dtCaption}}{`digits for significance in table display`data.table`with caption information`
+loads simulated result and convert for plotting
+
+if population scenario, time profiles are aggregated
+Units are converted to desired units
 load observed data used in this panel}
 }
 \if{html}{\out{</div>}}
@@ -37,6 +47,11 @@ load observed data used in this panel}
 \itemize{
 \item \href{#method-RmdContainer-new}{\code{PlotDataTimeProfile$new()}}
 \item \href{#method-RmdContainer-collectData}{\code{PlotDataTimeProfile$collectData()}}
+\item \href{#method-RmdContainer-setOrderAndFactors}{\code{PlotDataTimeProfile$setOrderAndFactors()}}
+\item \href{#method-RmdContainer-addDtCaption}{\code{PlotDataTimeProfile$addDtCaption()}}
+\item \href{#method-RmdContainer-setColorIndex}{\code{PlotDataTimeProfile$setColorIndex()}}
+\item \href{#method-RmdContainer-getCaptionTimeProfile}{\code{PlotDataTimeProfile$getCaptionTimeProfile()}}
+\item \href{#method-RmdContainer-getFootNoteLines}{\code{PlotDataTimeProfile$getFootNoteLines()}}
 \item \href{#method-RmdContainer-clone}{\code{PlotDataTimeProfile$clone()}}
 }
 }
@@ -57,8 +72,6 @@ Initialize a new instance of the class
 \describe{
 \item{\code{projectConfiguration}}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 
-\item{\code{projectConfiguration}}{Object of class `ProjectConfiguration` containing information on paths and filenames}
-
 \item{\code{onePlotConfig}}{plotconfiguration for one plot}
 }
 \if{html}{\out{</div>}}
@@ -75,14 +88,88 @@ Initialize a new instance of the class
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{projectConfiguration}}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+\item{\code{projectConfiguration}}{projectConfiguration}
 
-\item{\code{projectConfiguration}}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+\item{\code{observedDataDT}}{'data.table'  with observed data
+setfactors to plot}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-setOrderAndFactors"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-setOrderAndFactors}{}}}
+\subsection{Method \code{setOrderAndFactors()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$setOrderAndFactors(identifierColumns)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{identifierColumns}}{identifier columns which define sort order
+Creates PlotId for each scenario outputs group}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-addDtCaption"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-addDtCaption}{}}}
+\subsection{Method \code{addDtCaption()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$addDtCaption(nFacetColumns)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{nFacetColumns}}{number of maximal facet columns
+add colorIndex column
+creates a caption text}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-setColorIndex"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-setColorIndex}{}}}
+\subsection{Method \code{setColorIndex()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$setColorIndex()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-getCaptionTimeProfile"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-getCaptionTimeProfile}{}}}
+\subsection{Method \code{getCaptionTimeProfile()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$getCaptionTimeProfile(yScale)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{yScale}}{scale of Y axis}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-self
+`character` with caption text
+constructs footnote lines for aggregated data and data references
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-getFootNoteLines"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-getFootNoteLines}{}}}
+\subsection{Method \code{getFootNoteLines()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$getFootNoteLines()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+vector of characters, each entry is one footnote line
 }
 }
 \if{html}{\out{<hr>}}
