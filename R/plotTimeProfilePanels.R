@@ -24,17 +24,7 @@ plotTimeProfilePanels <- function(projectConfiguration,
   }
 
   # read configuration tables
-  configTable <- xlsxReadData(
-    wb = projectConfiguration$plotsFile,
-    sheetName = configTableSheet,
-    skipDescriptionRow = TRUE
-  )
-  validateConfigTableForTimeProfiles(
-    configTable = configTable,
-    dataObserved = dataObserved,
-    projectConfiguration = projectConfiguration
-  )
-
+  configTable <- readTimeprofileConfigTable(sheetName = configTableSheet)
 
   # initialize Container for RMD generation for .Rmd generation
   rmdContainer <-
@@ -53,7 +43,7 @@ plotTimeProfilePanels <- function(projectConfiguration,
       iRow = iRow +1
     } else{
       # execute plot section
-      iEndX = head(which(levelLines>iRow))
+      iEndX = utils::head(which(levelLines>iRow),1)
       if (length(iEndX) ==0 ) {
         iEnd <- nrow(configTable)}
       else{
@@ -67,7 +57,8 @@ plotTimeProfilePanels <- function(projectConfiguration,
                                     dataObserved = dataObserved,
                                     rmdContainer = rmdContainer,
                                     nFacetColumns = nFacetColumns,
-                                    facetAspectRatio = facetAspectRatio
+                                    facetAspectRatio = facetAspectRatio,
+                                    timeRangeTable = timeRangeTable
           )
       }
 
@@ -86,7 +77,8 @@ plotTimeProfilePanels <- function(projectConfiguration,
 #' @template projectConfig
 #' @template onePlotConfig
 #' @template observedDataDT
-#' @param rmdContainer object of class `rmdContainer`
+#' @param rmdContainer object of class `RmdContainer`
+#' @param `data.table` with Time Range configurations
 #'
 #' @return object of class `rmdContainer` with added figures
 #' @export
@@ -96,31 +88,33 @@ createPanelPlotsForPlotName <- function(projectConfiguration,
                                       dataObserved,
                                       nFacetColumns,
                                       rmdContainer,
-                                      facetAspectRatio) {
+                                      facetAspectRatio,
+                                      timeRangeTable) {
   plotData <- PlotDataTimeProfile$new(projectConfiguration = projectConfiguration,
                                       onePlotConfig = onePlotConfig)
-
+  # read simulated data and filter observed
   plotData$collectData(projectConfiguration = projectConfiguration,
                            dataObserved = dataObserved)
 
-  # TODO replicate TimeRanges
-  timeRangeTag <- 'total'
+  # replicate data for each TimeRange Tag
+  plotData$addTimeRangeTags()
 
   # make sure everything will be plotted in correct order
   plotData$setOrderAndFactors(
     identifierColumns = getColumnsForColumnType(dt = dataObserved, 'identifier'))
 
   # get table with caption information per plot Id
-  plotData$addDtCaption(nFacetColumns)
+  plotData$prepareCaptionDetails(nFacetColumns)
 
   # setColorIndex
-  plotData$setColorIndex()
+  plotData$prepareLegendDetails()
 
 
-  if (as.logical(onePlotConfig$Plot_TimeProfiles[1]))
+  if (as.logical(plotData$configTable$Plot_TimeProfiles[1]))
     rmdContainer <- plotTPPanel(plotData,
                                 rmdContainer,
                                 facetAspectRatio = facetAspectRatio)
+
 
   return(rmdContainer)
 
@@ -160,46 +154,52 @@ plotTPPanel <- function(plotData,
                               ggplot2::standardise_aes_names(names(plotData$scaleVectors)))
 
 
+  for (timeRangeFilter in names(plotData$timeRangeTagFilter)){
 
-  for (yScale in splitInputs(onePlotConfig$yScale[1])){
+    for (yScale in splitInputs(plotData$configTable$yScale[1])){
 
-    plotObject <- do.call(
-      what = ospsuite_plotTimeProfile,
-      args = c(
-        list(
-          plotData = plotData$data,
-          yscale = yScale,
-          mapping = mapping,
-          groupAesthetics = groupAesthetics,
-          geomLLOQAttributes = list(linetype = "dashed"),
-          mapSimulatedAndObserved = mapSimulatedAndObserved
-        ),
-        eval(parse(
-          text = paste('list(', onePlotConfig$PlotInputs_TP[1], ')')
-        ))
-      ))
+      plotObject <- do.call(what = ospsuite_plotTimeProfile,
+                            args = utils::modifyList(
+                              list(
+                                plotData = plotData$getDataForTimeRange(timeRangeFilter),
+                                yscale = yScale,
+                                mapping = mapping,
+                                groupAesthetics = groupAesthetics,
+                                geomLLOQAttributes = list(linetype = "dashed"),
+                                mapSimulatedAndObserved = mapSimulatedAndObserved
+                              ),
+                              eval(parse(
+                                text = paste('list(', plotData$configTable$PlotInputs_TP[1], ')')
+                              ))
+                            ))
+
+      # add Facet Columns
+      plotObject <- addFacets(plotObject = plotObject,
+                              plotData =  plotData,
+                              facetAspectRatio = facetAspectRatio)
+
+      # adjust labes
+      plotObject$labels = utils::modifyList(plotObject$labels,
+                                            plotData$tpLabels)
+
+      plotObject <- plotObject +
+        labs(x = plotData$getTimeLabelForTimeRange(timeRangeFilter))
+
+      # export
+      rmdContainer$addAndExportFigure(
+        plotObject = plotObject,
+        caption = plotData$getCaptionForTimeProfile(yScale = yScale,
+                                                    filterName = timeRangeFilter),
+        footNoteLines = plotData$getFootNoteLines(),
+        figureKey = paste(plotData$configTable$PlotName[1],
+                          'TP',
+                          ifelse(yScale == 'log','Log','Linear'),
+                          timeRangeFilter,
+                          sep = '-')
+      )
 
 
-    # add Facet Columns
-    plotObject <- addFacets(plotObject = plotObject,
-                            plotData =  plotData,
-                            facetAspectRatio = facetAspectRatio)
-
-    plotObject$labels = utils::modifyList(plotObject$labels,
-                                          plotData$tpLabels)
-
-    rmdContainer$addAndExportFigure(
-      plotObject = plotObject,
-      caption = plotData$getCaptionTimeProfile(yScale = yScale),
-      footNoteLines = plotData$getFootNoteLines(),
-      figureKey = paste(plotData$configTable$PlotName[1],
-                        'TP',
-                        ifelse(yScale == 'log','Log','Linear'),
-                        'timeRangeTag',
-                        sep = '-')
-    )
-
-
+    }
   }
 
   return(rmdContainer)
@@ -234,6 +234,38 @@ addFacets <- function(plotObject,
   return(plotObject)
 }
 
+
+#' Read the configtable for the timeprofile
+#'
+#' @param sheetName
+#'
+#' @return `data.table` with plot configurations
+#' @export
+readTimeprofileConfigTable <- function(sheetName){
+  # read configuration tables
+  configTable <- xlsxReadData(
+    wb = projectConfiguration$plotsFile,
+    sheetName = sheetName,
+    skipDescriptionRow = TRUE
+  )
+
+  validateConfigTableForTimeProfiles(
+    configTable = configTable,
+    dataObserved = dataObserved,
+    projectConfiguration = projectConfiguration
+  )
+
+
+  plotInputColumns <-
+    names(configTable)[grepl("^PlotInputs_", names(configTable))]
+
+  for (col in plotInputColumns){
+    configTable[is.na(get(col)) ,(col):='']
+  }
+
+  return(configTable)
+
+}
 
 # Validation ----------------
 

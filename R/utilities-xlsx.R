@@ -117,6 +117,8 @@ xlsxReadData <- function(wb, sheetName,
   return(dt)
 }
 
+# auxiliaries -------
+
 #' Split the elements of a vector by comma
 #'
 #' This function takes an original vector as input and splits its elements by comma.
@@ -137,6 +139,9 @@ splitInputs <- function(originalVector) {
 
   return(splitVector)
 }
+
+
+# load default tables -------
 
 #' load the properties for data groups
 #'
@@ -197,3 +202,22 @@ getOutputPathIds <- function(projectConfiguration) {
 
   return(dtOutputPaths)
 }
+
+
+
+getTimeRangeTags <- function(projectConfiguration) {
+  dtTimeRange <- xlsxReadData(
+    wb = projectConfiguration$plotsFile,
+    sheetName = "TimeRange",
+    skipDescriptionRow = TRUE
+  )
+
+  dtTimeRange[is.na(CaptionText), CaptionText := '']
+
+  dtTimeRange$Tag <- factor(dtTimeRange$Tag,
+                                       levels = unique(dtTimeRange$Tag),
+                                       ordered = TRUE)
+
+  return(dtTimeRange)
+}
+

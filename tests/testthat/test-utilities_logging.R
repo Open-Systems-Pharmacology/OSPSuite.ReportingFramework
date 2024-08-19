@@ -19,7 +19,7 @@ test_that("writeToLog appends log message to file", {
   writeToLog(type, msg, filename)
   suppressWarnings(logFile <- readLines(file.path(logFileFolder, filename)))
   expect_true(length(logFile) > 0)
-  expect_equal(grep(paste0(type, ": ", msg), tail(logFile, 1)), expected = 1)
+  expect_equal(grep(paste0(type, ": ", msg), utils::tail(logFile, 1)), expected = 1)
 })
 
 

@@ -169,12 +169,17 @@ pasteFigureTags = function(dtCaption,captionColumn){
     allTags <- dtCaption[, .(tags = paste0(' \\(', paste(unique(PlotTag), collapse = ', '), '\\)'))]$tags
 
     captionTextVector <- gsub(allTags,'',captionTextVector)
+    captionTextVector <- gsub('\\.$', '', captionTextVector)
 
     captionText =
       paste(c(paste(captionTextVector[seq(1, length(captionTextVector) - 1)],
                     collapse = ', '),
-              tail(captionTextVector, 1)),
+              utils::tail(captionTextVector, 1)),
             collapse = ' and ')
+
+    if (any(grepl('\\.$', captionTextVector))) {
+      captionText <- paste0(captionText, '.')
+    }
   }
 
   return(captionText)
