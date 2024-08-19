@@ -35,7 +35,7 @@ plotTimeProfilePanels <- function(projectConfiguration,
 
   iRow = 1
   levelLines = which(!is.na(configTable$Level))
-  while (iRow < nrow(configTable)){
+  while (iRow <= nrow(configTable)){
     if (!is.na(configTable$Level[iRow])){
       # add  section headers
       rmdContainer$addHeader(configTable$Header[iRow],
@@ -45,8 +45,8 @@ plotTimeProfilePanels <- function(projectConfiguration,
       # execute plot section
       iEndX = utils::head(which(levelLines>iRow),1)
       if (length(iEndX) ==0 ) {
-        iEnd <- nrow(configTable)}
-      else{
+        iEnd <- nrow(configTable)
+      }else{
         iEnd <- levelLines[iEndX]-1
       }
 
