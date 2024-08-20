@@ -156,6 +156,8 @@ getDataGroups <- function(projectConfiguration) {
     skipDescriptionRow = TRUE
   )
 
+  data.table::setnames(dtDataGroups, old = "Group", new = "group")
+
   dtDataGroups$group <- factor(dtDataGroups$group,
                                levels = unique(dtDataGroups$group),
                                ordered = TRUE)

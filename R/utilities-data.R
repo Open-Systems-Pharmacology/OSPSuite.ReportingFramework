@@ -37,14 +37,14 @@ readObservedDataByDictionary <- function(projectConfiguration,
     )
 
     dataDT <- rbind(dataDT,
-      convertDataByDictionary(
-        data = tmpData,
-        dataFilter = d$DataFilter,
-        dict = tmpdict,
-        dictionaryName = d$Dictionary
-      ) %>%
-        dplyr::mutate(dataClass = d$DataClass),
-      fill = TRUE
+                    convertDataByDictionary(
+                      data = tmpData,
+                      dataFilter = d$DataFilter,
+                      dict = tmpdict,
+                      dictionaryName = d$Dictionary
+                    ) %>%
+                      dplyr::mutate(dataClass = d$DataClass),
+                    fill = TRUE
     )
 
     # get unique dictionary for columnType
@@ -222,20 +222,20 @@ readDataDictionary <-
       )
     }
 
-  tmp <- dict[is.na(sourceColumn) & is.na(filter), ]
-  if (nrow(tmp) > 0) {
-    stop(paste0('Either sourceColumn or Filter on sourceColumn has to be filled in dictionary "', sheet,
-               '" for targetColumn(s) "', paste(tmp$targetColumn,collapse = '", "'),'"'))
+    tmp <- dict[is.na(sourceColumn) & is.na(filter), ]
+    if (nrow(tmp) > 0) {
+      stop(paste0('Either sourceColumn or Filter on sourceColumn has to be filled in dictionary "', sheet,
+                  '" for targetColumn(s) "', paste(tmp$targetColumn,collapse = '", "'),'"'))
+    }
+
+    checkmate::assertNames(
+      x = dict[!is.na(sourceColumn)]$sourceColumn,
+      subset.of = names(data),
+      .var.name = paste("Source column of", sheet)
+    )
+
+    return(dict)
   }
-
-  checkmate::assertNames(
-    x = dict[!is.na(sourceColumn)]$sourceColumn,
-    subset.of = names(data),
-    .var.name = paste("Source column of", sheet)
-  )
-
-  return(dict)
-}
 
 
 #' Convert data by dictionary
@@ -355,7 +355,7 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
   identifierCols <- intersect(c("group","studyId","studyArm"),names(dataDT))
 
   colsSelected <- unique(c(identifierCols,
-    getColumnsForColumnType(dt = dataDT,columnTypes = 'metadata')))
+                           getColumnsForColumnType(dt = dataDT,columnTypes = 'metadata')))
 
   dtDataGroupIdsNew <- dataDT %>%
     dplyr::select(all_of(colsSelected)) %>%
@@ -372,8 +372,8 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
   }
 
   dtDataGroupIds <- rbind(dtDataGroupIds,
-    dtDataGroupIdsNew,
-    fill = TRUE
+                          dtDataGroupIdsNew,
+                          fill = TRUE
   )
 
   identifierCols <- intersect(c("Group","StudyId","StudyArm"),names(dtDataGroupIds))
@@ -408,8 +408,8 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
 
 
   dtOutputPaths <- rbind(dtOutputPaths,
-    dtOutputPathsNew,
-    fill = TRUE
+                         dtOutputPathsNew,
+                         fill = TRUE
   )
 
   dtOutputPaths <- dtOutputPaths[!duplicated(dtOutputPaths, by = "OutputPathId")]
@@ -598,15 +598,15 @@ addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALS
   # merge old an new tables
   dtIndividualBiometrics <-
     rbind(dtIndividualBiometrics,
-      biometrics,
-      fill = TRUE
+          biometrics,
+          fill = TRUE
     )
 
   # if overwrite FALSE take original located at the top, otherwise take new rows located at the bottom
   dtIndividualBiometrics <-
     dtIndividualBiometrics[!duplicated(dtIndividualBiometrics,
-      by = "IndividualId",
-      fromLast = overwrite
+                                       by = "IndividualId",
+                                       fromLast = overwrite
     )]
 
   xlsxWriteData(wb = wb, sheetName = "IndividualBiometrics", dt = dtIndividualBiometrics)
@@ -637,11 +637,12 @@ convertDataCombinedToDataTable <- function(datacombined) {
 
   # set DataClass
   dataDT[,dataClass := ifelse(any(!is.na(yErrorValues)),DATACLASS$tpAggregated,DATACLASS$tpAggregated),
-                              by:='group']
+         by:='group']
 
   # avoid conflict with population IndividualID
   data.table::setnames(dataDT, "IndividualIdObserved", "IndividualID", skip_absent = TRUE)
 }
+
 
 # auxiliaries ---------
 #' sets comulnType attribute according to dictionary

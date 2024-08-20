@@ -53,12 +53,12 @@ plotTimeProfilePanels <- function(projectConfiguration,
       for (onePlotConfig in split(configTable[seq(iRow,iEnd)], by = "PlotName")) {
         rmdContainer <-
           createPanelPlotsForPlotName(projectConfiguration = projectConfiguration,
-                                    onePlotConfig = onePlotConfig,
-                                    dataObserved = dataObserved,
-                                    rmdContainer = rmdContainer,
-                                    nFacetColumns = nFacetColumns,
-                                    facetAspectRatio = facetAspectRatio,
-                                    timeRangeTable = timeRangeTable
+                                      onePlotConfig = onePlotConfig,
+                                      dataObserved = dataObserved,
+                                      rmdContainer = rmdContainer,
+                                      nFacetColumns = nFacetColumns,
+                                      facetAspectRatio = facetAspectRatio,
+                                      timeRangeTable = timeRangeTable
           )
       }
 
@@ -84,27 +84,33 @@ plotTimeProfilePanels <- function(projectConfiguration,
 #' @export
 #'
 createPanelPlotsForPlotName <- function(projectConfiguration,
-                                      onePlotConfig,
-                                      dataObserved,
-                                      nFacetColumns,
-                                      rmdContainer,
-                                      facetAspectRatio,
-                                      timeRangeTable) {
+                                        onePlotConfig,
+                                        dataObserved,
+                                        nFacetColumns,
+                                        rmdContainer,
+                                        facetAspectRatio,
+                                        timeRangeTable) {
   plotData <- PlotDataTimeProfile$new(projectConfiguration = projectConfiguration,
                                       onePlotConfig = onePlotConfig)
   # read simulated data and filter observed
   plotData$collectData(projectConfiguration = projectConfiguration,
-                           dataObserved = dataObserved)
+                       dataObserved = dataObserved)
 
-  # replicate data for each TimeRange Tag
+  if (!any(plotData$data$dataType == 'simulated'))
+    stop(paste('no simulated data found for',plotData$configTable$PlotName[1]))
+
+  # replicate and filter data for each Time Range Tag
   plotData$addTimeRangeTags()
+
+  if (!any(plotData$data$dataType == 'simulated'))
+    stop(paste('All simulated data outside time range for',plotData$configTable$PlotName[1]))
 
   # make sure everything will be plotted in correct order
   plotData$setOrderAndFactors(
     identifierColumns = getColumnsForColumnType(dt = dataObserved, 'identifier'))
 
-  # get table with caption information per plot Id
-  plotData$prepareCaptionDetails(nFacetColumns)
+  # split data to plot panels
+  plotData$splitDataToPanels(nFacetColumns)
 
   # setColorIndex
   plotData$prepareLegendDetails()
@@ -115,6 +121,25 @@ createPanelPlotsForPlotName <- function(projectConfiguration,
                                 rmdContainer,
                                 facetAspectRatio = facetAspectRatio)
 
+  # add predicted observed
+  plotData$addPredictedForObserved()
+
+  if (as.logical(plotData$configTable$Plot_PredictedVsObserved[1]))
+    rmdContainer <- plotPredictedVsObservedPanel(plotData,
+                                                 rmdContainer)
+
+  if (as.logical(plotData$configTable$Plot_ResidualsVsTime[1]))
+    rmdContainer <- plotResidualsVsTimePanel(plotData,
+                                             rmdContainer)
+
+  if (as.logical(plotData$configTable$Plot_ResidualsVsObserved[1]))
+    rmdContainer <- plotResidualsVsObservedPanel(plotData,
+                                                 rmdContainer)
+
+
+  if (as.logical(plotData$configTable$Plot_ResidualsAsHistogram))
+    rmdContainer <- plotResidualsAsHistogramPanel(plotData,
+                                                  rmdContainer)
 
   return(rmdContainer)
 
@@ -127,11 +152,11 @@ createPanelPlotsForPlotName <- function(projectConfiguration,
 #' @inheritParams createPanelPlotsForPlotName
 #' @param plotData object of class PlotDataTimeprofile which contains data and informations neede for plotting
 #'
-#' @return RmdContainer object with added lines
+#' @return RmdContainer object with added plot
 #' @export
 plotTPPanel <- function(plotData,
-                            rmdContainer,
-                            facetAspectRatio){
+                        rmdContainer,
+                        facetAspectRatio){
 
 
   if(any(plotData$data$dataType == 'observed')){
@@ -145,32 +170,25 @@ plotTPPanel <- function(plotData,
   }
 
 
-  mapping = eval(parse(text = paste(
-    'aes(groupby =', interaction(intersect(
-      names(plotData$data), c('colorIndex', 'shapeIndex')
-    )), ')'
-  )))
-  groupAesthetics = intersect(c('colour','fill','shape'),
-                              ggplot2::standardise_aes_names(names(plotData$scaleVectors)))
-
-
   for (timeRangeFilter in names(plotData$timeRangeTagFilter)){
 
     for (yScale in splitInputs(plotData$configTable$yScale[1])){
+
+      yLimits = checkAndAdjustYlimits(plotData,
+                                      yScale,
+                                      timeRangeFilter)
 
       plotObject <- do.call(what = ospsuite_plotTimeProfile,
                             args = utils::modifyList(
                               list(
                                 plotData = plotData$getDataForTimeRange(timeRangeFilter),
                                 yscale = yScale,
-                                mapping = mapping,
-                                groupAesthetics = groupAesthetics,
+                                mapping = plotData$getGroupbyMapping(),
+                                groupAesthetics = plotData$getGroupAesthetics(),
                                 geomLLOQAttributes = list(linetype = "dashed"),
-                                mapSimulatedAndObserved = mapSimulatedAndObserved
-                              ),
-                              eval(parse(
-                                text = paste('list(', plotData$configTable$PlotInputs_TP[1], ')')
-                              ))
+                                mapSimulatedAndObserved = mapSimulatedAndObserved,
+                                yscale.args = list(limits = yLimits)
+                              )
                             ))
 
       # add Facet Columns
@@ -188,8 +206,9 @@ plotTPPanel <- function(plotData,
       # export
       rmdContainer$addAndExportFigure(
         plotObject = plotObject,
-        caption = plotData$getCaptionForTimeProfile(yScale = yScale,
-                                                    filterName = timeRangeFilter),
+        caption = plotData$getCaptionForPlot(yScale = yScale,
+                                             filterName = timeRangeFilter,
+                                             plotType = 'TP'),
         footNoteLines = plotData$getFootNoteLines(),
         figureKey = paste(plotData$configTable$PlotName[1],
                           'TP',
@@ -206,6 +225,310 @@ plotTPPanel <- function(plotData,
 }
 
 
+#' plot predicted vs observed
+#'
+#' @inheritParams plotTPPanel
+#'
+#' @return RmdContainer object with added plot
+#' @export
+plotPredictedVsObservedPanel <- function(plotData,
+                                         rmdContainer){
+
+  foldDistance <- ifelse(!is.na(plotData$configTable$FoldDistance_PvO[1]),
+                         as.double(plotData$configTable$FoldDistance_PvO[1]),
+                         2)
+
+  mapping <- structure(c(aes(predicted = predicted,
+                             observed = yValues),
+                         plotData$getGroupbyMapping()), class = "uneval")
+
+  for (timeRangeFilter in names(plotData$timeRangeTagFilter)){
+
+    for (yScale in splitInputs(plotData$configTable$yScale[1])){
+
+      plotObject <- ospsuite.plots::plotPredVsObs(
+        data = plotData$getDataForTimeRange(timeRangeFilter)[dataType == 'observed'],
+        mapping = mapping,
+        groupAesthetics = plotData$getGroupAesthetics(),
+        xyscale = yScale,
+        comparisonLineVector = ospsuite.plots::getFoldDistanceList(foldDistance))
+
+      # add scalings
+      for (aesthetic in names(plotData$scaleVectors)){
+
+        plotObject <- plotObject +
+          ggplot2:::manual_scale(aesthetic,
+                                 values = plotData$scaleVectors[[aesthetic]],
+                                 guide = guide_legend(order = 1,title = NULL))
+      }
+      # add Facet Columns
+      plotObject <- addFacets(plotObject = plotObject,
+                              plotData =  plotData,
+                              facetAspectRatio = 1)
+
+      # adjust labels
+      plotObject <- plotObject +
+        labs(x = 'observed',
+             y = 'predicted')
+
+      # export
+      rmdContainer$addAndExportFigure(
+        plotObject = plotObject,
+        caption = plotData$getCaptionForPlot(yScale = yScale,
+                                             filterName = timeRangeFilter,
+                                             plotType = 'PvO'),
+        footNoteLines = plotData$getFootNoteLines(),
+        figureKey = paste(plotData$configTable$PlotName[1],
+                          'PvO',
+                          ifelse(yScale == 'log','Log','Linear'),
+                          timeRangeFilter,
+                          sep = '-')
+      )
+
+
+    }
+  }
+
+}
+
+#' plot residuals ve Time
+#'
+#' @inheritParams plotTPPanel
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plotResidualsVsTimePanel <- function(plotData,
+                                     rmdContainer,
+                                     facetAspectRatio){
+
+
+  mapping <- structure(c(aes(predicted = predicted,
+                             observed = yValues,
+                             x = xValues),
+                         plotData$getGroupbyMapping()), class = "uneval")
+
+  for (timeRangeFilter in names(plotData$timeRangeTagFilter)){
+
+    for (yScale in splitInputs(plotData$configTable$yScale[1])){
+
+      plotObject <- ospsuite.plots::plotResVsCov(
+        data = plotData$getDataForTimeRange(timeRangeFilter)[dataType == 'observed'],
+        mapping = mapping,
+        groupAesthetics = plotData$getGroupAesthetics(),
+        residualScale =  yScale)
+
+      # add scalings
+      for (aesthetic in names(plotData$scaleVectors)){
+
+        plotObject <- plotObject +
+          ggplot2:::manual_scale(aesthetic,
+                                 values = plotData$scaleVectors[[aesthetic]],
+                                 guide = guide_legend(order = 1,title = NULL))
+      }
+      # add Facet Columns
+      plotObject <- addFacets(plotObject = plotObject,
+                              plotData =  plotData,
+                              facetAspectRatio = facetAspectRatio)
+
+      plotObject <- plotObject +
+        labs(x = plotData$getTimeLabelForTimeRange(timeRangeFilter))
+
+      # export
+      rmdContainer$addAndExportFigure(
+        plotObject = plotObject,
+        caption = plotData$getCaptionForPlot(yScale = yScale,
+                                             filterName = timeRangeFilter,
+                                             plotType = 'ResvT'),
+        footNoteLines = plotData$getFootNoteLines(),
+        figureKey = paste(plotData$configTable$PlotName[1],
+                          'ResvT',
+                          ifelse(yScale == 'log','Log','Linear'),
+                          timeRangeFilter,
+                          sep = '-')
+      )
+
+
+    }
+  }
+
+}
+
+#' plot residuals vs Observed
+#'
+#' @inheritParams plotTPPanel
+#'
+#' @return RmdContainer object with added plot
+#' @export
+plotResidualsVsObservedPanel <- function(plotData,
+                                         rmdContainer,
+                                         facetAspectRatio){
+
+
+  mapping <- structure(c(aes(predicted = predicted,
+                             observed = yValues,
+                             x = yValues),
+                         plotData$getGroupbyMapping()), class = "uneval")
+
+  for (timeRangeFilter in names(plotData$timeRangeTagFilter)){
+
+    for (yScale in splitInputs(plotData$configTable$yScale[1])){
+
+      plotObject <- ospsuite.plots::plotResVsCov(
+        data = plotData$getDataForTimeRange(timeRangeFilter)[dataType == 'observed'],
+        mapping = mapping,
+        groupAesthetics = plotData$getGroupAesthetics(),
+        residualScale =  yScale)
+
+      # add scalings
+      for (aesthetic in names(plotData$scaleVectors)){
+
+        plotObject <- plotObject +
+          ggplot2:::manual_scale(aesthetic,
+                                 values = plotData$scaleVectors[[aesthetic]],
+                                 guide = guide_legend(order = 1,title = NULL))
+      }
+      # add Facet Columns
+      plotObject <- addFacets(plotObject = plotObject,
+                              plotData =  plotData,
+                              facetAspectRatio = facetAspectRatio)
+
+      # export
+      rmdContainer$addAndExportFigure(
+        plotObject = plotObject,
+        caption = plotData$getCaptionForPlot(yScale = yScale,
+                                             filterName = timeRangeFilter,
+                                             plotType = 'ResvO'),
+        footNoteLines = plotData$getFootNoteLines(),
+        figureKey = paste(plotData$configTable$PlotName[1],
+                          'ResvO',
+                          ifelse(yScale == 'log','Log','Linear'),
+                          timeRangeFilter,
+                          sep = '-')
+      )
+
+
+    }
+  }
+
+}
+
+
+#' plot residuals as histogram
+#'
+#' @inheritParams plotTPPanel
+#'
+#' @return RmdContainer object with added plot
+#' @export
+plotResidualsAsHistogramPanel <- function(plotData,
+                                          rmdContainer,
+                                          facetAspectRatio){
+
+
+  mapping <- structure(c(aes(predicted = predicted,
+                             observed = yValues),
+                         plotData$getGroupbyMapping()), class = "uneval")
+
+  for (timeRangeFilter in names(plotData$timeRangeTagFilter)){
+
+    for (yScale in splitInputs(plotData$configTable$yScale[1])){
+
+      plotObject <- ospsuite.plots::plotHistogram(
+        data = plotData$getDataForTimeRange(timeRangeFilter)[dataType == 'observed'],
+        mapping = mapping,
+        residualScale =  yScale,
+        distribution = 'normal')
+
+      # add scalings
+      for (aesthetic in names(plotData$scaleVectors)){
+
+        plotObject <- plotObject +
+          ggplot2:::manual_scale(aesthetic,
+                                 values = plotData$scaleVectors[[aesthetic]],
+                                 guide = guide_legend(order = 1,title = NULL))
+      }
+      # add Facet Columns
+      plotObject <- addFacets(plotObject = plotObject,
+                              plotData =  plotData,
+                              facetAspectRatio = facetAspectRatio)
+
+      # export
+      rmdContainer$addAndExportFigure(
+        plotObject = plotObject,
+        caption = plotData$getCaptionForPlot(yScale = yScale,
+                                             filterName = timeRangeFilter,
+                                             plotType = 'ResH'),
+        footNoteLines = plotData$getFootNoteLines(),
+        figureKey = paste(plotData$configTable$PlotName[1],
+                          'ResH',
+                          ifelse(yScale == 'log','Log','Linear'),
+                          timeRangeFilter,
+                          sep = '-')
+      )
+
+
+    }
+  }
+
+}
+
+#' plot residuals as QQ-plot
+#'
+#' @inheritParams plotTPPanel
+#'
+#' @return RmdContainer object with added plot
+#' @export
+plotQQPanel <- function(plotData,
+                        rmdContainer,
+                        facetAspectRatio){
+
+  mapping <- structure(c(aes(predicted = predicted,
+                             observed = yValues),
+                         plotData$getGroupbyMapping()), class = "uneval")
+
+  for (timeRangeFilter in names(plotData$timeRangeTagFilter)){
+
+    for (yScale in splitInputs(plotData$configTable$yScale[1])){
+
+      plotObject <- ospsuite.plots::plotQQ(
+        data = plotData$getDataForTimeRange(timeRangeFilter)[dataType == 'observed'],
+        mapping = mapping,
+        groupAesthetics = plotData$getGroupAesthetics(),
+        residualScale =  yScale)
+
+      # add scalings
+      for (aesthetic in names(plotData$scaleVectors)){
+
+        plotObject <- plotObject +
+          ggplot2:::manual_scale(aesthetic,
+                                 values = plotData$scaleVectors[[aesthetic]],
+                                 guide = guide_legend(order = 1,title = NULL))
+      }
+      # add Facet Columns
+      plotObject <- addFacets(plotObject = plotObject,
+                              plotData =  plotData,
+                              facetAspectRatio = facetAspectRatio)
+
+      # export
+      rmdContainer$addAndExportFigure(
+        plotObject = plotObject,
+        caption = plotData$getCaptionForPlot(yScale = yScale,
+                                             filterName = timeRangeFilter,
+                                             plotType = 'QQ'),
+        footNoteLines = plotData$getFootNoteLines(),
+        figureKey = paste(plotData$configTable$PlotName[1],
+                          'QQ',
+                          ifelse(yScale == 'log','Log','Linear'),
+                          timeRangeFilter,
+                          sep = '-')
+      )
+
+
+    }
+  }
+
+}
 
 #' addFacetColum
 #'
@@ -260,10 +583,77 @@ readTimeprofileConfigTable <- function(sheetName){
     names(configTable)[grepl("^PlotInputs_", names(configTable))]
 
   for (col in plotInputColumns){
-    configTable[is.na(get(col)) ,(col):='']
+    configTable[,(col) := as.character(get(col))]
+    configTable[is.na(get(col)) & is.na(Level) ,(col):='']
   }
 
   return(configTable)
+
+}
+
+#' check if Observed data are outside limits and set yLimits for log scale
+#'
+#' @param yScale y scale of Plot
+#' @param plotData object of class PlotDataTimeProfile
+#' @param timeRangeFilter Name of time range filter
+#'
+#' @return yLimits as numeric vector
+#' @export
+checkAndAdjustYlimits = function(plotData,
+                                 yScale,
+                                 timeRangeFilter) {
+
+  ylimits <- plotData$configTable[[paste0('ylimit_',yScale)]]
+
+  if (is.na(ylimits) || trimws(ylimits) == '') {
+    ylimits = NULL
+  } else {
+    ylimits = eval(parse(text = ylimits))
+  }
+
+  observedData <- plotData$getDataForTimeRange(timeRangeFilter)[dataType == 'observed']
+  simulatedData <- plotData$getDataForTimeRange(timeRangeFilter)[dataType == 'simulated']
+
+  # make sure no observed data are missed by setting y limits
+  if (!is.null(ylimits) & nrow(observedData) > 0) {
+    if (any(observedData$yValues
+            <= ylimits[1]) |
+        any(observedData$yValues
+            >= ylimits[2],na.rm = TRUE)) {
+
+      stop(paste('data outside ylimit for',plotData$configTable$PlotName[1],
+                 'time range', timeRangeFilter))
+    }
+  }
+
+  # for log scale set always limit to cut very low simulated values at the beginning
+  if (is.null(ylimits) & yScale == 'log') {
+
+    # replace Inf and omit first 10% of time range
+    timeRangeSim <- range(simulatedData$xValues)
+    timeRangeSim[1] <- timeRangeSim[1] + 0.1*diff(timeRangeSim)
+
+    minY <- Inf
+    if (nrow(observedData) > 0){
+      minY <- min(minY,min(observedData[xValues > 0]$xValues))
+    }
+
+    if (simulatedData$dataClass[1] == DATACLASS$tpAggregated){
+      minY = min(c(minY,
+                   simulatedData[time >= (timeRangeSim[1] ) &
+                                   time <= timeRangeSim[2] &
+                                   yMin > 0]$yMin))
+    } else{
+      minY = min(c(minY,
+                   simulatedData[xValues >= (timeRangeSim[1] ) &
+                                   xValues <= timeRangeSim[2] &
+                                   yValues > 0]$yValues))
+    }
+
+    ylimits =  c(minY/2,NA)
+  }
+
+  return(ylimits)
 
 }
 
@@ -304,14 +694,16 @@ validateConfigTableForTimeProfiles <- function(configTable, dataObserved, projec
       ),
     numericColumns = c(
       "TimeOffset",
-      "TimeOffset_Reference"
+      "TimeOffset_Reference",
+      "FoldDistance_PvO"
     ),
     logicalColumns = c(
       "Plot_TimeProfiles",
       "Plot_PredictedVsObserved",
       "Plot_ResidualsAsHistogram",
       "Plot_ResidualsVsTime",
-      "Plot_ResidualsVsObserved"
+      "Plot_ResidualsVsObserved",
+      "Plot_QQ"
     ),
     numericRangeColumns = c("ylimit_linear", "ylimit_log"),
     subsetList = list(
@@ -362,8 +754,8 @@ validateConfigTableForTimeProfiles <- function(configTable, dataObserved, projec
       'Plot_PredictedVsObserved',
       'Plot_ResidualsAsHistogram',
       'Plot_ResidualsVsTime',
-      'Plot_ResidualsVsObserved'
-
+      'Plot_ResidualsVsObserved',
+      'Plot_QQ'
     ),
     dtOutputPaths = dtOutputPaths
   )
@@ -385,8 +777,8 @@ validatePanelConsistency <- function(
     panelColumns,
     dtOutputPaths) {
   # Check for unique values of panel columns for each `PlotName`
-    uniquePanelValues <-
-      configTablePlots[, lapply(.SD, function(x) {
+  uniquePanelValues <-
+    configTablePlots[, lapply(.SD, function(x) {
       length(unique(x))
     }), by = PlotName, .SDcols = panelColumns]
   tmp <- lapply(panelColumns, function(col) {
@@ -421,7 +813,7 @@ validateTimeRangeColumns <- function(configTablePlots) {
   validateAtleastOneEntry(configTablePlots, columnVector = TimeRangeColumns)
 
   validateConfigTablePlots(configTablePlots,
-    charactersWithMissing = TimeRangeColumns
+                           charactersWithMissing = TimeRangeColumns
   )
 
   tryCatch(
@@ -432,7 +824,7 @@ validateTimeRangeColumns <- function(configTablePlots) {
           tmp <- eval(parse(text = x[!valid]))
           valid <-
             is.numeric(tmp) &&
-              length(tmp) == 2 &&
+            length(tmp) == 2 &&
             all(!is.na(tmp))
         }
         return(all(valid))
@@ -527,13 +919,14 @@ addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
     Plot_PredictedVsObserved = FALSE,
     Plot_ResidualsAsHistogram = FALSE,
     Plot_ResidualsVsTime = FALSE,
-    Plot_ResidualsVsObserved = FALSE
+    Plot_ResidualsVsObserved = FALSE,
+    Plot_QQ = FALSE
   )
 
   dtNewConfig <- dtNewConfig %>%
     merge(dtDataGroups %>%
-            dplyr::select(c('Group','DefaultScenario')) %>%
-            data.table::setnames(old = c('Group','DefaultScenario'),
+            dplyr::select(c('group','DefaultScenario')) %>%
+            data.table::setnames(old = c('group','DefaultScenario'),
                                  new = c('DataGroupIds','Scenario')),
           by = 'Scenario',
           all.x = TRUE,sort = FALSE)
@@ -544,8 +937,8 @@ addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
     templateSheet = "TimeProfile_Panel",
     sheetName = sheetName,
     dtNewConfig = rbind(dtNewHeader,
-      dtNewConfig,
-      fill = TRUE
+                        dtNewConfig,
+                        fill = TRUE
     )
   )
 
