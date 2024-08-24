@@ -4,15 +4,13 @@
 \alias{readObservedDataByDictionary}
 \title{Read data by dictionary}
 \usage{
-readObservedDataByDictionary(
-  projectConfiguration,
-  addBiometricsToConfigFlag = TRUE
-)
+readObservedDataByDictionary(projectConfiguration, spreadData = TRUE)
 }
 \arguments{
 \item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 
-\item{addBiometricsToConfigFlag}{if TRUE inividual biometrics are added  to Individualxlsx,}
+\item{spreadData}{if TRUE information dreived by observed data, such as identifier
+and biometrics is spread to other tables}
 }
 \value{
 Processed data based on the dictionary

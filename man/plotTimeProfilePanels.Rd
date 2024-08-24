@@ -10,7 +10,10 @@ plotTimeProfilePanels(
   configTableSheet,
   dataObserved,
   nFacetColumns = 2,
-  facetAspectRatio = 0.5
+  facetAspectRatio = 0.5,
+  aggregationFlag = c("GeometricStdDev", "ArithmeticStdDev", "Percentiles", "Custom"),
+  percentiles = c(5, 50, 95),
+  customFunction = NULL
 )
 }
 \arguments{

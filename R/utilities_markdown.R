@@ -162,7 +162,7 @@ mdFigure <- function(
   mdCaption(
     subfolder = subfolder,
     captionFile = captionFile,
-    captionPrefix = paste0("Figure", figureNumber, ":"),
+    captionPrefix = paste0("Figure ", figureNumber, ":"),
     captionStyle = customStyles$FigureCaption
   )
 

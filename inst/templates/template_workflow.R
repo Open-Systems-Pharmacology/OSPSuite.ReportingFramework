@@ -4,28 +4,24 @@
 # Initialization  ----------------------------------------------------------
 # load libraries and source project specific code
 library(ospsuite.reportingframework)
-library(ospsuite.plots)
-library(ggplot2)
-library(esqlabsR)
+
 
 # set graphic
-# (see vignette TODO)
+# (see vignette(package = 'ospsuite.plots',topic = 'ospsuite_plots'))
 ospsuite.plots::setDefaults()
 theme_update(legend.position = 'top')
 # configure panel labels to be used as Tags A,B,...
 theme_update(strip.background = element_rect(fill = NA,color = NA))
 theme_update(strip.text = element_text(hjust = 0,vjust = 1))
 
-# set options to enable watermarks
+# Set this to TRUE if you want to execute the workflow as a final valid run.
+# It then won't set watermarks to figures and does not skip failing plot generations
 # (see vignette TODO)
-setOspsuite.plots.option(
-  optionKey = OptionKeys$watermark_enabled,
-  value = TRUE
-)
+executeAsValidRun(isValidRun = FALSE)
 
 # Setup project structure -------------------------------------------------
-# creates project directory (see vignette TODO Esqlabs)
-# and help initProject for source Folder Selection
+# creates project directory
+# (see help initProject and https://esqlabs.github.io/esqlabsR/articles/esqlabsR.html)
 # if you go with the default structure defined by 'sourceFolder = templateDirectory()'
 # this workflow file should be saved in Scripts/ReportingFramework,
 # root directory is then two layers up.
@@ -49,7 +45,7 @@ logCatch({
 
 
   # Read observedData -------------------------------------------------------
-  # (see vignette('data_import_by_dictionary'))
+  # (see vignette(package = 'ospsuite.reportingframework',topic = 'data_import_by_dictionary'))
 
   # read data as data.table
   dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,
@@ -57,7 +53,7 @@ logCatch({
 
 
   # Simulations ------------------------------------------------------
-  # (see vignette xxx)
+  # (see https://esqlabs.github.io/esqlabsR/articles/esqlabsR.html)
   scenarioList <-
     createScenarios.wrapped(projectConfiguration = projectConfiguration,
                             scenarioNames = NULL,
@@ -95,7 +91,7 @@ logCatch({
   # )
 
   # Timeprofile Plots
-  # see vignette xxx
+  # see vignette(package = 'ospsuite.reportingframework',topic = 'TimeProfilePlots')
 
   runPlot(
     functionKey = "TimeProfile_Panel",

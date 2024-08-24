@@ -18,8 +18,3 @@ The updated data.table
 This function updates the specified identifier columns in a data.table by replacing commas with underscores.
 It also checks for the presence of commas in the columns and generates a warning message if found.
 }
-\examples{
-dt <- data.table(col1 = c("a,b,c", "d,e,f"), col2 = c("x,y,z", "1,2,3"))
-identifierCols <- c("col1", "col2")
-updatedDt <- updateIdentifierColumns(dt, identifierCols)
-}

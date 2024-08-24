@@ -71,6 +71,14 @@ initLogfunction <- function(projectConfiguration,
   addMessageToLog("Start run of workflow")
   addMessageToLog(paste(utils::capture.output(projectConfiguration), collapse = "\n"))
 
+  optionstxt = paste('\n\n',
+                     'Options:\n',
+                     'OSPSuite.plots.watermark_enabled:',ospsuite.plots::getOspsuite.plots.option(OptionKeys$watermark_enabled),'\n',
+                     'OSPSuite.RF.skipFailingPlots:',ifelse(getOption('OSPSuite.RF.skipFailingPlots',default = FALSE),
+                            'Failing Plots are skipped',
+                            'Failing Plots throw errors'),'\n')
+  addMessageToLog(optionstxt)
+
 }
 
 #' Used to add message to log file

@@ -104,6 +104,84 @@ addConfigToTemplate <- function(wb, templateSheet, sheetName, dtNewConfig) {
 }
 
 # auxiliaries ----
+#' returns a scalevector usable for manaul scaling in ggplot
+#'
+#' @param namesOfScaleVector names of the vector
+#' @param listOfValues list of possible entry, take the first where all values are not NA
+#'
+#' @return scaleVector
+#' @export
+getScalevector <- function(namesOfScaleVector,
+                           listOfValues){
+  checkmate::assertCharacter(namesOfScaleVector,any.missing = FALSE,min.len = 1,unique = TRUE)
+  checkmate::assertList(listOfValues)
+
+  scaleVector <- NULL
+  for (values in listOfValues){
+    if (!is.null(values) && !any(is.na(values))){
+      scaleVector <- values
+      break
+    }
+  }
+
+  if(is.null(scaleVector)){
+    stop(paste('no valid values for scalevector for',paste0(namesOfScaleVector,collapse = ', ')))
+  }
+
+  names(scaleVector) <- namesOfScaleVector
+
+  return(scaleVector)
+
+}
+
+
+#' creates default color Vector
+#'
+#' @param shade for n < 10 differentiation between dark and light is possible
+#' @param n
+#'
+#' @return
+#' @export
+#'
+#' @examples
+getDefaultColorsForScaleVector <- function(shade = c('dark','light'),n){
+  checkmate::assertIntegerish(n,lower = 1,len = 1)
+  shade <- match.arg(shade)
+  if (n <= 10){
+    colorVector <-
+      switch(shade,
+             dark = ggsci::pal_d3("category20c")(20)[1:n],
+             light = ggsci::pal_d3("category20c")(20)[(10 + 1):(10 + n)]
+      )
+
+  } else {
+    if (n> length(colorMaps[["ospDefault"]]))
+      stop(paste('To many colors for colorVector, maximal',length(colorMaps[["ospDefault"]]),'allowed'))
+    colorVector <- colorMaps[["ospDefault"]][1:n]
+  }
+
+  return(colorVector)
+}
+
+#' returns default shapes
+#'
+#' @param n
+#'
+#' @return
+#' @export
+#'
+#' @examples
+getDefaultShapesForScaleVector <- function(n){
+
+  shapes <- getOspsuite.plots.option(optionKey = OptionKeys$shapeValues)
+  if(is.null(shapes))
+    stop('no default shape sets for ospsuite.plots. Please use ospsuite.plots::setDefaults')
+
+  return(shapes)
+}
+
+
+
 #' generates named color vectors usable for sclae_color_manual
 #'
 #' @param dt `data.table` with aesthetic an dindex column

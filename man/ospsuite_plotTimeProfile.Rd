@@ -2,7 +2,7 @@
 % Please edit documentation in R/ospsuite_plotTimeprofile.R
 \name{ospsuite_plotTimeProfile}
 \alias{ospsuite_plotTimeProfile}
-\title{creates a time profile for plotData, data are grouped ny "group"}
+\title{creates a time profile for plotData, data are grouped by "group"}
 \usage{
 ospsuite_plotTimeProfile(plotData, metaData = NULL, ...)
 }
@@ -18,7 +18,7 @@ units should be consistent, otherwise use convertUnits(myDataCombined)}
 `ggplot2`plotObject
 }
 \description{
-creates a time profile for plotData, data are grouped ny "group"
+creates a time profile for plotData, data are grouped by "group"
 }
 \examples{
 \dontrun{

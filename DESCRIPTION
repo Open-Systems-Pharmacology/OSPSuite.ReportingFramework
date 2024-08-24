@@ -25,14 +25,15 @@ Imports:
     knitr,
     rmarkdown,
     fs,
-    esqlabsR,
     ospsuite,
-    ospsuite.plots,
     scales,
     tidyr,
     openxlsx,
     dplyr,
     stats
+Depends:
+    esqlabsR,
+    ospsuite.plots,
 Suggests: 
     rstudioapi,
     officer,

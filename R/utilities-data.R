@@ -630,7 +630,6 @@ addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALS
 convertDataCombinedToDataTable <- function(datacombined) {
   dataDT <- dataCombined$toDataFrame() %>%
     data.table::setDT()
-  dataDT <- dataDT[dataType == "observed"]
 
   # delete columns not needed
   dataDT <- dataDT[, which(colSums(is.na(dataDT)) != nrow(dataDT)), with = FALSE]
@@ -642,6 +641,173 @@ convertDataCombinedToDataTable <- function(datacombined) {
   # avoid conflict with population IndividualID
   data.table::setnames(dataDT, "IndividualIdObserved", "IndividualID", skip_absent = TRUE)
 }
+
+# data aggregation ------------
+
+#' Aggregate Observed Data Groups
+#'
+#' This function aggregates observed data based on specified groups and an aggregation method.
+#' It allows for different aggregation techniques, including geometric and arithmetic standard deviations,
+#' percentiles, or a user-defined custom function.
+#'
+#' The function also checks for values below the Lower Limit of Quantification (LLOQ) and adjusts the
+#' aggregated results accordingly.
+#'
+#' For custom functions, the `lloq3Columns` and `lloq2Columns` parameters are required to specify
+#' which columns should be checked against LLOQ thresholds. For other aggregation methods,
+#' these parameters can be set to NULL, as the function will handle LLOQ checks internally based
+#' on the aggregation type.
+#'
+#' A custom function should take a numeric vector `y` as input and return a list containing:
+#' - `yValues`: The aggregated value (e.g., mean).
+#' - `yMin`: The lower value of the aggregated data, (e.g mean - sd)
+#' - `yMax`: The upper value of the aggregated data, (e.g mean + sd)
+#' - `yErrorType`: A string indicating the type of error associated with the aggregation,
+#' it is used in plot legends and captions.
+#' It must be a concatenation of the descriptor of yValues and the descriptor of yMin - yMax range
+#' separated by "|" (e.g., "mean | standard deviation" or "median | 5th - 95th percentile").
+#'
+#' @param dataObserved A data.table containing observed data.
+#' @param groups A character vector specifying the groups to aggregate.
+#' If NULL, all available groups are used.
+#' @param aggregationFlag A character string indicating the aggregation method.
+#' Options include "GeometricStdDev", "ArithmeticStdDev", "Percentiles", or "Custom".
+#' @param percentiles A numeric vector of percentiles to calculate if aggregationFlag is "Percentiles".
+#' Default is c(5, 50, 95).
+#' @param groupSuffix A character string to append to group names in the aggregated output.
+#' Default is 'aggregated'.
+#' @param customFunction A custom function for aggregation if aggregationFlag is "Custom".
+#' Default is NULL.
+#' @param lloq3Columns A character vector specifying columns to check for LLOQ (Lower Limit of Quantification) for 3/3 data points. Default is NULL.
+#' @param lloq2Columns A character vector specifying columns to check for LLOQ for 2/3 data points. Default is NULL.
+#'
+#' @return A data.table containing aggregated observed data.
+#' @export
+aggregatedObservedDataGroups <- function(dataObserved,
+                                         groups = NULL,
+                                         aggregationFlag = c("GeometricStdDev",
+                                                             "ArithmeticStdDev",
+                                                             "Percentiles",
+                                                             "Custom"),
+                                         percentiles = c(5, 50, 95),
+                                         groupSuffix = 'aggregated',
+                                         customFunction = NULL,
+                                         lloq3Columns = NULL,
+                                         lloq2Columns = NULL) {
+
+  dataToAggregate <- prepareDataForAggregation(dataObserved = dataObserved,
+                                               groups = groups,
+                                               groupSuffix = groupSuffix)
+  if (is.null(dataToAggregate)) return(NULL)
+
+  aggregationFlag <- match.arg(aggregationFlag)
+  aggregationFun <- getAggregationFunction(aggregationFlag, percentiles, customFunction)
+
+  aggregatedData <- performAggregation(dataToAggregate = dataToAggregate,
+                                       aggregationFun = aggregationFun,
+                                       aggrCriteria = c('group', 'outputPathId', 'xValues'))
+
+  aggregatedData <- checkLLOQ(aggregatedData, lloq3Columns, lloq2Columns)
+
+  aggregatedData <- addUniqueColumns(dataToAggregate,aggregatedData)
+
+  aggregatedData <- setDataTypeAttributes(aggregatedData)
+
+  return(aggregatedData)
+}
+
+
+#' prepares data for aggregation
+#'
+#' @inheritParams aggregatedObservedDataGroups
+#'
+#' @return `data.table` filtered for aggregation
+prepareDataForAggregation <- function(dataObserved, groups,groupSuffix) {
+  if ("DataCombined" %in% class(dataObserved)) {
+    dataObserved <- convertDataCombinedToDataTable(dataObserved)
+  }
+
+  dataToAggregate <- dataObserved[dataType == 'observed']
+  groupsAvailable <- unique(dataToAggregate[dataClass == DATACLASS$tpIndividual]$group)
+
+  if (is.null(groups)) {
+    groups <- groupsAvailable
+  } else {
+    unsuitableGroups <- setdiff(groups, groupsAvailable)
+    if (length(unsuitableGroups) > 0) {
+      warning(paste('Groups', paste(unsuitableGroups, collapse = ', '), 'are not available for grouping.'))
+    }
+    groups <- intersect(groups, groupsAvailable)
+  }
+
+  if (length(groups) == 0) {
+    warning('No groups available for aggregation')
+    return(NULL)
+  }
+
+  dataToAggregate <- dataToAggregate[group %in% groups]
+  dataToAggregate[, group := paste(group, groupSuffix, sep = '_')]
+
+  checkmate::assertNames(unique(dataToAggregate$group),
+                         disjunct.from = unique(dataObserved$group),
+                         .var.name = 'new groupnames')
+
+  return(dataToAggregate)
+}
+
+#' stes values  which does not match the lloq criteria to NA
+#'
+#' @param aggregatedData `data.table` with aggregated data
+#' @inheritParams aggregatedObservedDataGroups
+#'
+#' @return updated aggregatedData `data.table`
+checkLLOQ <- function(aggregatedData, lloq3Columns, lloq2Columns) {
+  if (length(lloq3Columns) > 0) {
+    LLOQ3_filter <- aggregatedData[, (nBelowLLOQ / numberOfPatients) > (1/3)]
+    aggregatedData[, (lloq3Columns) := lapply(.SD, function(x) { ifelse(LLOQ3_filter, NA, x) }),
+                   .SDcols = lloq3Columns, by = .I]
+  }
+
+  if (length(lloq2Columns) > 0) {
+    LLOQ2_filter <- aggregatedData[, (nBelowLLOQ / numberOfPatients) >= (1/2)]
+    aggregatedData[, (lloq2Columns) := lapply(.SD, function(x) { ifelse(LLOQ2_filter, NA, x) }),
+                   .SDcols = lloq2Columns, by = .I]
+  }
+
+  return(aggregatedData)
+}
+
+
+#' add all columns of observedData which are uniuqe for a group
+#'
+#' @param dataObserved
+#' @param aggregatedData
+#'
+#' @return
+addUniqueColumns <- function(dataObserved,aggregatedData){
+
+  identifier <- c('group','outputPathId')
+
+  colsToCheck <- setdiff(names(dataObserved),identifier)
+  columnISUnique <- dataObserved[, lapply(.SD, function(x) length(unique(x))),
+                                 by = identifier,
+                                 .SDcols = colsToCheck] %>%
+    .[, lapply(.SD, function(x) all(x == 1)), .SDcols = colsToCheck] %>%
+    unlist()
+
+  tmp <- dataObserved %>%
+    dplyr::select(all_of(c(identifier,colsToCheck[columnISUnique]))) %>%
+    unique()
+
+  aggregatedData <- merge(aggregatedData,
+                          tmp,
+                          by = identifier,
+                          all.x = TRUE)
+
+  return(aggregatedData)
+}
+
+
 
 
 # auxiliaries ---------
@@ -659,8 +825,9 @@ setDataTypeAttributes <- function(dataDT, dict = NULL) {
         wb = system.file(
           "templates",
           "templateProject",
-          "Data",
-          "dataImportConfiguration.xlsx",
+          "Scripts",
+          "ReportingFramework",
+          "DataImportConfiguration.xlsx",
           package = "ospsuite.reportingframework",
           mustWork = TRUE
         ),
