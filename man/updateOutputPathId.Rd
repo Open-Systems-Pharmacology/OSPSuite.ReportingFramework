@@ -2,15 +2,15 @@
 % Please edit documentation in R/utilities-data.R
 \name{updateOutputPathId}
 \alias{updateOutputPathId}
-\title{Add outputpath ids of observed data to configuration sheet}
+\title{Add output path IDs of observed data to configuration sheet}
 \usage{
 updateOutputPathId(projectConfiguration, dataDT)
 }
 \arguments{
 \item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 
-\item{data}{`data.table`with observed Data}
+\item{data}{`data.table` with observed data.}
 }
 \description{
-Add outputpath ids of observed data to configuration sheet
+Add output path IDs of observed data to configuration sheet
 }

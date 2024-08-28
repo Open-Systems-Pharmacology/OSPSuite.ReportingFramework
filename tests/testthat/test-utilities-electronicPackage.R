@@ -14,4 +14,3 @@ test_that("checkFileNameValidity function returns the correct results", {
   inValidFileNames <- checkFileNameValidity(files)
   expect_contains(inValidFileNames, files)
 })
-

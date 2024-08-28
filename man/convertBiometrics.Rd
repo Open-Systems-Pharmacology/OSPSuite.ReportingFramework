@@ -2,20 +2,21 @@
 % Please edit documentation in R/utilities-data.R
 \name{convertBiometrics}
 \alias{convertBiometrics}
-\title{converts biomertic columns to default unit}
+\title{Converts biometric columns to default unit}
 \usage{
 convertBiometrics(data, dict, dictionaryName)
 }
 \arguments{
-\item{data}{The data to be converted}
+\item{data}{The data to be converted.}
 
-\item{dict}{The dictionary to be used for conversion}
+\item{dict}{The dictionary to be used for conversion.}
 
-\item{dictionaryName}{The name of the dictionary}
+\item{dictionaryName}{The name of the dictionary.}
 }
 \value{
-`data.table` with converted columns
+`data.table` with converted columns.
 }
 \description{
-converts biomertic columns to default unit
+Converts biometric columns to default unit
 }
+\keyword{internal}

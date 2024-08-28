@@ -7,17 +7,18 @@
 convertDataByDictionary(data, dataFilter, dict, dictionaryName)
 }
 \arguments{
-\item{data}{The data to be converted}
+\item{data}{The data to be converted.}
 
-\item{dataFilter}{The filter to be applied to the data}
+\item{dataFilter}{The filter to be applied to the data.}
 
-\item{dict}{The dictionary to be used for conversion}
+\item{dict}{The dictionary to be used for conversion.}
 
-\item{dictionaryName}{The name of the dictionary}
+\item{dictionaryName}{The name of the dictionary.}
 }
 \value{
-The converted data
+The converted data.
 }
 \description{
 This function converts the data based on the provided dictionary and filters.
 }
+\keyword{internal}

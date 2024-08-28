@@ -75,12 +75,14 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 #' @export
 xlsxReadData <- function(wb, sheetName,
                          skipDescriptionRow = FALSE,
-                         alwaysCharacter = c("IndividualId",
-                                             "StudyId",
-                                             "group",
-                                             "outputPathId",
-                                             "DataGroupIds",
-                                             "DataGroupId")) {
+                         alwaysCharacter = c(
+                           "IndividualId",
+                           "StudyId",
+                           "group",
+                           "outputPathId",
+                           "DataGroupIds",
+                           "DataGroupId"
+                         )) {
   dt <- data.table::setDT(openxlsx::read.xlsx(
     xlsxFile = wb,
     sheet = sheetName,
@@ -159,11 +161,11 @@ getDataGroups <- function(projectConfiguration) {
   data.table::setnames(dtDataGroups, old = "Group", new = "group")
 
   dtDataGroups$group <- factor(dtDataGroups$group,
-                               levels = unique(dtDataGroups$group),
-                               ordered = TRUE)
+    levels = unique(dtDataGroups$group),
+    ordered = TRUE
+  )
 
   return(dtDataGroups)
-
 }
 
 #' load the scenario definitions
@@ -195,12 +197,13 @@ getOutputPathIds <- function(projectConfiguration) {
 
   data.table::setnames(dtOutputPaths, old = "OutputPathId", new = "outputPathId")
 
-  dtOutputPaths[,DisplayUnit := gsub('Âµ','\u00B5',as.character(DisplayUnit))]
-  dtOutputPaths[is.na(DisplayUnit), DisplayUnit := '']
+  dtOutputPaths[, DisplayUnit := gsub("Âµ", "\u00B5", as.character(DisplayUnit))]
+  dtOutputPaths[is.na(DisplayUnit), DisplayUnit := ""]
 
   dtOutputPaths$outputPathId <- factor(dtOutputPaths$outputPathId,
-                                       levels = unique(dtOutputPaths$outputPathId),
-                                       ordered = TRUE)
+    levels = unique(dtOutputPaths$outputPathId),
+    ordered = TRUE
+  )
 
   return(dtOutputPaths)
 }
@@ -214,12 +217,12 @@ getTimeRangeTags <- function(projectConfiguration) {
     skipDescriptionRow = TRUE
   )
 
-  dtTimeRange[is.na(CaptionText), CaptionText := '']
+  dtTimeRange[is.na(CaptionText), CaptionText := ""]
 
   dtTimeRange$Tag <- factor(dtTimeRange$Tag,
-                                       levels = unique(dtTimeRange$Tag),
-                                       ordered = TRUE)
+    levels = unique(dtTimeRange$Tag),
+    ordered = TRUE
+  )
 
   return(dtTimeRange)
 }
-

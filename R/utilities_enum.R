@@ -21,4 +21,3 @@ DATACLASS <- ospsuite.utils::enum(c( # nolint
   tpIndividual = "tp Individual",
   tpAggregated = "tp Aggregated"
 ))
-

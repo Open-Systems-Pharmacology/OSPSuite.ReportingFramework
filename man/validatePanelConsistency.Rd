@@ -2,15 +2,16 @@
 % Please edit documentation in R/plotTimeProfilePanels.R
 \name{validatePanelConsistency}
 \alias{validatePanelConsistency}
-\title{check if panel columns ar filled consistently}
+\title{Check if panel columns are filled consistently}
 \usage{
 validatePanelConsistency(configTablePlots, panelColumns, dtOutputPaths)
 }
 \arguments{
 \item{configTablePlots}{`data.table` ConfigurationTable without header lines}
 
-\item{panelcolumns}{vector of columns which should be consistent}
+\item{panelColumns}{Vector of columns which should be consistent.}
 }
 \description{
-check if panel columns ar filled consistently
+Check if panel columns are filled consistently
 }
+\keyword{internal}

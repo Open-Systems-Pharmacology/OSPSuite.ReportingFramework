@@ -4,7 +4,6 @@
 #'
 #' @return projectConfiguration
 setUpTestProject <- function(withModel = FALSE) {
-
   rootDirectory <- tempdir()
   if (!dir.exists(rootDirectory)) dir.create(rootDirectory)
   initProject(
@@ -15,12 +14,13 @@ setUpTestProject <- function(withModel = FALSE) {
 
   projectConfiguration <-
     esqlabsR::createDefaultProjectConfiguration(
-      path = file.path(rootDirectory, "Scripts","ReportingFramework","ProjectConfiguration.xlsx")
+      path = file.path(rootDirectory, "Scripts", "ReportingFramework", "ProjectConfiguration.xlsx")
     )
 
-  if (withModel){
-    if (!dir.exists(projectConfiguration$modelFolder))
+  if (withModel) {
+    if (!dir.exists(projectConfiguration$modelFolder)) {
       dir.create(projectConfiguration$modelFolder, recursive = TRUE)
+    }
 
     file.copy(
       from = system.file("extdata", "Aciclovir.pkml", package = "ospsuite"),
@@ -36,8 +36,7 @@ setUpTestProject <- function(withModel = FALSE) {
 #'
 #' @param rootDirectory temporary rootDirectory
 cleanupLogFileForTest <- function(projectConfiguration) {
-
-  rootDirectory <- file.path(projectConfiguration$projectConfigurationDirPath,'..','..')
+  rootDirectory <- file.path(projectConfiguration$projectConfigurationDirPath, "..", "..")
   unlink(rootDirectory, recursive = TRUE)
 
   optionsToNull <- grep("ospsuite",
@@ -102,13 +101,13 @@ setDataDictionary <- function(projectConfiguration) {
   wb <- openxlsx::loadWorkbook(projectConfiguration$dataImporterConfigurationFile)
 
 
-  dtDataFiles <- xlsxReadData(wb = wb, sheetName = "DataFiles",skipDescriptionRow = FALSE)
+  dtDataFiles <- xlsxReadData(wb = wb, sheetName = "DataFiles", skipDescriptionRow = FALSE)
   dtDataFiles <- dtDataFiles[c(1)]
 
   dtDataFiles <- rbind(
     dtDataFiles,
     data.table(
-      DataFile = file.path("..","..","Data", "data.csv"),
+      DataFile = file.path("..", "..", "Data", "data.csv"),
       Dictionary = "tpDictionary",
       DataFilter = "",
       DataClass = DATACLASS$tpIndividual
@@ -123,6 +122,7 @@ setDataDictionary <- function(projectConfiguration) {
 
   tpDictionary <- tpDictionary[targetColumn != "population"]
   tpDictionary <- tpDictionary[targetColumn != "nBelowLLOQ"]
+  tpDictionary <- tpDictionary[targetColumn != "numberOfPatients"]
   tpDictionary <- tpDictionary[targetColumn != "yErrorType"]
   tpDictionary <- tpDictionary[targetColumn != "yErrorValues"]
   tpDictionary <- tpDictionary[targetColumn != "studyArm"]
@@ -194,7 +194,7 @@ addRandomSourceData <- function(projectConfiguration) {
     }
   }
 
-  data.table::fwrite(dt, file = file.path(projectConfiguration$projectConfigurationDirPath,'..','..','Data', "data.csv"))
+  data.table::fwrite(dt, file = file.path(projectConfiguration$projectConfigurationDirPath, "..", "..", "Data", "data.csv"))
 
   return(invisible())
 }

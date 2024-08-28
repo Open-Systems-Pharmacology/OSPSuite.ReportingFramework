@@ -2,19 +2,20 @@
 % Please edit documentation in R/utilities-data.R
 \name{setDataTypeAttributes}
 \alias{setDataTypeAttributes}
-\title{sets comulnType attribute according to dictionary}
+\title{Sets columnType attribute according to dictionary}
 \usage{
 setDataTypeAttributes(dataDT, dict = NULL)
 }
 \arguments{
-\item{dataDT}{`data.table` with observed data}
+\item{dataDT}{`data.table` with observed data.}
 
-\item{dict}{named list with columnNames and columntypes, if NULL,
-list is produced by template saved in package installation}
+\item{dict}{Named list with columnNames and columnTypes; if NULL,
+list is produced by template saved in package installation.}
 }
 \value{
-`data.table` with attributes
+`data.table` with attributes.
 }
 \description{
-sets comulnType attribute according to dictionary
+Sets columnType attribute according to dictionary
 }
+\keyword{internal}

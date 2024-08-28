@@ -2,18 +2,19 @@
 % Please edit documentation in R/plotTimeProfilePanels.R
 \name{addFacets}
 \alias{addFacets}
-\title{addFacetColum}
+\title{Add facets to a ggplot object}
 \usage{
 addFacets(plotObject, plotData, facetAspectRatio = 0.5)
 }
 \arguments{
-\item{plotObject}{ggplot object to which the facet should be added}
+\item{plotObject}{ggplot object to which the facets should be added.}
 
-\item{nFacetColumns}{maximal number of facet used for facettype byOrder}
+\item{nFacetColumns}{Maximal number of facets used for facet type by Order.}
 }
 \value{
-ggplot Object with facets
+Updated ggplot object with facets.
 }
 \description{
-addFacetColum
+Add facets to a ggplot object
 }
+\keyword{internal}

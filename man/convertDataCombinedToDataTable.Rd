@@ -2,16 +2,16 @@
 % Please edit documentation in R/utilities-data.R
 \name{convertDataCombinedToDataTable}
 \alias{convertDataCombinedToDataTable}
-\title{converts object of class `DataCombined` to data.table with attributes}
+\title{Converts object of class `DataCombined` to data.table with attributes.}
 \usage{
 convertDataCombinedToDataTable(datacombined)
 }
 \arguments{
-\item{datacombined}{}
+\item{datacombined}{The input DataCombined object.}
 }
 \value{
-`data.table`
+`data.table`.
 }
 \description{
-format correspondents to data.table produced by `readObservedDataByDictionary`
+Format corresponds to data.table produced by `readObservedDataByDictionary`.
 }

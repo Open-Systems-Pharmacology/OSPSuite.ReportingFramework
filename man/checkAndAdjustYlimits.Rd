@@ -2,20 +2,23 @@
 % Please edit documentation in R/plotTimeProfilePanels.R
 \name{checkAndAdjustYlimits}
 \alias{checkAndAdjustYlimits}
-\title{check if Observed data are outside limits and set yLimits for log scale}
+\title{Check and adjust Y limits for plots}
 \usage{
 checkAndAdjustYlimits(plotData, yScale, timeRangeFilter, plotType)
 }
 \arguments{
-\item{plotData}{object of class PlotDataTimeProfile}
+\item{plotData}{Object of class `PlotDataTimeProfile`.}
 
-\item{yScale}{y scale of Plot}
+\item{yScale}{Y scale of the plot.}
 
-\item{timeRangeFilter}{Name of time range filter}
+\item{timeRangeFilter}{Name of the time range filter.}
+
+\item{plotType}{Type of the plot.}
 }
 \value{
-yLimits as numeric vector
+Numeric vector of Y limits.
 }
 \description{
-check if Observed data are outside limits and set yLimits for log scale
+Check and adjust Y limits for plots
 }
+\keyword{internal}

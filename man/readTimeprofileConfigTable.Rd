@@ -2,16 +2,17 @@
 % Please edit documentation in R/plotTimeProfilePanels.R
 \name{readTimeprofileConfigTable}
 \alias{readTimeprofileConfigTable}
-\title{Read the configtable for the timeprofile}
+\title{Read the configuration table for time profiles}
 \usage{
-readTimeprofileConfigTable(sheetName)
+readTimeprofileConfigTable(projectConfiguration, sheetName, dataObserved)
 }
 \arguments{
-\item{sheetName}{}
+\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 }
 \value{
-`data.table` with plot configurations
+`data.table` with plot configurations.
 }
 \description{
-Read the configtable for the timeprofile
+Read the configuration table for time profiles
 }
+\keyword{internal}

@@ -117,26 +117,24 @@ logCatch({
   #   inputs = list(configTable = "DDIRatio")
   # )
 
-  #TODO
-  # runPlot(
-  #   functionKey = NULL,
-  #   plotFunction = myProjectSpecificfunction(),
-  #   subfolder = "myFigures",
-  #   projectConfg = projectConfiguration,
-  #   inputs = list()
-  # )
-
-
+  # see vignette (TODO)
+  runPlot(
+    functionKey = NULL,
+    plotFunction = myProjectSpecificfunction(),
+    subfolder = "myCustomPlots",
+    projectConfiguration = projectConfiguration,
+    inputs = list()
+  )
 
   # Create Report document --------------------------------------------------
-  #TODO
-  # mergeRmds(
-  #   newName = "appendix",
-  #   title = "Appendix",
-  #   sourceRmds = c("Demographics", "TimeProfile", "PKParameter", "DDIRatio", "myFigures")
-  # )
+  # see vignette (TODO)
+  mergeRmds(projectConfiguration = projectConfiguration,
+    newName = "appendix",
+    title = "Appendix",
+    sourceRmds = c("Demographics", "TimeProfile", "PKParameter", "DDIRatio", "myFigures")
+  )
 
-  renderWord(fileName = file.path(projectConfiguration$outputFolder,"appendix.rmd"))
+  renderWord(fileName = file.path(projectConfiguration$outputFolder,"appendix.Rmd"))
 
   # finalize workflow---------------------
   addMessageToLog("finalize workflow")

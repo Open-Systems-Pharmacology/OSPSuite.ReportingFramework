@@ -1,9 +1,8 @@
 # initialize logging. Is always needed
 projectConfiguration <- setUpTestProject()
-initLogfunction(projectConfiguration = projectConfiguration,verbose = FALSE)
+initLogfunction(projectConfiguration = projectConfiguration, verbose = FALSE)
 
 test_that("generation of default template works", {
-
   addDefaultConfigForTimeProfilePlots(
     projectConfiguration = projectConfiguration,
     sheetName = "TimeProfileNew", overwrite = FALSE
@@ -20,7 +19,7 @@ mockConfigTable <- function() {
     Level = c(1, 2, NA, NA, NA),
     Header = c("Header1", "Header2", NA, NA, NA),
     Value1 = c(NA, NA, 10, 30, 40),
-    Value2 = c(NA, NA, 'A', 'B', NA)
+    Value2 = c(NA, NA, "A", "B", NA)
   )
 }
 
@@ -52,34 +51,43 @@ configTablePlots <- data.table(
 
 test_that("validateConfigTablePlots function test", {
   expect_no_error(validateConfigTablePlots(configTablePlots,
-                                           charactersWithoutMissing = c("CharacterColumn1"),
-                                           charactersWithMissing = c("CharacterColumn2"),
-                                           numericColumns = "NumericColumn1",
-                                           logicalColumns = "LogicalColumn1",
-                                           numericRangeColumns = 'NumericRangeColumn1',
-                                           subsetList = list(list(cols = c('CharacterColumn1'),
-                                                             allowedValues = c("A", "B", "C", "D")))))
+    charactersWithoutMissing = c("CharacterColumn1"),
+    charactersWithMissing = c("CharacterColumn2"),
+    numericColumns = "NumericColumn1",
+    logicalColumns = "LogicalColumn1",
+    numericRangeColumns = "NumericRangeColumn1",
+    subsetList = list(list(
+      cols = c("CharacterColumn1"),
+      allowedValues = c("A", "B", "C", "D")
+    ))
+  ))
 
 
   # Test if the function correctly validates character columns without missing values
   expect_error(validateConfigTablePlots(configTablePlots,
-                                           charactersWithoutMissing = c("CharacterColumn2")))
+    charactersWithoutMissing = c("CharacterColumn2")
+  ))
 
   # Test if the function correctly validates numeric columns
   expect_error(validateConfigTablePlots(configTablePlots,
-                                        numericColumns = c("CharacterColumn2")))
+    numericColumns = c("CharacterColumn2")
+  ))
 
   # Test if the function correctly validates logical columns
   expect_error(validateConfigTablePlots(configTablePlots,
-                                        logicalColumns = "CharacterColumn1"))
+    logicalColumns = "CharacterColumn1"
+  ))
 
   # Test if the function correctly validates numeric range columns
   expect_error(validateConfigTablePlots(configTablePlots, numericRangeColumns = "NumericColumn1"))
 
   # Test if the function correctly validates subset list
   expect_error(validateConfigTablePlots(configTablePlots,
-                                           subsetList = list(list(cols = c('CharacterColumn2'),
-                                                                  allowedValues = c("A", "B", "C", "D")))))
+    subsetList = list(list(
+      cols = c("CharacterColumn2"),
+      allowedValues = c("A", "B", "C", "D")
+    ))
+  ))
 })
 
 
@@ -107,7 +115,6 @@ dtOutputPaths <- data.table(
 test_that("validateOutputIdsForPlot function test", {
   # Test if the function correctly find the inconsistency in DisplayUnit
   expect_error(validateOutputIdsForPlot(dtOutputPaths))
-
 })
 
 

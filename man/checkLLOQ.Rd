@@ -2,20 +2,21 @@
 % Please edit documentation in R/utilities-data.R
 \name{checkLLOQ}
 \alias{checkLLOQ}
-\title{stes values  which does not match the lloq criteria to NA}
+\title{Sets values which do not match the LLOQ criteria to NA}
 \usage{
 checkLLOQ(aggregatedData, lloq3Columns, lloq2Columns)
 }
 \arguments{
-\item{aggregatedData}{`data.table` with aggregated data}
+\item{aggregatedData}{`data.table` with aggregated data.}
 
 \item{lloq3Columns}{A character vector specifying columns to check for LLOQ (Lower Limit of Quantification) for 3/3 data points. Default is NULL.}
 
 \item{lloq2Columns}{A character vector specifying columns to check for LLOQ for 2/3 data points. Default is NULL.}
 }
 \value{
-updated aggregatedData `data.table`
+Updated aggregatedData `data.table`.
 }
 \description{
-stes values  which does not match the lloq criteria to NA
+Sets values which do not match the LLOQ criteria to NA
 }
+\keyword{internal}

@@ -2,16 +2,17 @@
 % Please edit documentation in R/plotTimeProfilePanels.R
 \name{getGroupAesthetics}
 \alias{getGroupAesthetics}
-\title{get groupAesthetics out of scaleVactors}
+\title{Get group aesthetics from scale vectors}
 \usage{
 getGroupAesthetics(plotData)
 }
 \arguments{
-\item{plotData}{}
+\item{plotData}{Object containing the data for the plot.}
 }
 \value{
-vector with aesthtics to group by
+Vector with aesthetics to group by.
 }
 \description{
-get groupAesthetics out of scaleVactors
+Get group aesthetics from scale vectors
 }
+\keyword{internal}

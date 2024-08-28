@@ -2,13 +2,23 @@
 % Please edit documentation in R/plotTimeProfilePanels.R
 \name{generatePlotForPlotType}
 \alias{generatePlotForPlotType}
-\title{Title}
+\title{Generate plots for a specific plot type}
 \usage{
 generatePlotForPlotType(plotData, rmdContainer, facetAspectRatio, plotType)
 }
 \arguments{
-\item{plotType}{}
+\item{plotData}{Object containing the data for the plot.}
+
+\item{rmdContainer}{Object of class `RmdContainer`.}
+
+\item{facetAspectRatio}{Aspect ratio for the facets.}
+
+\item{plotType}{Type of the plot to generate.}
+}
+\value{
+Updated `rmdContainer` with the generated plot.
 }
 \description{
-Title
+Generate plots for a specific plot type
 }
+\keyword{internal}

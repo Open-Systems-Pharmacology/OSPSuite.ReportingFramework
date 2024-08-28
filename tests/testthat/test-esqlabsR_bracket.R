@@ -57,7 +57,6 @@ test_that("initProject does not overwrite existing files when overwrite = FALSE"
 projectConfiguration <- suppressMessages(setUpTestProject(withModel = TRUE))
 
 test_that("initProject creates project folder structure", {
-
   expect_s3_class(projectConfiguration, "ProjectConfiguration")
 
   scenarioList <-

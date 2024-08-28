@@ -2,15 +2,15 @@
 % Please edit documentation in R/utilities-data.R
 \name{updateDataGroupId}
 \alias{updateDataGroupId}
-\title{Add group ids of observed data to configuration sheet}
+\title{Add group IDs of observed data to configuration sheet}
 \usage{
 updateDataGroupId(projectConfiguration, dataDT)
 }
 \arguments{
 \item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 
-\item{data}{`data.table`with observed Data}
+\item{data}{`data.table` with observed data.}
 }
 \description{
-Add group ids of observed data to configuration sheet
+Add group IDs of observed data to configuration sheet
 }

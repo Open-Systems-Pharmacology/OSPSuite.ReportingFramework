@@ -1,6 +1,6 @@
 # initialize logging. Is always needed
 projectConfiguration <- setUpTestProject()
-initLogfunction(projectConfiguration,verbose = FALSE)
+initLogfunction(projectConfiguration, verbose = FALSE)
 
 test_that("It should read and process data based on the provided project configuration", {
   # Create a sample project configuration for testing
@@ -47,7 +47,7 @@ test_that("It should check the validity of the observed dataset", {
     ))
 
   # Add your assertions here to test the validation result
-  expect_true(grep("empty entries in weight", validationResult) == 1)
+  expect_true(grep("Empty entries in weight", validationResult) == 1)
 
   # Test for uniqueness of `individualId`, group, `outputPathId`, and time columns
   expect_error(validateObservedData(
@@ -172,18 +172,18 @@ test_that("convertIdentifierColumns function works as expected", {
   expect_equal(updated_dt$col2[1], "x_y_z")
 
 
-  expect_warning(updated_dt <- convertIdentifierColumns(test_dt, 'col1'))
-
+  expect_warning(updated_dt <- convertIdentifierColumns(test_dt, "col1"))
 })
 
 
 # Example observed data for aggregation test
 dataObserved <- data.table(
   individualId = rep(1:10, each = 3),
+  outputPathId = rep('parent', each = 30),
   group = rep(c("A", "B"), each = 15),
   xValues = rep(c(1, 2, 3), times = 10),
-  yValues = c(5, 6, NA, 7, 8, 9, 2, 3, 4, 1, 2, 3, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, NA, 7, 8, 9, 10),
-  lloq = c(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2),
+  yValues = c(5, 6, NA, 7, 8, 9, 2, 3, 4, 1, 2, 3, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, NA, 7, 8, 9, 10, 8, 4, 6),
+  lloq = c(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2),
   dataType = rep("observed", 30),
   dataClass = rep(DATACLASS$tpIndividual, 30)
 )
@@ -191,18 +191,17 @@ dataObserved <- data.table(
 
 # Test for aggregatedObservedDataGroups
 test_that("aggregatedObservedDataGroups works correctly", {
-
   # Test with default aggregation (GeometricStdDev)
   result <- aggregatedObservedDataGroups(dataObserved, groups = c("A", "B"), aggregationFlag = "GeometricStdDev")
 
   expect_s3_class(result, "data.table")
-  expect_equal(nrow(result), 6)  # Expecting 2 groups x 3 unique xValues
+  expect_equal(nrow(result), 6) # Expecting 2 groups x 3 unique xValues
 
   # Test with Percentiles
   result <- aggregatedObservedDataGroups(dataObserved, groups = c("A", "B"), aggregationFlag = "Percentiles", percentiles = c(0.25, 0.5, 0.75))
 
   expect_s3_class(result, "data.table")
-  expect_equal(nrow(result), 6)  # Expecting 2 groups x 3 unique xValues
+  expect_equal(nrow(result), 6) # Expecting 2 groups x 3 unique xValues
 
   # Test with Custom Function
   custom_func <- function(y) {
@@ -217,13 +216,14 @@ test_that("aggregatedObservedDataGroups works correctly", {
   result <- aggregatedObservedDataGroups(dataObserved, groups = c("A", "B"), aggregationFlag = "Custom", customFunction = custom_func)
 
   expect_s3_class(result, "data.table")
-  expect_equal(nrow(result), 6)  # Expecting 2 groups x 3 unique xValues
+  expect_equal(nrow(result), 6) # Expecting 2 groups x 3 unique xValues
 })
 
 
 # Sample data for testing add Unique columns
 originalData <- data.table(
   group = rep(c("A", "B"), each = 3),
+  outputPathId = rep('parent', each = 6),
   xValues = rep(1:3, times = 2),
   yValues = c(5, 6, NA, 7, 8, 9),
   additionalCol1 = c("foo", "bar", "foo", "baz", "bar", "baz"),
@@ -232,6 +232,7 @@ originalData <- data.table(
 
 aggregatedData <- data.table(
   group = c("A", "A", "B", "B"),
+  outputPathId = rep('parent', each = 4),
   xValues = c(1, 2, 1, 2),
   yValues = c(5, 6, 7, 8),
   yErrorValues = c(1, 1, 1, 1),
@@ -240,8 +241,7 @@ aggregatedData <- data.table(
 
 # Test for addUniqueColumns
 test_that("addUniqueColumns works correctly", {
-
-  result <- addUniqueColumns(dataObserved = originalData,aggregatedData = aggregatedData)
+  result <- addUniqueColumns(dataObserved = originalData, aggregatedData = aggregatedData)
 
   # Check that the result is a data.table
   expect_s3_class(result, "data.table")
@@ -252,7 +252,6 @@ test_that("addUniqueColumns works correctly", {
   # Check that unique columns are added correctly
   expect_false("additionalCol1" %in% names(result))
   expect_true("additionalCol2" %in% names(result))
-
 })
 
 

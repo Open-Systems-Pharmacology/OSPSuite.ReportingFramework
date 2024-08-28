@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotTimeProfilePanels.R
 \name{validateTimeRangeColumns}
 \alias{validateTimeRangeColumns}
-\title{validates timerange columns}
+\title{Validates time range columns}
 \usage{
 validateTimeRangeColumns(configTablePlots)
 }
@@ -10,7 +10,8 @@ validateTimeRangeColumns(configTablePlots)
 \item{configTablePlots}{`data.table` ConfigurationTable without header lines}
 }
 \description{
-Timerange columns must be character and mast contain NA
+Time range columns must be character and must contain NA
 'total','firstApplication','lastApplication'
-or a string which evaluates in r to a numeric vector length 2  (e.g. 'c(2,3)' or 'c(2,NA)'
+or a string which evaluates in R to a numeric vector length 2  (e.g. 'c(2,3)' or 'c(2,NA)'
 }
+\keyword{internal}

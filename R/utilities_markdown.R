@@ -486,3 +486,89 @@ prepareDTForPrinting <- function(
 
   return(dt)
 }
+
+
+#' creates startlines of Rmd file
+#'
+#' @param title
+#'
+#' @return character with startlines
+startRmd <- function(title = "Report") {
+  return(c(
+    "---",
+    paste0('title: "', title, '"'),
+    "output:",
+    "  word_document",
+    "params:",
+    "  customStyles:",
+    "    value:",
+    "      FigureCaption: NULL",
+    "      FigureFootnote: NULL",
+    "      TableCaption: NULL",
+    "      TableFootnote: NULL",
+    "---",
+    " "
+  ))
+}
+
+
+#' Creates Rmd file which include specified  .Rmd s
+#'
+#' @param newName new Name of .Rmd
+#' @param title Title of new Rmd
+#' @param sourceRmds list of .rmds to include
+#' @template projectConfig
+#'
+#' @export
+mergeRmds <- function(
+    newName = "appendix",
+    title = "Appendix",
+    sourceRmds = c("Demographics", "TimeProfile", "PKParameter", "DDIRatio", "myFigures"),
+    projectConfiguration) {
+  checkmate::assertCharacter(newName, len = 1)
+  checkmate::assertCharacter(title, len = 1)
+  checkmate::assertCharacter(sourceRmds, len = 1, unique = TRUE)
+
+  # Check for any other extensions the .Rmd
+  if (any(grepl("\\.[^.Rmd]*$", sourceRmds))) {
+    stop("Error: One or more elements of sourceRmds have an extension other than .Rmd.")
+  } else {
+    # Add.Rmd extension to elements that don't have it
+    sourceRmds <- ifelse(grepl("\\.Rmd$", sourceRmds), sourceRmds, paste0(sourceRmds, ".Rmd"))
+  }
+  if (any(grepl("\\.[^.Rmd]*$", newName))) {
+    stop("Error: NewName has an extension other than .Rmd.")
+  } else {
+    # Add.Rmd extension to elements that don't have it
+    newName <- ifelse(grepl("\\.Rmd$", newName), newName, paste0(newName, ".Rmd"))
+  }
+  checkmate::assertFileExists(file.path(projectConfiguration$outputFolder, sourceRmds))
+
+  rmdTxt <- c(
+    startRmd(title = title),
+    "  ",
+    "```{r setup, include=FALSE}",
+    'knitr::opts_chunk$set(echo = FALSE,warning = FALSE,results = "asis",error = FALSE,message = FALSE)',
+    "setupDone <<- TRUE",
+    "```",
+    "  "
+  )
+
+
+  for (sourceRmd in sourceRmds) {
+    rmdTxt <- c(
+      rmdTxt,
+      " ",
+      paste0('```{r child="', sourceRmd, '"}'),
+      " "
+    )
+  }
+
+  writeLines(
+    text = rmdTxt,
+    con = file.path(projectConfiguration$outputFolder, newName),
+    sep = "\n"
+  )
+
+  return(invisible())
+}

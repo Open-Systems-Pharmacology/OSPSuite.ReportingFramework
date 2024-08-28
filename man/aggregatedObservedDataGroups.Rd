@@ -56,8 +56,8 @@ on the aggregation type.
 
 A custom function should take a numeric vector `y` as input and return a list containing:
 - `yValues`: The aggregated value (e.g., mean).
-- `yMin`: The lower value of the aggregated data, (e.g mean - sd)
-- `yMax`: The upper value of the aggregated data, (e.g mean + sd)
+- `yMin`: The lower value of the aggregated data, (e.g. mean - sd).
+- `yMax`: The upper value of the aggregated data, (e.g. mean + sd).
 - `yErrorType`: A string indicating the type of error associated with the aggregation,
 it is used in plot legends and captions.
 It must be a concatenation of the descriptor of yValues and the descriptor of yMin - yMax range

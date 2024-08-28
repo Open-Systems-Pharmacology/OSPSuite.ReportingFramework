@@ -11,6 +11,9 @@ getDefaultColorsForScaleVector(shade = c("dark", "light"), n)
 
 \item{n}{}
 }
+\value{
+named vector with default colors
+}
 \description{
 creates default color Vector
 }

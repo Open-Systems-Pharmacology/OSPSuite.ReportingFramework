@@ -1,9 +1,9 @@
 # set up directory with figures
 projectConfiguration <- setUpTestProject()
-initLogfunction(projectConfiguration = projectConfiguration,verbose = FALSE)
+initLogfunction(projectConfiguration = projectConfiguration, verbose = FALSE)
 
 test_that("Rendering", {
-  rmdfolder <-  projectConfiguration$outputFolder
+  rmdfolder <- projectConfiguration$outputFolder
   rmdContainer <- RmdContainer$new(rmdfolder = rmdfolder, "timeProfiles")
 
   rmdContainer$addHeader("Section 1")

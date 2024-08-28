@@ -4,7 +4,7 @@ projectConfiguration <- setUpTestProject()
 # Unit tests for initLogfunction
 test_that("initLogfunction creates default log file folder when logFileFolder is NULL", {
   suppressMessages(initLogfunction(projectConfiguration))
-  expect_true(dir.exists(file.path(projectConfiguration$outputFolder,"Logs")))
+  expect_true(dir.exists(file.path(projectConfiguration$outputFolder, "Logs")))
 })
 
 #  tests for `writeToLog`
@@ -74,10 +74,9 @@ example_data <- data.table(x = 1:5, y = letters[1:5])
 
 # Write the unit test
 test_that("writeTableToLog function works as expected", {
-
   setShowLogMessages(FALSE)
   # Call the function with example data
-  writeTableToLog(example_data,filename = 'table.log')
+  writeTableToLog(example_data, filename = "table.log")
 
   # Verify that the log file has been created
   # Check if the log file was created and contains the session info
@@ -85,7 +84,6 @@ test_that("writeTableToLog function works as expected", {
 
   suppressWarnings(logContent <- readLines(file.path(logFileFolder, "table.log")))
   expect_true(length(logContent) > 0, "Log file was created")
-
 })
 
 cleanupLogFileForTest(projectConfiguration)

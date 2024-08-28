@@ -9,6 +9,9 @@ getDefaultShapesForScaleVector(n)
 \arguments{
 \item{n}{}
 }
+\value{
+named vector with default shapes
+}
 \description{
 returns default shapes
 }

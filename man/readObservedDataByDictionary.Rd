@@ -9,11 +9,11 @@ readObservedDataByDictionary(projectConfiguration, spreadData = TRUE)
 \arguments{
 \item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 
-\item{spreadData}{if TRUE information dreived by observed data, such as identifier
-and biometrics is spread to other tables}
+\item{spreadData}{If TRUE, information derived from observed data, such as identifiers
+and biometrics, is spread to other tables.}
 }
 \value{
-Processed data based on the dictionary
+Processed data based on the dictionary.
 }
 \description{
 This function reads and processes data based on the provided project configuration.

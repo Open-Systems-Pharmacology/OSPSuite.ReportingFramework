@@ -14,34 +14,437 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r setup, warning=FALSE,error=FALSE,message=FALSE}
 library(ospsuite.reportingframework)
 ```
 
-## OSPSuite.ReportingFramework
+# Introduction
 
-The aim of this package is to support project workflows with the OSPSuite R toolboxes.
+This vignette provides a comprehensive overview of the workflow designed for data analysis and reporting using the `ospsuite.reportingframework` package. The workflow streamlines the process of conducting analyses, generating plots, and creating reports, making it easier for users to manage their projects and communicate results effectively.
 
-The setup and simulation is based on the EsqlabsR package.
+## Table of Contents
+ - [Accessing and Configuring the Workflow Template](#accessing-and-configuring-the-workflow-template)
+ - [Executing the Workflow as a Valid Run](#executing-the-workflow-as-a-valid-run)
+ - [Project Initialization with initProject](#project-initialization-with-initproject)
+ - [Logging in the Workflow](#logging-in-the-workflow)
+ - [Integration with esqlabsR Package](#integration-with-esqlabsr-package)
+ - [Plot Functionality](#plot-functionality)
+ - [Report Generation](#report-generation)
 
-## Template
+Each section of this vignette is designed to guide you through the workflow's features and functionalities, providing examples and best practices for effective usage.
 
-### Valid Mode
+By the end of this vignette, you will have a solid understanding of how to:
+ - Access and customize the workflow template.
+ - Implement logging to track your workflow's execution.
+ - Execute the workflow in valid run mode to ensure output integrity.
+ - Utilize the `esqlabsR` package for project configuration and simulation.
+ - Initialize your project structure efficiently.
+ - Generate plots and compile them into comprehensive reports.
+ - Create and integrate custom plot functions tailored to your analysis needs.
+
+#' Whether you are a seasoned analyst or new to data analysis workflows, this vignette serves as a valuable resource for leveraging the capabilities of the `ospsuite.reportingframework` package to enhance your analytical projects.
+
+## Additional Vignettes
+
+### Data Import by Dictionary
+
+In this separate vignette, you will find detailed explanations and examples of how to read observed data effectively, ensuring that your analysis is based on accurate and well-structured datasets.
+
+To access the **Data Import by Dictionary** vignette, you can run the following command in R:
+ 
+```{r}
+vignette("data_import_by_dictionary")
+```
+
+
+### Time profile plots
+
+In this separate vignette, you will find detailed explanations how to configure and call the time profile plot function.
+
+To access the **Time Profile Plots** vignette, you can run the following command in R:
+ 
+```{r}
+vignette("TimeProfilePlots")
+```
+
+# Accessing and Configuring the Workflow Template
+
+This section explains how to access the workflow template and customize it according to your needs.
+
+## Accessing the Workflow Template
+
+To access the default workflow template provided by the package, you can use the following function:
+
+```{r,echo=TRUE,eval=FALSE}
+
+openWorkflowTemplate()
+
+```
+
+
+ This function will open the workflow template as a new document in your RStudio environment.
+
+### Access via RStudio Addin
+
+You can also access the workflow template through an RStudio addin. 
+To use the addin, simply navigate to the Addins menu in RStudio, and select "Open Template Workflow". This will execute the `openWorkflowTemplate()` function and open the template in a new document.
+
+## Customizing the Workflow Template
+
+By default, the workflow template is loaded from the package's internal templates. If you wish to customize this template, follow these steps:
+
+1. Create your own workflow template script and save it with the name `template_workflow.R`.
+2. Place this file in your designated template directory.
+3. Set the path to your custom template by using the following option:
+
+```{r,echo=TRUE,eval=FALSE}
+
+ options(OSPSuite.RF.PathForWorkflowTemplate = 'myTemplateDirectory')
+
+```
+
+After setting this option, calling `openWorkflowTemplate()` or using the addin will open your customized template instead of the default one.
+
+You can save this option in your ".Rprofile" file. (file.path(Sys.getenv("HOME"), ".Rprofile"). Then it will be set automatically.
+
+## Additional Template Functions
+
+You can also open other templates such as the figure creation template using:
+
+```{r,echo=TRUE,eval=FALSE}
+
+ openFigureTemplate()
+
+```
+
+This function will open the figure creation template as a new document.
+
+## Conclusion
+
+By following these steps, you can easily access and configure the workflow template to suit your specific needs, streamlining your reporting process.
+
+# Executing the Workflow as a Valid Run
+
+This section describes how to configure the workflow to execute as a valid run using the `executeAsValidRun` function.
+
+## Purpose of Valid Run
+
+A valid run is used when you want to execute the workflow without any watermarks on the figures and ensure that the workflow stops if a figure creation fails. This is particularly useful for final reports or production runs where the integrity of the output is crucial.
+
+## Function: `executeAsValidRun`
+
+The `executeAsValidRun` function sets the necessary options to control the behavior of the workflow during execution.
+
+### Parameters:
+
+ - `isValidRun`: A boolean value. If `TRUE`, the workflow will execute as a valid run; if `FALSE`, it will execute in a standard mode.
+
+### Behavior:
+- **Watermark Management**: When `isValidRun` is set to `TRUE`, watermarks are disabled on figures. This is achieved by setting the `watermark_enabled` option to `FALSE`.
+- **Failure Handling**: If `isValidRun` is `TRUE`, the workflow will not skip failing plots. If `FALSE`, any errors in figure generation will be ignored, and the workflow will continue.
+
+### Example:
+
+```{r,echo=TRUE,eval=FALSE}
+
+# Execute the workflow as a valid run
+executeAsValidRun(isValidRun = TRUE)
+
+```
+
+## Conclusion
+
+By using the `executeAsValidRun` function, you can control the execution mode of your workflow, ensuring that the output meets the necessary standards for reporting and analysis.
+
+
+# Project Initialization with initProject
+
+This section explains the purpose and functionality of the `initProject` function in the workflow template.
+
+## Purpose of initProject
+
+The `initProject` function is designed to create the necessary directory structure for your project and copy relevant files from a specified source folder. This helps ensure that your project is organized and ready for analysis.
+
+## Function Definition
+
+The function takes the following parameters:
+ - `rootDirectory`: The root directory where the project structure will be created. By default, it is set to the parent directory (`".."`).
+ - `sourceFolder`: The folder containing the template files and directories that you want to copy to your project.
+ - `overwrite`: A boolean value indicating whether to overwrite existing files in the root directory. It is set to `FALSE` by default.
+
+## Functionality
+
+The function lists all directories within the `sourceFolder` and iterates through them. For each directory:
+   - If the directory does not exist in the `rootDirectory`, it creates the directory.
+   - It then lists all files in the directory and checks if they already exist in the `rootDirectory`. If a file does not exist or if `overwrite` is set to `TRUE`, it copies the file to the `rootDirectory`.
+
+### Example:
+```{r,echo=TRUE,eval=FALSE}
+
+ initProject(
+   rootDirectory = file.path("..", ".."),
+   sourceFolder = templateDirectory(),
+   overwrite = FALSE
+)
+
+```
+
+In this example, the project structure will be created two levels up from the current directory, using the files and folders from the specified template directory. Existing files will not be overwritten.
+
+## Conclusion
+
+The `initProject` function is a crucial step in organizing your project, ensuring that all necessary files and directories are in place before you proceed with your analysis.
+
+
+# Logging in the Workflow
+
+This section describes how logging is handled in the workflow using the `logCatch` and `initLogfunction`.
+
+## Initializing the Log Function
+
+The `initLogfunction` is called at the beginning of the workflow script to set up logging. It configures options for the log file folder, specifies warnings and messages that should not be logged, and allows for verbosity control.
+
+### Parameters:
+
+- `projectConfiguration`: A configuration object containing project settings.
+- `warningsNotDisplayed`: A list of warnings to ignore in the log.
+- `messagesNotDisplayed`: A list of messages to ignore in the log.
+- `verbose`: If `TRUE`, log messages will be shown on the console.
+
+### Example:
+
+
+```{r,echo=TRUE,eval=FALSE}
+
+# Initialize the log function
+logFunction <- initLogfunction(projectConfiguration)
+
+```
+
+## Catching Logs
+
+The `logCatch` function is used to catch messages, warnings, and errors within the workflow. It must be initialized by calling `initLogfunction`. 
+
+- **Error Handling**: Errors are logged with a detailed trace, allowing for easier debugging.
+- **Warning Handling**: Warnings can be selectively ignored based on the configuration.
+- **Message Handling**: Informational messages can also be logged or displayed based on user preferences.
+
+### Example:
+
+```{r,echo=TRUE,eval=FALSE}
+
+logCatch({
+  # Your code here
+})
+
+```
+
+## Writing to the Log
+
+The `writeToLog` function appends messages to the log file. It can log different types of messages, such as "Error", "Warning", or "Info".
+
+### Example:
+```{r,echo=TRUE,eval=FALSE}
+
+writeToLog(type = "Info", msg = "This is an information message")
+
+```
+
+## Saving Session Info
+
+At the end of your workflow, you can save session information, including loaded packages and R version, into a log file using the `saveSessionInfo` function.
+
+```{r,echo=TRUE,eval=FALSE}
+
+saveSessionInfo()
+```
+## Conclusion
+
+By implementing logging in your workflow, you ensure better traceability and easier debugging, making it a crucial part of any robust analysis pipeline.
+
+
+# Integration with esqlabsR Package
+
+This section outlines how the workflow utilizes the `esqlabsR` package for project configuration, scenario setup, and simulation.
+
+For more information and detailed documentation, users can visit the [esqlabsR Documentation](https://esqlabs.github.io/esqlabsR/).
+
+## Overview of esqlabsR
+
+The `esqlabsR` package provides tools for managing and analyzing pharmacokinetic data. It facilitates the creation of project configurations, scenario management, and simulation execution, making it an essential component of this workflow.
+
+## Project Configuration
+
+The workflow begins by setting up a project configuration using the `createDefaultProjectConfiguration` function from the `esqlabsR` package. This function retrieves paths for all relevant project files, which are crucial for subsequent analysis steps.
+
+### Example:
+
+```{r,echo=TRUE,eval=FALSE}
+projectConfiguration <- esqlabsR::createDefaultProjectConfiguration(
+   path = file.path("ProjectConfiguration.xlsx")
+)
+```
+
+This configuration is then used throughout the workflow to ensure that all file paths and settings are correctly referenced.
+
+## Scenario Setup
+
+After configuring the project, scenarios are created using the `createScenarios.wrapped` function. This function allows you to define various simulation scenarios based on your project configuration.
+
+### Example:
+
+```{r,echo=TRUE,eval=FALSE}
+ scenarioList <- createScenarios.wrapped(
+   projectConfiguration = projectConfiguration,
+   scenarioNames = NULL,
+   doCheckScenarioNameValidity = TRUE
+)
+```
+
+This setup ensures that all scenarios are valid and ready for execution.
+
+## Simulation Execution
+
+The workflow then executes the defined scenarios using the `runAndSaveScenarios` function. This function runs the simulations and saves the results, allowing for easy access and analysis later.
+
+### Example:
+```{r,echo=TRUE,eval=FALSE}
+runAndSaveScenarios(
+   projectConfiguration = projectConfiguration,
+   scenarioList = scenarioList,
+   simulationRunOptions = SimulationRunOptions$new(
+     numberOfCores = NULL,
+     checkForNegativeValues = NULL,
+     showProgress = TRUE
+   )
+)
+```
+
+
+## Conclusion
+
+By leveraging the capabilities of the `esqlabsR` package, this workflow effectively manages project configurations, sets up scenarios, and executes simulations, thus streamlining the analysis process for pharmacokinetic data.
 
 
 
-##  Log file creation
+# Plot Functionality
 
-The logging functionality in this package allows users to capture messages, warnings, and errors during their workflows. This section describes the key functions and their usage for configuring and utilizing the logging capabilities.
+This section describes the plotting functionality within the workflow and how reports are generated from the plots.
 
-To set up the folder for the Logs, use the function \code{\link[OSPSuite.ReportingFramework]{initLogfunction}}
+## Overview of Plot Functions
 
-Now you are able to write messages to the specified file in the previous initialized logfile folder with the function \code{\link[OSPSuite.ReportingFramework]{writeToLog}}
+The workflow includes various plotting functions that generate visualizations based on the analysis performed. Currently, the only implemented plot function is the **TimeProfile** plot function. However, additional plot functions are planned for future development.
 
-To catch errors, warnings and messages you can call use the function \code{\link[OSPSuite.ReportingFramework]{logCatch}}
+Each plot function is designed to create an R Markdown (`.Rmd`) file, which contains the code and output for the respective plot. This allows for easy documentation and sharing of the results.
 
-If you want to save the Session Info, call \code{\link[OSPSuite.ReportingFramework]{saveSessionInfo}}.
-This call should be at the end of the workflow, to include all packages which were loaded to the namespace during the workflow
+## Using runPlot
+
+The `runPlot` function is the primary interface for generating plots within the workflow. It takes the following key parameters:
+ - `functionKey`: The key that identifies which plot function to execute. For example, `"TimeProfile_Panel"` for the TimeProfile plot.
+ - `projectConfiguration`: The configuration object that contains project settings and paths.
+ - `inputs`: A list of additional inputs required by the specific plot function.
+ 
+ ### Example:
+ 
+```{r,echo=TRUE,eval=FALSE}
+ runPlot(
+   functionKey = "TimeProfile_Panel",
+   projectConfiguration = projectConfiguration,
+   inputs = list(
+     configTableSheet = "TimeProfiles_1",
+     dataObserved = dataObserved
+   )
+ )
+```
 
 
+In this example, the TimeProfile plot is generated using the specified configuration and observed data. The resulting `.Rmd` file will be created in the designated output folder.
 
+
+## Creating Custom Plot Functions
+
+Custom plot functions allow you to generate specific visualizations tailored to your analysis needs. Each plot function should create an R Markdown (`.Rmd`) file, enabling seamless integration with the existing reporting framework.
+
+## Accessing the Plot Template
+
+To facilitate the creation of custom plot functions, you can open a template using the RStudio addin. Navigate to the Addins menu in RStudio and select "Open Template Plotfunction". Alternatively, you can use the following function to open the template directly:
+
+```{r,echo=TRUE,eval=FALSE}
+ openFigureTemplate()
+```
+
+This will provide you with a pre-structured template to help you get started with your custom plot function.
+
+
+## Calling the Custom Plot Function
+
+Once you have defined your custom plot function, you can call it using the `runPlot` interface. For example:
+
+```{r,echo=TRUE,eval=FALSE}
+runPlot(
+   functionKey = NULL,  # No function key for custom functions
+   plotFunction = myPlotFunction,
+   subfolder = "MyCustomPlots",
+   projectConfiguration = projectConfiguration,
+   inputs = list()  # Additional inputs can be passed as needed
+)
+```
+
+### Difference Between Custom and Default Plot Function Calls
+
+- **Custom Plot Functions**: When using a custom plot function, you set `functionKey` to `NULL` and directly specify the `plotFunction` parameter with your custom function. 
+
+ - **Default Plot Functions**: For default plot functions, you typically provide a `functionKey` that corresponds to a predefined plot function. The `runPlot` function then uses this key to determine which plot to execute.
+
+## Conclusion
+
+By following this guide, you can create custom plot functions that integrate seamlessly with the workflow. This flexibility allows you to tailor your visualizations and reports to meet the specific needs of your analysis.
+
+
+# Report Generation
+
+ After generating the plots, the workflow can compile these plots into a comprehensive report. The report is also generated in R Markdown format, allowing for flexible formatting and easy updates.
+
+The first step of the report generation is typically handled by the `mergeRmds` function, which combines multiple `.Rmd` files into a single report document. This allows users to compile results from different plot functions into one cohesive document.
+
+```{r,echo=TRUE,eval=FALSE}
+mergeRmds(
+   projectConfiguration = projectConfiguration,
+   newName = "appendix",
+   title = "Appendix",
+   sourceRmds = c("Demographics", "TimeProfile", "PKParameter", "DDIRatio", "myFigures")
+)
+```
+
+In this example, the `mergeRmds` function combines several R Markdown files into a single report titled "Appendix". This report can then be rendered into various formats, such as HTML or Word.
+
+
+## Converting R Markdown to Word Documents
+
+The `renderWord` function takes an R Markdown file and generates a Word document using the specified conversion template. This allows users to create well-formatted reports that can be easily shared and presented.
+
+### Key Parameters:
+ - `fileName`: The name of the `.Rmd` file to convert to Word format.
+ - `wordConversionTemplate`: An optional template used for the conversion. If not provided, a default template will be used.
+ - `doAppendDocToTemplate`: A boolean value that, if `TRUE`, appends the newly generated document to the specified template after a designated bookmark (`REPORTBLOCK`).
+ - `customStyles`: A list of custom styles for figure and table captions and footnotes. The styles should be defined in the `wordConversionTemplate`.
+
+### Example:
+
+```{r,echo=TRUE,eval=FALSE}
+renderWord(
+   fileName = "myReport.Rmd",
+   wordConversionTemplate = "path/to/template/myTemplate.docx",
+   customStyles = list(FigureFootnote = "myFootnoteFormat", TableFootnote = "myFootnoteFormat")
+ )
+```
+
+In this example, the `renderWord` function converts the specified R Markdown file into a Word document, applying the custom styles defined for footnotes.
+
+### Additional Functionality:
+ The `appendDocToTemplate` function allows the generated Word document to be seamlessly integrated into a pre-defined template. This is particularly useful for maintaining consistent formatting and layout across multiple reports.
+
+## Conclusion:
+
+The plotting functionality and report generation capabilities within this workflow provide a powerful way to visualize and document your analysis results. By leveraging R Markdown, users can create dynamic, reproducible reports that effectively communicate their findings.
+The `renderWord` function provides an efficient way to generate professional-quality reports from R Markdown files, facilitating easy documentation and sharing of analysis results.

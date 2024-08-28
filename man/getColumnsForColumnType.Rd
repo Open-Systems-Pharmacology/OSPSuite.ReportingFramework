@@ -2,18 +2,18 @@
 % Please edit documentation in R/utilities-data.R
 \name{getColumnsForColumnType}
 \alias{getColumnsForColumnType}
-\title{select all columns where the attribute `columnType` matches the requirement}
+\title{Select all columns where the attribute `columnType` matches the requirement}
 \usage{
 getColumnsForColumnType(dt, columnTypes)
 }
 \arguments{
-\item{dt}{`data.table` with attributes (e.g. imported by `readObservedDataByDictionary`)}
+\item{dt}{`data.table` with attributes (e.g., imported by `readObservedDataByDictionary`).}
 
-\item{columnTypes}{vector with required types}
+\item{columnTypes}{Vector with required types.}
 }
 \value{
-vector with column names
+Vector with column names.
 }
 \description{
-select all columns where the attribute `columnType` matches the requirement
+Select all columns where the attribute `columnType` matches the requirement
 }

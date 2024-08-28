@@ -2,13 +2,23 @@
 % Please edit documentation in R/plotTimeProfilePanels.R
 \name{getCaptionForPlot}
 \alias{getCaptionForPlot}
-\title{Title}
+\title{Generate a caption for the plot}
 \usage{
 getCaptionForPlot(plotData, yScale, timeRangeFilter, plotType)
 }
 \arguments{
-\item{plotType}{}
+\item{plotData}{Object containing the data for the plot.}
+
+\item{yScale}{Y scale of the plot.}
+
+\item{timeRangeFilter}{Name of the time range filter.}
+
+\item{plotType}{Type of the plot.}
+}
+\value{
+Caption text for the plot.
 }
 \description{
-Title
+Generate a caption for the plot
 }
+\keyword{internal}

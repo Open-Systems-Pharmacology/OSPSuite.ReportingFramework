@@ -12,17 +12,18 @@ readDataDictionary(
 )
 }
 \arguments{
-\item{dictionaryFile}{The file containing the data dictionary}
+\item{dictionaryFile}{The file containing the data dictionary.}
 
-\item{sheet}{The sheet within the data dictionary file}
+\item{sheet}{The sheet within the data dictionary file.}
 
-\item{data}{The data to be used with the dictionary}
+\item{data}{The data to be used with the dictionary.}
 
-\item{dataClass}{class of data either "tp Individual" or "tp Aggregated"}
+\item{dataClass}{Class of data, either "tp Individual" or "tp Aggregated".}
 }
 \value{
-The data dictionary
+The data dictionary.
 }
 \description{
 This function reads the data dictionary based on the provided file and sheet.
 }
+\keyword{internal}

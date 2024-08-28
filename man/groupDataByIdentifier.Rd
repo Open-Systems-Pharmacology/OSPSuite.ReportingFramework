@@ -2,16 +2,17 @@
 % Please edit documentation in R/utilities-data.R
 \name{groupDataByIdentifier}
 \alias{groupDataByIdentifier}
-\title{groups the data by identifier}
+\title{Groups the data by identifier}
 \usage{
 groupDataByIdentifier(dataDT)
 }
 \arguments{
-\item{dataDT}{`data.table` to be grouped}
+\item{dataDT}{`data.table` to be grouped.}
 }
 \value{
-list with grouped data
+List with grouped data.
 }
 \description{
-groups the data by identifier
+Groups the data by identifier
 }
+\keyword{internal}

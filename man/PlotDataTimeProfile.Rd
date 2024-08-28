@@ -6,7 +6,7 @@
 \title{plotData for Timeprofile plotData}
 \value{
 RmdContainer object
-constructs footnote lines for aggregated data and data references
+get the timelabel for the filtered timerange
 }
 \description{
 An object to collect plotData and other informations to create a timeprofile plot
@@ -14,20 +14,12 @@ An object to collect plotData and other informations to create a timeprofile plo
 \section{Super class}{
 \code{\link[ospsuite.utils:Printable]{ospsuite.utils::Printable}} -> \code{RmdContainer}
 }
-\section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
-\describe{
-\item{\code{timeTagfilter}}{list with filters for time range tags
-Collects all observed and simulated data needed for this plots}
-}
-\if{html}{\out{</div>}}
-}
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
 \item{\code{data}}{data For Plot}
 
-\item{\code{data}}{data For Plot Predicted vs observed residuals}
+\item{\code{dataReference}}{data with references for data}
 
 \item{\code{configTable}}{configuration table for one plot}
 
@@ -35,7 +27,7 @@ Collects all observed and simulated data needed for this plots}
 
 \item{\code{scaleVectors}}{list with scaling vectors to manually scale aesthetics}
 
-\item{\code{scaleVectors}}{list with scaling vectors to manually scale aesthetics}
+\item{\code{scaleVectorsObserved}}{list with scaling vectors to manually scale aesthetics of observed data}
 
 \item{\code{tpLabelSimulatedMean}}{label for simulated mean}
 
@@ -43,12 +35,15 @@ Collects all observed and simulated data needed for this plots}
 
 \item{\code{tpLabelObserved}}{label for observed data}
 
-\item{\code{dtCaption}}{list of time profile labels to add on ggplot}
+\item{\code{tpLabels}}{list of time profile labels to add on ggplot}
 
-\item{\code{dtCaption}}{`data.table`with caption information`}
+\item{\code{nFacetColumns}}{number of facet columns}
 
-\item{\code{timeTagfilter}}{list with filters for time range tags
-Collects all observed and simulated data needed for this plots}
+\item{\code{timeRangeTagFilter}}{list with filters for time range tags
+Collects all observed and simulated data needed for this plots
+helper function to extract time profiles for results
+setfactors to plot
+Creates PlotId for each scenario outputs group}
 }
 \if{html}{\out{</div>}}
 }
@@ -56,13 +51,12 @@ Collects all observed and simulated data needed for this plots}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-RmdContainer-new}{\code{PlotDataTimeProfile$new()}}
+\item \href{#method-RmdContainer-getTimeLabelForTimeRange}{\code{PlotDataTimeProfile$getTimeLabelForTimeRange()}}
+\item \href{#method-RmdContainer-getDataForTimeRange}{\code{PlotDataTimeProfile$getDataForTimeRange()}}
 \item \href{#method-RmdContainer-useColorIndex}{\code{PlotDataTimeProfile$useColorIndex()}}
 \item \href{#method-RmdContainer-useShapeIndex}{\code{PlotDataTimeProfile$useShapeIndex()}}
 \item \href{#method-RmdContainer-hasSimulatedPop}{\code{PlotDataTimeProfile$hasSimulatedPop()}}
 \item \href{#method-RmdContainer-hasObservedData}{\code{PlotDataTimeProfile$hasObservedData()}}
-\item \href{#method-RmdContainer-getFootNoteLines}{\code{PlotDataTimeProfile$getFootNoteLines()}}
-\item \href{#method-RmdContainer-getTimeLabelForTimeRange}{\code{PlotDataTimeProfile$getTimeLabelForTimeRange()}}
-\item \href{#method-RmdContainer-getDataForTimeRange}{\code{PlotDataTimeProfile$getDataForTimeRange()}}
 \item \href{#method-RmdContainer-clone}{\code{PlotDataTimeProfile$clone()}}
 }
 }
@@ -87,56 +81,12 @@ Initialize a new instance of the class
 \item{\code{projectConfiguration}}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 
 \item{\code{onePlotConfig}}{plotconfiguration for one plot}
+
+\item{\code{aggregationFun}}{function to aggregate simulated data}
+
+\item{\code{default}}{number of facet columns}
 }
 \if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdContainer-useColorIndex"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdContainer-useColorIndex}{}}}
-\subsection{Method \code{useColorIndex()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$useColorIndex()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdContainer-useShapeIndex"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdContainer-useShapeIndex}{}}}
-\subsection{Method \code{useShapeIndex()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$useShapeIndex()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdContainer-hasSimulatedPop"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdContainer-hasSimulatedPop}{}}}
-\subsection{Method \code{hasSimulatedPop()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$hasSimulatedPop()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdContainer-hasObservedData"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdContainer-hasObservedData}{}}}
-\subsection{Method \code{hasObservedData()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$hasObservedData()}\if{html}{\out{</div>}}
-}
-
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdContainer-getFootNoteLines"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdContainer-getFootNoteLines}{}}}
-\subsection{Method \code{getFootNoteLines()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$getFootNoteLines()}\if{html}{\out{</div>}}
-}
-
-\subsection{Returns}{
-vector of characters, each entry is one footnote line
 }
 }
 \if{html}{\out{<hr>}}
@@ -147,6 +97,14 @@ vector of characters, each entry is one footnote line
 \if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$getTimeLabelForTimeRange(filterName)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{filterName}}{character with name of time range filter
+get the data for the filtered time range}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RmdContainer-getDataForTimeRange"></a>}}
@@ -156,6 +114,70 @@ vector of characters, each entry is one footnote line
 \if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$getDataForTimeRange(filterName, typeFilter = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{filterName}}{name of timeRange filter}
+
+\item{\code{typeFilter}}{filter for data type}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+`data.table` with filtered plotData
+function to determine if color legend is needed
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-useColorIndex"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-useColorIndex}{}}}
+\subsection{Method \code{useColorIndex()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$useColorIndex()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+Logical
+function to determine if shape legend is needed
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-useShapeIndex"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-useShapeIndex}{}}}
+\subsection{Method \code{useShapeIndex()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$useShapeIndex()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+Logical
+function to determine if simulation is aggregated
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-hasSimulatedPop"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-hasSimulatedPop}{}}}
+\subsection{Method \code{hasSimulatedPop()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$hasSimulatedPop()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+Logical
+function to determine if data contains oberved data
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-hasObservedData"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-hasObservedData}{}}}
+\subsection{Method \code{hasObservedData()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$hasObservedData()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+Logical
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-RmdContainer-clone"></a>}}

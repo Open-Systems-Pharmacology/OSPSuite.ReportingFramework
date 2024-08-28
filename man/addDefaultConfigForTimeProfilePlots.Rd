@@ -13,9 +13,9 @@ addDefaultConfigForTimeProfilePlots(
 \arguments{
 \item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 
-\item{sheetName}{name of sheet in plot configuration table}
+\item{sheetName}{Name of the sheet in the plot configuration table.}
 
-\item{overwrite}{`boolean` if TRUE existing configurations will be overwritten}
+\item{overwrite}{Boolean indicating if existing configurations will be overwritten.}
 }
 \description{
 Adds a default sheet to the plot configuration table

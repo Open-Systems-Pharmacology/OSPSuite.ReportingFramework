@@ -34,24 +34,27 @@ initLogfunction <- function(projectConfiguration,
   checkmate::assertCharacter(warningsNotDisplayed)
   checkmate::assertCharacter(messagesNotDisplayed)
 
-  loggingFolder <- file.path(projectConfiguration$outputFolder,'Logs')
-  if (!dir.exists(loggingFolder)) dir.create(loggingFolder,recursive = TRUE)
+  loggingFolder <- file.path(projectConfiguration$outputFolder, "Logs")
+  if (!dir.exists(loggingFolder)) dir.create(loggingFolder, recursive = TRUE)
 
   # Create the log file sub-folder with a time stamp
 
   # Get the name of the original script
-  script_name <- tryCatch({
-    script <- sys.frame(1)$ofile
-    sub(".R$", "", basename(script))
-  }, error = function(e) {
-    return(NULL)
-  })
+  script_name <- tryCatch(
+    {
+      script <- sys.frame(1)$ofile
+      sub(".R$", "", basename(script))
+    },
+    error = function(e) {
+      return(NULL)
+    }
+  )
 
   timestamp <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
-  logFileSubFolder <- paste(script_name,timestamp,sep = '_')
+  logFileSubFolder <- paste(script_name, timestamp, sep = "_")
 
 
-  logFileFolder <- fs::path_abs(file.path(loggingFolder,logFileSubFolder))
+  logFileFolder <- fs::path_abs(file.path(loggingFolder, logFileSubFolder))
 
   # Create the log file sub-folder if it doesn't exist
   if (!dir.exists(logFileFolder)) {
@@ -71,14 +74,16 @@ initLogfunction <- function(projectConfiguration,
   addMessageToLog("Start run of workflow")
   addMessageToLog(paste(utils::capture.output(projectConfiguration), collapse = "\n"))
 
-  optionstxt = paste('\n\n',
-                     'Options:\n',
-                     'OSPSuite.plots.watermark_enabled:',ospsuite.plots::getOspsuite.plots.option(OptionKeys$watermark_enabled),'\n',
-                     'OSPSuite.RF.skipFailingPlots:',ifelse(getOption('OSPSuite.RF.skipFailingPlots',default = FALSE),
-                            'Failing Plots are skipped',
-                            'Failing Plots throw errors'),'\n')
+  optionstxt <- paste(
+    "\n\n",
+    "Options:\n",
+    "OSPSuite.plots.watermark_enabled:", ospsuite.plots::getOspsuite.plots.option(OptionKeys$watermark_enabled), "\n",
+    "OSPSuite.RF.skipFailingPlots:", ifelse(getOption("OSPSuite.RF.skipFailingPlots", default = FALSE),
+      "Failing Plots are skipped",
+      "Failing Plots throw errors"
+    ), "\n"
+  )
   addMessageToLog(optionstxt)
-
 }
 
 #' Used to add message to log file
@@ -222,14 +227,13 @@ writeTableToLog <- function(dt, filename = "run.log") {
   checkmate::assertDirectoryExists(logFileFolder)
   checkmate::assertCharacter(filename, len = 1, any.missing = FALSE)
 
-  sink(file.path(logFileFolder, filename),append = TRUE,split = FALSE)
+  sink(file.path(logFileFolder, filename), append = TRUE, split = FALSE)
   print(dt)
   sink()
 
   if (verbose) {
     print(dt)
   }
-
 }
 
 

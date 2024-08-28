@@ -5,10 +5,10 @@
 #' This function reads and processes data based on the provided project configuration.
 #'
 #' @template projectConfig
-#' @param spreadData if TRUE information dreived by observed data, such as identifier
-#'   and biometrics is spread to other tables
+#' @param spreadData If TRUE, information derived from observed data, such as identifiers
+#'   and biometrics, is spread to other tables.
 #'
-#' @return Processed data based on the dictionary
+#' @return Processed data based on the dictionary.
 #' @export
 readObservedDataByDictionary <- function(projectConfiguration,
                                          spreadData = TRUE) { # nolint
@@ -20,7 +20,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
     skipDescriptionRow = TRUE
   )
 
-  # loop on selected datafiles
+  # Loop through selected data files
   dataDT <- data.table()
   dict <- list()
   for (d in split(dataList, seq_len(nrow(dataList)))) {
@@ -37,17 +37,17 @@ readObservedDataByDictionary <- function(projectConfiguration,
     )
 
     dataDT <- rbind(dataDT,
-                    convertDataByDictionary(
-                      data = tmpData,
-                      dataFilter = d$DataFilter,
-                      dict = tmpdict,
-                      dictionaryName = d$Dictionary
-                    ) %>%
-                      dplyr::mutate(dataClass = d$DataClass),
-                    fill = TRUE
+      convertDataByDictionary(
+        data = tmpData,
+        dataFilter = d$DataFilter,
+        dict = tmpdict,
+        dictionaryName = d$Dictionary
+      ) %>%
+        dplyr::mutate(dataClass = d$DataClass),
+      fill = TRUE
     )
 
-    # get unique dictionary for columnType
+    # Get unique dictionary for columnType
     tmpdict <-
       tmpdict %>%
       dplyr::select(c("targetColumn", "type")) %>%
@@ -66,8 +66,8 @@ readObservedDataByDictionary <- function(projectConfiguration,
 
   validateObservedData(dataDT = dataDT, stopIfValidationFails = FALSE)
 
-  # spread data to other tables
-  if (spreadData){
+  # Spread data to other tables
+  if (spreadData) {
     updateDataGroupId(
       projectConfiguration = projectConfiguration,
       dataDT = dataDT
@@ -84,33 +84,35 @@ readObservedDataByDictionary <- function(projectConfiguration,
     )
   }
 
-  # logging
-  message('Observed Data:')
-  writeTableToLog(dataDT[,.('No of data points' = .N,
-                            'No of individuals' = dplyr::n_distinct(individualId),
-                            'No of outputs' = dplyr::n_distinct(outputPathId)),
-                         by = c('group') ])
+  # Logging
+  message("Observed Data:")
+  writeTableToLog(dataDT[, .(
+    "No of data points" = .N,
+    "No of individuals" = dplyr::n_distinct(individualId),
+    "No of outputs" = dplyr::n_distinct(outputPathId)
+  ),
+  by = c("group")
+  ])
 
   return(dataDT)
 }
-
 
 #' Validate observed data
 #'
 #' This function checks the validity of the observed dataset.
 #'
-#' @param data The observed dataset
-#' @param stopIfValidationFails Flag to indicate whether to stop if validation fails
+#' @param data The observed dataset.
+#' @param stopIfValidationFails Flag to indicate whether to stop if validation fails.
+#' @export
 validateObservedData <- function(dataDT, stopIfValidationFails = TRUE) {
-  # initialize variables used fo data.tables
+  # Initialize variables used for data.tables
   yUnit <- NULL
-
   .returnMessage <- function(msg, stopIfValidationFails) {
     if (stopIfValidationFails) stop(msg)
     warning(msg)
   }
 
-  # check colIdentifier
+  # Check colIdentifier
   columnsWithAttributes <- lapply(dataDT, attr, "columnType")
   columnsWithAttributes <-
     names(columnsWithAttributes)[unlist(lapply(columnsWithAttributes, function(col) {
@@ -126,14 +128,17 @@ validateObservedData <- function(dataDT, stopIfValidationFails = TRUE) {
       stopIfValidationFails
     )
   }
-  # check data validity
+
+  # Check data validity
   colIdentifier <-
-    intersect(c("individualId", "group", "outputPathId", "xValues"),
-              names(dataDT))
+    intersect(
+      c("individualId", "group", "outputPathId", "xValues"),
+      names(dataDT)
+    )
   if (any(duplicated(dataDT, by = colIdentifier))) {
     .returnMessage(
       paste(
-        "data must be unique in columns",
+        "Data must be unique in columns",
         paste(colIdentifier, collapse = ", ")
       ),
       stopIfValidationFails
@@ -145,31 +150,32 @@ validateObservedData <- function(dataDT, stopIfValidationFails = TRUE) {
   ))) {
     if (any(is.na(dataDT[[col]]) | dataDT[[col]] == "")) {
       .returnMessage(
-        paste("data contains NAs or empty values in column", col),
+        paste("Data contains NAs or empty values in column", col),
         FALSE
       )
-      print(paste("empty entries in", col))
+      print(paste("Empty entries in", col))
     }
   }
   colIdentifier <- c("group", "outputPathId")
   if (any(dataDT[, .(N = dplyr::n_distinct(yUnit)), by = "outputPathId"]$N > 1)) { # nolint
     .returnMessage(
-      paste("dv unit is ambiguous in columns", paste(colIdentifier, collapse = ", ")),
+      paste("Y unit is ambiguous in columns", paste(colIdentifier, collapse = ", ")),
       stopIfValidationFails
     )
   }
 
-  if ("yErrorType" %in% names(dataDT)){
-    if (any(dataDT$yErrorType %in%  unlist(ospsuite::DataErrorType))){
+  if ("yErrorType" %in% names(dataDT)) {
+    if (any(dataDT$yErrorType %in% unlist(ospsuite::DataErrorType))) {
       checkmate::assertNames(
         names(dataDT),
-        must.include = "yErrorValues")
+        must.include = "yErrorValues"
+      )
     } else {
       checkmate::assertNames(
         names(dataDT),
-        must.include = c("yMin","yMax"))
+        must.include = c("yMin", "yMax")
+      )
     }
-
   }
 }
 
@@ -177,87 +183,89 @@ validateObservedData <- function(dataDT, stopIfValidationFails = TRUE) {
 #'
 #' This function reads the data dictionary based on the provided file and sheet.
 #'
-#' @param dictionaryFile The file containing the data dictionary
-#' @param sheet The sheet within the data dictionary file
-#' @param data The data to be used with the dictionary
-#' @param dataClass class of data either "tp Individual" or "tp Aggregated"
+#' @param dictionaryFile The file containing the data dictionary.
+#' @param sheet The sheet within the data dictionary file.
+#' @param data The data to be used with the dictionary.
+#' @param dataClass Class of data, either "tp Individual" or "tp Aggregated".
 #'
-#' @return The data dictionary
-readDataDictionary <-
-  function(dictionaryFile,
-           sheet,
-           data,
-           dataClass = grep('^tp',unlist(DATACLASS),value = TRUE)) {
-    # initialize variables used fo data.tables
-    sourceColumn <- filter <- targetColumn <- NULL
+#' @return The data dictionary.
+#' @keywords internal
+readDataDictionary <- function(dictionaryFile,
+                               sheet,
+                               data,
+                               dataClass = grep("^tp", unlist(DATACLASS), value = TRUE)) {
+  # Initialize variables used for data.tables
+  sourceColumn <- filter <- targetColumn <- NULL
 
-    dict <- xlsxReadData(wb = dictionaryFile, sheetName = sheet, skipDescriptionRow = TRUE)
+  dict <- xlsxReadData(wb = dictionaryFile, sheetName = sheet, skipDescriptionRow = TRUE)
 
-    dataClass <- match.arg(dataClass)
+  dataClass <- match.arg(dataClass)
 
-    if (dataClass == DATACLASS$tpIndividual){
-      checkmate::assertNames(
-        dict$targetColumn,
-        must.include = c(
-          "individualId",
-          "group",
-          "outputPathId",
-          "xValues",
-          "yValues",
-          "yUnit"
-        ), .var.name = paste("Check for missing targetColumns in  dictionary", sheet)
-      )
-    } else if (dataClass == DATACLASS$tpAggregated){
-      checkmate::assertNames(
-        dict$targetColumn,
-        must.include = c(
-          "group",
-          "outputPathId",
-          "xValues",
-          "yValues",
-          "yUnit",
-          "yErrorType",
-          "nBelowLLOQ"
-        ), .var.name = paste("Check for missing targetColumns in  dictionary", sheet)
-      )
-    }
-
-    tmp <- dict[is.na(sourceColumn) & is.na(filter), ]
-    if (nrow(tmp) > 0) {
-      stop(paste0('Either sourceColumn or Filter on sourceColumn has to be filled in dictionary "', sheet,
-                  '" for targetColumn(s) "', paste(tmp$targetColumn,collapse = '", "'),'"'))
-    }
-
+  if (dataClass == DATACLASS$tpIndividual) {
     checkmate::assertNames(
-      x = dict[!is.na(sourceColumn)]$sourceColumn,
-      subset.of = names(data),
-      .var.name = paste("Source column of", sheet)
+      dict$targetColumn,
+      must.include = c(
+        "individualId",
+        "group",
+        "outputPathId",
+        "xValues",
+        "yValues",
+        "yUnit"
+      ), .var.name = paste("Check for missing targetColumns in dictionary", sheet)
     )
-
-    return(dict)
+  } else if (dataClass == DATACLASS$tpAggregated) {
+    checkmate::assertNames(
+      dict$targetColumn,
+      must.include = c(
+        "group",
+        "outputPathId",
+        "xValues",
+        "yValues",
+        "yUnit",
+        "yErrorType",
+        "nBelowLLOQ"
+      ), .var.name = paste("Check for missing targetColumns in dictionary", sheet)
+    )
   }
 
+  tmp <- dict[is.na(sourceColumn) & is.na(filter), ]
+  if (nrow(tmp) > 0) {
+    stop(paste0(
+      'Either sourceColumn or Filter on sourceColumn has to be filled in dictionary "', sheet,
+      '" for targetColumn(s) "', paste(tmp$targetColumn, collapse = '", "'), '"'
+    ))
+  }
+
+  checkmate::assertNames(
+    x = dict[!is.na(sourceColumn)]$sourceColumn,
+    subset.of = names(data),
+    .var.name = paste("Source column of", sheet)
+  )
+
+  return(dict)
+}
 
 #' Convert data by dictionary
 #'
 #' This function converts the data based on the provided dictionary and filters.
 #'
-#' @param data The data to be converted
-#' @param dataFilter The filter to be applied to the data
-#' @param dict The dictionary to be used for conversion
-#' @param dictionaryName The name of the dictionary
-#' @return The converted data
+#' @param data The data to be converted.
+#' @param dataFilter The filter to be applied to the data.
+#' @param dict The dictionary to be used for conversion.
+#' @param dictionaryName The name of the dictionary.
+#' @return The converted data.
+#' @keywords internal
 convertDataByDictionary <- function(data,
                                     dataFilter,
                                     dict,
                                     dictionaryName) {
-  # initialize variables used fo data.tables
+  # Initialize variables used for data.tables
   targetColumn <- sourceColumn <- xUnit <- NULL
 
-  # execute data Filter
+  # Execute data filter
   if (!is.na(dataFilter) & dataFilter != "") data <- data[eval(parse(text = dataFilter))]
 
-  # execute all filters
+  # Execute all filters
   if (any(!is.na(dict$filter))) {
     dictFilters <- dict[!is.na(filter)]
 
@@ -275,38 +283,40 @@ convertDataByDictionary <- function(data,
   checkmate::assertCharacter(
     dictColumns$targetColumn,
     unique = TRUE,
-    .var.name = paste("target columns with source columnsof", dictionaryName)
+    .var.name = paste("Target columns with source columns of", dictionaryName)
   )
 
-  # Create new columns for duplicated old names, do not use setnames as source columns may not be unique
+  # Create new columns for duplicated old names; do not use setnames as source columns may not be unique
   for (iRow in seq_len(nrow(dictColumns))) {
     data[, (dictColumns$targetColumn[iRow]) := data[[dictColumns$sourceColumn[iRow]]]]
   }
 
-  # reduce to defined columns
+  # Reduce to defined columns
   data <- data %>%
     dplyr::select(unique(dict$targetColumn))
 
-  # add time unit
+  # Add time unit
   data[, xUnit := dict[targetColumn == "xValues"]$sourceUnit]
 
-  # transfer identifier to character without commas
-  data <- convertIdentifierColumns(dt = data,
-                                   identifierCols = dict[type == "identifier"]$targetColumn)
+  # Transfer identifier to character without commas
+  data <- convertIdentifierColumns(
+    dt = data,
+    identifierCols = dict[type == "identifier"]$targetColumn
+  )
 
   data <- convertBiometrics(data, dict)
 
   return(data)
 }
 
-
-#' converts biomertic columns to default unit
+#' Converts biometric columns to default unit
 #'
 #' @inheritParams convertDataByDictionary
 #'
-#' @return `data.table` with converted columns
+#' @return `data.table` with converted columns.
+#' @keywords internal
 convertBiometrics <- function(data, dict, dictionaryName) {
-  # initialize variables used fo data.tables
+  # Initialize variables used for data.tables
   targetColumn <- NULL
 
   biometricUnits <- list(
@@ -341,21 +351,24 @@ convertBiometrics <- function(data, dict, dictionaryName) {
   return(data)
 }
 
-#' Add group ids of observed data to configuration sheet
+#' Add group IDs of observed data to configuration sheet
 #'
 #' @template projectConfig
-#' @param data `data.table`with observed Data
+#' @param data `data.table` with observed data.
+#' @export
 updateDataGroupId <- function(projectConfiguration, dataDT) {
-  # initialize variables used fo data.tables
+  # Initialize variables used for data.tables
   studyId <- studyARm <- group <- NULL
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
   dtDataGroupIds <- xlsxReadData(wb = wb, sheetName = "DataGroups")
-  identifierCols <- intersect(c("group","studyId","studyArm"),names(dataDT))
+  identifierCols <- intersect(c("group", "studyId", "studyArm"), names(dataDT))
 
-  colsSelected <- unique(c(identifierCols,
-                           getColumnsForColumnType(dt = dataDT,columnTypes = 'metadata')))
+  colsSelected <- unique(c(
+    identifierCols,
+    getColumnsForColumnType(dt = dataDT, columnTypes = "metadata")
+  ))
 
   dtDataGroupIdsNew <- dataDT %>%
     dplyr::select(all_of(colsSelected)) %>%
@@ -363,24 +376,23 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
     dplyr::mutate(studyId = as.character(studyId)) %>%
     dplyr::mutate(group = as.character(group))
 
-  # rename with capitals
+  # Rename with capitals
   for (col in names(dtDataGroupIdsNew)) {
     newName <- grep(col, names(dtDataGroupIds), ignore.case = TRUE, value = TRUE)
     if (length(newName) > 0) {
-      names(dtDataGroupIdsNew)[names(dtDataGroupIdsNew) == col] = newName
+      names(dtDataGroupIdsNew)[names(dtDataGroupIdsNew) == col] <- newName
     }
   }
 
   dtDataGroupIds <- rbind(dtDataGroupIds,
-                          dtDataGroupIdsNew,
-                          fill = TRUE
+    dtDataGroupIdsNew,
+    fill = TRUE
   )
 
-  identifierCols <- intersect(c("Group","StudyId","StudyArm"),names(dtDataGroupIds))
+  identifierCols <- intersect(c("Group", "StudyId", "StudyArm"), names(dtDataGroupIds))
 
   dtDataGroupIds <- dtDataGroupIds[!duplicated(dtDataGroupIds %>%
-                                                 dplyr::select(all_of(identifierCols)))]
-
+    dplyr::select(all_of(identifierCols)))]
 
   xlsxWriteData(wb = wb, sheetName = "DataGroups", dt = dtDataGroupIds)
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
@@ -388,13 +400,13 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
   return(invisible())
 }
 
-
-#' Add outputpath ids of observed data to configuration sheet
+#' Add output path IDs of observed data to configuration sheet
 #'
 #' @template projectConfig
-#' @param data `data.table`with observed Data
+#' @param data `data.table` with observed data.
+#' @export
 updateOutputPathId <- function(projectConfiguration, dataDT) {
-  # initialize variables used fo data.tables
+  # Initialize variables used for data.tables
   outputPathId <- NULL
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
@@ -406,14 +418,12 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
     dplyr::mutate(outputPathId = as.character(outputPathId)) %>%
     data.table::setnames("outputPathId", "OutputPathId")
 
-
   dtOutputPaths <- rbind(dtOutputPaths,
-                         dtOutputPathsNew,
-                         fill = TRUE
+    dtOutputPathsNew,
+    fill = TRUE
   )
 
   dtOutputPaths <- dtOutputPaths[!duplicated(dtOutputPaths, by = "OutputPathId")]
-
 
   xlsxWriteData(wb = wb, sheetName = "Outputs", dt = dtOutputPaths)
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
@@ -421,16 +431,15 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
   return(invisible())
 }
 
-# converts data.table with observed data to `DataCombined` object ----------
+# Converts data.table with observed data to `DataCombined` object ----------
 
-
-#' converts data.table with observed data to `DataCombined` object
+#' Converts data.table with observed data to `DataCombined` object
 #'
-#' data.table must be formatted like a table produced by `readObservedDataByDictionary`
+#' The data.table must be formatted like a table produced by `readObservedDataByDictionary`.
 #'
-#' @param dataDT `data.table`to convert
+#' @param dataDT `data.table` to convert.
 #'
-#' @return object of class `DataCombined`
+#' @return Object of class `DataCombined`.
 #' @export
 convertDataTableToDataCombined <- function(dataDT) {
   validateObservedData(dataDT = dataDT)
@@ -452,20 +461,20 @@ convertDataTableToDataCombined <- function(dataDT) {
   return(dataCombined)
 }
 
-
-#' groups the data by identifier
+#' Groups the data by identifier
 #'
-#' @param dataDT `data.table` to be grouped
+#' @param dataDT `data.table` to be grouped.
 #'
-#' @return list with grouped data
+#' @return List with grouped data.
+#' @keywords internal
 groupDataByIdentifier <- function(dataDT) {
   checkmate::assert_disjunct(names(dataDT), ".groupBy")
   .groupBy <- NULL
 
-  # group data by identifier
+  # Group data by identifier
   groupBy <- getColumnsForColumnType(dt = dataDT, columnTypes = "identifier")
 
-  # use a copy, to keep the data.table outside the function unchanged
+  # Use a copy to keep the data.table outside the function unchanged
   dataDT <- data.table::copy(dataDT) %>%
     dplyr::group_by_at(dplyr::vars(dplyr::all_of(groupBy))) %>%
     dplyr::mutate(.groupBy = paste(!!!dplyr::syms(groupBy), sep = "_")) %>%
@@ -482,15 +491,14 @@ groupDataByIdentifier <- function(dataDT) {
   return(groupedData)
 }
 
-
-
 #' Function to create data sets from grouped data
 #'
-#' @param groupData data.table unique for identifier
+#' @param groupData Data.table unique for identifier.
 #'
-#' @return object of class 'DataSet'
+#' @return Object of class 'DataSet'.
+#' @keywords internal
 createDataSets <- function(groupData) {
-  # initialize variables used fo data.tables
+  # Initialize variables used for data.tables
   lloq <- NULL
 
   groupData <- data.table::as.data.table(groupData)
@@ -522,7 +530,7 @@ createDataSets <- function(groupData) {
     lLOQ <- groupData[!is.na(lloq)]$lloq
     if (dplyr::n_distinct(lLOQ) > 1) {
       warning(paste(
-        "DataDT to combinedData: More then one LLOQ for dataset",
+        "DataDT to combinedData: More than one LLOQ for dataset",
         groupName,
         "is set to minimal"
       ))
@@ -534,12 +542,13 @@ createDataSets <- function(groupData) {
   return(dataSet)
 }
 
-#' add meta data to a data set
+#' Add meta data to a data set
 #'
-#' @param dataSet `DataSet` object with observed data
-#' @param groupData corresponding `data.table` with meta data
+#' @param dataSet `DataSet` object with observed data.
+#' @param groupData Corresponding `data.table` with meta data.
 #'
-#' @return `DataSet` with observed data with added metadata
+#' @return `DataSet` with observed data with added metadata.
+#' @keywords internal
 addMetaDataToDataSet <- function(dataSet, groupData) {
   metaColumns <-
     getColumnsForColumnType(
@@ -557,19 +566,16 @@ addMetaDataToDataSet <- function(dataSet, groupData) {
   return(dataSet)
 }
 
-
-
-#' add bio-metrics   information to config
+#' Add biometrics information to config
 #'
 #' @template projectConfig
-#' @param dataDT `data.table` with observed data
-#' @param overwrite if TRUE existing rows will be overwritten
-#'
+#' @param dataDT `data.table` with observed data.
+#' @param overwrite If TRUE, existing rows will be overwritten.
 #' @export
 addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALSE) {
   checkmate::assertFileExists(projectConfiguration$individualsFile)
 
-  # initialize variables used fo data.tables
+  # Initialize variables used for data.tables
   gender <- NULL
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$individualsFile)
@@ -595,18 +601,18 @@ addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALS
 
   if (!("Species" %in% names(biometrics))) biometrics[["Species"]] <- ospsuite::Species$Human
 
-  # merge old an new tables
+  # Merge old and new tables
   dtIndividualBiometrics <-
     rbind(dtIndividualBiometrics,
-          biometrics,
-          fill = TRUE
+      biometrics,
+      fill = TRUE
     )
 
-  # if overwrite FALSE take original located at the top, otherwise take new rows located at the bottom
+  # If overwrite FALSE take original located at the top, otherwise take new rows located at the bottom
   dtIndividualBiometrics <-
     dtIndividualBiometrics[!duplicated(dtIndividualBiometrics,
-                                       by = "IndividualId",
-                                       fromLast = overwrite
+      by = "IndividualId",
+      fromLast = overwrite
     )]
 
   xlsxWriteData(wb = wb, sheetName = "IndividualBiometrics", dt = dtIndividualBiometrics)
@@ -616,33 +622,33 @@ addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALS
   return(invisible())
 }
 
-# converts `DataCombined` object to data.table  ----------
+# Converts `DataCombined` object to data.table  ----------
 
-
-#' converts object of class `DataCombined` to data.table with attributes
+#' Converts object of class `DataCombined` to data.table with attributes.
 #'
-#' format correspondents to data.table produced by `readObservedDataByDictionary`
+#' Format corresponds to data.table produced by `readObservedDataByDictionary`.
 #'
-#' @param datacombined
+#' @param datacombined The input DataCombined object.
 #'
-#' @return `data.table`
+#' @return `data.table`.
 #' @export
 convertDataCombinedToDataTable <- function(datacombined) {
-  dataDT <- dataCombined$toDataFrame() %>%
+  dataDT <- datacombined$toDataFrame() %>%
     data.table::setDT()
 
-  # delete columns not needed
+  # Delete columns not needed
   dataDT <- dataDT[, which(colSums(is.na(dataDT)) != nrow(dataDT)), with = FALSE]
 
-  # set DataClass
-  dataDT[,dataClass := ifelse(any(!is.na(yErrorValues)),DATACLASS$tpAggregated,DATACLASS$tpAggregated),
-         by:='group']
+  # Set DataClass
+  dataDT[, dataClass := ifelse(any(!is.na(yErrorValues)), DATACLASS$tpAggregated, DATACLASS$tpAggregated),
+    by = "group"
+  ]
 
-  # avoid conflict with population IndividualID
+  # Avoid conflict with population IndividualID
   data.table::setnames(dataDT, "IndividualIdObserved", "IndividualID", skip_absent = TRUE)
 }
 
-# data aggregation ------------
+# Data aggregation ------------
 
 #' Aggregate Observed Data Groups
 #'
@@ -660,8 +666,8 @@ convertDataCombinedToDataTable <- function(datacombined) {
 #'
 #' A custom function should take a numeric vector `y` as input and return a list containing:
 #' - `yValues`: The aggregated value (e.g., mean).
-#' - `yMin`: The lower value of the aggregated data, (e.g mean - sd)
-#' - `yMax`: The upper value of the aggregated data, (e.g mean + sd)
+#' - `yMin`: The lower value of the aggregated data, (e.g. mean - sd).
+#' - `yMax`: The upper value of the aggregated data, (e.g. mean + sd).
 #' - `yErrorType`: A string indicating the type of error associated with the aggregation,
 #' it is used in plot legends and captions.
 #' It must be a concatenation of the descriptor of yValues and the descriptor of yMin - yMax range
@@ -685,49 +691,56 @@ convertDataCombinedToDataTable <- function(datacombined) {
 #' @export
 aggregatedObservedDataGroups <- function(dataObserved,
                                          groups = NULL,
-                                         aggregationFlag = c("GeometricStdDev",
-                                                             "ArithmeticStdDev",
-                                                             "Percentiles",
-                                                             "Custom"),
+                                         aggregationFlag = c(
+                                           "GeometricStdDev",
+                                           "ArithmeticStdDev",
+                                           "Percentiles",
+                                           "Custom"
+                                         ),
                                          percentiles = c(5, 50, 95),
-                                         groupSuffix = 'aggregated',
+                                         groupSuffix = "aggregated",
                                          customFunction = NULL,
                                          lloq3Columns = NULL,
                                          lloq2Columns = NULL) {
-
-  dataToAggregate <- prepareDataForAggregation(dataObserved = dataObserved,
-                                               groups = groups,
-                                               groupSuffix = groupSuffix)
-  if (is.null(dataToAggregate)) return(NULL)
+  dataToAggregate <- prepareDataForAggregation(
+    dataObserved = dataObserved,
+    groups = groups,
+    groupSuffix = groupSuffix
+  )
+  if (is.null(dataToAggregate)) {
+    return(NULL)
+  }
 
   aggregationFlag <- match.arg(aggregationFlag)
   aggregationFun <- getAggregationFunction(aggregationFlag, percentiles, customFunction)
 
-  aggregatedData <- performAggregation(dataToAggregate = dataToAggregate,
-                                       aggregationFun = aggregationFun,
-                                       aggrCriteria = c('group', 'outputPathId', 'xValues'))
+  aggregatedData <- performAggregation(
+    dataToAggregate = dataToAggregate,
+    aggregationFun = aggregationFun,
+    aggrCriteria = c("group", "outputPathId", "xValues")
+  )
 
   aggregatedData <- checkLLOQ(aggregatedData, lloq3Columns, lloq2Columns)
 
-  aggregatedData <- addUniqueColumns(dataToAggregate,aggregatedData)
+  aggregatedData <- addUniqueColumns(dataToAggregate, aggregatedData)
 
   aggregatedData <- setDataTypeAttributes(aggregatedData)
 
   return(aggregatedData)
 }
 
-
-#' prepares data for aggregation
+#' Prepares data for aggregation
 #'
 #' @inheritParams aggregatedObservedDataGroups
 #'
-#' @return `data.table` filtered for aggregation
-prepareDataForAggregation <- function(dataObserved, groups,groupSuffix) {
+#' @return Prepared data for aggregation.
+#' @keywords internal
+prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
   if ("DataCombined" %in% class(dataObserved)) {
     dataObserved <- convertDataCombinedToDataTable(dataObserved)
   }
 
-  dataToAggregate <- dataObserved[dataType == 'observed']
+  dataToAggregate <- dataObserved[dataType == "observed"]
   groupsAvailable <- unique(dataToAggregate[dataClass == DATACLASS$tpIndividual]$group)
 
   if (is.null(groups)) {
@@ -735,89 +748,97 @@ prepareDataForAggregation <- function(dataObserved, groups,groupSuffix) {
   } else {
     unsuitableGroups <- setdiff(groups, groupsAvailable)
     if (length(unsuitableGroups) > 0) {
-      warning(paste('Groups', paste(unsuitableGroups, collapse = ', '), 'are not available for grouping.'))
+      warning(paste("Groups", paste(unsuitableGroups, collapse = ", "), "are not available for grouping."))
     }
     groups <- intersect(groups, groupsAvailable)
   }
 
   if (length(groups) == 0) {
-    warning('No groups available for aggregation')
+    warning("No groups available for aggregation")
     return(NULL)
   }
 
   dataToAggregate <- dataToAggregate[group %in% groups]
-  dataToAggregate[, group := paste(group, groupSuffix, sep = '_')]
+  dataToAggregate[, group := paste(group, groupSuffix, sep = "_")]
 
   checkmate::assertNames(unique(dataToAggregate$group),
-                         disjunct.from = unique(dataObserved$group),
-                         .var.name = 'new groupnames')
+    disjunct.from = unique(dataObserved$group),
+    .var.name = "new group names"
+  )
 
   return(dataToAggregate)
 }
 
-#' stes values  which does not match the lloq criteria to NA
+#' Sets values which do not match the LLOQ criteria to NA
 #'
-#' @param aggregatedData `data.table` with aggregated data
+#' @param aggregatedData `data.table` with aggregated data.
 #' @inheritParams aggregatedObservedDataGroups
 #'
-#' @return updated aggregatedData `data.table`
+#' @return Updated aggregatedData `data.table`.
+#' @keywords internal
 checkLLOQ <- function(aggregatedData, lloq3Columns, lloq2Columns) {
   if (length(lloq3Columns) > 0) {
-    LLOQ3_filter <- aggregatedData[, (nBelowLLOQ / numberOfPatients) > (1/3)]
-    aggregatedData[, (lloq3Columns) := lapply(.SD, function(x) { ifelse(LLOQ3_filter, NA, x) }),
-                   .SDcols = lloq3Columns, by = .I]
+    LLOQ3_filter <- aggregatedData[, (nBelowLLOQ / numberOfPatients) > (1 / 3)]
+    aggregatedData[, (lloq3Columns) := lapply(.SD, function(x) {
+      ifelse(LLOQ3_filter, NA, x)
+    }),
+    .SDcols = lloq3Columns, by = .I
+    ]
   }
 
   if (length(lloq2Columns) > 0) {
-    LLOQ2_filter <- aggregatedData[, (nBelowLLOQ / numberOfPatients) >= (1/2)]
-    aggregatedData[, (lloq2Columns) := lapply(.SD, function(x) { ifelse(LLOQ2_filter, NA, x) }),
-                   .SDcols = lloq2Columns, by = .I]
+    LLOQ2_filter <- aggregatedData[, (nBelowLLOQ / numberOfPatients) >= (1 / 2)]
+    aggregatedData[, (lloq2Columns) := lapply(.SD, function(x) {
+      ifelse(LLOQ2_filter, NA, x)
+    }),
+    .SDcols = lloq2Columns, by = .I
+    ]
   }
 
   return(aggregatedData)
 }
 
-
-#' add all columns of observedData which are uniuqe for a group
+#' Add all columns of observedData which are unique for a group
 #'
-#' @param dataObserved
-#' @param aggregatedData
+#' @param dataObserved The observed data.
+#' @param aggregatedData The aggregated data.
 #'
-#' @return
-addUniqueColumns <- function(dataObserved,aggregatedData){
+#' @return The updated aggregated data.
+#' @keywords internal
+addUniqueColumns <- function(dataObserved, aggregatedData) {
+  identifier <- c("group", "outputPathId")
 
-  identifier <- c('group','outputPathId')
-
-  colsToCheck <- setdiff(names(dataObserved),identifier)
+  colsToCheck <- setdiff(names(dataObserved), identifier)
   columnISUnique <- dataObserved[, lapply(.SD, function(x) length(unique(x))),
-                                 by = identifier,
-                                 .SDcols = colsToCheck] %>%
+    by = identifier,
+    .SDcols = colsToCheck
+  ] %>%
     .[, lapply(.SD, function(x) all(x == 1)), .SDcols = colsToCheck] %>%
     unlist()
 
   tmp <- dataObserved %>%
-    dplyr::select(all_of(c(identifier,colsToCheck[columnISUnique]))) %>%
+    dplyr::select(all_of(c(identifier, colsToCheck[columnISUnique]))) %>%
     unique()
 
   aggregatedData <- merge(aggregatedData,
-                          tmp,
-                          by = identifier,
-                          all.x = TRUE)
+    tmp,
+    by = identifier,
+    all.x = TRUE
+  )
 
   return(aggregatedData)
 }
 
+# Auxiliaries ---------
 
-
-
-# auxiliaries ---------
-#' sets comulnType attribute according to dictionary
+#' Sets columnType attribute according to dictionary
 #'
-#' @param dataDT `data.table` with observed data
-#' @param dict named list with columnNames and columntypes, if NULL,
-#'  list is produced by template saved in package installation
+#' @param dataDT `data.table` with observed data.
+#' @param dict Named list with columnNames and columnTypes; if NULL,
+#'  list is produced by template saved in package installation.
 #'
-#' @return `data.table` with attributes
+#' @return `data.table` with attributes.
+#' @keywords internal
 setDataTypeAttributes <- function(dataDT, dict = NULL) {
   if (is.null(dict)) {
     tmpdict <-
@@ -841,17 +862,17 @@ setDataTypeAttributes <- function(dataDT, dict = NULL) {
       stats::setNames(tmpdict$targetColumn)
   }
 
-  # add dictionary as attributes
-  for (dc in c("dataType","dataClass")) {
+  # Add dictionary as attributes
+  for (dc in c("dataType", "dataClass")) {
     dict[[dc]] <- "identifier"
   }
 
-  # add columns used in class DataCombined
+  # Add columns used in class DataCombined
   for (dc in c("xUnit", "xDimension", "yDimension", "molWeight")) {
     dict[[dc]] <- "timeprofile"
   }
 
-  # all unknown to covariates
+  # All unknown to covariates
   covariates <- setdiff(names(dataDT), names(dict))
   for (dc in covariates) {
     dict[[dc]] <- "covariates"
@@ -861,18 +882,15 @@ setDataTypeAttributes <- function(dataDT, dict = NULL) {
     data.table::setattr(dataDT[[dc]], "columnType", dict[[dc]])
   })
 
-
   return(dataDT)
 }
 
-
-
-#' select all columns where the attribute `columnType` matches the requirement
+#' Select all columns where the attribute `columnType` matches the requirement
 #'
-#' @param dt `data.table` with attributes (e.g. imported by `readObservedDataByDictionary`)
-#' @param columnTypes vector with required types
+#' @param dt `data.table` with attributes (e.g., imported by `readObservedDataByDictionary`).
+#' @param columnTypes Vector with required types.
 #'
-#' @return vector with column names
+#' @return Vector with column names.
 #' @export
 getColumnsForColumnType <- function(dt, columnTypes) {
   columnsWithAttributes <- unlist(lapply(dt, attr, "columnType"))
@@ -882,24 +900,22 @@ getColumnsForColumnType <- function(dt, columnTypes) {
   return(columnNames)
 }
 
-
 #' Update identifier columns in a data.table
 #'
 #' This function updates the specified identifier columns in a data.table by replacing commas with underscores.
 #' It also checks for the presence of commas in the columns and generates a warning message if found.
 #'
-#' @param dt The input data.table
-#' @param identifierCols A character vector specifying the columns to be updated
-#' @return The updated data.table
-#' @export
+#' @param dt The input data.table.
+#' @param identifierCols A character vector specifying the columns to be updated.
+#' @return The updated data.table.
+#' @keywords internal
 convertIdentifierColumns <- function(dt, identifierCols) {
   for (col in identifierCols) {
     dt[[col]] <- as.character(dt[[col]])
     if (any(grepl(",", dt[[col]]))) {
-      warning(paste("Warning: Column", col, "commas were replace by _"))
+      warning(paste("Warning: Column", col, "commas were replaced by _"))
     }
     dt[[col]] <- gsub(",", "_", dt[[col]])
   }
   return(dt)
 }
-

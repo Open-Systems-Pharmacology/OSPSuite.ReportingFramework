@@ -2,16 +2,16 @@
 % Please edit documentation in R/utilities-data.R
 \name{convertDataTableToDataCombined}
 \alias{convertDataTableToDataCombined}
-\title{converts data.table with observed data to `DataCombined` object}
+\title{Converts data.table with observed data to `DataCombined` object}
 \usage{
 convertDataTableToDataCombined(dataDT)
 }
 \arguments{
-\item{dataDT}{`data.table`to convert}
+\item{dataDT}{`data.table` to convert.}
 }
 \value{
-object of class `DataCombined`
+Object of class `DataCombined`.
 }
 \description{
-data.table must be formatted like a table produced by `readObservedDataByDictionary`
+The data.table must be formatted like a table produced by `readObservedDataByDictionary`.
 }

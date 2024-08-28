@@ -7,9 +7,9 @@
 validateObservedData(dataDT, stopIfValidationFails = TRUE)
 }
 \arguments{
-\item{stopIfValidationFails}{Flag to indicate whether to stop if validation fails}
+\item{stopIfValidationFails}{Flag to indicate whether to stop if validation fails.}
 
-\item{data}{The observed dataset}
+\item{data}{The observed dataset.}
 }
 \description{
 This function checks the validity of the observed dataset.

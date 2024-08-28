@@ -2,13 +2,19 @@
 % Please edit documentation in R/utilities-data.R
 \name{addUniqueColumns}
 \alias{addUniqueColumns}
-\title{add all columns of observedData which are uniuqe for a group}
+\title{Add all columns of observedData which are unique for a group}
 \usage{
 addUniqueColumns(dataObserved, aggregatedData)
 }
 \arguments{
-\item{aggregatedData}{}
+\item{dataObserved}{The observed data.}
+
+\item{aggregatedData}{The aggregated data.}
+}
+\value{
+The updated aggregated data.
 }
 \description{
-add all columns of observedData which are uniuqe for a group
+Add all columns of observedData which are unique for a group
 }
+\keyword{internal}

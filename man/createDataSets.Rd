@@ -7,11 +7,12 @@
 createDataSets(groupData)
 }
 \arguments{
-\item{groupData}{data.table unique for identifier}
+\item{groupData}{Data.table unique for identifier.}
 }
 \value{
-object of class 'DataSet'
+Object of class 'DataSet'.
 }
 \description{
 Function to create data sets from grouped data
 }
+\keyword{internal}

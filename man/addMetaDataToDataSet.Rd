@@ -2,18 +2,19 @@
 % Please edit documentation in R/utilities-data.R
 \name{addMetaDataToDataSet}
 \alias{addMetaDataToDataSet}
-\title{add meta data to a data set}
+\title{Add meta data to a data set}
 \usage{
 addMetaDataToDataSet(dataSet, groupData)
 }
 \arguments{
-\item{dataSet}{`DataSet` object with observed data}
+\item{dataSet}{`DataSet` object with observed data.}
 
-\item{groupData}{corresponding `data.table` with meta data}
+\item{groupData}{Corresponding `data.table` with meta data.}
 }
 \value{
-`DataSet` with observed data with added metadata
+`DataSet` with observed data with added metadata.
 }
 \description{
-add meta data to a data set
+Add meta data to a data set
 }
+\keyword{internal}

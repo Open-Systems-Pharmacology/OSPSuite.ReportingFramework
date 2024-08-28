@@ -8,8 +8,7 @@
 #' @param isValidRun  if TTRUE
 #'
 #' @export
-executeAsValidRun <- function(isValidRun){
-
+executeAsValidRun <- function(isValidRun) {
   # set options to enable watermarks
   setOspsuite.plots.option(
     optionKey = OptionKeys$watermark_enabled,
@@ -21,4 +20,3 @@ executeAsValidRun <- function(isValidRun){
 
   return(invisible())
 }
-

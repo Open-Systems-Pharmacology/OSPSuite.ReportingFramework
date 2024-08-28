@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-data.R
 \name{prepareDataForAggregation}
 \alias{prepareDataForAggregation}
-\title{prepares data for aggregation}
+\title{Prepares data for aggregation}
 \usage{
 prepareDataForAggregation(dataObserved, groups, groupSuffix)
 }
@@ -16,8 +16,9 @@ If NULL, all available groups are used.}
 Default is 'aggregated'.}
 }
 \value{
-`data.table` filtered for aggregation
+Prepared data for aggregation.
 }
 \description{
-prepares data for aggregation
+Prepares data for aggregation
 }
+\keyword{internal}

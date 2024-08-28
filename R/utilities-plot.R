@@ -31,12 +31,14 @@ runPlot <- function(projectConfiguration,
   # execute plotfunction
   rmdContainer <- do.call(
     what = plotFunction,
-    args = c(list(projectConfiguration = projectConfiguration,
-                  subfolder = subfolder), inputs)
+    args = c(list(
+      projectConfiguration = projectConfiguration,
+      subfolder = subfolder
+    ), inputs)
   )
 
   # create rmd
-  rmdContainer$writeRmd(fileName = paste0(subfolder,'.Rmd'))
+  rmdContainer$writeRmd(fileName = paste0(subfolder, ".Rmd"))
 
   return(invisible())
 }
@@ -112,26 +114,25 @@ addConfigToTemplate <- function(wb, templateSheet, sheetName, dtNewConfig) {
 #' @return scaleVector
 #' @export
 getScalevector <- function(namesOfScaleVector,
-                           listOfValues){
-  checkmate::assertCharacter(namesOfScaleVector,any.missing = FALSE,min.len = 1,unique = TRUE)
+                           listOfValues) {
+  checkmate::assertCharacter(namesOfScaleVector, any.missing = FALSE, min.len = 1, unique = TRUE)
   checkmate::assertList(listOfValues)
 
   scaleVector <- NULL
-  for (values in listOfValues){
-    if (!is.null(values) && !any(is.na(values))){
+  for (values in listOfValues) {
+    if (!is.null(values) && !any(is.na(values))) {
       scaleVector <- values
       break
     }
   }
 
-  if(is.null(scaleVector)){
-    stop(paste('no valid values for scalevector for',paste0(namesOfScaleVector,collapse = ', ')))
+  if (is.null(scaleVector)) {
+    stop(paste("no valid values for scalevector for", paste0(namesOfScaleVector, collapse = ", ")))
   }
 
   names(scaleVector) <- namesOfScaleVector
 
   return(scaleVector)
-
 }
 
 
@@ -140,23 +141,21 @@ getScalevector <- function(namesOfScaleVector,
 #' @param shade for n < 10 differentiation between dark and light is possible
 #' @param n
 #'
-#' @return
+#' @return named vector with default colors
 #' @export
-#'
-#' @examples
-getDefaultColorsForScaleVector <- function(shade = c('dark','light'),n){
-  checkmate::assertIntegerish(n,lower = 1,len = 1)
+getDefaultColorsForScaleVector <- function(shade = c("dark", "light"), n) {
+  checkmate::assertIntegerish(n, lower = 1, len = 1)
   shade <- match.arg(shade)
-  if (n <= 10){
+  if (n <= 10) {
     colorVector <-
       switch(shade,
-             dark = ggsci::pal_d3("category20c")(20)[1:n],
-             light = ggsci::pal_d3("category20c")(20)[(10 + 1):(10 + n)]
+        dark = ggsci::pal_d3("category20c")(20)[1:n],
+        light = ggsci::pal_d3("category20c")(20)[(10 + 1):(10 + n)]
       )
-
   } else {
-    if (n> length(colorMaps[["ospDefault"]]))
-      stop(paste('To many colors for colorVector, maximal',length(colorMaps[["ospDefault"]]),'allowed'))
+    if (n > length(colorMaps[["ospDefault"]])) {
+      stop(paste("To many colors for colorVector, maximal", length(colorMaps[["ospDefault"]]), "allowed"))
+    }
     colorVector <- colorMaps[["ospDefault"]][1:n]
   }
 
@@ -167,17 +166,19 @@ getDefaultColorsForScaleVector <- function(shade = c('dark','light'),n){
 #'
 #' @param n
 #'
-#' @return
+#' @return named vector with default shapes
 #' @export
-#'
-#' @examples
-getDefaultShapesForScaleVector <- function(n){
-
+getDefaultShapesForScaleVector <- function(n) {
   shapes <- getOspsuite.plots.option(optionKey = OptionKeys$shapeValues)
-  if(is.null(shapes))
-    stop('no default shape sets for ospsuite.plots. Please use ospsuite.plots::setDefaults')
+  if (is.null(shapes)) {
+    stop("no default shape sets for ospsuite.plots. Please use ospsuite.plots::setDefaults")
+  }
 
-  return(shapes)
+  if (n > length(shapes)) {
+    stop("not enough shapes available")
+  }
+
+  return(shapes[1:n])
 }
 
 
@@ -191,38 +192,36 @@ getDefaultShapesForScaleVector <- function(n){
 #'
 #' @return named list of color vectors
 #' @export
-generateColorScaleVectors <-  function(dt,
-                                       aesthetic = list(color = 'dark',
-                                                        fill = 'light'),
-                                       index = 'colorIndex'){
-
-  n = nrow(dt)
-  scaleVectors = list()
-  for (col in names(aesthetic)){
-
-    for (col2 in c(col,setdiff(names(aesthetic),col))){
-      if (!all(is.na(scaleVectors[[col]]))){
+generateColorScaleVectors <- function(dt,
+                                      aesthetic = list(
+                                        color = "dark",
+                                        fill = "light"
+                                      ),
+                                      index = "colorIndex") {
+  n <- nrow(dt)
+  scaleVectors <- list()
+  for (col in names(aesthetic)) {
+    for (col2 in c(col, setdiff(names(aesthetic), col))) {
+      if (!all(is.na(scaleVectors[[col]]))) {
         scaleVectors[[col]] <- dt[[col2]]
         break
       }
     }
 
-    if (is.null(scaleVectors[[col]] )){
-      if (n <= 10){
-        if (aesthetic[[col]] == 'dark'){
+    if (is.null(scaleVectors[[col]])) {
+      if (n <= 10) {
+        if (aesthetic[[col]] == "dark") {
           scaleVectors[[col]] <- ggsci::pal_d3("category20c")(20)[1:n]
-        } else{
+        } else {
           scaleVectors[[col]] <- ggsci::pal_d3("category20c")(20)[(10 + 1):(10 + n)]
         }
-
-      } else{
+      } else {
         scaleVectors[[col]] <- colorMaps[["ospDefault"]][1:n]
       }
     }
     names(scaleVectors[[col]]) <- dt[[index]]
   }
   return(scaleVectors)
-
 }
 
 
@@ -232,31 +231,35 @@ generateColorScaleVectors <-  function(dt,
 #' @param captionColumn `character`column names which should be sorted to Tags
 #'
 #' @return `character` text for cpation
-pasteFigureTags = function(dtCaption,captionColumn){
-
+pasteFigureTags <- function(dtCaption, captionColumn) {
   if (dplyr::n_distinct(dtCaption[[captionColumn]]) == 1) {
-
     captionText <- unique(dtCaption[[captionColumn]])
-
   } else {
+    captionTextVector <- dtCaption[, .(tags = paste0(
+      get(captionColumn),
+      " (", paste(unique(PlotTag), collapse = ", "), ")"
+    )),
+    by = captionColumn
+    ]$tags
 
-    captionTextVector <- dtCaption[, .(tags = paste0(get(captionColumn),
-                                     ' (', paste(unique(PlotTag), collapse = ', '), ')')),
-                   by = captionColumn]$tags
+    allTags <- dtCaption[, .(tags = paste0(" \\(", paste(unique(PlotTag), collapse = ", "), "\\)"))]$tags
 
-    allTags <- dtCaption[, .(tags = paste0(' \\(', paste(unique(PlotTag), collapse = ', '), '\\)'))]$tags
+    captionTextVector <- gsub(allTags, "", captionTextVector)
+    captionTextVector <- gsub("\\.$", "", captionTextVector)
 
-    captionTextVector <- gsub(allTags,'',captionTextVector)
-    captionTextVector <- gsub('\\.$', '', captionTextVector)
+    captionText <-
+      paste(
+        c(
+          paste(captionTextVector[seq(1, length(captionTextVector) - 1)],
+            collapse = ", "
+          ),
+          utils::tail(captionTextVector, 1)
+        ),
+        collapse = " and "
+      )
 
-    captionText =
-      paste(c(paste(captionTextVector[seq(1, length(captionTextVector) - 1)],
-                    collapse = ', '),
-              utils::tail(captionTextVector, 1)),
-            collapse = ' and ')
-
-    if (any(grepl('\\.$', captionTextVector))) {
-      captionText <- paste0(captionText, '.')
+    if (any(grepl("\\.$", captionTextVector))) {
+      captionText <- paste0(captionText, ".")
     }
   }
 
@@ -277,8 +280,8 @@ validateHeaders <- function(configTable) {
   checkmate::assertIntegerish(configTableHeader$Level, lower = 1, any.missing = FALSE)
   checkmate::assertCharacter(configTableHeader$Header, any.missing = FALSE)
 
-  if (any(!is.na(configTableHeader %>%  dplyr::select(setdiff(
-    names(configTableHeader), c('Level', 'Header')
+  if (any(!is.na(configTableHeader %>% dplyr::select(setdiff(
+    names(configTableHeader), c("Level", "Header")
   ))))) {
     stop(
       "Invalid plot configuration table. For Rows with headers all other columns must be empty."
@@ -371,10 +374,10 @@ validateConfigTablePlots <- function(configTablePlots,
   }
 
   # valid selection
-  checkmate::assertList(subsetList,types = 'list')
+  checkmate::assertList(subsetList, types = "list")
   for (subsetCheck in subsetList) {
-    checkmate::assertList(subsetCheck,types = c('character','factor'),names = 'named')
-    checkmate::assertNames(names(subsetCheck),permutation.of = c('cols','allowedValues'))
+    checkmate::assertList(subsetCheck, types = c("character", "factor"), names = "named")
+    checkmate::assertNames(names(subsetCheck), permutation.of = c("cols", "allowedValues"))
     invisible(lapply(
       subsetCheck$cols,
       function(col) {
@@ -399,7 +402,7 @@ validateConfigTablePlots <- function(configTablePlots,
             if (length(x) > 0) {
               valid <-
                 is.numeric(eval(parse(text = x))) &&
-                length(eval(parse(text = x))) == 2
+                  length(eval(parse(text = x))) == 2
             }
             if (!all(valid)) {
               stop(paste("invalid inputs in plot configuration column", col))
@@ -441,8 +444,9 @@ validateOutputIdsForPlot <- function(dtOutputPaths) {
   checkmate::assertCharacter(dtOutputPaths$OutputPath, any.missing = FALSE)
   checkmate::assertCharacter(dtOutputPaths$DisplayName, any.missing = FALSE)
 
-  if (any(!is.na(dtOutputPaths$color)))
+  if (any(!is.na(dtOutputPaths$color))) {
     checkmate::assertCharacter(dtOutputPaths$color, any.missing = FALSE)
+  }
 
   # Check for unique values for outputpathids
   uniqueColumns <- c("DisplayName", "DisplayUnit")
@@ -455,19 +459,19 @@ validateOutputIdsForPlot <- function(dtOutputPaths) {
   })
 
   # check validity of units
-  invisible(lapply(unique(dtOutputPaths$DisplayUnit),
-         function(unit){
-           tryCatch({
-             suppressMessages(getDimensionForUnit(unit))
-           }, error = function(e) {
-             stop(paste0('Please check sheet Outputs in plotconfiguration file. Unit "',unit,'" is not valid'))
-           })
-         }
+  invisible(lapply(
+    unique(dtOutputPaths$DisplayUnit),
+    function(unit) {
+      tryCatch(
+        {
+          suppressMessages(getDimensionForUnit(unit))
+        },
+        error = function(e) {
+          stop(paste0('Please check sheet Outputs in plotconfiguration file. Unit "', unit, '" is not valid'))
+        }
+      )
+    }
   ))
 
   return(invisible())
 }
-
-
-
-

@@ -13,7 +13,6 @@ configTablePlots <- data.table(
 test_that("validatePanelConsistency function test", {
   # Test if the function correctly checks for unique values of panel columns for each PlotName
   expect_error(validatePanelConsistency(configTablePlots, c("Column1", "Column2")))
-
 })
 
 
@@ -22,7 +21,7 @@ configTablePlots <- data.table(
   Value1 = c(1, 2, 3, 4),
   Value2 = c("A", "B", "C", "D"),
   TimeRange_Valid1 = c(NA, "total", "firstApplication", "lastApplication"),
-  TimeRange_Valid2 = c("c(0,30)",NA, "c(0,40)", "lastApplication"),
+  TimeRange_Valid2 = c("c(0,30)", NA, "c(0,40)", "lastApplication"),
   TimeRange_invalid1 = c("total", "invalid", "firstApplication", "lastApplication"),
   TimeRange_invalid1 = c("c(0,30,50)", "total", "firstApplication", "lastApplication"),
   TimeRange_invalid1 = c("c(0,NA)", "total", "firstApplication", "lastApplication")
@@ -31,19 +30,17 @@ configTablePlots <- data.table(
 # Write unit tests for the function
 test_that("validateTimeRangeColumns function test", {
   # Test if the function correctly validates correct TimeRange Columns
-  expect_no_error(validateTimeRangeColumns(configTablePlots[,c(1,2,3,4)]))
+  expect_no_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4)]))
 
   # Test if the function correctly checks for at least one TimeRange Column
-  expect_error(validateTimeRangeColumns(configTablePlots[,c(1,2)]))
+  expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2)]))
 
   # Test if the function correctly validates the inputs in the TimeRange columns
-  expect_error(validateTimeRangeColumns(configTablePlots[,c(1,2,3,4,5)]))
+  expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 5)]))
 
   # Test if the function correctly validates the inputs in the TimeRange columns
-  expect_error(validateTimeRangeColumns(configTablePlots[,c(1,2,3,4,6)]))
+  expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 6)]))
 
   # Test if the function correctly validates the inputs in the TimeRange columns
-  expect_error(validateTimeRangeColumns(configTablePlots[,c(1,2,3,4,7)]))
-
+  expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 7)]))
 })
-
