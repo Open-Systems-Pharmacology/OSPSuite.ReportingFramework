@@ -1,10 +1,18 @@
 # Purpose: Add the Purpose of the workflow
 #
 
+# Typically This file is saved in <Rootdirectory>\Scripts\ReportingFrame
+
+# set working directory to  workflow file location, (only if working interactively)
+if (interactive() && rstudioapi::isAvailable()) {
+  # Get the active document path in RStudio
+  setwd(rstudioapi::getActiveDocumentContext()$path)
+}
+
+
 # Initialization  ----------------------------------------------------------
 # load libraries and source project specific code
 library(ospsuite.reportingframework)
-
 
 # set graphic
 # (see vignette(package = 'ospsuite.plots',topic = 'ospsuite_plots'))
@@ -48,8 +56,7 @@ logCatch({
   # (see vignette(package = 'ospsuite.reportingframework',topic = 'data_import_by_dictionary'))
 
   # read data as data.table
-  dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,
-                                         addBiometricsToConfigFlag = TRUE)
+  dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration)
 
 
   # Simulations ------------------------------------------------------

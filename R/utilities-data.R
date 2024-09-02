@@ -640,12 +640,14 @@ convertDataCombinedToDataTable <- function(datacombined) {
   dataDT <- dataDT[, which(colSums(is.na(dataDT)) != nrow(dataDT)), with = FALSE]
 
   # Set DataClass
-  dataDT[, dataClass := ifelse(any(!is.na(yErrorValues)), DATACLASS$tpAggregated, DATACLASS$tpAggregated),
+  dataDT[, dataClass := ifelse(any(!is.na(yErrorValues)), DATACLASS$tpAggregated, DATACLASS$tpIndividual),
     by = "group"
   ]
 
-  # Avoid conflict with population IndividualID
-  data.table::setnames(dataDT, "IndividualIdObserved", "IndividualID", skip_absent = TRUE)
+  if (any(dataDT$dataClass == DATACLASS$tpIndividual) &&
+      !('individualId' %in% names(dataDT))) stop('IndividualData needs meta data individualId')
+
+
 }
 
 # Data aggregation ------------
@@ -740,25 +742,14 @@ prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
     dataObserved <- convertDataCombinedToDataTable(dataObserved)
   }
 
-  dataToAggregate <- dataObserved[dataType == "observed"]
-  groupsAvailable <- unique(dataToAggregate[dataClass == DATACLASS$tpIndividual]$group)
-
-  if (is.null(groups)) {
-    groups <- groupsAvailable
-  } else {
-    unsuitableGroups <- setdiff(groups, groupsAvailable)
-    if (length(unsuitableGroups) > 0) {
-      warning(paste("Groups", paste(unsuitableGroups, collapse = ", "), "are not available for grouping."))
-    }
-    groups <- intersect(groups, groupsAvailable)
-  }
+  groups <- getIndividualDataGroups(dataObserved,groups)
 
   if (length(groups) == 0) {
     warning("No groups available for aggregation")
     return(NULL)
   }
 
-  dataToAggregate <- dataToAggregate[group %in% groups]
+  dataToAggregate <- dataObserved[group %in% groups]
   dataToAggregate[, group := paste(group, groupSuffix, sep = "_")]
 
   checkmate::assertNames(unique(dataToAggregate$group),
@@ -919,3 +910,37 @@ convertIdentifierColumns <- function(dt, identifierCols) {
   }
   return(dt)
 }
+
+
+#' filters observed data for individual groups which are suited for
+#' aggregation or "IndividualPopulation" creation
+#'
+#' @inheritParams aggregatedObservedDataGroups
+#' @param minN  minimal number needed for group
+#'
+#' @return vector with suitable group Ids
+getIndividualDataGroups <- function(dataObserved,groups,minN = 2){
+
+  tmp <-
+    dataObserved[, .(N = dplyr::n_distinct(individualId)),
+                 by = c('group', 'dataClass', 'dataType')]
+  groupsAvailable <- unique(tmp[dataClass == DATACLASS$tpIndividual &
+                                           dataType == 'observed' &
+                                  N >= minN]$group)
+
+
+  if (is.null(groups)) {
+    groups <- groupsAvailable
+  } else {
+    unsuitableGroups <- setdiff(groups, groupsAvailable)
+    if (length(unsuitableGroups) > 0) {
+      warning(paste("Groups", paste(unsuitableGroups, collapse = ", "), "are not suited for grouping.",
+                    "Check if they are available in data, have more then",minN,'Individuals or
+                    if they are have data class',DATACLASS$tpIndividual))
+    }
+    groups <- intersect(groups, groupsAvailable)
+  }
+
+  return(groups)
+}
+
