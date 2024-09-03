@@ -95,6 +95,7 @@ xlsxReadData <- function(wb, sheetName,
                            "DataGroupId"
                          ),
                          emptyAsNA = TRUE) {
+  if (!any(class(wb) %in%  "Workbook")) checkmate::assertFileExists(wb)
   dt <- data.table::setDT(openxlsx::read.xlsx(
     xlsxFile = wb,
     sheet = sheetName,

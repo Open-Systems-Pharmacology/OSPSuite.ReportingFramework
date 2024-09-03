@@ -14,7 +14,7 @@
 #' setupIndPopConfig(projectConfiguration, dataObserved, groups = c("Group1", "Group2"))
 setupIndPopConfig <- function(projectConfiguration, dataObserved, groups = NULL) {
 
-  checkmate::assertCharacter(groups,any.missing = FALSE,null.ok = TRUE)
+  checkmate::assertCharacter(groups, any.missing = FALSE, null.ok = TRUE)
 
   # Check if dataObserved is of class "DataCombined" and convert it if necessary
   if ("DataCombined" %in% class(dataObserved)) {
@@ -70,21 +70,68 @@ setupIndPopConfig <- function(projectConfiguration, dataObserved, groups = NULL)
 }
 
 
-generateIndividualPopulation <- function(projectConfiguration,modelFile,overwrite = TRUE){
+#' Generate Individual Population
+#'
+#' This function generates individual populations based on the provided model and project configuration.
+#'
+#' @param projectConfiguration A list containing project configuration details, including file paths for populations and scenarios.
+#' @param modelFile A string representing the name of the model file to be loaded.
+#' @param overwrite A logical indicating whether to overwrite existing files. Defaults to FALSE
+#'
+#' @export
+#'
+#' @examples
+#' # Example usage:
+#' generateIndividualPopulation(projectConfiguration, "modelFileName", overwrite = TRUE)
+generateIndividualPopulation <- function(projectConfiguration, modelFile, overwrite = FALSE) {
 
-  # initialize model for default values and Unit conversion
-  sim <- ospsuite::loadSimulation(file.path(projectConfiguration$modelFolder,modelFile))
-
-  # read list of poulations to create
   dtIndPops <- xlsxReadData(wb = projectConfiguration$populationsFile,
                             sheetName = "IndividualPopulation",
                             emptyAsNA = FALSE)
 
+  # Check if overwrite is FALSE and filter for existing files
+  if (!overwrite) {
+    existingFiles <- list.files(projectConfiguration$populationsFolder, pattern = "*.csv", full.names = TRUE)
+    existingPopulationNames <- sub("\\.csv$", "", basename(existingFiles))
 
-  #Read all parameter sheets
+    # Filter dtIndPops for populations that do not exist
+    dtIndPops <- dtIndPops[!PopulationName %in% existingPopulationNames]
+  }
+  # If no populations left to generate, return with a message
+  if (nrow(dtIndPops) == 0) {
+    message("No new individual populations to generate; all files already exist.")
+    return(invisible())
+  }
+
+  sim <-   ospsuite::loadSimulation(file.path(projectConfiguration$modelFolder, modelFile))
+
+  params <- .readParameterSheetList(projectConfiguration, dtIndPops, sim)
+
+  dtIndividualBiometrics <- xlsxReadData(wb = projectConfiguration$individualsFile, sheetName = "IndividualBiometrics")
+  dtIndividualBiometrics[IndividualId %in% dtIndPops$IndividualId]
+
+
+  .generatePopulationFiles(dtIndPops, params, dtIndividualBiometrics, projectConfiguration,sim)
+
+  .addMissingScenarios(projectConfiguration = projectConfiguration,dtIndPops = dtIndPops,modelFile = modelFile)
+
+  return(invisible())
+}
+
+
+#' Read Parameter Sheet List
+#'
+#' This function reads parameters from specified sheets in an Excel file.
+#'
+#' @param projectConfiguration A list containing project configuration details.
+#' @param dtIndPops A data.table containing individual population data.
+#' @param sim A simulation object.
+#'
+#' @return A list of parameters for the specified sheets.
+#' @keywords internal
+.readParameterSheetList <- function(projectConfiguration, dtIndPops, sim) {
   params <- mapply(
     function(sheet, file) {
-      message(sheet)
       .getAllParameterForSheets(
         projectConfiguration = projectConfiguration,
         sheets = .cleanUpSheetList(dtIndPops[[sheet]]),
@@ -92,11 +139,7 @@ generateIndividualPopulation <- function(projectConfiguration,modelFile,overwrit
         sim = sim
       )
     },
-    c(
-      'ModelParameterSheets',
-      'IndividualId',
-      'ApplicationProtocol'
-    ),
+    c('ModelParameterSheets', 'IndividualId', 'ApplicationProtocol'),
     c(
       projectConfiguration$modelParamsFile,
       projectConfiguration$individualsFile,
@@ -105,244 +148,278 @@ generateIndividualPopulation <- function(projectConfiguration,modelFile,overwrit
     SIMPLIFY = FALSE
   )
 
-  # get IndividualBiometrics
-  dtIndividualBiometrics <- xlsxReadData(wb = projectConfiguration$individualsFile,sheetName = "IndividualBiometrics")
-  dtIndividualBiometrics <- dtIndividualBiometrics[IndividualId %in% dtIndPops$IndividualId]
+  return(params)
+}
 
-  biometrics = list()
 
-  # Create a progress bar
-  pb <- utils::txtProgressBar(min = 1, max = nrow(biometrics), style = 3)
+#' Generate Population Files
+#'
+#' This function generates population files based on individual biometrics and parameters.
+#'
+#' @param dtIndPops A data.table containing individual population data.
+#' @param params A list of parameters for the individual population.
+#' @param dtIndividualBiometrics A data.table containing individual biometrics.
+#' @param projectConfiguration A list containing project configuration details.
+#' @param sim A simulation object.
+#'
+#' @keywords internal
+.generatePopulationFiles <- function(dtIndPops, params, dtIndividualBiometrics, projectConfiguration,sim) {
 
   for (indId in dtIndividualBiometrics$IndividualId) {
-    utils::setTxtProgressBar(pb, indId) # Update the progress bar
 
     biomForInd <- dtIndividualBiometrics[IndividualId == indId, ]
-
-
-    # Create ontogenies for the proteins
-    moleculeOntogenies <- esqlabsR:::.readOntongeniesFromXLS(biomForInd)
-
-    # Create the IndividualCharacteristics object
-    individualCharacteristics <- ospsuite::createIndividualCharacteristics(
-      species = biomForInd$Species,
-      population = biomForInd$Population,
-      gender = biomForInd$Gender,
-      weight = biomForInd$`Weight [kg]`,
-      height = biomForInd$`Height [cm]`,
-      age = biomForInd$`Age [year(s)]`,
-      moleculeOntogenies = moleculeOntogenies
-    )
-
+    individualCharacteristics <- .createIndividualCharacteristics(biomForInd)
     individual <- createIndividual(individualCharacteristics)
 
-    # Convert to data.table
-    distributedParameters <- rbind(
-      .convertBiomForIndStatics(biomForInd),
-        data.table::as.data.table(individual$derivedParameters)[paths %in% c("Organism|Weight", "Organism|BMI", "Organism|BSA")],
-        data.table::as.data.table(individual$distributedParameters)
-      )
+    results <- .processIndividual(individual = individual,
+                                  biomForInd = biomForInd,
+                                  params = params,
+                                  projectConfiguration = projectConfiguration,
+                                  sim = sim)
 
-    # Create the output data.table
-    output <- data.table(
-      path = distributedParameters$paths,
-      value = as.numeric(distributedParameters$values),
-      unit = distributedParameters$units
-    )
-
-    # make sure evrythin is in baseunit
-    output[, `:=`(
-      dimension = getParameter(path, container = sim)$dimension),
-      by ='path']
-    output[, `:=`(
-      base_value = toBaseUnit(quantityOrDimension = dimension, values = values, unit = units)),
-      by ='paths']
-
-
-    results = setNames(as.list(output$base_value),output$path)
     if (is.null(params$IndividualId[[indId]])) {
       params$IndividualId[[indId]] <- results
     } else {
-      params$IndividualId[[indId]] <- utils::modifyList(params$IndividualId[[indId]],results )
+      params$IndividualId[[indId]] <- utils::modifyList(params$IndividualId[[indId]], results)
     }
-
   }
 
-  close(pb)
-
-  popTableMatch = data.table()
-
   for (dPop in split(dtIndPops, by = "PopulationName")) {
-
     poptable <- .buildIndividualPopulation(projectConfiguration = projectConfiguration,
                                            params = params,
                                            dPop = dPop)
 
-    # a population needs a numeric columns individualId
-    poptable[,IndividualId := .I-1]
-    setcolorder(poptable,'IndividualId')
-
-
-    write.csv(x = poptable,
-              file = file.path(
-                projectConfiguration$populationsFolder,
-                paste0(dPop$PopulationName[1], '.csv')
-              ),
-              fileEncoding = 'UTF8',
-              sep = ',',
-              row.names = FALSE
-    )
-
-
+    .savePopulationFile(poptable, dPop, projectConfiguration)
   }
+}
 
+#' Create Individual Characteristics
+#'
+#' This function creates individual characteristics from biometrics data.
+#'
+#' @param biomForInd A data.table containing biometrics for an individual.
+#'
+#' @return An individual characteristics object.
+#' @keywords internal
+.createIndividualCharacteristics <- function(biomForInd) {
+  moleculeOntogenies <- esqlabsR:::.readOntongeniesFromXLS(biomForInd)
+
+  ospsuite::createIndividualCharacteristics(
+    species = biomForInd$Species,
+    population = biomForInd$Population,
+    gender = biomForInd$Gender,
+    weight = biomForInd$`Weight [kg]`,
+    height = biomForInd$`Height [cm]`,
+    age = biomForInd$`Age [year(s)]`,
+    moleculeOntogenies = moleculeOntogenies
+  )
+}
+
+#' Process Individual
+#'
+#' This function processes individual data and generates as results a list of all paremetrs transfreed to poulation csv
+#'
+#' @param individual An individual object.
+#' @param biomForInd A data.table containing biometrics for an individual.
+#' @param params A list of parameters for the individual population.
+#' @param projectConfiguration A list containing project configuration details.
+#' @param sim A simulation object.
+#'
+#' @return A list of results for the individual.
+#' @keywords internal
+.processIndividual <- function(individual, biomForInd, params, projectConfiguration,sim) {
+  popParameters <- rbind(
+    .convertBiomForIndStatics(biomForInd,sim),
+    data.table::as.data.table(individual$derivedParameters)[paths %in% c("Organism|Weight", "Organism|BMI", "Organism|BSA")],
+    data.table::as.data.table(individual$distributedParameters)
+  )
+
+  results <- setNames(as.list(popParameters$values), popParameters$paths)
+
+  return(results)
 }
 
 
+
+#' Save Population File
 #'
-#' @param projectConfiguration
-#' @param dtScenarioG
-#' @param dataG
+#' This function saves the population data to a CSV file.
 #'
-#' @return
-#' @export
+#' @param poptable A data.table representing the population data.
+#' @param dPop A data.table containing population metadata.
+#' @param projectConfiguration A list containing project configuration details.
 #'
-#' @examples
-.buildIndividualPopulation <- function(projectConfiguration,
-                                       params,
-                                       dPop) {
+#' @keywords internal
+.savePopulationFile <- function(poptable, dPop, projectConfiguration) {
+  poptable[, IndividualId := .I - 1]
+  data.table::setcolorder(poptable, 'IndividualId')
+
+  write.csv(x = poptable,
+            file = file.path(
+              projectConfiguration$populationsFolder,
+              paste0(dPop$PopulationName[1], '.csv')
+            ),
+            fileEncoding = 'UTF8',
+            row.names = FALSE)
+
+  return(invisible())
+}
 
 
+#' Build Individual Population
+#'
+#' This function builds an individual population table based on the provided parameters and population data.
+#'
+#' @param projectConfiguration A list containing project configuration details.
+#' @param params A list of parameters for the individual population.
+#' @param dPop A data.table containing population data.
+#'
+#' @return A data.table representing the individual population.
+#' @keywords internal
+.buildIndividualPopulation <- function(projectConfiguration, params, dPop) {
 
+  poptable <- data.table()
 
-  poptable = data.table()
-  poptableUnits <- data.table()
+  for (d in split(dPop, by = c('IndividualId', 'DataGroup'))) {
+    popRow <- list(PopulationName = d$PopulationName, DataGroup = d$DataGroup)
 
-  for (d in split(dPop,by = c('IndividualId','DataGroup'))){
+    for (parType in names(params)) {
+      sheets = .cleanUpSheetList(d[[parType]])
 
-    popRow <- list(PopulationName = d$PopulationName,
-                     DataGroup = d$DataGroup)
-
-    for (parType in names(params)){
-
-      sheets = cleanUpSheetList(d[[parType]])
-
-      for (sheet in sheets){
-
+      for (sheet in sheets) {
         newValues = params[[parType]][[sheet]]
-
-        popRow <- utils::modifyList(popRow,newValues)
-
+        popRow <- utils::modifyList(popRow, newValues)
       }
-
     }
 
     if (nrow(poptable) > 1){
       checkmate::assertNames(names(popRow),permutation.of = names(poptable))
     }
-    poptable <- rbind(poptable,
-                      data.table::as.data.table(popRow))
 
+    poptable <- rbind(poptable, data.table::as.data.table(popRow))
   }
 
   return(poptable)
-
 }
 
-
-
-
-#' Title
+#' Get All Parameters for Sheets
 #'
-#' @param sheets
-#' @param paramsXLSpath
+#' This function retrieves parameters from specified sheets in an Excel file.
 #'
-#' @return
-.getAllParameterForSheets <- function(projectConfiguration,sheets,paramsXLSpath,sim) {
+#' @param projectConfiguration A list containing project configuration details.
+#' @param sheets A character vector of sheet names to read parameters from.
+#' @param paramsXLSpath A string representing the path to the parameters Excel file.
+#' @param sim A simulation object.
+#'
+#' @return A list of parameters for the specified sheets.
+#' @keywords internal
+.getAllParameterForSheets <- function(projectConfiguration, sheets, paramsXLSpath, sim) {
 
   wb <- openxlsx::loadWorkbook(paramsXLSpath)
-  sheets <- intersect(openxlsx::sheets(wb),sheets)
+  sheets <- intersect(openxlsx::sheets(wb), sheets)
 
   if (length(sheets) == 0) {
     return(list())
   }
 
-  params = lapply(sheets,function(sheet){
-    tmp <-
-      readParametersFromXLS(
-        paramsXLSpath = paramsXLSpath,
-        sheets = sheet) %>%
+  params <- lapply(sheets, function(sheet) {
+    tmp <- readParametersFromXLS(paramsXLSpath = paramsXLSpath, sheets = sheet) %>%
       data.table::as.data.table()
 
     tmp[, `:=`(
       dimension = getParameter(paths, container = sim)$dimension),
-      by ='paths']
+      by = 'paths']
     tmp[, `:=`(
       base_value = toBaseUnit(quantityOrDimension = dimension, values = values, unit = units)),
-      by ='paths']
+      by = 'paths']
 
-    results = setNames(as.list(tmp$base_value),tmp$paths)
+    results = setNames(as.list(tmp$base_value), tmp$paths)
     return(results)
   })
 
-
   names(params) <- sheets
-
   return(params)
 }
 
-
-
-#' Title
+#' Clean Up Sheet List
 #'
-#' @param sheets
+#' This function sanitizes a list of sheet names by removing duplicates and whitespace.
 #'
-#' @return
-.cleanUpSheetList<- function(sheets){
-  sheet <- unique(sheets)
-  sheets <- unlist(strsplit(sheets,','))
+#' @param sheets A character vector of sheet names.
+#'
+#' @return A cleaned character vector of sheet names.
+#' @keywords internal
+.cleanUpSheetList <- function(sheets) {
+  sheets <- unique(sheets)
+  sheets <- unlist(strsplit(sheets, ','))
   sheets <- trimws(sheets)
   sheets <- sheets[!is.na(sheets) & sheets != ""]
+  sheets <- unique(sheets)
 
   return(sheets)
 }
 
+#' Convert Biometrics for Individual Statistics
+#'
+#' This function converts biometrics data for individual statistics into a specific format.
+#'
+#' @param biomForInd A data.table containing biometrics for an individual.
+#' @param sim A simulation object.
+#'
+#' @return A data.table with converted biometrics.
+#' #' @keywords internal
+.convertBiomForIndStatics <- function(biomForInd,sim) {
 
-
-.convertBiomForIndStatics <- function(biomForInd){
-
-
-  dtSelection = data.table(pName = c("IndividualId",
-                                     "Population",
-                                     "Gender",
-                                     "Height [cm]",
-                                     "Age [year(s)]",
-                                     "Gestational Age [week(s)]"),
-                           units = c('','','','dm','year(s)','week(s)'),
-                           paths = c("ObservedIndividualId",
-                                     "Population",
-                                     "Gender",
-                                     "Organism|Height",
-                                     "Organism|Age",
-                                     "Organism|Gestational age"))
+  dtSelection <- data.table(
+    pName = c("IndividualId", "Population", "Gender", "Height [cm]", "Age [year(s)]", "Gestational Age [week(s)]"),
+    units = c('', '', '', 'dm', 'year(s)', 'week(s)'),
+    paths = c("ObservedIndividualId", "Population", "Gender", "Organism|Height", "Organism|Age", "Organism|Gestational age")
+  )
 
   tmp <- biomForInd %>%
     dplyr::select(any_of(dtSelection$pName)) %>%
-    data.table::setnames(
-      old = dtSelection$pName,
-      new = dtSelection$paths,
-      skip_absent = TRUE
-    )
-  if  (!is.null(tmp$`Organism|Height`))
+    data.table::setnames(old = dtSelection$pName, new = dtSelection$paths, skip_absent = TRUE)
+
+  if (!is.null(tmp$`Organism|Height`)) {
     tmp$`Organism|Height` <- ospsuite::toBaseUnit(
-      quantityOrDimension = getParameter(path = 'Organism|Height',container = sim)$dimension,
+      quantityOrDimension = getParameter(path = 'Organism|Height', container = sim)$dimension,
       unit = 'cm',
-      values = tmp$`Organism|Height`)
+      values = tmp$`Organism|Height`
+    )
+  }
 
-  result <- data.table(path = names(tmp),
-                       values = as.vector(unlist(tmp)))
-
-  result[, unit := dtSelection$units[match(path, dtSelection$paths)]]
+  result <- data.table(paths = names(tmp), values = as.vector(unlist(tmp)))
+  result[, units := dtSelection$units[match(paths, dtSelection$paths)]]
 
   return(result)
+}
+
+#' Add Missing Scenarios
+#'
+#' This function adds any missing scenarios to the scenarios workbook based on the provided individual population data.
+#'
+#' @param dtIndPops A data.table containing individual population data with PopulationName.
+#' @param projectConfiguration A list containing project configuration details, including the scenarios file path.
+#' @param modelFile A string representing the name of the model file to be used.
+#'
+#' @return Returns NULL invisibly after updating the scenarios workbook.
+#' @keywords internal
+.addMissingScenarios <- function(dtIndPops, projectConfiguration, modelFile) {
+  wb <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
+  dtScenario <- xlsxReadData(wb, 'Scenarios')
+
+  newScenarios <- setdiff(unique(dtIndPops$PopulationName), dtScenario$PopulationId)
+
+  if (length(newScenarios) > 0) {
+    dtScenario <- rbind(dtScenario,
+                        data.table(Scenario_name = tolower(newScenarios),
+                                   PopulationId = newScenarios,
+                                   ReadPopulationFromCSV = TRUE,
+                                   ModelFile = modelFile),
+                        fill = TRUE)
+
+    xlsxWriteData(wb = wb, sheetName = 'Scenarios', dt = dtScenario)
+    openxlsx::saveWorkbook(wb, projectConfiguration$scenariosFile, overwrite = TRUE)
+  }
+  return(invisible())
 }

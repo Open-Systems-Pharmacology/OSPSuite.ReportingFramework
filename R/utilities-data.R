@@ -82,6 +82,12 @@ readObservedDataByDictionary <- function(projectConfiguration,
       dataDT = dataDT,
       projectConfiguration = projectConfiguration
     )
+
+    setupIndPopConfig(
+      projectConfiguration = projectConfiguration,
+      dataObserved = dataDT,
+      groups = NULL
+    )
   }
 
   # Logging
@@ -725,6 +731,7 @@ aggregatedObservedDataGroups <- function(dataObserved,
   aggregatedData <- checkLLOQ(aggregatedData, lloq3Columns, lloq2Columns)
 
   aggregatedData <- addUniqueColumns(dataToAggregate, aggregatedData)
+  aggregatedData$dataClass <- DATACLASS$tpAggregated
 
   aggregatedData <- setDataTypeAttributes(aggregatedData)
 

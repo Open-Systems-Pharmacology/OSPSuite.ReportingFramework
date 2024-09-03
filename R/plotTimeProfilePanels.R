@@ -41,8 +41,13 @@ plotTimeProfilePanels <- function(projectConfiguration,
 
 
   # read configuration tables
-  configTable <- readTimeprofileConfigTable(projectConfiguration = projectConfiguration,
-                                            sheetName = configTableSheet)
+  configTable <-
+    readTimeprofileConfigTable(
+      sheetName = configTableSheet,
+      projectConfiguration = projectConfiguration,
+      dataObserved = dataObserved
+    )
+
 
   # initialize Container for RMD generation for .Rmd generation
   rmdContainer <-
@@ -738,7 +743,8 @@ validateConfigTableForTimeProfiles <- function(configTable, dataObserved, projec
       c(
         "DataGroupIds",
         "PlotCaptionAddon",
-        "ReferenceScenario"
+        "ReferenceScenario",
+        "IndividualIds"
       ),
     numericColumns = c(
       "TimeOffset",
@@ -766,6 +772,10 @@ validateConfigTableForTimeProfiles <- function(configTable, dataObserved, projec
       outputPathId = list(
         cols = c("outputPathId"),
         allowedValues = unique(dtOutputPaths$outputPathId)
+      ),
+      IndividualIds = list(
+        cols = 'IndividualIds',
+        allowedValues = c('*',unique(dataObserved[!is.na(individualId)]$individualId))
       ),
       yscale = list(
         cols = c("yscale"),
@@ -807,6 +817,12 @@ validateConfigTableForTimeProfiles <- function(configTable, dataObserved, projec
     ),
     dtOutputPaths = dtOutputPaths
   )
+
+
+  validateOutputPathIdFormat(configTablePlots = configTablePlots)
+
+  validateOutputPathIdFormat(configTablePlots = configTablePlots,column = 'IndividualIds')
+
   return(invisible())
 }
 
@@ -888,10 +904,14 @@ validateTimeRangeColumns <- function(configTablePlots) {
 #'
 #' @template configTablePlots
 #' @keywords internal
-validateOutputPathIdFormat <- function(configTablePlots) {
-  if (any(length(stringr::str_extract_all(configTablePlots$outputPathId, "\\([^)]*$")) > 0) ||
-    any(length(stringr::str_extract_all(configTablePlots$outputPathId, "(?<!\\()\\([^)]+")) > 0)) {
-    stop("Please check the brackets in column outputPathId")
+validateOutputPathIdFormat <- function(configTablePlots,column = 'OutputPathIds') {
+  tmp <- configTablePlots[,.(nBracketOpen = sum(grepl("\\(", get(column))),
+                             nBracketClosed = sum(grepl("\\)", get(column)))),by = column]
+
+  tmp <- tmp[nBracketOpen != nBracketClosed]
+
+  if (nrow(tmp) > 0) {
+    stop(paste("Please check the brackets in column",column,paste(tmp[[column]],collapse = ';')))
   }
 }
 
