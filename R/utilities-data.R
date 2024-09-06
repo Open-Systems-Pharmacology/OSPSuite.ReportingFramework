@@ -68,26 +68,33 @@ readObservedDataByDictionary <- function(projectConfiguration,
 
   # Spread data to other tables
   if (spreadData) {
-    updateDataGroupId(
-      projectConfiguration = projectConfiguration,
-      dataDT = dataDT
+    # Define a list of functions and their arguments
+    function_calls <- list(
+      list(func = updateDataGroupId, args = list(projectConfiguration = projectConfiguration, dataDT = dataDT),
+           functionCall = "updateDataGroupId(projectConfiguration = projectConfiguration, dataDT = dataObserved)"),
+      list(func = updateOutputPathId, args = list(projectConfiguration = projectConfiguration, dataDT = dataDT),
+           functionCall = "updateOutputPathId(projectConfiguration = projectConfiguration, dataDT = dataObserved)"),
+      list(func = addBiometricsToConfig, args = list(dataDT = dataDT, projectConfiguration = projectConfiguration),
+           functionCall = "addBiometricsToConfig(projectConfiguration = projectConfiguration, dataDT = dataObserved)"),
+      list(func = setupIndPopConfig, args = list(projectConfiguration = projectConfiguration, dataObserved = dataDT),
+           functionCall = "setupIndPopConfig(projectConfiguration = projectConfiguration, dataObserved = dataObserved)")
     )
 
-    updateOutputPathId(
-      projectConfiguration = projectConfiguration,
-      dataDT = dataDT
-    )
-
-    addBiometricsToConfig(
-      dataDT = dataDT,
-      projectConfiguration = projectConfiguration
-    )
-
-    setupIndPopConfig(
-      projectConfiguration = projectConfiguration,
-      dataObserved = dataDT,
-      groups = NULL
-    )
+    # Loop through each function call
+    for (call in function_calls) {
+      tryCatch(
+        {
+          do.call(call$func, call$args)
+        },
+        error = function(err) {
+          warning(paste(
+            "Error during execution of", call$functionCall,
+            "\nMessage:", conditionMessage(err),
+            "\nAre all relevant xlsx files closed? Retry manually."
+          ))
+        }
+      )
+    }
   }
 
   # Logging

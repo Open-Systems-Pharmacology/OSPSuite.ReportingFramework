@@ -28,30 +28,32 @@ setupIndPopConfig <- function(projectConfiguration, dataObserved, groups = NULL)
   if (!('IndividualPopulation' %in% wb$sheet_names)) {
     dtIndPops <- xlsxReadData(projectConfiguration$scenariosFile, sheetName = 'Scenarios') %>%
       data.table::setnames("PopulationId", 'PopulationName') %>%
-      dplyr::mutate('DataGroup' = '') %>%
-      dplyr::select(c('PopulationName', 'DataGroup', "IndividualId", "ModelParameterSheets", "ApplicationProtocol")) %>%
+      dplyr::mutate('DataGroups' = '') %>%
+      dplyr::select(c('PopulationName', 'DataGroups', "IndividualId", "ModelParameterSheets", "ApplicationProtocol")) %>%
       dplyr::filter(FALSE)
   } else {
     dtIndPops <- xlsxReadData(wb, 'IndividualPopulation')
   }
 
+  if (is.null(groups))   groups <- getIndividualDataGroups(dataObserved, groups)
   # Remove any groups that are already in dtIndPops
-  groups <- setdiff(groups, unique(dtIndPops$DataGroup))
-  groups <- getIndividualDataGroups(dataObserved, groups)
+  groups <- setdiff(groups, unique(splitInputs(dtIndPops$DataGroups)))
 
   # Check if any groups are available for individual population creation
   if (length(groups) == 0) {
-    warning("No groups available for individual population creation")
+    message("No groups available for individual population creation")
     return(NULL)
   }
 
   # Create new individual population data
   dtIndPopsNew <- dataObserved[group %in% groups, c('group', 'individualId')] %>%
-    unique() %>%
-    dplyr::mutate(PopulationName = group) %>%
-    data.table::setnames(old = c('group', 'individualId'),
-                         new = c('DataGroup', 'IndividualId')) %>%
-    data.table::setorderv(c('DataGroup', 'IndividualId'))
+    unique()  %>%
+    data.table::setnames('individualId','IndividualId') %>%
+    .[,.(DataGroups=paste(group,collapse = ', ')),by = 'IndividualId'] %>%
+    .[,PopulationName := gsub(', ','_',DataGroups)]
+
+  message('add individual population configuration in Population configuration file:')
+  writeTableToLog(dtIndPopsNew[,.N,by = 'PopulationName'])
 
   # Combine the existing and new individual population data
   dtIndPops <- rbind(dtIndPops, dtIndPopsNew, fill = TRUE)
@@ -75,15 +77,18 @@ setupIndPopConfig <- function(projectConfiguration, dataObserved, groups = NULL)
 #' This function generates individual populations based on the provided model and project configuration.
 #'
 #' @param projectConfiguration A list containing project configuration details, including file paths for populations and scenarios.
-#' @param modelFile A string representing the name of the model file to be loaded.
+#' @param modelFile A string representing the name of the model file to be loaded. This file is used for unit conversion
 #' @param overwrite A logical indicating whether to overwrite existing files. Defaults to FALSE
+#' @param populationIds A character vector cotaining  DataGroups to filter relevant populations
 #'
 #' @export
 #'
 #' @examples
 #' # Example usage:
 #' generateIndividualPopulation(projectConfiguration, "modelFileName", overwrite = TRUE)
-generateIndividualPopulation <- function(projectConfiguration, modelFile, overwrite = FALSE) {
+exportIndividualPopulations <- function(projectConfiguration, modelFile, overwrite = FALSE,populationNames = NULL) {
+
+  checkmate::assertCharacter(populationNames,any.missing = FALSE,null.ok = TRUE)
 
   dtIndPops <- xlsxReadData(wb = projectConfiguration$populationsFile,
                             sheetName = "IndividualPopulation",
@@ -97,6 +102,9 @@ generateIndividualPopulation <- function(projectConfiguration, modelFile, overwr
     # Filter dtIndPops for populations that do not exist
     dtIndPops <- dtIndPops[!PopulationName %in% existingPopulationNames]
   }
+  if (!is.null(populationNames) & nrow(dtIndPops) > 0){
+    dtIndPops <- dtIndPops[dtIndPops$PopulationName %in% populationNames]
+  }
   # If no populations left to generate, return with a message
   if (nrow(dtIndPops) == 0) {
     message("No new individual populations to generate; all files already exist.")
@@ -108,7 +116,7 @@ generateIndividualPopulation <- function(projectConfiguration, modelFile, overwr
   params <- .readParameterSheetList(projectConfiguration, dtIndPops, sim)
 
   dtIndividualBiometrics <- xlsxReadData(wb = projectConfiguration$individualsFile, sheetName = "IndividualBiometrics")
-  dtIndividualBiometrics[IndividualId %in% dtIndPops$IndividualId]
+  dtIndividualBiometrics <- dtIndividualBiometrics[IndividualId %in% dtIndPops$IndividualId]
 
 
   .generatePopulationFiles(dtIndPops, params, dtIndividualBiometrics, projectConfiguration,sim)
@@ -116,6 +124,166 @@ generateIndividualPopulation <- function(projectConfiguration, modelFile, overwr
   .addMissingScenarios(projectConfiguration = projectConfiguration,dtIndPops = dtIndPops,modelFile = modelFile)
 
   return(invisible())
+}
+
+#' Get Individual Match for a Scenario
+#'
+#' This function retrieves the individual match data for a specified scenario
+#' from a project configuration. It checks if the scenario is a population
+#' scenario with a static population file containing the column ObservedIndividualId
+#' and reads the IndividualId of the simulated results and the ObservedIndividualId
+#' of the observed data.
+#'
+#' @param projectConfiguration A list containing the project configuration,
+#' including the path to the populations folder.
+#' @param scenario A string specifying the name of the scenario for which
+#' the individual match data is to be retrieved.
+#' @param dtScenarios A data table containing scenario details.
+#'
+#' @return A data.table containing the 'IndividualId' and 'ObservedIndividualId'
+#' if the population scenario is a individual population; otherwise, returns NULL.
+#'
+#' @export
+getIndividualMatchForScenario <- function(projectConfiguration,
+                                          scenario,
+                                          dtScenario = getScenarioDefinitions(projectConfiguration)){
+
+    dtScenarioRow <- dtScenario[Scenario_name == scenario]
+
+    # check if is is a population scenario with a static population file
+    if (is.na(dtScenarioRow$PopulationId) ||
+        is.na(dtScenarioRow$ReadPopulationFromCSV) ||
+        dtScenarioRow$ReadPopulationFromCSV == 0) return(NULL)
+
+    # read static population file
+    filename <- file.path(projectConfiguration$populationsFolder,paste0(dtScenarioRow$PopulationId,'.csv'))
+    checkmate::assertFile(filename)
+    poptable <- data.table::fread(filename)
+
+    # check if ths is an individualPopulation with column ObservedIndividualId
+    if (!('ObservedIndividualId' %in% names(poptable))) return(NULL)
+
+    poptable[,ObservedIndividualId := as.character(ObservedIndividualId)]
+
+    return(poptable %>% dplyr::select('IndividualId','ObservedIndividualId'))
+
+}
+
+#' Export Virtual Populations
+#'
+#' This function exports virtual populations based on demographic data from a
+#' specified Excel file. It can filter populations to export based on existing
+#' files in a specified folder and optionally overwrite those files.
+#'
+#' @param projectConfiguration A object of class ProjectConfiguration containing configuration settings, including
+#'                             the path to the populations file and the folder for
+#'                             output files.
+#' @param populationNames A character vector of population names to export. If NULL,
+#'                        all populations in the demographics sheet will be considered.
+#' @param overwrite A logical value indicating whether to overwrite existing population
+#'                  files. Default is FALSE.
+#'
+#' @return NULL (invisible), or an informative message if no new populations are
+#'         available for export.
+#'
+#' @export
+exportVirtualPopulations <- function(projectConfiguration,populationNames = NULL, overwrite = FALSE){
+
+  # add virtual population with in biometric ranges of observed data
+  dtPops <- xlsxReadData(wb = projectConfiguration$populationsFile,sheetName  = "Demographics" )
+
+  if (is.null(populationNames)) populationNames <- dtPops$PopulationName
+
+  # Check if overwrite is FALSE and filter for existing files
+  if (!overwrite) {
+    existingFiles <- list.files(projectConfiguration$populationsFolder, pattern = "*.csv", full.names = TRUE)
+    existingPopulationNames <- sub("\\.csv$", "", basename(existingFiles))
+
+    # Filter dtIndPops for populations that do not exist
+    populationNames <- setdiff(populationNames,existingPopulationNames)
+  }
+  if (!is.null(populationNames) & nrow(dtPops) > 0){
+    dtPops <- dtPops[dtPops$PopulationName %in% populationNames]
+  }
+  # If no populations left to generate, return with a message
+  if (nrow(dtPops) == 0) {
+    message("No new virtual populations to generate; all files already exist.")
+    return(invisible())
+  }
+
+  lapply(split(dtPops,by = 'PopulationName'),
+         function(dPop){
+           popCharacteristics <- esqlabsR::readPopulationCharacteristicsFromXLS(
+             XLSpath =projectConfiguration$populationsFile,
+             populationName = dPop$PopulationName,
+             sheet = "Demographics"
+           )
+           population <- createPopulation(populationCharacteristics = popCharacteristics)
+
+           if (dPop$PopulationName %in% wb$sheet_names)
+             extendPopulationFromXLS_RF(population, projectConfiguration$populationsFile, sheet = dPop$PopulationName)
+
+           ospsuite::exportPopulationToCSV(
+             population = population$population,
+             filePath = file.path(projectConfiguration$populationsFolder, paste0(dPop$PopulationName, ".csv"))
+           )
+          return(invisible())
+         }
+  )
+
+  return(invisible())
+}
+
+
+#' Update Exported Population
+#'
+#' This function updates an existing exported population by loading data from a
+#' specified source population file and extending it with additional data from
+#' an Excel sheet. It checks for the existence of the target population file and
+#' can optionally overwrite existing files.
+#'
+#' @param projectConfiguration A list containing configuration settings, including
+#'                             the path to the populations folder and the populations file.
+#' @param sourcePopulation A character string representing the name of the source
+#'                         population to load.
+#' @param targetPopulation A character string representing the name of the target
+#'                         population to be updated.
+#' @param sheetName A character string specifying the name of the sheet in the Excel
+#'               file from which to extend the population data.
+#' @param overwrite A logical value indicating whether to overwrite the existing
+#'                  target population file. Default is FALSE.
+#'
+#' @return NULL (invisible), or a warning if the target population already exists
+#'         and overwrite is FALSE.
+#'
+#' @export
+updateExportedPopulation <- function(projectConfiguration,sourcePopulation,targetPopulation,sheetName,overwrite = FALSE){
+
+  sourcepopFilename <- file.path(projectConfiguration$populationsFolder,paste0(sourcePopulation,'.csv'))
+
+  checkmate::assertFileExists(sourcepopFilename)
+
+  # Check if overwrite is FALSE and filter for existing files
+  if (!overwrite) {
+    existingFiles <- list.files(projectConfiguration$populationsFolder, pattern = "*.csv", full.names = TRUE)
+    existingPopulationNames <- sub("\\.csv$", "", basename(existingFiles))
+
+    if (targetPopulation %in% existingPopulationNames) {
+      warning(paste(targetPopulation,'already exists, nothing is done. Do you want to set overwrite to TRUE?'))
+      return(invisible())
+    }
+  }
+
+  population <- loadPopulation(sourcepopFilename)
+  extendPopulationFromXLS_RF(population = population,
+                          XLSpath = projectConfiguration$populationsFile, sheet = sheetName)
+  ospsuite::exportPopulationToCSV(
+    population = population,
+    filePath = file.path(projectConfiguration$populationsFolder, paste0(targetPopulation, ".csv"))
+  )
+
+  return(invisible())
+
 }
 
 
@@ -150,6 +318,8 @@ generateIndividualPopulation <- function(projectConfiguration, modelFile, overwr
 
   return(params)
 }
+
+
 
 
 #' Generate Population Files
@@ -187,7 +357,7 @@ generateIndividualPopulation <- function(projectConfiguration, modelFile, overwr
   for (dPop in split(dtIndPops, by = "PopulationName")) {
     poptable <- .buildIndividualPopulation(projectConfiguration = projectConfiguration,
                                            params = params,
-                                           dPop = dPop)
+                                           dPop = unique(dPop))
 
     .savePopulationFile(poptable, dPop, projectConfiguration)
   }
@@ -257,7 +427,7 @@ generateIndividualPopulation <- function(projectConfiguration, modelFile, overwr
   write.csv(x = poptable,
             file = file.path(
               projectConfiguration$populationsFolder,
-              paste0(dPop$PopulationName[1], '.csv')
+              paste0(dPop$PopulationName[1], ".csv")
             ),
             fileEncoding = 'UTF8',
             row.names = FALSE)
@@ -280,7 +450,7 @@ generateIndividualPopulation <- function(projectConfiguration, modelFile, overwr
 
   poptable <- data.table()
 
-  for (d in split(dPop, by = c('IndividualId', 'DataGroup'))) {
+  for (d in split(dPop, by = c('IndividualId', 'DataGroups'))) {
     popRow <- list(PopulationName = d$PopulationName, DataGroup = d$DataGroup)
 
     for (parType in names(params)) {
@@ -394,6 +564,9 @@ generateIndividualPopulation <- function(projectConfiguration, modelFile, overwr
   return(result)
 }
 
+
+
+
 #' Add Missing Scenarios
 #'
 #' This function adds any missing scenarios to the scenarios workbook based on the provided individual population data.
@@ -423,3 +596,7 @@ generateIndividualPopulation <- function(projectConfiguration, modelFile, overwr
   }
   return(invisible())
 }
+
+
+
+

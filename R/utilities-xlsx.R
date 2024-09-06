@@ -57,7 +57,6 @@ xlsxWriteData <- function(wb, sheetName, dt) {
 #' @param sheetName A character string specifying the name of the new sheet.
 #' @param dt A `data.table` with new content.
 #'
-#' @return A workbook object with the cloned sheet.
 #' @export
 xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
   if (!(sheetName %in% wb$sheet_names)) {
@@ -69,7 +68,7 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 
   xlsxWriteData(wb = wb, sheetName = sheetName, dt = dt)
 
-  return(wb)
+  return(invisible())
 }
 
 #' Read data from a worksheet

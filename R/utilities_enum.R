@@ -19,5 +19,6 @@ TIMERANGE <- ospsuite.utils::enum(c( # nolint
 #' @export
 DATACLASS <- ospsuite.utils::enum(c( # nolint
   tpIndividual = "tp Individual",
-  tpAggregated = "tp Aggregated"
+  tpAggregated = "tp Aggregated",
+  tpIndPop = "tp Individual Population"
 ))

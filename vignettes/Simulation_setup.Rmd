@@ -1,0 +1,82 @@
+---
+title: "Simulation_setup"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Simulation_setup}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(ospsuite.reportingframework)
+```
+
+# Simulation Setup
+
+This section outlines how the workflow utilizes the `esqlabsR` package for project configuration, scenario setup, and simulation.
+
+For more information and detailed documentation, users can visit the [esqlabsR Documentation](https://esqlabs.github.io/esqlabsR/).
+
+## Overview of esqlabsR
+
+The `esqlabsR` package provides tools for managing and analyzing pharmacokinetic data. It facilitates the creation of project configurations, scenario management, and simulation execution, making it an essential component of this workflow.
+
+## Project Configuration
+
+The workflow begins by setting up a project configuration using the `createDefaultProjectConfiguration` function from the `esqlabsR` package. This function retrieves paths for all relevant project files, which are crucial for subsequent analysis steps.
+
+### Example:
+
+```{r,echo=TRUE,eval=FALSE}
+projectConfiguration <- esqlabsR::createDefaultProjectConfiguration(
+   path = file.path("ProjectConfiguration.xlsx")
+)
+```
+
+This configuration is then used throughout the workflow to ensure that all file paths and settings are correctly referenced.
+
+## Scenario Setup
+
+After configuring the project, scenarios are created using the `createScenarios.wrapped` function. This function allows you to define various simulation scenarios based on your project configuration.
+
+### Example:
+
+```{r,echo=TRUE,eval=FALSE}
+ scenarioList <- createScenarios.wrapped(
+   projectConfiguration = projectConfiguration,
+   scenarioNames = NULL,
+   doCheckScenarioNameValidity = TRUE
+)
+```
+
+This setup ensures that all scenarios are valid and ready for execution.
+
+## Simulation Execution
+
+The workflow then executes the defined scenarios using the `runAndSaveScenarios` function. This function runs the simulations and saves the results, allowing for easy access and analysis later.
+
+### Example:
+```{r,echo=TRUE,eval=FALSE}
+runAndSaveScenarios(
+   projectConfiguration = projectConfiguration,
+   scenarioList = scenarioList,
+   simulationRunOptions = SimulationRunOptions$new(
+     numberOfCores = NULL,
+     checkForNegativeValues = NULL,
+     showProgress = TRUE
+   )
+)
+```
+
+
+## Conclusion
+
+By leveraging the capabilities of the `esqlabsR` package, this workflow effectively manages project configurations, sets up scenarios, and executes simulations, thus streamlining the analysis process for pharmacokinetic data.
+

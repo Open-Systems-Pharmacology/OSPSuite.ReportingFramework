@@ -162,6 +162,7 @@ getDefaultColorsForScaleVector <- function(shade = c("dark", "light"), n) {
   return(colorVector)
 }
 
+
 #' returns default shapes
 #'
 #' @param n
@@ -231,7 +232,7 @@ generateColorScaleVectors <- function(dt,
 #' @param captionColumn `character`column names which should be sorted to Tags
 #'
 #' @return `character` text for cpation
-pasteFigureTags <- function(dtCaption, captionColumn) {
+pasteFigureTags <- function(dtCaption, captionColumn,endWithDot = FALSE) {
   if (dplyr::n_distinct(dtCaption[[captionColumn]]) == 1) {
     captionText <- unique(dtCaption[[captionColumn]])
   } else {
@@ -245,7 +246,6 @@ pasteFigureTags <- function(dtCaption, captionColumn) {
     allTags <- dtCaption[, .(tags = paste0(" \\(", paste(unique(PlotTag), collapse = ", "), "\\)"))]$tags
 
     captionTextVector <- gsub(allTags, "", captionTextVector)
-    captionTextVector <- gsub("\\.$", "", captionTextVector)
 
     captionText <-
       paste(
@@ -258,7 +258,7 @@ pasteFigureTags <- function(dtCaption, captionColumn) {
         collapse = " and "
       )
 
-    if (any(grepl("\\.$", captionTextVector))) {
+    if (endWithDot & length(trimws(captionText))>0) {
       captionText <- paste0(captionText, ".")
     }
   }
