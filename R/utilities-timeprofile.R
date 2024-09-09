@@ -132,7 +132,7 @@ getSimulatedTimeprofile <- function(simulatedResult, outputPaths, aggregationFun
       merge(individualMatch, by = 'IndividualId') %>%
       dplyr::mutate(IndividualId = NULL) %>%
       data.table::setnames(old = 'ObservedIndividualId', new = 'individualId') %>%
-      dplyr::mutate(dataClass = DATACLASS$tpIndPop)
+      dplyr::mutate(dataClass = DATACLASS$tpTwinPop)
 
   } else if (dplyr::n_distinct(dt$IndividualId) > 1) {
     dt <- performAggregation(

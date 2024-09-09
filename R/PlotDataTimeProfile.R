@@ -165,7 +165,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
       dtCaption <- getPlotIdForColumns(configTable = configTable,col = 'OutputPathIds')
 
-      if (private$.dataSimulated$dataClass[1] == DATACLASS$tpIndPop)
+      if (private$.dataSimulated$dataClass[1] == DATACLASS$tpTwinPop)
         dtCaption <- splitCaptionByIndividuals(configTable = configTable,
                                                individualIds = sort(unique(self$data$individualId)),
                                                dtCaption = dtCaption)
@@ -575,33 +575,33 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       private$.dataSimulated$colorIndex <-
         factor(private$.dataSimulated$colorIndex,
                levels = c('Scenario','ReferenceScenario'),
-               labels = names(referenceColorscaleVector),
+               labels = names(referenceColorScaleVector),
                ordered = TRUE
         )
       if (nrow(private$.dataObserved) > 0) {
-        private$.dataObserved[, colorIndex := names(referenceColorscaleVector)[1]]
+        private$.dataObserved[, colorIndex := names(referenceColorScaleVector)[1]]
         private$.dataObserved$colorIndex <-
           factor(private$.dataObserved$colorIndex,
-                 levels = names(referenceColorscaleVector),
+                 levels = names(referenceColorScaleVector),
                  ordered = TRUE
           )
       }
 
-      if (any(is.na(referenceColorscaleVector))){
+      if (any(is.na(referenceColorScaleVector))){
         private$.scaleVectors[["colour"]] <-
           setNames(c(getDefaultColorsForScaleVector(shade = 'dark',n=1),'grey'),
-                   names(referenceColorscaleVector))
+                   names(referenceColorScaleVector))
       } else {
-        private$.scaleVectors[["colour"]] <- referenceFillscaleVector
+        private$.scaleVectors[["colour"]] <- referenceFillScaleVector
       }
 
       if (self$hasObservedData() | self$hasSimulatedPop()) {
-        if (any(is.na(referenceColorscaleVector))){
+        if (any(is.na(referenceColorScaleVector))){
           private$.scaleVectors[["fill"]] <-
             setNames(c(getDefaultColorsForScaleVector(shade = 'light',n=1),'grey'),
-                     names(referenceColorscaleVector))
+                     names(referenceColorScaleVector))
         } else {
-          private$.scaleVectors[["fill"]] <- referenceFillscaleVector
+          private$.scaleVectors[["fill"]] <- referenceFillScaleVector
         }
 
       }

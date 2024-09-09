@@ -252,7 +252,7 @@ generatePlotForPlotType <- function(plotData,
             TP = ospsuite_plotTimeProfile(
               plotData = plotData$getDataForTimeRange(timeRangeFilter, counter = plotCounter),
               yscale = yScale,
-              mapping = getGroupbyMapping(plotData),
+              mapping = getGroupbyMapping(plotData,plotType),
               groupAesthetics = getGroupAesthetics(plotData),
               mapSimulatedAndObserved = NULL, # getMapSimulatedAndObserved(plotData),
               yscale.args = list(limits = yLimits)
@@ -260,33 +260,33 @@ generatePlotForPlotType <- function(plotData,
             PvO = ospsuite_plotPredictedVsObserved(
               plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", counter = plotCounter),
               xyscale = yScale,
-              mapping = getGroupbyMapping(plotData),
+              mapping = getGroupbyMapping(plotData,plotType),
               groupAesthetics = getGroupAesthetics(plotData),
               comparisonLineVector = getFoldDistanceForPvO(plotData)
             ),
             ResvT = ospsuite_plotResidualsVsTime(
               plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", counter = plotCounter),
               residualScale = yScale,
-              mapping = getGroupbyMapping(plotData),
+              mapping = getGroupbyMapping(plotData,plotType),
               groupAesthetics = getGroupAesthetics(plotData)
             ),
             ResvO = ospsuite_plotResidualsVsObserved(
               plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", counter = plotCounter),
               residualScale = yScale,
               xscale = yScale,
-              mapping = getGroupbyMapping(plotData),
+              mapping = getGroupbyMapping(plotData,plotType),
               groupAesthetics = getGroupAesthetics(plotData)
             ),
             ResH = ospsuite_plotResidualsAsHistogram(
               plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", counter = plotCounter),
               residualScale = yScale,
-              mapping = getGroupbyMapping(plotData),
+              mapping = getGroupbyMapping(plotData,plotType),
               distribution = "normal"
             ),
             QQ = ospsuite_plotQuantileQuantilePlot(
               plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", counter = plotCounter),
               residualScale = yScale,
-              mapping = getGroupbyMapping(plotData),
+              mapping = getGroupbyMapping(plotData,plotType),
               groupAesthetics = getGroupAesthetics(plotData)
             )
           )
@@ -495,12 +495,15 @@ checkAndAdjustYlimits <- function(plotData,
 #' Get mapping for "groupby" aesthetics
 #'
 #' @param plotData Object containing the data for the plot.
+#' @param plotType Type of the plot.
 #'
 #' @return Aesthetic mappings for grouping.
 #' @keywords internal
-getGroupbyMapping <- function(plotData) {
+getGroupbyMapping <- function(plotData,plotType) {
   if ("shapeIndex" %in% names(plotData$data)) {
     aes(groupby = colorIndex, shape = shapeIndex)
+  } else if (plotType == 'TP') {
+    aes(groupby = colorIndex, shape = 'observed data')
   } else {
     aes(groupby = colorIndex)
   }
@@ -533,15 +536,12 @@ updateGuides <- function(plotData, plotObject, plotType) {
     return(plotObject)
   }
 
-  # if mapSimulatedAdObserved is not available, colors has to be set by scalingVectors
-  #if (!plotData$hasObservedData()) {
-    for (aesthetic in names(plotData$scaleVectors)) {
-      plotObject <- plotObject +
-        scale_discrete_manual(aesthetic,
-          values = plotData$scaleVectors[[aesthetic]]
-        )
-    }
-  #}
+  for (aesthetic in names(plotData$scaleVectors)) {
+    plotObject <- plotObject +
+      scale_discrete_manual(aesthetic,
+                            values = plotData$scaleVectors[[aesthetic]]
+      )
+  }
 
   if (plotData$useColorIndex() & !plotData$hasSimulatedPop()) {
     legendTitleSimulated <- paste("Simulated", plotData$tpLabelSimulatedMean)
@@ -552,45 +552,103 @@ updateGuides <- function(plotData, plotObject, plotType) {
       " with ", plotData$tpLabelSimulatedRange
     )
   } else {
-    legendTitleSimulated <- NULL
+    legendTitleSimulated <- ''
   }
 
-  if (plotData$hasObservedData() &
-    !plotData$useColorIndex() &
-    !plotData$useShapeIndex()) {
-    legendTitleObserved <- NULL
-  } else {
-    legendTitleObserved <- plotData$tpLabelObserved
-  }
 
-  aestheticsSuffix <- ifelse(plotData$hasObservedData(), "_ggnewscale_1", "")
-  guidesList <- setNames(
-    lapply(c("colour", "fill"), function(aesthetic) {
-      guide_legend(order = 1, title = legendTitleSimulated)
-    }),
-    paste0(c("colour", "fill"), aestheticsSuffix)
-  )
-  if (plotData$hasObservedData()) {
-    guidesListObserved <- setNames(
-      lapply(c("colour", "fill"), function(aesthetic) {
-        guide_legend(order = 2, title = legendTitleObserved)
-      }),
-      c("colour", "fill")
+  plotObject <-
+    plotObject +
+    guides(
+      color = guide_legend(
+        title = legendTitleSimulated,
+        order = 1,
+        override.aes = list(shape = NA)
+      ),
+      fill = guide_legend(
+        title = legendTitleSimulated,
+        order = 1
+      )
     )
-    guidesList <- c(
-      guidesList,
-      guidesListObserved
-    )
-  }
-  if (plotData$useShapeIndex()) {
-    if (plotData$useColorIndex()) {
-      guidesList[["shape"]] <- guide_legend(order = 3, title = "")
-    } else {
-      guidesList[["shape"]] <- guide_legend(order = 2, title = legendTitleObserved)
-    }
+  if (plotData$hasObservedData()){
+      legendTitleShape <- ifelse(plotData$useShapeIndex(),'observedData','')
+
+    plotObject <-
+      plotObject +
+      guides(
+        shape = guide_legend(
+          title = legendTitleShape,
+          order = 2,
+          override.aes = list(alpha = 0.7,
+                              color = 'black',
+                              fill = 'black'),
+        ),
+        linetype = guide_legend(
+          title = '',
+          order = 3
+        )
+      )
   }
 
-  plotObject <- plotObject + guides(!!!guidesList)
+
+
+  # if mapSimulatedAdObserved is not available, colors has to be set by scalingVectors
+  # if (!plotData$hasObservedData()) {
+  #   for (aesthetic in names(plotData$scaleVectors)) {
+  #     plotObject <- plotObject +
+  #       scale_discrete_manual(aesthetic,
+  #         values = plotData$scaleVectors[[aesthetic]]
+  #       )
+  #   }
+  # }
+  #
+  # if (plotData$useColorIndex() & !plotData$hasSimulatedPop()) {
+  #   legendTitleSimulated <- paste("Simulated", plotData$tpLabelSimulatedMean)
+  # } else if (plotData$useColorIndex() & plotData$hasSimulatedPop()) {
+  #   legendTitleSimulated <- paste0(
+  #     "Simulated data\n",
+  #     plotData$tpLabelSimulatedMean,
+  #     " with ", plotData$tpLabelSimulatedRange
+  #   )
+  # } else {
+  #   legendTitleSimulated <- NULL
+  # }
+  #
+  # if (plotData$hasObservedData() &
+  #   !plotData$useColorIndex() &
+  #   !plotData$useShapeIndex()) {
+  #   legendTitleObserved <- NULL
+  # } else {
+  #   legendTitleObserved <- plotData$tpLabelObserved
+  # }
+  #
+  # aestheticsSuffix <- ifelse(plotData$hasObservedData(), "_ggnewscale_1", "")
+  # guidesList <- setNames(
+  #   lapply(c("colour", "fill"), function(aesthetic) {
+  #     guide_legend(order = 1, title = legendTitleSimulated)
+  #   }),
+  #   paste0(c("colour", "fill"), aestheticsSuffix)
+  # )
+  # if (plotData$hasObservedData()) {
+  #   guidesListObserved <- setNames(
+  #     lapply(c("colour", "fill"), function(aesthetic) {
+  #       guide_legend(order = 2, title = legendTitleObserved)
+  #     }),
+  #     c("colour", "fill")
+  #   )
+  #   guidesList <- c(
+  #     guidesList,
+  #     guidesListObserved
+  #   )
+  # }
+  # if (plotData$useShapeIndex()) {
+  #   if (plotData$useColorIndex()) {
+  #     guidesList[["shape"]] <- guide_legend(order = 3, title = "")
+  #   } else {
+  #     guidesList[["shape"]] <- guide_legend(order = 2, title = legendTitleObserved)
+  #   }
+  # }
+  #
+  # plotObject <- plotObject + guides(!!!guidesList)
 
   return(plotObject)
 }
@@ -869,7 +927,7 @@ validateConfigTableForTimeProfiles <- function(configTable, dataObserved, projec
 
   validateOutputPathIdFormat(configTablePlots = configTablePlots,column = 'IndividualIds')
 
-  validateIndividualPop(
+  validateVirtualTwinPop(
     configTablePlots = configTablePlots,
     projectConfiguration = projectConfiguration,
     dtScenarios = dtScenarios
@@ -967,10 +1025,10 @@ validateOutputPathIdFormat <- function(configTablePlots,column = 'OutputPathIds'
   }
 }
 
-#' Validate Individual Population in Plot Configuration
+#' Validate Virtual Twin Population in Plot Configuration
 #'
-#' This function validates the individual population specified in the plot configuration table.
-#' It checks for the presence of `IndividualIds` in scenarios with individual populations,
+#' This function validates the virtual twin population specified in the plot configuration table.
+#' It checks for the presence of `IndividualIds` in scenarios with virtual twin populations,
 #' ensures that brackets are not used in `IndividualIds` for time profile plots, and warns
 #' if `IndividualIds` is filled without a corresponding data group.
 #'
@@ -978,7 +1036,7 @@ validateOutputPathIdFormat <- function(configTablePlots,column = 'OutputPathIds'
 #' @param projectConfiguration A configuration object containing project-specific settings.
 #' @param dtScenarios A data table containing scenario details.
 #' @keywords internal
-validateIndividualPop <- function(configTablePlots,projectConfiguration,dtScenarios){
+validateVirtualTwinPop <- function(configTablePlots,projectConfiguration,dtScenarios){
 
   scenarioNames <- unique(configTablePlots$Scenario)
   individualMatches <-
@@ -995,7 +1053,7 @@ validateIndividualPop <- function(configTablePlots,projectConfiguration,dtScenar
 
   # IndividualIds is filled
   if (any(is.na(configTablePlots[Scenario %in% indPopScenarios ]$IndividualIds))){
-    stop(paste('For scenarios with individual populations, column IndividualIds has to be filled.',
+    stop(paste('For scenarios with virtual twin populations, column IndividualIds has to be filled.',
                'Use "*" or "(*)", if you want to plot all. (Brackets not allowed for Timeprofile Plots)',
                'Check Scenarios:',paste(indPopScenarios,collapse = ', ')))
   }
@@ -1003,7 +1061,7 @@ validateIndividualPop <- function(configTablePlots,projectConfiguration,dtScenar
   tmp <- configTablePlots[Scenario %in% indPopScenarios & as.logical(Plot_TimeProfiles)]
   errorRows <- which(grepl("\\(", tmp$IndividualIds) | grepl("\\)", tmp$IndividualIds))
   if (length(errorRows) > 0){
-    stop(paste('For scenarios with individual populations and selected Plot_TimeProfiles,
+    stop(paste('For scenarios with virtual twin populations and selected Plot_TimeProfiles,
                brackets are not allowed in column IndividualIds.',
                'Check Plots:',paste(tmp$PlotName[errorRows],collapse = ', ')))
   }
@@ -1011,7 +1069,7 @@ validateIndividualPop <- function(configTablePlots,projectConfiguration,dtScenar
   tmp <- configTablePlots[!(Scenario %in% indPopScenarios) & !is.na(IndividualIds) & is.na(DataGroupIds)]
   if (nrow(tmp) > 0){
     warning(paste('Column "IndividualIds" is filled but no data group is selected and
-    scenario is not an individual population scenario. "IndividualIds" will be ignored.',
+    scenario is not an virtual twin population scenario. "IndividualIds" will be ignored.',
                'Check Plots:',paste(tmp$PlotName,collapse = ', ')))
   }
 

@@ -927,7 +927,7 @@ convertIdentifierColumns <- function(dt, identifierCols) {
 
 
 #' filters observed data for individual groups which are suited for
-#' aggregation or "IndividualPopulation" creation
+#' aggregation or "Virtual Twin population" creation
 #'
 #' @inheritParams aggregatedObservedDataGroups
 #' @param minN  minimal number needed for group

@@ -20,11 +20,11 @@
 #
 #   # Check if the workbook was modified
 #   wb <- openxlsx::loadWorkbook(mock_projectConfiguration$populationsFile)
-#   expect_true("IndividualPopulation" %in% wb$sheet_names)
+#   expect_true("VirtualTwinPopulation" %in% wb$sheet_names)
 # })
 #
-# # Test for generateIndividualPopulation
-# test_that("generateIndividualPopulation works correctly", {
+# # Test for generateVirtualTwinPopulation
+# test_that("generateVirtualTwinPopulation works correctly", {
 #   # Create necessary mock files
 #   openxlsx::write.xlsx(data.frame(IndividualId = c(1, 2, 3)),
 #                        file = mock_projectConfiguration$individualsFile,
@@ -34,19 +34,19 @@
 #                        file = mock_projectConfiguration$modelParamsFile,
 #                        sheetName = "ModelParameterSheets")
 #
-#   expect_null(generateIndividualPopulation(mock_projectConfiguration, "mock_model_file", overwrite = TRUE))
+#   expect_null(generateVirtualTwinPopulation(mock_projectConfiguration, "mock_model_file", overwrite = TRUE))
 #
 #   # Check if the output CSV files are created
 #   expect_true(file.exists(file.path(mock_projectConfiguration$populationsFolder, "Group1.csv")))
 #   expect_true(file.exists(file.path(mock_projectConfiguration$populationsFolder, "Group2.csv")))
 # })
 #
-# # Test for.buildIndividualPopulation
-# test_that(".buildIndividualPopulation works correctly", {
+# # Test for.buildVirtualTwinPopulation
+# test_that(".buildVirtualTwinPopulation works correctly", {
 #   params <- list(IndividualId = list(Sheet1 = list(value = 1)))
 #   dPop <- data.table(PopulationName = "Pop1", DataGroup = "Group1", IndividualId = 1)
 #
-#   result <- .buildIndividualPopulation(mock_projectConfiguration, params, dPop)
+#   result <- .buildVirtualTwinPopulation(mock_projectConfiguration, params, dPop)
 #
 #   expect_true(nrow(result) > 0)
 #   expect_true("PopulationName" %in% names(result))
