@@ -11,7 +11,7 @@
 #'
 #' @examples
 #' # Example usage:
-#' setupIndPopConfig(projectConfiguration, dataObserved, groups = c("Group1", "Group2"))
+#' setupVirtualTwinPopConfig(projectConfiguration, dataObserved, groups = c("Group1", "Group2"))
 setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups = NULL) {
 
   checkmate::assertCharacter(groups, any.missing = FALSE, null.ok = TRUE)
@@ -26,18 +26,18 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
 
   # Check if the 'VirtualTwinPopulation' sheet exists
   if (!('VirtualTwinPopulation' %in% wb$sheet_names)) {
-    dtIndPops <- xlsxReadData(projectConfiguration$scenariosFile, sheetName = 'Scenarios') %>%
+    dtTwinPops <- xlsxReadData(projectConfiguration$scenariosFile, sheetName = 'Scenarios') %>%
       data.table::setnames("PopulationId", 'PopulationName') %>%
       dplyr::mutate('DataGroups' = '') %>%
       dplyr::select(c('PopulationName', 'DataGroups', "IndividualId", "ModelParameterSheets", "ApplicationProtocol")) %>%
       dplyr::filter(FALSE)
   } else {
-    dtIndPops <- xlsxReadData(wb, 'VirtualTwinPopulation')
+    dtTwinPops <- xlsxReadData(wb, 'VirtualTwinPopulation')
   }
 
   if (is.null(groups))   groups <- getIndividualDataGroups(dataObserved, groups)
-  # Remove any groups that are already in dtIndPops
-  groups <- setdiff(groups, unique(splitInputs(dtIndPops$DataGroups)))
+  # Remove any groups that are already in dtTwinPops
+  groups <- setdiff(groups, unique(splitInputs(dtTwinPops$DataGroups)))
 
   # Check if any groups are available for virtual twin population creation
   if (length(groups) == 0) {
@@ -46,23 +46,23 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
   }
 
   # Create new virtual twin population data
-  dtIndPopsNew <- dataObserved[group %in% groups, c('group', 'individualId')] %>%
+  dtTwinPopsNew <- dataObserved[group %in% groups, c('group', 'individualId')] %>%
     unique()  %>%
     data.table::setnames('individualId','IndividualId') %>%
     .[,.(DataGroups=paste(group,collapse = ', ')),by = 'IndividualId'] %>%
     .[,PopulationName := gsub(', ','_',DataGroups)]
 
   message('add virtual twin population configuration in Population configuration file:')
-  writeTableToLog(dtIndPopsNew[,.N,by = 'PopulationName'])
+  writeTableToLog(dtTwinPopsNew[,.N,by = 'PopulationName'])
 
   # Combine the existing and new virtual twin population data
-  dtIndPops <- rbind(dtIndPops, dtIndPopsNew, fill = TRUE)
+  dtTwinPops <- rbind(dtTwinPops, dtTwinPopsNew, fill = TRUE)
 
   # Write data to the workbook
   if (!('VirtualTwinPopulation' %in% wb$sheet_names)) {
-    xlsxAddSheet(wb = wb, sheetName = 'VirtualTwinPopulation', dt = dtIndPops)
+    xlsxAddSheet(wb = wb, sheetName = 'VirtualTwinPopulation', dt = dtTwinPops)
   } else {
-    xlsxWriteData(wb = wb, sheetName = 'VirtualTwinPopulation', dt = dtIndPops)
+    xlsxWriteData(wb = wb, sheetName = 'VirtualTwinPopulation', dt = dtTwinPops)
   }
 
   # Save the workbook
@@ -90,7 +90,7 @@ exportVirtualTwinPopulations <- function(projectConfiguration, modelFile, overwr
 
   checkmate::assertCharacter(populationNames,any.missing = FALSE,null.ok = TRUE)
 
-  dtIndPops <- xlsxReadData(wb = projectConfiguration$populationsFile,
+  dtTwinPops <- xlsxReadData(wb = projectConfiguration$populationsFile,
                             sheetName = "VirtualTwinPopulation",
                             emptyAsNA = FALSE)
 
@@ -99,29 +99,27 @@ exportVirtualTwinPopulations <- function(projectConfiguration, modelFile, overwr
     existingFiles <- list.files(projectConfiguration$populationsFolder, pattern = "*.csv", full.names = TRUE)
     existingPopulationNames <- sub("\\.csv$", "", basename(existingFiles))
 
-    # Filter dtIndPops for populations that do not exist
-    dtIndPops <- dtIndPops[!PopulationName %in% existingPopulationNames]
+    # Filter dtTwinPops for populations that do not exist
+    dtTwinPops <- dtTwinPops[!PopulationName %in% existingPopulationNames]
   }
-  if (!is.null(populationNames) & nrow(dtIndPops) > 0){
-    dtIndPops <- dtIndPops[dtIndPops$PopulationName %in% populationNames]
+  if (!is.null(populationNames) & nrow(dtTwinPops) > 0){
+    dtTwinPops <- dtTwinPops[dtTwinPops$PopulationName %in% populationNames]
   }
   # If no populations left to generate, return with a message
-  if (nrow(dtIndPops) == 0) {
+  if (nrow(dtTwinPops) == 0) {
     message("No new virtual twin populations to generate; all files already exist.")
     return(invisible())
   }
 
   sim <-   ospsuite::loadSimulation(file.path(projectConfiguration$modelFolder, modelFile))
 
-  params <- .readParameterSheetList(projectConfiguration, dtIndPops, sim)
+  params <- .readParameterSheetList(projectConfiguration, dtTwinPops, sim)
 
   dtIndividualBiometrics <- xlsxReadData(wb = projectConfiguration$individualsFile, sheetName = "IndividualBiometrics")
-  dtIndividualBiometrics <- dtIndividualBiometrics[IndividualId %in% dtIndPops$IndividualId]
+  dtIndividualBiometrics <- dtIndividualBiometrics[IndividualId %in% dtTwinPops$IndividualId]
 
 
-  .generatePopulationFiles(dtIndPops, params, dtIndividualBiometrics, projectConfiguration,sim)
-
-  .addMissingScenarios(projectConfiguration = projectConfiguration,dtIndPops = dtIndPops,modelFile = modelFile)
+  .generatePopulationFiles(dtTwinPops, params, dtIndividualBiometrics, projectConfiguration,sim)
 
   return(invisible())
 }
@@ -169,9 +167,9 @@ getIndividualMatchForScenario <- function(projectConfiguration,
 
 }
 
-#' Export Virtual Populations
+#' Export Random Populations
 #'
-#' This function exports virtual populations based on demographic data from a
+#' This function exports random populations based on demographic ranges from a
 #' specified Excel file. It can filter populations to export based on existing
 #' files in a specified folder and optionally overwrite those files.
 #'
@@ -187,7 +185,7 @@ getIndividualMatchForScenario <- function(projectConfiguration,
 #'         available for export.
 #'
 #' @export
-exportVirtualPopulations <- function(projectConfiguration,populationNames = NULL, overwrite = FALSE){
+exportRandomPopulations <- function(projectConfiguration,populationNames = NULL, overwrite = FALSE){
 
   # add virtual population with in biometric ranges of observed data
   dtPops <- xlsxReadData(wb = projectConfiguration$populationsFile,sheetName  = "Demographics" )
@@ -199,7 +197,7 @@ exportVirtualPopulations <- function(projectConfiguration,populationNames = NULL
     existingFiles <- list.files(projectConfiguration$populationsFolder, pattern = "*.csv", full.names = TRUE)
     existingPopulationNames <- sub("\\.csv$", "", basename(existingFiles))
 
-    # Filter dtIndPops for populations that do not exist
+    # Filter dtTwinPops for populations that do not exist
     populationNames <- setdiff(populationNames,existingPopulationNames)
   }
   if (!is.null(populationNames) & nrow(dtPops) > 0){
@@ -286,23 +284,71 @@ updateExportedPopulation <- function(projectConfiguration,sourcePopulation,targe
 
 }
 
+#' Set Custom Parameters to Population
+#'
+#' This function updates the parameter values of a population based on custom parameters defined in a scenario.
+#' It first checks if the scenario is of type "Population" and whether custom parameters are available.
+#'
+#' @param scenario An object of class `Scenario` containing the following components:
+#'   - `scenarioType`: A character string indicating the type of scenario.
+#'   - `finalCustomParams`: A list with custom parameters.
+#'   - `population`: An object representing the population, which includes a method to set parameter values.
+#'   - `simulation`: An object containing simulation details, used to retrieve parameter dimensions.
+#'
+#' @details
+#' The function filters the custom parameters to include only those that exist in the population's parameter paths.
+#' It calculates the base values for these parameters and sets them for the entire population if applicable.
+#'
+#' @return The updated `scenario` object, with the population's parameters set accordingly. If the scenario type is not "Population" or if there are no custom parameters, the original scenario is returned unchanged.
+#'
+#' @export
+setCustomParamsToPopulation <- function(scenario){
+  checkmate::assertClass(scenario,classes = 'Scenario')
+  if (scenario$scenarioType != "Population" ||
+      is.null(scenario$finalCustomParams$paths))
+    return(scenario)
+
+
+  dtCustomParams  <- data.table::as.data.table(scenario$finalCustomParams)
+  dtCustomParams <- dtCustomParams[paths %in% scenario$population$allParameterPaths]
+  if (nrow(dtCustomParams) > 0){
+
+    dtCustomParams[, `:=`(
+      dimension = getParameter(paths, container = scenario$simulation)$dimension),
+      by = 'paths']
+    dtCustomParams[, `:=`(
+      baseValue = toBaseUnit(quantityOrDimension = dimension, values = values, unit = units)),
+      by = 'paths']
+
+    for (dp in split(dtCustomParams,by = 'paths')){
+
+      scenario$population$setParameterValues(
+        parameterOrPath = dp$paths,
+        values = rep(dp$baseValue, scenario$population$count)
+      )
+
+    }
+  }
+  return(scenario)
+}
+
 
 #' Read Parameter Sheet List
 #'
 #' This function reads parameters from specified sheets in an Excel file.
 #'
 #' @param projectConfiguration A list containing project configuration details.
-#' @param dtIndPops A data.table containing virtual twin population data.
+#' @param dtTwinPops A data.table containing virtual twin population data.
 #' @param sim A simulation object.
 #'
 #' @return A list of parameters for the specified sheets.
 #' @keywords internal
-.readParameterSheetList <- function(projectConfiguration, dtIndPops, sim) {
+.readParameterSheetList <- function(projectConfiguration, dtTwinPops, sim) {
   params <- mapply(
     function(sheet, file) {
       .getAllParameterForSheets(
         projectConfiguration = projectConfiguration,
-        sheets = .cleanUpSheetList(dtIndPops[[sheet]]),
+        sheets = .cleanUpSheetList(dtTwinPops[[sheet]]),
         paramsXLSpath = file,
         sim = sim
       )
@@ -326,14 +372,14 @@ updateExportedPopulation <- function(projectConfiguration,sourcePopulation,targe
 #'
 #' This function generates population files based on individual biometrics and parameters.
 #'
-#' @param dtIndPops A data.table containing virtual twin population data.
+#' @param dtTwinPops A data.table containing virtual twin population data.
 #' @param params A list of parameters for the virtual twin population.
 #' @param dtIndividualBiometrics A data.table containing individual biometrics.
 #' @param projectConfiguration A list containing project configuration details.
 #' @param sim A simulation object.
 #'
 #' @keywords internal
-.generatePopulationFiles <- function(dtIndPops, params, dtIndividualBiometrics, projectConfiguration,sim) {
+.generatePopulationFiles <- function(dtTwinPops, params, dtIndividualBiometrics, projectConfiguration,sim) {
 
   for (indId in dtIndividualBiometrics$IndividualId) {
 
@@ -354,7 +400,7 @@ updateExportedPopulation <- function(projectConfiguration,sourcePopulation,targe
     }
   }
 
-  for (dPop in split(dtIndPops, by = "PopulationName")) {
+  for (dPop in split(dtTwinPops, by = "PopulationName")) {
     poptable <- .buildVirtualTwinPopulation(projectConfiguration = projectConfiguration,
                                            params = params,
                                            dPop = unique(dPop))
@@ -563,40 +609,4 @@ updateExportedPopulation <- function(projectConfiguration,sourcePopulation,targe
 
   return(result)
 }
-
-
-
-
-#' Add Missing Scenarios
-#'
-#' This function adds any missing scenarios to the scenarios workbook based on the provided virtual twin population data.
-#'
-#' @param dtIndPops A data.table containing virtual twin population data with PopulationName.
-#' @param projectConfiguration A list containing project configuration details, including the scenarios file path.
-#' @param modelFile A string representing the name of the model file to be used.
-#'
-#' @return Returns NULL invisibly after updating the scenarios workbook.
-#' @keywords internal
-.addMissingScenarios <- function(dtIndPops, projectConfiguration, modelFile) {
-  wb <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
-  dtScenario <- xlsxReadData(wb, 'Scenarios')
-
-  newScenarios <- setdiff(unique(dtIndPops$PopulationName), dtScenario$PopulationId)
-
-  if (length(newScenarios) > 0) {
-    dtScenario <- rbind(dtScenario,
-                        data.table(Scenario_name = tolower(newScenarios),
-                                   PopulationId = newScenarios,
-                                   ReadPopulationFromCSV = TRUE,
-                                   ModelFile = modelFile),
-                        fill = TRUE)
-
-    xlsxWriteData(wb = wb, sheetName = 'Scenarios', dt = dtScenario)
-    openxlsx::saveWorkbook(wb, projectConfiguration$scenariosFile, overwrite = TRUE)
-  }
-  return(invisible())
-}
-
-
-
 

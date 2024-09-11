@@ -289,6 +289,10 @@ The workflow includes various plotting functions that generate visualizations ba
 
 Each plot function is designed to create an R Markdown (`.Rmd`) file, which contains the code and output for the respective plot. This allows for easy documentation and sharing of the results.
 
+## Configuration of Plots
+
+The plot configuration excel file has two sheets ("DataGroups" and "Outputs") which are used for all plotting functions. Here properties like display names, units, colors,.. are set for outputs and data groups. The identifiers corresponds to the columns "group" and "outputPathId" of the observed data.
+
 ## Using runPlot
 
 The `runPlot` function is the primary interface for generating plots within the workflow. It takes the following key parameters:

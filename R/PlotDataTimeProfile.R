@@ -78,10 +78,6 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         private$.tpLabelSimulatedMean <- "time profile"
       }
 
-
-
-
-
       return(invisible())
     },
 
@@ -130,7 +126,8 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
       return(invisible())
     },
-    # Replicates data for each time tag
+    #' Replicates data for each time tag
+    #' @return invisible(NULL)
     addTimeRangeTags = function() {
       timeRangeColumns <- names(private$.configTable)[grepl("^TimeRange_", names(private$.configTable))]
 
@@ -153,6 +150,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
           applicationTimes = private$.applicationTimes
         )
       }
+      return(invisible())
     },
     #' Creates PlotId for each scenario outputs group
     #'
@@ -215,8 +213,9 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       return(invisible())
     },
 
-    #' Set factors for plotting
-    setOrderAndFactors = function(identifierColumns) {
+    #'  @title Set factors for plotting
+    #' @return invisible(NULL)
+    setOrderAndFactors = function() {
       private$setFactorLevels(
         tableName = ".dtOutputPaths",
         identifier = "outputPathId",
@@ -240,12 +239,11 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
       return(invisible())
     },
-    #' set columns for aesthtics
-    #' @param referenceColorScaleVector scale vector to scale aesthetic color for scenarios with reference scenerio
-    #' @param referenceFillScaleVector scale vector to scale aesthetic fill for scenarios with reference scenerio
-    setIndexColumns = function(referenceColorScaleVector,referenceFillScaleVector){
-      private$addColorIndexColumns(referenceColorScaleVector = referenceColorScaleVector,
-                                   referenceFillScaleVector = referenceFillScaleVector)
+    #' set columns for aesthetics
+    #' @param referenceScaleVector scale vector to scale aesthetic color and fill for scenarios with reference scenerio
+    setIndexColumns = function(referenceScaleVector){
+
+      private$addColorIndexColumns(referenceScaleVector = referenceScaleVector)
       private$addShapeIndexColumn()
 
     },
@@ -263,8 +261,9 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         " [", private$.configTable$TimeUnit[1], "]"
       )
     },
-    # Add predicted values to observed data
-    addPredictedForObserved = function(identifierColumns) {
+    #'  @title Add predicted values to observed data
+    #' @return invisible(NULL)
+    addPredictedForObserved = function() {
       # Check if predicted data is needed
       plotCols <- setdiff(grep("^Plot_", names(private$.configTable), value = TRUE), "Plot_TimeProfiles")
       plotCols <- plotCols[unlist(lapply(plotCols, function(x) {
@@ -296,11 +295,12 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     #'
     #' @param filterName name of time range filter
     #' @param typeFilter filter for data type
+    #' @param plotCounter counter for different plots
     #'
     #' @return `data.table` with filtered plot data
-    getDataForTimeRange = function(filterName, counter, typeFilter = NULL) {
+    getDataForTimeRange = function(filterName, plotCounter, typeFilter = NULL) {
       tmp <- self$data[eval(parse(text = private$.timeRangeTagFilter[[filterName]])) &
-                         counter == counter]
+                         counter == plotCounter]
       if (!is.null(typeFilter)) {
         tmp <- tmp[dataType == typeFilter]
       }
@@ -335,6 +335,12 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     #' @return Logical
     hasObservedData = function() {
       return(nrow(private$.dataObserved) > 0)
+    },
+
+    #' Function to determine if data contains observed data range
+    #' @return Logical
+    hasObservedDataRange = function() {
+      return(self$hasObservedData() && !is.na(private$.dataObserved$yErrorType[1]))
     },
 
     #' Function to determine if a reference population should be plotted
@@ -375,10 +381,6 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     #' @field scaleVectors List with scaling vectors to manually scale aesthetics
     scaleVectors = function() {
       private$.scaleVectors
-    },
-    #' @field scaleVectorsObserved List with scaling vectors for observed data
-    scaleVectorsObserved = function() {
-      private$.scaleVectorsObserved
     },
     #' @field tpLabelSimulatedMean Label for simulated mean
     tpLabelSimulatedMean = function() {
@@ -425,8 +427,6 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     .dtCaption = NULL,
     # List with scaling vectors to manually scale aesthetics
     .scaleVectors = list(),
-    # List with scaling vectors for residual plots
-    .scaleVectorsObserved = list(),
     # Label for simulated mean
     .tpLabelSimulatedMean = NULL,
     # Label for simulated range
@@ -517,10 +517,9 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
 
     # Add color and fill index columns
-    addColorIndexColumns = function(referenceColorScaleVector,referenceFillScaleVector) {
+    addColorIndexColumns = function(referenceScaleVector) {
       if (self$hasReferenceComparison()){
-        private$addColorIndexByScenarioType(referenceColorScaleVector = referenceColorScaleVector,
-                                            referenceFillScaleVector = referenceFillScaleVector)
+        private$addColorIndexByScenarioType(referenceScaleVector = referenceScaleVector)
       } else if (self$useColorIndex()) {
         private$addColorIndexByOutput()
       } else {
@@ -540,7 +539,6 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
             )
         }
       }
-
       private$.scaleVectors[["colour"]] <- getScalevector(
         namesOfScaleVector = levels(private$.dataSimulated$colorIndex),
         listOfValues = list(
@@ -565,12 +563,21 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
           )
         )
       }
-      if (self$hasObservedData()) {
-        private$.scaleVectorsObserved <- private$.scaleVectors
-      }
     },
     # color is defined by reference
-    addColorIndexByScenarioType = function(referenceColorScaleVector,referenceFillScaleVector){
+    addColorIndexByScenarioType = function(referenceScaleVector){
+
+      namesVector <- names(referenceScaleVector)
+      referenceColorScaleVector <-
+        setNames(sapply(namesVector, function(name)
+          referenceScaleVector[[name]][1]),
+          namesVector)
+      referenceFillScaleVector <-
+        setNames(sapply(namesVector, function(name)
+          referenceScaleVector[[name]][2]),
+          namesVector)
+
+
       private$.dataSimulated[, colorIndex := scenarioType]
       private$.dataSimulated$colorIndex <-
         factor(private$.dataSimulated$colorIndex,
@@ -605,39 +612,22 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         }
 
       }
-      if (self$hasObservedData()) {
-        private$.scaleVectorsObserved <- private$.scaleVectors
-      }
     },
     # only one color needed
     addSingleColorIndex = function(){
+      colorIndexTxt <- if(self$hasSimulatedPop()){
+        paste("Simulated", private$.tpLabelSimulatedMean,
+              '\nwith', private$.tpLabelSimulatedRange) # nolint: line_length
+      } else{
+        paste("Simulated", private$.tpLabelSimulatedMean)
+      }
+
       for (fieldName in c(".dataSimulated", ".dataObserved")) {
         if (nrow(private[[fieldName]]) > 0) {
-          private[[fieldName]][, colorIndex := ifelse(dataType == "simulated",
-                                                      paste("Simulated", private$.tpLabelSimulatedMean), # nolint: line_length
-                                                      private$.tpLabelObserved
-          )]
+          private[[fieldName]][, colorIndex := colorIndexTxt]
           private[[fieldName]]$colorIndex <- factor(private[[fieldName]]$colorIndex,
-                                                    levels = c(
-                                                      paste("Simulated", private$.tpLabelSimulatedMean),
-                                                      private$.tpLabelObserved
-                                                    ),
-                                                    ordered = TRUE
-          )
+                                                    levels = colorIndexTxt)
 
-          if (self$hasSimulatedPop()) {
-            private[[fieldName]][, fillIndex := ifelse(dataType == "simulated",
-                                                       paste("Simulated", private$.tpLabelSimulatedRange),  # nolint: line_length
-                                                       private$.tpLabelObserved
-            )]
-            private[[fieldName]]$fillIndex <- factor(private[[fieldName]]$fillIndex,
-                                                     levels = c(
-                                                       paste("Simulated", private$.tpLabelSimulatedRange),
-                                                       private$.tpLabelObserved
-                                                     ),
-                                                     ordered = TRUE
-            )
-          }
         }
       }
       private$.scaleVectors[["colour"]] <- getScalevector(
@@ -645,19 +635,8 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         listOfValues = list(getDefaultColorsForScaleVector("dark", n = 1))
       )
       if (self$hasSimulatedPop() | self$hasObservedData()) {
-        indexField <- ifelse(self$hasSimulatedPop(), "fillIndex", "colorIndex")
         private$.scaleVectors[["fill"]] <- getScalevector(
-          namesOfScaleVector = levels(private$.dataSimulated[[indexField]])[1],
-          listOfValues = list(getDefaultColorsForScaleVector("light", n = 1))
-        )
-      }
-      if (self$hasObservedData()) {
-        private$.scaleVectorsObserved[["colour"]] <- getScalevector(
-          namesOfScaleVector = levels(private$.dataObserved$colorIndex)[2],
-          listOfValues = list(getDefaultColorsForScaleVector("dark", n = 1))
-        )
-        private$.scaleVectorsObserved[["fill"]] <- getScalevector(
-          namesOfScaleVector = levels(private$.dataObserved$colorIndex)[2],
+          namesOfScaleVector = levels(private$.dataSimulated$colorIndex)[1],
           listOfValues = list(getDefaultColorsForScaleVector("light", n = 1))
         )
       }
@@ -702,7 +681,8 @@ getPlotIdForColumns <- function(configTable, col) {
   colNew = sub("s$", "", col)
   colNew <- paste0(tolower(substring(colNew, 1, 1)), substring(colNew, 2))
 
-  dtCaption <- tidyr::separate_rows(data.table::setDF(configTable),
+  # use a copy of configTable, to make sure class is not changed outside
+  dtCaption <- tidyr::separate_rows(data.table::setDF(data.table::copy(configTable)),
                                     !!col,
                                     sep = ",\\s*|(?<=\\)),\\s*|\\s(?=\\()"
   ) %>%
@@ -749,13 +729,14 @@ splitCaptionByIndividuals <- function(configTable, individualIds, dtCaption) {
   tmpCount  <- dtCaptionMerge %>%
     dplyr::select(c('PlotId.O','PlotId.Ind')) %>%
     unique() %>%
-    data.table::setorderv(c('PlotId.O','PlotId.Ind'))
+    data.table::setorderv(c('PlotId.Ind','PlotId.O'))
 
   tmpCount[, PlotId := .I]
 
   dtCaptionMerge <- dtCaptionMerge %>%
-    merge(tmpCount, by = c('PlotId.O','PlotId.Ind')) %>%
-    dplyr::select(!c('PlotId.O','PlotId.Ind'))
+    merge(tmpCount, by = c('PlotId.O','PlotId.Ind'),sort = FALSE) %>%
+    dplyr::select(!c('PlotId.O','PlotId.Ind')) %>%
+    data.table::setorderv(c('PlotId'))
 
   return(dtCaptionMerge)
 }
@@ -902,7 +883,6 @@ restructureApplicationTimeByScenarioIndex = function(applicationTimes, configTab
 getOutputPathsPerScenario = function(configTable,dtOutputPaths) {
   outputPathsPerScenario <- list()
   for (scenarioType in  c('Scenario','ReferenceScenario')){
-
     outputPathsPerScenario <- utils::modifyList(
       outputPathsPerScenario,
       lapply(lapply(

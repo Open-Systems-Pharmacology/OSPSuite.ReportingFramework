@@ -6,10 +6,10 @@
 \title{plotData for Timeprofile plotData}
 \value{
 RmdContainer object
-get the timelabel for the filtered timerange
+Load simulated results for the specified project configuration
 }
 \description{
-An object to collect plotData and other informations to create a timeprofile plot
+An object to collect plotData and other information to create a time profile plot
 }
 \section{Super class}{
 \code{\link[ospsuite.utils:Printable]{ospsuite.utils::Printable}} -> \code{RmdContainer}
@@ -17,33 +17,29 @@ An object to collect plotData and other informations to create a timeprofile plo
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
-\item{\code{data}}{data For Plot}
+\item{\code{data}}{Data for Plot}
 
-\item{\code{dataReference}}{data with references for data}
+\item{\code{dataReference}}{Data with references for data}
 
-\item{\code{configTable}}{configuration table for one plot}
+\item{\code{configTable}}{Configuration table for one plot}
 
-\item{\code{dtCaption}}{`digits for significance in table display`data.table`with caption information`}
+\item{\code{PlotName}}{PlotName of configTable}
 
-\item{\code{scaleVectors}}{list with scaling vectors to manually scale aesthetics}
+\item{\code{dtCaption}}{Data.table with caption information}
 
-\item{\code{scaleVectorsObserved}}{list with scaling vectors to manually scale aesthetics of observed data}
+\item{\code{scaleVectors}}{List with scaling vectors to manually scale aesthetics}
 
-\item{\code{tpLabelSimulatedMean}}{label for simulated mean}
+\item{\code{tpLabelSimulatedMean}}{Label for simulated mean}
 
-\item{\code{tpLabelSimulatedRange}}{label for simulated range}
+\item{\code{tpLabelSimulatedRange}}{Label for simulated range}
 
-\item{\code{tpLabelObserved}}{label for observed data}
+\item{\code{tpLabelObserved}}{Label for observed data}
 
-\item{\code{tpLabels}}{list of time profile labels to add on ggplot}
+\item{\code{tpLabels}}{List of time profile labels to add on ggplot}
 
-\item{\code{nFacetColumns}}{number of facet columns}
+\item{\code{nFacetColumns}}{Number of facet columns}
 
-\item{\code{timeRangeTagFilter}}{list with filters for time range tags
-Collects all observed and simulated data needed for this plots
-helper function to extract time profiles for results
-setfactors to plot
-Creates PlotId for each scenario outputs group}
+\item{\code{timeRangeTagFilter}}{List with filters for time range tags}
 }
 \if{html}{\out{</div>}}
 }
@@ -51,12 +47,21 @@ Creates PlotId for each scenario outputs group}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-RmdContainer-new}{\code{PlotDataTimeProfile$new()}}
+\item \href{#method-RmdContainer-loadSimulatedResults}{\code{PlotDataTimeProfile$loadSimulatedResults()}}
+\item \href{#method-RmdContainer-filterObservedDataForPlot}{\code{PlotDataTimeProfile$filterObservedDataForPlot()}}
+\item \href{#method-RmdContainer-addTimeRangeTags}{\code{PlotDataTimeProfile$addTimeRangeTags()}}
+\item \href{#method-RmdContainer-splitDataToPanels}{\code{PlotDataTimeProfile$splitDataToPanels()}}
+\item \href{#method-RmdContainer-setOrderAndFactors}{\code{PlotDataTimeProfile$setOrderAndFactors()}}
+\item \href{#method-RmdContainer-setIndexColumns}{\code{PlotDataTimeProfile$setIndexColumns()}}
 \item \href{#method-RmdContainer-getTimeLabelForTimeRange}{\code{PlotDataTimeProfile$getTimeLabelForTimeRange()}}
+\item \href{#method-RmdContainer-addPredictedForObserved}{\code{PlotDataTimeProfile$addPredictedForObserved()}}
 \item \href{#method-RmdContainer-getDataForTimeRange}{\code{PlotDataTimeProfile$getDataForTimeRange()}}
 \item \href{#method-RmdContainer-useColorIndex}{\code{PlotDataTimeProfile$useColorIndex()}}
 \item \href{#method-RmdContainer-useShapeIndex}{\code{PlotDataTimeProfile$useShapeIndex()}}
 \item \href{#method-RmdContainer-hasSimulatedPop}{\code{PlotDataTimeProfile$hasSimulatedPop()}}
 \item \href{#method-RmdContainer-hasObservedData}{\code{PlotDataTimeProfile$hasObservedData()}}
+\item \href{#method-RmdContainer-hasObservedDataRange}{\code{PlotDataTimeProfile$hasObservedDataRange()}}
+\item \href{#method-RmdContainer-hasReferenceComparison}{\code{PlotDataTimeProfile$hasReferenceComparison()}}
 \item \href{#method-RmdContainer-clone}{\code{PlotDataTimeProfile$clone()}}
 }
 }
@@ -68,10 +73,7 @@ Initialize a new instance of the class
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$new(
   projectConfiguration = projectConfiguration,
-  onePlotConfig = onePlotConfig,
-  dataObserved = dataObserved,
-  aggregationFun = aggregationFun,
-  nFacetColumns = nFacetColumns
+  onePlotConfig = onePlotConfig
 )}\if{html}{\out{</div>}}
 }
 
@@ -80,11 +82,112 @@ Initialize a new instance of the class
 \describe{
 \item{\code{projectConfiguration}}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 
-\item{\code{onePlotConfig}}{plotconfiguration for one plot}
+\item{\code{onePlotConfig}}{plot configuration for one plot}
+
+\item{\code{dataObserved}}{`data.table` with observed data}
 
 \item{\code{aggregationFun}}{function to aggregate simulated data}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-loadSimulatedResults"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-loadSimulatedResults}{}}}
+\subsection{Method \code{loadSimulatedResults()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$loadSimulatedResults(projectConfiguration, aggregationFun)}\if{html}{\out{</div>}}
+}
 
-\item{\code{default}}{number of facet columns}
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{projectConfiguration}}{Configuration for the project}
+
+\item{\code{aggregationFun}}{Function to aggregate simulated data
+Filter observed data for plotting}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-filterObservedDataForPlot"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-filterObservedDataForPlot}{}}}
+\subsection{Method \code{filterObservedDataForPlot()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$filterObservedDataForPlot(dataObserved)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{dataObserved}}{`data.table` with observed data}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+`data.table` with filtered observed data for plotting
+Replicates data for each time tag
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-addTimeRangeTags"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-addTimeRangeTags}{}}}
+\subsection{Method \code{addTimeRangeTags()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$addTimeRangeTags()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+invisible(NULL)
+Creates PlotId for each scenario outputs group
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-splitDataToPanels"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-splitDataToPanels}{}}}
+\subsection{Method \code{splitDataToPanels()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$splitDataToPanels(nFacetColumns, nMaxFacetRows)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{nFacetColumns}}{default number of facet columns}
+
+\item{\code{nMaxFacetRows}}{maximal number of facet rows
+@title Set factors for plotting}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-setOrderAndFactors"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-setOrderAndFactors}{}}}
+\subsection{Method \code{setOrderAndFactors()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$setOrderAndFactors()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+invisible(NULL)
+set columns for aesthetics
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-setIndexColumns"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-setIndexColumns}{}}}
+\subsection{Method \code{setIndexColumns()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$setIndexColumns(referenceScaleVector)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{referenceScaleVector}}{scale vector to scale aesthetic color and fill for scenarios with reference scenerio
+Get the time label for the filtered time range}
 }
 \if{html}{\out{</div>}}
 }
@@ -101,9 +204,22 @@ Initialize a new instance of the class
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{filterName}}{character with name of time range filter
-get the data for the filtered time range}
+@title Add predicted values to observed data}
 }
 \if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-addPredictedForObserved"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-addPredictedForObserved}{}}}
+\subsection{Method \code{addPredictedForObserved()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$addPredictedForObserved()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+invisible(NULL)
+Get the data for the filtered time range
 }
 }
 \if{html}{\out{<hr>}}
@@ -111,21 +227,27 @@ get the data for the filtered time range}
 \if{latex}{\out{\hypertarget{method-RmdContainer-getDataForTimeRange}{}}}
 \subsection{Method \code{getDataForTimeRange()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$getDataForTimeRange(filterName, typeFilter = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$getDataForTimeRange(
+  filterName,
+  plotCounter,
+  typeFilter = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{filterName}}{name of timeRange filter}
+\item{\code{filterName}}{name of time range filter}
+
+\item{\code{plotCounter}}{counter for different plots}
 
 \item{\code{typeFilter}}{filter for data type}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-`data.table` with filtered plotData
-function to determine if color legend is needed
+`data.table` with filtered plot data
+Function to determine if color legend is needed
 }
 }
 \if{html}{\out{<hr>}}
@@ -138,7 +260,7 @@ function to determine if color legend is needed
 
 \subsection{Returns}{
 Logical
-function to determine if shape legend is needed
+Function to determine if shape legend is needed
 }
 }
 \if{html}{\out{<hr>}}
@@ -151,7 +273,7 @@ function to determine if shape legend is needed
 
 \subsection{Returns}{
 Logical
-function to determine if simulation is aggregated
+Function to determine if simulation is aggregated
 }
 }
 \if{html}{\out{<hr>}}
@@ -164,7 +286,7 @@ function to determine if simulation is aggregated
 
 \subsection{Returns}{
 Logical
-function to determine if data contains oberved data
+Function to determine if data contains observed data
 }
 }
 \if{html}{\out{<hr>}}
@@ -173,6 +295,32 @@ function to determine if data contains oberved data
 \subsection{Method \code{hasObservedData()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$hasObservedData()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+Logical
+Function to determine if data contains observed data range
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-hasObservedDataRange"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-hasObservedDataRange}{}}}
+\subsection{Method \code{hasObservedDataRange()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$hasObservedDataRange()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+Logical
+Function to determine if a reference population should be plotted
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-RmdContainer-hasReferenceComparison"></a>}}
+\if{latex}{\out{\hypertarget{method-RmdContainer-hasReferenceComparison}{}}}
+\subsection{Method \code{hasReferenceComparison()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$hasReferenceComparison()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{

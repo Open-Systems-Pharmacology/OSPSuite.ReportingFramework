@@ -22,6 +22,8 @@ ospsuite_plotTimeProfile <- function(plotData, #nolint
   yDimension <- yUnit <- dataType <- NULL
 
   plotData <- .validateAndConvertData(plotData = plotData, predictedIsNeeded = FALSE)
+  checkmate::assertNames(names(plotData), must.include = c("xUnit"))
+
 
   # Capture additional arguments
   AdditionalArgs <- list(...)
@@ -424,8 +426,8 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
 
   # make sure to exclude nas and sorting is correct
   dtSimulated <- data.table::copy(dtSimulated) %>%
-    dplyr::select(c("xValues", "yValues", identifier)) %>%
-    data.table::setorderv(c("xValues", identifier))
+    dplyr::select(dplyr::all_of(c("xValues", "yValues", identifier))) %>%
+    data.table::setorderv(dplyr::all_of(c("xValues", identifier)))
   dtSimulated <- dtSimulated[!is.nan(xValues) & !is.nan(yValues)]
 
   dtObserved[, predicted := {
@@ -510,7 +512,7 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
       data.table::setDT()
   }
   checkmate::assertDataFrame(plotData)
-  checkmate::assertNames(names(plotData), must.include = c("xValues", "yValues", "group"))
+  checkmate::assertNames(names(plotData), must.include = c("xValues", "yValues", "group","dataType"))
 
   # create a copy, so changes to columns will stay inside function
   plotData <- data.table::copy(data.table::setDT(plotData))

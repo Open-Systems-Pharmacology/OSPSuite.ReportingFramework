@@ -9,14 +9,14 @@
 #   individualId = c(1, 2, 3)
 # )
 #
-# # Test for setupIndPopConfig
-# test_that("setupIndPopConfig works correctly", {
+# # Test for setupVirtualTwinPopConfig
+# test_that("setupVirtualTwinPopConfig works correctly", {
 #   # # Create a mock workbook
 #   # openxlsx::write.xlsx(data.frame(PopulationId = c("Pop1", "Pop2")),
 #   #                      file = mock_projectConfiguration$populationsFile,
 #   #                      sheetName = "Scenarios")
 #
-#   expect_null(setupIndPopConfig(projectConfiguration, mock_dataObserved, groups = c("Group1", "Group2")))
+#   expect_null(setupVirtualTwinPopConfig(projectConfiguration, mock_dataObserved, groups = c("Group1", "Group2")))
 #
 #   # Check if the workbook was modified
 #   wb <- openxlsx::loadWorkbook(mock_projectConfiguration$populationsFile)

@@ -226,6 +226,10 @@ getErrorTrace  <- function(e){
 #'
 writeToLog <- function(type, msg, filename = NULL) {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
+  if (is.null(logFileFolder)) {
+    warning('Logfile was not initialized')
+    return(invisible())
+  }
   if (is.null(filename)) filename <- "run.log"
   checkmate::assertCharacter(type, len = 1, any.missing = FALSE)
   checkmate::assertCharacter(msg)
@@ -238,6 +242,7 @@ writeToLog <- function(type, msg, filename = NULL) {
     file = file.path(logFileFolder, filename),
     append = TRUE
   )
+  return(invisible())
 }
 
 #' write a table to the logfile
@@ -248,6 +253,10 @@ writeToLog <- function(type, msg, filename = NULL) {
 #' @export
 writeTableToLog <- function(dt, filename = "run.log") {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
+  if (is.null(logFileFolder)) {
+    warning('Logfile was not initialized')
+    return(invisible())
+  }
   verbose <- getOption("OSPSuite.RF.verbose", default = TRUE)
 
   checkmate::assertDataFrame(dt)
@@ -261,6 +270,7 @@ writeTableToLog <- function(dt, filename = "run.log") {
   if (verbose) {
     print(dt)
   }
+  return(invisible())
 }
 
 

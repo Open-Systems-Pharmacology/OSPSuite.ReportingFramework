@@ -4,7 +4,7 @@
 \alias{validateOutputPathIdFormat}
 \title{Validates output path ID format}
 \usage{
-validateOutputPathIdFormat(configTablePlots)
+validateOutputPathIdFormat(configTablePlots, column = "OutputPathIds")
 }
 \arguments{
 \item{configTablePlots}{`data.table` ConfigurationTable without header lines}

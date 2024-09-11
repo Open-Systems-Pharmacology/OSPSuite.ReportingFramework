@@ -4,7 +4,7 @@
 \alias{pasteFigureTags}
 \title{Title}
 \usage{
-pasteFigureTags(dtCaption, captionColumn)
+pasteFigureTags(dtCaption, captionColumn, endWithDot = FALSE)
 }
 \arguments{
 \item{dtCaption}{`data.table` with caption information must have column PlotTag}

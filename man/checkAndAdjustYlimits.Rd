@@ -4,7 +4,7 @@
 \alias{checkAndAdjustYlimits}
 \title{Check and adjust Y limits for plots}
 \usage{
-checkAndAdjustYlimits(plotData, yScale, timeRangeFilter, plotType)
+checkAndAdjustYlimits(plotData, yScale, timeRangeFilter, plotType, plotCounter)
 }
 \arguments{
 \item{plotData}{Object of class `PlotDataTimeProfile`.}

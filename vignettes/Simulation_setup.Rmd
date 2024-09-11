@@ -30,7 +30,7 @@ The `esqlabsR` package provides tools for managing and analyzing pharmacokinetic
 
 ## Project Configuration
 
-The workflow begins by setting up a project configuration using the `createDefaultProjectConfiguration` function from the `esqlabsR` package. This function retrieves paths for all relevant project files, which are crucial for subsequent analysis steps.
+The workflow begins by setting up a project configuration using the `createProjectConfiguration` function from the `esqlabsR` package. This function retrieves paths for all relevant project files, which are crucial for subsequent analysis steps.
 
 ### Example:
 
@@ -41,6 +41,14 @@ projectConfiguration <- esqlabsR::createDefaultProjectConfiguration(
 ```
 
 This configuration is then used throughout the workflow to ensure that all file paths and settings are correctly referenced.
+
+## Populations
+
+Virtual twins are simulated  populations that closely mirror the characteristics of your observed data but allow for virtual experimentation.
+
+Random populations are useful for understanding variability and sensitivity within your pharmacokinetic models.
+
+
 
 ## Scenario Setup
 

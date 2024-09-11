@@ -2,15 +2,20 @@
 % Please edit documentation in R/utilities-xlsx.R
 \name{xlsxWriteData}
 \alias{xlsxWriteData}
-\title{adds data to worksheet}
+\title{Write data to a worksheet, clearing existing content}
 \usage{
 xlsxWriteData(wb, sheetName, dt)
 }
 \arguments{
-\item{wb}{A Workbook object containing a worksheet.}
+\item{wb}{A workbook object created by `openxlsx::loadWorkbook()`.}
 
-\item{dt}{`data.table` to write}
+\item{sheetName}{A character string specifying the name of the sheet where data will be written.}
+
+\item{dt}{A `data.table` to write.}
+}
+\value{
+An invisible NULL value.
 }
 \description{
-wrapps `openxlsx::writeData`, but delete before all current content
+This function wraps `openxlsx::writeData`, but deletes all current content before writing new data.
 }

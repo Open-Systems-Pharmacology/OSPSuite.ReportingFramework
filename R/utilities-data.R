@@ -76,8 +76,8 @@ readObservedDataByDictionary <- function(projectConfiguration,
            functionCall = "updateOutputPathId(projectConfiguration = projectConfiguration, dataDT = dataObserved)"),
       list(func = addBiometricsToConfig, args = list(dataDT = dataDT, projectConfiguration = projectConfiguration),
            functionCall = "addBiometricsToConfig(projectConfiguration = projectConfiguration, dataDT = dataObserved)"),
-      list(func = setupIndPopConfig, args = list(projectConfiguration = projectConfiguration, dataObserved = dataDT),
-           functionCall = "setupIndPopConfig(projectConfiguration = projectConfiguration, dataObserved = dataObserved)")
+      list(func = setupVirtualTwinPopConfig, args = list(projectConfiguration = projectConfiguration, dataObserved = dataDT),
+           functionCall = "setupVirtualTwinPopConfig(projectConfiguration = projectConfiguration, dataObserved = dataObserved)")
     )
 
     # Loop through each function call

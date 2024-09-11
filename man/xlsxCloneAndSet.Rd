@@ -2,22 +2,19 @@
 % Please edit documentation in R/utilities-xlsx.R
 \name{xlsxCloneAndSet}
 \alias{xlsxCloneAndSet}
-\title{create a clone of a sheet and set new contet}
+\title{Clone a sheet and set new content}
 \usage{
 xlsxCloneAndSet(wb, clonedSheet, sheetName, dt)
 }
 \arguments{
-\item{wb}{A Workbook object to attach the new worksheet}
+\item{wb}{A workbook object created by `openxlsx::loadWorkbook()`.}
 
-\item{clonedSheet}{The name of the existing worksheet to be cloned.}
+\item{clonedSheet}{A character string specifying the name of the sheet to clone.}
 
-\item{sheetName}{A name for the new worksheet}
+\item{sheetName}{A character string specifying the name of the new sheet.}
 
-\item{dt}{`data.table` with new content}
-}
-\value{
-workbook with cloned sheet
+\item{dt}{A `data.table` with new content.}
 }
 \description{
-wrapps openxlsx::cloneWorksheet but set new content
+This function wraps `openxlsx::cloneWorksheet` but sets new content in the cloned sheet.
 }

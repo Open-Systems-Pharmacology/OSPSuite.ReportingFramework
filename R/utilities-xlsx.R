@@ -87,6 +87,7 @@ xlsxReadData <- function(wb, sheetName,
                          skipDescriptionRow = FALSE,
                          alwaysCharacter = c(
                            "IndividualId",
+                           "IndividualIds",
                            "StudyId",
                            "group",
                            "outputPathId",

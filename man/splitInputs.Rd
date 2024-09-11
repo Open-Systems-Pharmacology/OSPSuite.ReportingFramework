@@ -7,10 +7,10 @@
 splitInputs(originalVector)
 }
 \arguments{
-\item{originalVector}{The original vector to be split}
+\item{originalVector}{The original vector to be split.}
 }
 \value{
-A vector containing the split elements
+A vector containing the split elements.
 }
 \description{
 This function takes an original vector as input and splits its elements by comma.

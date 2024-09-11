@@ -4,7 +4,7 @@
 \alias{getCaptionForPlot}
 \title{Generate a caption for the plot}
 \usage{
-getCaptionForPlot(plotData, yScale, timeRangeFilter, plotType)
+getCaptionForPlot(plotData, yScale, timeRangeFilter, plotType, plotCounter)
 }
 \arguments{
 \item{plotData}{Object containing the data for the plot.}
@@ -14,6 +14,8 @@ getCaptionForPlot(plotData, yScale, timeRangeFilter, plotType)
 \item{timeRangeFilter}{Name of the time range filter.}
 
 \item{plotType}{Type of the plot.}
+
+\item{plotCounter}{counter of plot}
 }
 \value{
 Caption text for the plot.

@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-xlsx.R
 \name{getScenarioDefinitions}
 \alias{getScenarioDefinitions}
-\title{load the scenario definitions}
+\title{Load the scenario definitions}
 \usage{
 getScenarioDefinitions(projectConfiguration)
 }
@@ -10,8 +10,8 @@ getScenarioDefinitions(projectConfiguration)
 \item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 }
 \value{
-`data.table` with scenario definitions
+A `data.table` with scenario definitions.
 }
 \description{
-load the scenario definitions
+Load the scenario definitions
 }

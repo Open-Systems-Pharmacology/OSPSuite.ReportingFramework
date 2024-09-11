@@ -13,7 +13,7 @@ setUpTestProject <- function(withModel = FALSE) {
   )
 
   projectConfiguration <-
-    esqlabsR::createDefaultProjectConfiguration(
+    esqlabsR::createProjectConfiguration(
       path = file.path(rootDirectory, "Scripts", "ReportingFramework", "ProjectConfiguration.xlsx")
     )
 

@@ -24,7 +24,7 @@ theme_update(strip.text = element_text(hjust = 0,vjust = 1))
 
 # Set this to TRUE if you want to execute the workflow as a final valid run.
 # It then won't set watermarks to figures and does not skip failing plot generations
-# (see vignette TODO)
+# (see vignette OSPSuite_ReportingFramework)
 executeAsValidRun(isValidRun = FALSE)
 
 # Setup project structure -------------------------------------------------
@@ -45,22 +45,26 @@ projectConfiguration <-
   esqlabsR::createDefaultProjectConfiguration(
     path =  file.path("ProjectConfiguration.xlsx"))
 
-
+# start log Catch loop which catches all errors, warnins and messages in a logfile
+# (see vignette OSPSuite_ReportingFramework)
 logCatch({
 
   # initialize log file for logCatch, has to be first call in logCatch loop
   initLogfunction(projectConfiguration)
 
 
-  # Read observedData -------------------------------------------------------
+  # 1) Read observedData -------------------------------------------------------
   # (see vignette(package = 'ospsuite.reportingframework',topic = 'data_import_by_dictionary'))
 
   # read data as data.table
   dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration)
 
+  # 2) Export populations -------------------------------------------------------
+  # (see vignette Simulation_setup)
 
-  # Simulations ------------------------------------------------------
-  # (see https://esqlabs.github.io/esqlabsR/articles/esqlabsR.html)
+
+  # 3) Simulations ------------------------------------------------------
+  # (see  vignette Simulation_setup)
   scenarioList <-
     createScenarios.wrapped(projectConfiguration = projectConfiguration,
                             scenarioNames = NULL,
@@ -74,7 +78,7 @@ logCatch({
                         showProgress = TRUE
                       ))
 
-  # SensitivityAnalysis -----------------------------------------------------
+  # 4) SensitivityAnalysis -----------------------------------------------------
   #  (see vignette xxx)
   # TODO
   # runSensitivityAnalysis(
@@ -83,8 +87,8 @@ logCatch({
   # )
 
 
-  # Create Output Plots -----------------------------------------------------
-  # (see vignette xxx)
+  # 5) Create Output Plots -----------------------------------------------------
+  # (see vignette OSPSuite_ReportingFramework.Rmd  section  Plot Functionality)
 
   # TODO
   # runPlot(
@@ -104,7 +108,7 @@ logCatch({
     functionKey = "TimeProfile_Panel",
     projectConfiguration = projectConfiguration,
     inputs = list(
-      configTableSheet = "TimeProfiles_1",
+      configTableSheet = "TimeProfiles",
       dataObserved = dataObserved
     )
   )
@@ -133,8 +137,7 @@ logCatch({
     inputs = list()
   )
 
-  # Create Report document --------------------------------------------------
-  # see vignette (TODO)
+  # 6) Create Report document --------------------------------------------------
   mergeRmds(projectConfiguration = projectConfiguration,
     newName = "appendix",
     title = "Appendix",

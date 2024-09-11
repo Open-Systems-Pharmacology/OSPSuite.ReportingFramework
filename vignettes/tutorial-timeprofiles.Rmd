@@ -1,0 +1,764 @@
+---
+title: "Tutorial: Time Profile Plotting"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tutorial-timeprofiles}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  echo=TRUE, 
+  eval=FALSE,
+  warning = FALSE,
+  message = FALSE,
+  error = FALSE,
+  comment = "#>"
+)
+```
+
+```{r setup, echo=FALSE}
+library(ospsuite.reportingframework)
+```
+
+
+# Time Profile Plotting Tutorial
+
+## Introduction
+
+Welcome to the Time Profile Plotting Tutorial! This guide will walk you through the process of generating time profile plots using the `ospsuite.reportingframework` package. Time profile plots are essential for visualizing pharmacokinetic data, allowing researchers to understand how a drug behaves over time in the body.
+
+In this tutorial, we will focus on manually editing the Excel (xlsx) configuration tables to customize your plots effectively. By following the outlined steps, you will learn how to set up your project, import data, create simulations, and visualize results through various plotting techniques. 
+
+### Prerequisites
+Before you begin, ensure you have installed the `ospsuite.reportingframework` package. Familiarity with R, RStudio, and basic Excel operations will be beneficial as you navigate through the tutorial.
+
+Additionally, a Word document containing all plots generated during this tutorial is included in the package:
+
+```{r}
+# Set the file path
+filePath <- system.file(
+  "extdata","example_1","appendix.docx",
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE)
+
+# Open the document
+shell.exec(filePath)  # For Windows
+# system(paste("open", shQuote(filePath)))  # For macOS
+# system(paste("xdg-open", shQuote(filePath)))  # For Linux
+```
+
+## Table of Contents
+
+1. [Setting Up the Project and Basic Simulations](#1-setting-up-the-project-and-basic-simulations)  
+   Learn how to set up your project, save a template workflow, and initialize the project structure for time profile plotting.
+
+2. [Adding Virtual Twin Populations](#2-adding-virtual-twin-populations)  
+   Discover how to define and export virtual twin populations for more refined simulations.
+
+3. [Adding Random Populations and Use of Aggregated Data](#3-adding-random-populations-and-use-of-aggregated-data)  
+   Understand how to aggregate individual data and work with aggregated random populations for comparative analysis.
+
+4. [Adding Reference Populations](#4-adding-reference-populations)  
+   Learn how to create and display reference scenarios by modifying parameters in existing random population scenarios.
+
+5. [Adding Plots with Different Time Ranges](#5-adding-plots-with-different-time-ranges)  
+   Explore how to visualize pharmacokinetic data across various time ranges to reveal different drug behavior aspects.
+
+
+## 1) Setting Up the Project and Basic Simulations
+
+### Step 1: Save Template Workflow
+
+Open RStudio and navigate to the Addins menu.
+Select Open Template Workflow to create a new workflow file.
+Save the file in the subfolder `Scripts/ReportingFramework` of your project directory as `workflow.R`.
+At the top of the workflow file, you can add a description of the purpose of your workflow.
+
+### Step 2: Initialize Project Structure
+
+Execute the first lines of your workflow, skipping the `logCatch` loop. This will:
+
+- change the working directory to the workflow file location  
+- set some graphic defaults
+- set some options to switch between final valid run and preliminary runs, such as watermarks
+- initialize the project directory
+- load the project configuration
+- sets up a logfile to catch messages
+
+```{r}
+
+# set working directory to  workflow file location, (only if working interactively)
+if (interactive() && rstudioapi::isAvailable()) {
+  # Get the active document path in RStudio
+  setwd(rstudioapi::getActiveDocumentContext()$path)
+}
+
+# Initialization  ----------------------------------------------------------
+# load libraries and source project specific code
+library(ospsuite.reportingframework)
+
+# set graphic
+# (see vignette(package = 'ospsuite.plots',topic = 'ospsuite_plots'))
+ospsuite.plots::setDefaults()
+theme_update(legend.position = 'top')
+# configure panel labels to be used as Tags A,B,...
+theme_update(strip.background = element_rect(fill = NA,color = NA))
+theme_update(strip.text = element_text(hjust = 0,vjust = 1))
+
+# Set this to TRUE if you want to execute the workflow as a final valid run.
+# It then won't set watermarks to figures and does not skip failing plot generations
+# (see vignette OSPSuite_ReportingFramework)
+executeAsValidRun(isValidRun = FALSE)
+
+# Setup project structure -------------------------------------------------
+# creates project directory
+# (see help initProject and https://esqlabs.github.io/esqlabsR/articles/esqlabsR.html)
+# if you go with the default structure defined by 'sourceFolder = templateDirectory()'
+# this workflow file should be saved in Scripts/ReportingFramework,
+# root directory is then two layers up.
+initProject(
+  rootDirectory = file.path("..",'..'),
+  sourceFolder = templateDirectory(),
+  overwrite = FALSE
+)
+
+
+# get paths of all relevant project files
+projectConfiguration <-
+  esqlabsR::createDefaultProjectConfiguration(
+    path =  file.path("ProjectConfiguration.xlsx"))
+
+# initialize log file for logCatch, has to be first call in logCatch loop
+initLogfunction(projectConfiguration)
+
+```
+
+
+### Step 3: Copy the sample data to your project structure
+
+You have now the complete project structure with all configuration files.
+The package provides some example data that you can copy using the following lines:
+(do not add the lines to the workflow)
+
+```{r}
+file.copy(from = system.file(
+  "extdata","example_1","iv 1 mg (5 min).pkml",
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE),
+  to = file.path('..','..','Models',"iv 1 mg (5 min).pkml"),overwrite = TRUE)
+
+file.copy(from = system.file(
+  "extdata","example_1","po 3 mg (solution).pkml",
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE),
+  to = file.path('..','..','Models',"po 3 mg (solution).pkml"),overwrite = TRUE)
+
+file.copy(from = system.file(
+  "extdata","example_1",'observedData_drugX.csv',
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE),
+  to = file.path('..','..','Data','observedData_drugX.csv'),overwrite = TRUE)
+
+```
+
+### Step 4: Read Observed Data
+
+(see the vignette for the `ospsuite.reportingframework` package, topic 'data_import_by_dictionary')
+
+Open the "DataImportConfiguration.xlsx"
+
+List in the sheet "DataFiles" your available data.  
+The paths should be relative to th configuration table which is in '<Rootdirectory>/Scripts/ReportingFramework', the data are saved in '<Rootdirectory>/Data' so the correct path is '../../Data'
+
+
+```{r, echo=FALSE, eval = TRUE}
+
+tmp = xlsxReadData(wb = system.file(
+  "extdata","example_1",'DataImportConfiguration.xlsx',
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE),
+  sheetName = 'DataFiles',
+  skipDescriptionRow = TRUE,
+  emptyAsNA = FALSE)
+
+knitr::kable(tmp)
+
+```
+
+Update the dictionary:
+
+- In our random data we do not have a study ID, we set it using the filter option for all individuals to '000'
+- We match the 'studyArm' and 'group', with the source column 'Route' which contains 'IV' and 'PO' for the two applications
+- For 'subjectId' and 'individualId' we can use the columns 'SID', as we have only one study, subjecId is already unique
+- For the 'outputPathId' we use the filter option. As the filters are executed row by row, we set in a first lien everything to 'Concentration' and then in a second line the ones with dimension = 'Fraction' to Fraction.
+- For the 'timeprofile' columns we have the source columns 'Time','values','unit' and 'LLOQ' available
+- As biometrics columns we have the source columns 'Age','Weight','Height' and 'Gender' available. Attention Height is in unit 'dm'
+- We have to set a 'population' we set "European_ICRP_2002" by the filter option
+- Metadata 'route' is available, 'dose' we set via the filter option like the outputPtahId in two lines.
+
+
+```{r, echo=FALSE, eval = TRUE}
+
+tmp = xlsxReadData(wb = system.file(
+  "extdata","example_1",'DataImportConfiguration.xlsx',
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE),
+  sheetName = 'tpDictionary',
+  skipDescriptionRow = TRUE,
+  emptyAsNA = FALSE)
+
+tmp <- tmp[c(which(tmp$type == 'identifier'),which(tmp$type == 'timeprofile'),which(tmp$type == 'biometrics'),which(tmp$type == 'metadata'))]
+ix = which(tmp$targetColumn == 'outputPathId')
+tmp <- tmp[c(seq(1,ix[1]),ix[2],setdiff(seq(ix[1]+1,nrow(tmp)),ix[2]))]
+ix = which(tmp$targetColumn == 'dose')
+tmp <- tmp[c(seq(1,ix[1]),ix[2],setdiff(seq(ix[1]+1,nrow(tmp)),ix[2]))]
+
+knitr::kable(tmp)
+
+```
+
+Now you can execute the next workflow line:
+
+```{r}
+# read data as data.table
+  dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration)
+```
+
+This will return a data.table with the observed data.
+
+It adds also data to the configuration tables. 
+
+- The biometrics of the individuals in the observed data are added to the "Individual.xlsx".
+Information which is not in the observed data like the ontogeny has to be added manually:
+
+
+```{r, echo=FALSE, eval = TRUE}
+
+tmp = xlsxReadData(wb = system.file(
+  "extdata","example_1",'Individuals.xlsx',
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE),
+  sheetName = 'IndividualBiometrics',
+  skipDescriptionRow = FALSE,
+  emptyAsNA = FALSE)
+
+knitr::kable(tmp)
+
+```
+
+- The identifier for the data groups and outputs are added to the "Plots.xlsx", sheets 'DataGroups' and 'Outputs'
+These tables are used to configure properties for output plots such as 'DisplayName' and 'DisplayUnit'.
+Please add the 'outputpaths' for the 'outputPathsIds':
+
+
+```{r, echo=FALSE, eval = TRUE}
+
+tmp = xlsxReadData(wb = system.file(
+  "extdata","example_1",'Plots.xlsx',
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE),
+  sheetName = 'Outputs',
+  skipDescriptionRow = TRUE,
+  emptyAsNA = FALSE)
+
+knitr::kable(tmp)
+
+```
+
+
+### Step 5: Set up and run scenario
+
+We will skip the section on exporting populations
+
+```{r}
+# 2) Export populations -------------------------------------------------------
+  # (see vignette Simulation_setup)
+```
+
+and start with a simple scenario to simulate one individual, defined by biometrics, with an iv application.
+
+Open the "Scenario.xlsx" and edit the sheet "Scenarios". 
+We have to fill the columns:
+
+- Scenario_name, identifier of the scenario
+- IndividualId, corresponds to individual identifier in configuration table Individuals.xlsx
+- ModelFile, this file must exists in folder 'Models'
+
+
+```{r, echo=FALSE, eval = TRUE}
+
+dtScenarios = xlsxReadData(wb = system.file(
+  "extdata","example_1",'Scenarios.xlsx',
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE),
+  sheetName = 'Scenarios',
+  skipDescriptionRow = FALSE,
+  emptyAsNA = FALSE)
+
+dtScenarios[,ReadPopulationFromCSV:= as.logical(as.numeric(ReadPopulationFromCSV))]
+
+knitr::kable(dtScenarios[1])
+
+```
+
+Now we can set up the scenario List an run the simulation
+
+
+```{r}
+# 3) Simulations ------------------------------------------------------
+  # (see  vignette Simulation_setup)
+  scenarioList <-
+    createScenarios.wrapped(projectConfiguration = projectConfiguration,
+                            scenarioNames = NULL,
+                            doCheckScenarioNameValidity = TRUE)
+
+  runAndSaveScenarios(projectConfiguration = projectConfiguration,
+                      scenarioList = scenarioList,
+                      simulationRunOptions = SimulationRunOptions$new(
+                        numberOfCores = NULL,
+                        checkForNegativeValues = NULL,
+                        showProgress = TRUE
+                      ))
+```
+
+The results are saved in 'Outputs/ReportingFramework/SimulationResults'.
+
+### Step 6: Configure and Generate Plots
+
+For the plot configuration we call a helper function which adds all defined scenarios with default settings to the plot configuration table. As this is a helper function, which changes the inputc configuration of a workflow, it is not intended to be part of an final workflow and will throw an error if run as validRun.
+
+```{r}
+
+addDefaultConfigForTimeProfilePlots(
+  projectConfiguration = projectConfiguration,
+  sheetName = 'TimeProfiles',
+  overwrite = FALSE
+)
+
+```
+
+Then we open the "Plots.xlsx" sheet "TimeProfiles".
+It starts with a header line and one line for the previously defined scenario.
+
+- Add another sub-header for this tutorial section with level 2
+- Edit the columns:
+
+  - ScenarioCaptionName: Name of the scenario used in caption
+  - PlotCaptionAddon: Add on for the caption used fro all scenarios in this plot
+  - DataGroupIds: data group identifier whcih corresponds to this scenario
+  - IndividualIds: identifier of the individual
+  - TimeRange_firstApplication and TimeRange_lastApplication set to empty, as we have single dose.
+  
+This line will create a timeprofile plot which compares the simulated data to data.
+
+We want to add also goodness of fit plots, as we have selected two outputs with different dimensions, and the goodness of fit plots are not able to handle more then one dimension, we do this in an extra line:
+
+Copy the plot line and edit the columns:
+
+- PlotName, each plot must have a unique Plotidentifier
+- OutputPathIds: make sure we have only outputs of one dimension selected
+- deselect Plot_TimeProfiles
+- Select Plot_PredictedVsObserved, Plot_ResidualsAsHistogram, Plot_ResidualsVsTime, Plot_ResidualsVsObserved,  Plot_QQ
+
+
+```{r, echo=FALSE, eval = TRUE}
+
+dtPlots = xlsxReadData(wb = system.file(
+  "extdata","example_1",'Plots.xlsx',
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE),
+  sheetName = 'TimeProfiles',
+  skipDescriptionRow = TRUE,
+  emptyAsNA = FALSE)
+dtPlots <- dtPlots[-4]
+
+knitr::kable(dtPlots[1:4] 
+             %>% dplyr::select(!c('TimeRange_h0_6','TimeRange_h6_24')))
+
+```
+
+
+Please comment all plot functions which we do not use and execute the ones for the Timeprofileplots:
+
+```{r}
+runPlot(
+    functionKey = "TimeProfile_Panel",
+    projectConfiguration = projectConfiguration,
+    inputs = list(
+      configTableSheet = "TimeProfiles",
+      dataObserved = dataObserved
+    )
+  )
+```
+
+All figures and captions are filed in "Outputs\ReportingFramework\TimeProfiles" as png and textfiles.
+An Timeprofiles.Rmd is file in "Outputs\ReportingFramework\"
+
+
+### Step 7: Report creation
+
+The first step in report creation is to merge all available markdown files. As we have only created the Time Profile plots, we will edit the workflow accordingly. The resulting. appendix.Rmd is the rendered to a word document.
+
+```{r}
+# 6) Create Report document --------------------------------------------------
+  mergeRmds(projectConfiguration = projectConfiguration,
+    newName = "appendix",
+    title = "Appendix",
+    sourceRmds = c( "TimeProfile")
+  )
+
+renderWord(fileName = file.path(projectConfiguration$outputFolder,"appendix.Rmd"))
+
+
+```
+
+
+### Step 8: All in one
+
+Now that you have configured all settings and adjusted the workflow as necessary, you can run the entire workflow in one step.
+
+```{r}
+
+source('workflow.R')
+
+```
+
+
+## 2) Adding Virtual Twin Populations
+
+(see the vignette for the `ospsuite.reportingframework` package, topic 'Simulation_setup', section 'Populations').
+
+### Step 1: Edit Population Configuration
+
+Manually adjust your Excel configuration to define virtual twin populations. The 'VirtualTwinPopulation' sheet within the 'Populations.xlsx' file was created during data import. It contains all data groups with individual data. Since this is a crossover study and the individuals in group 'IV' are also in group 'PO', only one population is suggested for both data groups.
+
+For now, we will leave the default configuration and only adjust the 'populationName':
+
+
+```{r, echo=FALSE, eval = TRUE}
+
+tmp = xlsxReadData(wb = system.file(
+  "extdata","example_1",'Populations.xlsx',
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE),
+  sheetName = 'VirtualTwinPopulation',
+  skipDescriptionRow = FALSE,
+  emptyAsNA = FALSE)
+
+knitr::kable(tmp)
+
+```
+
+
+### Step 2: Export population
+
+Go to the Export populations of the workflow and add and execute following lines:
+
+```{r}
+
+exportVirtualTwinPopulations(
+  projectConfiguration = projectConfiguration,
+  populationNames = NULL,
+  modelFile = "po 3 mg (solution).pkml",
+  overwrite = FALSE
+)
+
+```
+
+This will create a population based on the configuration table from the previous section. It is saved as csv file in 'Models/Populations'.
+The model file is used for unit conversions. As our population contains only parameters not related to the application, we could have used both available model files, the one for the oral administration and the iv administration file.
+
+### Step 3: Set up and run scenario
+
+We open again the "Scenario.xlsx" and add two more scenarios to  the sheet "Scenarios". 
+Instead of the 'IndividualId', we will now fill the 'PopulationId' with the name of our newly created population and a TRUE to the column 'ReadPopulationFromCSV'.
+
+
+```{r, echo=FALSE, eval = TRUE}
+
+knitr::kable(dtScenarios[1:3])
+
+```
+
+To omit a rerun from previously defined scenarios, we change in the scenarioList initialisation the parameter `scenarioNames` from `NULL` to the names of the newly created scenarios.
+
+
+```{r}
+# 3) Simulations ------------------------------------------------------
+  # (see  vignette Simulation_setup)
+  scenarioList <-
+    createScenarios.wrapped(projectConfiguration = projectConfiguration,
+                            scenarioNames = c('virtual_twin_population_iv','virtual_twin_population_po'),
+                            doCheckScenarioNameValidity = TRUE)
+
+  runAndSaveScenarios(projectConfiguration = projectConfiguration,
+                      scenarioList = scenarioList,
+                      simulationRunOptions = SimulationRunOptions$new(
+                        numberOfCores = NULL,
+                        checkForNegativeValues = NULL,
+                        showProgress = TRUE
+                      ))
+```
+
+
+### Step 4: Configure and Generate Plots
+
+We will add the new scenarios to the plot configuration table using the helper function `addDefaultConfigForTimeProfilePlots`.
+
+Then we open the configuration table  and adjust the plot configurations.
+
+We will use the 'virtual_twin_population_iv' scenario as an example to filter individuals explicitly:
+
+- copy the "virtual_twin_population_iv" line
+- adjust the column plotName to generate two independent plots
+- select as "DataGroupId" "IV" and as "IndividualId" for the first plot "1,2,3,4" and for the second "5,6,7"
+- set a bracket around the outputs in the column "OutputPathIds". With this both outputs will be plotted in one panel.
+
+The "virtual_twin_population_po" scenario is used as an example to filter individuals with shortcuts:
+
+- select as "DataGroupId" "PO" and as "IndividualId" use "*". Now all available individuals will be plotted. 
+As this will lead to very large plot with many rwos, the plot is splitted in different plots. The maximal row numer is an input parameter of the plot function. 
+
+As we did in Section 1, we will add a line for the goodness of fit plots.
+Copy the plot line  "virtual_twin_population_po and edit the columns:
+
+- PlotName
+- OutputPathIds: make sure we have only outputs of one dimension selected
+- deselect Plot_TimeProfiles
+- Select Plot_PredictedVsObserved, Plot_ResidualsAsHistogram, Plot_ResidualsVsTime, Plot_ResidualsVsObserved,  Plot_QQ
+- Set IndividualId to "(*)". In this way all individuals are plotted in one panel. This is only available for goodness of fit plots, not for the timeprofile plots.
+
+Do not forget to edit the columns "ScenarioCaptionName", "PlotCaptionAddon", "TimeRange_firstApplication", "TimeRange_lastApplication"
+Add subsections
+
+```{r, echo=FALSE, eval = TRUE}
+
+knitr::kable(dtPlots[1:11] %>% dplyr::select(!c('TimeRange_h0_6','TimeRange_h6_24')))
+
+```
+
+
+The figure and report generation is same as in section 1). 
+
+
+## 3) Adding Random Populations and use of aggregated data
+
+In this section we want to plot aggregated data vs aggregated random populations.
+
+### Step 1: Data Aggregation
+
+Since our dataset contains only individual data, we will aggregate the data as a first step.
+Adjust your data import in this way:
+
+To learn more about the aggregation possibilities check the help of  `aggregatedObservedDataGroups`
+
+```{r}
+
+dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration)
+
+# add aggregated  groups of data
+dataObserved <- rbind(dataObserved,
+                      aggregatedObservedDataGroups(dataObserved = dataObserved,
+                                                   groups = c('IV','PO')),
+                      fill = TRUE
+)
+# for the manually added groups the configuration sheet in Plot.xlsx has to be updated
+updateDataGroupId(projectConfiguration, dataObserved)
+
+
+```
+
+
+### Step 2: Edit Population Configuration
+
+Open the sheet 'Demographics' in the "Populations.xlsx".
+
+In the example below, the population 'random_population' is defined with demographic ranges of the observed data population.
+
+
+```{r, echo=FALSE, eval = TRUE}
+
+tmp = xlsxReadData(wb = system.file(
+  "extdata","example_1",'Populations.xlsx',
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE),
+  sheetName = 'Demographics',
+  skipDescriptionRow = FALSE,
+  emptyAsNA = FALSE)
+
+knitr::kable(tmp)
+
+```
+
+### Step 3: Export population
+
+Go to the Export populations of the workflow and add and execute following lines:
+
+```{r}
+
+exportRandomPopulations(projectConfiguration = projectConfiguration,
+                        populationNames = NULL,
+                        overwrite = FALSE)
+
+```
+
+This will create a population based on the configuration table from the previous section. It is saved as csv file in 'Models\Populations'.
+
+### Step 4: Set up and run scenario
+
+Add two more scenarios to the 'Scenarios' sheet:
+
+
+```{r, echo=FALSE, eval = TRUE}
+
+knitr::kable(dtScenarios[1:5])
+
+```   
+
+Run the scenarios as in section 2). Do not forget to adjust the input parameter `ScenarioNames` for the function `createScenarios.wrapped`.
+
+### Step 5: Configure and Generate Plots
+
+We will add the new scenarios to the plot configuration table using the helper function `addDefaultConfigForTimeProfilePlots`.
+
+Then we open the configuration table  and adjust the plot configurations.
+
+In this example we want to both scenarios in one plot:
+
+- update the `PlotName` for both 'random_population' sceanrios to 'random_population'
+- The column `PlotCaptionAddon` has to be the same for all lines with the same PlotName, therefore we set it to an empty string. Put the application information the the column 'ScenarioCaptionName'.
+
+Do not forget to edit the columns  "DataGroupIds","TimeRange_firstApplication", "TimeRange_lastApplication"
+Add subsections
+
+```{r, echo=FALSE, eval = TRUE}
+
+knitr::kable(dtPlots[1:14] %>% dplyr::select(!c('TimeRange_h0_6','TimeRange_h6_24')))
+
+```
+
+Do the figure and report generation as before.
+You can configure the aggregation of the random population via the input parameter of plot function.
+(see the vignette for the `ospsuite.reportingframework` package, topic 'TimeProfilePlots')
+)
+
+
+## 4) Adding Reference Populations
+
+In this section we will add scenarios for reference scenarios. For that we change in the random population scenarios only one parameter, and compare the corresponding timeprofiles.
+
+### Step 1: Set up and run scenario
+
+Copy the sheet 'Template' in the "ModelParameters.xlsx" and rename it to 'CYP3A4_2'
+
+Add a new line specifying the parameter to change:
+
+
+```{r, echo=FALSE, eval = TRUE}
+
+tmp = xlsxReadData(wb = system.file(
+  "extdata","example_1",'ModelParameters.xlsx',
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE),
+  sheetName = 'CYP3A4_2',
+  skipDescriptionRow = FALSE,
+  emptyAsNA = FALSE)
+
+knitr::kable(tmp)
+
+```
+
+Add two more scenarios to  the sheet "Scenarios":
+Enter the name of the newly created sheet with the parameters in the 'ModelParameterSheets' column. 
+
+
+```{r, echo=FALSE, eval = TRUE}
+
+knitr::kable(dtScenarios[1:7])
+
+``` 
+Run the scenarios as before. Do not forget to adjust the input parameter `ScenarioNames` for the function `createScenarios.wrapped`.
+
+
+### Step 2: Configure and Generate Plots
+
+We will add the new scenarios to the plot configuration table using the helper function `addDefaultConfigForTimeProfilePlots`.
+
+Then we open the configuration table  and adjust the plot configurations.
+
+- shift the reference scenarios from column 'Scenario' to 'ReferenceScenario' 
+- add the corresonding random poulation scenarios to column 'Scenario'
+
+
+Do not forget to edit the columns "DataGroupIds","ScenarioCaptionName", "PlotCaptionAddon", "TimeRange_firstApplication", "TimeRange_lastApplication"
+Add subsections
+
+```{r, echo=FALSE, eval = TRUE}
+
+knitr::kable(dtPlots[1:17])
+
+```
+
+Do the figure and report generation as before.
+You can configure the color and headers for the legends with the parameters 'referenceColorScaleVector','
+(see the vignette for the `ospsuite.reportingframework` package, topic 'TimeProfilePlots')
+)
+
+## 5) Adding Plots with different Time Ranges
+
+Visualizing pharmacokinetic data across various time ranges can reveal different aspects of drug behavior.
+
+### Step 1: Configure Time Ranges
+In your plot configuration Excel file, specify different time ranges for which you'd like to generate plots. This might involve adding new rows or adjusting existing settings in the "Plot.xlsx" file.
+
+In the example below, a new row for the range between 0 and 6 hours and a row for the range between 6 and 24 hours have been added.
+
+
+```{r, echo=FALSE, eval = TRUE}
+
+tmp = xlsxReadData(wb = system.file(
+  "extdata","example_1",'Plots.xlsx',
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE),
+  sheetName = 'TimeRange',
+  skipDescriptionRow = TRUE,
+  emptyAsNA = FALSE)
+
+knitr::kable(tmp)
+
+```
+
+
+### Step 2: Configure and Generate Plots
+
+
+Open the plot configuration table and adjust the plot configurations.
+
+- copy the plot line for the 'individual_1_iv' scenario to the end of the table
+- change plot name in column 'PlotName' for this line
+- Add new columns 'TimeRange_h0_6' and 'TimeRange_h6_24' for the newly created timeranges
+- set the 'TimeRange_h0_6' column to 'c(0, 6)' and the 'TimeRange_h6_24' column to 'c(6, 24)'.
+
+
+
+```{r, echo=FALSE, eval = TRUE}
+ix <- which(names(dtPlots) == "TimeRange_lastApplication")
+data.table::setcolorder(dtPlots,names(dtPlots)[c(seq(1,ix),29,30,seq(ix+1,28))])
+
+knitr::kable(dtPlots)
+
+```
+
+Do the figure and report generation as before.
+
+
+## Conclusion
+
+In this tutorial, you have learned how to generate time profile plots using the `ospsuite.reportingframework` package. By following the structured steps, you have gained insights into setting up a project, importing and manipulating pharmacokinetic data, and visualizing results through various plotting techniques.
+
+You explored how to create simulations, configure plot settings, and even add virtual twin populations and reference scenarios to your analysis. The skills you have acquired here will empower you to effectively analyze and present pharmacokinetic data, ultimately contributing to more informed decision-making in your research or clinical work.
+
+We encourage you to experiment further with the `ospsuite.reportingframework` package and explore its extensive capabilities. Happy plotting!

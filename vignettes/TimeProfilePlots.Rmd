@@ -19,24 +19,27 @@ library(ospsuite.reportingframework)
 library(data.table)
 ```
 
-# Introduction to plotTimeProfilePanels
+# Time Profile Plots
 
+## Introduction 
 
 The plotTimeProfilePanels function is a powerful utility designed to generate a series of time profile plots as facet panels from your data. This function simplifies the process of visualizing complex time-dependent data by allowing you to create multiple plots organized in a user-defined layout.
 
-Its focus is on simulated scenarios, with each panel displaying the result of one scenario. Plots containing more than one scenario or only observed data are not supported by this function.
+This function primarily focuses on simulated scenarios, with each panel displaying the result of one scenario. Plots containing more than one scenario or only observed data are not supported by this function.
 
-By utilizing an Excel configuration sheet, plotTimeProfilePanels reads various parameters, such as scenarios, time ranges, and output paths, to produce informative and visually appealing plots. The function supports faceting, enabling you to display different subsets of your data side by side, which enhances comparative analysis.
+By utilizing an Excel configuration sheet, plotTimeProfilePanels reads various parameters, such as scenarios, time ranges, and output paths, to produce informative and visually appealing plots. The function supports faceting, enabling you to display different subsets of your data side by side, enhancing comparative analysis.
 
 This function is particularly useful for researchers and analysts who need to visualize concentration-time profiles of various scenarios, compare predicted versus observed data, and analyze residuals cohesively. With options for customizing plot aesthetics and layouts, plotTimeProfilePanels provides a comprehensive solution for time profile visualization.
 
-# Calling the `plotTimeProfilePanels` Function via `runPlot`
+For a more comprehensive understanding of time profile plotting, including setting up your project and analyzing data, please refer to the Time Profile Plotting Tutorial.
+
+## Calling the `plotTimeProfilePanels` Function via `runPlot`
 
 The `plotTimeProfilePanels` function can be invoked through the `runPlot` interface, allowing for a standardized way to generate time profile plots. This approach ensures that your plots are created with the necessary configurations and observed data.
 
-## Function Overview
+### Function Overview
 
-### Usage
+#### Usage
 
 ```{r, echo=TRUE,eval=FALSE}
 runPlot(
@@ -46,14 +49,17 @@ runPlot(
     configTableSheet,
     dataObserved,
     nFacetColumns = 2,
+    nMaxFacetRows = 4,
     facetAspectRatio = 0.5,
     aggregationFlag = c("GeometricStdDev", "ArithmeticStdDev", "Percentiles", "Custom"),
-    percentiles = c(5, 50, 95)
+    percentiles = c(5, 50, 95),
+    referenceScaleVector = list(Control = c(NA, NA),
+                                Reference = c(NA, NA))
   )
 )
 ```
 
-### Parameters
+#### Parameters
 
 - *functionKey:*  This parameter is used to select the plotfuncion, its sets the subfolder of the outputFolder, where the created plots are saved to the selected "sheetName"
 
@@ -64,6 +70,8 @@ runPlot(
 - *dataObserved:* The observed data to be plotted. This can be provided in data.table format or as a DataCombined object (which will be converted internally).
 
 - *nFacetColumns:* The maximum number of facet columns (default is 2) used for the facet type "by Order". This controls how many columns will be displayed in the plot.
+
+- *nMaxFacetRows:* The maximum number of facet rows (default is 4) used for all facet types. This controls how many rows will be displayed in one plot. If the plot configuration leads to more rows, the plot wil be split in different plots.
 
 - *facetAspectRatio:* The aspect ratio for the facets (default is 0.5). This controls the height-to-width ratio of the individual plots.
 
@@ -88,18 +96,20 @@ A custom function should take a numeric vector `y` as input and return a list co
  It must be a concatenation of the descriptor of yValues and the descriptor of yMin - yMax range
  separated by "|" (e.g., "mean | standard deviation" or "median | 5th - 95th percentile").
 
+- *referenceScaleVector:* A named list which configures labels and colors for the display of reference scenarios.
+ The names of the list are displayed as labels in the legend, the first entry defines the aestehtic color, the second entry defines the aesthetic fill. E.g. referenceScaleVector = list(DDI = c('darkred', 'red'), Control = c('darkblue', 'blue')) would label the 'Scenario' with 'DDI' and color it red the 'ReferenceScenario' would be labeled as 'Control' and displayed in blue, with dark colors for the aesthetic color and light colors for the aesthetic fill.  If the colors are set to NA, default colors are selected for the Scenario and the reference is displayed in grey.
 
-# Adding Default Configuration for Time Profile Plots
+## Adding Default Configuration for Time Profile Plots
 
 The addDefaultConfigForTimeProfilePlots function is a helpful utility designed to streamline the process of setting up your Excel configuration sheet for time profile plots. This function automatically populates a new sheet with default values that you can customize according to your needs.
 
-## Function Overview
+### Function Overview
 
-### Purpose
+#### Purpose
 
 The primary purpose of the addDefaultConfigForTimeProfilePlots function is to create a new configuration sheet in your Excel workbook that contains standardized settings for time profile plots. This is especially useful for users who are starting from scratch or want to ensure consistency across multiple plots.
 
-### Parameters
+#### Parameters
 
 - *projectConfiguration:* This parameter takes an object that contains the project settings, including file paths and scenario definitions. It is essential for the function to access the necessary data for populating the configuration sheet.
 
@@ -107,7 +117,7 @@ The primary purpose of the addDefaultConfigForTimeProfilePlots function is to cr
 
 - *overwrite:* A boolean value that indicates whether to overwrite an existing sheet with the same name. If set to TRUE, the function will replace the existing sheet; if FALSE, it will raise an error if the sheet already exists.
 
-## How It Works
+### How It Works
 
 1. Loading the Workbook: The function first loads the existing Excel workbook specified in the projectConfiguration.
 
@@ -135,7 +145,7 @@ If the DefaultScenario in the "DataGroups" sheet of the plot configuration is fi
 
 5. Saving the Workbook: Finally, the function saves the workbook, ensuring that the new configuration sheet is stored for future use.
 
-## Example Usage
+### Example Usage
 
 Here’s an example of how to use the addDefaultConfigForTimeProfilePlots function:
 
@@ -143,34 +153,35 @@ Here’s an example of how to use the addDefaultConfigForTimeProfilePlots functi
 # Assuming projectConfiguration is already defined
 addDefaultConfigForTimeProfilePlots(
   projectConfiguration = projectConfiguration,
-  sheetName = "TimeProfile_Panel",
+  sheetName = "TimeProfiles",
   overwrite = TRUE
 )
 ```
 
-In this example, a new sheet named "TimeProfile_Panel" will be created (or overwritten if it already exists) in the specified Excel workbook, populated with default settings for time profile plots.
+In this example, a new sheet named "TimeProfiles" will be created (or overwritten if it already exists) in the specified Excel workbook, populated with default settings for time profile plots.
+If the parameter `overwrite`is set to `FALSE`only scenarios are added whcih are not yet included.
 
-## Conclusion
+### Conclusion
 
 The `addDefaultConfigForTimeProfilePlots` function is an invaluable tool for users looking to streamline the process of creating time profile plot configurations. By automatically populating an Excel sheet with default values, it saves time and ensures consistency across your plotting efforts. 
 
 
-# Filling the Excel Configuration Sheet for Time Profile Panels
+## Filling the Excel Configuration Sheet for Time Profile Panels
 
-## Introduction
+### Introduction
 This section guides you through filling out the Excel configuration sheet required for generating time profile panels using the `plotTimeProfilePanels` function in R. The configuration sheet includes several columns, each serving a specific purpose in defining the plots.
 
-## Excel Sheet Structure
+### Excel Sheet Structure
 Your Excel sheet should have the following columns:
 
-### Heading Columns
+#### Heading Columns
 These columns define the structure and hierarchy of your report.
 
 - *Level:* Specifies the header level for the plot sections. Use numeric values to indicate the hierarchy (e.g., 1 for main headers, 2 for sub-headers).
 
 - *Header:* The title of the section or plot. This will be displayed in the generated report.
 
-### Plot Configuration Columns
+#### Plot Configuration Columns
 
 These columns provide the essential information required to generate the plots.
 - *PlotName:* A unique identifier for each plot. 
@@ -178,21 +189,24 @@ All rows with the same PlotName will be exported in one plot with different pane
 
 - *Scenario:* The name of the scenario being plotted. This should match the scenario names defined in your project. In this plot type only one scenario per panle is possible.
 
-### Data Grouping Columns
+#### Data Grouping Columns
 
 - *OutputPathIds:* The IDs of the output paths that will be plotted. Ensure that these IDs are defined in your project. If you want to include multiple output paths, you can list them separated by commas. For example: OutputPath1, OutputPath2, OutputPath3 leads to 3 Panels in the plot. For each Output a new panel will be generated. You can also use parentheses to group output paths. The brackets indicate that the enclosed paths should be plotted into one panel. For example: (OutputPath1, OutputPath2),OutputPath3 leads to two panels.
 
 - *DataGroupIds:* IDs for the data groups to be included in the plot. These should match the data groups defined in your project. If you want to include multiple data groups, you can list them separated by commas. All groups will be added in the same panel
 
+- *IndividualIds:* IDs for the individuals to be included in the plot. 
+The columns is used a s filter for data group and scenario simulation, if your scenario is a virtual twin scenario (see the vignette for the `ospsuite.reportingframework` package, topic 'Simulation_setup', section 'Populations').
+It is possible to list more then one individual separated by ",". If you want to plot all individuals you can use "\*" as short cut. For all plots except the 'Plot_TimeProfiles' you can enclose IndividualIds with a bracket, to plot them in one panel. For the shortcut that would be '(*)'.
 
-### Caption and Output Columns
+#### Caption and Output Columns
 
 - *ScenarioCaptionName*: A descriptive name for the scenario that will appear in the plot captions.
 
 - *PlotCaptionAddon:* Any additional text you want to include in the plot captions.
 
 
-### Additional Plot Configuration Columns
+#### Additional Plot Configuration Columns
 
 - *TimeUnit:* The unit of time for the x-axis (e.g., "h" for hours, "day(s)" for days).
   This unit is valid for all time columns like Timeoffset or Time range.
@@ -208,7 +222,7 @@ All rows with the same PlotName will be exported in one plot with different pane
 - *ylimit_linear* and *ylimit_log:* The limits for the y-axis in linear(log) scale . This should be an R readable string which evaluates to a numeric vector of length 2 (e.g "c(0,100)" or "c(0,NA)" if only a lower limit is needed). 
 The function will stop with an error if observed data are outside the limits. Please use a filtered data set if you want to zoom in.
 
-### Facet Columns:
+#### Facet Columns:
 
 
 - *FacetType:*  Defines how the plots will be faceted. Options are: 
@@ -220,7 +234,7 @@ The function will stop with an error if observed data are outside the limits. Pl
 
 - *FacetScale:* Determines the scaling of facets. Options include "fixed", "free", "free_x", and "free_y". This is used as input for `ggplot2::facet_wrap`
 
-### Time range columns
+#### Time range columns
 
 This are all columns which start with "TimeRange_". Per default 3 columns ar given, but you can add new ones or delete some. For each scenario at least one has to be non empty.
 
@@ -237,7 +251,7 @@ Each time range columns needs a corresponding row in the excel sheet "TimeRange"
 Here you can customize the caption text and the time label.
 
 
-### Plot type selection
+#### Plot type selection
 
 A logical value indicating whether to generate selected plotType:
 
@@ -253,7 +267,7 @@ A logical value indicating whether to generate selected plotType:
 
 
 
-## Example Configuration
+### Example Configuration
 Here is an example of how the first few rows of your Excel sheet might look:
 
 
@@ -319,7 +333,7 @@ for (col in names(dtPlots)) {
 knitr::kable(dtPlots)
 ```
 
-## Conclusion
+### Conclusion
 Filling out the Excel configuration sheet correctly is crucial for generating accurate and informative time profile panels. By following this guide, you can ensure that your plots are well-defined and ready for analysis. 
 
 If you have any questions or need further assistance, please refer to the package documentation or reach out to the support team.

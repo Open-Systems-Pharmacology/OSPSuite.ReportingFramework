@@ -2,28 +2,31 @@
 % Please edit documentation in R/utilities-xlsx.R
 \name{xlsxReadData}
 \alias{xlsxReadData}
-\title{reads data}
+\title{Read data from a worksheet}
 \usage{
 xlsxReadData(
   wb,
   sheetName,
   skipDescriptionRow = FALSE,
-  alwaysCharacter = c("IndividualId", "StudyId", "group", "outputPathId", "DataGroupIds",
-    "DataGroupId")
+  alwaysCharacter = c("IndividualId", "IndividualIds", "StudyId", "group",
+    "outputPathId", "DataGroupIds", "DataGroupId"),
+  emptyAsNA = TRUE
 )
 }
 \arguments{
-\item{wb}{workbook or xlsxfile}
+\item{wb}{A workbook or xlsx file.}
 
-\item{sheetName}{sheet name}
+\item{sheetName}{A character string specifying the name of the sheet to read.}
 
-\item{skipDescriptionRow}{`boolean`if TRUE first line is interpreted as a description and skipped}
+\item{skipDescriptionRow}{A boolean indicating if the first line should be interpreted as a description and skipped.}
 
-\item{alwaysCharacter}{vector with column names which should be returned as character (typically identifier)}
+\item{alwaysCharacter}{A vector with column names that should be returned as character (typically identifiers).}
+
+\item{emptyAsNA}{If TRUE empty strings are converted to NA}
 }
 \value{
-`data.table` with sheet data
+A `data.table` containing the sheet data.
 }
 \description{
-wrapps `openxlsx::read.xlsx` but returns data as data.table()
+This function wraps `openxlsx::read.xlsx` but returns data as a `data.table`.
 }

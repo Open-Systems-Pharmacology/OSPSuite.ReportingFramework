@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotTimeProfilePanels.R
 \name{updateGuides}
 \alias{updateGuides}
-\title{Update guides for time profile plots}
+\title{Update guides and scales}
 \usage{
 updateGuides(plotData, plotObject, plotType)
 }
@@ -17,6 +17,6 @@ updateGuides(plotData, plotObject, plotType)
 Updated ggplot object with guides.
 }
 \description{
-Update guides for time profile plots
+Update guides and scales
 }
 \keyword{internal}

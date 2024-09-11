@@ -2,17 +2,21 @@
 % Please edit documentation in R/utilities-xlsx.R
 \name{xlsxAddSheet}
 \alias{xlsxAddSheet}
-\title{adds a new sheet to a workbook}
+\title{Add a new sheet to a workbook with data}
 \usage{
 xlsxAddSheet(wb, sheetName, dt)
 }
 \arguments{
-\item{wb}{A Workbook object to attach the new worksheet}
+\item{wb}{A workbook object created by `openxlsx::loadWorkbook()`.}
 
-\item{sheetName}{A name for the new worksheet}
+\item{sheetName}{A character string specifying the name of the sheet to add.}
 
-\item{dt}{`data.table`  to attach}
+\item{dt}{A `data.table` containing the data to be written to the new sheet.}
+}
+\value{
+An invisible NULL value.
 }
 \description{
-wrapps `openxlsx::addWorksheet`, and adds new data to the sheet
+This function wraps `openxlsx::addWorksheet` and adds data to the newly created sheet.
+If the sheet already exists, it issues a warning and clears the existing content.
 }

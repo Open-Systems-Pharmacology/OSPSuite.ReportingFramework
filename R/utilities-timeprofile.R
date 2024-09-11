@@ -123,7 +123,6 @@ getSimulatedTimeprofile <- function(simulatedResult, outputPaths, aggregationFun
     old = c("Time", "simulationValues", "unit"),
     new = c("xValues", "yValues", "yUnit")
   )
-
   # Aggregate if needed
   if (!is.null(individualMatch)){
 

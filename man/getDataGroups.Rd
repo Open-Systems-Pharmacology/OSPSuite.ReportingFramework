@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-xlsx.R
 \name{getDataGroups}
 \alias{getDataGroups}
-\title{load the properties for data groups}
+\title{Load the properties for data groups}
 \usage{
 getDataGroups(projectConfiguration)
 }
@@ -10,8 +10,8 @@ getDataGroups(projectConfiguration)
 \item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 }
 \value{
-`data.table` with datagroupIds
+A `data.table` with data group IDs.
 }
 \description{
-load the properties for data groups
+Load the properties for data groups
 }

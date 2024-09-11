@@ -87,3 +87,4 @@ test_that("addTimeRangeTagsToData works correctly", {
   expect_true("timeRangeTag" %in% names(result))
   expect_equal(nrow(result), sum(observedData$xValues<=10))  # Check number of rows
 })
+
