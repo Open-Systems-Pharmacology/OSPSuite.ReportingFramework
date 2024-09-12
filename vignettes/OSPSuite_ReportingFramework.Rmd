@@ -36,7 +36,8 @@ This vignette provides a comprehensive overview of the workflow designed for dat
 
 Each section of this vignette is designed to guide you through the workflow's features and functionalities, providing examples and best practices for effective usage.
 
-By the end of this vignette, you will have a solid understanding of how to:
+By the end of this vignette, you will have a solid understanding of how to:  
+
  - Access and customize the workflow template.
  - Implement logging to track your workflow's execution.
  - Execute the workflow in valid run mode to ensure output integrity.
@@ -90,18 +91,16 @@ This section explains how to access the workflow template and customize it accor
 To access the default workflow template provided by the package, you can use the following function:
 
 ```{r,echo=TRUE,eval=FALSE}
-
 openWorkflowTemplate()
-
 ```
 
 
  This function will open the workflow template as a new document in your RStudio environment.
 
-### Access via RStudio Addin
+### Access via RStudio Addins
 
 You can also access the workflow template through an RStudio addin. 
-To use the addin, simply navigate to the Addins menu in RStudio, and select "Open Template Workflow". This will execute the `openWorkflowTemplate()` function and open the template in a new document.
+To use the Addins, simply navigate to the Addins menu in RStudio, and select "Open Template Workflow". This will execute the `openWorkflowTemplate()` function and open the template in a new document.
 
 ## Customizing the Workflow Template
 
@@ -112,12 +111,10 @@ By default, the workflow template is loaded from the package's internal template
 3. Set the path to your custom template by using the following option:
 
 ```{r,echo=TRUE,eval=FALSE}
-
- options(OSPSuite.RF.PathForWorkflowTemplate = 'myTemplateDirectory')
-
+options(OSPSuite.RF.PathForWorkflowTemplate = "myTemplateDirectory")
 ```
 
-After setting this option, calling `openWorkflowTemplate()` or using the addin will open your customized template instead of the default one.
+After setting this option, calling `openWorkflowTemplate()` or using the Addins will open your customized template instead of the default one.
 
 You can save this option in your ".Rprofile" file. (file.path(Sys.getenv("HOME"), ".Rprofile"). Then it will be set automatically.
 
@@ -126,9 +123,7 @@ You can save this option in your ".Rprofile" file. (file.path(Sys.getenv("HOME")
 You can also open other templates such as the figure creation template using:
 
 ```{r,echo=TRUE,eval=FALSE}
-
- openFigureTemplate()
-
+openFigureTemplate()
 ```
 
 This function will open the figure creation template as a new document.
@@ -160,10 +155,8 @@ The `executeAsValidRun` function sets the necessary options to control the behav
 ### Example:
 
 ```{r,echo=TRUE,eval=FALSE}
-
 # Execute the workflow as a valid run
 executeAsValidRun(isValidRun = TRUE)
-
 ```
 
 ## Conclusion
@@ -186,6 +179,13 @@ The function takes the following parameters:
  - `sourceFolder`: The folder containing the template files and directories that you want to copy to your project.
  - `overwrite`: A boolean value indicating whether to overwrite existing files in the root directory. It is set to `FALSE` by default.
 
+If you use as 'sourceFolder' the `templateDirectory()` you will get this folder structure
+
+
+```{r, echo = FALSE}
+fs::dir_tree(path = templateDirectory())
+```
+
 ## Functionality
 
 The function lists all directories within the `sourceFolder` and iterates through them. For each directory:
@@ -194,13 +194,11 @@ The function lists all directories within the `sourceFolder` and iterates throug
 
 ### Example:
 ```{r,echo=TRUE,eval=FALSE}
-
- initProject(
-   rootDirectory = file.path("..", ".."),
-   sourceFolder = templateDirectory(),
-   overwrite = FALSE
+initProject(
+  rootDirectory = file.path("..", ".."),
+  sourceFolder = templateDirectory(),
+  overwrite = FALSE
 )
-
 ```
 
 In this example, the project structure will be created two levels up from the current directory, using the files and folders from the specified template directory. Existing files will not be overwritten.
@@ -229,10 +227,8 @@ The `initLogfunction` is called at the beginning of the workflow script to set u
 
 
 ```{r,echo=TRUE,eval=FALSE}
-
 # Initialize the log function
 logFunction <- initLogfunction(projectConfiguration)
-
 ```
 
 ## Catching Logs
@@ -246,11 +242,9 @@ The `logCatch` function is used to catch messages, warnings, and errors within t
 ### Example:
 
 ```{r,echo=TRUE,eval=FALSE}
-
 logCatch({
   # Your code here
 })
-
 ```
 
 ## Writing to the Log
@@ -259,9 +253,7 @@ The `writeToLog` function appends messages to the log file. It can log different
 
 ### Example:
 ```{r,echo=TRUE,eval=FALSE}
-
 writeToLog(type = "Info", msg = "This is an information message")
-
 ```
 
 ## Saving Session Info
@@ -269,7 +261,6 @@ writeToLog(type = "Info", msg = "This is an information message")
 At the end of your workflow, you can save session information, including loaded packages and R version, into a log file using the `saveSessionInfo` function.
 
 ```{r,echo=TRUE,eval=FALSE}
-
 saveSessionInfo()
 ```
 ## Conclusion
@@ -303,14 +294,14 @@ The `runPlot` function is the primary interface for generating plots within the 
  ### Example:
  
 ```{r,echo=TRUE,eval=FALSE}
- runPlot(
-   functionKey = "TimeProfile_Panel",
-   projectConfiguration = projectConfiguration,
-   inputs = list(
-     configTableSheet = "TimeProfiles_1",
-     dataObserved = dataObserved
-   )
- )
+runPlot(
+  functionKey = "TimeProfile_Panel",
+  projectConfiguration = projectConfiguration,
+  inputs = list(
+    configTableSheet = "TimeProfiles_1",
+    dataObserved = dataObserved
+  )
+)
 ```
 
 
@@ -323,10 +314,10 @@ Custom plot functions allow you to generate specific visualizations tailored to 
 
 ## Accessing the Plot Template
 
-To facilitate the creation of custom plot functions, you can open a template using the RStudio addin. Navigate to the Addins menu in RStudio and select "Open Template Plotfunction". Alternatively, you can use the following function to open the template directly:
+To facilitate the creation of custom plot functions, you can open a template using the RStudio Addins. Navigate to the Addins menu in RStudio and select "Open Template Plotfunction". Alternatively, you can use the following function to open the template directly:
 
 ```{r,echo=TRUE,eval=FALSE}
- openFigureTemplate()
+openFigureTemplate()
 ```
 
 This will provide you with a pre-structured template to help you get started with your custom plot function.
@@ -338,11 +329,11 @@ Once you have defined your custom plot function, you can call it using the `runP
 
 ```{r,echo=TRUE,eval=FALSE}
 runPlot(
-   functionKey = NULL,  # No function key for custom functions
-   plotFunction = myPlotFunction,
-   subfolder = "MyCustomPlots",
-   projectConfiguration = projectConfiguration,
-   inputs = list()  # Additional inputs can be passed as needed
+  functionKey = NULL, # No function key for custom functions
+  plotFunction = myPlotFunction,
+  subfolder = "MyCustomPlots",
+  projectConfiguration = projectConfiguration,
+  inputs = list() # Additional inputs can be passed as needed
 )
 ```
 
@@ -365,10 +356,10 @@ The first step of the report generation is typically handled by the `mergeRmds` 
 
 ```{r,echo=TRUE,eval=FALSE}
 mergeRmds(
-   projectConfiguration = projectConfiguration,
-   newName = "appendix",
-   title = "Appendix",
-   sourceRmds = c("Demographics", "TimeProfile", "PKParameter", "DDIRatio", "myFigures")
+  projectConfiguration = projectConfiguration,
+  newName = "appendix",
+  title = "Appendix",
+  sourceRmds = c("Demographics", "TimeProfile", "PKParameter", "DDIRatio", "myFigures")
 )
 ```
 
@@ -389,10 +380,10 @@ The `renderWord` function takes an R Markdown file and generates a Word document
 
 ```{r,echo=TRUE,eval=FALSE}
 renderWord(
-   fileName = "myReport.Rmd",
-   wordConversionTemplate = "path/to/template/myTemplate.docx",
-   customStyles = list(FigureFootnote = "myFootnoteFormat", TableFootnote = "myFootnoteFormat")
- )
+  fileName = "myReport.Rmd",
+  wordConversionTemplate = "path/to/template/myTemplate.docx",
+  customStyles = list(FigureFootnote = "myFootnoteFormat", TableFootnote = "myFootnoteFormat")
+)
 ```
 
 In this example, the `renderWord` function converts the specified R Markdown file into a Word document, applying the custom styles defined for footnotes.

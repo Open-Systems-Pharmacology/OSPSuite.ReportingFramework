@@ -18,12 +18,8 @@ exportVirtualTwinPopulations(
 
 \item{overwrite}{A logical indicating whether to overwrite existing files. Defaults to FALSE}
 
-\item{populationIds}{A character vector cotaining  DataGroups to filter relevant populations}
+\item{populationNames}{a character vector defining the population which should be exported. If NULL (default) all will be exported}
 }
 \description{
 This function generates virtual twin populations based on the provided model and project configuration.
-}
-\examples{
-# Example usage:
-exportVirtualTwinPopulation(projectConfiguration, "modelFileName", overwrite = TRUE)
 }

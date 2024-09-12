@@ -1,7 +1,7 @@
 #' Initializing a Log Function
 #'
 #' This function initialize the logging during a workflow. It is called at the start of the workflow script.
-#' It is used to configure options for the log file folder, warning swhich should not logged and messages which should not logged.
+#' It is used to configure options for the log file folder, warnings which should not logged and messages which should not logged.
 #'
 #' @template projectConfig
 #' @param warningsNotDisplayed A list of warnings that should not be logged.
@@ -40,7 +40,7 @@ initLogfunction <- function(projectConfiguration,
   # Create the log file sub-folder with a time stamp
 
   # Get the name of the original script
-  script_name <- tryCatch(
+  scriptName <- tryCatch(
     {
       script <- sys.frame(1)$ofile
       sub(".R$", "", basename(script))
@@ -51,7 +51,7 @@ initLogfunction <- function(projectConfiguration,
   )
 
   timestamp <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
-  logFileSubFolder <- paste(script_name, timestamp, sep = "_")
+  logFileSubFolder <- paste(scriptName, timestamp, sep = "_")
 
 
   logFileFolder <- fs::path_abs(file.path(loggingFolder, logFileSubFolder))
@@ -77,7 +77,9 @@ initLogfunction <- function(projectConfiguration,
   optionstxt <- paste(
     "\n\n",
     "Options:\n",
-    "OSPSuite.plots.watermark_enabled:", ospsuite.plots::getOspsuite.plots.option(OptionKeys$watermark_enabled), "\n",
+    "OSPSuite.plots.watermark_enabled:", ospsuite.plots::getOspsuite.plots.option(
+      ospsuite.plots::OptionKeys$watermark_enabled
+    ), "\n",
     "OSPSuite.RF.skipFailingPlots:", ifelse(getOption("OSPSuite.RF.skipFailingPlots", default = FALSE),
       "Failing Plots are skipped",
       "Failing Plots throw errors"
@@ -176,15 +178,18 @@ logCatch <- function(expr) {
 #'
 #' @examples
 #' # Example usage
-#' tryCatch({
-#'   # Some code that may produce an error
-#' }, error = function(e) {
-#'   errorTrace <- getErrorTrace(e)
-#'   cat(errorTrace)
-#' })
+#' tryCatch(
+#'   {
+#'     # Some code that may produce an error
+#'   },
+#'   error = function(e) {
+#'     errorTrace <- getErrorTrace(e)
+#'     cat(errorTrace)
+#'   }
+#' )
 #'
 #' @export
-getErrorTrace  <- function(e){
+getErrorTrace <- function(e) {
   calls <- sys.calls()
   errorTrace <- "Error Trace:"
   for (call in calls) {
@@ -227,7 +232,7 @@ getErrorTrace  <- function(e){
 writeToLog <- function(type, msg, filename = NULL) {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
   if (is.null(logFileFolder)) {
-    warning('Logfile was not initialized')
+    warning("Logfile was not initialized")
     return(invisible())
   }
   if (is.null(filename)) filename <- "run.log"
@@ -254,7 +259,7 @@ writeToLog <- function(type, msg, filename = NULL) {
 writeTableToLog <- function(dt, filename = "run.log") {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
   if (is.null(logFileFolder)) {
-    warning('Logfile was not initialized')
+    warning("Logfile was not initialized")
     return(invisible())
   }
   verbose <- getOption("OSPSuite.RF.verbose", default = TRUE)

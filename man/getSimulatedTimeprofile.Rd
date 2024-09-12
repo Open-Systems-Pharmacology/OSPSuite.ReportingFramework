@@ -19,7 +19,7 @@ getSimulatedTimeprofile(
 \item{aggregationFun}{A function to aggregate the simulation data if necessary.}
 
 \item{individualMatch}{data.table with matches simulated individual id with individual id of observed data,
-is only fille for individual poulations otherwise NULL}
+is only filled for individual populations otherwise NULL}
 }
 \value{
 A data.table with the processed time profile data.

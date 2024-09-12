@@ -63,19 +63,3 @@ templateDirectory <- function() {
     mustWork = TRUE
   )
 }
-
-
-#' set a group of options, to generate a valid run of a workflow
-#'
-#' if TRUE
-#'  Ospsuite.plots.option watermark_enabled is set to FALSE
-#'
-#' @param isValid `boolean`if TRUE run of workflow is executed in valid mode
-#'
-#' @export
-setRunModeIsValid <- function(isValid) {
-  setOspsuite.plots.option(
-    optionKey = OptionKeys$watermark_enabled,
-    value = !isValid
-  )
-}

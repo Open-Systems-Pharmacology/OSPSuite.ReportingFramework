@@ -17,9 +17,9 @@ runPlot(
 
 \item{functionKey}{keyword which select plot function, if NULL plotfunction is needed}
 
-\item{plotFunction}{function which is used for plotting, if not null, it overwrites functionKey selection}
+\item{plotFunction}{function which is used for plotting, if not null, it overwrites `functionKey` selection}
 
-\item{subfolder}{subfolder where results are filed, if functionKey is used, as default value the sheetname of the plotconfiguartion is used}
+\item{subfolder}{subfolder where results are filed, if `functionKey` is used, as default value the sheetname of the plotconfiguration is used}
 
 \item{inputs}{additionally inputs for the}
 }

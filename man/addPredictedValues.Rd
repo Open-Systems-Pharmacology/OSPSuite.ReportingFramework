@@ -2,27 +2,22 @@
 % Please edit documentation in R/ospsuite_plotTimeprofile.R
 \name{addPredictedValues}
 \alias{addPredictedValues}
-\title{Interpolate}
+\title{Interpolates observed data based on simulated data.}
 \usage{
 addPredictedValues(dtObserved, dtSimulated, identifier)
 }
 \arguments{
-\item{dtObserved}{A data.table containing observed data with xValues and
-grouping identifiers.}
+\item{dtObserved}{A data.table containing observed data with columns `xValues`, `yValues`, and grouping identifiers.}
 
-\item{dtSimulated}{A data.table containing simulated data with xValues
-and corresponding yValues.}
+\item{dtSimulated}{A data.table containing simulated data with columns `xValues` and `yValues`.}
 
-\item{identifiers}{A character vector of column names used for grouping
-in the extrapolation and interpolation process.}
+\item{identifier}{A character vector of column names used for grouping in the extrapolation and interpolation process.}
 }
 \value{
-A data.table with an additional column named 'predicted' containing
-        the extrapolated and interpolated values.
+A data.table with an additional column named 'predicted' containing the extrapolated and interpolated values.
 }
 \description{
-This function performs linear extrapolation for increasing yValues and
-logarithmic interpolation for decreasing yValues based on the specified
-grouping identifiers. It modifies the input dtObserved data.table by
-adding a new column with the predicted values.
+This function performs linear extrapolation for increasing yValues and logarithmic interpolation for decreasing yValues
+based on the specified grouping identifiers. It modifies the input dtObserved data.table by adding a new column
+with the predicted values.
 }

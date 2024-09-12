@@ -5,6 +5,8 @@
 `.` <- list
 
 ## usethis namespace: start
+#' @import esqlabsR
+#' @import ospsuite.plots
 #' @importFrom data.table .BY
 #' @importFrom data.table .EACHI
 #' @importFrom data.table .GRP
@@ -15,5 +17,6 @@
 #' @importFrom data.table :=
 #' @importFrom data.table data.table
 #' @importFrom tidyr  %>%
+#' @importFrom rlang %||%
 ## usethis namespace: end
 NULL

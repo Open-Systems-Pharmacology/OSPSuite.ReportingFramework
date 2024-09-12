@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-plot.R
 \name{getScalevector}
 \alias{getScalevector}
-\title{returns a scalevector usable for manaul scaling in ggplot}
+\title{returns a scalevector usable for manual scaling in ggplot}
 \usage{
 getScalevector(namesOfScaleVector, listOfValues)
 }
@@ -15,5 +15,5 @@ getScalevector(namesOfScaleVector, listOfValues)
 scaleVector
 }
 \description{
-returns a scalevector usable for manaul scaling in ggplot
+returns a scalevector usable for manual scaling in ggplot
 }

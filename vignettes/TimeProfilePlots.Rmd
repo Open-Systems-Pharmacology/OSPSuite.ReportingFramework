@@ -53,19 +53,21 @@ runPlot(
     facetAspectRatio = 0.5,
     aggregationFlag = c("GeometricStdDev", "ArithmeticStdDev", "Percentiles", "Custom"),
     percentiles = c(5, 50, 95),
-    referenceScaleVector = list(Control = c(NA, NA),
-                                Reference = c(NA, NA))
+    referenceScaleVector = list(
+      Control = c(NA, NA),
+      Reference = c(NA, NA)
+    )
   )
 )
 ```
 
 #### Parameters
 
-- *functionKey:*  This parameter is used to select the plotfuncion, its sets the subfolder of the outputFolder, where the created plots are saved to the selected "sheetName"
+- *functionKey:*  This parameter is used to select the plotfunction, its sets the subfolder of the outputFolder, where the created plots are saved to the selected "sheetName"
 
 - *projectConfiguration:* An object containing the project settings, including file paths and scenario definitions. This is essential for the function to access the necessary data.
 
-- *configTableSheet:* The name of the sheet in the Excel plot configuration file that defines the plot settings. See detials below.
+- *configTableSheet:* The name of the sheet in the Excel plot configuration file that defines the plot settings. See details below.
 
 - *dataObserved:* The observed data to be plotted. This can be provided in data.table format or as a DataCombined object (which will be converted internally).
 
@@ -77,8 +79,8 @@ runPlot(
 
 - *aggregationFlag:* The type of aggregation function to use for simulated data (default is "GeometricStdDev"). Options include:
 
-  - "GeometricStdDev"  Mean will be the geometric meam, range is defined by the geometric standard deviation
-  - "ArithmeticStdDev" Mean will be the arithmetric meam, range is defined by the arithmetric standarddeviation
+  - "GeometricStdDev"  Mean will be the geometric mean, range is defined by the geometric standard-deviation
+  - "ArithmeticStdDev" Mean will be the arithmetic mean, range is defined by the arithmetic standard-deviation
   - "Percentiles"  mean and range are defined by the percentiles input parameter
   - "Custom"  the custom function provided by parameter is used for aggregation
 
@@ -97,7 +99,7 @@ A custom function should take a numeric vector `y` as input and return a list co
  separated by "|" (e.g., "mean | standard deviation" or "median | 5th - 95th percentile").
 
 - *referenceScaleVector:* A named list which configures labels and colors for the display of reference scenarios.
- The names of the list are displayed as labels in the legend, the first entry defines the aestehtic color, the second entry defines the aesthetic fill. E.g. referenceScaleVector = list(DDI = c('darkred', 'red'), Control = c('darkblue', 'blue')) would label the 'Scenario' with 'DDI' and color it red the 'ReferenceScenario' would be labeled as 'Control' and displayed in blue, with dark colors for the aesthetic color and light colors for the aesthetic fill.  If the colors are set to NA, default colors are selected for the Scenario and the reference is displayed in grey.
+ The names of the list are displayed as labels in the legend, the first entry defines the aesthehtic color, the second entry defines the aesthetic fill. E.g. referenceScaleVector = list(DDI = c('darkred', 'red'), Control = c('darkblue', 'blue')) would label the 'Scenario' with 'DDI' and color it red the 'ReferenceScenario' would be labeled as 'Control' and displayed in blue, with dark colors for the aesthetic color and light colors for the aesthetic fill.  If the colors are set to NA, default colors are selected for the Scenario and the reference is displayed in grey.
 
 ## Adding Default Configuration for Time Profile Plots
 
@@ -159,7 +161,7 @@ addDefaultConfigForTimeProfilePlots(
 ```
 
 In this example, a new sheet named "TimeProfiles" will be created (or overwritten if it already exists) in the specified Excel workbook, populated with default settings for time profile plots.
-If the parameter `overwrite`is set to `FALSE`only scenarios are added whcih are not yet included.
+If the parameter `overwrite`is set to `FALSE`only scenarios are added which are not yet included.
 
 ### Conclusion
 
@@ -185,9 +187,9 @@ These columns define the structure and hierarchy of your report.
 
 These columns provide the essential information required to generate the plots.
 - *PlotName:* A unique identifier for each plot. 
-All rows with the same PlotName will be exported in one plot with different panels and one plot caption.
+All rows with the same 'PlotName' will be exported in one plot with different panels and one plot caption.
 
-- *Scenario:* The name of the scenario being plotted. This should match the scenario names defined in your project. In this plot type only one scenario per panle is possible.
+- *Scenario:* The name of the scenario being plotted. This should match the scenario names defined in your project. In this plot type only one scenario per panel is possible.
 
 #### Data Grouping Columns
 
@@ -229,14 +231,14 @@ The function will stop with an error if observed data are outside the limits. Pl
 
 - "by Order":  number of facet columns is determined by the input parameter `nFacetCOlumns` of `plotTimeProfilePanels()`
 - "vs Output": number of facet columns is determined by the number of outputs.
-- "vs TimeRange": Normally For each time range a separate plot is genearted. With this option you can compare different time ranges in one plot. E.g. FIrst dose vs steady state. 
+- "vs TimeRange": Normally For each time range a separate plot is generated. With this option you can compare different time ranges in one plot. E.g. First dose vs steady state. 
 
 
 - *FacetScale:* Determines the scaling of facets. Options include "fixed", "free", "free_x", and "free_y". This is used as input for `ggplot2::facet_wrap`
 
 #### Time range columns
 
-This are all columns which start with "TimeRange_". Per default 3 columns ar given, but you can add new ones or delete some. For each scenario at least one has to be non empty.
+This are all columns which start with "TimeRange_". Per default 3 columns are given, but you can add new ones or delete some. For each scenario at least one has to be non empty.
 
 The input has to be  an R expression which evaluates to a numeric vector of length 2 ( e.g. c(0,24)) A time Unit the unit given in column timeUnit is used)  or one of the predefined strings: "total", "firstApplication", or "lastApplication".
 

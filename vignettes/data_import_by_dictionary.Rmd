@@ -22,7 +22,7 @@ library(tidyr)
 
 # Introduction
 
-Welcome to the data import vignette for the OSPSuite.ReportingFramework package. This vignette aims to provide a comprehensive understanding of the data import process within the package. Importing and processing observed data is a critical step in many scientific and analytical workflows. With the help of our package, users can efficiently import observed datasets using a customizable data dictionary and an Excel-based template.
+Welcome to the data import vignette for the OSPSuite.ReportingFramework package. This vignette aims to provide a comprehensive understanding of the data import process within the package. Importing and processing observed data is a critical step in many scientific and analytical workflows. With the help of our package, users can efficiently import observed datasets using a configurable data dictionary and an Excel-based template.
 
 
 # Data Formats for Plot Functions
@@ -107,8 +107,8 @@ In the "tpDictionary" sheet, define the data dictionary with the following colum
          - outputPathId: identifier for the output.
          
       - **timeprofile** columns used to process time profiles.
-         The columns 'xValues','yValues','yUnit','lloq' are alyways mandatory, 
-         for aggregated data the columns yErrorValues, yErrorType, yMin, yMax, numberOfPatients,nBelowLLOQ are also available:
+         The columns 'xValues','yValues','yUnit','lloq' are always mandatory, 
+         for aggregated data the columns 'yErrorValues', 'yErrorType', 'yMin', 'yMax', 'numberOfPatients' and 'nBelowLLOQ' are also available:
       
         - time: time values, unit is specified in dictionary
         - yValues: data value
@@ -117,8 +117,8 @@ In the "tpDictionary" sheet, define the data dictionary with the following colum
         - yErrorType: type of aggregation range 
           There are two defaults for `yErrorType`:
          
-           - `ArithmeticStdDev` interpretes `yValues` as mean and `yErrorValues` as standard deviation
-           - `GeometricStdDev` interpretes `yValues` as geomean and `yErrorValues` as geometric standard deviation
+           - `ArithmeticStdDev` interprets `yValues` as mean and `yErrorValues` as standard deviation
+           - `GeometricStdDev` interprets `yValues` as geomean and `yErrorValues` as geometric standard deviation
          
            For the defaults the legend is automatically generated and `yMin` and `yMax` are ignored.
            For non defaults `yErrorType` is interpreted as legend, it should contain the description of the man and the range, separated by a "|"
@@ -175,7 +175,7 @@ The first line of the sheet contains descriptions for the columns, the informati
 
 ```{r echo=FALSE,eval=TRUE}
 dataFilesSheet <- rbind(
-  dataFilesSheet[c(1), ],
+  dataFilesSheet[FALSE, ],
   data.table(
     DataFile = c(
       "relative/path/to/data1.csv",
@@ -198,7 +198,7 @@ knitr::kable(dataFilesSheet)
 In the example above we want to read data from 3 source files. 
 "data1" and "data2" have the same format and use the same dictionary for the import, for data3 the dictionary "tpDictionaryAggregated" is used. All used dictionaries have to be part of the "dataImportConfiguration.xlsx."
 
-For Data1 we need all rows, for the other two we have filter defined. In Data2 we want to exclude all flagged wit a PKFLAG > 0 and In Data3 we want to exclude data from study 1234
+For Data1 we need all rows, for the other two we have filter defined. In Data2 we want to exclude all flagged wit a `PKFLAG > 0` and In Data3 we want to exclude data from study 1234
 
 ## `tpDictionary` Sheet
 

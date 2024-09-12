@@ -7,10 +7,11 @@
 executeAsValidRun(isValidRun)
 }
 \arguments{
-\item{isValidRun}{if TTRUE}
+\item{isValidRun}{if TRUE}
 }
 \description{
 relevant options are
   - watermark for figures (see vignette(package = 'ospsuite.plots',topic = 'ospsuite_plots'))
   - OSPSuite.RF.skipFailingPlots
+  - OSPSuite.RF.stopHelperFunction  stops helper function during valid runs
 }

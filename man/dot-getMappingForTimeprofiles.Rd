@@ -2,18 +2,21 @@
 % Please edit documentation in R/ospsuite_plotTimeprofile.R
 \name{.getMappingForTimeprofiles}
 \alias{.getMappingForTimeprofiles}
-\title{creates mapping for plotData}
+\title{Creates mapping for plotData.}
 \usage{
 .getMappingForTimeprofiles(plotData, metaData, userMapping)
 }
 \arguments{
-\item{plotData}{to map}
+\item{plotData}{Data to map.}
 
-\item{metaData}{list with metaData for plotData}
+\item{metaData}{A list with metadata for plotData.}
+
+\item{userMapping}{Mapping provided by the user; this will update the internal mapping.}
 }
 \value{
-mapping
+A mapping object for ggplot2.
 }
 \description{
-creates mapping for plotData
+This function generates a mapping for the plotting based on the provided plot data and metadata.
 }
+\keyword{internal}

@@ -186,7 +186,7 @@ set columns for aesthetics
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{referenceScaleVector}}{scale vector to scale aesthetic color and fill for scenarios with reference scenerio
+\item{\code{referenceScaleVector}}{scale vector to scale aesthetic color and fill for scenarios with reference scenario
 Get the time label for the filtered time range}
 }
 \if{html}{\out{</div>}}

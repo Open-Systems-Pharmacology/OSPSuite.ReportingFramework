@@ -21,6 +21,6 @@
 A list of results for the individual.
 }
 \description{
-This function processes individual data and generates as results a list of all paremetrs transfreed to poulation csv
+This function processes individual data and generates as results a list of all parameters transferred to population csv
 }
 \keyword{internal}

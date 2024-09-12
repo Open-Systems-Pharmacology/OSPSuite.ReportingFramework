@@ -2,15 +2,25 @@
 % Please edit documentation in R/utilities-data.R
 \name{updateOutputPathId}
 \alias{updateOutputPathId}
-\title{Add output path IDs of observed data to configuration sheet}
+\title{Update Output Path IDs in Project Configuration}
 \usage{
 updateOutputPathId(projectConfiguration, dataDT)
 }
 \arguments{
-\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+\item{projectConfiguration}{An object of class `ProjectConfiguration` containing configuration details, including:
+- `plotsFile`: A string representing the file path to the Excel workbook containing the Outputs sheet.}
 
-\item{data}{`data.table` with observed data.}
+\item{dataDT}{A data.table containing new output path IDs to be added to the Outputs sheet.
+It must include a column named "outputPathId".}
+}
+\value{
+NULL This function updates the Excel workbook in place and does not return a value. It is called for its side effects.
 }
 \description{
-Add output path IDs of observed data to configuration sheet
+This function updates the Outputs sheet in an Excel workbook based on a provided data table,
+ensuring that output path IDs remain unique.
+}
+\details{
+The function loads the existing Output Paths from the specified Excel workbook, extracts unique output path IDs from the input data,
+and appends them while maintaining uniqueness. The updated data is then written back to the workbook.
 }

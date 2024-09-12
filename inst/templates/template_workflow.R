@@ -102,7 +102,16 @@ logCatch({
   # )
 
   # Timeprofile Plots
-  # see vignette(package = 'ospsuite.reportingframework',topic = 'TimeProfilePlots')
+  #' The `TimeProfile_Panel` function creates a series of time profile plots as facet panels
+  #' from the provided observed data. This function is designed to visualize complex time-dependent
+  #' data by allowing for multiple plots organized in a user-defined layout.
+  #'
+  #' This function is particularly useful for researchers and analysts who need to visualize
+  #' concentration-time profiles of various scenarios, compare predicted versus observed data,
+  #' and analyze residuals cohesively. For more detailed information, please refer to the
+  #' accompanying vignettes:
+  #' - **TimeProfilePlots**
+  #' - **Time Profile Plotting Tutorial**
 
   runPlot(
     functionKey = "TimeProfile_Panel",

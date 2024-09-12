@@ -26,7 +26,7 @@ initLogfunction(
 }
 \description{
 This function initialize the logging during a workflow. It is called at the start of the workflow script.
-It is used to configure options for the log file folder, warning swhich should not logged and messages which should not logged.
+It is used to configure options for the log file folder, warnings which should not logged and messages which should not logged.
 }
 \examples{
 \dontrun{

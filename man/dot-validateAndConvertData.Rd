@@ -2,20 +2,21 @@
 % Please edit documentation in R/ospsuite_plotTimeprofile.R
 \name{.validateAndConvertData}
 \alias{.validateAndConvertData}
-\title{validates observed data and converts it to appropriate format}
+\title{Validates observed data and converts it to appropriate format.}
 \usage{
 .validateAndConvertData(plotData, predictedIsNeeded)
 }
 \arguments{
-\item{plotData}{either data.table with columns 'xValues','yValues','group' or
-object of class 'DataCombined'}
+\item{plotData}{Either a data.table with columns 'xValues', 'yValues', 'group' or an object of class 'DataCombined'.}
 
-\item{predictedIsNeeded}{if TRUE only observed data are returned,
-if not column "predicted" exists, predicted values are caluclated}
+\item{predictedIsNeeded}{If TRUE, only observed data are returned. If FALSE and the "predicted" column does not exist,
+predicted values are calculated.}
 }
 \value{
-`data.table` with data to plot
+A `data.table` with data formatted for plotting.
 }
 \description{
-validates observed data and converts it to appropriate format
+This function checks the input data for required columns and formats it for plotting. If predicted values are needed,
+it calculates them based on the observed and simulated data.
 }
+\keyword{internal}

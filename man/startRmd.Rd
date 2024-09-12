@@ -7,7 +7,7 @@
 startRmd(title = "Report")
 }
 \arguments{
-\item{title}{}
+\item{title}{title of report}
 }
 \value{
 character with startlines

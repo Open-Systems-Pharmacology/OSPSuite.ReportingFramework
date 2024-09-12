@@ -7,7 +7,10 @@
 readTimeprofileConfigTable(projectConfiguration, sheetName, dataObserved)
 }
 \arguments{
-\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+\item{projectConfiguration}{An object of class ProjectConfiguration containing the project settings,
+including file paths and scenario definitions. This is essential for the function to access the necessary data.}
+
+\item{dataObserved}{A data.table or DataCombined object containing the observed data to be plotted.}
 }
 \value{
 `data.table` with plot configurations.

@@ -19,5 +19,5 @@ A data frame containing only the rows from `timeprofile` that match the specifie
 \description{
 This function filters a given time profile data frame to include only the rows
 corresponding to specified individual IDs. If the individual list is not provided
-othe the timeprofile has no column "individualId" the original time profile is returned.
+or the time profile has no column "individualId" the original time profile is returned.
 }

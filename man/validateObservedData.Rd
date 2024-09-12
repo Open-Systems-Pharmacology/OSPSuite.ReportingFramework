@@ -2,15 +2,38 @@
 % Please edit documentation in R/utilities-data.R
 \name{validateObservedData}
 \alias{validateObservedData}
-\title{Validate observed data}
+\title{Validate Observed Data}
 \usage{
-validateObservedData(dataDT, stopIfValidationFails = TRUE)
+validateObservedData(dataDT)
 }
 \arguments{
-\item{stopIfValidationFails}{Flag to indicate whether to stop if validation fails.}
-
-\item{data}{The observed dataset.}
+\item{dataDT}{A data.table containing observed data with the following relevant columns:
+- `individualId`: Unique identifier for individuals.
+- `group`: Group identifier.
+- `outputPathId`: Identifier for output paths.
+- `xValues`: Values for the x-axis.
+- `yUnit`: Unit for the Y values.
+- `yErrorType`: Type of error for Y values (optional).
+- `yErrorValues`: Values representing errors (optional).
+- `yMin`, `yMax`: Minimum and maximum Y values (optional).
+- `lloq`: Lower limit of quantification (optional).
+- `nBelowLLOQ`: Count of values below the lower limit of quantification (optional).}
+}
+\value{
+NULL This function performs checks and stops execution if any validation fails.
+It does not return a value.
 }
 \description{
-This function checks the validity of the observed dataset.
+This function checks the integrity and validity of observed data in a data.table.
+It verifies the presence of required attributes, checks for duplicates, and ensures that
+there are no missing or empty values in the relevant columns. Additionally, it checks
+for ambiguities in the Y unit and validates error type columns.
+}
+\details{
+The function performs several checks, including:
+- Ensuring all data columns have the appropriate attributes.
+- Verifying that the data is unique based on specified identifier columns.
+- Checking for NA or empty values in all relevant columns.
+- Ensuring that the Y unit is consistent across output paths.
+- Validating the presence of necessary columns based on the Y error type.
 }

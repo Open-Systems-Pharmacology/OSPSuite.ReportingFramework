@@ -2,18 +2,24 @@
 % Please edit documentation in R/utilities-plot.R
 \name{pasteFigureTags}
 \alias{pasteFigureTags}
-\title{Title}
+\title{Paste Figure Tags for Captions}
 \usage{
 pasteFigureTags(dtCaption, captionColumn, endWithDot = FALSE)
 }
 \arguments{
-\item{dtCaption}{`data.table` with caption information must have column PlotTag}
+\item{dtCaption}{A data.table containing the captions and plot tags. It must have at least the following columns:
+- `captionColumn`: The column name containing the captions.
+- `PlotTag`: A column containing the plot tags associated with each caption.}
 
-\item{captionColumn}{`character`column names which should be sorted to Tags}
+\item{captionColumn}{A string specifying the name of the column in `dtCaption` that contains the captions.}
+
+\item{endWithDot}{A logical value indicating whether to append a period at the end of the caption text. Default is FALSE.}
 }
 \value{
-`character` text for cpation
+A character string representing the formatted caption text, which includes the captions and associated plot tags.
 }
 \description{
-Title
+This function generates a formatted caption text by combining unique captions with associated plot tags.
+If all captions are the same, it returns that caption. Otherwise, it creates a string that includes
+the unique captions and their corresponding tags.
 }

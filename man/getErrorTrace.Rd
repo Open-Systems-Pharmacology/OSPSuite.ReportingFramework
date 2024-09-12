@@ -21,11 +21,14 @@ that led to the error.
 }
 \examples{
 # Example usage
-tryCatch({
-  # Some code that may produce an error
-}, error = function(e) {
-  errorTrace <- getErrorTrace(e)
-  cat(errorTrace)
-})
+tryCatch(
+  {
+    # Some code that may produce an error
+  },
+  error = function(e) {
+    errorTrace <- getErrorTrace(e)
+    cat(errorTrace)
+  }
+)
 
 }

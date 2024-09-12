@@ -27,41 +27,39 @@ test_that("It should read and process data based on the provided project configu
 
 
 test_that("It should check the validity of the observed dataset", {
+
   # Create a sample observed dataset for testing
   observedData <- data.table(
     individualId = c(1, 2, 3),
     group = c(1, 1, 2),
     outputPathId = c(101, 102, 103),
     xValues = c(10, 20, 30),
-    yValues = c(5.6, 7.8, 9.1),
+    yValues = c(5.6, 7.8, 9.3),
     yUnit = c("mg/L", "mg/L", "mg/L"),
-    lloq = c(1.0, 1.0, 1.0),
-    weight = c(70, 65, NA) # Adding NA value for testing empty entries
-    # Add more sample data as per your requirements
+    lloq = c(1.0, 1.0, 1.0)
   )
-
-  # Call the function and test the validation
-  suppressWarnings(validationResult <-
-    capture.output(
-      validateObservedData(observedData, stopIfValidationFails = FALSE)
-    ))
+  data.table::setattr(observedData[['individualId']], "columnType", 'identifier')
+  data.table::setattr(observedData[['group']], "columnType", 'identifier')
+  data.table::setattr(observedData[['outputPathId']], "columnType", 'identifier')
+  data.table::setattr(observedData[['xValues']], "columnType", 'timeprofile')
+  data.table::setattr(observedData[['yValues']], "columnType", 'timeprofile')
+  data.table::setattr(observedData[['yUnit']], "columnType", 'timeprofile')
+  data.table::setattr(observedData[['lloq']], "columnType", 'timeprofile')
 
   # Add your assertions here to test the validation result
-  expect_true(grep("Empty entries in weight", validationResult) == 1)
+  expect_invisible(validateObservedData(observedData))
 
   # Test for uniqueness of `individualId`, group, `outputPathId`, and time columns
   expect_error(validateObservedData(
-    data = rbind(observedData, observedData),
-    stopIfValidationFails = TRUE
+    data = rbind(observedData, observedData)
   ))
 
   # Test for NAs or empty values in columns other than lloq and yUnit
   observedDataChanged <- data.table::copy(observedData)
-  observedDataChanged[1, dv := NA]
+  observedDataChanged[1, yValues := NA]
 
-  expect_error(validateObservedData(
-    data = observedDataChanged,
-    stopIfValidationFails = TRUE
+  expect_warning(validateObservedData(
+    data = observedDataChanged
   ))
 
   # Test for uniqueness of yUnit within each outputPathId
@@ -70,8 +68,7 @@ test_that("It should check the validity of the observed dataset", {
   observedDataChanged[2, outputPathId := 101]
 
   expect_error(validateObservedData(
-    data = rbind(observedData, observedData),
-    stopIfValidationFails = TRUE
+    data = rbind(observedData, observedData)
   ))
 })
 
@@ -162,24 +159,24 @@ test_that("convertDataTableToDataCombined function test", {
 
 
 test_that("convertIdentifierColumns function works as expected", {
-  test_dt <- data.table(col1 = c("a,b,c", "d,e,f"), col2 = c("x,y,z", "1,2,3"), col3 = c("1,2,3", "4,5,6"))
+  testDt <- data.table(col1 = c("a,b,c", "d,e,f"), col2 = c("x,y,z", "1,2,3"), col3 = c("1,2,3", "4,5,6"))
 
   identifierCols <- c("col1", "col2")
-  updated_dt <- suppressWarnings(convertIdentifierColumns(test_dt, identifierCols))
+  updatedDt <- suppressWarnings(convertIdentifierColumns(testDt, identifierCols))
 
   # Check if commas were replaced by underscores
-  expect_equal(updated_dt$col1[1], "a_b_c")
-  expect_equal(updated_dt$col2[1], "x_y_z")
+  expect_equal(updatedDt$col1[1], "a_b_c")
+  expect_equal(updatedDt$col2[1], "x_y_z")
 
 
-  expect_warning(updated_dt <- convertIdentifierColumns(test_dt, "col1"))
+  expect_warning(updatedDt <- convertIdentifierColumns(testDt, "col1"))
 })
 
 
 # Example observed data for aggregation test
 dataObserved <- data.table(
   individualId = rep(1:10, each = 3),
-  outputPathId = rep('parent', each = 30),
+  outputPathId = rep("parent", each = 30),
   group = rep(c("A", "B"), each = 15),
   xValues = rep(c(1, 2, 3), times = 10),
   yValues = c(5, 6, NA, 7, 8, 9, 2, 3, 4, 1, 2, 3, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, NA, 7, 8, 9, 10, 8, 4, 6),
@@ -204,7 +201,7 @@ test_that("aggregatedObservedDataGroups works correctly", {
   expect_equal(nrow(result), 6) # Expecting 2 groups x 3 unique xValues
 
   # Test with Custom Function
-  custom_func <- function(y) {
+  customFunc <- function(y) {
     return(list(
       yValues = mean(y, na.rm = TRUE),
       yMin = min(y, na.rm = TRUE),
@@ -213,7 +210,7 @@ test_that("aggregatedObservedDataGroups works correctly", {
     ))
   }
 
-  result <- aggregatedObservedDataGroups(dataObserved, groups = c("A", "B"), aggregationFlag = "Custom", customFunction = custom_func)
+  result <- aggregatedObservedDataGroups(dataObserved, groups = c("A", "B"), aggregationFlag = "Custom", customFunction = customFunc)
 
   expect_s3_class(result, "data.table")
   expect_equal(nrow(result), 6) # Expecting 2 groups x 3 unique xValues
@@ -223,7 +220,7 @@ test_that("aggregatedObservedDataGroups works correctly", {
 # Sample data for testing add Unique columns
 originalData <- data.table(
   group = rep(c("A", "B"), each = 3),
-  outputPathId = rep('parent', each = 6),
+  outputPathId = rep("parent", each = 6),
   xValues = rep(1:3, times = 2),
   yValues = c(5, 6, NA, 7, 8, 9),
   additionalCol1 = c("foo", "bar", "foo", "baz", "bar", "baz"),
@@ -232,7 +229,7 @@ originalData <- data.table(
 
 aggregatedData <- data.table(
   group = c("A", "A", "B", "B"),
-  outputPathId = rep('parent', each = 4),
+  outputPathId = rep("parent", each = 4),
   xValues = c(1, 2, 1, 2),
   yValues = c(5, 6, 7, 8),
   yErrorValues = c(1, 1, 1, 1),

@@ -129,7 +129,7 @@ runAndSaveScenarios <- function(projectConfiguration,
 #'   copy of esqlabsR::extendPopulationFromXLS but columnNames always withdot
 #'
 #' @export
-extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) {
+extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { #nolint
   ospsuite.utils::validateIsOfType(population, "Population")
   ospsuite.utils::validateIsString(XLSpath)
   ospsuite.utils::validateIsString(sheet, nullAllowed = TRUE)
@@ -143,9 +143,9 @@ extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) {
   )
 
   data <- readExcel(path = XLSpath, sheet = sheet)
-  names(data) <- gsub(' ','\\.',names(data))
+  names(data) <- gsub(" ", "\\.", names(data))
   if (!all(columnNames %in% names(data))) {
-    stop(messages$errorWrongXLSStructure(filePath = XLSpath, expectedColNames = columnNames))
+    stop(messages$errorWrongXLSStructure(filePath = XLSpath, expectedColNames = columnNames)) #nolint
   }
 
   paramPaths <- c(dim(data)[[1]])
@@ -185,11 +185,11 @@ extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) {
 #'   be sampled. Must have the same length as `parameterPaths`.
 #' A list of supported distributions is defined in `Distributions`. Default is `"Normal"`.
 #' @export
-extendPopulationByUserDefinedParams_RF <- function(population, # nolint: object_length_linter.
-                                                parameterPaths,
-                                                meanValues,
-                                                sdValues,
-                                                distributions = Distributions$Normal) {
+extendPopulationByUserDefinedParams_RF <- function(population, # nolint
+                                                   parameterPaths,
+                                                   meanValues,
+                                                   sdValues,
+                                                   distributions = Distributions$Normal) {
   ospsuite.utils::validateIsOfType(population, "Population")
   ospsuite.utils::validateIsString(parameterPaths)
   ospsuite.utils::validateIsNumeric(sdValues)

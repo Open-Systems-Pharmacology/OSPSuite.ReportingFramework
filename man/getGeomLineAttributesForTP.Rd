@@ -7,7 +7,7 @@
 getGeomLineAttributesForTP(plotData)
 }
 \arguments{
-\item{plotData}{}
+\item{plotData}{object of class PlotData}
 }
 \value{
 list with additional attributes for geom_line
@@ -15,3 +15,4 @@ list with additional attributes for geom_line
 \description{
 get additional inputs for TP plotType to enable lines in shape legend
 }
+\keyword{internal}

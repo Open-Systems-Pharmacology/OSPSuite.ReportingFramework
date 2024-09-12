@@ -4,11 +4,7 @@
 \alias{getIndividualMatchForScenario}
 \title{Get Individual Match for a Scenario}
 \usage{
-getIndividualMatchForScenario(
-  projectConfiguration,
-  scenario,
-  dtScenario = getScenarioDefinitions(projectConfiguration)
-)
+getIndividualMatchForScenario(projectConfiguration, scenario, dtScenarios)
 }
 \arguments{
 \item{projectConfiguration}{A list containing the project configuration,

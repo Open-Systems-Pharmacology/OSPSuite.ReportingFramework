@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-plot.R
 \name{generateColorScaleVectors}
 \alias{generateColorScaleVectors}
-\title{generates named color vectors usable for sclae_color_manual}
+\title{generates named color vectors usable for scale_color_manual}
 \usage{
 generateColorScaleVectors(
   dt,
@@ -11,9 +11,9 @@ generateColorScaleVectors(
 )
 }
 \arguments{
-\item{dt}{`data.table` with aesthetic an dindex column}
+\item{dt}{`data.table` with aesthetic and index column}
 
-\item{aesthetic}{named `list`, names correspond to aesthic columns,
+\item{aesthetic}{named `list`, names correspond to aesthetic columns,
 entries are either 'dark' or 'light'}
 
 \item{index}{name of index column}
@@ -22,5 +22,5 @@ entries are either 'dark' or 'light'}
 named list of color vectors
 }
 \description{
-generates named color vectors usable for sclae_color_manual
+generates named color vectors usable for scale_color_manual
 }

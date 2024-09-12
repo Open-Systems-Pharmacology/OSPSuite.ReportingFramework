@@ -70,13 +70,13 @@ test_that("logCatch Logs messages when verbose is TRUE", {
 
 
 # Define the example data
-example_data <- data.table(x = 1:5, y = letters[1:5])
+exampleData <- data.table(x = 1:5, y = letters[1:5])
 
 # Write the unit test
 test_that("writeTableToLog function works as expected", {
   setShowLogMessages(FALSE)
   # Call the function with example data
-  writeTableToLog(example_data, filename = "table.log")
+  writeTableToLog(exampleData, filename = "table.log")
 
   # Verify that the log file has been created
   # Check if the log file was created and contains the session info

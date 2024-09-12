@@ -95,7 +95,7 @@ xlsxReadData <- function(wb, sheetName,
                            "DataGroupId"
                          ),
                          emptyAsNA = TRUE) {
-  if (!any(class(wb) %in%  "Workbook")) checkmate::assertFileExists(wb)
+  if (!any(class(wb) %in% "Workbook")) checkmate::assertFileExists(wb)
   dt <- data.table::setDT(openxlsx::read.xlsx(
     xlsxFile = wb,
     sheet = sheetName,
@@ -179,8 +179,8 @@ getDataGroups <- function(projectConfiguration) {
   data.table::setnames(dtDataGroups, old = "Group", new = "group")
 
   dtDataGroups$group <- factor(dtDataGroups$group,
-                               levels = unique(dtDataGroups$group),
-                               ordered = TRUE
+    levels = unique(dtDataGroups$group),
+    ordered = TRUE
   )
 
   return(dtDataGroups)
@@ -207,6 +207,9 @@ getScenarioDefinitions <- function(projectConfiguration) {
 #' @return A `data.table` with output configurations.
 #' @export
 getOutputPathIds <- function(projectConfiguration) {
+  # avoid warning for global variable
+  DisplayUnit <- NULL # nolint object_name_linter
+
   dtOutputPaths <- xlsxReadData(
     wb = projectConfiguration$plotsFile,
     sheetName = "Outputs",
@@ -219,8 +222,8 @@ getOutputPathIds <- function(projectConfiguration) {
   dtOutputPaths[is.na(DisplayUnit), DisplayUnit := ""]
 
   dtOutputPaths$outputPathId <- factor(dtOutputPaths$outputPathId,
-                                       levels = unique(dtOutputPaths$outputPathId),
-                                       ordered = TRUE
+    levels = unique(dtOutputPaths$outputPathId),
+    ordered = TRUE
   )
 
   return(dtOutputPaths)
@@ -233,6 +236,9 @@ getOutputPathIds <- function(projectConfiguration) {
 #' @return A `data.table` with time range tags.
 #' @export
 getTimeRangeTags <- function(projectConfiguration) {
+  # avoid warning for global variable
+  CaptionText <- NULL # nolint object_name_linter
+
   dtTimeRange <- xlsxReadData(
     wb = projectConfiguration$plotsFile,
     sheetName = "TimeRange",
@@ -242,8 +248,8 @@ getTimeRangeTags <- function(projectConfiguration) {
   dtTimeRange[is.na(CaptionText), CaptionText := ""]
 
   dtTimeRange$Tag <- factor(dtTimeRange$Tag,
-                            levels = unique(dtTimeRange$Tag),
-                            ordered = TRUE
+    levels = unique(dtTimeRange$Tag),
+    ordered = TRUE
   )
 
   return(dtTimeRange)

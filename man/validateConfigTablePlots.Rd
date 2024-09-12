@@ -9,7 +9,6 @@ validateConfigTablePlots(
   charactersWithoutMissing = NULL,
   charactersWithMissing = NULL,
   numericColumns = NULL,
-  numericColumnsWithMissing = NULL,
   logicalColumns = NULL,
   numericRangeColumns = NULL,
   subsetList = list()

@@ -9,11 +9,11 @@ getApplicationTimes(outputPathsPerScenario, simulatedResults)
 \arguments{
 \item{outputPathsPerScenario}{A named list of output paths for each scenario.}
 
-\item{simulatedResult}{The results of the simulation.}
+\item{simulatedResults}{List with simulation results}
 }
 \value{
 A list containing the start and end times of applications for each scenario.
 }
 \description{
-This helper function prepares the timerange filter for application times based on output paths and simulation results.
+This helper function prepares the time range filter for application times based on output paths and simulation results.
 }

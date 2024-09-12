@@ -1,4 +1,4 @@
-#' Checks if scenarioName + extension .xml fullfils conditions for filenames for electronic package
+#' Checks if scenarioName + extension .xml fulfills conditions for file names for electronic package
 #'
 #' @template projectConfig
 #'
@@ -21,18 +21,18 @@ checkScenarioNameValidity <- function(projectConfiguration) {
 }
 
 
-#' Check on directory for valid filenams
+#' Check on directory for valid file names
 #'
-#' Checks if all files and all files of datasets of a directory fullfill conditions for file names for electronic package
+#' Checks if all files and all files of data sets of a directory fulfill conditions for file names for electronic package
 #'
-#' @param directory_path path to the driectory where the electronic package is filed
+#' @param directoryPath path to the directory where the electronic package is filed
 #'
 #' @export
-checkFileNameValidityForDirectory <- function(directory_path) {
+checkFileNameValidityForDirectory <- function(directoryPath) {
   # List all files in the directory
-  files <- list.files(directory_path)
+  files <- list.files(directoryPath)
 
-  dataSets <- list.files(directory_path, pattern = ".txt")
+  dataSets <- list.files(directoryPath, pattern = ".txt")
 
   inValidFileNames <- checkFileNameValidity(files, dataSets)
 
@@ -45,12 +45,35 @@ checkFileNameValidityForDirectory <- function(directory_path) {
   }
 }
 
-#' Checks if files given as a character vector fullfills conditions for filen ames for electronic package
+#' Check File Name Validity
 #'
-#' @param files vector wtih file names
-#' @param dataSets  ector with data set names (may be NULL)
+#' This function checks the validity of file names and dataset names based on specified criteria,
+#' including allowed file extensions and maximum length restrictions.
 #'
-#' @return list with inValid file names
+#' @param files A character vector of file names to validate. Each file name should have
+#'   a valid extension (xml, txt, or csv) and must not exceed 64 characters in length.
+#'
+#' @param dataSets A character vector of dataset names to validate. Each dataset name must
+#'   not exceed 32 characters in length. This parameter is optional.
+#'
+#' @details
+#' The function checks the following conditions for file names:
+#' - Must match the regular expression pattern allowing only lowercase letters, numbers, and underscores.
+#' - Must end with one of the allowed file extensions.
+#' - Must not exceed the maximum length of 64 characters.
+#'
+#' For dataset names, the function checks that they do not exceed the maximum length of 32 characters.
+#'
+#' @return A character vector containing the names of invalid files and datasets that do not meet the specified criteria.
+#'
+#' @examples
+#' # Example usage:
+#' files <- c("valid_file.xml", "invalid_file.txt", "too_long_file_name_exceeding_the_limit.csv")
+#' dataSets <- c("validDataset", "invalidDatasetNameThatIsWayTooLong")
+#' invalidNames <- checkFileNameValidity(files, dataSets)
+#' print(invalidNames)
+#'
+#' @export
 checkFileNameValidity <- function(files, dataSets = NULL) {
   maxLengthForFiles <- 64
   maxLengthForDataSet <- 32
@@ -70,10 +93,10 @@ checkFileNameValidity <- function(files, dataSets = NULL) {
   # Check if all files meet the conditions
   doesFileMeetCondition <-
     grepl(pattern, files) &
-      sapply(strsplit(files, "\\."), function(x) tolower(x[length(x)]) %in% allowedExtensions) &
-      sapply(files, function(x) {
-        nchar(x) <= maxLengthForFiles
-      })
+    sapply(strsplit(files, "\\."), function(x) tolower(x[length(x)]) %in% allowedExtensions) &
+    sapply(files, function(x) {
+      nchar(x) <= maxLengthForFiles
+    })
   inValidFileNames <- files[!doesFileMeetCondition]
 
   if (!is.null(dataSets)) {

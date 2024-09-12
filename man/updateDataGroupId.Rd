@@ -2,15 +2,25 @@
 % Please edit documentation in R/utilities-data.R
 \name{updateDataGroupId}
 \alias{updateDataGroupId}
-\title{Add group IDs of observed data to configuration sheet}
+\title{Update Data Group IDs in Project Configuration}
 \usage{
 updateDataGroupId(projectConfiguration, dataDT)
 }
 \arguments{
-\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+\item{projectConfiguration}{An object of class `ProjectConfiguration` list containing configuration details, including:
+- `plotsFile`: A string representing the file path to the Excel workbook containing the Data Groups sheet.}
 
-\item{data}{`data.table` with observed data.}
+\item{dataDT}{A data.table containing the new data to be added to the Data Groups sheet.
+It must have columns that can be matched with existing identifiers, including "group", "studyId", and "studyArm".}
+}
+\value{
+NULL This function updates the Excel workbook in place and does not return a value. It is called for its side effects.
 }
 \description{
-Add group IDs of observed data to configuration sheet
+This function updates the Data Groups sheet in an Excel workbook based on a provided data table.
+It reads existing data group IDs, merges them with new data, and ensures that the identifiers remain unique.
+}
+\details{
+The function loads the existing Data Groups from the specified Excel workbook, selects relevant columns from the input data,
+and appends new entries while maintaining the uniqueness of the identifiers. The updated data is then written back to the workbook.
 }

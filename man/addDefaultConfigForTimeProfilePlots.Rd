@@ -2,21 +2,34 @@
 % Please edit documentation in R/plotTimeProfilePanels.R
 \name{addDefaultConfigForTimeProfilePlots}
 \alias{addDefaultConfigForTimeProfilePlots}
-\title{Adds a default sheet to the plot configuration table}
+\title{Add Default Configuration for Time Profile Plots}
 \usage{
 addDefaultConfigForTimeProfilePlots(
   projectConfiguration,
-  sheetName = "TimeProfile_Panel",
+  sheetName = "TimeProfiles",
   overwrite = FALSE
 )
 }
 \arguments{
-\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+\item{projectConfiguration}{A ProjectConfiguration class object containing configuration details, including:
+- `plotsFile`: A string representing the file path to the Excel workbook containing the plot configurations.}
 
-\item{sheetName}{Name of the sheet in the plot configuration table.}
+\item{sheetName}{A character string specifying the name of the sheet in the plot configuration table.
+Default is "TimeProfiles".}
 
-\item{overwrite}{Boolean indicating if existing configurations will be overwritten.}
+\item{overwrite}{A boolean indicating whether existing configurations should be overwritten.
+Default is FALSE.}
+}
+\value{
+NULL This function updates the Excel workbook in place and does not return a value.
+It is called for its side effects.
 }
 \description{
-Adds a default sheet to the plot configuration table
+This function adds a default configuration sheet for time profile plots to the plot configuration table.
+It can either create a new sheet or overwrite an existing one based on the specified parameters.
+}
+\details{
+The function retrieves scenario definitions, output path IDs, and data groups from the project configuration.
+It checks if the specified sheet already exists and whether to overwrite it. If not, it creates a new header
+and fills in the default configuration values for the time profile plots.
 }

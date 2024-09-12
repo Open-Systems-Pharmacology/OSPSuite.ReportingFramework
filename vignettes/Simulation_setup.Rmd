@@ -20,71 +20,56 @@ library(ospsuite.reportingframework)
 
 # Simulation Setup
 
-This section outlines how the workflow utilizes the `esqlabsR` package for project configuration, scenario setup, and simulation.
+The simulation setup is based on the esqlabsR package.
 
 For more information and detailed documentation, users can visit the [esqlabsR Documentation](https://esqlabs.github.io/esqlabsR/).
 
-## Overview of esqlabsR
+This vignette focuses on the differences in project structure and population types.
 
-The `esqlabsR` package provides tools for managing and analyzing pharmacokinetic data. It facilitates the creation of project configurations, scenario management, and simulation execution, making it an essential component of this workflow.
+## Project structure
 
-## Project Configuration
+This package uses a slightly different project structure but can also work with the default esqlabsR structure or any other customized structure. You can define your structure by providing a template structure with an adjusted 'ProjectConfiguration.xlsx'.
 
-The workflow begins by setting up a project configuration using the `createProjectConfiguration` function from the `esqlabsR` package. This function retrieves paths for all relevant project files, which are crucial for subsequent analysis steps.
 
-### Example:
+### Default structure:
 
-```{r,echo=TRUE,eval=FALSE}
-projectConfiguration <- esqlabsR::createDefaultProjectConfiguration(
-   path = file.path("ProjectConfiguration.xlsx")
-)
+```{r, echo = FALSE}
+fs::dir_tree(path = templateDirectory())
 ```
 
-This configuration is then used throughout the workflow to ensure that all file paths and settings are correctly referenced.
 
 ## Populations
 
-Virtual twins are simulated  populations that closely mirror the characteristics of your observed data but allow for virtual experimentation.
+This package recognizes two kinds of populations:
 
-Random populations are useful for understanding variability and sensitivity within your pharmacokinetic models.
+## Random Population
 
+This population is created from ranges of population characteristics, such as age and body weight, along with a set of parameters defined by a distribution. A set of n individuals are then generated randomly within the given ranges. This is what is referred to as a population in the OSPSuite context.
 
+The 'Random Population' can be configured using the 'Demographics' sheet in the 'Population.xlsx'. The population identifier is specified in the column 'PopulationName'. For each population, a sheet named after the population name with distributed parameters can be provided.
 
-## Scenario Setup
+The package `ospsuite.reportingframework` includes a function, `exportRandomPopulations`, to export the population as a CSV file, which is then saved in <rootdirectory>/Models/Populations. See the function help for more details.
 
-After configuring the project, scenarios are created using the `createScenarios.wrapped` function. This function allows you to define various simulation scenarios based on your project configuration.
-
-### Example:
-
-```{r,echo=TRUE,eval=FALSE}
- scenarioList <- createScenarios.wrapped(
-   projectConfiguration = projectConfiguration,
-   scenarioNames = NULL,
-   doCheckScenarioNameValidity = TRUE
-)
-```
-
-This setup ensures that all scenarios are valid and ready for execution.
-
-## Simulation Execution
-
-The workflow then executes the defined scenarios using the `runAndSaveScenarios` function. This function runs the simulations and saves the results, allowing for easy access and analysis later.
-
-### Example:
-```{r,echo=TRUE,eval=FALSE}
-runAndSaveScenarios(
-   projectConfiguration = projectConfiguration,
-   scenarioList = scenarioList,
-   simulationRunOptions = SimulationRunOptions$new(
-     numberOfCores = NULL,
-     checkForNegativeValues = NULL,
-     showProgress = TRUE
-   )
-)
-```
+In the scenario setup, you can use the 'PopulationName' as 'PopulationId' and set the column 'ReadPopulationFromCSV' to TRUE. (With `ReadPopulationFromCSV = FALSE`, the population will be generated anew during the scenario setup. The usage of the distributed parameters is not yet implemented this way; only the demographics will be considered. Additionally, since it is currently not possible to set a seed, each scenario setup will produce a new population.)
 
 
-## Conclusion
+## Virtual Twin Population
 
-By leveraging the capabilities of the `esqlabsR` package, this workflow effectively manages project configurations, sets up scenarios, and executes simulations, thus streamlining the analysis process for pharmacokinetic data.
+Virtual twins are simulated populations that closely mirror the characteristics of your observed data. They consist of a collection of individuals generated with the known biometrics extracted from the observed data. For all unknown parameters, the mean value of an individual defined by these characteristics is used.
+
+During the data import via the `readObservedDataByDictionary` function, a sheet named 'VirtualTwinPopulation' is added to the 'Population.xlsx' with the following columns:
+
+- *PopulationName*: Identifier for the population.
+- *DataGroups*: List of data groups (used for informational purposes only).
+- *IndividualId*: Identifier of the individual, referencing the IndividualId of the observed data and linking to the 'Individual.xlsx'.
+- *ModelParameterSheets*: Reference to the sheet in 'ModelParameters.xlsx'.
+- *ApplicationProtocol*: Reference to the sheet in 'ApplicationProtocol.xlsx'.
+
+If you do not use `readObservedDataByDictionary` for data import, add the sheet by calling `setupVirtualTwinPopConfig(projectConfiguration, dataObserved)`.
+
+With this sheet, you define which individuals belong to which virtual population. The configuration of the individuals is saved in the tables 'Individual.xlsx', 'ModelParameters.xlsx', and 'ApplicationProtocol.xlsx'.
+
+The function *exportVirtualTwinPopulations* is called to export this population to a CSV table in <rootdirectory>/Models/Populations. It includes an additional column, 'ObservedIndividualId', which contains the individual identifier.
+
+The scenario setup is the same as for the 'Random Population': use the `PopulationName` as 'PopulationId' and set the column 'ReadPopulationFromCSV' to TRUE. Note that `ReadPopulationFromCSV = FALSE` is not possible for this type of population.
 

@@ -10,7 +10,7 @@ getErrorTypeForPercentiles(percentiles)
 \item{percentiles}{numeric vectors with percentiles}
 }
 \value{
-character with with errortype for given precentiles
+character with with `errorType` for given percentiles
 }
 \description{
 creates text for percentiles

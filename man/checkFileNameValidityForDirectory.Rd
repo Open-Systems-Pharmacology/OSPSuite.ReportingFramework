@@ -2,13 +2,13 @@
 % Please edit documentation in R/utilities-electronicPackage.R
 \name{checkFileNameValidityForDirectory}
 \alias{checkFileNameValidityForDirectory}
-\title{Check on directory for valid filenams}
+\title{Check on directory for valid file names}
 \usage{
-checkFileNameValidityForDirectory(directory_path)
+checkFileNameValidityForDirectory(directoryPath)
 }
 \arguments{
-\item{directory_path}{path to the driectory where the electronic package is filed}
+\item{directoryPath}{path to the directory where the electronic package is filed}
 }
 \description{
-Checks if all files and all files of datasets of a directory fullfill conditions for file names for electronic package
+Checks if all files and all files of data sets of a directory fulfill conditions for file names for electronic package
 }

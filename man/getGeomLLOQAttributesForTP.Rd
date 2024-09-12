@@ -15,3 +15,4 @@ list with additional attributes for lloq line
 \description{
 get additional inputs for TP plotType to enable lines in shape legend
 }
+\keyword{internal}

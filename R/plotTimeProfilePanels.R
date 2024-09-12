@@ -1,17 +1,66 @@
-#' Generate a list of time profiles as facet panels
+#' Generate Time Profile Panels
 #'
-#' @template projectConfig
-#' @param subfolder Name of the subfolder in the projectconfiguration$outputFolder directory.
-#' @param configTableSheet Name of the sheet in the plot configuration xlsx that defines the plot.
-#' @template observedData
-#' @param nFacetColumns Maximal number of facet columns (default 2) used for facet type "by Order".
-#' @param facetAspectRatio Aspect ratio for the facets (default 0.5).
-#' @param aggregationFlag Type of aggregation function to use (default is "GeometricStdDev").
-#' @param percentiles Percentiles to consider (default is c(5, 50, 95)).
-#' @param customFunction Optional custom function for aggregation.
-#' @param referenceScaleVector list to configure labels and colors for the display of reference scenarios
+#' The `plotTimeProfilePanels` function creates a series of time profile plots as facet panels
+#' from the provided observed data. This function is designed to visualize complex time-dependent
+#' data by allowing for multiple plots organized in a user-defined layout.
 #'
-#' @return Object of class `rmdContainer`.
+#' This function is particularly useful for researchers and analysts who need to visualize
+#' concentration-time profiles of various scenarios, compare predicted versus observed data,
+#' and analyze residuals cohesively. For more detailed information, please refer to the
+#' accompanying vignettes:
+#' - **TimeProfilePlots**
+#' - **Time Profile Plotting Tutorial**
+#
+#'
+#' @param projectConfiguration An object of class ProjectConfiguration containing the project settings,
+#' including file paths and scenario definitions. This is essential for the function to access the necessary data.
+#'
+#' @param subfolder A character string specifying the subfolder within the output directory where
+#' the plots will be saved.
+#'
+#' @param configTableSheet The name of the sheet in the Excel plot configuration file that defines
+#' the plot settings.
+#'
+#' @param dataObserved A data.table or DataCombined object containing the observed data to be plotted.
+#'
+#' @param nFacetColumns An integer specifying the maximum number of facet columns (default is 2)
+#' used for the facet type "by Order".
+#'
+#' @param nMaxFacetRows An integer specifying the maximum number of facet rows (default is 4)
+#' used for all facet types.
+#'
+#' @param facetAspectRatio A numeric value specifying the aspect ratio for the facets (default is 0.5).
+#'
+#' @param aggregationFlag A character vector indicating the type of aggregation function to use
+#' for simulated data. Options include "GeometricStdDev", "ArithmeticStdDev", "Percentiles",
+#' and "Custom" (default is "GeometricStdDev").
+#'
+#' @param percentiles A numeric vector of percentiles to consider if the aggregation method is set
+#' to "Percentiles" (default is c(5, 50, 95)).
+#'
+#' @param customFunction An optional custom function for aggregation. This function should take a
+#' numeric vector as input and return a list containing aggregated values and error types.
+#'
+#' @param referenceScaleVector A named list that configures labels and colors for the display of
+#' reference scenarios. The names of the list are displayed as labels in the legend.
+#'
+#' @return Generates time profile plots and saves them to the specified output directory.
+#' The function does not return any value.
+#'
+#' @details The function primarily focuses on simulated scenarios, with each panel displaying the
+#' result of one scenario. Plots containing more than one scenario or only observed data are not
+#' supported.
+#'
+#' @examples
+#' \dontrun{
+#' plotTimeProfilePanels(
+#'   projectConfiguration = myProjectConfig,
+#'   subfolder = "TimeProfiles",
+#'   configTableSheet = "TimeProfiles",
+#'   dataObserved = myObservedData
+#' )
+#' }
+#'
 #' @export
 plotTimeProfilePanels <- function(projectConfiguration,
                                   subfolder,
@@ -28,8 +77,31 @@ plotTimeProfilePanels <- function(projectConfiguration,
                                   ),
                                   percentiles = c(5, 50, 95),
                                   customFunction = NULL,
-                                  referenceScaleVector = list(Control = c(NA, NA),
-                                                               Reference = c(NA, NA))) {
+                                  referenceScaleVector = list(
+                                    Control = c(NA, NA),
+                                    Reference = c(NA, NA)
+                                  )) {
+  # Function implementation goes here
+}
+plotTimeProfilePanels <- function(projectConfiguration,
+                                  subfolder,
+                                  configTableSheet,
+                                  dataObserved,
+                                  nFacetColumns = 2,
+                                  nMaxFacetRows = 4,
+                                  facetAspectRatio = 0.5,
+                                  aggregationFlag = c(
+                                    "GeometricStdDev",
+                                    "ArithmeticStdDev",
+                                    "Percentiles",
+                                    "Custom"
+                                  ),
+                                  percentiles = c(5, 50, 95),
+                                  customFunction = NULL,
+                                  referenceScaleVector = list(
+                                    Control = c(NA, NA),
+                                    Reference = c(NA, NA)
+                                  )) {
   checkmate::assert_path_for_output(file.path(projectConfiguration$outputFolder, subfolder), overwrite = TRUE)
   checkmate::assertIntegerish(nFacetColumns, lower = 1, len = 1)
   checkmate::assertDouble(facetAspectRatio, lower = 0, len = 1)
@@ -66,7 +138,7 @@ plotTimeProfilePanels <- function(projectConfiguration,
     if (!is.na(configTable$Level[iRow])) {
       # add  section headers
       rmdContainer$addHeader(configTable$Header[iRow],
-                             level = configTable$Level[iRow]
+                             level = configTable$Level[iRow] # nolint indentation_linter
       )
       iRow <- iRow + 1
     } else {
@@ -120,9 +192,9 @@ plotTimeProfilePanels <- function(projectConfiguration,
 #'
 #' @return `data.table` with plot configurations.
 #' @keywords internal
-readTimeprofileConfigTable <- function(projectConfiguration,sheetName,dataObserved) {
-  #initialize variable used in data.tables
-  Level <- NULL
+readTimeprofileConfigTable <- function(projectConfiguration, sheetName, dataObserved) {
+  # initialize variable used in data.tables
+  Level <- NULL  # nolint object_name_linter
 
   # read configuration tables
   configTable <- xlsxReadData(
@@ -153,13 +225,12 @@ readTimeprofileConfigTable <- function(projectConfiguration,sheetName,dataObserv
 #' @param rmdContainer Object of class `RmdContainer`.
 #' @param aggregationFun Function to aggregate simulated data.
 #' @template projectConfig
-#' @template onePlotConfig
+#' @param onePlotConfig configuration table for this plot
 #' @template observedDataDT
 #' @param nFacetColumns Maximal number of facet columns (default 2) used for facet type "by Order".
 #' @param facetAspectRatio Aspect ratio for the facets (default 0.5).
 #' @param nMaxFacetRows  maximal number of facet rows
-#' @param referenceColorScaleVector scale vector to scale aesthetic color for scenarios with reference scenerio
-#' @param referenceFillScaleVector scale vector to scale aesthetic fill for scenarios with reference scenerio
+#' @param referenceScaleVector scale vector to scale aesthetics color and fill for scenarios with reference scenario
 #'
 #' @return Object of class `rmdContainer` with added figures.
 #' @export
@@ -171,17 +242,19 @@ createPanelPlotsForPlotName <- function(projectConfiguration,
                                         rmdContainer,
                                         facetAspectRatio,
                                         aggregationFun,
-                                        referenceScaleVector
-) {
+                                        referenceScaleVector) {
   message(paste("Create Plot", onePlotConfig$PlotName[1]))
 
   plotData <- PlotDataTimeProfile$new(
     projectConfiguration = projectConfiguration,
-    onePlotConfig = onePlotConfig)
+    onePlotConfig = onePlotConfig
+  )
 
   # read simulated data and filter observed
-  plotData$loadSimulatedResults(projectConfiguration = projectConfiguration,
-                                aggregationFun = aggregationFun)
+  plotData$loadSimulatedResults(
+    projectConfiguration = projectConfiguration,
+    aggregationFun = aggregationFun
+  )
   plotData$filterObservedDataForPlot(
     dataObserved = dataObserved
   )
@@ -193,8 +266,10 @@ createPanelPlotsForPlotName <- function(projectConfiguration,
   plotData$setOrderAndFactors()
 
   # split data to plot panels
-  plotData$splitDataToPanels(nFacetColumns = nFacetColumns,
-                             nMaxFacetRows = nMaxFacetRows)
+  plotData$splitDataToPanels(
+    nFacetColumns = nFacetColumns,
+    nMaxFacetRows = nMaxFacetRows
+  )
 
   # add columns for indices
   plotData$setIndexColumns(referenceScaleVector = referenceScaleVector)
@@ -202,11 +277,12 @@ createPanelPlotsForPlotName <- function(projectConfiguration,
   # add predicted observed
   plotData$addPredictedForObserved()
 
-  for (plotType in c('TP','PvO','ResvT','ResvO','ResH','QQ')) {
-    rmdContainer <- generatePlotForPlotType(plotData = plotData,
-                                            rmdContainer = rmdContainer,
-                                            facetAspectRatio = facetAspectRatio,
-                                            plotType = plotType
+  for (plotType in c("TP", "PvO", "ResvT", "ResvO", "ResH", "QQ")) {
+    rmdContainer <- generatePlotForPlotType(
+      plotData = plotData,
+      rmdContainer = rmdContainer,
+      facetAspectRatio = facetAspectRatio,
+      plotType = plotType
     )
   }
 
@@ -232,7 +308,7 @@ generatePlotForPlotType <- function(plotData,
 
   for (timeRangeFilter in names(plotData$timeRangeTagFilter)) {
     for (yScale in splitInputs(plotData$configTable$yScale[1])) {
-      for (plotCounter in unique(plotData$dtCaption$counter)){
+      for (plotCounter in unique(plotData$dtCaption$counter)) {
         yLimits <- checkAndAdjustYlimits(
           plotData = plotData,
           yScale = yScale,
@@ -242,49 +318,48 @@ generatePlotForPlotType <- function(plotData,
         )
 
         plotObject <-
-          switch(
-            plotType,
-            TP = ospsuite_plotTimeProfile(
-              plotData = plotData$getDataForTimeRange(timeRangeFilter, plotCounter = plotCounter),
-              yscale = yScale,
-              mapping = getGroupbyMapping(plotData,plotType),
-              groupAesthetics = getGroupAesthetics(plotData),
-              yscale.args = list(limits = yLimits),
-              geomLineAttributes = getGeomLineAttributesForTP(plotData),
-              geomLLOQAttributes = getGeomLLOQAttributesForTP(plotData)
-            ),
-            PvO = ospsuite_plotPredictedVsObserved(
-              plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter),
-              xyscale = yScale,
-              mapping = getGroupbyMapping(plotData,plotType),
-              groupAesthetics = getGroupAesthetics(plotData),
-              comparisonLineVector = getFoldDistanceForPvO(plotData)
-            ),
-            ResvT = ospsuite_plotResidualsVsTime(
-              plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter),
-              residualScale = yScale,
-              mapping = getGroupbyMapping(plotData,plotType),
-              groupAesthetics = getGroupAesthetics(plotData)
-            ),
-            ResvO = ospsuite_plotResidualsVsObserved(
-              plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter),
-              residualScale = yScale,
-              xscale = yScale,
-              mapping = getGroupbyMapping(plotData,plotType),
-              groupAesthetics = getGroupAesthetics(plotData)
-            ),
-            ResH = ospsuite_plotResidualsAsHistogram(
-              plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter),
-              residualScale = yScale,
-              mapping = getGroupbyMapping(plotData,plotType),
-              distribution = "normal"
-            ),
-            QQ = ospsuite_plotQuantileQuantilePlot(
-              plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter),
-              residualScale = yScale,
-              mapping = getGroupbyMapping(plotData,plotType),
-              groupAesthetics = getGroupAesthetics(plotData)
-            )
+          switch(plotType,
+                 TP = ospsuite_plotTimeProfile( # nolint indentation_linter
+                   plotData = plotData$getDataForTimeRange(timeRangeFilter, plotCounter = plotCounter),
+                   yscale = yScale,
+                   mapping = getGroupbyMapping(plotData, plotType),
+                   groupAesthetics = getGroupAesthetics(plotData),
+                   yscale.args = list(limits = yLimits),
+                   geomLineAttributes = getGeomLineAttributesForTP(plotData),
+                   geomLLOQAttributes = getGeomLLOQAttributesForTP(plotData)
+                 ),
+                 PvO = ospsuite_plotPredictedVsObserved(
+                   plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter),
+                   xyscale = yScale,
+                   mapping = getGroupbyMapping(plotData, plotType),
+                   groupAesthetics = getGroupAesthetics(plotData),
+                   comparisonLineVector = getFoldDistanceForPvO(plotData)
+                 ),
+                 ResvT = ospsuite_plotResidualsVsTime(
+                   plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter),
+                   residualScale = yScale,
+                   mapping = getGroupbyMapping(plotData, plotType),
+                   groupAesthetics = getGroupAesthetics(plotData)
+                 ),
+                 ResvO = ospsuite_plotResidualsVsObserved(
+                   plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter),
+                   residualScale = yScale,
+                   xscale = yScale,
+                   mapping = getGroupbyMapping(plotData, plotType),
+                   groupAesthetics = getGroupAesthetics(plotData)
+                 ),
+                 ResH = ospsuite_plotResidualsAsHistogram(
+                   plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter),
+                   residualScale = yScale,
+                   mapping = getGroupbyMapping(plotData, plotType),
+                   distribution = "normal"
+                 ),
+                 QQ = ospsuite_plotQuantileQuantilePlot(
+                   plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter),
+                   residualScale = yScale,
+                   mapping = getGroupbyMapping(plotData, plotType),
+                   groupAesthetics = getGroupAesthetics(plotData)
+                 )
           )
 
         plotObject <- setManualScalevectors(
@@ -305,20 +380,21 @@ generatePlotForPlotType <- function(plotData,
           plotData = plotData,
           facetAspectRatio =
             ifelse(plotType %in% c("PvO", "QQ "),
-                   1,
+                   1, # nolint indentation_linter
                    facetAspectRatio
-            ))
+            )
+        )
 
         # adjust time labels
         if (plotType %in% c("TP", "ResvT ")) {
           plotObject <- plotObject +
-            labs(x = plotData$getTimeLabelForTimeRange(timeRangeFilter))
+            ggplot2::labs(x = plotData$getTimeLabelForTimeRange(timeRangeFilter))
         }
         # export
         rmdContainer$addAndExportFigure(
           plotObject = plotObject,
           caption = getCaptionForPlot(plotData,
-                                      yScale = yScale,
+                                      yScale = yScale, # nolint indentation_linter
                                       timeRangeFilter = timeRangeFilter,
                                       plotType = plotType,
                                       plotCounter = plotCounter
@@ -331,12 +407,14 @@ generatePlotForPlotType <- function(plotData,
             ),
             dtDataReference = plotData$dataReference
           ),
-          figureKey = paste0(paste(plotData$configTable$PlotName[1],
-                                   plotType,
-                                   ifelse(yScale == "log", "log", "linear"),
-                                   timeRangeFilter,
-                                   sep = "-"),
-                             ifelse(max(plotData$dtCaption$counter) == 1,'',paste0('-',plotCounter))
+          figureKey = paste0(
+            paste(plotData$configTable$PlotName[1],
+                  plotType, # nolint indentation_linter
+                  ifelse(yScale == "log", "log", "linear"),
+                  timeRangeFilter,
+                  sep = "-"
+            ),
+            ifelse(max(plotData$dtCaption$counter) == 1, "", paste0("-", plotCounter))
           )
         )
       }
@@ -355,7 +433,7 @@ generatePlotForPlotType <- function(plotData,
 #' @keywords internal
 isPlotTypeNeededAndPossible <- function(plotType, plotData) {
   configColumn <- switch(plotType,
-                         TP = "Plot_TimeProfiles",
+                         TP = "Plot_TimeProfiles", # nolint indentation_linter
                          PvO = "Plot_PredictedVsObserved",
                          ResvT = "Plot_ResidualsVsTime",
                          ResvO = "Plot_ResidualsVsObserved",
@@ -364,11 +442,11 @@ isPlotTypeNeededAndPossible <- function(plotType, plotData) {
                          stop(paste("unknown plottype:", plotType))
   )
 
-  if (plotType == "TP") {  # nolint: line_length
+  if (plotType == "TP") { # nolint: line_length
     return(as.logical(plotData$configTable[[configColumn]][1]))
   } else {
     return(as.logical(plotData$configTable[[configColumn]][1]) &
-             plotData$hasObservedData()) # warning is thrown during data preparation
+             plotData$hasObservedData()) # warning is thrown during data preparation # nolint indentation_linter
   }
 }
 
@@ -413,7 +491,7 @@ checkAndAdjustYlimits <- function(plotData,
                                   plotType,
                                   plotCounter) {
   # initialize data.table variables
-  dataType <- yUnit <- yValues <- lloq <- xValues <- yMin <- yerrorValues <- NULL
+  yUnit <- yValues <- lloq <- xValues <- yMin <- yErrorValues <- NULL
 
   if (plotType != "TP") {
     return(NULL)
@@ -427,9 +505,9 @@ checkAndAdjustYlimits <- function(plotData,
     ylimits <- eval(parse(text = ylimits))
   }
 
-  simulatedData <- plotData$getDataForTimeRange(timeRangeFilter,typeFilter = "simulated",plotCounter = plotCounter)
+  simulatedData <- plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "simulated", plotCounter = plotCounter)
 
-  observedData <- plotData$getDataForTimeRange(timeRangeFilter,typeFilter = "observed",plotCounter = plotCounter)
+  observedData <- plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter)
   if (nrow(observedData) > 1) {
     observedData <- observedData[yUnit == unique(simulatedData$yUnit)[1]]
   }
@@ -437,8 +515,8 @@ checkAndAdjustYlimits <- function(plotData,
   # make sure no observed data are missed by setting y limits
   if (!is.null(ylimits) & nrow(observedData) > 0) {
     if (any(observedData$yValues
-            <= ylimits[1]) |
-        any(observedData$yValues
+            <= ylimits[1]) |  # nolint indentation_linter
+        any(observedData$yValues  # nolint indentation_linter
             >= ylimits[2], na.rm = TRUE)) {
       stop(paste(
         "data outside ylimit for", plotData$configTable$PlotName[1],
@@ -462,7 +540,7 @@ checkAndAdjustYlimits <- function(plotData,
     }
 
     tmp <- simulatedData[xValues >= timeRangeSim[1] &
-                           xValues <= timeRangeSim[2]]
+                           xValues <= timeRangeSim[2]] # nolint indentation_linter
     if (simulatedData$dataClass[1] == DATACLASS$tpAggregated) {
       if (simulatedData$yErrorType[1] == ospsuite::DataErrorType$ArithmeticStdDev) {
         tmp <- tmp[, yMin := yValues - yErrorValues]
@@ -470,16 +548,12 @@ checkAndAdjustYlimits <- function(plotData,
       if (simulatedData$yErrorType[1] == ospsuite::DataErrorType$GeometricStdDev) {
         tmp <- tmp[, yMin := yValues / yErrorValues]
       }
-      minY <- min(c(
-        minY,
-        tmp[!is.na(yMin) &
-              yMin > 0]$yMin
-      ))
+      minY <- min(c(minY,
+                    tmp[!is.na(yMin) &
+                          yMin > 0]$yMin))
     } else {
-      minY <- min(c(
-        minY,
-        tmp[!is.na(yValues) & yValues > 0]$yValues
-      ))
+      minY <- min(c(minY,
+                    tmp[!is.na(yValues) & yValues > 0]$yValues))
     }
 
     ylimits <- c(minY / 2, NA)
@@ -495,13 +569,16 @@ checkAndAdjustYlimits <- function(plotData,
 #'
 #' @return Aesthetic mappings for grouping.
 #' @keywords internal
-getGroupbyMapping <- function(plotData,plotType) {
+getGroupbyMapping <- function(plotData, plotType) {
+  # avoid warning for global variable
+  colorIndex <- shapeIndex <- NULL
+
   if ("shapeIndex" %in% names(plotData$data)) {
-    aes(groupby = colorIndex, shape = shapeIndex)
-  } else if (plotType == 'TP') {
-    aes(groupby = colorIndex, shape = 'Observed data')
+    ggplot2::aes(groupby = colorIndex, shape = shapeIndex)
+  } else if (plotType == "TP") {
+    ggplot2::aes(groupby = colorIndex, shape = "Observed data")
   } else {
-    aes(groupby = colorIndex)
+    ggplot2::aes(groupby = colorIndex)
   }
 }
 #' Get group aesthetics from scale vectors
@@ -528,58 +605,60 @@ getGroupAesthetics <- function(plotData) {
 #' @return Updated ggplot object with guides.
 #' @keywords internal
 updateGuides <- function(plotData, plotObject, plotType) {
+  legendTitleObservedData <- "Observed data"
 
-  legendTitleObservedData <- 'Observed data'
-
-  legendTitleColor <- ''
+  legendTitleColor <- ""
   if (plotData$useColorIndex()) {
-    if (plotType == 'TP' & !plotData$hasSimulatedPop()) {
+    if (plotType == "TP" & !plotData$hasSimulatedPop()) {
       legendTitleColor <- paste("Simulated", plotData$tpLabelSimulatedMean)
-    } else if (plotType == 'TP' & plotData$hasSimulatedPop()) {
-      legendTitleSimulated <- paste0(
+    } else if (plotType == "TP" & plotData$hasSimulatedPop()) {
+      legendTitleColor <- paste0(
         "Simulated data\n",
         plotData$tpLabelSimulatedMean,
         " with ", plotData$tpLabelSimulatedRange
       )
     } else {
-      legendTitleColor <-  legendTitleObservedData
+      legendTitleColor <- legendTitleObservedData
     }
   }
 
   plotObject <-
     plotObject +
-    guides(
-      color = guide_legend(
+    ggplot2::guides(
+      color = ggplot2::guide_legend(
         title = legendTitleColor,
         order = 1,
-        override.aes = ifelse(plotType == 'TP',list(shape = NA),list())
+        override.aes = ifelse(plotType == "TP", list(shape = NA), list())
       ),
-      fill = guide_legend(
+      fill = ggplot2::guide_legend(
         title = legendTitleColor,
-        order = 1
+        order = 1,
+        override.aes = ifelse(plotType == "TP", list(shape = NA), list())
       )
     )
 
-  if (plotData$hasObservedData()){
-    legendTitleShape <- ''
-    if (plotData$useShapeIndex())  legendTitleShape <- legendTitleObservedData
-    if (plotType != 'TP' & plotData$useColorIndex())  legendTitleShape <- legendTitleObservedData
+  if (plotData$hasObservedData()) {
+    legendTitleShape <- ""
+    if (plotData$useShapeIndex()) legendTitleShape <- legendTitleObservedData
+    if (plotType != "TP" & plotData$useColorIndex()) legendTitleShape <- legendTitleObservedData
 
     plotObject <-
       plotObject +
-      guides(
-        shape = guide_legend(
+      ggplot2::guides(
+        shape = ggplot2::guide_legend(
           title = legendTitleShape,
-          order = ifelse(plotType == 'TP',2,1),
-          override.aes = list(alpha = 0.7,
-                              color = 'black',
-                              linewidth = 0.5,
-                              fill = 'black'),
+          order = ifelse(plotType == "TP", 2, 1),
+          override.aes = list(
+            alpha = 0.7,
+            color = "black",
+            linewidth = 0.5,
+            fill = "black"
+          ),
         ),
-        linetype = guide_legend(
-          title = '',
-          order =  ifelse(plotType == 'TP',3,2),
-          override.aes = list(color = 'black', linewidth = 0.5,linetype = 'dashed')
+        linetype = ggplot2::guide_legend(
+          title = "",
+          order = ifelse(plotType == "TP", 3, 2),
+          override.aes = list(color = "black", linewidth = 0.5, linetype = "dashed")
         )
       )
   }
@@ -596,21 +675,19 @@ updateGuides <- function(plotData, plotObject, plotType) {
 #' @return Updated ggplot object with manual scale vectors.
 #' @keywords internal
 setManualScalevectors <- function(plotObject, plotData, plotType) {
-
   for (aesthetic in names(plotData$scaleVectors)) {
-
-    if (plotType != 'TP' &
-        !plotData$useColorIndex() &
-        !plotData$useShapeIndex()){
-      labels = 'Observed data'
-    } else{
-      labels = names(plotData$scaleVectors[[aesthetic]])
+    if (plotType != "TP" &
+        !plotData$useColorIndex() & # nolint indentation_linter
+        !plotData$useShapeIndex()) {
+      labels <- "Observed data"
+    } else {
+      labels <- names(plotData$scaleVectors[[aesthetic]])
     }
 
     plotObject <- plotObject +
-      scale_discrete_manual(aesthetic,
-                            values = plotData$scaleVectors[[aesthetic]],
-                            labels = labels
+      ggplot2::scale_discrete_manual(aesthetic,
+                                     values = plotData$scaleVectors[[aesthetic]], # nolint indentation_linter
+                                     labels = labels
       )
   }
 
@@ -628,16 +705,19 @@ addFacets <- function(plotObject,
                       plotData,
                       facetAspectRatio = 0.5,
                       nFacetColumns = 3) {
+  # avoid warnings for global variables during check
+  PlotTag <- NULL # nolint object_name_linter
+
   nFacetColumns <- plotData$nFacetColumns
 
   if (!is.null(nFacetColumns)) {
     plotObject <- plotObject +
-      facet_wrap(
-        facets = vars(PlotTag),
+      ggplot2::facet_wrap(
+        facets = ggplot2::vars(PlotTag),
         scales = plotData$configTable$FacetScale[1],
         ncol = nFacetColumns
       ) +
-      theme(aspect.ratio = facetAspectRatio)
+      ggplot2::theme(aspect.ratio = facetAspectRatio)
   }
 
   return(plotObject)
@@ -652,14 +732,17 @@ addFacets <- function(plotObject,
 #'
 #' @return Caption text for the plot.
 #' @keywords internal
-getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType,plotCounter) {
+getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotCounter) {
+  # avoid warning for global variable
+  counter <- NULL
+
   dtCaption <-
     plotData$dtCaption[eval(parse(text = plotData$timeRangeTagFilter[[timeRangeFilter]])) &
-                         counter == plotCounter]
+                         counter == plotCounter] # nolint indentation_linter
 
 
   plotTypeTxt <- switch(plotType,
-                        TP = "Concentration-time profiles",
+                        TP = "Concentration-time profiles", # nolint indentation_linter
                         PvO = "Predicted vs Observed",
                         ResvT = "Residuals vs time values",
                         ResvO = "Residuals vs observed values",
@@ -667,12 +750,14 @@ getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType,plotCo
                         QQ = "Residuals as quantile-quantile plot"
   )
 
-  if ('individualId' %in% names(dtCaption)){
+  if ("individualId" %in% names(dtCaption)) {
     individualtext <-
-      paste("for subject",
-            pasteFigureTags(dtCaption, captionColumn = "individualId"))
-  } else{
-    individualtext = ''
+      paste(
+        "for subject",
+        pasteFigureTags(dtCaption, captionColumn = "individualId")
+      )
+  } else {
+    individualtext <- ""
   }
 
   captiontext <- paste(
@@ -684,7 +769,7 @@ getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType,plotCo
     individualtext,
     "on a", ifelse(yScale == "linear", "linear", "logarithmic"),
     "y-scale.",
-    pasteFigureTags(dtCaption, captionColumn = "timeRangeCaption",endWithDot = TRUE),
+    pasteFigureTags(dtCaption, captionColumn = "timeRangeCaption", endWithDot = TRUE),
     plotData$configTable$PlotCaptionAddon[1]
   )
   return(captiontext)
@@ -738,7 +823,7 @@ getFootNoteLines <- function(dataObserved, dtDataReference) {
 #' @keywords internal
 getFoldDistanceForPvO <- function(plotData) {
   foldDistance <- ifelse(!is.na(plotData$configTable$FoldDistance_PvO[1]),
-                         as.double(plotData$configTable$FoldDistance_PvO[1]),
+                         as.double(plotData$configTable$FoldDistance_PvO[1]), # nolint indentation_linter
                          2
   )
 
@@ -747,13 +832,14 @@ getFoldDistanceForPvO <- function(plotData) {
 
 #' get additional inputs for TP plotType to enable lines in shape legend
 #'
-#' @param plotData
+#' @param plotData object of class PlotData
 #'
 #' @return list with additional attributes for geom_line
-getGeomLineAttributesForTP <- function(plotData){
-  if(plotData$hasObservedDataRange()){
-    return(list(linetype = 'solid', show.legend = TRUE))
-  } else{
+#' @keywords internal
+getGeomLineAttributesForTP <- function(plotData) {
+  if (plotData$hasObservedDataRange()) {
+    return(list(linetype = "solid", show.legend = TRUE))
+  } else {
     return(list())
   }
 }
@@ -763,10 +849,11 @@ getGeomLineAttributesForTP <- function(plotData){
 #' @param plotData
 #'
 #' @return list with additional attributes for lloq line
-getGeomLLOQAttributesForTP <- function(plotData){
-  if(plotData$hasObservedDataRange()){
+#' @keywords internal
+getGeomLLOQAttributesForTP <- function(plotData) {
+  if (plotData$hasObservedDataRange()) {
     return(list(linewidth = 0.5, show.legend = TRUE))
-  } else{
+  } else {
     return(list())
   }
 }
@@ -780,6 +867,9 @@ getGeomLLOQAttributesForTP <- function(plotData){
 #' @template observedDataDT
 #' @keywords internal
 validateConfigTableForTimeProfiles <- function(configTable, dataObserved, projectConfiguration) {
+  # avoid warning for global variable
+  individualId <- NULL
+
   configTablePlots <- validateHeaders(configTable)
 
   dtScenarios <- getScenarioDefinitions(projectConfiguration)
@@ -833,8 +923,8 @@ validateConfigTableForTimeProfiles <- function(configTable, dataObserved, projec
         allowedValues = unique(dtOutputPaths$outputPathId)
       ),
       IndividualIds = list(
-        cols = 'IndividualIds',
-        allowedValues = c('*',unique(dataObserved[!is.na(individualId)]$individualId))
+        cols = "IndividualIds",
+        allowedValues = c("*", unique(dataObserved[!is.na(individualId)]$individualId))
       ),
       yscale = list(
         cols = c("yscale"),
@@ -880,7 +970,7 @@ validateConfigTableForTimeProfiles <- function(configTable, dataObserved, projec
 
   validateOutputPathIdFormat(configTablePlots = configTablePlots)
 
-  validateOutputPathIdFormat(configTablePlots = configTablePlots,column = 'IndividualIds')
+  validateOutputPathIdFormat(configTablePlots = configTablePlots, column = "IndividualIds")
 
   validateVirtualTwinPop(
     configTablePlots = configTablePlots,
@@ -900,12 +990,15 @@ validatePanelConsistency <- function(
     configTablePlots,
     panelColumns,
     dtOutputPaths) {
+  # avoid warning for global variable
+  PlotName <- outputPathId <- NULL   # nolint object_name_linter
+
   # Check for unique values of panel columns for each `PlotName`
   uniquePanelValues <-
     configTablePlots[, lapply(.SD, function(x) {
       length(unique(x))
     }), by = PlotName, .SDcols = panelColumns]
-  tmp <- lapply(panelColumns, function(col) {
+  tmp <- lapply(panelColumns, function(col) {  # nolint object_usage_linter
     if (any(uniquePanelValues[[col]] > 1)) stop(paste("values for", col, "should be the same within each panel"))
   })
 
@@ -930,20 +1023,21 @@ validatePanelConsistency <- function(
 #' @template configTablePlots
 #' @keywords internal
 validateTimeRangeColumns <- function(configTablePlots) {
-  TimeRangeColumns <-
+  timeRangeColumns <-
     names(configTablePlots)[grepl("^TimeRange_", names(configTablePlots))]
 
-  if (length(TimeRangeColumns) == 0) stop("You need at least one TimeRange Column")
+  if (length(timeRangeColumns) == 0) stop("You need at least one TimeRange Column")
 
-  validateAtleastOneEntry(configTablePlots, columnVector = TimeRangeColumns)
+  validateAtleastOneEntry(configTablePlots, columnVector = timeRangeColumns)
 
   validateConfigTablePlots(configTablePlots,
-                           charactersWithMissing = TimeRangeColumns
+                           charactersWithMissing = timeRangeColumns # nolint indentation_linter
   )
 
   tryCatch(
     {
-      if (!all(sapply(configTablePlots[, ..TimeRangeColumns], function(x) {
+      if (!all(sapply(configTablePlots %>%
+                      dplyr::select(dplyr::all_of(timeRangeColumns)), function(x) {
         valid <- x %in% c(NA, "total", "firstApplication", "lastApplication")
         if (!all(valid)) {
           tmp <- eval(parse(text = x[!valid]))
@@ -969,14 +1063,19 @@ validateTimeRangeColumns <- function(configTablePlots) {
 #'
 #' @template configTablePlots
 #' @keywords internal
-validateOutputPathIdFormat <- function(configTablePlots,column = 'OutputPathIds') {
-  tmp <- configTablePlots[,.(nBracketOpen = sum(grepl("\\(", get(column))),
-                             nBracketClosed = sum(grepl("\\)", get(column)))),by = column]
+validateOutputPathIdFormat <- function(configTablePlots, column = "OutputPathIds") {
+  # avoid warning for global variable
+  nBracketOpen <- nBracketClosed <- NULL
+
+  tmp <- configTablePlots[, .(
+    nBracketOpen = sum(grepl("\\(", get(column))),
+    nBracketClosed = sum(grepl("\\)", get(column)))
+  ), by = column]
 
   tmp <- tmp[nBracketOpen != nBracketClosed]
 
   if (nrow(tmp) > 0) {
-    stop(paste("Please check the brackets in column",column,paste(tmp[[column]],collapse = ';')))
+    stop(paste("Please check the brackets in column", column, paste(tmp[[column]], collapse = ";")))
   }
 }
 
@@ -991,41 +1090,51 @@ validateOutputPathIdFormat <- function(configTablePlots,column = 'OutputPathIds'
 #' @param projectConfiguration A configuration object containing project-specific settings.
 #' @param dtScenarios A data table containing scenario details.
 #' @keywords internal
-validateVirtualTwinPop <- function(configTablePlots,projectConfiguration,dtScenarios){
+validateVirtualTwinPop <- function(configTablePlots, projectConfiguration, dtScenarios) {
+  # avoid warning for global variable
+  Scenario <- DataGroupIds <- Plot_TimeProfiles <- IndividualIds <- NULL # nolint object_name_linter
 
   scenarioNames <- unique(configTablePlots$Scenario)
   individualMatches <-
-    lapply(setNames(as.list(scenarioNames), scenarioNames),
-           function(scenario) {
-             getIndividualMatchForScenario(
-               projectConfiguration = projectConfiguration,
-               scenario = scenario,
-               dtScenario = dtScenarios
-             )
-           })
+    lapply(
+      stats::setNames(as.list(scenarioNames), scenarioNames),
+      function(scenario) {
+        getIndividualMatchForScenario(
+          projectConfiguration = projectConfiguration,
+          scenario = scenario,
+          dtScenarios = dtScenarios
+        )
+      }
+    )
 
-  indPopScenarios <- scenarioNames[!unlist(lapply(individualMatches,is.null))]
+  indPopScenarios <- scenarioNames[!unlist(lapply(individualMatches, is.null))]
 
   # IndividualIds is filled
-  if (any(is.na(configTablePlots[Scenario %in% indPopScenarios ]$IndividualIds))){
-    stop(paste('For scenarios with virtual twin populations, column IndividualIds has to be filled.',
-               'Use "*" or "(*)", if you want to plot all. (Brackets not allowed for Timeprofile Plots)',
-               'Check Scenarios:',paste(indPopScenarios,collapse = ', ')))
+  if (any(is.na(configTablePlots[Scenario %in% indPopScenarios]$IndividualIds))) {
+    stop(paste(
+      "For scenarios with virtual twin populations, column IndividualIds has to be filled.",
+      'Use "*" or "(*)", if you want to plot all. (Brackets not allowed for Timeprofile Plots)',
+      "Check Scenarios:", paste(indPopScenarios, collapse = ", ")
+    ))
   }
 
   tmp <- configTablePlots[Scenario %in% indPopScenarios & as.logical(Plot_TimeProfiles)]
   errorRows <- which(grepl("\\(", tmp$IndividualIds) | grepl("\\)", tmp$IndividualIds))
-  if (length(errorRows) > 0){
-    stop(paste('For scenarios with virtual twin populations and selected Plot_TimeProfiles,
-               brackets are not allowed in column IndividualIds.',
-               'Check Plots:',paste(tmp$PlotName[errorRows],collapse = ', ')))
+  if (length(errorRows) > 0) {
+    stop(paste(
+      "For scenarios with virtual twin populations and selected Plot_TimeProfiles,
+               brackets are not allowed in column IndividualIds.",
+      "Check Plots:", paste(tmp$PlotName[errorRows], collapse = ", ")
+    ))
   }
 
   tmp <- configTablePlots[!(Scenario %in% indPopScenarios) & !is.na(IndividualIds) & is.na(DataGroupIds)]
-  if (nrow(tmp) > 0){
-    warning(paste('Column "IndividualIds" is filled but no data group is selected and
+  if (nrow(tmp) > 0) {
+    warning(paste(
+      'Column "IndividualIds" is filled but no data group is selected and
     scenario is not an virtual twin population scenario. "IndividualIds" will be ignored.',
-                  'Check Plots:',paste(tmp$PlotName,collapse = ', ')))
+      "Check Plots:", paste(tmp$PlotName, collapse = ", ")
+    ))
   }
 
   return(invisible())
@@ -1033,24 +1142,47 @@ validateVirtualTwinPop <- function(configTablePlots,projectConfiguration,dtScena
 
 # support usability --------------------
 
-#' Adds a default sheet to the plot configuration table
+#' Add Default Configuration for Time Profile Plots
 #'
-#' @template projectConfig
-#' @param sheetName Name of the sheet in the plot configuration table.
-#' @param overwrite Boolean indicating if existing configurations will be overwritten.
+#' This function adds a default configuration sheet for time profile plots to the plot configuration table.
+#' It can either create a new sheet or overwrite an existing one based on the specified parameters.
+#'
+#' @param projectConfiguration A ProjectConfiguration class object containing configuration details, including:
+#'   - `plotsFile`: A string representing the file path to the Excel workbook containing the plot configurations.
+#'
+#' @param sheetName A character string specifying the name of the sheet in the plot configuration table.
+#'   Default is "TimeProfiles".
+#'
+#' @param overwrite A boolean indicating whether existing configurations should be overwritten.
+#'   Default is FALSE.
+#'
+#' @details
+#' The function retrieves scenario definitions, output path IDs, and data groups from the project configuration.
+#' It checks if the specified sheet already exists and whether to overwrite it. If not, it creates a new header
+#' and fills in the default configuration values for the time profile plots.
+#'
+#' @return NULL This function updates the Excel workbook in place and does not return a value.
+#' It is called for its side effects.
+#'
 #' @export
 addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
-                                                sheetName = "TimeProfile_Panel", overwrite = FALSE) {
+                                                sheetName = "TimeProfiles", overwrite = FALSE) {
+  # avoid warnings for global variables during check
+  Scenario_name <- NULL # nolint object_name_linter
+
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+
+  # this function stops in valid runs
+  stopHelperFunction()
 
   scenarios <- getScenarioDefinitions(projectConfiguration)
   dtOutputPaths <- getOutputPathIds(projectConfiguration)
   dtDataGroups <- getDataGroups(projectConfiguration)
 
   if (sheetName %in% wb$sheet_names & !overwrite) {
-    dtNewHeader <- xlsxReadData(wb, sheetName = sheetName,skipDescriptionRow = TRUE)
+    dtNewHeader <- xlsxReadData(wb, sheetName = sheetName, skipDescriptionRow = TRUE)
     scenarios <- scenarios[!(Scenario_name %in% unique(dtNewHeader$Scenario))]
-  } else{
+  } else {
     dtNewHeader <- data.table(
       Level = 1,
       Header = "Concentration time profiles"
@@ -1097,7 +1229,7 @@ addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
     templateSheet = "TimeProfile_Panel",
     sheetName = sheetName,
     dtNewConfig = rbind(dtNewHeader,
-                        dtNewConfig,
+                        dtNewConfig, # nolint indentation_linter
                         fill = TRUE
     )
   )

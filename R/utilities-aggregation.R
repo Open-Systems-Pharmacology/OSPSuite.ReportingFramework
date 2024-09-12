@@ -25,7 +25,7 @@ getAggregationFunction <- function(aggregationFlag,
         y <- y[y > 0 & !is.na(y)]
         return(list(
           yValues = exp(mean(log(y))),
-          yErrorValues = exp(sqrt(var(log(y)))),
+          yErrorValues = exp(sqrt(stats::var(log(y)))),
           yErrorType = ospsuite::DataErrorType$GeometricStdDev
         ))
       }
@@ -35,7 +35,7 @@ getAggregationFunction <- function(aggregationFlag,
         y <- y[!is.na(y)]
         return(list(
           yValues = mean(y),
-          yErrorValues = sqrt(var(y)),
+          yErrorValues = sqrt(stats::var(y)),
           yErrorType = ospsuite::DataErrorType$ArithmeticStdDev
         ))
       }
@@ -54,9 +54,9 @@ getAggregationFunction <- function(aggregationFlag,
       function(y) {
         y <- y[!is.na(y)]
         return(list(
-          yMin = quantile(y, probs = percentiles[1]),
-          yValues = quantile(y, probs = percentiles[2]),
-          yMax = quantile(y, probs = percentiles[3]),
+          yMin = stats::quantile(y, probs = percentiles[1]),
+          yValues = stats::quantile(y, probs = percentiles[2]),
+          yMax = stats::quantile(y, probs = percentiles[3]),
           yErrorType = getErrorTypeForPercentiles(percentiles)
         ))
       }
@@ -72,7 +72,7 @@ getAggregationFunction <- function(aggregationFlag,
 #'
 #' @param percentiles numeric vectors with percentiles
 #'
-#' @return  character with with errortype for given precentiles
+#' @return  character with with `errorType` for given percentiles
 getErrorTypeForPercentiles <- function(percentiles) {
   mName <- ifelse(percentiles[2] == 0.5, "median",
     paste(scales::label_ordinal()(x = percentiles[2] * 100), "percentile")
@@ -103,6 +103,9 @@ getErrorTypeForPercentiles <- function(percentiles) {
 performAggregation <- function(dataToAggregate,
                                aggregationFun,
                                aggrCriteria) {
+  # avoid warning for global variable
+  lloq <- LLOQFlag <- yValues <- NULL # nolint object_name_linter
+
   checkmate::assertNames(aggrCriteria, subset.of = names(dataToAggregate))
 
   aggregatedData <- dataToAggregate[, .(

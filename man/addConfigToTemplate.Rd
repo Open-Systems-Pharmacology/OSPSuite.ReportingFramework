@@ -19,7 +19,7 @@ addConfigToTemplate(wb, templateSheet, sheetName, dtNewConfig)
 Plotconfiguration file
 }
 \description{
-if the template does not exist in the plotconfigurationfile in the project directory
-it is taken from the plotconfigurationfile of the package installation.
+if the template does not exist in the plot-configuration file in the project directory
+it is taken from the plot-configuration file of the package installation.
 In this case formats are not preserved
 }

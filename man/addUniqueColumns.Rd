@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-data.R
 \name{addUniqueColumns}
 \alias{addUniqueColumns}
-\title{Add all columns of observedData which are unique for a group}
+\title{Add all columns of `dataObserved` which are unique for a group}
 \usage{
 addUniqueColumns(dataObserved, aggregatedData)
 }
@@ -15,6 +15,6 @@ addUniqueColumns(dataObserved, aggregatedData)
 The updated aggregated data.
 }
 \description{
-Add all columns of observedData which are unique for a group
+Add all columns of `dataObserved` which are unique for a group
 }
 \keyword{internal}

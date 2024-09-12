@@ -2,18 +2,37 @@
 % Please edit documentation in R/utilities-electronicPackage.R
 \name{checkFileNameValidity}
 \alias{checkFileNameValidity}
-\title{Checks if files given as a character vector fullfills conditions for filen ames for electronic package}
+\title{Check File Name Validity}
 \usage{
 checkFileNameValidity(files, dataSets = NULL)
 }
 \arguments{
-\item{files}{vector wtih file names}
+\item{files}{A character vector of file names to validate. Each file name should have
+a valid extension (xml, txt, or csv) and must not exceed 64 characters in length.}
 
-\item{dataSets}{ector with data set names (may be NULL)}
+\item{dataSets}{A character vector of dataset names to validate. Each dataset name must
+not exceed 32 characters in length. This parameter is optional.}
 }
 \value{
-list with inValid file names
+A character vector containing the names of invalid files and datasets that do not meet the specified criteria.
 }
 \description{
-Checks if files given as a character vector fullfills conditions for filen ames for electronic package
+This function checks the validity of file names and dataset names based on specified criteria,
+including allowed file extensions and maximum length restrictions.
+}
+\details{
+The function checks the following conditions for file names:
+- Must match the regular expression pattern allowing only lowercase letters, numbers, and underscores.
+- Must end with one of the allowed file extensions.
+- Must not exceed the maximum length of 64 characters.
+
+For dataset names, the function checks that they do not exceed the maximum length of 32 characters.
+}
+\examples{
+# Example usage:
+files <- c("valid_file.xml", "invalid_file.txt", "too_long_file_name_exceeding_the_limit.csv")
+dataSets <- c("validDataset", "invalidDatasetNameThatIsWayTooLong")
+invalidNames <- checkFileNameValidity(files, dataSets)
+print(invalidNames)
+
 }

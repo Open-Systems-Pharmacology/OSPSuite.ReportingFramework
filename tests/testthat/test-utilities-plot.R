@@ -3,6 +3,7 @@ projectConfiguration <- setUpTestProject()
 initLogfunction(projectConfiguration = projectConfiguration, verbose = FALSE)
 
 test_that("generation of default template works", {
+  executeAsValidRun(FALSE)
   addDefaultConfigForTimeProfilePlots(
     projectConfiguration = projectConfiguration,
     sheetName = "TimeProfileNew", overwrite = FALSE
@@ -45,7 +46,7 @@ configTablePlots <- data.table(
   CharacterColumn1 = c("A", "B", "C", "D"),
   CharacterColumn2 = c("X", NA, "Y", "Z"),
   NumericColumn1 = c(1, 2, 3, NA),
-  LogicalColumn1 = c(TRUE, FALSE, NA, TRUE),
+  LogicalColumn1 = c(TRUE, FALSE, TRUE, TRUE),
   NumericRangeColumn1 = c("c(1,2)", "c(3,NA)", NA, "c(5,6)")
 )
 

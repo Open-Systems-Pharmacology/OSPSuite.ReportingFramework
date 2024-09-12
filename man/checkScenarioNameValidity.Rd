@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-electronicPackage.R
 \name{checkScenarioNameValidity}
 \alias{checkScenarioNameValidity}
-\title{Checks if scenarioName + extension .xml fullfils conditions for filenames for electronic package}
+\title{Checks if scenarioName + extension .xml fulfills conditions for file names for electronic package}
 \usage{
 checkScenarioNameValidity(projectConfiguration)
 }
@@ -10,5 +10,5 @@ checkScenarioNameValidity(projectConfiguration)
 \item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
 }
 \description{
-Checks if scenarioName + extension .xml fullfils conditions for filenames for electronic package
+Checks if scenarioName + extension .xml fulfills conditions for file names for electronic package
 }
