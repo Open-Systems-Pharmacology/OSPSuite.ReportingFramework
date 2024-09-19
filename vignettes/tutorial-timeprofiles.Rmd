@@ -24,8 +24,6 @@ library(ospsuite.reportingframework)
 ```
 
 
-# Time Profile Plotting Tutorial
-
 ## Introduction
 
 Welcome to the Time Profile Plotting Tutorial! This guide will walk you through the process of generating time profile plots using the `ospsuite.reportingframework` package. Time profile plots are essential for visualizing pharmacokinetic data, allowing researchers to understand how a drug behaves over time in the body.
@@ -98,7 +96,8 @@ Execute the first lines of your workflow, skipping the `logCatch` loop. This wil
 # set working directory to  workflow file location, (only if working interactively)
 if (interactive() && rstudioapi::isAvailable()) {
   # Get the active document path in RStudio
-  setwd(rstudioapi::getActiveDocumentContext()$path)
+  activeDocPath <- rstudioapi::getActiveDocumentContext()$path
+  setwd(dirname(activeDocPath))
 }
 
 # Initialization  ----------------------------------------------------------
@@ -133,7 +132,7 @@ initProject(
 
 # get paths of all relevant project files
 projectConfiguration <-
-  esqlabsR::createDefaultProjectConfiguration(
+  esqlabsR::createProjectConfiguration(
     path = file.path("ProjectConfiguration.xlsx")
   )
 
@@ -183,8 +182,12 @@ file.copy(
 
 Open the 'DataImportConfiguration.xlsx'
 
-List in the sheet 'DataFiles' your available data.  
+- List in the sheet 'DataFiles' your available data.  
 The paths should be relative to the configuration table which is in '<Rootdirectory>/Scripts/ReportingFramework', the data are saved in '<Rootdirectory>/Data' so the correct path is '../../Data'
+
+- As dictionary we select tpDictionary  
+- We do not need a filter, so make sure column 'DataFilter' is empty.
+- The data is of class 'tp Individual' (individual timeprofile data)
 
 
 ```{r, echo=FALSE, eval = TRUE}
@@ -282,6 +285,8 @@ tmp <- xlsxReadData(
   emptyAsNA = FALSE
 )
 
+tmp$DisplayUnit <- gsub('Â','',tmp$DisplayUnit)
+
 knitr::kable(tmp)
 ```
 
@@ -350,7 +355,7 @@ The results are saved in 'Outputs/ReportingFramework/SimulationResults'.
 
 ### Step 6: Configure and Generate Plots
 
-For the plot configuration we call a helper function which adds all defined scenarios with default settings to the plot configuration table. As this is a helper function, which changes the input configuration of a workflow, it is not intended to be part of an final workflow and will throw an error if run as 'validRun'.
+For the plot configuration we call a helper function which adds all defined scenarios with default settings to the plot configuration table. As this is a helper function, which changes the input configuration of a workflow, it is not intended to be part of a final workflow and will throw an error if run as 'validRun'. (see the vignette for the `ospsuite.reportingframework` package, topic 'OSPSuite_ReportingFramework', section 'Executing the Workflow as a Valid Run')
 
 ```{r}
 addDefaultConfigForTimeProfilePlots(
@@ -474,7 +479,11 @@ knitr::kable(tmp)
 
 ### Step 2: Export population
 
-Go to the Export populations of the workflow and add and execute following lines:
+- Go to the Export populations of the workflow and de-comment the lines for the virtualTwinexport 
+- adjust input parameter 'modelFile'
+The model file is used for unit conversions. As our population contains only parameters not related to the application, we can use both available model files, the one for the oral administration and the iv administration file.
+
+Now you can execute following lines:
 
 ```{r}
 exportVirtualTwinPopulations(
@@ -486,7 +495,6 @@ exportVirtualTwinPopulations(
 ```
 
 This will create a population based on the configuration table from the previous section. It is saved as csv file in 'Models/Populations'.
-The model file is used for unit conversions. As our population contains only parameters not related to the application, we could have used both available model files, the one for the oral administration and the iv administration file.
 
 ### Step 3: Set up and run scenario
 
@@ -612,7 +620,7 @@ knitr::kable(tmp)
 
 ### Step 3: Export population
 
-Go to the Export populations of the workflow and add and execute following lines:
+Go to the Export populations of the workflow and de-comment lines to export random populations:
 
 ```{r}
 exportRandomPopulations(

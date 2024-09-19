@@ -63,7 +63,7 @@ vignette("data_import_by_dictionary")
 
 ### Simulation setup
 
-In this separate vignette, you will find detailed explanations and examples of how to read observed data effectively, ensuring that your analysis is based on accurate and well-structured datasets.
+In this separate vignette, you will get an overvieo on the Simulation setup based on the 'esqlabsR' package.
 
 To access the **Simulation setup** vignette, you can run the following command in R:
  
@@ -151,6 +151,7 @@ The `executeAsValidRun` function sets the necessary options to control the behav
 ### Behavior:
 - **Watermark Management**: When `isValidRun` is set to `TRUE`, watermarks are disabled on figures. This is achieved by setting the `watermark_enabled` option to `FALSE`.
 - **Failure Handling**: If `isValidRun` is `TRUE`, the workflow will not skip failing plots. If `FALSE`, any errors in figure generation will be ignored, and the workflow will continue.
+- **Exclude Helper Functions**: If `isValidRun` is `TRUE` helper function will not run. These are functions which are used to prepare the input for a workflow and should only be used for preparation.
 
 ### Example:
 

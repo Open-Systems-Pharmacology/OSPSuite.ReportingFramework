@@ -6,7 +6,8 @@
 # set working directory to  workflow file location, (only if working interactively)
 if (interactive() && rstudioapi::isAvailable()) {
   # Get the active document path in RStudio
-  setwd(rstudioapi::getActiveDocumentContext()$path)
+  activeDocPath <- rstudioapi::getActiveDocumentContext()$path
+  setwd(dirname(activeDocPath))
 }
 
 
@@ -42,7 +43,7 @@ initProject(
 
 # get paths of all relevant project files
 projectConfiguration <-
-  esqlabsR::createDefaultProjectConfiguration(
+  esqlabsR::createProjectConfiguration(
     path =  file.path("ProjectConfiguration.xlsx"))
 
 # start log Catch loop which catches all errors, warnins and messages in a logfile
@@ -61,6 +62,22 @@ logCatch({
 
   # 2) Export populations -------------------------------------------------------
   # (see vignette Simulation_setup)
+
+  # to export random populations de-comment lines below
+  # exportRandomPopulations(
+  #   projectConfiguration = projectConfiguration,
+  #   populationNames = NULL,
+  #   overwrite = FALSE
+  # )
+  #
+
+  # to export virtual twin populations de-comment lines below
+  # exportVirtualTwinPopulations(
+  #   projectConfiguration = projectConfiguration,
+  #   populationNames = NULL,
+  #   modelFile = "myModelFile.pkml",
+  #   overwrite = FALSE
+  # )
 
 
   # 3) Simulations ------------------------------------------------------

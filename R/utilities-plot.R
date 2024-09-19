@@ -84,7 +84,8 @@ addConfigToTemplate <- function(wb, templateSheet, sheetName, dtNewConfig) {
         wb = system.file(
           "templates",
           "templateProject",
-          "Parameters",
+          "scripts",
+          "ReportingFramework",
           "Plots.xlsx",
           package = "ospsuite.reportingframework",
           mustWork = TRUE
