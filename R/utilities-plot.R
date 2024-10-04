@@ -257,7 +257,7 @@ generateColorScaleVectors <- function(dt,
 #'
 #' @param dtCaption A data.table containing the captions and plot tags. It must have at least the following columns:
 #'   - `captionColumn`: The column name containing the captions.
-#'   - `PlotTag`: A column containing the plot tags associated with each caption.
+#'   - `plotTag`: A column containing the plot tags associated with each caption.
 #'
 #' @param captionColumn A string specifying the name of the column in `dtCaption` that contains the captions.
 #'
@@ -267,19 +267,19 @@ generateColorScaleVectors <- function(dt,
 #'
 pasteFigureTags <- function(dtCaption, captionColumn, endWithDot = FALSE) {
   # avoid warning for global variable
-  PlotTag <- NULL # nolint object_name_linter
+  plotTag <- NULL
 
   if (dplyr::n_distinct(dtCaption[[captionColumn]]) == 1) {
     captionText <- unique(dtCaption[[captionColumn]])
   } else {
     captionTextVector <- dtCaption[, .(tags = paste0(
       get(captionColumn),
-      " (", paste(unique(PlotTag), collapse = ", "), ")"
+      " (", paste(unique(plotTag), collapse = ", "), ")"
     )),
     by = captionColumn
     ]$tags
 
-    allTags <- dtCaption[, .(tags = paste0(" \\(", paste(unique(PlotTag), collapse = ", "), "\\)"))]$tags
+    allTags <- dtCaption[, .(tags = paste0(" \\(", paste(unique(plotTag), collapse = ", "), "\\)"))]$tags
 
     captionTextVector <- gsub(allTags, "", captionTextVector)
 
@@ -313,25 +313,25 @@ pasteFigureTags <- function(dtCaption, captionColumn, endWithDot = FALSE) {
 #' @export
 validateHeaders <- function(configTable) {
   # avoid warning for global variable
-  Level <- NULL # nolint object_name_linter
+  level <- NULL
 
-  configTableHeader <- configTable[!is.na(Level)]
-  checkmate::assertIntegerish(configTableHeader$Level, lower = 1, any.missing = FALSE)
-  checkmate::assertCharacter(configTableHeader$Header, any.missing = FALSE)
+  configTableHeader <- configTable[!is.na(level)]
+  checkmate::assertIntegerish(configTableHeader$level, lower = 1, any.missing = FALSE)
+  checkmate::assertCharacter(configTableHeader$header, any.missing = FALSE)
 
   if (any(!is.na(configTableHeader %>% dplyr::select(setdiff(
-    names(configTableHeader), c("Level", "Header")
+    names(configTableHeader), c("level", "header")
   ))))) {
     stop(
       "Invalid plot configuration table. For Rows with headers all other columns must be empty."
     )
   }
 
-  configTablePlots <- configTable[is.na(Level)]
+  configTablePlots <- configTable[is.na(level)]
   if (!all(configTablePlots[,
                             lapply(.SD, function(x)
                               all(is.na(x))),   # nolint indentation_linter
-                            .SDcols = "Header"])) {
+                            .SDcols = "header"])) {
     stop("Invalid plot configuration table. Missing header for level")
   }
 
@@ -491,15 +491,15 @@ validateOutputIdsForPlot <- function(dtOutputPaths) {
   outputPathId <- NULL
 
   checkmate::assertFactor(dtOutputPaths$outputPathId, any.missing = FALSE)
-  checkmate::assertCharacter(dtOutputPaths$OutputPath, any.missing = FALSE)
-  checkmate::assertCharacter(dtOutputPaths$DisplayName, any.missing = FALSE)
+  checkmate::assertCharacter(dtOutputPaths$outputPath, any.missing = FALSE)
+  checkmate::assertCharacter(dtOutputPaths$displayName, any.missing = FALSE)
 
   if (any(!is.na(dtOutputPaths$color))) {
     checkmate::assertCharacter(dtOutputPaths$color, any.missing = FALSE)
   }
 
   # Check for unique values for outputpathids
-  uniqueColumns <- c("DisplayName", "DisplayUnit")
+  uniqueColumns <- c("displayName", "displayUnit")
   uniqueIDValues <-
     dtOutputPaths[, lapply(.SD, function(x) {
       length(unique(x))
@@ -510,7 +510,7 @@ validateOutputIdsForPlot <- function(dtOutputPaths) {
 
   # check validity of units
   invisible(lapply(
-    unique(dtOutputPaths$DisplayUnit),
+    unique(dtOutputPaths$displayUnit),
     function(unit) {
       tryCatch(
         {

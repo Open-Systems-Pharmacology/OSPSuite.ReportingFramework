@@ -4,6 +4,8 @@ rootDirectory <- tempdir()
 message(rootDirectory)
 dir.create(file.path(rootDirectory,'Scripts','ReportingFramework'),recursive = TRUE)
 
+setwd("~/GitHub/OSPSuiteReportingFramework")
+load_all()
 
 setwd(file.path(rootDirectory,'Scripts','ReportingFramework'))
 
@@ -15,7 +17,7 @@ source(system.file(
 
 # Initialization  ----------------------------------------------------------
 # load libraries and source project specific code
-library(ospsuite.reportingframework)
+#library(ospsuite.reportingframework)
 library(data.table)
 library(tidyr)
 
@@ -89,7 +91,7 @@ logCatch({
 
     if (tutorialstep == 1){
       # Read observedData -------------------------------------------------------
-      # (see vignette('data_import_by_dictionary'))
+      # (see vignette('Data_import_by_dictionary'))
       mockManualEditings.DataDictionary(projectConfiguration)
     }
     # read observed data

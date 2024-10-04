@@ -17,10 +17,10 @@ test_that("generation of default template works", {
 # Create example data for testing
 mockConfigTable <- function() {
   data.table(
-    Level = c(1, 2, NA, NA, NA),
-    Header = c("Header1", "Header2", NA, NA, NA),
-    Value1 = c(NA, NA, 10, 30, 40),
-    Value2 = c(NA, NA, "A", "B", NA)
+    level = c(1, 2, NA, NA, NA),
+    header = c("Header1", "Header2", NA, NA, NA),
+    value1 = c(NA, NA, 10, 30, 40),
+    value2 = c(NA, NA, "A", "B", NA)
   )
 }
 
@@ -32,12 +32,12 @@ test_that("validateHeaders function test", {
 
   # Test if the function throws an error when the plot configuration table has non-empty columns
   configTable <- mockConfigTable()
-  configTable$Value1[1] <- 3
+  configTable$value1[1] <- 3
   expect_error(validateHeaders(configTable))
 
   # Test if the function throws an error when the plot configuration table has missing header for level
   configTable <- mockConfigTable()
-  configTable$Header[1] <- NA
+  configTable$header[1] <- NA
   expect_error(validateHeaders(configTable))
 })
 
@@ -108,13 +108,13 @@ test_that("validateAtleastOneEntry function test", {
 # Create example data for testing
 dtOutputPaths <- data.table(
   outputPathId = c("id1", "id1", "id2", "id2"),
-  DisplayName = c("Display1", "Display1", "Display2", "Display2"),
-  DisplayUnit = c("Unit1", "Unit1", "Unit1", "Unit2")
+  displayName = c("Display1", "Display1", "Display2", "Display2"),
+  displayUnit = c("Unit1", "Unit1", "Unit1", "Unit2")
 )
 
 # Write unit tests for the function
 test_that("validateOutputIdsForPlot function test", {
-  # Test if the function correctly find the inconsistency in DisplayUnit
+  # Test if the function correctly find the inconsistency in displayUnit
   expect_error(validateOutputIdsForPlot(dtOutputPaths))
 })
 

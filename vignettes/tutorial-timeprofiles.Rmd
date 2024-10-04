@@ -2,7 +2,7 @@
 title: "Tutorial: Time Profile Plotting"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{tutorial-timeprofiles}
+  %\VignetteIndexEntry{Tutorial-timeprofiles}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
   error = FALSE,
   comment = "#>"
 )
+options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
 ```{r setup, echo=FALSE}
@@ -178,7 +179,7 @@ file.copy(
 
 ### Step 4: Read Observed Data
 
-(see the vignette for the `ospsuite.reportingframework` package, topic 'data_import_by_dictionary')
+(see the vignette for the `ospsuite.reportingframework` package, topic 'Data_import_by_dictionary')
 
 Open the 'DataImportConfiguration.xlsx'
 
@@ -199,7 +200,8 @@ tmp <- xlsxReadData(
   ),
   sheetName = "DataFiles",
   skipDescriptionRow = TRUE,
-  emptyAsNA = FALSE
+  emptyAsNA = FALSE,
+  convertHeaders = FALSE
 )
 
 knitr::kable(tmp)
@@ -226,7 +228,8 @@ tmp <- xlsxReadData(
   ),
   sheetName = "tpDictionary",
   skipDescriptionRow = TRUE,
-  emptyAsNA = FALSE
+  emptyAsNA = FALSE,
+  convertHeaders = FALSE
 )
 
 tmp <- tmp[c(which(tmp$type == "identifier"), which(tmp$type == "timeprofile"), which(tmp$type == "biometrics"), which(tmp$type == "metadata"))]
@@ -249,7 +252,7 @@ This will return a data.table with the observed data.
 
 It adds also data to the configuration tables. 
 
-- The biometrics of the individuals in the observed data are added to the 'Individual.xlsx'.
+- The biometrics of the individuals in the observed data are added to the 'Individuals.xlsx'.
 Information which is not in the observed data like the ontogeny has to be added manually:
 
 
@@ -262,7 +265,8 @@ tmp <- xlsxReadData(
   ),
   sheetName = "IndividualBiometrics",
   skipDescriptionRow = FALSE,
-  emptyAsNA = FALSE
+  emptyAsNA = FALSE,
+  convertHeaders = FALSE
 )
 
 knitr::kable(tmp)
@@ -270,7 +274,7 @@ knitr::kable(tmp)
 
 - The identifier for the data groups and outputs are added to the 'Plots.xlsx', sheets 'DataGroups' and 'Outputs'
 These tables are used to configure properties for output plots such as 'DisplayName' and 'DisplayUnit'.
-Please add the 'outputpaths' for the 'outputPathsIds':
+Please add the 'Outputpaths' for the 'OutputPathsIds':
 
 
 ```{r, echo=FALSE, eval = TRUE}
@@ -282,10 +286,11 @@ tmp <- xlsxReadData(
   ),
   sheetName = "Outputs",
   skipDescriptionRow = TRUE,
-  emptyAsNA = FALSE
+  emptyAsNA = FALSE,
+  convertHeaders = FALSE
 )
 
-tmp$DisplayUnit <- gsub('Â','',tmp$DisplayUnit)
+tmp$displayUnit <- gsub('Â','',tmp$displayUnit)
 
 knitr::kable(tmp)
 ```
@@ -319,7 +324,8 @@ dtScenarios <- xlsxReadData(
   ),
   sheetName = "Scenarios",
   skipDescriptionRow = FALSE,
-  emptyAsNA = FALSE
+  emptyAsNA = FALSE,
+  convertHeaders = FALSE
 )
 
 dtScenarios[, ReadPopulationFromCSV := as.logical(as.numeric(ReadPopulationFromCSV))]
@@ -398,7 +404,8 @@ dtPlots <- xlsxReadData(
   ),
   sheetName = "TimeProfiles",
   skipDescriptionRow = TRUE,
-  emptyAsNA = FALSE
+  emptyAsNA = FALSE,
+  convertHeaders = FALSE
 )
 dtPlots <- dtPlots[-4]
 
@@ -470,7 +477,8 @@ tmp <- xlsxReadData(
   ),
   sheetName = "VirtualTwinPopulation",
   skipDescriptionRow = FALSE,
-  emptyAsNA = FALSE
+  emptyAsNA = FALSE,
+  convertHeaders = FALSE
 )
 
 knitr::kable(tmp)
@@ -612,7 +620,8 @@ tmp <- xlsxReadData(
   ),
   sheetName = "Demographics",
   skipDescriptionRow = FALSE,
-  emptyAsNA = FALSE
+  emptyAsNA = FALSE,
+  convertHeaders = FALSE
 )
 
 knitr::kable(tmp)
@@ -687,7 +696,8 @@ tmp <- xlsxReadData(
   ),
   sheetName = "CYP3A4_2",
   skipDescriptionRow = FALSE,
-  emptyAsNA = FALSE
+  emptyAsNA = FALSE,
+  convertHeaders = FALSE
 )
 
 knitr::kable(tmp)
@@ -744,7 +754,8 @@ tmp <- xlsxReadData(
   ),
   sheetName = "TimeRange",
   skipDescriptionRow = TRUE,
-  emptyAsNA = FALSE
+  emptyAsNA = FALSE,
+  convertHeaders = FALSE
 )
 
 knitr::kable(tmp)

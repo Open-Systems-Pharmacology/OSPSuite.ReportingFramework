@@ -8,25 +8,27 @@ xlsxReadData(
   wb,
   sheetName,
   skipDescriptionRow = FALSE,
-  alwaysCharacter = c("IndividualId", "IndividualIds", "StudyId", "group",
-    "outputPathId", "DataGroupIds", "DataGroupId"),
-  emptyAsNA = TRUE
+  alwaysCharacter = c("group", "Id$", "Ids$"),
+  emptyAsNA = TRUE,
+  convertHeaders = TRUE
 )
 }
 \arguments{
-\item{wb}{A workbook or xlsx file.}
+\item{wb}{A workbook object or a character string specifying the path to the xlsx file.}
 
 \item{sheetName}{A character string specifying the name of the sheet to read.}
 
-\item{skipDescriptionRow}{A boolean indicating if the first line should be interpreted as a description and skipped.}
+\item{skipDescriptionRow}{A logical value indicating if the first row should be interpreted as a description and skipped.}
 
-\item{alwaysCharacter}{A vector with column names that should be returned as character (typically identifiers).}
+\item{alwaysCharacter}{A character vector with column names or regex patterns that should be returned as character (typically identifiers).}
 
-\item{emptyAsNA}{If TRUE empty strings are converted to NA}
+\item{emptyAsNA}{A logical value. If TRUE, empty strings are converted to NA.}
+
+\item{convertHeaders}{A logical value. If TRUE, column names are converted to start with a lowercase letter.}
 }
 \value{
 A `data.table` containing the sheet data.
 }
 \description{
-This function wraps `openxlsx::read.xlsx` but returns data as a `data.table`.
+This function wraps `openxlsx::read.xlsx` and returns the data as a `data.table`.
 }

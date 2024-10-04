@@ -23,7 +23,7 @@ An object to collect plotData and other information to create a time profile plo
 
 \item{\code{configTable}}{Configuration table for one plot}
 
-\item{\code{PlotName}}{PlotName of configTable}
+\item{\code{plotName}}{plotName of configTable}
 
 \item{\code{dtCaption}}{Data.table with caption information}
 
@@ -140,7 +140,7 @@ Replicates data for each time tag
 
 \subsection{Returns}{
 invisible(NULL)
-Creates PlotId for each scenario outputs group
+Creates plotId for each scenario outputs group
 }
 }
 \if{html}{\out{<hr>}}

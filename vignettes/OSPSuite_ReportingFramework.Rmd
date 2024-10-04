@@ -57,7 +57,7 @@ In this separate vignette, you will find detailed explanations and examples of h
 To access the **Data Import by Dictionary** vignette, you can run the following command in R:
  
 ```{r}
-vignette("data_import_by_dictionary")
+vignette("Data_import_by_dictionary")
 ```
 
 

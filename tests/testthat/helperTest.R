@@ -107,10 +107,10 @@ setDataDictionary <- function(projectConfiguration) {
   dtDataFiles <- rbind(
     dtDataFiles,
     data.table(
-      DataFile = file.path("..", "..", "Data", "data.csv"),
-      Dictionary = "tpDictionary",
-      DataFilter = "",
-      DataClass = DATACLASS$tpIndividual
+      dataFile = file.path("..", "..", "Data", "data.csv"),
+      dictionary = "tpDictionary",
+      dataFilter = "",
+      dataClass = DATACLASS$tpIndividual
     )
   )
 

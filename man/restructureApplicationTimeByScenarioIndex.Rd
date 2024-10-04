@@ -2,7 +2,7 @@
 % Please edit documentation in R/PlotDataTimeProfile.R
 \name{restructureApplicationTimeByScenarioIndex}
 \alias{restructureApplicationTimeByScenarioIndex}
-\title{Restructure Application Time by Scenario Index}
+\title{Restructure Application Time by scenario Index}
 \usage{
 restructureApplicationTimeByScenarioIndex(applicationTimes, configTable)
 }

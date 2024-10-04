@@ -3,7 +3,8 @@
 FACETTYPE <- ospsuite.utils::enum(c( # nolint
   byOrder = "by order",
   vsOutput = "Scenario vs Output",
-  vsTimeRange = "Scenario vs TimeRange"
+  vsTimeRange = "Scenario vs TimeRange",
+  byIndividual = "by Individual"
 ))
 
 

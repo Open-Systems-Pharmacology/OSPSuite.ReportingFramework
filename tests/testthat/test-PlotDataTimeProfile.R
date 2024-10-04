@@ -1,15 +1,15 @@
 # Example data for testing
 configTable <- data.table(
-  Scenario = c("A", "A", "B", "B"),
+  scenario = c("A", "A", "B", "B"),
   scenarioIndex = c(1, 2, 3, 4),
-  IndividualIds = c("1,2", "3", "*", "4"),
-  OutputPathIds = c("Path1", "Path2", "Path1,Path2", "Path3"),
-  TimeUnit = c("day(s)", "day(s)", "day(s)", "day(s)"),
-  TimeOffset_Reference = c(0, 1, 2, 3),
-  TimeOffset = c(1, 1, 1, 1),
-  TimeRange_Tag1 = c("firstApplication", rep(NA, 3)),
-  TimeRange_2 = rep("total", 4),
-  ReferenceScenario = c(NA, NA, NA, NA)
+  individualIds = c("1,2", "3", "*", "4"),
+  outputPathIds = c("Path1", "Path2", "Path1,Path2", "Path3"),
+  timeUnit = c("day(s)", "day(s)", "day(s)", "day(s)"),
+  timeOffset_Reference = c(0, 1, 2, 3),
+  timeOffset = c(1, 1, 1, 1),
+  timeRange_Tag1 = c("firstApplication", rep(NA, 3)),
+  timeRange_2 = rep("total", 4),
+  referenceScenario = c(NA, NA, NA, NA)
 )
 
 timeTags <- factor(c("Tag1", "Tag2"), levels = c("Tag1", "Tag2"), ordered = TRUE)
@@ -22,26 +22,26 @@ dtOutputPaths <- data.table(
 
 # Unit tests
 test_that("getPlotIdForColumns works correctly", {
-  result <- getPlotIdForColumns(configTable, "OutputPathIds")
-  expect_true("PlotId" %in% names(result))
+  result <- getPlotIdForColumns(configTable, "outputPathIds")
+  expect_true("plotId" %in% names(result))
   expect_equal(nrow(result), 5) # Check the number of rows
 })
 
 test_that("splitCaptionByIndividuals works correctly", {
-  dtCaption <- getPlotIdForColumns(configTable, "OutputPathIds")
-  result <- splitCaptionByIndividuals(configTable, individualIds = c("1", "2"), dtCaption)
+  dtCaption <- getPlotIdForColumns(configTable, "outputPathIds")
+  result <- splitCaptionByIndividuals(configTable, individualIdVector = c("1", "2"), dtCaption)
   expect_true("individualId" %in% names(result))
   expect_equal(nrow(result), 8) # Adjust based on expected output
 })
 
 test_that("determineFacetColumns works correctly", {
-  dtCaption <- getPlotIdForColumns(configTable, "OutputPathIds")
+  dtCaption <- getPlotIdForColumns(configTable, "outputPathIds")
   result <- determineFacetColumns(dtCaption, 2, "vsOutput", "TestPlot")
   expect_equal(result, 2) # Adjust based on expected output
 })
 
 test_that("addTimeTagsToCaption works correctly", {
-  dtCaption <- getPlotIdForColumns(configTable, "OutputPathIds")
+  dtCaption <- getPlotIdForColumns(configTable, "outputPathIds")
   result <- addTimeTagsToCaption(dtCaption, timeTags, "vsTimeRange")
   expect_true("timeRangeTag" %in% names(result))
   expect_contains(result$timeRangeTag, timeTags)
@@ -72,7 +72,7 @@ test_that("getObservedUnitConversionDT works correctly", {
       outputPathId = c("Path1", "Path2"),
       dimension = c("Mass", "Mass"),
       yUnit = c("kg", "kg"),
-      DisplayUnit = c("g", "kg"),
+      displayUnit = c("g", "kg"),
       unitFactor = c(1000, 1)
     )
 
@@ -82,7 +82,7 @@ test_that("getObservedUnitConversionDT works correctly", {
 })
 
 test_that("addTimeRangeTagsToData works correctly", {
-  timeRangeColumns <- c("TimeRange_Tag1")
+  timeRangeColumns <- c("timeRange_Tag1")
   observedData <- randomObservedData()
   result <- addTimeRangeTagsToData(timeRangeColumns,
     dataOld = observedData, configTable,

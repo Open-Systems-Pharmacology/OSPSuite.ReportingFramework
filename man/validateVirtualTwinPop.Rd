@@ -15,8 +15,8 @@ validateVirtualTwinPop(configTablePlots, projectConfiguration, dtScenarios)
 }
 \description{
 This function validates the virtual twin population specified in the plot configuration table.
-It checks for the presence of `IndividualIds` in scenarios with virtual twin populations,
-ensures that brackets are not used in `IndividualIds` for time profile plots, and warns
-if `IndividualIds` is filled without a corresponding data group.
+It checks for the presence of `individualIds` in scenarios with virtual twin populations,
+ensures that brackets are not used in `individualIds` for time profile plots, and warns
+if `individualIds` is filled without a corresponding data group.
 }
 \keyword{internal}

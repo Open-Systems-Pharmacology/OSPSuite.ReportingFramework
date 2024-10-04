@@ -8,7 +8,7 @@ test_that("It should read and process data based on the provided project configu
   addRandomSourceData(projectConfiguration)
 
   # Call the function and test the output
-  observedData <- readObservedDataByDictionary(projectConfiguration)
+  observedData <- suppressWarnings(readObservedDataByDictionary(projectConfiguration))
   # Add your assertions here to test the processed data
   # For example:
   expect_true(data.table::is.data.table(observedData), "Processed data should be a data table")

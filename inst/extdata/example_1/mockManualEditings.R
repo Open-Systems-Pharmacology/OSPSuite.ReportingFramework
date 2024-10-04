@@ -15,12 +15,11 @@ mockManualEditings.DataDictionary <- function(projectConfiguration){
 
   dtDataFiles <- xlsxReadData(wb = wb,sheetName  = 'DataFiles')
   dtDataFiles <- dtDataFiles[c(1)]
-
   dtDataFiles <- rbind(dtDataFiles,
-                       data.table(DataFile = file.path('..','..','Data','observedData_drugX.csv'),
-                                  Dictionary = 'tpDictionary',
-                                  DataFilter = '',
-                                  DataClass = DATACLASS$tpIndividual
+                       data.table(dataFile = file.path('..','..','Data','observedData_drugX.csv'),
+                                  dictionary = 'tpDictionary',
+                                  dataFilter = '',
+                                  dataClass = DATACLASS$tpIndividual
                        )
   )
 
@@ -78,31 +77,32 @@ mockManualEditings.Population <- function(projectConfiguration,dataObserved,tuto
 
 
 
-  if (tutorialstep == 2){
+  if (tutorialstep == 1){
 
     # individuals
     wb <- openxlsx::loadWorkbook(projectConfiguration$individualsFile)
     dtInds <- xlsxReadData(wb = wb,sheetName  = "IndividualBiometrics" )
-
     # delete template rows
-    dtInds <- dtInds[IndividualId != 'MALE']
-    dtInds <- dtInds[IndividualId != 'FEMALE']
+    dtInds <- dtInds[individualId != 'MALE']
+    dtInds <- dtInds[individualId != 'FEMALE']
 
     # add ontogeny to individual imported by readObservedDataByDictionary
-    dtInds[,Protein := as.character(Protein)]
-    dtInds[,Protein := 'CYP3A4,UGT1A4']
-    dtInds[,Ontogeny := as.character(Ontogeny)]
-    dtInds[,Ontogeny := 'CYP3A4,UGT1A4']
+    dtInds[,protein := as.character(protein)]
+    dtInds[,protein := 'CYP3A4,UGT1A4']
+    dtInds[,ontogeny := as.character(ontogeny)]
+    dtInds[,ontogeny := 'CYP3A4,UGT1A4']
 
     xlsxWriteData(wb = wb, sheetName  = 'IndividualBiometrics', dt = dtInds)
     openxlsx::saveWorkbook(wb, projectConfiguration$individualsFile, overwrite = TRUE)
+  }
+  if (tutorialstep == 2){
 
     # check configuration for virtual twin population settings and adjust population name
     wb <- openxlsx::loadWorkbook(projectConfiguration$populationsFile)
 
     dtTwinPops <- xlsxReadData(wb, 'VirtualTwinPopulation')
 
-    dtTwinPops$PopulationName = 'virtual_twin_population'
+    dtTwinPops$populationName = 'virtual_twin_population'
 
     xlsxWriteData(wb = wb, sheetName  = 'VirtualTwinPopulation', dt = dtTwinPops)
     openxlsx::saveWorkbook(wb, projectConfiguration$populationsFile, overwrite = TRUE)
@@ -117,7 +117,7 @@ mockManualEditings.Population <- function(projectConfiguration,dataObserved,tuto
     dtPops <- xlsxReadData(wb = wb,sheetName  = "Demographics" )
     dtPops <- dtPops[1]
 
-    dtPops$PopulationName = 'random_population'
+    dtPops$populationName = 'random_population'
     dtPops$species = 'Human'
     dtPops$population = 'European_ICRP_2002'
     dtPops$numberOfIndividuals = 100
@@ -131,10 +131,10 @@ mockManualEditings.Population <- function(projectConfiguration,dataObserved,tuto
     dtPops$ageMin = floor(min(dataObserved$age,na.rm = TRUE))
     dtPops$ageMax = ceiling(max(dataObserved$age,na.rm = TRUE))
     BMI <- unique(dataObserved$weight/dataObserved$height/dataObserved$height)*10000
-    dtPops$BMIMin = floor(min(BMI,na.rm = TRUE))
-    dtPops$BMIMax = ceiling(max(BMI,na.rm = TRUE))
-    dtPops$Protein = 'CYP3A4,UGT1A4'
-    dtPops$Ontogeny = 'CYP3A4,UGT1A4'
+    dtPops$bMIMin = floor(min(BMI,na.rm = TRUE))
+    dtPops$bMIMax = ceiling(max(BMI,na.rm = TRUE))
+    dtPops$protein = 'CYP3A4,UGT1A4'
+    dtPops$ontogeny = 'CYP3A4,UGT1A4'
 
     xlsxWriteData(wb = wb, sheetName  = 'Demographics', dt = dtPops)
 
@@ -160,10 +160,10 @@ mockManualEditings.Scenario <- function(projectConfiguration,dataObserved,tutori
     # delete template rows
     dtPar <- dtPar[FALSE]
     dtPar <- rbind(dtPar,
-                   data.table( 'Container Path' = 'CYP3A4',
-                               'Parameter Name' = 'Ontogeny factor',
-                               Value = 2,
-                               Units = ''
+                   data.table( 'container Path' = 'CYP3A4',
+                               'parameter Name' = 'Ontogeny factor',
+                               value = 2,
+                               units = ''
                    ))
 
     xlsxCloneAndSet(wb = wb, clonedSheet = 'Template',sheetName = 'CYP3A4_2',dt = dtPar)
@@ -183,9 +183,9 @@ mockManualEditings.Scenario <- function(projectConfiguration,dataObserved,tutori
 
     # add scenario for an individual iv scenario
     dtScenario = rbind(dtScenario,
-                       data.table(Scenario_name = 'individual_1_iv',
-                                  IndividualId = '1',
-                                  ModelFile = 'iv 1 mg (5 min).pkml'),
+                       data.table(scenario_name = 'individual_1_iv',
+                                  individualId = '1',
+                                  modelFile = 'iv 1 mg (5 min).pkml'),
                        fill = TRUE)
   }
 
@@ -193,14 +193,14 @@ mockManualEditings.Scenario <- function(projectConfiguration,dataObserved,tutori
   if (tutorialstep == 2){
     # add scenario for individual population iv application and po application
     dtScenario = rbind(dtScenario,
-                       data.table(Scenario_name = 'virtual_twin_population_iv',
-                                  PopulationId = 'virtual_twin_population',
-                                  ReadPopulationFromCSV = TRUE,
-                                  ModelFile = 'iv 1 mg (5 min).pkml'),
-                       data.table(Scenario_name = 'virtual_twin_population_po',
-                                  PopulationId = 'virtual_twin_population',
-                                  ReadPopulationFromCSV = TRUE,
-                                  ModelFile = 'po 3 mg (solution).pkml'),
+                       data.table(scenario_name = 'virtual_twin_population_iv',
+                                  populationId = 'virtual_twin_population',
+                                  readPopulationFromCSV = TRUE,
+                                  modelFile = 'iv 1 mg (5 min).pkml'),
+                       data.table(scenario_name = 'virtual_twin_population_po',
+                                  populationId = 'virtual_twin_population',
+                                  readPopulationFromCSV = TRUE,
+                                  modelFile = 'po 3 mg (solution).pkml'),
                        fill = TRUE)
   }
 
@@ -208,30 +208,30 @@ mockManualEditings.Scenario <- function(projectConfiguration,dataObserved,tutori
   if (tutorialstep == 3){
 
     dtScenario = rbind(dtScenario,
-                       data.table(Scenario_name = 'random_population_iv',
-                                  PopulationId = 'random_population',
-                                  ReadPopulationFromCSV = TRUE,
-                                  ModelFile = 'iv 1 mg (5 min).pkml'),
-                       data.table(Scenario_name = 'random_population_po',
-                                  PopulationId = 'random_population',
-                                  ReadPopulationFromCSV = TRUE,
-                                  ModelFile = 'po 3 mg (solution).pkml'),
+                       data.table(scenario_name = 'random_population_iv',
+                                  populationId = 'random_population',
+                                  readPopulationFromCSV = TRUE,
+                                  modelFile = 'iv 1 mg (5 min).pkml'),
+                       data.table(scenario_name = 'random_population_po',
+                                  populationId = 'random_population',
+                                  readPopulationFromCSV = TRUE,
+                                  modelFile = 'po 3 mg (solution).pkml'),
                        fill = TRUE)
   }
 
   # add scenario for virtual population iv application and po application
   if (tutorialstep == 4){
     dtScenario = rbind(dtScenario,
-                       data.table(Scenario_name = 'reference_population_iv',
-                                  PopulationId = 'random_population',
-                                  ModelParameterSheets  = 'CYP3A4_2',
-                                  ReadPopulationFromCSV = TRUE,
-                                  ModelFile = 'iv 1 mg (5 min).pkml'),
-                       data.table(Scenario_name = 'reference_population_po',
-                                  PopulationId = 'random_population',
-                                  ModelParameterSheets  = 'CYP3A4_2',
-                                  ReadPopulationFromCSV = TRUE,
-                                  ModelFile = 'po 3 mg (solution).pkml'),
+                       data.table(scenario_name = 'reference_population_iv',
+                                  populationId = 'random_population',
+                                  modelParameterSheets  = 'CYP3A4_2',
+                                  readPopulationFromCSV = TRUE,
+                                  modelFile = 'iv 1 mg (5 min).pkml'),
+                       data.table(scenario_name = 'reference_population_po',
+                                  populationId = 'random_population',
+                                  modelParameterSheets  = 'CYP3A4_2',
+                                  readPopulationFromCSV = TRUE,
+                                  modelFile = 'po 3 mg (solution).pkml'),
                        fill = TRUE)
   }
 
@@ -259,19 +259,19 @@ mockManualEditings.DataGroups <- function(projectConfiguration,dataObserved,tuto
 
   # delete template lines, keeping only the ones added by data import
   if (tutorialstep == 1){
-    dtDataGroups <- dtDataGroups[c(1,which(dtDataGroups$StudyId == '000')),]
+    dtDataGroups <- dtDataGroups[c(1,which(dtDataGroups$studyId == '000')),]
 
   }
 
 
   # add simulation Scenario for matching
   if (tutorialstep == 2){
-    dtDataGroups[Group == "IV", DefaultScenario := "virtual_twin_population_iv"]
-    dtDataGroups[Group == "PO", DefaultScenario := "virtual_twin_population_po"]
+    dtDataGroups[group == "IV", defaultScenario := "virtual_twin_population_iv"]
+    dtDataGroups[group == "PO", defaultScenario := "virtual_twin_population_po"]
   }
   if (tutorialstep == 3){
-    dtDataGroups[Group == "IV_aggregated", DefaultScenario := "random_population_iv"]
-    dtDataGroups[Group == "PO_aggregated", DefaultScenario := "random_population_po"]
+    dtDataGroups[group == "IV_aggregated", defaultScenario := "random_population_iv"]
+    dtDataGroups[group == "PO_aggregated", defaultScenario := "random_population_po"]
   }
 
   xlsxWriteData(wb = wb, sheetName  = 'DataGroups', dt = dtDataGroups)
@@ -281,15 +281,15 @@ mockManualEditings.DataGroups <- function(projectConfiguration,dataObserved,tuto
     dtOutputs <- xlsxReadData(wb = wb,sheetName = 'Outputs')
 
     # delete template lines, keeping only the ones added by data import
-    dtOutputs <- dtOutputs[OutputPathId %in% c(dtOutputs$OutputPathId[1],'Concentration','Fraction')]
+    dtOutputs <- dtOutputs[outputPathId %in% c(dtOutputs$outputPathId[1],'Concentration','Fraction')]
 
     # add properties for concentration
-    dtOutputs[OutputPathId == 'Concentration', OutputPath := "Organism|PeripheralVenousBlood|DrugX|Plasma (Peripheral Venous Blood)"]
-    dtOutputs[OutputPathId == 'Concentration', DisplayName := "DrugX Plasma"]
-    dtOutputs[OutputPathId == 'Concentration', DisplayUnit := "µg/L"]
+    dtOutputs[outputPathId == 'Concentration', outputPath := "Organism|PeripheralVenousBlood|DrugX|Plasma (Peripheral Venous Blood)"]
+    dtOutputs[outputPathId == 'Concentration', displayName := "DrugX Plasma"]
+    dtOutputs[outputPathId == 'Concentration', displayUnit := "µg/L"]
     # add properties for concentration
-    dtOutputs[OutputPathId == 'Fraction', OutputPath := "Organism|Kidney|Urine|DrugX|Fraction excreted to urine"]
-    dtOutputs[OutputPathId == 'Fraction', DisplayName := "Fraction excreted to urine"]
+    dtOutputs[outputPathId == 'Fraction', outputPath := "Organism|Kidney|Urine|DrugX|Fraction excreted to urine"]
+    dtOutputs[outputPathId == 'Fraction', displayName := "Fraction excreted to urine"]
 
     xlsxWriteData(wb = wb, sheetName  = 'Outputs', dt = dtOutputs)
 
@@ -312,23 +312,23 @@ mockManualEditings.TimePlot <- function(projectConfiguration,dataObserved,tutori
 
   # update configurations done by addDefaultConfigForTimeProfilePlots
   addHeaderLineBeforePlot <- function(dtPlots,plotName,level,header){
-    iRow <- which(dtPlots$PlotName == plotName)
+    iRow <- which(dtPlots$plotName == plotName)
     dtPlots <- rbind(dtPlots[seq(1,iRow-1)],
-                     data.table(Level = level,Header =header),
+                     data.table(level = level,header =header),
                      dtPlots[seq(iRow,nrow(dtPlots))],
                      fill = TRUE)
     return(dtPlots)
   }
 
-  copyLine <- function(dtPlots,PlotName){
-    ix = which(dtPlots$PlotName == PlotName)
+  copyLine <- function(dtPlots,plotName){
+    ix = which(dtPlots$plotName == plotName)
     dtPlots <- dtPlots[c(seq(1,ix),seq(ix,nrow(dtPlots)))]
     return(dtPlots)
 
   }
 
-  shiftLineToEnd <- function(dtPlots,PlotName){
-    ix = which(dtPlots$PlotName == PlotName)
+  shiftLineToEnd <- function(dtPlots,plotName){
+    ix = which(dtPlots$plotName == plotName)
     dtPlots <- dtPlots[c(setdiff(seq(1,nrow(dtPlots)),ix),ix)]
     return(dtPlots)
 
@@ -339,18 +339,17 @@ mockManualEditings.TimePlot <- function(projectConfiguration,dataObserved,tutori
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
-
   # add use case for different time ranges
   if (tutorialstep == 5){
     # create new timerange tags
     dtTimeRange <- xlsxReadData(wb,sheetName = 'TimeRange')
     dtTimeRange <- rbind(dtTimeRange,
-                         data.table(Tag = 'h0_6',
-                                    CaptionText = 'Zoom on first 6 hours',
-                                    TimeLabel = 'Time'),
-                         data.table(Tag = 'h6_24',
-                                    CaptionText = 'Zoom on time range 6 to 24 hours',
-                                    TimeLabel = 'Time after dose')) %>%
+                         data.table(tag = 'h0_6',
+                                    captionText = 'Zoom on first 6 hours',
+                                    timeLabel = 'Time'),
+                         data.table(tag = 'h6_24',
+                                    captionText = 'Zoom on time range 6 to 24 hours',
+                                    timeLabel = 'Time after dose')) %>%
       unique()
 
 
@@ -364,128 +363,132 @@ mockManualEditings.TimePlot <- function(projectConfiguration,dataObserved,tutori
 
   if (tutorialstep == 1){
     dtPlots <- addHeaderLineBeforePlot(dtPlots,'individual_1_iv',2,'Setting Up the Project and Basic Simulations')
-    # set PlotCaptionAddon to describe application
-    dtPlots[PlotName == 'individual_1_iv',PlotCaptionAddon :=  "DrugX was admistered as a 1mg Iv application with an infusion time of 5 minutes."]
+    # set plotCaptionAddon to describe application
+    dtPlots[plotName == 'individual_1_iv',plotCaptionAddon :=  "DrugX was admistered as a 1mg Iv application with an infusion time of 5 minutes."]
     # single dose, only Time range total makes sense
-    dtPlots[PlotName == 'individual_1_iv',TimeRange_firstApplication:= NA]
-    dtPlots[PlotName == 'individual_1_iv',TimeRange_lastApplication:= NA]
+    dtPlots[plotName == 'individual_1_iv',timeRange_firstApplication:= NA]
+    dtPlots[plotName == 'individual_1_iv',timeRange_lastApplication:= NA]
     # set caption description of scenario
-    dtPlots[PlotName == 'individual_1_iv', ScenarioCaptionName := 'individual 1 of study 000']
-    # DataGroupIds is empty and has to be set manually as this scenario was not selected as DefaultScenario in the DataGroups configuration
-    dtPlots[PlotName == 'individual_1_iv', DataGroupIds := 'IV']
+    dtPlots[plotName == 'individual_1_iv', scenarioCaptionName := 'individual 1 of study 000']
+    # dataGroupIds is empty and has to be set manually as this scenario was not selected as DefaultScenario in the DataGroups configuration
+    dtPlots[plotName == 'individual_1_iv', dataGroupIds := 'IV']
     # Filter the data for the simulated individual
-    dtPlots[PlotName == 'individual_1_iv', IndividualIds := '1']
+    dtPlots[plotName == 'individual_1_iv', individualIds := '1']
 
 
-    dtPlots <- copyLine(dtPlots = dtPlots,PlotName = 'individual_1_iv')
-    dtPlots[PlotName == 'individual_1_iv', ]$PlotName[2] <- 'individual_1_iv-gof'
-    cols = c("Plot_PredictedVsObserved", "Plot_ResidualsAsHistogram", "Plot_ResidualsVsTime", "Plot_ResidualsVsObserved",  "Plot_QQ" )
-    dtPlots[PlotName == 'individual_1_iv-gof',(cols) := TRUE]
-    dtPlots[PlotName == 'individual_1_iv-gof',Plot_TimeProfiles := FALSE]
+    dtPlots <- copyLine(dtPlots = dtPlots,plotName = 'individual_1_iv')
+    dtPlots[plotName == 'individual_1_iv', ]$plotName[2] <- 'individual_1_iv-gof'
+    cols = c("plot_PredictedVsObserved", "plot_ResidualsAsHistogram", "plot_ResidualsVsTime", "plot_ResidualsVsObserved",  "plot_QQ" )
+    dtPlots[plotName == 'individual_1_iv-gof',(cols) := TRUE]
+    dtPlots[plotName == 'individual_1_iv-gof',plot_TimeProfiles := FALSE]
     # select only Concentraion, as for gof plots two different dimensions like Concentration and Fraction are not possible
-    dtPlots[PlotName == 'individual_1_iv-gof',OutputPathIds :=  "Concentration"]
+    dtPlots[plotName == 'individual_1_iv-gof',outputPathIds :=  "Concentration"]
 
     # add use case for simulation only
-    dtPlots <- copyLine(dtPlots,PlotName = 'individual_1_iv')
-    dtPlots[PlotName == 'individual_1_iv', ]$PlotName[2] <- 'noData'
+    dtPlots <- copyLine(dtPlots,plotName = 'individual_1_iv')
+    dtPlots[plotName == 'individual_1_iv', ]$plotName[2] <- 'noData'
     # Delete data input
-    dtPlots[PlotName == 'noData', DataGroupIds := '']
-    dtPlots[PlotName == 'noData', IndividualIds := '']
+    dtPlots[plotName == 'noData', dataGroupIds := '']
+    dtPlots[plotName == 'noData', individualIds := '']
     # example for set ylimit
-    dtPlots[PlotName == 'noData',ylimit_log := "c(0.01,NA)"]
+    dtPlots[plotName == 'noData',ylimit_log := "c(0.01,NA)"]
 
 
   } else  if (tutorialstep == 2){
     dtPlots <- addHeaderLineBeforePlot(dtPlots,'virtual_twin_population_iv',2,'Adding Virtual Twin Populations')
     dtPlots <- addHeaderLineBeforePlot(dtPlots,'virtual_twin_population_iv',3,'filtered individual')
 
-    dtPlots[PlotName == 'virtual_twin_population_iv',PlotCaptionAddon :=  "DrugX was admistered as a 1mg Iv application with an infusion time of 5 minutes."]
-    dtPlots[PlotName == 'virtual_twin_population_po',PlotCaptionAddon :=  "DrugX was admistered as a 5mg oral application of a solution."]
+    dtPlots[plotName == 'virtual_twin_population_iv',plotCaptionAddon :=  "DrugX was admistered as a 1mg Iv application with an infusion time of 5 minutes."]
+    dtPlots[plotName == 'virtual_twin_population_po',plotCaptionAddon :=  "DrugX was admistered as a 5mg oral application of a solution."]
 
     # single dose, only Time range total makes sense
-    dtPlots[PlotName %in%  c('virtual_twin_population_iv','virtual_twin_population_po'),TimeRange_firstApplication:= NA]
-    dtPlots[PlotName %in%  c('virtual_twin_population_iv','virtual_twin_population_po'),TimeRange_lastApplication:= NA]
+    dtPlots[plotName %in%  c('virtual_twin_population_iv','virtual_twin_population_po'),timeRange_firstApplication:= NA]
+    dtPlots[plotName %in%  c('virtual_twin_population_iv','virtual_twin_population_po'),timeRange_lastApplication:= NA]
 
     # create one plot for individual 1,2,3,4 and one for 5,6,7
-    dtPlots <- copyLine(dtPlots = dtPlots,PlotName = 'virtual_twin_population_iv')
-    dtPlots[PlotName == 'virtual_twin_population_iv', PlotName := paste(PlotName,.I,sep = '-')]
+    dtPlots <- copyLine(dtPlots = dtPlots,plotName = 'virtual_twin_population_iv')
+    dtPlots[plotName == 'virtual_twin_population_iv', plotName := paste(plotName,.I,sep = '-')]
     # Filter the data for the simulated individual
-    dtPlots[PlotName == 'virtual_twin_population_iv-1', IndividualIds := '1,2,3,4']
-    dtPlots[PlotName == 'virtual_twin_population_iv-2', IndividualIds := '5,6,7']
+    dtPlots[plotName == 'virtual_twin_population_iv-1', individualIds := '1,2,3,4']
+    dtPlots[plotName == 'virtual_twin_population_iv-2', individualIds := '5,6,7']
     # plot both outputs in one panel
-    dtPlots[PlotName %in% c('virtual_twin_population_iv-1','virtual_twin_population_iv-2'),OutputPathIds :=  "(Concentration, Fraction)"]
-    dtPlots[PlotName %in% c('virtual_twin_population_iv-1','virtual_twin_population_iv-2'), ScenarioCaptionName := 'individual simualtions of study 000']
+    dtPlots[plotName %in% c('virtual_twin_population_iv-1','virtual_twin_population_iv-2'),outputPathIds :=  "(Concentration, Fraction)"]
+    dtPlots[plotName %in% c('virtual_twin_population_iv-1','virtual_twin_population_iv-2'), scenarioCaptionName := 'individual simualtions of study 000']
 
 
     # use Scenario virtual_twin_population_po as use case for shortcut '*'
     dtPlots <- addHeaderLineBeforePlot(dtPlots,'virtual_twin_population_po',3,'shortcut for individual filter')
     # Filter all data for the simulated individual
-    dtPlots[PlotName == 'virtual_twin_population_po', IndividualIds := '*']
-    dtPlots[PlotName == 'virtual_twin_population_po', ScenarioCaptionName := 'individual simualtions of study 000']
-    dtPlots[PlotName == 'virtual_twin_population_po',FacetType := "Scenario vs Output"]
+    dtPlots[plotName == 'virtual_twin_population_po', individualIds := '*']
+    dtPlots[plotName == 'virtual_twin_population_po', scenarioCaptionName := 'individual simualtions of study 000']
+    dtPlots[plotName == 'virtual_twin_population_po',facetType := "Scenario vs Output"]
 
     # add goodness for fit plot in new line
-    dtPlots <- copyLine(dtPlots,PlotName = 'virtual_twin_population_po')
-    dtPlots[PlotName == 'virtual_twin_population_po',]$PlotName[2] <- 'virtual_twin_population_po-gof'
-    cols = c("Plot_PredictedVsObserved", "Plot_ResidualsAsHistogram", "Plot_ResidualsVsTime", "Plot_ResidualsVsObserved",  "Plot_QQ" )
-    dtPlots[PlotName == 'virtual_twin_population_po-gof',(cols) := TRUE]
-    dtPlots[PlotName == 'virtual_twin_population_po-gof',Plot_TimeProfiles := FALSE]
+    dtPlots <- copyLine(dtPlots,plotName = 'virtual_twin_population_po')
+    dtPlots[plotName == 'virtual_twin_population_po',]$plotName[2] <- 'virtual_twin_population_po-gof'
+    cols = c("plot_PredictedVsObserved", "plot_ResidualsAsHistogram", "plot_ResidualsVsTime", "plot_ResidualsVsObserved",  "plot_QQ" )
+    dtPlots[plotName == 'virtual_twin_population_po-gof',(cols) := TRUE]
+    dtPlots[plotName == 'virtual_twin_population_po-gof',plot_TimeProfiles := FALSE]
     # plot all individuals in one panel
-    dtPlots[PlotName == 'virtual_twin_population_po-gof', IndividualIds := '(*)']
+    dtPlots[plotName == 'virtual_twin_population_po-gof', individualIds := '(*)']
     # select only Concentration, as for gof plots two different dimensions like Concentration and Fraction are not possible
-    dtPlots[PlotName == 'virtual_twin_population_po-gof',OutputPathIds :=  "Concentration"]
+    dtPlots[plotName == 'virtual_twin_population_po-gof',outputPathIds :=  "Concentration"]
 
   } else  if (tutorialstep == 3){
 
     dtPlots <- addHeaderLineBeforePlot(dtPlots, 'random_population_iv',2,'Adding Random Populations and use of aggregated data')
     # merge in one plot
-    dtPlots[PlotName %in% c('random_population_iv','random_population_po'), PlotName := 'random_population']
-    dtPlots[Scenario == 'random_population_iv', ScenarioCaptionName := 'random population simulation of a 1mg 5min iv administration']
-    dtPlots[Scenario == 'random_population_po', ScenarioCaptionName := 'random population simulation of a 5mg oral administration']
-    dtPlots[PlotName == 'random_population',PlotCaptionAddon := '']
+    dtPlots[plotName %in% c('random_population_iv','random_population_po'), plotName := 'random_population']
+    dtPlots[scenario == 'random_population_iv', scenarioCaptionName := 'random population simulation of a 1mg 5min iv administration']
+    dtPlots[scenario == 'random_population_po', scenarioCaptionName := 'random population simulation of a 5mg oral administration']
+    dtPlots[plotName == 'random_population',plotCaptionAddon := '']
     # single dose, only Time range total makes sense
-    dtPlots[PlotName ==  'random_population',TimeRange_firstApplication:= NA]
-    dtPlots[PlotName ==  'random_population',TimeRange_lastApplication:= NA]
+    dtPlots[plotName ==  'random_population',timeRange_firstApplication:= NA]
+    dtPlots[plotName ==  'random_population',timeRange_lastApplication:= NA]
 
   } else  if (tutorialstep == 4){
 
     # add use case for reference population
     dtPlots <- addHeaderLineBeforePlot(dtPlots, 'reference_population_iv',2,'Adding Reference Populations')
-    dtPlots[,ReferenceScenario := as.character(ReferenceScenario)]
-    dtPlots[PlotName %in% c('reference_population_iv','reference_population_po'),
-            PlotName := 'reference']
-    # shift reference scenarios in column ReferenceScenario and ad controll scenarios
-    dtPlots[PlotName == 'reference',  ReferenceScenario := Scenario]
-    dtPlots[PlotName == 'reference',  Scenario := gsub('reference','random',Scenario)]
+    dtPlots[,referenceScenario := as.character(referenceScenario)]
+    dtPlots[plotName %in% c('reference_population_iv','reference_population_po'),
+            plotName := 'reference']
+    # shift reference scenarios in column referenceScenario and ad controll scenarios
+    dtPlots[plotName == 'reference',  referenceScenario := scenario]
+    dtPlots[plotName == 'reference',  scenario := gsub('reference','random',scenario)]
 
-    dtPlots[ReferenceScenario == 'reference_population_iv', DataGroupIds := 'IV']
-    dtPlots[ReferenceScenario == 'reference_population_po', DataGroupIds := 'PO']
+    dtPlots[referenceScenario == 'reference_population_iv', dataGroupIds := 'IV']
+    dtPlots[referenceScenario == 'reference_population_po', dataGroupIds := 'PO']
 
-    dtPlots[ReferenceScenario == 'reference_population_iv', ScenarioCaptionName := 'random population simulation of a 1mg 5min iv administration']
-    dtPlots[ReferenceScenario == 'reference_population_po', ScenarioCaptionName := 'random population simulation of a 5mg oral administration']
-    dtPlots[PlotName == 'reference',PlotCaptionAddon := 'Reference population has doubled CYP3A4 liver ontogeny.']
+    dtPlots[referenceScenario == 'reference_population_iv', scenarioCaptionName := 'random population simulation of a 1mg 5min iv administration']
+    dtPlots[referenceScenario == 'reference_population_po', scenarioCaptionName := 'random population simulation of a 5mg oral administration']
+    dtPlots[plotName == 'reference',plotCaptionAddon := 'Reference population has doubled CYP3A4 liver ontogeny.']
+
+    # single dose, only Time range total makes sense
+    dtPlots[plotName ==  'reference',timeRange_firstApplication:= NA]
+    dtPlots[plotName ==  'reference',timeRange_lastApplication:= NA]
 
   } else  if (tutorialstep == 5){
     # add use case for different time ranges
     # add timerange columns with newly created timeranges
-    dtPlots[,TimeRange_h0_6 := as.character(NA)]
-    dtPlots[,TimeRange_h0_6 := NA]
-    dtPlots[,TimeRange_h6_24 := as.character(NA)]
-    dtPlots[,TimeRange_h6_24 := NA]
+    dtPlots[,timeRange_h0_6 := as.character(NA)]
+    dtPlots[,timeRange_h0_6 := NA]
+    dtPlots[,timeRange_h6_24 := as.character(NA)]
+    dtPlots[,timeRange_h6_24 := NA]
 
     # ad a new plot line
-    dtPlots <- copyLine(dtPlots,PlotName = 'individual_1_iv')
-    dtPlots[PlotName == 'individual_1_iv', ]$PlotName[2] <- 'timeranges'
+    dtPlots <- copyLine(dtPlots,plotName = 'individual_1_iv')
+    dtPlots[plotName == 'individual_1_iv', ]$plotName[2] <- 'timeranges'
     dtPlots <- shiftLineToEnd(dtPlots,'timeranges')
     dtPlots <- addHeaderLineBeforePlot(dtPlots, 'timeranges',2,'Adding Plots with different Time Ranges')
 
     # add the timeranges
-    dtPlots[PlotName == 'timeranges', TimeRange_h0_6 := 'c(0,6)']
-    dtPlots[PlotName == 'timeranges', TimeRange_h6_24 := 'c(6,24)']
+    dtPlots[plotName == 'timeranges', timeRange_h0_6 := 'c(0,6)']
+    dtPlots[plotName == 'timeranges', timeRange_h6_24 := 'c(6,24)']
     # use facet type vs Time ranges
-    dtPlots[PlotName == 'timeranges', FacetType := "Scenario vs TimeRange"]
-    # allow different  scales of x- axis
-    dtPlots[PlotName == 'timeranges', FacetScale := "free_x"]
+    dtPlots[plotName == 'timeranges', facetType := "Scenario vs TimeRange"]
+    # allow different  scales of x-axis
+    dtPlots[plotName == 'timeranges', facetScale := "free_x"]
 
   }
 

@@ -2,7 +2,7 @@
 title: "Data import by dictionary"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{data_import_by_dictionary}
+  %\VignetteIndexEntry{Data_import_by_dictionary}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -12,6 +12,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
 ```{r setup, echo=FALSE,warning=FALSE,error=FALSE,message=FALSE}
@@ -164,8 +165,23 @@ templateFilePath <- system.file("templates", "templateProject", "Scripts", "Repo
   package = "ospsuite.reportingframework", mustWork = TRUE
 )
 
-dataFilesSheet <- xlsxReadData(wb = templateFilePath, sheetName = "DataFiles", skipDescriptionRow = TRUE)
-tpDictionary <- xlsxReadData(wb = templateFilePath, sheetName = "tpDictionary", skipDescriptionRow = TRUE)
+dataFilesSheet <-
+  xlsxReadData(
+    wb = templateFilePath,
+    sheetName = "DataFiles",
+    skipDescriptionRow = TRUE,
+    emptyAsNA = FALSE,
+    convertHeaders = FALSE
+  )
+tpDictionary <-
+  xlsxReadData(
+    wb = templateFilePath,
+    sheetName = "tpDictionary",
+    skipDescriptionRow = TRUE,
+    emptyAsNA = FALSE,
+    convertHeaders = FALSE
+  )
+
 ```
 
 
@@ -204,11 +220,11 @@ For Data1 we need all rows, for the other two we have filter defined. In Data2 w
 
 ```{r, echo=FALSE}
 tpDictionaryInd <- tpDictionary %>%
-  dplyr::filter(!(targetColumn %in% c("yErrorValues", "yErrorType", "nBelowLLOQ", "numberOfPatients", "yMin", "yMax", "route")))
+  dplyr::filter(!(TargetColumn %in% c("yErrorValues", "yErrorType", "nBelowLLOQ", "numberOfPatients", "yMin", "yMax", "route")))
 
-tpDictionaryInd[targetColumn == "group"]$filterValue <- 'paste(STUD,GRPNAME,"individual",sep = "_")'
-tpDictionaryInd[targetColumn == "dose"]$sourceColumn <- "DOSE"
-tpDictionaryInd[targetColumn == "dose"]$filter <- NA
+tpDictionaryInd[TargetColumn == "group"]$FilterValue <- 'paste(STUD,GRPNAME,"individual",sep = "_")'
+tpDictionaryInd[TargetColumn == "dose"]$SourceColumn <- "DOSE"
+tpDictionaryInd[TargetColumn == "dose"]$Filter <- NA
 
 knitr::kable(tpDictionaryInd)
 ```

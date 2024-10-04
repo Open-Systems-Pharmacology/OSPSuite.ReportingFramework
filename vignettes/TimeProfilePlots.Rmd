@@ -279,7 +279,15 @@ templateFilePath <- system.file("templates", "templateProject", "Scripts", "Repo
   package = "ospsuite.reportingframework", mustWork = TRUE
 )
 
-dtPlots <- xlsxReadData(wb = templateFilePath, sheet = "TimeProfile_Panel", skipDescriptionRow = TRUE)
+dtPlots <-
+  xlsxReadData(
+    wb = templateFilePath,
+    sheet = "TimeProfile_Panel",
+    skipDescriptionRow = TRUE,
+    emptyAsNA = FALSE,
+    convertHeaders = FALSE
+  )
+
 ```
 
 ```{r example-table, echo=FALSE,eval=TRUE}
@@ -300,9 +308,9 @@ dtPlots <- rbind(dtPlots,
     TimeRange_total = "total",
     TimeRange_firstApplication = rep(c("", "firstApplication"), each = 3),
     TimeRange_lastApplication = rep(c("", "lastApplication"), each = 3),
-    yScale = "linear,log",
-    ylimit_linear = rep(c(""), each = 6),
-    ylimit_log = rep(c(""), each = 6),
+    YScale = "linear,log",
+    Ylimit_linear = rep(c(""), each = 6),
+    Ylimit_log = rep(c(""), each = 6),
     FacetType = FACETTYPE$byOrder,
     FacetScale = "fixed",
     Plot_TimeProfiles = rep(c("TRUE"), each = 6),

@@ -4,12 +4,12 @@
 \alias{splitCaptionByIndividuals}
 \title{Split Caption by Individuals}
 \usage{
-splitCaptionByIndividuals(configTable, individualIds, dtCaption)
+splitCaptionByIndividuals(configTable, individualIdVector, dtCaption)
 }
 \arguments{
 \item{configTable}{A data frame containing the configuration data.}
 
-\item{individualIds}{A vector of individual IDs.}
+\item{individualIdVector}{A vector of individual IDs.}
 
 \item{dtCaption}{A data table containing the caption data.}
 }

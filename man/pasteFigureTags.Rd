@@ -9,7 +9,7 @@ pasteFigureTags(dtCaption, captionColumn, endWithDot = FALSE)
 \arguments{
 \item{dtCaption}{A data.table containing the captions and plot tags. It must have at least the following columns:
 - `captionColumn`: The column name containing the captions.
-- `PlotTag`: A column containing the plot tags associated with each caption.}
+- `plotTag`: A column containing the plot tags associated with each caption.}
 
 \item{captionColumn}{A string specifying the name of the column in `dtCaption` that contains the captions.}
 

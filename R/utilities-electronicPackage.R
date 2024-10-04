@@ -5,7 +5,7 @@
 #' @export
 checkScenarioNameValidity <- function(projectConfiguration) {
   scenarios <- getScenarioDefinitions(projectConfiguration)
-  files <- paste0(scenarios$Scenario_name, ".xml")
+  files <- paste0(scenarios$scenario_name, ".xml")
 
   inValidFileNames <- gsub(".xml", "", checkFileNameValidity(files))
 

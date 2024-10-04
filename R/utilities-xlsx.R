@@ -34,15 +34,41 @@ xlsxAddSheet <- function(wb, sheetName, dt) {
 #' @return An invisible NULL value.
 #' @export
 xlsxWriteData <- function(wb, sheetName, dt) {
+
+  # make a copy otherwise data.table outside may be changed
+  dt <- data.table::copy(dt)
+
   if (!(sheetName %in% wb$sheet_names)) {
     stop(paste("Sheet", sheetName, "does not exist."))
   }
 
-  # Clear existing data
-  tmp <- xlsxReadData(wb, sheetName = sheetName)
-  tmp[, names(tmp) := NA]
-  openxlsx::writeData(wb = wb, sheet = sheetName, x = tmp)
+  # Read existing data to determine dimensions
+  existingData <- xlsxReadData(wb, sheetName = sheetName,convertHeaders = FALSE)
 
+  # Check if existingData has more rows than dt
+  if (nrow(existingData) > nrow(dt)) {
+    # Add a data.table with NA values
+    na_rows <- data.table(matrix(NA, nrow = nrow(existingData) - nrow(dt), ncol = ncol(dt)))
+    data.table::setnames(na_rows, names(dt))  # Set the column names to match dt
+    dt <- rbind(dt, na_rows)
+  }
+
+  # Convert data.table column names to match correct upper an lower case
+
+  data.table::setnames(dt, old = names(dt),
+                       new = unlist(lapply(names(dt), function(x){
+                         ix = which(tolower(x) == tolower(names(existingData)))
+                          if (length(ix) == 1){
+                            newName = names(existingData)[ix]
+                          } else if (length(ix) > 1) {
+                            stop(paste('ambigiuos header ames in', sheetName, paste(names(existingData)[ix],sep = ',')))
+                          } else {
+                            newName = x
+                          }
+                         return(newName)
+                         })))
+
+  # Write new data
   openxlsx::writeData(wb = wb, sheet = sheetName, x = dt)
 
   return(invisible())
@@ -73,29 +99,25 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 
 #' Read data from a worksheet
 #'
-#' This function wraps `openxlsx::read.xlsx` but returns data as a `data.table`.
+#' This function wraps `openxlsx::read.xlsx` and returns the data as a `data.table`.
 #'
-#' @param wb A workbook or xlsx file.
+#' @param wb A workbook object or a character string specifying the path to the xlsx file.
 #' @param sheetName A character string specifying the name of the sheet to read.
-#' @param skipDescriptionRow A boolean indicating if the first line should be interpreted as a description and skipped.
-#' @param alwaysCharacter A vector with column names that should be returned as character (typically identifiers).
-#' @param emptyAsNA If TRUE empty strings are converted to NA
+#' @param skipDescriptionRow A logical value indicating if the first row should be interpreted as a description and skipped.
+#' @param alwaysCharacter A character vector with column names or regex patterns that should be returned as character (typically identifiers).
+#' @param emptyAsNA A logical value. If TRUE, empty strings are converted to NA.
+#' @param convertHeaders A logical value. If TRUE, column names are converted to start with a lowercase letter.
 #'
 #' @return A `data.table` containing the sheet data.
 #' @export
 xlsxReadData <- function(wb, sheetName,
                          skipDescriptionRow = FALSE,
-                         alwaysCharacter = c(
-                           "IndividualId",
-                           "IndividualIds",
-                           "StudyId",
-                           "group",
-                           "outputPathId",
-                           "DataGroupIds",
-                           "DataGroupId"
-                         ),
-                         emptyAsNA = TRUE) {
+                         alwaysCharacter = c("group", "Id$", "Ids$"),
+                         emptyAsNA = TRUE,
+                         convertHeaders = TRUE) {
   if (!any(class(wb) %in% "Workbook")) checkmate::assertFileExists(wb)
+
+  # Read data from the specified sheet
   dt <- data.table::setDT(openxlsx::read.xlsx(
     xlsxFile = wb,
     sheet = sheetName,
@@ -106,6 +128,12 @@ xlsxReadData <- function(wb, sheetName,
   if (skipDescriptionRow) {
     dt <- dt[-1, ]
   }
+
+  # Capture all columns matching the patterns in alwaysCharacter
+  idColumns <- unlist(lapply(alwaysCharacter, function(pattern) {
+    grep(pattern, names(dt), value = TRUE)
+  }))
+  alwaysCharacter <- unique(c(alwaysCharacter, idColumns))
 
   # Convert specified columns to character
   alwaysCharacter <- intersect(names(dt), alwaysCharacter)
@@ -128,12 +156,19 @@ xlsxReadData <- function(wb, sheetName,
     dt[, (characterCols) := lapply(.SD, trimws), .SDcols = characterCols]
   }
 
-  # keeps NA and empty string consistent with in one table
+  # Keeps NA and empty string consistent within one table
   if (emptyAsNA) {
     dt[dt == ""] <- NA
   } else {
     dt[is.na(dt)] <- ""
   }
+
+  # Convert column names to start with a lowercase letter
+  if (convertHeaders)
+    data.table::setnames(dt, sapply(names(dt), function(x)
+      paste0(tolower(substring(
+        x, 1, 1
+      )), substring(x, 2))))
 
   return(dt)
 }
@@ -176,8 +211,6 @@ getDataGroups <- function(projectConfiguration) {
     skipDescriptionRow = TRUE
   )
 
-  data.table::setnames(dtDataGroups, old = "Group", new = "group")
-
   dtDataGroups$group <- factor(dtDataGroups$group,
     levels = unique(dtDataGroups$group),
     ordered = TRUE
@@ -208,7 +241,7 @@ getScenarioDefinitions <- function(projectConfiguration) {
 #' @export
 getOutputPathIds <- function(projectConfiguration) {
   # avoid warning for global variable
-  DisplayUnit <- NULL # nolint object_name_linter
+  displayUnit <- NULL
 
   dtOutputPaths <- xlsxReadData(
     wb = projectConfiguration$plotsFile,
@@ -216,10 +249,8 @@ getOutputPathIds <- function(projectConfiguration) {
     skipDescriptionRow = TRUE
   )
 
-  data.table::setnames(dtOutputPaths, old = "OutputPathId", new = "outputPathId")
-
-  dtOutputPaths[, DisplayUnit := gsub("Âµ", "\u00B5", as.character(DisplayUnit))]
-  dtOutputPaths[is.na(DisplayUnit), DisplayUnit := ""]
+  dtOutputPaths[, displayUnit := gsub("Âµ", "\u00B5", as.character(displayUnit))]
+  dtOutputPaths[is.na(displayUnit), displayUnit := ""]
 
   dtOutputPaths$outputPathId <- factor(dtOutputPaths$outputPathId,
     levels = unique(dtOutputPaths$outputPathId),
@@ -237,18 +268,17 @@ getOutputPathIds <- function(projectConfiguration) {
 #' @export
 getTimeRangeTags <- function(projectConfiguration) {
   # avoid warning for global variable
-  CaptionText <- NULL # nolint object_name_linter
+  captionText <- NULL
 
   dtTimeRange <- xlsxReadData(
     wb = projectConfiguration$plotsFile,
     sheetName = "TimeRange",
-    skipDescriptionRow = TRUE
+    skipDescriptionRow = TRUE,
+    emptyAsNA = FALSE
   )
 
-  dtTimeRange[is.na(CaptionText), CaptionText := ""]
-
-  dtTimeRange$Tag <- factor(dtTimeRange$Tag,
-    levels = unique(dtTimeRange$Tag),
+  dtTimeRange$Tag <- factor(dtTimeRange$tag,
+    levels = unique(dtTimeRange$tag),
     ordered = TRUE
   )
 

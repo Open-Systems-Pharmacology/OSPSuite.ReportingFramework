@@ -19,7 +19,3 @@ Returns NULL invisibly if no groups are available for virtual twin population cr
 \description{
 This function sets up a configuration sheet for virtual twin populations based on the provided project configuration and observed data.
 }
-\examples{
-# Example usage:
-setupVirtualTwinPopConfig(projectConfiguration, dataObserved, groups = c("Group1", "Group2"))
-}

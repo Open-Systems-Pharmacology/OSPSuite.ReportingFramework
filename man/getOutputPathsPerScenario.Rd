@@ -2,7 +2,7 @@
 % Please edit documentation in R/PlotDataTimeProfile.R
 \name{getOutputPathsPerScenario}
 \alias{getOutputPathsPerScenario}
-\title{Get Output Paths per Scenario}
+\title{Get Output Paths per scenario}
 \usage{
 getOutputPathsPerScenario(configTable, dtOutputPaths)
 }

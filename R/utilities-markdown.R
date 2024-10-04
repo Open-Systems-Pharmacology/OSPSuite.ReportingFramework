@@ -408,7 +408,7 @@ mergeRmds <- function(
     projectConfiguration) {
   checkmate::assertCharacter(newName, len = 1)
   checkmate::assertCharacter(title, len = 1)
-  checkmate::assertCharacter(sourceRmds, len = 1, unique = TRUE)
+  checkmate::assertCharacter(sourceRmds, min.len = 1, unique = TRUE)
 
   # Check for any other extensions the .Rmd
   if (any(grepl("\\.[^.Rmd]*$", sourceRmds))) {

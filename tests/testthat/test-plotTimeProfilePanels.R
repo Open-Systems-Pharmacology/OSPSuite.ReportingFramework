@@ -2,29 +2,29 @@ projectConfiguration <- suppressMessages(setUpTestProject())
 
 # Create example data for testing
 configTablePlots <- data.table(
-  PlotName = c("Plot1", "Plot1", "Plot2", "Plot2"),
-  Column1 = c("A", "A", "B", "B"),
-  Column2 = c("X", "X", "X", "Y"),
-  OutputPathIds = c("id1", "id2", "id3", "id4")
+  plotName = c("Plot1", "Plot1", "Plot2", "Plot2"),
+  column1 = c("A", "A", "B", "B"),
+  column2 = c("X", "X", "X", "Y"),
+  outputPathIds = c("id1", "id2", "id3", "id4")
 )
 
-
-# Write unit tests for the function
 test_that("validatePanelConsistency function test", {
   # Test if the function correctly checks for unique values of panel columns for each PlotName
-  expect_error(validatePanelConsistency(configTablePlots, c("Column1", "Column2")))
+  expect_error(validatePanelConsistency(configTablePlots, c("column1", "column2")))
+
 })
+
 
 
 # Create example data for testing
 configTablePlots <- data.table(
-  Value1 = c(1, 2, 3, 4),
-  Value2 = c("A", "B", "C", "D"),
-  TimeRange_Valid1 = c(NA, "total", "firstApplication", "lastApplication"),
-  TimeRange_Valid2 = c("c(0,30)", NA, "c(0,40)", "lastApplication"),
-  TimeRange_invalid1 = c("total", "invalid", "firstApplication", "lastApplication"),
-  TimeRange_invalid1 = c("c(0,30,50)", "total", "firstApplication", "lastApplication"),
-  TimeRange_invalid1 = c("c(0,NA)", "total", "firstApplication", "lastApplication")
+  value1 = c(1, 2, 3, 4),
+  value2 = c("A", "B", "C", "D"),
+  timeRange_Valid1 = c(NA, "total", "firstApplication", "lastApplication"),
+  timeRange_Valid2 = c("c(0,30)", NA, "c(0,40)", "lastApplication"),
+  timeRange_invalid1 = c("total", "invalid", "firstApplication", "lastApplication"),
+  timeRange_invalid1 = c("c(0,30,50)", "total", "firstApplication", "lastApplication"),
+  timeRange_invalid1 = c("c(0,NA)", "total", "firstApplication", "lastApplication")
 )
 
 # Write unit tests for the function

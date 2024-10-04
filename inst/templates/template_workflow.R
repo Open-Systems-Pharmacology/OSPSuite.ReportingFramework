@@ -1,7 +1,7 @@
 # Purpose: Add the Purpose of the workflow
 #
 
-# Typically This file is saved in <Rootdirectory>\Scripts\ReportingFrame
+# Typically This file is saved in <Rootdirectory>\Scripts\ReportingFramework
 
 # set working directory to  workflow file location, (only if working interactively)
 if (interactive() && rstudioapi::isAvailable()) {
@@ -55,7 +55,7 @@ logCatch({
 
 
   # 1) Read observedData -------------------------------------------------------
-  # (see vignette(package = 'ospsuite.reportingframework',topic = 'data_import_by_dictionary'))
+  # (see vignette(package = 'ospsuite.reportingframework',topic = 'Data_import_by_dictionary'))
 
   # read data as data.table
   dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration)
@@ -71,7 +71,7 @@ logCatch({
   # )
   #
 
-  # to export virtual twin populations de-comment lines below
+  # to export virtual twin populations de-comment lines below and adjsut name of modelfile
   # exportVirtualTwinPopulations(
   #   projectConfiguration = projectConfiguration,
   #   populationNames = NULL,

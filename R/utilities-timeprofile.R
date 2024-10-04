@@ -28,7 +28,7 @@ loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, out
         aggregationFun = aggregationFun,
         individualMatch = individualMatch
       ) %>%
-        dplyr::mutate(Scenario = scenarioName)
+        dplyr::mutate(scenario = scenarioName)
     )
   }
   return(dtSimulated)
@@ -45,15 +45,14 @@ loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, out
 getUnitConversionDT <- function(dtSimulated, dtOutputs) {
   # avoid warning for global variable
   unitFactor <- NULL
-
   dtUnit <- dtSimulated %>%
     dplyr::select("paths", "dimension", "yUnit", "molWeight") %>%
     unique() %>%
     merge(
       dtOutputs %>%
-        dplyr::select("outputPathId", "DisplayUnit", "OutputPath"),
+        dplyr::select("outputPathId", "displayUnit", "outputPath"),
       by.x = "paths",
-      by.y = "OutputPath"
+      by.y = "outputPath"
     )
 
   dtUnit[, unitFactor := apply(dtUnit, 1, function(row) {
@@ -61,7 +60,7 @@ getUnitConversionDT <- function(dtSimulated, dtOutputs) {
       quantityOrDimension = row["dimension"],
       values = 1,
       sourceUnit = row["yUnit"],
-      targetUnit = row["DisplayUnit"],
+      targetUnit = row["displayUnit"],
       molWeight = as.numeric(row["molWeight"]),
       molWeightUnit = "g/mol"
     )
@@ -173,7 +172,7 @@ convertYunit <- function(timeprofile, dtUnit) {
 
   identifier <- intersect(names(dtUnit), names(timeprofile))
   timeprofile <- timeprofile %>%
-    merge(dtUnit %>% dplyr::select(unique(c(identifier, "outputPathId", "unitFactor", "DisplayUnit"))),
+    merge(dtUnit %>% dplyr::select(unique(c(identifier, "outputPathId", "unitFactor", "displayUnit"))),
       by = identifier
     )
 
@@ -193,7 +192,7 @@ convertYunit <- function(timeprofile, dtUnit) {
   timeprofile <- timeprofile %>%
     dplyr::select(-dplyr::any_of(c("paths", "dimension", "molWeight", "unitFactor", "yUnit")))
 
-  data.table::setnames(timeprofile, old = "DisplayUnit", new = "yUnit")
+  data.table::setnames(timeprofile, old = "displayUnit", new = "yUnit")
 
 
   return(timeprofile)
@@ -212,8 +211,11 @@ convertAndShiftTimeUnits <- function(timeprofile, targetTimeUnit, timeOffset = 0
   # avoid warnings during check
   xValues <- xUnit <- NULL
 
+  sourceTimeUnit <- unique(timeprofile$xUnit)
+
   timeprofile[, xValues := ospsuite::toUnit(
     quantityOrDimension = "Time",
+    sourceUnit = sourceTimeUnit,
     values = as.double(xValues),
     targetUnit = targetTimeUnit
   )]

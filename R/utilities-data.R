@@ -25,11 +25,11 @@ readObservedDataByDictionary <- function(projectConfiguration,
   )
   checkmate::assertFileExists(fs::path_abs(
     start = projectConfiguration$projectConfigurationDirPath,
-    path = dataList$DataFile
+    path = dataList$dataFile
   ))
-  checkmate::assertNames(dataList$Dictionary,subset.of = wb$sheet_names)
-  checkmate::assertCharacter(dataList$DataClass,any.missing = FALSE)
-  checkmate::assertNames(dataList$DataClass,subset.of = unlist(DATACLASS))
+  checkmate::assertNames(dataList$dictionary,subset.of = wb$sheet_names)
+  checkmate::assertCharacter(dataList$dataClass,any.missing = FALSE)
+  checkmate::assertNames(dataList$dataClass,subset.of = unlist(DATACLASS))
 
   # Loop through selected data files
   dataDT <- data.table()
@@ -37,24 +37,24 @@ readObservedDataByDictionary <- function(projectConfiguration,
   for (d in split(dataList, seq_len(nrow(dataList)))) {
     tmpData <- data.table::fread(fs::path_abs(
       start = projectConfiguration$projectConfigurationDirPath,
-      path = d$DataFile
+      path = d$dataFile
     ))
 
     tmpdict <- readDataDictionary(
       dictionaryFile = projectConfiguration$dataImporterConfigurationFile,
-      sheet = d$Dictionary,
+      sheet = d$dictionary,
       data = tmpData,
-      dataClass = d$DataClass
+      dataClass = d$dataClass
     )
 
     dataDT <- rbind(dataDT,
                     convertDataByDictionary( # nolint indentation_linter
                       data = tmpData,
-                      dataFilter = d$DataFilter,
+                      dataFilter = d$dataFilter,
                       dict = tmpdict,
-                      dictionaryName = d$Dictionary
+                      dictionaryName = d$dictionary
                     ) %>%
-                      dplyr::mutate(dataClass = d$DataClass),
+                      dplyr::mutate(dataClass = d$dataClass),
                     fill = TRUE
     )
 
@@ -207,6 +207,9 @@ validateObservedData <- function(dataDT) {
   }
   colIdentifier <- c("group", "outputPathId")
   if (any(dataDT[, .(N = dplyr::n_distinct(yUnit)), by = "outputPathId"]$N > 1)) { # nolint
+    tmp <- dataObserved[,.N,by = c('group','outputPathId','yUnit')]
+    tmp <- merge(tmp,tmp[duplicated(tmp[,c('group','outputPathId')]),c('group','outputPathId')],by = c('group','outputPathId'))
+    writeTableToLog(tmp)
     stop(
       paste("Y unit is ambiguous in columns", paste(colIdentifier, collapse = ", "))
     )
@@ -318,10 +321,23 @@ convertDataByDictionary <- function(data,
     dictFilters <- dict[!is.na(filter)]
 
     for (myFilter in split(dictFilters, seq_len(nrow(dictFilters)))) {
-      data[
-        eval(parse(text = myFilter$filter)),
-        (myFilter$targetColumn) := eval(parse(text = myFilter$filterValue))
-      ]
+      tryCatch(
+        {
+          data[
+            eval(parse(text = myFilter$filter)),
+            (myFilter$targetColumn) := eval(parse(text = myFilter$filterValue))
+          ]
+        },
+        error = function(err) {
+          warning(paste0(
+            "tpDictionary: '", dictionaryName,
+            "'; targetColumn: '", myFilter$targetColumn,
+            "'; filter: '", myFilter$filter,
+            "'; filterValue: '", myFilter$filterValue,
+            "'"
+          ))
+          stop(conditionMessage(err))
+        })
     }
   }
 
@@ -387,6 +403,8 @@ convertBiometrics <- function(data, dict, dictionaryName) {
   if ("gender" %in% dict$targetColumn) {
     data[, gender := ifelse(gender == 1, "MALE", gender)]
     data[, gender := ifelse(gender == 2, "FEMALE", gender)]
+    data[, gender := ifelse(gender == 'M', "MALE", gender)]
+    data[, gender := ifelse(gender == 'F', "FEMALE", gender)]
     data[, gender := toupper(gender)]
 
     data[, gender := ifelse(gender != "MALE" & gender != "FEMALE", "UNKNOWN", gender)]
@@ -449,7 +467,7 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
                           dtDataGroupIdsNew, # nolint indentation_linter
                           fill = TRUE)
 
-  identifierCols <- intersect(c("Group", "StudyId", "StudyArm"), names(dtDataGroupIds))
+  identifierCols <- intersect(c("group", "studyId", "studyArm"), names(dtDataGroupIds))
 
   dtDataGroupIds <- dtDataGroupIds[!duplicated(dtDataGroupIds %>%
                                                  dplyr::select(dplyr::all_of(identifierCols)))] # nolint indentation_linter
@@ -483,20 +501,18 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
   outputPathId <- NULL
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
-
   dtOutputPaths <- xlsxReadData(wb = wb, sheetName = "Outputs")
 
   dtOutputPathsNew <- dataDT[, c("outputPathId")] %>%
     unique() %>%
-    dplyr::mutate(outputPathId = as.character(outputPathId)) %>%
-    data.table::setnames("outputPathId", "OutputPathId")
+    dplyr::mutate(outputPathId = as.character(outputPathId))
 
   dtOutputPaths <- rbind(dtOutputPaths,
                          dtOutputPathsNew, # nolint indentation_linter
                          fill = TRUE
   )
 
-  dtOutputPaths <- dtOutputPaths[!duplicated(dtOutputPaths, by = "OutputPathId")]
+  dtOutputPaths <- dtOutputPaths[!duplicated(dtOutputPaths, by = "outputPathId")]
 
   xlsxWriteData(wb = wb, sheetName = "Outputs", dt = dtOutputPaths)
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
@@ -651,6 +667,8 @@ addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALS
   wb <- openxlsx::loadWorkbook(projectConfiguration$individualsFile)
 
   dtIndividualBiometrics <- xlsxReadData(wb = wb, sheetName = "IndividualBiometrics")
+  if (overwrite)
+    dtIndividualBiometrics <- dtIndividualBiometrics[1,]
 
   biometrics <-
     dataDT %>%
@@ -669,7 +687,7 @@ addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALS
     }
   }
 
-  if (!("Species" %in% names(biometrics))) biometrics[["Species"]] <- ospsuite::Species$Human
+  if (!("species" %in% names(biometrics))) biometrics[["species"]] <- ospsuite::Species$Human
 
   # Merge old and new tables
   dtIndividualBiometrics <-
@@ -681,9 +699,8 @@ addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALS
   # If overwrite FALSE take original located at the top, otherwise take new rows located at the bottom
   dtIndividualBiometrics <-
     dtIndividualBiometrics[!duplicated(dtIndividualBiometrics,
-                                       by = "IndividualId", # nolint indentation_linter
+                                       by = "individualId",
                                        fromLast = overwrite)]
-
   xlsxWriteData(wb = wb, sheetName = "IndividualBiometrics", dt = dtIndividualBiometrics)
 
   openxlsx::saveWorkbook(wb, projectConfiguration$individualsFile, overwrite = TRUE)

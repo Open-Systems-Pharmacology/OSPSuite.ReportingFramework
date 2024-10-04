@@ -1,7 +1,7 @@
 Package: ospsuite.reportingframework
 Type: Package
 Title: Provides a framework for report generation with the ospsuite
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: 
     c(person(given = "Open-Systems-Pharmacology Community",
              role = "cph"),
