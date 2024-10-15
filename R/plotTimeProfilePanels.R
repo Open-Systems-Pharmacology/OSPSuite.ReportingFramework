@@ -292,7 +292,7 @@ generatePlotForPlotType <- function(plotData,
         plotObject <-
           switch(plotType,
                  TP = ospsuite_plotTimeProfile( # nolint indentation_linter
-                   plotData = plotData$getDataForTimeRange(timeRangeFilter, plotCounter = plotCounter),
+                   plotData = plotData$getDataForTimeRange(timeRangeFilter, plotCounter = plotCounter,yScale = yScale),
                    yscale = yScale,
                    mapping = getGroupbyMapping(plotData, plotType),
                    groupAesthetics = getGroupAesthetics(plotData),
@@ -301,33 +301,33 @@ generatePlotForPlotType <- function(plotData,
                    geomLLOQAttributes = getGeomLLOQAttributesForTP(plotData)
                  ),
                  PvO = ospsuite_plotPredictedVsObserved(
-                   plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter),
+                   plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter,yScale = yScale),
                    xyscale = yScale,
                    mapping = getGroupbyMapping(plotData, plotType),
                    groupAesthetics = getGroupAesthetics(plotData),
                    comparisonLineVector = getFoldDistanceForPvO(plotData)
                  ),
                  ResvT = ospsuite_plotResidualsVsTime(
-                   plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter),
+                   plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter,yScale = yScale),
                    residualScale = yScale,
                    mapping = getGroupbyMapping(plotData, plotType),
                    groupAesthetics = getGroupAesthetics(plotData)
                  ),
                  ResvO = ospsuite_plotResidualsVsObserved(
-                   plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter),
+                   plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter,yScale = yScale),
                    residualScale = yScale,
                    xscale = yScale,
                    mapping = getGroupbyMapping(plotData, plotType),
                    groupAesthetics = getGroupAesthetics(plotData)
                  ),
                  ResH = ospsuite_plotResidualsAsHistogram(
-                   plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter),
+                   plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter,yScale = yScale),
                    residualScale = yScale,
                    mapping = getGroupbyMapping(plotData, plotType),
                    distribution = "normal"
                  ),
                  QQ = ospsuite_plotQuantileQuantilePlot(
-                   plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter),
+                   plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter,yScale = yScale),
                    residualScale = yScale,
                    mapping = getGroupbyMapping(plotData, plotType),
                    groupAesthetics = getGroupAesthetics(plotData)
@@ -375,7 +375,8 @@ generatePlotForPlotType <- function(plotData,
             dataObserved = plotData$getDataForTimeRange(
               filterName = timeRangeFilter,
               typeFilter = "observed",
-              plotCounter = plotCounter
+              plotCounter = plotCounter,
+              yScale = yScale
             ),
             dtDataReference = plotData$dataReference
           ),
@@ -477,9 +478,9 @@ checkAndAdjustYlimits <- function(plotData,
     ylimits <- eval(parse(text = ylimits))
   }
 
-  simulatedData <- plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "simulated", plotCounter = plotCounter)
+  simulatedData <- plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "simulated", plotCounter = plotCounter,yScale = yScale)
 
-  observedData <- plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter)
+  observedData <- plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter,yScale = yScale)
   if (nrow(observedData) > 1) {
     observedData <- observedData[yUnit == unique(simulatedData$yUnit)[1]]
   }
@@ -545,13 +546,32 @@ getGroupbyMapping <- function(plotData, plotType) {
   # avoid warning for global variable
   colorIndex <- shapeIndex <- NULL
 
-  if ("shapeIndex" %in% names(plotData$data)) {
-    ggplot2::aes(groupby = colorIndex, shape = shapeIndex)
-  } else if (plotType == "TP") {
-    ggplot2::aes(groupby = colorIndex, shape = "Observed data")
-  } else {
-    ggplot2::aes(groupby = colorIndex)
+  if (plotType == "TP"){
+    if (plotData$useShapeIndex()) {
+      mapping <- ggplot2::aes(groupby = colorIndex, shape = shapeIndex)
+    } else {
+      mapping <- ggplot2::aes(groupby = colorIndex, shape = "Observed data")
+    }
+  } else{
+    if (plotData$useColorIndex() & plotData$useShapeIndex()){
+      mapping <- ggplot2::aes(groupby = colorIndex, shape = shapeIndex)
+    } else if (plotData$useShapeIndex()){
+      mapping <- ggplot2::aes(groupby = shapeIndex, shape = shapeIndex)
+    } else{
+      mapping <- ggplot2::aes(groupby = colorIndex)
+    }
   }
+
+  # if (plotData$useShapeIndex()) {
+  #   mapping <- ggplot2::aes(groupby = colorIndex, shape = shapeIndex)
+  # } else if (plotType == "TP") {
+  #   mapping <- ggplot2::aes(groupby = colorIndex, shape = "Observed data")
+  # } else {
+  #   mapping <- ggplot2::aes(groupby = colorIndex)
+  # }
+
+  return(mapping)
+
 }
 #' Get group aesthetics from scale vectors
 #'
@@ -562,10 +582,9 @@ getGroupbyMapping <- function(plotData, plotType) {
 getGroupAesthetics <- function(plotData) {
   return(intersect(
     c("colour", "fill", "shape"),
-    ggplot2::standardise_aes_names(unique(c(
-      names(plotData$scaleVectors),
-      names(plotData$scaleVectorsObserved)
-    )))
+    ggplot2::standardise_aes_names(c(
+      names(plotData$scaleVectors)
+    ))
   ))
 }
 #' Update guides and scales
@@ -577,47 +596,55 @@ getGroupAesthetics <- function(plotData) {
 #' @return Updated ggplot object with guides.
 #' @keywords internal
 updateGuides <- function(plotData, plotObject, plotType) {
+  # Initialize legend titles
   legendTitleObservedData <- "Observed data"
-
   legendTitleColor <- ""
+
+  # Determine the color legend title based on conditions
   if (plotData$useColorIndex()) {
-    if (plotType == "TP" & !plotData$hasSimulatedPop()) {
-      legendTitleColor <- paste("Simulated", plotData$tpLabelSimulatedMean)
-    } else if (plotType == "TP" & plotData$hasSimulatedPop()) {
-      legendTitleColor <- paste0(
-        "Simulated data\n",
-        plotData$tpLabelSimulatedMean,
-        " with ", plotData$tpLabelSimulatedRange
-      )
+    if (plotType == "TP") {
+      if (plotData$hasSimulatedPop()) {
+        legendTitleColor <- paste0(
+          "Simulated data\n",
+          plotData$tpLabelSimulatedMean,
+          " with ", plotData$tpLabelSimulatedRange
+        )
+      } else {
+        legendTitleColor <- paste("Simulated", plotData$tpLabelSimulatedMean)
+      }
     } else {
       legendTitleColor <- legendTitleObservedData
     }
+  } else if (plotData$useShapeIndex() && plotType != "TP") {
+    legendTitleColor <- legendTitleObservedData
   }
 
-  overrideAes <- list()
-  if (plotType == "TP") overrideAes <- list(shape = NA)
+  # Override aesthetics for shape if plotType is "TP"
+  overrideAes <- if (plotType == "TP") list(shape = NA) else list()
 
-  plotObject <-
-    plotObject +
+  # Add guides for color and fill
+  plotObject <- plotObject +
     ggplot2::guides(
       color = ggplot2::guide_legend(
         title = legendTitleColor,
         order = 1,
-        override.aes =  overrideAes
+        override.aes = overrideAes
       ),
       fill = ggplot2::guide_legend(
         title = legendTitleColor,
-        order = 1,
+        order = 1
       )
     )
 
+  # Check if there is observed data to add shape guide
   if (plotData$hasObservedData()) {
     legendTitleShape <- ""
-    if (plotData$useShapeIndex()) legendTitleShape <- legendTitleObservedData
-    if (plotType != "TP" & plotData$useColorIndex()) legendTitleShape <- legendTitleObservedData
+    if (plotData$useShapeIndex() || (plotType != "TP" && plotData$useColorIndex())) {
+      legendTitleShape <- legendTitleObservedData
+    }
 
-    plotObject <-
-      plotObject +
+    # Add guide for shape
+    plotObject <- plotObject +
       ggplot2::guides(
         shape = ggplot2::guide_legend(
           title = legendTitleShape,
@@ -627,14 +654,21 @@ updateGuides <- function(plotData, plotObject, plotType) {
             color = "black",
             linewidth = 0.5,
             fill = "black"
-          ),
-        ),
-        linetype = ggplot2::guide_legend(
-          title = "",
-          order = ifelse(plotType == "TP", 3, 2),
-          override.aes = list(color = "black", linewidth = 0.5, linetype = "dashed",'shape' = NA)
+          )
         )
       )
+
+    # Add guide for linetype if plotType is "TP"
+    if (plotType == "TP") {
+      plotObject <- plotObject +
+        ggplot2::guides(
+          linetype = ggplot2::guide_legend(
+            title = "",
+            order = 3,
+            override.aes = list(color = "black", linewidth = 0.5, linetype = "dashed", shape = NA)
+          )
+        )
+    }
   }
 
   return(plotObject)
@@ -650,17 +684,28 @@ updateGuides <- function(plotData, plotObject, plotType) {
 #' @keywords internal
 setManualScalevectors <- function(plotObject, plotData, plotType) {
   for (aesthetic in names(plotData$scaleVectors)) {
+
+    scaleVector <- plotData$scaleVectors[[aesthetic]]
+    labels <- waiver()
+
     if (plotType != "TP" &
         !plotData$useColorIndex() & # nolint indentation_linter
         !plotData$useShapeIndex()) {
       labels <- "Observed data"
-    } else {
-      labels <- names(plotData$scaleVectors[[aesthetic]])
+    } else  if (plotType != "TP" &
+                !plotData$useColorIndex() & # nolint indentation_linter
+                plotData$useShapeIndex() & aesthetic != 'shape') {
+      scaleVector <-
+        stats::setNames(rep(
+          plotData$scaleVectors[[aesthetic]],
+          length(plotData$scaleVectors$shape)
+        ),
+        names(plotData$scaleVectors$shape))
     }
 
     plotObject <- plotObject +
       ggplot2::scale_discrete_manual(aesthetic,
-                                     values = plotData$scaleVectors[[aesthetic]], # nolint indentation_linter
+                                     values = scaleVector, # nolint indentation_linter
                                      labels = labels
       )
   }
@@ -725,8 +770,9 @@ getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotC
   )
 
   if ("individualId" %in% names(dtCaption)) {
-    individualtext <-
-      paste(
+    individualtext <- pasteFigureTags(dtCaption, captionColumn = "individualId")
+    if (individualtext != "")
+      individualtext <- paste(individualtext,
         "for subject",
         pasteFigureTags(dtCaption, captionColumn = "individualId")
       )

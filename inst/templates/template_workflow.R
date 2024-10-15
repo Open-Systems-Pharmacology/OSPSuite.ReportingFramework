@@ -87,13 +87,14 @@ logCatch({
                             scenarioNames = NULL,
                             doCheckScenarioNameValidity = TRUE)
 
-  runAndSaveScenarios(projectConfiguration = projectConfiguration,
-                      scenarioList = scenarioList,
-                      simulationRunOptions = SimulationRunOptions$new(
-                        numberOfCores = NULL,
-                        checkForNegativeValues = NULL,
-                        showProgress = TRUE
-                      ))
+  scenarioResults <- runAndSaveScenarios(projectConfiguration = projectConfiguration,
+                                         scenarioList = scenarioList,
+                                         simulationRunOptions = SimulationRunOptions$new(
+                                           numberOfCores = NULL,
+                                           checkForNegativeValues = NULL,
+                                           showProgress = TRUE
+                                         ),
+                                         withResimulation = FALSE)
 
   # 4) SensitivityAnalysis -----------------------------------------------------
   #  (see vignette xxx)
@@ -135,7 +136,8 @@ logCatch({
     projectConfiguration = projectConfiguration,
     inputs = list(
       configTableSheet = "TimeProfiles",
-      dataObserved = dataObserved
+      dataObserved = dataObserved,
+      scenarioResults = scenarioResults
     )
   )
 

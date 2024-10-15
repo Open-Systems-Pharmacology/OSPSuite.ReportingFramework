@@ -6,6 +6,7 @@
 \usage{
 addDefaultConfigForTimeProfilePlots(
   projectConfiguration,
+  dataObserved = NULL,
   sheetName = "TimeProfiles",
   overwrite = FALSE
 )
@@ -13,6 +14,8 @@ addDefaultConfigForTimeProfilePlots(
 \arguments{
 \item{projectConfiguration}{A ProjectConfiguration class object containing configuration details, including:
 - `plotsFile`: A string representing the file path to the Excel workbook containing the plot configurations.}
+
+\item{dataObserved}{Optional. A data object containing observed data, if available.}
 
 \item{sheetName}{A character string specifying the name of the sheet in the plot configuration table.
 Default is "TimeProfiles".}
@@ -32,4 +35,7 @@ It can either create a new sheet or overwrite an existing one based on the speci
 The function retrieves scenario definitions, output path IDs, and data groups from the project configuration.
 It checks if the specified sheet already exists and whether to overwrite it. If not, it creates a new header
 and fills in the default configuration values for the time profile plots.
+
+Additionally, the function performs a validity check to ensure that it is not executed during a context
+where helper functions are prohibited (validRun). If such a context is detected, an error is raised to prevent execution.
 }

@@ -328,11 +328,14 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     #' @param plotCounter counter for different plots
     #'
     #' @return `data.table` with filtered plot data
-    getDataForTimeRange = function(filterName, plotCounter, typeFilter = NULL) {
+    getDataForTimeRange = function(filterName, plotCounter,yScale,typeFilter = NULL) {
       tmp <- self$data[eval(parse(text = private$.timeRangeTagFilter[[filterName]])) &
                          counter == plotCounter]
       if (!is.null(typeFilter)) {
         tmp <- tmp[dataType == typeFilter]
+      }
+      if (yScale == 'log'){
+        tmp <- tmp[yValues > 0]
       }
       return(tmp)
     },
@@ -857,7 +860,10 @@ determineFacetColumns <- function(dtCaption, nFacetColumns, facetType, plotName)
   data.table::setorderv(dtCaption, c("plotId", "outputPathId"))
 
   if (facetType == FACETTYPE$vsOutput) {
-    tmp <- dtCaption[, .(rowNumber = .I), by = "outputPathId"] %>%
+    tmp <- dtCaption %>%
+      dplyr::select('plotId','outputPathId') %>%
+      unique()
+    tmp <- tmp[, .(rowNumber = .I), by = "outputPathId"] %>%
       .[, .(diff = rowNumber - data.table::shift(rowNumber, 1)),
         by = "outputPathId"
       ]

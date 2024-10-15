@@ -9,7 +9,7 @@ addFacets(plotObject, plotData, facetAspectRatio = 0.5, nFacetColumns = 3)
 \arguments{
 \item{plotObject}{ggplot object to which the facets should be added.}
 
-\item{facetAspectRatio}{Aspect ratio for the facets (default 0.5).}
+\item{facetAspectRatio}{A numeric value specifying the aspect ratio for the facets (default is 0.5).}
 
 \item{nFacetColumns}{Maximal number of facets used for facet type by Order.}
 }

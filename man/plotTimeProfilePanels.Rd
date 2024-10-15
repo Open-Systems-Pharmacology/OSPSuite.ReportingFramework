@@ -9,6 +9,7 @@ plotTimeProfilePanels(
   subfolder,
   configTableSheet,
   dataObserved,
+  scenarioResults = list(),
   nFacetColumns = 2,
   nMaxFacetRows = 4,
   facetAspectRatio = 0.5,
@@ -29,6 +30,10 @@ the plots will be saved.}
 the plot settings.}
 
 \item{dataObserved}{A data.table or DataCombined object containing the observed data to be plotted.}
+
+\item{scenarioResults}{A list with simulated scenario results. This parameter may be an empty list or
+contain only some of all scenarios defined in the project configuration, in which
+case the function will attempt to load missing scenario results from the specified folder.}
 
 \item{nFacetColumns}{An integer specifying the maximum number of facet columns (default is 2)
 used for the facet type "by Order".}
@@ -71,15 +76,4 @@ accompanying vignettes:
 The function primarily focuses on simulated scenarios, with each panel displaying the
 result of one scenario. Plots containing more than one scenario or only observed data are not
 supported.
-}
-\examples{
-\dontrun{
-plotTimeProfilePanels(
-  projectConfiguration = myProjectConfig,
-  subfolder = "TimeProfiles",
-  configTableSheet = "TimeProfiles",
-  dataObserved = myObservedData
-)
-}
-
 }

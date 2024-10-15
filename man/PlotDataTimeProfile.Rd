@@ -96,7 +96,11 @@ Initialize a new instance of the class
 \if{latex}{\out{\hypertarget{method-RmdContainer-loadSimulatedResults}{}}}
 \subsection{Method \code{loadSimulatedResults()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$loadSimulatedResults(projectConfiguration, aggregationFun)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$loadSimulatedResults(
+  projectConfiguration,
+  aggregationFun,
+  scenarioResults
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -104,7 +108,9 @@ Initialize a new instance of the class
 \describe{
 \item{\code{projectConfiguration}}{Configuration for the project}
 
-\item{\code{aggregationFun}}{Function to aggregate simulated data
+\item{\code{aggregationFun}}{Function to aggregate simulated data}
+
+\item{\code{scenarioResults}}{list with simulated scenario results
 Filter observed data for plotting}
 }
 \if{html}{\out{</div>}}
@@ -230,6 +236,7 @@ Get the data for the filtered time range
 \if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$getDataForTimeRange(
   filterName,
   plotCounter,
+  yScale,
   typeFilter = NULL
 )}\if{html}{\out{</div>}}
 }

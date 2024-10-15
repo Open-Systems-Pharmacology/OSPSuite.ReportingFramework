@@ -8,20 +8,42 @@ runAndSaveScenarios(
   projectConfiguration,
   scenarioList,
   simulationRunOptions = NULL,
+  withResimulation = TRUE,
   ...
 )
 }
 \arguments{
-\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+\item{projectConfiguration}{Configuration for the project, containing paths and settings necessary
+to run the simulations and save the results.}
 
-\item{scenarioList}{Named list of Scenario objects.}
+\item{scenarioList}{Named list of Scenario objects to be simulated.}
 
 \item{simulationRunOptions}{Object of type SimulationRunOptions that will be passed to simulation runs.
-If NULL, default options are used.}
+If `NULL`, default options are used.}
 
-\item{...}{arguments passed to esqlabsR::saveScenarioResults}
+\item{withResimulation}{A logical value indicating whether to re-run simulations for scenarios
+even if results already exist. If `TRUE`, existing results will be overwritten.
+If `FALSE` and simulation results already exist for a scenario,
+the function will load those results instead of running the simulation.}
+
+\item{...}{Additional arguments passed to `esqlabsR::saveScenarioResults`.}
+}
+\value{
+A list containing the simulation results for each scenario that was run or reloaded.
 }
 \description{
-uses `esqlabsR::runScenarios` and `esqlabsR::saveScenarioResults
-runs the simulations and save the result`
+This function uses `esqlabsR::runScenarios` to execute simulations for a list of scenarios
+and `esqlabsR::saveScenarioResults` to save the results. If simulation results already exist,
+it loads them instead of re-running the simulations.
+}
+\examples{
+\dontrun{
+runAndSaveScenarios(
+  projectConfiguration = myProjectConfig,
+  scenarioList = myScenarioList,
+  simulationRunOptions = myRunOptions,
+  withResimulation = FALSE
+)
+}
+
 }

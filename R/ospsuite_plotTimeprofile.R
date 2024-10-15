@@ -476,6 +476,8 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
 
         # Find the closest x in the filtered data
         closestIdx <- which(filteredX >= xVal)[1]
+        x <- dtSimulatedGroup$x
+        y <- dtSimulatedGroup$y
 
         # Check if the slope is positive or negative
         if (length(closestIdx) < 1 | xVal > maxX) {
@@ -484,15 +486,15 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
           if (dtSimulatedGroup$diffY[closestIdx] >= 0) {
             # Linear extrapolation for increasing slope
             predicted[i] <- stats::approx(
-              x = dtSimulatedGroup$x,
-              y = dtSimulatedGroup$y,
+              x = x,
+              y = y,
               xout = xVal,
               rule = 1
             )$y
           } else {
             predicted[i] <- exp(stats::approx(
-              x = dtSimulatedGroup$x,
-              y = log(dtSimulatedGroup$y),
+              x = x[y>0],
+              y = log(y[y>0]),
               xout = xVal,
               rule = 1
             )$y)
