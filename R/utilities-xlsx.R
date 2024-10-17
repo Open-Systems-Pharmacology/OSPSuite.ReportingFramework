@@ -165,10 +165,7 @@ xlsxReadData <- function(wb, sheetName,
 
   # Convert column names to start with a lowercase letter
   if (convertHeaders)
-    data.table::setnames(dt, sapply(names(dt), function(x)
-      paste0(tolower(substring(
-        x, 1, 1
-      )), substring(x, 2))))
+    dt <- setHeadersToLowerCase(dt)
 
   return(dt)
 }
@@ -194,6 +191,19 @@ splitInputs <- function(originalVector) {
   splitVector <- trimws(unlist(strsplit(originalVector, ",")))
 
   return(splitVector)
+}
+
+#' Convert Data Table Column Names to Lowercase
+#'
+#' This function takes a data.table and converts the first letter of all column names to lowercase,
+#'
+#' @param dt A data.table object whose column names need to be converted to lowercase.
+setHeadersToLowerCase <- function(dt){
+  data.table::setnames(dt, sapply(names(dt), function(x)
+    paste0(tolower(substring(
+      x, 1, 1
+    )), substring(x, 2))))
+  return(dt)
 }
 
 # get special tables ---------

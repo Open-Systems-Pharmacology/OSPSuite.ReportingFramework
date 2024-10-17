@@ -43,7 +43,7 @@ initProject(
 
 # get paths of all relevant project files
 projectConfiguration <-
-  esqlabsR::createProjectConfiguration(
+  ospsuite.reportingframework::createProjectConfiguration(
     path =  file.path("ProjectConfiguration.xlsx"))
 
 # start log Catch loop which catches all errors, warnins and messages in a logfile

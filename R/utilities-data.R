@@ -455,6 +455,9 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
     dplyr::mutate(studyId = as.character(studyId)) %>%
     dplyr::mutate(group = as.character(group))
 
+  dtDataGroupIdsNew <-
+    dtDataGroupIdsNew[!(group %in% dtDataGroupIds$group)]
+
   # Rename with capitals
   for (col in names(dtDataGroupIdsNew)) {
     newName <- grep(col, names(dtDataGroupIds), ignore.case = TRUE, value = TRUE)
@@ -467,10 +470,9 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
                           dtDataGroupIdsNew, # nolint indentation_linter
                           fill = TRUE)
 
+
   identifierCols <- intersect(c("group", "studyId", "studyArm"), names(dtDataGroupIds))
 
-  dtDataGroupIds <- dtDataGroupIds[!duplicated(dtDataGroupIds %>%
-                                                 dplyr::select(dplyr::all_of(identifierCols)))] # nolint indentation_linter
 
   xlsxWriteData(wb = wb, sheetName = "DataGroups", dt = dtDataGroupIds)
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)

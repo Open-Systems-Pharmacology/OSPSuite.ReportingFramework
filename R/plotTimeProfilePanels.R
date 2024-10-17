@@ -897,6 +897,7 @@ validateConfigTableForTimeProfiles <- function(configTable, dataObserved, projec
   dtScenarios <- getScenarioDefinitions(projectConfiguration)
   dtOutputPaths <- getOutputPathIds(projectConfiguration)
   validateOutputIdsForPlot(dtOutputPaths)
+  validateDataGroupIdsForPlot(projectConfiguration)
 
   validateConfigTablePlots(
     configTablePlots = configTablePlots,

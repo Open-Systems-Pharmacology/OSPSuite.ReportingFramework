@@ -44,6 +44,23 @@ initProject <- function(rootDirectory = "..",
   return(invisible())
 }
 
+#' #' Create a `ProjectConfiguration`
+#'
+#' @description  Create a `ProjectConfigurationRF` based on the `"ProjectConfiguration.xlsx"`
+#'
+#' based on esqlabsR::ProjectConfiguration but with additional file information for PK Parameter definitions
+#'
+#' @param path path to the `ProjectConfiguration.xlsx` file. default to the `ProjectConfiguration.xlsx` file located in the working directory.
+#'
+#' @return Object of type `ProjectConfigurationRF`
+#' @export
+createProjectConfiguration <- function (path = file.path("ProjectConfiguration.xlsx"))
+{
+  projectConfiguration <- ProjectConfigurationRF$new(projectConfigurationFilePath = path)
+  return(projectConfiguration)
+}
+
+
 
 #' Create Scenario objects from `ScenarioConfiguration` objects
 #'

@@ -13,7 +13,7 @@ setUpTestProject <- function(withModel = FALSE) {
   )
 
   projectConfiguration <-
-    esqlabsR::createProjectConfiguration(
+    ospsuite.reportingframework::createProjectConfiguration(
       path = file.path(rootDirectory, "Scripts", "ReportingFramework", "ProjectConfiguration.xlsx")
     )
 

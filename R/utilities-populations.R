@@ -35,7 +35,7 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
 
   if (is.null(groups)) groups <- getIndividualDataGroups(dataObserved, groups)
   # Remove any groups that are already in dtTwinPops
-  groups <- setdiff(groups, unique(splitInputs(dtTwinPops$dataGroups)))
+  groups <- setdiff(groups, unique(splitInputs(as.character(dtTwinPops$dataGroups))))
 
   # Check if any groups are available for virtual twin population creation
   if (length(groups) == 0) {

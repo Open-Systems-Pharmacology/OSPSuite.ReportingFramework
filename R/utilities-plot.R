@@ -490,12 +490,16 @@ validateOutputIdsForPlot <- function(dtOutputPaths) {
   # avoid warning for global variable
   outputPathId <- NULL
 
-  checkmate::assertFactor(dtOutputPaths$outputPathId, any.missing = FALSE)
-  checkmate::assertCharacter(dtOutputPaths$outputPath, any.missing = FALSE)
-  checkmate::assertCharacter(dtOutputPaths$displayName, any.missing = FALSE)
+  checkmate::assertFactor(dtOutputPaths$outputPathId, any.missing = FALSE,
+                          .var.name = 'Outputs column outputPathId')
+  checkmate::assertCharacter(dtOutputPaths$outputPath, any.missing = FALSE,
+                             .var.name = 'Outputs column outputPath')
+  checkmate::assertCharacter(dtOutputPaths$displayName, any.missing = FALSE,
+                             .var.name = 'Outputs column displayName')
 
   if (any(!is.na(dtOutputPaths$color))) {
-    checkmate::assertCharacter(dtOutputPaths$color, any.missing = FALSE)
+    checkmate::assertCharacter(dtOutputPaths$color, any.missing = FALSE,
+                               .var.name = 'Outputs column color')
   }
 
   # Check for unique values for outputpathids
@@ -522,6 +526,33 @@ validateOutputIdsForPlot <- function(dtOutputPaths) {
       )
     }
   ))
+
+  return(invisible())
+}
+
+#' Validation of data.table with outputPath Ids
+#'
+#' @param projectConfiguration ProjectConfiguration object
+validateDataGroupIdsForPlot <- function(projectConfiguration) {
+  # avoid warning for global variable
+  outputPathId <- NULL
+
+  dtDataGroupIds <<- getDataGroups(projectConfiguration)
+
+  checkmate::assertFactor(
+    dtDataGroupIds$group,
+    any.missing = FALSE,
+    unique = TRUE,
+    .var.name = 'DataGroups column group'
+  )
+  checkmate::assertCharacter(dtDataGroupIds$displayName,
+                             any.missing = FALSE,
+                             .var.name = 'DataGroups column displayName')
+
+  if (any(!is.na(dtDataGroupIds$color))) {
+    checkmate::assertCharacter(dtOutputPaths$color, any.missing = FALSE,
+                               .var.name = 'DataGroups column color')
+  }
 
   return(invisible())
 }

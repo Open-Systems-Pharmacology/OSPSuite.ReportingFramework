@@ -1,14 +1,5 @@
 # Purpose: Test case and base for Tutorial
 #
-rootDirectory <- tempdir()
-message(rootDirectory)
-dir.create(file.path(rootDirectory,'Scripts','ReportingFramework'),recursive = TRUE)
-
-setwd("~/GitHub/OSPSuiteReportingFramework")
-load_all()
-
-setwd(file.path(rootDirectory,'Scripts','ReportingFramework'))
-
 source(system.file(
   "extdata", "example_1", "mockManualEditings.R",
   package = "ospsuite.reportingframework",
@@ -17,7 +8,7 @@ source(system.file(
 
 # Initialization  ----------------------------------------------------------
 # load libraries and source project specific code
-#library(ospsuite.reportingframework)
+library(ospsuite.reportingframework)
 library(data.table)
 library(tidyr)
 
@@ -75,7 +66,7 @@ file.copy(from = system.file(
 
 # get paths of all relevant project files
 projectConfiguration <-
-  esqlabsR::createProjectConfiguration(
+  ospsuite.reportingframework::createProjectConfiguration(
     path =  file.path("ProjectConfiguration.xlsx"))
 
 # start log Catch loop which catches all errors, warnins and messages in a logfile
