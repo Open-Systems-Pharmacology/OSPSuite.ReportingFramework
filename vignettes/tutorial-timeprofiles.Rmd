@@ -463,7 +463,7 @@ source("workflow.R")
 
 ### Step 1: Edit Population Configuration
 
-Manually adjust your Excel configuration to define virtual twin populations. The 'VirtualTwinPopulation' sheet within the 'Populations.xlsx' file was created during data import. It contains all data groups with individual data. Since this is a crossover study and the individuals in group 'IV' are also in group 'PO', only one population is suggested for both data groups.
+Manually adjust your Excel configuration to define virtual twin populations. The 'VirtualTwinPopulation' sheet within the 'Individuals.xlsx' file was created during data import. It contains all data groups with individual data. Since this is a crossover study and the individuals in group 'IV' are also in group 'PO', only one population is suggested for both data groups.
 
 For now, we will leave the default configuration and only adjust the 'populationName':
 

@@ -14,11 +14,13 @@ loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, out
 
   dtScenarios <- getScenarioDefinitions(projectConfiguration)
   for (scenarioName in names(outputPathsPerScenario)) {
-    individualMatch <- getIndividualMatchForScenario(
-      projectConfiguration = projectConfiguration,
-      scenario = scenarioName,
-      dtScenarios = dtScenarios
-    )
+
+    individualMatch <- NULL
+    if ("ObservedIndividualId" %in% simulatedResults[[scenarioName]]$population$allCovariateNames){
+      individualMatch <-
+        data.table(individualId = simulatedResults[[scenarioName]]$population$allIndividualIds,
+                   observedIndividualId = simulatedResults[[scenarioName]]$population$getCovariateValues('observedIndividualId'))
+    }
 
     dtSimulated <- rbind(
       dtSimulated,
@@ -33,6 +35,67 @@ loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, out
   }
   return(dtSimulated)
 }
+
+#' Get Predictions for Scenarios
+#'
+#' This function generates predictions for a set of scenarios based on observed data.
+#'
+#' @param scenarioResults A list of scenario results, each containing a population and covariate information.
+#' @param dataObserved A data.table containing observed data with required columns: 'scenario' and identifiers.
+#' @param aggregationFun A function for aggregation (optional).
+#' @param identifier A character vector of identifiers for matching, defaults to c("outputPath", "individualId").
+#'
+#' @return A data.table containing the predicted values for each scenario, along with the scenario name.
+#'
+#' @export
+getPredictionsForScenarios <- function(scenarioResults,
+                                       dataObserved,
+                                       aggregationFun = NULL,
+                                       identifier = c("outputPath", "individualId")) {
+
+  # Validate input names
+  checkmate::assertNames(names(dataObserved), must.include = c('scenario', identifier))
+
+  # Initialize a list to store results for each scenario
+  resultsList <- list()
+
+  # Loop through each scenario
+  for (scenarioName in names(scenarioResults)) {
+    scenarioResult <- scenarioResults[[scenarioName]]
+
+    individualMatch <- NULL
+    if ("ObservedIndividualId" %in% scenarioResult$population$allCovariateNames) {
+      individualMatch <- data.table(
+        individualId = scenarioResult$population$allIndividualIds,
+        observedIndividualId = scenarioResult$population$getCovariateValues('ObservedIndividualId')
+      )
+    }
+
+    # Get simulated time profile
+    dtSimulated <- getSimulatedTimeprofile(
+      simulatedResult = scenarioResult,
+      outputPaths = unique(dataObserved$outputPath),
+      aggregationFun = aggregationFun,
+      individualMatch = individualMatch
+    ) %>%
+      dplyr::mutate(scenario = scenarioName) %>%
+      data.table::setnames('paths', 'outputPath')
+
+    # Add predicted values and store in the results list
+    resultsList[[scenarioName]] <- addPredictedValues(
+      dtObserved = dataObserved,
+      dtSimulated = dtSimulated,
+      identifier = identifier
+    ) %>%
+      dplyr::mutate(scenarioName = scenarioName)
+  }
+
+  # Combine all results into a single data.table
+  dtResult <- rbindlist(resultsList, use.names = TRUE, fill = TRUE)
+
+  return(dtResult)
+}
+
 
 #' Get Unit Conversion Data Table
 #'
@@ -134,9 +197,9 @@ getSimulatedTimeprofile <- function(simulatedResult, outputPaths, aggregationFun
   if (!is.null(individualMatch)) {
     dt <- dt %>%
       dplyr::select(c("IndividualId", "xValues", "yValues", "paths", "dimension", "yUnit", "molWeight")) %>%
-      merge(individualMatch, by = "IndividualId") %>%
+      merge(individualMatch, by.x = "IndividualId",by.y = "individualId") %>%
       dplyr::mutate(IndividualId = NULL) %>%
-      data.table::setnames(old = "ObservedIndividualId", new = "individualId") %>%
+      data.table::setnames(old = "observedIndividualId", new = "individualId") %>%
       dplyr::mutate(dataClass = DATACLASS$tpTwinPop)
   } else if (dplyr::n_distinct(dt$IndividualId) > 1) {
     dt <- performAggregation(

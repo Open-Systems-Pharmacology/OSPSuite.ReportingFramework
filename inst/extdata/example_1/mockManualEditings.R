@@ -98,7 +98,7 @@ mockManualEditings.Population <- function(projectConfiguration,dataObserved,tuto
   if (tutorialstep == 2){
 
     # check configuration for virtual twin population settings and adjust population name
-    wb <- openxlsx::loadWorkbook(projectConfiguration$populationsFile)
+    wb <- openxlsx::loadWorkbook(projectConfiguration$individualsFile)
 
     dtTwinPops <- xlsxReadData(wb, 'VirtualTwinPopulation')
 

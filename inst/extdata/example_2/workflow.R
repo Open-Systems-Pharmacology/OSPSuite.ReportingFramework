@@ -20,8 +20,6 @@ source(system.file(
 # Initialization  ----------------------------------------------------------
 # load libraries and source project specific code
 #library(ospsuite.reportingframework)
-library(data.table)
-library(tidyr)
 
 # set graphic all defaults
 # (see vignette vignette(package = 'ospsuite.plots',topic = 'ospsuite_plots'))

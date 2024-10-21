@@ -57,7 +57,7 @@ In the scenario setup, you can use the 'PopulationName' as 'PopulationId' and se
 
 Virtual twins are simulated populations that closely mirror the characteristics of your observed data. They consist of a collection of individuals generated with the known biometrics extracted from the observed data. For all unknown parameters, the mean value of an individual defined by these characteristics is used.
 
-During the data import via the `readObservedDataByDictionary` function, a sheet named 'VirtualTwinPopulation' is added to the 'Population.xlsx' with the following columns:
+During the data import via the `readObservedDataByDictionary` function, a sheet named 'VirtualTwinPopulation' is added to the 'Individual.xlsx' with the following columns:
 
 - *PopulationName*: Identifier for the population.
 - *DataGroups*: List of data groups (used for informational purposes only).

@@ -10,7 +10,7 @@ mockManualEditings.PKParameter <- function(projectConfiguration){
 
 
   # add all data files which are used in the project
-  wb <- openxlsx::loadWorkbook(projectConfiguration$pKParameterFile)
+  wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$pKParameterFile)
 
   dtTemplate <- xlsxReadData(wb = wb,sheetName = 'Template')
 
@@ -28,7 +28,7 @@ mockManualEditings.PKParameter <- function(projectConfiguration){
   xlsxCloneAndSet(wb = wb,clonedSheet = 'Template', sheetName  = 'PK_Fraction', dt = dtTemplate)
 
 
-  openxlsx::saveWorkbook(wb, projectConfiguration$pKParameterFile, overwrite = TRUE)
+  openxlsx::saveWorkbook(wb, projectConfiguration$addOns$pKParameterFile, overwrite = TRUE)
 }
 
 

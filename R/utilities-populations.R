@@ -20,15 +20,29 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
   }
 
   # Load configuration table for virtual twin population
-  wb <- openxlsx::loadWorkbook(projectConfiguration$populationsFile)
+  wb <- openxlsx::loadWorkbook(projectConfiguration$individualsFile)
 
   # Check if the 'VirtualTwinPopulation' sheet exists
   if (!("VirtualTwinPopulation" %in% wb$sheet_names)) {
-    dtTwinPops <- xlsxReadData(projectConfiguration$scenariosFile, sheetName = "Scenarios") %>%
-      data.table::setnames("populationId", "populationName") %>%
-      dplyr::mutate("dataGroups" = "") %>%
-      dplyr::select(c("populationName", "dataGroups", "individualId", "modelParameterSheets", "applicationProtocol")) %>%
-      dplyr::filter(FALSE)
+
+    # convert old version
+    wbPop <- openxlsx::loadWorkbook(projectConfiguration$populationsFolder)
+    if (("VirtualTwinPopulation" %in% wbPop$sheet_names)){
+      dtTwinPops <- xlsxReadData(wb, "VirtualTwinPopulation")
+
+      xlsxAddSheet(wb = wb, sheetName = "VirtualTwinPopulation", dt = dtTwinPops)
+      openxlsx::removeWorksheet(wbPop,"VirtualTwinPopulation")
+      openxlsx::saveWorkbook(wbPop)
+
+    } else{
+
+      dtTwinPops <- xlsxReadData(projectConfiguration$scenariosFile, sheetName = "Scenarios") %>%
+        data.table::setnames("populationId", "populationName") %>%
+        dplyr::mutate("dataGroups" = "") %>%
+        dplyr::select(c("populationName", "dataGroups", "individualId", "modelParameterSheets", "applicationProtocol")) %>%
+        dplyr::filter(FALSE)
+
+    }
   } else {
     dtTwinPops <- xlsxReadData(wb, "VirtualTwinPopulation")
   }
@@ -86,7 +100,7 @@ exportVirtualTwinPopulations <- function(projectConfiguration, modelFile, overwr
   checkmate::assertCharacter(populationNames, any.missing = FALSE, null.ok = TRUE)
 
   dtTwinPops <- xlsxReadData(
-    wb = projectConfiguration$populationsFile,
+    wb = projectConfiguration$individualsFile,
     sheetName = "VirtualTwinPopulation",
     emptyAsNA = FALSE
   )
@@ -166,7 +180,7 @@ getIndividualMatchForScenario <- function(projectConfiguration,
 
   poptable[, ObservedIndividualId := as.character(ObservedIndividualId)]
 
-  return(poptable %>% dplyr::select("IndividualId", "ObservedIndividualId"))
+  return(poptable %>% dplyr::select("IndividualId", "ObservedIndividualId") %>% setHeadersToLowerCase())
 }
 
 #' Export Random Populations

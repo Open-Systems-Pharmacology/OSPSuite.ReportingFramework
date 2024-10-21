@@ -61,7 +61,7 @@ loadPKAnalysisPerScenario <- function(scenarioName,scenarioResult,
   resultsList <- list()
   for (pkParameterSheet in pkParameterSheets) {
 
-    dtPkParameterDefinition <- xlsxReadData(wb = projectConfiguration$pKParameterFile,
+    dtPkParameterDefinition <- xlsxReadData(wb = projectConfiguration$addOns$pKParameterFile,
                                             sheetName = pkParameterSheet,
                                             skipDescriptionRow = TRUE)
 
@@ -219,7 +219,7 @@ updateParameterOfSheets <- function(projectConfiguration, pkParameterSheets) {
   ospsuite::removeAllUserDefinedPKParameters()
 
   # Read user-defined PK parameters and clean the names
-  dtUserdefPKParameter <- xlsxReadData(wb = projectConfiguration$pKParameterFile,
+  dtUserdefPKParameter <- xlsxReadData(wb = projectConfiguration$addOns$pKParameterFile,
                                        sheetName = 'Userdef PK Parameter',
                                        skipDescriptionRow = FALSE) %>%
     stats::setNames(gsub(" \\[.*\\]", "", names(.)))
@@ -233,7 +233,7 @@ updateParameterOfSheets <- function(projectConfiguration, pkParameterSheets) {
   # Loop through each PK parameter sheet
   for (pkParameterSheet in pkParameterSheets) {
 
-    dtPkParameterDefinition <- xlsxReadData(wb = projectConfiguration$pKParameterFile,
+    dtPkParameterDefinition <- xlsxReadData(wb = projectConfiguration$addOns$pKParameterFile,
                                             sheetName = pkParameterSheet,
                                             skipDescriptionRow = TRUE)
 
