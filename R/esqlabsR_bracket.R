@@ -143,6 +143,13 @@ runAndSaveScenarios <- function(projectConfiguration,
         scenarioNames = sc,
         resultsFolder = file.path(projectConfiguration$outputFolder, "SimulationResults")
       )
+
+      # make sure custom params are not again overwritten by population
+      popFile = file.path(outputFolder,paste0(sc,'_population.csv'))
+      if (file.exists(popFile)){
+        scenarioResults[[sc]][['population']] <- ospsuite::loadPopulation(popFile)
+      }
+
     } else{
 
       message(paste("Start simulation of", sc))

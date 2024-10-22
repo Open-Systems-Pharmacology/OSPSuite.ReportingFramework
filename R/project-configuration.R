@@ -10,12 +10,17 @@ ProjectConfigurationRF <- R6::R6Class(   # nolint object_name_linter
   active = list(
     #' @field pKParameterFile Path to the file containing BMLM Identification
     addOns = function() {
-      stats::setNames(lapply(names(private$.projectConfigurationDataAddOns),function(property){
-      private$.clean_path(
-        private$.projectConfigurationDataAddOns[[property]],
-        self$configurationsFolder
-      )}),
-      names(private$.projectConfigurationDataAddOns))
+      browser
+      if (length(private$.projectConfigurationDataAddOns) == 0) {
+        return(list())
+      } else{
+        return(stats::setNames(lapply(names(private$.projectConfigurationDataAddOns),function(property){
+          private$.clean_path(
+            private$.projectConfigurationDataAddOns[[property]],
+            self$configurationsFolder
+          )}),
+          names(private$.projectConfigurationDataAddOns)))
+      }
     }
   ),
   private = list(
@@ -77,16 +82,17 @@ ProjectConfigurationRF <- R6::R6Class(   # nolint object_name_linter
         ))
       }
 
-      if (!('bMLMConfigurationFile' %in% names(self))){
+      if (!(property %in% names(private$.projectConfigurationDataAddOns))){
         wb = openxlsx::loadWorkbook(self$projectConfigurationFilePath)
         dtConfiguration <- xlsxReadData(wb = wb,sheetName =  wb$sheet_names[1])
-        dtConfiguration <- rbind(dtConfiguration,
-                                 data.table(property = property,
-                                            value = value,
-                                            description = description))
-        xlsxWriteData(wb = wb,sheetName =  wb$sheet_names[1],dt = dtConfiguration)
-        openxlsx::saveWorkbook(wb,self$projectConfigurationFilePath,overwrite = TRUE)
-
+        if (!(property %in% dtConfiguration$propety)){
+          dtConfiguration <- rbind(dtConfiguration,
+                                   data.table(property = property,
+                                              value = value,
+                                              description = description))
+          xlsxWriteData(wb = wb,sheetName =  wb$sheet_names[1],dt = dtConfiguration)
+          openxlsx::saveWorkbook(wb,self$projectConfigurationFilePath,overwrite = TRUE)
+        }
       }
 
       private$.addOnFile(property = property,

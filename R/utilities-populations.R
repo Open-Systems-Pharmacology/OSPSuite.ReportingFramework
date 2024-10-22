@@ -26,13 +26,16 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
   if (!("VirtualTwinPopulation" %in% wb$sheet_names)) {
 
     # convert old version
-    wbPop <- openxlsx::loadWorkbook(projectConfiguration$populationsFolder)
+    wbPop <- openxlsx::loadWorkbook(projectConfiguration$populationsFile)
     if (("VirtualTwinPopulation" %in% wbPop$sheet_names)){
-      dtTwinPops <- xlsxReadData(wb, "VirtualTwinPopulation")
+      dtTwinPops <- xlsxReadData(wbPop, "VirtualTwinPopulation")
 
       xlsxAddSheet(wb = wb, sheetName = "VirtualTwinPopulation", dt = dtTwinPops)
+      openxlsx::saveWorkbook(wb = wb,file = projectConfiguration$individualsFile,overwrite = TRUE)
       openxlsx::removeWorksheet(wbPop,"VirtualTwinPopulation")
-      openxlsx::saveWorkbook(wbPop)
+      openxlsx::saveWorkbook(wb = wbPop,fil = projectConfiguration$populationsFile,overwrite = TRUE)
+
+      message("shift sheet 'VirtualTwinPopulation' from 'Indvidual.xslx' to 'Population.xlsx'")
 
     } else{
 

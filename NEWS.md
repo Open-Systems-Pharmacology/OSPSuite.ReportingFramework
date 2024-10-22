@@ -1,3 +1,5 @@
 # ospsuite.reportingframework 0.3.0
 
-* Initial CRAN submission.
+* Development Version
+
+* PK Parameter Calculation

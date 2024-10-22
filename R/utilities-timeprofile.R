@@ -19,7 +19,7 @@ loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, out
     if ("ObservedIndividualId" %in% simulatedResults[[scenarioName]]$population$allCovariateNames){
       individualMatch <-
         data.table(individualId = simulatedResults[[scenarioName]]$population$allIndividualIds,
-                   observedIndividualId = simulatedResults[[scenarioName]]$population$getCovariateValues('observedIndividualId'))
+                   observedIndividualId = simulatedResults[[scenarioName]]$population$getCovariateValues('ObservedIndividualId'))
     }
 
     dtSimulated <- rbind(
@@ -36,25 +36,171 @@ loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, out
   return(dtSimulated)
 }
 
+
+#' Prepare Data for Matching
+#'
+#' This function prepares observed data for matching with simulation results based on project configuration and scenario definitions.
+#'
+#' @param projectConfiguration A ProjectConfiguration object containing project configuration details, including data groups and output paths.
+#' @param dataObserved A data.table containing observed data. It must include columns for 'group', 'yValues', and 'yUnit'.
+#' @param scenarioList A list of scenarios, each containing simulation details relevant to the observed data.
+#'
+#' @return A data.table containing the prepared observed data, with adjusted values and units for matching with simulation results.
+#'
+#' @details The function checks for valid scenarios, merges data tables, calculates conversion factors, and ensures that the data class matches the expected format.
+#'
+#' @export
+prepareDataForMatch <- function(projectConfiguration, dataObserved, scenarioList) {
+
+  # make sure not to change dataObserved outside function
+  dataObservedForMatch <- data.table::copy(dataObserved)
+
+  # Retrieve data groups and output paths
+  dtDataGroups <- getDataGroups(projectConfiguration)
+  dtOutputs <- getOutputPathIds(projectConfiguration)
+  scenarioNames <- names(scenarioList)
+
+  # Check if all scenario names are in the default scenarios
+  if (!all(scenarioNames %in% dtDataGroups$defaultScenario)) {
+    stop(
+      paste(
+        'There are scenarios which are not selected as "DefaultScenario" in sheet "DataGroups" "Plots.xlsx".',
+        'This is mandatory to connect data and simulations:',
+        paste(setdiff(scenarioNames, dtDataGroups$defaultScenario), collapse = ', ')
+      )
+    )
+  }
+
+  # Clean up observed data
+  if ('scenario' %in% names(dataObservedForMatch)) dataObservedForMatch[, scenario := NULL]
+  if ('outputPath' %in% names(dataObservedForMatch)) dataObservedForMatch[, outputPath := NULL]
+
+  # Merge data tables
+  dataObservedForMatch <- dataObservedForMatch %>%
+    merge(dtDataGroups[, c('group', 'defaultScenario')], by = 'group') %>%
+    data.table::setnames(old = 'defaultScenario', 'scenario') %>%
+    merge(dtOutputs[, c('outputPathId', 'outputPath')], by = 'outputPathId')
+
+  dataObservedForMatch <- calculateUnitFactors(dataObservedForMatch,dtOutputs,scenarioList)
+
+  # Check data class
+  if (!all(dataObservedForMatch$dataClass == DATACLASS$tpIndividual)) {
+    stop(
+      paste(
+        'Please select only scenarios which are matched as "DefaultScenarios" in sheet "DataGroups" "Plots.xlsx" to individual data.',
+        'Check dataGroup',
+        paste(unique(dataObservedForMatch[dataClass != DATACLASS$tpIndividual]$group), collapse = ', ')
+      )
+    )
+  }
+
+  return(dataObservedForMatch)
+}
+
+#' Calculate Unit Factors and Adjust Observed Data
+#'
+#' This function calculates unit conversion factors for observed data and adjusts the observed data accordingly.
+#'
+#' @param dataObserved A data.table containing observed data. It must include columns for 'scenario', 'outputPathId', 'yUnit', and 'yValues'.
+#' @param dtOutputs A data.table containing output path information, including 'outputPathId' and 'displayUnit'.
+#' @param scenarioList A list of scenarios, each containing simulation details relevant to the observed data.
+#'
+#' @return A data.table containing the updated observed data with adjusted yValues, unit factors, and units.
+#'
+#' @details The function merges unit conversion factors into the observed data, adjusts the yValues based on the calculated data factors,
+#' and computes the unit factor for time.
+#'
+#' @keywords internal
+calculateUnitFactors <- function(dataObserved,dtOutputs,scenarioList){
+  # Get unit conversion factors
+  dtUnit <- unique(dataObserved[, c('scenario', 'outputPathId', 'yUnit')]) %>%
+    merge(dtOutputs, by = 'outputPathId')
+
+  # Calculate unit factor for x
+  dtUnit[, unitFactorX := ospsuite::toUnit(quantityOrDimension = 'Time', values = 1, targetUnit = dataObserved$xUnit[1])]
+
+  # Initialize conversion factors
+  dtUnit[, dataFactor := NA_real_]
+  dtUnit[, unitFactorY := NA_real_]
+  dtUnit[, endTimeSimulation := NA_real_]
+
+  # Calculate conversion factors
+  for (iRow in seq_len(nrow(dtUnit))) {
+    sim <- scenarioList[[dtUnit$scenario[iRow]]]$simulation
+    quantity <- ospsuite::getQuantity(path = dtUnit$outputPath[iRow], container = sim)
+
+    dtUnit$dataFactor[iRow] <- ospsuite::toUnit(
+      quantityOrDimension = quantity$dimension,
+      values = 1,
+      targetUnit = dtUnit$displayUnit[iRow],
+      sourceUnit = dtUnit$yUnit[iRow],
+      molWeight = sim$molWeightFor(dtUnit$outputPath[iRow])
+    )
+
+    dtUnit$unitFactorY[iRow] <- ospsuite::toUnit(
+      quantityOrDimension = quantity$dimension,
+      values = 1,
+      targetUnit = dtUnit$displayUnit[iRow],
+      sourceUnit = quantity$unit,
+      molWeight = sim$molWeightFor(dtUnit$outputPath[iRow])
+    )
+
+    dtUnit[, endTimeSimulation := sim$outputSchema$endTime * unitFactorX]
+  }
+
+  # Merge conversion factors back to observed data
+  dataObserved <- dataObserved %>%
+    merge(dtUnit[,c('scenario', 'outputPathId', 'unitFactorX', 'unitFactorY', 'dataFactor', 'displayUnit','endTimeSimulation')],
+          by = c('scenario', 'outputPathId'))
+
+  # Adjust yValues and units
+  dataObserved[, yValues := yValues * dataFactor]
+  dataObserved[, dataFactor := NULL]
+  dataObserved[, yUnit := displayUnit]
+  dataObserved[, displayUnit := NULL]
+
+  if (any(dataObserved$xValues < 0)){
+    warning('data with time < 0 is outside simulation range will be ignored')
+    dataObserved <- dataObserved[xValues >= 0]
+  }
+  if (any(dataObserved$xValues > dataObserved$endTimeSimulation)){
+    writeTableToLog(dataObserved[xValues > endTimeSimulation] %>%
+                      dplyr::select(any_of(c(getColumnsForColumnType(dataObservedForMatch,'identifier'),
+                                             'xValues','endTimeSimulation','timeUnit'))))
+    warning('data with time outside simulation range will be ignored')
+    dataObserved <- dataObserved[xValues <= endTimeSimulation]
+  }
+  dataObserved[,endTimeSimulation := NULL]
+
+
+  return(dataObserved)
+}
+
 #' Get Predictions for Scenarios
 #'
 #' This function generates predictions for a set of scenarios based on observed data.
 #'
-#' @param scenarioResults A list of scenario results, each containing a population and covariate information.
-#' @param dataObserved A data.table containing observed data with required columns: 'scenario' and identifiers.
-#' @param aggregationFun A function for aggregation (optional).
+#' @param scenarioResults A list of scenario results, each containing population and covariate information.
+#' @param dataObserved A data.table containing observed data, which must include the required columns:
+#'        'scenario', 'outputPathId', 'yValues', and 'yUnit'.
+#'        The unit factors (`unitFactorX` and `unitFactorY`) are necessary for proper scaling of the predicted values
+#'        and can be generated using the `prepareDataForMatch` function prior to calling this function.
+#' @param aggregationFun A function for aggregation (optional). If provided, it will be used to aggregate the simulated results.
 #' @param identifier A character vector of identifiers for matching, defaults to c("outputPath", "individualId").
 #'
-#' @return A data.table containing the predicted values for each scenario, along with the scenario name.
+#' @return A data.table containing the predicted values for each scenario, along with the scenario name and other relevant identifiers.
+#'
+#' @details The function validates the input names, loops through each scenario to generate predictions, and combines all results into a single data.table.
+#' It also handles individual matching if 'ObservedIndividualId' is present in the scenario results.
 #'
 #' @export
 getPredictionsForScenarios <- function(scenarioResults,
-                                       dataObserved,
+                                       dataObservedForMatch,
                                        aggregationFun = NULL,
                                        identifier = c("outputPath", "individualId")) {
 
   # Validate input names
-  checkmate::assertNames(names(dataObserved), must.include = c('scenario', identifier))
+  checkmate::assertNames(names(dataObservedForMatch), must.include = c('scenario', 'unitFactorX','unitFactorY',identifier))
 
   # Initialize a list to store results for each scenario
   resultsList <- list()
@@ -74,16 +220,22 @@ getPredictionsForScenarios <- function(scenarioResults,
     # Get simulated time profile
     dtSimulated <- getSimulatedTimeprofile(
       simulatedResult = scenarioResult,
-      outputPaths = unique(dataObserved$outputPath),
+      outputPaths = unique(dataObservedForMatch$outputPath),
       aggregationFun = aggregationFun,
       individualMatch = individualMatch
     ) %>%
       dplyr::mutate(scenario = scenarioName) %>%
-      data.table::setnames('paths', 'outputPath')
+      data.table::setnames('paths', 'outputPath') %>%
+      merge( dataObservedForMatch[scenario == scenarioName,] %>%
+               dplyr::select(all_of(c(identifier,'unitFactorX','unitFactorY'))) %>%
+               unique(),
+             by = identifier) %>%
+      .[,xValues := xValues*unitFactorX] %>%
+      .[,yValues := yValues*unitFactorY]
 
     # Add predicted values and store in the results list
     resultsList[[scenarioName]] <- addPredictedValues(
-      dtObserved = dataObserved,
+      dtObserved = dataObservedForMatch[scenario == scenarioName],
       dtSimulated = dtSimulated,
       identifier = identifier
     ) %>%

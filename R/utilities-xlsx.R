@@ -103,7 +103,7 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 #'
 #' @param wb A workbook object or a character string specifying the path to the xlsx file.
 #' @param sheetName A character string specifying the name of the sheet to read.
-#' @param skipDescriptionRow A logical value indicating if the first row should be interpreted as a description and skipped.
+#' @param skipDescriptionRow A logical value indicating if the first row should be interpreted as a description and skipped. Additionally column Comment is skipped
 #' @param alwaysCharacter A character vector with column names or regex patterns that should be returned as character (typically identifiers).
 #' @param emptyAsNA A logical value. If TRUE, empty strings are converted to NA.
 #' @param convertHeaders A logical value. If TRUE, column names are converted to start with a lowercase letter.
@@ -127,6 +127,7 @@ xlsxReadData <- function(wb, sheetName,
 
   if (skipDescriptionRow) {
     dt <- dt[-1, ]
+    dt <- dt %>% dplyr::select(!any_of('comment'))
   }
 
   # Capture all columns matching the patterns in alwaysCharacter
