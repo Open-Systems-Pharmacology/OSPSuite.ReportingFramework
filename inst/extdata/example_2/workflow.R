@@ -86,11 +86,10 @@ logCatch({
   # calculate PK Parameter
   mockManualEditings.PKParameter(projectConfiguration)
 
-  pkParameterDT <- calculateAndLoadPKParameter(projectConfiguration,
-                                          scenarioResults,
-                                          pkParameterSheets = c('PK_Plasma','PK_Fraction'),
-                                          withRecalculation = TRUE)
-
+  pkParameterDT <- calculateAndLoadPKParameter(projectConfiguration = projectConfiguration,
+                                               scenarioResults = scenarioResults,
+                                               pkParameterSheets = c('PK_Plasma','PK_Fraction'),
+                                               withRecalculation = TRUE)
 
 
   # Create Output Plots -----------------------------------------------------

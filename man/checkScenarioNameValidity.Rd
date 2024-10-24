@@ -4,7 +4,7 @@
 \alias{checkScenarioNameValidity}
 \title{Checks if scenarioName + extension .xml fulfills conditions for file names for electronic package}
 \usage{
-checkScenarioNameValidity(projectConfiguration)
+checkScenarioNameValidity(scenarioNames)
 }
 \arguments{
 \item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}

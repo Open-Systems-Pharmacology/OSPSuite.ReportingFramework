@@ -20,8 +20,8 @@ rmdContainer <-
     subfolder = subfolder
   )
 
-iRow = 25
-iEnd = 25
+iRow = 3
+iEnd = 3
 onePlotConfig <- split(configTable[seq(iRow,iEnd)], by = "plotName")[[1]]
 
 plotType <- 'TP'
@@ -31,3 +31,44 @@ plotCounter <- 1
 
 
 plotType <- 'PvO'
+plotType <- "ResvT"
+
+
+# PK Ratio
+
+functionKey = "PK_DDIRatio"
+configTableSheet = "PK_DDIRatio"
+subfolder <- configTableSheet
+pkParameterDT = pkParameterDT
+coefficentOfVariation = 0
+nObservationDefault = 16
+digitsToRound = 3
+digitsToShow = 3
+nBootstrap = 1000
+seed = 123
+vlineIntercept = 1
+scaleVactors = list(
+  simulated = list(color ='darkgrey',
+                   fill = 'darkgrey',
+                   shape = 'circle'),
+  observed = list(color = 'darkgrey',
+                  fill = 'lightgrey',
+                  shape = 'triangle filled'))
+configTable <-
+  readPKRatioConfigTable(
+    sheetName = configTableSheet,
+    projectConfiguration = projectConfiguration,
+    pkParameterDT = pkParameterDT
+  )
+
+
+rmdContainer <- RmdContainer$new(
+  rmdfolder = file.path(projectConfiguration$outputFolder),
+  subfolder = subfolder
+)
+
+iRow = 10
+iEnd = 17
+onePlotConfig <- split(configTable[seq(iRow,iEnd)], by = "plotName")[[1]]
+
+outputPathIdLoop <- unique(pkParameterDT$outputPathId)[1]

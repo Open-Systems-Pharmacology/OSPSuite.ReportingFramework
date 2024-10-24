@@ -19,6 +19,9 @@ calculateAndLoadPKParameter <- function(projectConfiguration,
   checkmate::assertCharacter(pkParameterSheets, any.missing = FALSE)
   checkmate::assertFlag(withRecalculation)
 
+  dtOutputPaths <- getOutputPathIds(projectConfiguration)
+  if (nrow(dtOutputPaths) == 0) stop('Please define ouputPaths in plot configuration xlsx')
+
   updateParameterOfSheets(projectConfiguration,pkParameterSheets)
 
   # Load or calculate PK analyses for all scenarios
@@ -30,7 +33,7 @@ calculateAndLoadPKParameter <- function(projectConfiguration,
                               projectConfiguration = projectConfiguration)
   })
 
-  return(rbindlist(pkAnalysesList))
+  return(data.table::rbindlist(pkAnalysesList))
 }
 
 
@@ -74,7 +77,7 @@ loadPKAnalysisPerScenario <- function(scenarioName,scenarioResult,
                           list(processPKAnalyses(dtPkAnalyses, dtPkParameterDefinition)))
   }
 
-  return(rbindlist(resultsList))
+  return(data.table::rbindlist(resultsList))
 
 }
 
@@ -221,7 +224,7 @@ updateParameterOfSheets <- function(projectConfiguration, pkParameterSheets) {
   # Read user-defined PK parameters and clean the names
   dtUserdefPKParameter <- xlsxReadData(wb = projectConfiguration$addOns$pKParameterFile,
                                        sheetName = 'Userdef PK Parameter',
-                                       skipDescriptionRow = FALSE) %>%
+                                       skipDescriptionRow = TRUE) %>%
     stats::setNames(gsub(" \\[.*\\]", "", names(.)))
 
   checkmate::assertCharacter(dtUserdefPKParameter$name,any.missing = FALSE,unique = TRUE)
@@ -255,7 +258,7 @@ updateParameterOfSheets <- function(projectConfiguration, pkParameterSheets) {
         displayUnit = dtUserdefPKParameter$`display Unit`[iRow]
       )
 
-      for (col in setdiff(intersect(names(myAUC), names(dtUserdefPKParameter)), c('name','dimension'))) {
+      for (col in setdiff(intersect(names(myPK), names(dtUserdefPKParameter)), c('name','dimension'))) {
         if (!is.na(dtUserdefPKParameter[[col]][iRow])) {
           myPK[[col]] <- dtUserdefPKParameter[[col]][iRow]
         }

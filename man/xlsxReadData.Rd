@@ -18,7 +18,7 @@ xlsxReadData(
 
 \item{sheetName}{A character string specifying the name of the sheet to read.}
 
-\item{skipDescriptionRow}{A logical value indicating if the first row should be interpreted as a description and skipped.}
+\item{skipDescriptionRow}{A logical value indicating if the first row should be interpreted as a description and skipped. Additionally column Comment is skipped}
 
 \item{alwaysCharacter}{A character vector with column names or regex patterns that should be returned as character (typically identifiers).}
 

@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 
 ```{r setup, warning=FALSE,error=FALSE,message=FALSE}
 library(ospsuite.reportingframework)
-library(DisgrammeR)
+library(DiagrammeR)
 ```
 
 # Introduction

@@ -77,8 +77,6 @@ createProjectConfiguration <- function (path = file.path("ProjectConfiguration.x
 createScenarios.wrapped <- function(projectConfiguration, # nolint
                                     scenarioNames = NULL,
                                     doCheckScenarioNameValidity = TRUE) {
-  if (doCheckScenarioNameValidity) checkScenarioNameValidity(projectConfiguration)
-
   scenarioList <-
     esqlabsR::createScenarios(
       esqlabsR::readScenarioConfigurationFromExcel(
@@ -86,6 +84,9 @@ createScenarios.wrapped <- function(projectConfiguration, # nolint
         projectConfiguration = projectConfiguration
       )
     )
+
+  if (doCheckScenarioNameValidity) checkScenarioNameValidity(names(scenarioList))
+
 
   return(scenarioList)
 }
@@ -144,7 +145,7 @@ runAndSaveScenarios <- function(projectConfiguration,
         resultsFolder = file.path(projectConfiguration$outputFolder, "SimulationResults")
       )
 
-      # make sure custom params are not again overwritten by population
+      # add population
       popFile = file.path(outputFolder,paste0(sc,'_population.csv'))
       if (file.exists(popFile)){
         scenarioResults[[sc]][['population']] <- ospsuite::loadPopulation(popFile)

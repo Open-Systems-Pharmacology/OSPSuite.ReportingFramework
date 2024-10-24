@@ -8,7 +8,7 @@
 #'
 #' @export
 runPlot <- function(projectConfiguration,
-                    functionKey = c("TimeProfile_Panel"),
+                    functionKey = c("TimeProfile_Panel",'PK_DDIRatio'),
                     plotFunction = NULL,
                     subfolder = NULL,
                     inputs = list()) {
@@ -54,6 +54,7 @@ getFunctionByKey <- function(key) {
   plotFunction <-
     switch(key,
            TimeProfile_Panel = plotTimeProfilePanels, # nolint indentation_linter
+           PK_DDIRatio = plotPKRatio,
            stop("unkown function key")
     )
 
@@ -107,6 +108,60 @@ addConfigToTemplate <- function(wb, templateSheet, sheetName, dtNewConfig) {
 
   return(wb)
 }
+#' Generate R Markdown Container for Plotting
+#'
+#' This function initializes an R Markdown container and iterates through a configuration table to generate plots based on the provided plotting function.
+#'
+#' @param projectConfiguration An object of class `ProjectConfiguration`, which contains project-specific settings.
+#' @param subfolder A string specifying the subfolder within the output directory where the R Markdown files will be stored.
+#' @param configTable A data frame or data table containing the configuration settings for the plots, including headers and levels.
+#' @param plotFunction A function that takes a plot configuration and the R Markdown container as arguments and generates the corresponding plot.
+#' @param ... Additional arguments passed to the `plotFunction`.
+#'
+#' @return An instance of `RmdContainer` populated with the generated plots based on the configuration table.
+#'
+#' @keywords internal
+generateRmdContainer <- function(projectConfiguration, subfolder, configTable, plotFunction, ...) {
+  # Check common arguments
+  checkmate::assertClass(projectConfiguration, classes = 'ProjectConfiguration')
+  checkmate::assertString(subfolder)
+
+  # Initialize Container for RMD generation
+  rmdContainer <- RmdContainer$new(
+    rmdfolder = file.path(projectConfiguration$outputFolder),
+    subfolder = subfolder
+  )
+
+  iRow <- 1
+  levelLines <- which(!is.na(configTable$level))
+  while (iRow <= nrow(configTable)) {
+    if (!is.na(configTable$level[iRow])) {
+      # Add section headers
+      rmdContainer$addHeader(configTable$header[iRow], level = configTable$level[iRow])
+      iRow <- iRow + 1
+    } else {
+      # Execute plot section
+      iEndX <- utils::head(which(levelLines > iRow), 1)
+      iEnd <- if (length(iEndX) == 0) nrow(configTable) else levelLines[iEndX] - 1
+
+      for (onePlotConfig in split(configTable[seq(iRow, iEnd)], by = "plotName")) {
+        tryCatch({
+          rmdContainer <- plotFunction(onePlotConfig = onePlotConfig, rmdContainer = rmdContainer, ...)
+        }, error = function(err) {
+          if (!getOption("OSPSuite.RF.skipFailingPlots", default = FALSE)) {
+            stop(err)
+          } else {
+            warning(paste("Error during creation of:", onePlotConfig$plotName[1], "Message:", conditionMessage(err)))
+          }
+        })
+      }
+      iRow <- iEnd + 1
+    }
+  }
+
+  return(rmdContainer)
+}
+
 
 # auxiliaries ----
 #' returns a scalevector usable for manual scaling in ggplot
@@ -283,16 +338,7 @@ pasteFigureTags <- function(dtCaption, captionColumn, endWithDot = FALSE) {
 
     captionTextVector <- gsub(allTags, "", captionTextVector)
 
-    captionText <-
-      paste(
-        c(
-          paste(captionTextVector[seq(1, length(captionTextVector) - 1)],
-                collapse = ", " # nolint indentation_linter
-          ),
-          utils::tail(captionTextVector, 1)
-        ),
-        collapse = " and "
-      )
+    captionText <- concatWithAnd(captionTextVector)
 
     if (endWithDot & length(trimws(captionText)) > 0) {
       captionText <- paste0(captionText, ".")
@@ -300,6 +346,34 @@ pasteFigureTags <- function(dtCaption, captionColumn, endWithDot = FALSE) {
   }
 
   return(captionText)
+}
+
+#' Concatenate Text Vector with Commas and "and"
+#'
+#' This function takes a vector of text strings and concatenates them into a single string.
+#' For vectors with more than two elements, it separates them with commas and uses "and"
+#' before the last element.
+#'
+#' @param textVector A character vector of text strings to be concatenated.
+#' @return A single character string representing the concatenated text.
+#'
+#' @keywords internal
+concatWithAnd <- function(textVector) {
+
+  textVector <- trimws(textVector)
+  textVector <- textVector[textVector != '']
+
+  n <- length(textVector)
+
+  if (n == 0) {
+    return("")
+  } else if (n == 1) {
+    return(textVector)
+  } else if (n == 2) {
+    return(paste(textVector, collapse = " and "))
+  } else {
+    return(concatWithAnd(c(paste(textVector[1:(n - 1)], collapse = ", "), tail(textVector, 1))))
+  }
 }
 
 # validation ----------------

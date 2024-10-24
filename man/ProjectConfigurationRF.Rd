@@ -10,6 +10,14 @@ An object storing configuration used project-wide
 \section{Super classes}{
 \code{\link[ospsuite.utils:Printable]{ospsuite.utils::Printable}} -> \code{\link[esqlabsR:ProjectConfiguration]{esqlabsR::ProjectConfiguration}} -> \code{ProjectConfiguration}
 }
+\section{Public fields}{
+\if{html}{\out{<div class="r6-fields">}}
+\describe{
+\item{\code{pKParameterFile}}{Path to the file containing BMLM Identification
+Initialize}
+}
+\if{html}{\out{</div>}}
+}
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
@@ -23,6 +31,7 @@ Initialize}
 \itemize{
 \item \href{#method-ProjectConfiguration-new}{\code{ProjectConfigurationRF$new()}}
 \item \href{#method-ProjectConfiguration-print}{\code{ProjectConfigurationRF$print()}}
+\item \href{#method-ProjectConfiguration-addAddOnfileToConfiguration}{\code{ProjectConfigurationRF$addAddOnfileToConfiguration()}}
 \item \href{#method-ProjectConfiguration-clone}{\code{ProjectConfigurationRF$clone()}}
 }
 }
@@ -60,6 +69,33 @@ print prints a summary of the Project Configuration.
 \if{html}{\out{<div class="r">}}\preformatted{ProjectConfigurationRF$print()}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ProjectConfiguration-addAddOnfileToConfiguration"></a>}}
+\if{latex}{\out{\hypertarget{method-ProjectConfiguration-addAddOnfileToConfiguration}{}}}
+\subsection{Method \code{addAddOnfileToConfiguration()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ProjectConfigurationRF$addAddOnfileToConfiguration(
+  property,
+  value,
+  description,
+  templatePath
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{property}}{Property to add}
+
+\item{\code{value}}{Value of added property}
+
+\item{\code{templatePath}}{path of file template}
+
+\item{\code{projectConfigurationFilePath}}{A string representing the path to the}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ProjectConfiguration-clone"></a>}}

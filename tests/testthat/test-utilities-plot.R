@@ -14,6 +14,39 @@ test_that("generation of default template works", {
 })
 
 
+# Test cases for concatWithAnd function
+test_that("concatWithAnd works correctly", {
+
+  # Test with no elements
+  expect_equal(concatWithAnd(character(0)), "")
+
+  # Test with one element
+  expect_equal(concatWithAnd(c("apple")), "apple")
+
+  # Test with two elements
+  expect_equal(concatWithAnd(c("apple", "banana")), "apple and banana")
+
+  # Test with three elements
+  expect_equal(concatWithAnd(c("apple", "banana", "cherry")), "apple, banana and cherry")
+
+  # Test with four elements
+  expect_equal(concatWithAnd(c("apple", "banana", "cherry", "date")), "apple, banana, cherry and date")
+
+  # Test with special characters
+  expect_equal(concatWithAnd(c("apple!", "banana@", "cherry#")), "apple!, banana@ and cherry#")
+
+  # Test with empty strings
+  expect_equal(concatWithAnd(c("", "banana")), "banana")
+  expect_equal(concatWithAnd(c("apple", "", "cherry")), "apple and cherry")
+
+  # Test with ws
+  expect_equal(concatWithAnd(c("apple ", "", " cherry")), "apple and cherry")
+
+})
+
+
+
+
 # Create example data for testing
 mockConfigTable <- function() {
   data.table(

@@ -5,23 +5,25 @@
 \title{Generate one plot as facet panels}
 \usage{
 createPanelPlotsForPlotName(
-  projectConfiguration,
   onePlotConfig,
+  rmdContainer,
+  projectConfiguration,
   dataObserved,
   scenarioResults,
   nFacetColumns,
   nMaxFacetRows,
-  rmdContainer,
   facetAspectRatio,
   aggregationFun,
   referenceScaleVector
 )
 }
 \arguments{
+\item{onePlotConfig}{configuration table for this plot}
+
+\item{rmdContainer}{Object of class `RmdContainer`.}
+
 \item{projectConfiguration}{An object of class ProjectConfiguration containing the project settings,
 including file paths and scenario definitions. This is essential for the function to access the necessary data.}
-
-\item{onePlotConfig}{configuration table for this plot}
 
 \item{dataObserved}{A data.table or DataCombined object containing the observed data to be plotted.}
 
@@ -34,8 +36,6 @@ used for the facet type "by Order".}
 
 \item{nMaxFacetRows}{An integer specifying the maximum number of facet rows (default is 4)
 used for all facet types.}
-
-\item{rmdContainer}{Object of class `RmdContainer`.}
 
 \item{facetAspectRatio}{A numeric value specifying the aspect ratio for the facets (default is 0.5).}
 

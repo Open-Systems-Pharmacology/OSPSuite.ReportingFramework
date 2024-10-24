@@ -98,6 +98,25 @@ plotTimeProfilePanels <- function(projectConfiguration,
       dataObserved = dataObserved
     )
 
+  # Use the helper function
+  rmdContainer <- generateRmdContainer(
+    projectConfiguration = projectConfiguration,
+    subfolder = subfolder,
+    configTable = configTable,
+    plotFunction =
+      function(onePlotConfig, rmdContainer, ...) {
+        createPanelPlotsForPlotName(
+          projectConfiguration = projectConfiguration,
+          scenarioResults = scenarioResults,
+          dataObserved = dataObserved,
+          rmdContainer = rmdContainer,
+          nFacetColumns = nFacetColumns,
+          nMaxFacetRows = nMaxFacetRows,
+          facetAspectRatio = facetAspectRatio,
+          aggregationFun = aggregationFun,
+          referenceScaleVector = referenceScaleVector)
+      }
+  )
 
   # initialize Container for RMD generation for .Rmd generation
   rmdContainer <-
@@ -204,13 +223,13 @@ readTimeprofileConfigTable <- function(projectConfiguration, sheetName, dataObse
 #'
 #' @return Object of class `rmdContainer` with added figures.
 #' @export
-createPanelPlotsForPlotName <- function(projectConfiguration,
-                                        onePlotConfig,
+createPanelPlotsForPlotName <- function(onePlotConfig,
+                                        rmdContainer,
+                                        projectConfiguration,
                                         dataObserved,
                                         scenarioResults,
                                         nFacetColumns,
                                         nMaxFacetRows,
-                                        rmdContainer,
                                         facetAspectRatio,
                                         aggregationFun,
                                         referenceScaleVector) {
