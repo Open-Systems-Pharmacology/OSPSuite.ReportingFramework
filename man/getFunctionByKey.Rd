@@ -15,3 +15,4 @@ selected `function` for key
 \description{
 select function by key
 }
+\keyword{internal}

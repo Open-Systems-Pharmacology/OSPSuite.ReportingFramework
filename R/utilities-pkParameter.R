@@ -33,7 +33,15 @@ calculateAndLoadPKParameter <- function(projectConfiguration,
                               projectConfiguration = projectConfiguration)
   })
 
-  return(data.table::rbindlist(pkAnalysesList))
+
+  dtOutputPaths <- getOutputPathIds(projectConfiguration)
+  pkParameterDT <- merge(data.table::rbindlist(pkAnalysesList),
+                         dtOutputPaths[, c('outputPathId', 'displayName')],
+                         by = 'outputPathId',
+                         suffixes = c('', 'Output'))
+
+
+  return(pkParameterDT)
 }
 
 
@@ -43,7 +51,6 @@ calculateAndLoadPKParameter <- function(projectConfiguration,
 #' It also processes each specified PK parameter sheet for the scenario.
 #'
 #' @param scenarioName The name of the scenario to process.
-#' @param outputFolder The folder where output files are stored.
 #' @param scenarioResult A list containing the results of the scenario.
 #' @param pkParameterSheets A vector with names of the sheets in the PK parameter file to read.
 #' @param withRecalculation A boolean indicating whether to recalculate PK parameters if results already exist.
@@ -107,9 +114,11 @@ processPKAnalyses <- function(pkAnalyses, dtPkParameterDefinition, dtOutputPaths
 #'
 #' This function loads PK analysis results from a CSV file or recalculates them if specified.
 #'
-#' @param fileName The path to the CSV file containing PK analysis results.
+#' @param projectConfiguration A list containing project configuration, including output folder and PK parameter file.
 #' @param scenarioResult A list containing the results of the scenario.
+#' @param scenarioName name of scenario
 #' @param withRecalculation A boolean indicating whether to recalculate PK parameters if results already exist.
+#'
 #' @return A data.table containing the PK analyses.
 #'
 #' @export

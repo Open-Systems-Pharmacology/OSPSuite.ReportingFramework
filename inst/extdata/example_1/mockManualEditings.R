@@ -105,7 +105,7 @@ mockManualEditings.Population <- function(projectConfiguration,dataObserved,tuto
     dtTwinPops$populationName = 'virtual_twin_population'
 
     xlsxWriteData(wb = wb, sheetName  = 'VirtualTwinPopulation', dt = dtTwinPops)
-    openxlsx::saveWorkbook(wb, projectConfiguration$populationsFile, overwrite = TRUE)
+    openxlsx::saveWorkbook(wb, projectConfiguration$individualsFile, overwrite = TRUE)
 
   }
 

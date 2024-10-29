@@ -4,12 +4,12 @@
 \alias{.savePopulationFile}
 \title{Save Population File}
 \usage{
-.savePopulationFile(poptable, dPop, projectConfiguration)
+.savePopulationFile(poptable, populationName, projectConfiguration)
 }
 \arguments{
 \item{poptable}{A data.table representing the population data.}
 
-\item{dPop}{A data.table containing population metadata.}
+\item{populationName}{name of poulation.}
 
 \item{projectConfiguration}{A list containing project configuration details.}
 }

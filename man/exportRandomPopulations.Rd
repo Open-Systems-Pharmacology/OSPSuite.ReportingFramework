@@ -7,26 +7,34 @@
 exportRandomPopulations(
   projectConfiguration,
   populationNames = NULL,
+  customParameters = NULL,
   overwrite = FALSE
 )
 }
 \arguments{
-\item{projectConfiguration}{A object of class ProjectConfiguration containing configuration settings, including
-the path to the populations file and the folder for
-output files.}
+\item{projectConfiguration}{A list containing project configuration details, including:
+- populationsFile: Path to the Excel file containing population demographics.
+- populationsFolder: Directory where the generated CSV files will be saved.}
 
-\item{populationNames}{A character vector of population names to export. If NULL,
-all populations in the demographics sheet will be considered.}
+\item{populationNames}{A character vector of population names to generate. If NULL, all populations in the demographics sheet will be considered.}
 
-\item{overwrite}{A logical value indicating whether to overwrite existing population
-files. Default is FALSE.}
+\item{customParameters}{A list of custom parameters to set for the populations. Each item in the list should be a list containing:
+- path: The parameter path to set.
+- values: A vector of values to assign to the parameter.}
+
+\item{overwrite}{A logical indicating whether to overwrite existing population files. Default is FALSE.}
 }
 \value{
-NULL (invisible), or an informative message if no new populations are
-        available for export.
+This function does not return a value. It generates and exports CSV files for the specified populations.
 }
 \description{
-This function exports random populations based on demographic ranges from a
-specified Excel file. It can filter populations to export based on existing
-files in a specified folder and optionally overwrite those files.
+This function generates virtual populations based on demographic data and exports them to CSV files.
+}
+\examples{
+\dontrun{
+exportRandomPopulations(projectConfiguration,
+                        populationNames = c("Population1", "Population2"),
+                        customParameters = list(list(path = "param1", values = c(1, 2))),
+                        overwrite = TRUE)
+}
 }

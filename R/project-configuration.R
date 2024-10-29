@@ -25,11 +25,13 @@ ProjectConfigurationRF <- R6::R6Class(   # nolint object_name_linter
   ),
   private = list(
     .projectConfigurationDataAddOns = list(),
+    #' @description Initializes the ProjectConfiguration object with a specified configuration file path.
     .addOnFile = function(property,value) {
       if (!missing(value)) {
         private$.projectConfigurationDataAddOns[[property]]$value <- value
       }
     },
+    #' @description Read configuration from file
     .read_config = function(file_path) {
       path <- private$.clean_path(file_path)
       # Update private values
@@ -40,7 +42,8 @@ ProjectConfigurationRF <- R6::R6Class(   # nolint object_name_linter
         # Update each private property
         self[[property]] <- data[data$Property == property, ]$Value
       }
-      for (property in setdiff(data$Property,names(private$.projectConfigurationDataAddOns))){
+      for (property in setdiff(data$Property,
+                               c(names(private$.projectConfigurationDataAddOns),names(self)))){
         private$.addOnFile(property = property,
                            value = data[data$Property == property, ]$Value)
       }
@@ -65,10 +68,12 @@ ProjectConfigurationRF <- R6::R6Class(   # nolint object_name_linter
       }
       invisible(self)
     },
-    #' @param projectConfigurationFilePath A string representing the path to the
-    #' @param property Property to add
-    #' @param value Value of added property
-    #' @param templatePath path of file template
+    #' @description Adds an add-on file to the project configuration.
+    #'
+    #' @param property A string representing the name of the property to add.
+    #' @param value A string representing the path of the value to add.
+    #' @param description A string providing a description of the property.
+    #' @param templatePath A string representing the path of the template file.
     addAddOnfileToConfiguration = function(property,value,description,templatePath){
       checkmate::assertString(property)
       checkmate::assertString(value)

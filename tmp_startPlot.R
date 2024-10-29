@@ -35,16 +35,19 @@ plotType <- "ResvT"
 
 
 # PK Ratio
+pkParameterObserved = NULL
 
-functionKey = "PK_DDIRatio"
-configTableSheet = "PK_DDIRatio"
-subfolder <- configTableSheet
-pkParameterDT = pkParameterDT
-coefficentOfVariation = 0
+functionKey = "PK_RatioForestByBootstrap"
+configTableSheet = "PKParameter_Forest"
+subfolder <- getSubfolderByKey(functionKey,subfolder = NULL,configTableSheet)
+coefficientOfVariation = 0
 nObservationDefault = 16
 digitsToRound = 3
 digitsToShow = 3
+statFun = function(x) exp(mean(log(x)))
+confLevel = 0.9
 nBootstrap = 1000
+xlabel = 'DDI Ratio'
 seed = 123
 vlineIntercept = 1
 scaleVactors = list(
@@ -55,7 +58,7 @@ scaleVactors = list(
                   fill = 'lightgrey',
                   shape = 'triangle filled'))
 configTable <-
-  readPKRatioConfigTable(
+  readPKForestConfigTable(
     sheetName = configTableSheet,
     projectConfiguration = projectConfiguration,
     pkParameterDT = pkParameterDT
@@ -67,8 +70,8 @@ rmdContainer <- RmdContainer$new(
   subfolder = subfolder
 )
 
-iRow = 10
-iEnd = 17
+iRow = 6
+iEnd = 9
 onePlotConfig <- split(configTable[seq(iRow,iEnd)], by = "plotName")[[1]]
 
-outputPathIdLoop <- unique(pkParameterDT$outputPathId)[1]
+outputPathIdLoop <- splitInputs(onePlotConfig$outputPathId[1])[1]

@@ -181,7 +181,7 @@ calculateUnitFactors <- function(dataObserved,dtOutputs,scenarioList){
 #' This function generates predictions for a set of scenarios based on observed data.
 #'
 #' @param scenarioResults A list of scenario results, each containing population and covariate information.
-#' @param dataObserved A data.table containing observed data, which must include the required columns:
+#' @param dataObservedForMatch A data.table containing observed data, which must include the required columns:
 #'        'scenario', 'outputPathId', 'yValues', and 'yUnit'.
 #'        The unit factors (`unitFactorX` and `unitFactorY`) are necessary for proper scaling of the predicted values
 #'        and can be generated using the `prepareDataForMatch` function prior to calling this function.

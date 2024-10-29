@@ -18,8 +18,9 @@ runExample1 <- function(rootDirectory = NULL){
     rootDirectory <- tempdir()
   }
   message(rootDirectory)
-  if (!dir.exists(rootDirectory))
+  if (!dir.exists(file.path(rootDirectory,'Scripts','ReportingFramework')))
     dir.create(file.path(rootDirectory,'Scripts','ReportingFramework'),recursive = TRUE)
+
   setwd(file.path(rootDirectory,'Scripts','ReportingFramework'))
 
   source(system.file(

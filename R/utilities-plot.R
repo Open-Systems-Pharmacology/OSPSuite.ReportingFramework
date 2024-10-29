@@ -1,4 +1,8 @@
-#' Title
+# file with function called by different plot functions
+
+#' run plot function
+#'
+#' creates .Rmd file for selected plotfile and inputs
 #'
 #' @template projectConfig
 #' @param functionKey keyword which select plot function, if NULL plotfunction is needed
@@ -8,15 +12,21 @@
 #'
 #' @export
 runPlot <- function(projectConfiguration,
-                    functionKey = c("TimeProfile_Panel",'PK_DDIRatio'),
+                    functionKey = c("TimeProfile_Panel",'PK_RatioForestPlot','PK_BoxPlot_absolute','PK_BoxPlot_relative'),
                     plotFunction = NULL,
                     subfolder = NULL,
                     inputs = list()) {
+
+  functionKeys <-  getFuncionKeys()
+
   # validate inputs
   if (is.null(plotFunction)) {
-    functionKey <- match.arg(functionKey)
-    plotFunction <- getFunctionByKey(functionKey)
-    if (is.null(subfolder)) subfolder <- inputs$configTableSheet
+    functionKey <- checkmate::assertChoice(functionKey,choices = names(functionKeys))
+    plotFunction <- functionKeys[[functionKey]]$fun
+
+    if (is.null(subfolder)) {
+      subfolder <- paste0(inputs$configTableSheet,functionKeys[[functionKey]]$subfolderOffset)
+    }
   }
   checkmate::assertFunction(plotFunction)
   checkmate::assertCharacter(subfolder, null.ok = FALSE)
@@ -43,22 +53,23 @@ runPlot <- function(projectConfiguration,
   return(invisible())
 }
 
-
-#' select function by key
+#' Get Function Keys
 #'
-#' @param key character for function selection
+#' This function returns a list of function keys associated with specific plotting functions and offset for subfolders
 #'
-#' @return selected `function` for key
-#' @export
-getFunctionByKey <- function(key) {
-  plotFunction <-
-    switch(key,
-           TimeProfile_Panel = plotTimeProfilePanels, # nolint indentation_linter
-           PK_DDIRatio = plotPKRatio,
-           stop("unkown function key")
-    )
+#' @keywords internal
+getFuncionKeys <- function(){
 
-  return(plotFunction)
+
+  list(TimeProfile_Panel = list(fun = plotTimeProfilePanels,
+                                subfolderOffset = ''),
+       PK_RatioForestByAggregation = list(fun = plotPKRatioForestPlotByRatioAggregation,
+                                        subfolderOffset = '_ratio_aggregation'),
+       PK_RatioForestByBootstrap = list(fun = plotPKRatioForestPlotByBoostrapping,
+                                        subfolderOffset = '_ratio_bootstrap')
+  )
+
+
 }
 
 

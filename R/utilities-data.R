@@ -453,7 +453,8 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
     dplyr::select(dplyr::all_of(colsSelected)) %>%
     unique() %>%
     dplyr::mutate(studyId = as.character(studyId)) %>%
-    dplyr::mutate(group = as.character(group))
+    dplyr::mutate(group = as.character(group)) %>%
+    dplyr::mutate(displayName = as.character(group))
 
   dtDataGroupIdsNew <-
     dtDataGroupIdsNew[!(group %in% dtDataGroupIds$group)]

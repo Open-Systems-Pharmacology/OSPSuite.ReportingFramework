@@ -106,10 +106,11 @@ plotTimeProfilePanels <- function(projectConfiguration,
     plotFunction =
       function(onePlotConfig, rmdContainer, ...) {
         createPanelPlotsForPlotName(
+          onePlotConfig = onePlotConfig,
+          rmdContainer = rmdContainer,
           projectConfiguration = projectConfiguration,
           scenarioResults = scenarioResults,
           dataObserved = dataObserved,
-          rmdContainer = rmdContainer,
           nFacetColumns = nFacetColumns,
           nMaxFacetRows = nMaxFacetRows,
           facetAspectRatio = facetAspectRatio,

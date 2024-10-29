@@ -2,11 +2,12 @@
 % Please edit documentation in R/utilities-plot.R
 \name{runPlot}
 \alias{runPlot}
-\title{Title}
+\title{run plot function}
 \usage{
 runPlot(
   projectConfiguration,
-  functionKey = c("TimeProfile_Panel"),
+  functionKey = c("TimeProfile_Panel", "PK_RatioForestPlot", "PK_BoxPlot_absolute",
+    "PK_BoxPlot_relative"),
   plotFunction = NULL,
   subfolder = NULL,
   inputs = list()
@@ -24,5 +25,5 @@ runPlot(
 \item{inputs}{additionally inputs for the}
 }
 \description{
-Title
+creates .Rmd file for selected plotfile and inputs
 }

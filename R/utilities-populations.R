@@ -80,7 +80,7 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
   }
 
   # Save the workbook
-  openxlsx::saveWorkbook(wb = wb, file = projectConfiguration$populationsFile, overwrite = TRUE)
+  openxlsx::saveWorkbook(wb = wb, file = projectConfiguration$individualsFile, overwrite = TRUE)
 
   return(invisible())
 }
@@ -188,23 +188,40 @@ getIndividualMatchForScenario <- function(projectConfiguration,
 
 #' Export Random Populations
 #'
-#' This function exports random populations based on demographic ranges from a
-#' specified Excel file. It can filter populations to export based on existing
-#' files in a specified folder and optionally overwrite those files.
+#' This function generates virtual populations based on demographic data and exports them to CSV files.
 #'
-#' @param projectConfiguration A object of class ProjectConfiguration containing configuration settings, including
-#'                             the path to the populations file and the folder for
-#'                             output files.
-#' @param populationNames A character vector of population names to export. If NULL,
-#'                        all populations in the demographics sheet will be considered.
-#' @param overwrite A logical value indicating whether to overwrite existing population
-#'                  files. Default is FALSE.
+#' @param projectConfiguration A list containing project configuration details, including:
+#'   - populationsFile: Path to the Excel file containing population demographics.
+#'   - populationsFolder: Directory where the generated CSV files will be saved.
+#' @param populationNames A character vector of population names to generate. If NULL, all populations in the demographics sheet will be considered.
+#' @param customParameters A list of custom parameters to set for the populations. Each item in the list should be a list containing:
+#'   - path: The parameter path to set.
+#'   - values: A vector of values to assign to the parameter.
+#' @param overwrite A logical indicating whether to overwrite existing population files. Default is FALSE.
 #'
-#' @return NULL (invisible), or an informative message if no new populations are
-#'         available for export.
+#' @return This function does not return a value. It generates and exports CSV files for the specified populations.
 #'
+#' @examples
+#' \dontrun{
+#' exportRandomPopulations(projectConfiguration,
+#'                         populationNames = c("Population1", "Population2"),
+#'                         customParameters = list(list(path = "param1", values = c(1, 2))),
+#'                         overwrite = TRUE)
+#' }
 #' @export
-exportRandomPopulations <- function(projectConfiguration, populationNames = NULL, overwrite = FALSE) {
+exportRandomPopulations <- function(projectConfiguration, populationNames = NULL, customParameters = NULL,overwrite = FALSE) {
+  # Check for valid customParameter if provided
+  if (!is.null(customParameters)) {
+    # Validate that customParameter is a list
+    checkmate::assertList(customParameters, types = "list", min.len = 1)
+
+    for (cp in customParameters) {
+      # Check that each custom parameter has the required fields
+      checkmate::assertCharacter(cp$path, len = 1)
+      checkmate::assertCharacter(cp$values)
+    }
+  }
+
   # add virtual population with in biometric ranges of observed data
   dtPops <- xlsxReadData(wb = projectConfiguration$populationsFile, sheetName = "Demographics")
 
@@ -241,10 +258,18 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
         extendPopulationFromXLS_RF(population, projectConfiguration$populationsFile, sheet = dPop$populationName)
       }
 
-      ospsuite::exportPopulationToCSV(
-        population = population$population,
-        filePath = file.path(projectConfiguration$populationsFolder, paste0(dPop$populationName, ".csv"))
-      )
+      poptable <- ospsuite::populationToDataFrame(population$population) %>%
+        data.table::setDT()
+
+      if (!is.null(customParameters)){
+        for (cp in customParameters) {
+          if (length(cp$values) != 1 & length(cp$values) != nrow(poptable))
+            stop(paste('Inconsitent number of values for',cp$path,'in',dPop$populationName))
+          poptable[[cp$path]] = cp$values
+        }
+      }
+      .savePopulationFile(poptable = poptable,populationName = dPop$populationName,projectConfiguration = projectConfiguration)
+
       return(invisible())
     }
   )
@@ -435,7 +460,10 @@ setCustomParamsToPopulation <- function(scenario) {
       dPop = unique(dPop)
     )
 
-    .savePopulationFile(poptable, dPop, projectConfiguration)
+    poptable[, IndividualId := .I - 1]
+    data.table::setcolorder(poptable, "IndividualId")
+
+    .savePopulationFile(poptable, dPop$populationName[1], projectConfiguration)
   }
 }
 
@@ -495,22 +523,17 @@ setCustomParamsToPopulation <- function(scenario) {
 #' This function saves the population data to a CSV file.
 #'
 #' @param poptable A data.table representing the population data.
-#' @param dPop A data.table containing population metadata.
+#' @param populationName name of poulation.
 #' @param projectConfiguration A list containing project configuration details.
 #'
 #' @keywords internal
-.savePopulationFile <- function(poptable, dPop, projectConfiguration) {
-  # avoid warning for global variable
-  individualId <- NULL
-
-  poptable[, IndividualId := .I - 1]
-  data.table::setcolorder(poptable, "IndividualId")
+.savePopulationFile <- function(poptable, populationName, projectConfiguration) {
 
   utils::write.csv(
     x = poptable,
     file = file.path(
       projectConfiguration$populationsFolder,
-      paste0(dPop$populationName[1], ".csv")
+      paste0(populationName, ".csv")
     ),
     fileEncoding = "UTF8",
     row.names = FALSE
@@ -611,8 +634,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #' @keywords internal
 .cleanUpSheetList <- function(sheets) {
   sheets <- unique(sheets)
-  sheets <- unlist(strsplit(sheets, ","))
-  sheets <- trimws(sheets)
+  sheets <- splitInputs(sheets)
   sheets <- sheets[!is.na(sheets) & sheets != ""]
   sheets <- unique(sheets)
 
