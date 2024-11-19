@@ -369,7 +369,8 @@ generatePlotForPlotType <- function(plotData,
         # add Facet Columns
         plotObject <- addFacets(
           plotObject = plotObject,
-          plotData = plotData,
+          nFacetColumns = plotData$nFacetColumns,
+          facetScale = plotData$configTable$facetScale,
           facetAspectRatio =
             ifelse(plotType %in% c("PvO", "QQ "),
                    1, # nolint indentation_linter
@@ -732,35 +733,7 @@ setManualScalevectors <- function(plotObject, plotData, plotType) {
 
   return(plotObject)
 }
-#' Add facets to a ggplot object
-#'
-#' @param plotObject ggplot object to which the facets should be added.
-#' @inheritParams createPanelPlotsForPlotName
-#' @param nFacetColumns Maximal number of facets used for facet type by Order.
-#'
-#' @return Updated ggplot object with facets.
-#' @keywords internal
-addFacets <- function(plotObject,
-                      plotData,
-                      facetAspectRatio = 0.5,
-                      nFacetColumns = 3) {
-  # avoid warnings for global variables during check
-  plotTag <- NULL
 
-  nFacetColumns <- plotData$nFacetColumns
-
-  if (!is.null(nFacetColumns)) {
-    plotObject <- plotObject +
-      ggplot2::facet_wrap(
-        facets = ggplot2::vars(plotTag),
-        scales = plotData$configTable$facetScale[1],
-        ncol = nFacetColumns
-      ) +
-      ggplot2::theme(aspect.ratio = facetAspectRatio)
-  }
-
-  return(plotObject)
-}
 #' Generate a caption for the plot
 #'
 #' @param plotData Object containing the data for the plot.
@@ -829,7 +802,6 @@ getFootNoteLines <- function(dataObserved, dtDataReference) {
   }
 
   footnoteLines <- NULL
-
   if (any(dataObserved$dataClass == DATACLASS$tpAggregated)) {
     errorLabels <- getErrorLabels(dataObserved$yErrorType[1])
 

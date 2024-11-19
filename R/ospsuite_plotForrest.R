@@ -167,7 +167,7 @@ splitWindowsForTable <- function(plotData,textwidthLeft,textwidthRight,xscale,vl
   if (withoutTable){
     textwidthRight <- 0
     tableIndices <- 1
-  } else if('xrange' %in% names(plotData)){
+  } else if('xrange' %in% names(plotData) && any(!is.na(plotData$xrange))){
     tableIndices <- c(1,2,4,5)
   } else{
     tableIndices <- c(1,2,4,6,7)

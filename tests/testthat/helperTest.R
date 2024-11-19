@@ -122,7 +122,7 @@ setDataDictionary <- function(projectConfiguration) {
 
   tpDictionary <- tpDictionary[targetColumn != "population"]
   tpDictionary <- tpDictionary[targetColumn != "nBelowLLOQ"]
-  tpDictionary <- tpDictionary[targetColumn != "numberOfPatients"]
+  tpDictionary <- tpDictionary[targetColumn != "numberOfIndividuals"]
   tpDictionary <- tpDictionary[targetColumn != "yErrorType"]
   tpDictionary <- tpDictionary[targetColumn != "yErrorValues"]
   tpDictionary <- tpDictionary[targetColumn != "studyArm"]

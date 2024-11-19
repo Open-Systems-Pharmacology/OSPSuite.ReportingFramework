@@ -109,7 +109,7 @@ In the "tpDictionary" sheet, define the data dictionary with the following colum
          
       - **timeprofile** columns used to process time profiles.
          The columns 'xValues','yValues','yUnit','lloq' are always mandatory, 
-         for aggregated data the columns 'yErrorValues', 'yErrorType', 'yMin', 'yMax', 'numberOfPatients' and 'nBelowLLOQ' are also available:
+         for aggregated data the columns 'yErrorValues', 'yErrorType', 'yMin', 'yMax', 'numberOfIndividuals' and 'nBelowLLOQ' are also available:
       
         - time: time values, unit is specified in dictionary
         - yValues: data value
@@ -129,7 +129,7 @@ In the "tpDictionary" sheet, define the data dictionary with the following colum
         - yMin: lower range of aggregation range,
         - yMax: upper range of aggregation range
         - nBelowLLOQ: number of values below lloq
-        - numberOfPatients: number of values
+        - numberOfIndividuals: number of values
 
       - **biometrics** columns used to create individuals, can be used also for covariate analysis 
       All columns are optional, The values are transferred to the 'Individual.xlsx' for further use. 
@@ -220,7 +220,7 @@ For Data1 we need all rows, for the other two we have filter defined. In Data2 w
 
 ```{r, echo=FALSE}
 tpDictionaryInd <- tpDictionary %>%
-  dplyr::filter(!(TargetColumn %in% c("yErrorValues", "yErrorType", "nBelowLLOQ", "numberOfPatients", "yMin", "yMax", "route")))
+  dplyr::filter(!(TargetColumn %in% c("yErrorValues", "yErrorType", "nBelowLLOQ", "numberOfIndividuals", "yMin", "yMax", "route")))
 
 tpDictionaryInd[TargetColumn == "group"]$FilterValue <- 'paste(STUD,GRPNAME,"individual",sep = "_")'
 tpDictionaryInd[TargetColumn == "dose"]$SourceColumn <- "DOSE"

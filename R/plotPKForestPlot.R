@@ -114,7 +114,7 @@ plotPKRatioForestPlotByRatioAggregation <- function(projectConfiguration,
                                                     pkParameterDT,
                                                     pkParameterObserved = NULL,
                                                     aggregationFlag = c("GeometricStdDev", "ArithmeticStdDev", "Percentiles", "Custom"),
-                                                    percentiles = c(5, 50, 95),
+                                                    percentiles = c(0.05, 0.50, 0.95),
                                                     customFunction = NULL,
                                                     vlineIntercept = 1,
                                                     scaleVectors = list(
@@ -134,10 +134,7 @@ plotPKRatioForestPlotByRatioAggregation <- function(projectConfiguration,
         gsub(pattern = 'geometric ',replacement = 'geometric\n')
     } else if (aggregationFlag == "Percentiles"){
 
-      tableLabels <- paste0(scales::label_ordinal()(x = percentiles[c(2,1,3)] * 100), "\npercentile") %>%
-        gsub(pattern = "50th\npercentile",replacement = 'median') %>%
-        gsub(pattern = "0th\npercentile",replacement = 'min') %>%
-        gsub(pattern = "100th\npercentile",replacement = 'max')
+      tableLabels <- formatPercentiles(percentiles[c(2,1,3)], "\npercentile")
 
     } else if (aggregationFlag == "Custom"){
       checkmate::assertCharacter(tableLabels,len = 3,null.ok = FALSE)
@@ -313,13 +310,13 @@ createPkPlotForPlotName <- function(onePlotConfig,
       scale_shape_manual(values = unlist(lapply(scaleVectors, getElement, 'shape')))
 
 
-    browser()
     # Export
     rmdContainer$addAndExportFigure(
       plotObject = plotObject,
       caption = getCaptionForRatioPlot(outputPathIdLoop = outputPathIdLoop,
-                                          plotData = plotData,
-                                          pkParameterDT = pkParameterDT),
+                                       plotData = plotData,
+                                       pkParameterDT = pkParameterDT,
+                                       plotCaptionAddon = onePlotConfig$plotCaptionAddon[1]),
       figureKey = paste(onePlotConfig$plotName[1], outputPathIdLoop, sep = "-"),
       width = 30
     )
@@ -571,12 +568,17 @@ calculateRatiosByAggregation <- function(configList,
 #'
 #' @keywords internal
 getCaptionForRatioPlot <- function(outputPathIdLoop,
-                                      plotData,
-                                      pkParameterDT) {
-  paste0('Simulated ',
-         ifelse('observed' %in% unique(plotData$type), ' and observed ', ''),
-         concatWithAnd(paste(unique(plotData$parameter), 'ratios')),
-         ' of ', pkParameterDT[outputPathId == outputPathIdLoop,]$displayNameOutput[1])
+                                   plotData,
+                                   pkParameterDT,
+                                   plotCaptionAddon) {
+  captiontxt = paste0('Simulated ',
+                      ifelse('observed' %in% unique(plotData$type), ' and observed ', ''),
+                      concatWithAnd(paste(unique(plotData$parameter), 'ratios')),
+                      ' of ', pkParameterDT[outputPathId == outputPathIdLoop,]$displayNameOutput[1])
+
+  if (!is.na(plotCaptionAddon) & plotCaptionAddon !=''){
+    captiontxt = paste(captiontxt,plotCaptionAddon)
+  }
 }
 
 

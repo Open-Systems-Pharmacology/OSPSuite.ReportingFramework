@@ -20,6 +20,8 @@
 #' }
 ospsuite_plotTimeProfile <- function(plotData, # nolint
                                      metaData = NULL,
+                                     mapping = ggplot2::aes(),
+                                     observedMapping = mapping,
                                      ...) {
   # initialize variables used for data.table to avoid messages during checks
   yDimension <- yUnit <- dataType <- NULL
@@ -30,12 +32,6 @@ ospsuite_plotTimeProfile <- function(plotData, # nolint
 
   # Capture additional arguments
   additionalArgs <- list(...)
-
-  mapping <- additionalArgs$mapping
-  additionalArgs$mapping <- NULL
-  observedMapping <- additionalArgs$mapping
-  additionalArgs$observedMapping <- NULL
-
 
   if (is.null(metaData)) {
     metaData <- .constructMetDataForTimeProfile(plotData)
@@ -63,7 +59,7 @@ ospsuite_plotTimeProfile <- function(plotData, # nolint
         observedMapping = .getMappingForTimeprofiles(
           plotData = plotData[dataType == "observed"],
           metaData = metaData,
-          userMapping = observedMapping %||% mapping
+          userMapping = observedMapping
         ),
         metaData = metaData,
         observedData = plotData[dataType == "observed"]
@@ -96,6 +92,7 @@ ospsuite_plotTimeProfile <- function(plotData, # nolint
 #' }
 ospsuite_plotPredictedVsObserved <- function(plotData, #nolint
                                              metaData = NULL,
+                                             mapping = ggplot2::aes(),
                                              ...) {
   # initialize variables used for data.table to avoid messages during checks
   predicted <- yValues <- group <- NULL
@@ -105,8 +102,6 @@ ospsuite_plotPredictedVsObserved <- function(plotData, #nolint
   # Capture additional arguments
   additionalArgs <- list(...)
 
-  mapping <- additionalArgs$mapping
-  additionalArgs$mapping <- NULL
   mapping <- structure(
     utils::modifyList(
       ggplot2::aes(
@@ -162,6 +157,7 @@ ospsuite_plotPredictedVsObserved <- function(plotData, #nolint
 #' }
 ospsuite_plotResidualsVsTime <- function(plotData, #nolint
                                          metaData = NULL,
+                                         mapping = ggplot2::aes(),
                                          ...) {
   # initialize variables used for data.table to avoid messages during checks
   xValues <- predicted <- yValues <- group <- NULL
@@ -171,8 +167,6 @@ ospsuite_plotResidualsVsTime <- function(plotData, #nolint
   # Capture additional arguments
   additionalArgs <- list(...)
 
-  mapping <- additionalArgs$mapping
-  additionalArgs$mapping <- NULL
   mapping <- structure(
     utils::modifyList(
       ggplot2::aes(
@@ -230,6 +224,7 @@ ospsuite_plotResidualsVsTime <- function(plotData, #nolint
 #' }
 ospsuite_plotResidualsVsObserved <- function(plotData, #nolint
                                              metaData = NULL,
+                                             mapping = ggplot2::aes(),
                                              ...) {
   # initialize variables used for data.table to avoid messages during checks
   predicted <- yValues <- group <- NULL
@@ -239,8 +234,6 @@ ospsuite_plotResidualsVsObserved <- function(plotData, #nolint
   # Capture additional arguments
   additionalArgs <- list(...)
 
-  mapping <- additionalArgs$mapping
-  additionalArgs$mapping <- NULL
   mapping <- structure(
     utils::modifyList(
       ggplot2::aes(
@@ -298,6 +291,7 @@ ospsuite_plotResidualsVsObserved <- function(plotData, #nolint
 #' }
 ospsuite_plotResidualsAsHistogram <- function(plotData, #nolint
                                               metaData = NULL,
+                                              mapping = ggplot2::aes(),
                                               ...) {
   # initialize variables used for data.table to avoid messages during checks
   predicted <- yValues <- group <- NULL
@@ -307,8 +301,6 @@ ospsuite_plotResidualsAsHistogram <- function(plotData, #nolint
   # Capture additional arguments
   additionalArgs <- list(...)
 
-  mapping <- additionalArgs$mapping
-  additionalArgs$mapping <- NULL
   mapping <- structure(
     utils::modifyList(
       ggplot2::aes(
@@ -365,6 +357,7 @@ ospsuite_plotResidualsAsHistogram <- function(plotData, #nolint
 #' }
 ospsuite_plotQuantileQuantilePlot <- function(plotData, #nolint
                                               metaData = NULL,
+                                              mapping = ggplot2::aes(),
                                               ...) {
   # initialize variables used for data.table to avoid messages during checks
   predicted <- yValues <- group <- NULL
@@ -374,8 +367,6 @@ ospsuite_plotQuantileQuantilePlot <- function(plotData, #nolint
   # Capture additional arguments
   additionalArgs <- list(...)
 
-  mapping <- additionalArgs$mapping
-  additionalArgs$mapping <- NULL
   mapping <- structure(
     utils::modifyList(
       ggplot2::aes(

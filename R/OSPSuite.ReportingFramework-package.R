@@ -7,6 +7,7 @@
 ## usethis namespace: start
 #' @import esqlabsR
 #' @import ospsuite.plots
+#' @import data.table
 #' @importFrom data.table .BY
 #' @importFrom data.table .EACHI
 #' @importFrom data.table .GRP

@@ -158,10 +158,11 @@ runAndSaveScenarios <- function(projectConfiguration,
       # make sure custom params are not again overwritten by population
       scenarioList[[sc]] <- setCustomParamsToPopulation(scenarioList[[sc]])
 
-      scenarioResults[sc] <- esqlabsR::runScenarios(scenarios = scenarioList[sc], ...)
+      scenarioResults[sc] <- esqlabsR::runScenarios(scenarios = scenarioList[sc],
+                                                    simulationRunOptions = simulationRunOptions)
 
       esqlabsR::saveScenarioResults(
-        simulatedScenariosResults = scenarioResults,
+        simulatedScenariosResults =  scenarioResults[sc],
         projectConfiguration = projectConfiguration,
         outputFolder = outputFolder,
         ...

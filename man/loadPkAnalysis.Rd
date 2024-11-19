@@ -12,11 +12,13 @@ loadPkAnalysis(
 )
 }
 \arguments{
+\item{projectConfiguration}{A list containing project configuration, including output folder and PK parameter file.}
+
+\item{scenarioName}{name of scenario}
+
 \item{scenarioResult}{A list containing the results of the scenario.}
 
 \item{withRecalculation}{A boolean indicating whether to recalculate PK parameters if results already exist.}
-
-\item{fileName}{The path to the CSV file containing PK analysis results.}
 }
 \value{
 A data.table containing the PK analyses.

@@ -22,8 +22,6 @@ loadPKAnalysisPerScenario(
 \item{withRecalculation}{A boolean indicating whether to recalculate PK parameters if results already exist.}
 
 \item{projectConfiguration}{A list containing project configuration, including the PK parameter file.}
-
-\item{outputFolder}{The folder where output files are stored.}
 }
 \value{
 A data.table containing the processed PK analyses.

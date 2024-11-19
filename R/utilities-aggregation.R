@@ -74,18 +74,12 @@ getAggregationFunction <- function(aggregationFlag,
 #'
 #' @return  character with with `errorType` for given percentiles
 getErrorTypeForPercentiles <- function(percentiles) {
-  mName <- ifelse(percentiles[2] == 0.5, "median",
-    paste(scales::label_ordinal()(x = percentiles[2] * 100), "percentile")
-  )
-  yMinTxt <- ifelse(percentiles[1] == 0, "min",
-    paste(
-      scales::label_ordinal()(x = percentiles[1] * 100),
-      ifelse(percentiles[3] == 1, "percentile", "")
-    )
-  )
-  yMaxTxt <- ifelse(percentiles[3] == 1, "max",
-    paste(scales::label_ordinal()(x = percentiles[3] * 100), "percentile")
-  )
+  mName <- formatPercentiles(percentiles[2], suffix = " percentile")
+
+  yMinTxt <- formatPercentiles(percentiles[1], suffix = ifelse(percentiles[3] == 1, " percentile", ""))
+
+  yMinTxt <- formatPercentiles(percentiles[3], suffix = " percentile")
+
   return(paste(mName, "|", trimws(yMinTxt), "-", trimws(yMaxTxt)))
 }
 
@@ -109,7 +103,7 @@ performAggregation <- function(dataToAggregate,
   checkmate::assertNames(aggrCriteria, subset.of = names(dataToAggregate))
 
   aggregatedData <- dataToAggregate[, .(
-    numberOfPatients = .N
+    numberOfIndividuals = .N
   ), by = aggrCriteria]
 
   # Count number of measurements below LLOQ

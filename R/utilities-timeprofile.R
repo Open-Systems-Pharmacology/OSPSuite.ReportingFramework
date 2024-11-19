@@ -77,7 +77,7 @@ prepareDataForMatch <- function(projectConfiguration, dataObserved, scenarioList
 
   # Merge data tables
   dataObservedForMatch <- dataObservedForMatch %>%
-    merge(dtDataGroups[, c('group', 'defaultScenario')], by = 'group') %>%
+    merge(unique(dtDataGroups[, c('group', 'defaultScenario')]), by = 'group') %>%
     data.table::setnames(old = 'defaultScenario', 'scenario') %>%
     merge(dtOutputs[, c('outputPathId', 'outputPath')], by = 'outputPathId')
 
@@ -145,7 +145,7 @@ calculateUnitFactors <- function(dataObserved,dtOutputs,scenarioList){
       molWeight = sim$molWeightFor(dtUnit$outputPath[iRow])
     )
 
-    dtUnit[, endTimeSimulation := sim$outputSchema$endTime * unitFactorX]
+    dtUnit$endTimeSimulation[iRow] = sim$outputSchema$endTime * dtUnit$unitFactorX[iRow]
   }
 
   # Merge conversion factors back to observed data
@@ -165,7 +165,7 @@ calculateUnitFactors <- function(dataObserved,dtOutputs,scenarioList){
   }
   if (any(dataObserved$xValues > dataObserved$endTimeSimulation)){
     writeTableToLog(dataObserved[xValues > endTimeSimulation] %>%
-                      dplyr::select(any_of(c(getColumnsForColumnType(dataObservedForMatch,'identifier'),
+                      dplyr::select(any_of(c(getColumnsForColumnType(dataObserved,'identifier'),
                                              'xValues','endTimeSimulation','timeUnit'))))
     warning('data with time outside simulation range will be ignored')
     dataObserved <- dataObserved[xValues <= endTimeSimulation]
@@ -220,7 +220,7 @@ getPredictionsForScenarios <- function(scenarioResults,
     # Get simulated time profile
     dtSimulated <- getSimulatedTimeprofile(
       simulatedResult = scenarioResult,
-      outputPaths = unique(dataObservedForMatch$outputPath),
+      outputPaths = unique(dataObservedForMatch[scenario == scenarioName,]$outputPath),
       aggregationFun = aggregationFun,
       individualMatch = individualMatch
     ) %>%
@@ -246,6 +246,93 @@ getPredictionsForScenarios <- function(scenarioResults,
   dtResult <- rbindlist(resultsList, use.names = TRUE, fill = TRUE)
 
   return(dtResult)
+}
+
+
+#' Calculate Log Likelihood
+#'
+#' This function calculates the log likelihood of observed values given predicted values
+#' based on the specified error model. It accounts for both censored and uncensored data
+#' and allows for different modeling approaches (absolute, proportional, log-transformed).
+#'
+#' The log likelihood is a measure of how well the predicted values explain the observed
+#' data, with higher values indicating a better fit. The function can handle censored data.
+#' This function is typically called within the `data.table` context (see example below)
+#'
+#' @param yValue A numeric vector of observed values. These are the actual measurements that
+#'                will be compared against the predicted values.
+#' @param predicted A numeric vector of predicted values. These values represent the expected
+#'                  measurements based on the model.
+#' @param model A string indicating the error model type. Options include:
+#'              - "absolute": Assumes absolute errors in predictions.
+#'              - "proportional": Assumes proportional errors in predictions.
+#'              - "log_absolute": Assumes log-transformed absolute errors.
+#' @param sigma A numeric value representing the standard deviation of the error term
+#'              in the model, which quantifies the uncertainty in predictions.
+#' @param isCensored A logical indicating if the data is censored. If TRUE, the function
+#'                   will apply the appropriate calculations for censored data.
+#' @param lloq A numeric value representing the lower limit of quantification. This is
+#'              the lowest concentration of a substance that can be reliably measured.
+#' @param lowerBound A numeric value representing the lower bound for the predictions.
+#'                   Values below this threshold will return a log likelihood of negative
+#'                   infinity. Default is 0.
+#'
+#' @return A numeric value representing the log likelihood of the observed data given
+#'         the predicted values. If the data is censored, the log likelihood is computed
+#'         based on the probabilities of falling below the lower limit of quantification.
+#'         If the predictions are below the lower bound, the function returns negative
+#'         infinity, indicating an invalid scenario.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' library(data.table)
+#'
+#' # Create a sample data.table
+#' dt <- data.table(
+#'   yValue = c(1.0, 2.0, 3.0),
+#'   predicted = c(1.1, 2.1, 3.1),
+#'   errorModel = c("absolute", "proportional", "log_absolute"),
+#'   sigma = c(0.5, 0.5, 0.5),
+#'   isCensored = c(FALSE, FALSE, TRUE),
+#'   lloq = c(1.0, 1.0, 1.0)
+#' )
+#'
+#' # Calculate log likelihood for each row
+#' dt[, logLikelihood := mapply(calculateLogLikelihood, yValue, predicted, errorModel, sigma, isCensored, lloq)]
+#'
+#' # View results
+#' print(dt)
+#' }
+#'
+calculateLogLikelihood <- function(yValue, predicted, model, sigma, isCensored, lloq, lowerBound = 0) {
+
+  # Check that all inputs are of length 1 when called with mapply
+  checkmate::assertNumeric(yValue, len = 1)
+  checkmate::assertNumeric(predicted, len = 1)
+  checkmate::assertChoice(model, c("absolute", "proportional", "log_absolute"))
+  checkmate::assertNumeric(sigma, len = 1)
+  checkmate::assertLogical(isCensored, len = 1)
+  checkmate::assertNumeric(lloq, len = 1)
+  checkmate::assertNumeric(lowerBound, len = 1)
+
+  if (predicted < lowerBound) {
+    return(log(0))
+  } else if (isCensored) {
+    p <- switch(model,
+                absolute = pnorm(q = c(lloq, lowerBound), mean = predicted, sd = sigma, log = FALSE),
+                proportional = pnorm(q = c(lloq, lowerBound), mean = predicted, sd = sigma * predicted, log = FALSE),
+                log_absolute = plnorm(q = c(lloq, lowerBound), meanlog = log(predicted), sdlog = sigma, log = FALSE))
+
+    if (p[1] <= p[2]) stop(paste("Invalid probabilities for", model, "model: predicted =", predicted, "lloq =", lloq, "lowerBound =", lowerBound))
+    return(log(p[1] - p[2]) - log(1 - p[2]))
+  } else {
+    p <- switch(model,
+                absolute = dnorm(x = yValue, mean = predicted, sd = sigma, log = TRUE),
+                proportional = dnorm(x = yValue, mean = predicted, sd = sigma * predicted, log = TRUE),
+                log_absolute = dlnorm(x = yValue, meanlog = log(predicted), sdlog = sigma, log = TRUE))
+    return(p)
+  }
 }
 
 

@@ -207,6 +207,31 @@ setHeadersToLowerCase <- function(dt){
   return(dt)
 }
 
+
+#' Separate and Trim Helper Function
+#'
+#' This function separates the rows of a specified column in a data.table,
+#' trims whitespace from the resulting values, and renames the column to remove
+#' the plural 's' at the end of the column name.
+#'
+#' @param data A data.table containing the column to be processed.
+#' @param columnName A string representing the name of the column to separate.
+#'
+#' @return A data.table with the specified column separated into multiple rows,
+#'         trimmed of whitespace, and renamed to remove the plural 's'.
+#' @keywords internal
+separateAndTrim <- function(data, columnName) {
+  # Separate rows based on the specified column and trim whitespace
+  separatedData <- data %>%
+    tidyr::separate_rows(!!sym(columnName), sep = ",") %>%
+    data.table::setDT() %>%
+    .[, (columnName) := trimws(get(columnName))] %>%
+    data.table::setnames(old = columnName, new = sub("s$", "", columnName)) # Remove plural 's'
+
+  return(separatedData)
+}
+
+
 # get special tables ---------
 
 #' Load the properties for data groups
@@ -288,7 +313,7 @@ getTimeRangeTags <- function(projectConfiguration) {
     emptyAsNA = FALSE
   )
 
-  dtTimeRange$Tag <- factor(dtTimeRange$tag,
+  dtTimeRange$tag <- factor(dtTimeRange$tag,
     levels = unique(dtTimeRange$tag),
     ordered = TRUE
   )

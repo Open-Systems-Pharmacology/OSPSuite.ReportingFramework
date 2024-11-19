@@ -11,11 +11,12 @@
 #' @return Processed data based on the dictionary.
 #' @export
 readObservedDataByDictionary <- function(projectConfiguration,
-                                         spreadData = TRUE) {
+                                         spreadData = TRUE,
+                                         dataClassType = c('timeprofile','pkParameter')) {
   # avoid warning for global variable
   individualId <- outputPathId <- dataType <- NULL
 
-  checkmate::assertFileExists(projectConfiguration$dataImporterConfigurationFile)
+  dataClassType <- match.arg(dataClassType)
 
   wb = openxlsx::loadWorkbook(projectConfiguration$dataImporterConfigurationFile)
   dataList <- xlsxReadData(
@@ -23,13 +24,17 @@ readObservedDataByDictionary <- function(projectConfiguration,
     sheetName = "DataFiles",
     skipDescriptionRow = TRUE
   )
+  checkmate::assertCharacter(dataList$dataClass,any.missing = FALSE)
+  dataList <- switch (dataClassType,
+                      timeprofile = dataList[dataClass %in% grep("^tp", unlist(DATACLASS), value = TRUE)],
+                      pkParameter = dataList[dataClass %in% grep("^pk", unlist(DATACLASS), value = TRUE)]                    )
+  if (nrow(dataList) == 0) stop(paste('no datafiles defined for',dataClassType))
+
   checkmate::assertFileExists(fs::path_abs(
     start = projectConfiguration$projectConfigurationDirPath,
     path = dataList$dataFile
   ))
   checkmate::assertNames(dataList$dictionary,subset.of = wb$sheet_names)
-  checkmate::assertCharacter(dataList$dataClass,any.missing = FALSE)
-  checkmate::assertNames(dataList$dataClass,subset.of = unlist(DATACLASS))
 
   # Loop through selected data files
   dataDT <- data.table()
@@ -57,7 +62,6 @@ readObservedDataByDictionary <- function(projectConfiguration,
                       dplyr::mutate(dataClass = d$dataClass),
                     fill = TRUE
     )
-
     # Get unique dictionary for columnType
     tmpdict <-
       tmpdict %>%
@@ -75,7 +79,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
 
   dataDT <- setDataTypeAttributes(dataDT, dict)
 
-  validateObservedData(dataDT = dataDT)
+  validateObservedData(dataDT = dataDT,dataClassType)
 
   # Spread data to other tables
   if (spreadData) {
@@ -160,7 +164,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
 #' It does not return a value.
 #'
 #' @export
-validateObservedData <- function(dataDT) {
+validateObservedData <- function(dataDT,dataClassType) {
   # Initialize variables used for data.tables
   yUnit <- NULL
 
@@ -183,7 +187,7 @@ validateObservedData <- function(dataDT) {
   # Check data validity
   colIdentifier <-
     intersect(
-      c("individualId", "group", "outputPathId", "xValues"),
+      c("individualId", "group", "outputPathId", "xValues","parameter"),
       names(dataDT)
     )
   if (any(duplicated(dataDT, by = colIdentifier))) {
@@ -198,37 +202,54 @@ validateObservedData <- function(dataDT) {
     names(dataDT),
     c(
       "lloq", "yUnit",
-      "yErrorValues", "yErrorType", "nBelowLLOQ"
+      "yErrorValues", "yErrorType", "nBelowLLOQ",
+      "unit","errorValues","errorType"  # columns for pkParameter
     )
   )) {
     if (any(is.na(dataDT[[col]]) | dataDT[[col]] == "")) {
       warning(paste("Data contains NAs or empty values in column", col))
     }
   }
-  colIdentifier <- c("group", "outputPathId")
-  if (any(dataDT[, .(N = dplyr::n_distinct(yUnit)), by = "outputPathId"]$N > 1)) { # nolint
-    tmp <- dataObserved[,.N,by = c('group','outputPathId','yUnit')]
-    tmp <- merge(tmp,tmp[duplicated(tmp[,c('group','outputPathId')]),c('group','outputPathId')],by = c('group','outputPathId'))
-    writeTableToLog(tmp)
-    stop(
-      paste("Y unit is ambiguous in columns", paste(colIdentifier, collapse = ", "))
-    )
-  }
 
-  if ("yErrorType" %in% names(dataDT)) {
-    if (any(dataDT$yErrorType %in% unlist(ospsuite::DataErrorType))) {
-      checkmate::assertNames(
-        names(dataDT),
-        must.include = "yErrorValues"
-      )
-    } else {
-      checkmate::assertNames(
-        names(dataDT),
-        must.include = c("yMin", "yMax")
+
+
+  validateDataUnit <- function(colIdentifier,colUnit){
+    if (any(dataDT[, .(N = dplyr::n_distinct(get(colUnit))), by = colIdentifier]$N > 1)) { # nolint
+      tmp <- dataObserved[,.N,by = c('group',colIdentifier,colUnit)]
+      tmp <- merge(tmp,tmp[duplicated(tmp[,c('group', colIdentifier )]),c('group',colIdentifier)],by = c('group',colIdentifier))
+      writeTableToLog(tmp)
+      stop(
+        paste(colUnit,"ambiguous in columns", paste(colIdentifier, collapse = ", "))
       )
     }
   }
+
+  validateErrorType <- function(errorTypeCol,errorValuesCol,minCol,maxCol){
+    if (errorTypeCol %in% names(dataDT)) {
+      if (any(dataDT$yErrorType %in% unlist(ospsuite::DataErrorType))) {
+        checkmate::assertNames(
+          names(dataDT),
+          must.include = errorValuesCol
+        )
+      } else {
+        checkmate::assertNames(
+          names(dataDT),
+          must.include = c(minCol, maxCol)
+        )
+      }
+    }
+  }
+
+  if (dataClassType == 'timeprofile'){
+    validateDataUnit(colIdentifier = c("outputPathId"),colUnit = 'yUnit')
+    validateErrorType(errorTypeCol = 'yErrorType',errorValuesCol = 'yErrorValues',minCol = "yMin",maxCol = "yMax")
+  }else if (dataClassType == 'pkParameter'){
+    validateDataUnit(colIdentifier = c("outputPathId","parameter"),colUnit = 'unit')
+    validateErrorType(errorTypeCol = 'errorType',errorValuesCol = 'errorValues',minCol = "minValue",maxCol = "maxValue")
+  }
+
 }
+
 
 #' Read data dictionary
 #'
@@ -244,18 +265,17 @@ validateObservedData <- function(dataDT) {
 readDataDictionary <- function(dictionaryFile,
                                sheet,
                                data,
-                               dataClass = grep("^tp", unlist(DATACLASS), value = TRUE)) {
+                               dataClass) {
   # Initialize variables used for data.tables
   sourceColumn <- filter <- NULL
 
   dict <- xlsxReadData(wb = dictionaryFile, sheetName = sheet, skipDescriptionRow = TRUE)
 
-  dataClass <- match.arg(dataClass)
-
   if (dataClass == DATACLASS$tpIndividual) {
     checkmate::assertNames(
       dict$targetColumn,
       must.include = c(
+        "studyId",
         "individualId",
         "group",
         "outputPathId",
@@ -268,6 +288,7 @@ readDataDictionary <- function(dictionaryFile,
     checkmate::assertNames(
       dict$targetColumn,
       must.include = c(
+        "studyId",
         "group",
         "outputPathId",
         "xValues",
@@ -275,6 +296,31 @@ readDataDictionary <- function(dictionaryFile,
         "yUnit",
         "yErrorType",
         "nBelowLLOQ"
+      ), .var.name = paste("Check for missing targetColumns in dictionary", sheet)
+    )
+  } else if (dataClass == DATACLASS$pkIndividual) {
+    checkmate::assertNames(
+      dict$targetColumn,
+      must.include = c(
+        "studyId",
+        "individualId",
+        "group",
+        "outputPathId",
+        "values",
+        "unit"
+      ), .var.name = paste("Check for missing targetColumns in dictionary", sheet)
+    )
+  } else if (dataClass == DATACLASS$pkAggregated) {
+    checkmate::assertNames(
+      dict$targetColumn,
+      must.include = c(
+        "studyId",
+        "group",
+        "outputPathId",
+        "values",
+        "unit",
+        "errorType",
+        "numberOfIndividuals"
       ), .var.name = paste("Check for missing targetColumns in dictionary", sheet)
     )
   }
@@ -360,7 +406,8 @@ convertDataByDictionary <- function(data,
     dplyr::select(unique(dict$targetColumn))
 
   # Add time unit
-  data[, xUnit := dict[targetColumn == "xValues"]$sourceUnit]
+  if ('xValues' %in% dict$targetColumn)
+    data[, xUnit := dict[targetColumn == "xValues"]$sourceUnit]
 
   # Transfer identifier to character without commas
   data <- convertIdentifierColumns(
@@ -665,6 +712,9 @@ addMetaDataToDataSet <- function(dataSet, groupData) {
 #' @param overwrite If TRUE, existing rows will be overwritten.
 #' @export
 addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALSE) {
+
+  if (!('individualId' %in% names(dataDT))) return(invisible())
+
   checkmate::assertFileExists(projectConfiguration$individualsFile)
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$individualsFile)

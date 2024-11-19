@@ -1,9 +1,11 @@
 # Purpose: Test case and base for Tutorial
 #
 
-# use example_1 as base
-rootDirectory <- '~/Test'
+rootDirectory <- '~/TestPK'
 message(rootDirectory)
+if (!dir.exists(file.path(rootDirectory,'Scripts','ReportingFramework')))
+  dir.create(file.path(rootDirectory,'Scripts','ReportingFramework'),recursive = TRUE)
+
 
 setwd("~/GitHub/OSPSuiteReportingFramework")
 load_all()
@@ -16,7 +18,6 @@ source(system.file(
   mustWork = TRUE
 ))
 
-
 # Initialization  ----------------------------------------------------------
 # load libraries and source project specific code
 #library(ospsuite.reportingframework)
@@ -25,9 +26,6 @@ source(system.file(
 # (see vignette vignette(package = 'ospsuite.plots',topic = 'ospsuite_plots'))
 ospsuite.plots::setDefaults()
 theme_update(legend.position = 'top')
-# configure panel labels to be used as Tags A,B,...
-theme_update(strip.background = element_rect(fill = NA,color = NA))
-theme_update(strip.text = element_text(hjust = 0,vjust = 1))
 
 # Set this to TRUE if you want to execute the workflow as a final valid run.
 # It then won't set watermarks to figures and does not skip failing plot generations
@@ -47,6 +45,14 @@ initProject(
   overwrite = FALSE
 )
 
+# copy files needed for tutorials to the correct folders
+file.copy(from = system.file(
+  "extdata","example_1","iv 1 mg (5 min).pkml",
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE),
+  to = file.path('..','..','Models',"iv 1 mg (5 min).pkml"),overwrite = TRUE)
+
+
 
 # get paths of all relevant project files
 projectConfiguration <-
@@ -55,18 +61,27 @@ projectConfiguration <-
 
 # start log Catch loop which catches all errors, warnins and messages in a logfile
 # (see vignette OSPSuite_ReportingFramework)
-logCatch({
+#logCatch({
 
   # initialize log file
   initLogfunction(projectConfiguration = projectConfiguration)
 
   # read observed data
-  dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration)
+  #dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration)
+
+
+  # export populations ------------------------------------------------------
+  mockManualEditings.Population(projectConfiguration)
+
+  # exports all populations defined in population.xlsx sheet "Demographics"
+  exportRandomPopulations(projectConfiguration = projectConfiguration,
+                          populationNames = NULL,
+                          overwrite = FALSE)
 
 
   # Simulations ------------------------------------------------------
   # set up Scenarios
-
+  mockManualEditings.Scenario(projectConfiguration)
 
   # initialize  all scenarios previously defined in scenario.xlsx
   scenarioList <-
@@ -85,18 +100,36 @@ logCatch({
 
   # calculate PK Parameter
   mockManualEditings.PKParameter(projectConfiguration)
+  mockManualEditings.outputPath(projectConfiguration)
 
-  pkParameterDT <- calculateAndLoadPKParameter(projectConfiguration = projectConfiguration,
-                                               scenarioResults = scenarioResults,
-                                               pkParameterSheets = c('PK_Plasma','PK_Fraction'),
-                                               withRecalculation = TRUE)
+  pkParameterDT <- calculateOrLoadPKParameter(projectConfiguration = projectConfiguration,
+                                              scenarioResults = scenarioResults,
+                                              scenarioList = scenarioList,
+                                              pkParameterSheets = c('PK_Plasma','PK_Fraction'),
+                                              withRecalculation = FALSE)
 
 
   # Create Output Plots -----------------------------------------------------
   # (see vignette OSPSuite_ReportingFramework.Rmd  section  Plot Functionality)
-
-
   # figures and captions are filed in <rootdirectory>\Outputs\ReportingFramework\TimeProfiles
+
+  addDefaultConfigForPKBoxwhsikerPlots(projectConfiguration = projectConfiguration,
+                                                   pkParameterDT = pkParameterDT,
+                                                   sheetName = "PKParameter_Boxplot",
+                                                   overwrite = TRUE)
+  mockManualEditings.PlotBoxwhsiker(projectConfiguration)
+
+
+  runPlot(
+    functionKey = "PK_Boxwhisker_Absolute",
+    projectConfiguration = projectConfiguration,
+    inputs = list(
+      configTableSheet = "PKParameter_Boxplot",
+      pkParameterDT = pkParameterDT
+    )
+  )
+
+
 
 
   # Create Report document --------------------------------------------------
@@ -109,7 +142,7 @@ logCatch({
   renderWord(fileName = file.path(projectConfiguration$outputFolder,"appendix.Rmd"))
 
 
-})
+#})
 
 # finalize workflow---------------------
 addMessageToLog("finalize workflow")

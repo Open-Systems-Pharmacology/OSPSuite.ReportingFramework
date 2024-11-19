@@ -63,6 +63,8 @@ getFuncionKeys <- function(){
 
   list(TimeProfile_Panel = list(fun = plotTimeProfilePanels,
                                 subfolderOffset = ''),
+       PK_Boxwhisker_Absolute = list(fun = plotPKBoxwhisker,
+                                          subfolderOffset = '_abs'),
        PK_RatioForestByAggregation = list(fun = plotPKRatioForestPlotByRatioAggregation,
                                         subfolderOffset = '_ratio_aggregation'),
        PK_RatioForestByBootstrap = list(fun = plotPKRatioForestPlotByBoostrapping,
@@ -171,6 +173,42 @@ generateRmdContainer <- function(projectConfiguration, subfolder, configTable, p
   }
 
   return(rmdContainer)
+}
+
+# plotAddons ------------
+#' Add facets to a ggplot object
+#'
+#' This function adds facets to a given ggplot object, allowing for better visualization of data subsets.
+#' Faceting is done by variable plotTag
+#'
+#' @param plotObject A ggplot object to which the facets should be added.
+#' @param facetScale A character string indicating the scale of the facets. Options are "free", "fixed", "free_x", or "free_y".
+#' @param facetAspectRatio A numeric value specifying the aspect ratio of the facets. Default is 0.5.
+#' @param nFacetColumns An integer specifying the number of columns to use for the facet layout. If NULL no faceting is done
+#'
+#' @return An updated ggplot object with facets added.
+#' @keywords internal
+addFacets <- function(plotObject,
+                      facetScale,
+                      facetAspectRatio = 0.5,
+                      nFacetColumns) {
+  # avoid warnings for global variables during check
+  plotTag <- NULL
+
+  if (!is.null(nFacetColumns)) {
+    plotObject <- plotObject +
+      ggplot2::facet_wrap(
+        facets = ggplot2::vars(plotTag),
+        scales = facetScale,
+        ncol = nFacetColumns
+      ) +
+      ggplot2::theme(aspect.ratio = facetAspectRatio,
+                     strip.background = element_rect(fill = NA,color = NA),
+                     strip.text = element_text(hjust = 0,vjust = 1))
+
+  }
+
+  return(plotObject)
 }
 
 
@@ -385,6 +423,49 @@ concatWithAnd <- function(textVector) {
   } else {
     return(concatWithAnd(c(paste(textVector[1:(n - 1)], collapse = ", "), tail(textVector, 1))))
   }
+}
+
+
+' Process Percentiles
+#'
+#' This function takes a numeric vector of percentiles and maps specific values to their corresponding labels.
+#' It also formats other numeric values based on whether they are integers or not.
+#'
+#' @param percentiles A numeric vector of percentiles (0, 50, 100, and other values).
+#' @param suffix A character string to append to formatted percentile values.
+#'
+#' @return A vector containing the mapped labels for specific percentiles and formatted strings for others.
+formatPercentiles <- function(percentiles,suffix = '',allAsPercentiles = FALSE){
+
+  lapply(percentiles*100, function(p) {
+    if (p == 0 & !allAsPercentiles){
+      'min'
+    } else if (p == 50 & !allAsPercentiles){
+      'median'
+    } else if (p == 100 & !allAsPercentiles){
+      'max'
+    } else if (p %% 1 == 0) {
+      paste0(scales::label_ordinal()(x = p), suffix)
+    } else {
+      paste0(p, 'th', suffix)
+    }
+
+  }) %>% unlist()
+}
+
+#' Generate a Plot Tag
+#'
+#' This function generates a plot tag based on the provided index.
+#' The function takes an index and returns the corresponding letter
+#' from the alphabet in uppercase.
+#'
+#' @param index An integer representing the position in the alphabet
+#'
+#' @return A character string representing the uppercase letter
+#' corresponding to the given index.
+#' @keywords internal
+generatePlotTag <- function(index){
+  toupper(letters[index])
 }
 
 # validation ----------------

@@ -145,13 +145,15 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     #' Replicates data for each time tag
     #' @return invisible(NULL)
     addTimeRangeTags = function() {
+
       timeRangeColumns <- names(private$.configTable)[grepl("^timeRange_", names(private$.configTable))]
 
       private$.dataSimulated <- addTimeRangeTagsToData(
         timeRangeColumns = timeRangeColumns,
         dataOld = private$.dataSimulated,
         configTable = self$configTable,
-        applicationTimes = private$.applicationTimes
+        applicationTimes = private$.applicationTimes,
+        timeTags = private$.timeTags
       )
 
       if (nrow(private$.dataSimulated) == 0) {
@@ -163,7 +165,8 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
           timeRangeColumns = timeRangeColumns,
           dataOld = private$.dataObserved,
           configTable = self$configTable,
-          applicationTimes = private$.applicationTimes
+          applicationTimes = private$.applicationTimes,
+          timeTags = private$.timeTags
         )
       }
       return(invisible())
@@ -187,7 +190,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       }
       dtCaption <- addTimeTagsToCaption(
         dtCaption = dtCaption,
-        timeTags = private$.timeTags$Tag,
+        timeTags = private$.timeTags$tag,
         facetType = self$configTable$facetType[1]
       )
 
@@ -211,7 +214,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
       private$.timeRangeTagFilter <- setTimeRangeFilter(
         facetType = self$configTable$facetType[1],
-        timeTags = private$.timeTags$Tag
+        timeTags = private$.timeTags$tag
       )
 
       private$.nColorPerPlotID <- dtCaption[, .(N = dplyr::n_distinct(outputPathId)), by = c("plotTag","counter")]$N %>%
@@ -262,7 +265,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
       private$setFactorLevels(
         tableName = ".timeTags",
-        identifier = "Tag",
+        identifier = "tag",
         identifierData = "timeRangeTag",
         dataToMatch = ".dataSimulated"
       )
@@ -279,10 +282,11 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     #'
     #' @param filterName character with name of time range filter
     getTimeLabelForTimeRange = function(filterName) {
+
       if (filterName == "allTimeRanges") {
         timeLabel <- utils::tail(private$.timeTags$TimeLabel, 1)
       } else {
-        timeLabel <- private$.timeTags[eval(parse(text = paste0('Tag == "', filterName, '"')))]$TimeLabel
+        timeLabel <- private$.timeTags[eval(parse(text = paste0('tag == "', filterName, '"')))]$timeLabel
       }
       xLabel <- paste0(
         timeLabel,
@@ -1028,7 +1032,7 @@ getObservedUnitConversionDT <- function(dataObserved, dtUnit) {
 #' @param applicationTimes A list of application times.
 #' @return A data table with added time range tags.
 #' @keywords internal
-addTimeRangeTagsToData <- function(timeRangeColumns, dataOld, configTable, applicationTimes) {
+addTimeRangeTagsToData <- function(timeRangeColumns, dataOld, configTable, applicationTimes,timeTags) {
   # avoid warnings for global variables
   xValues <- NULL
 
@@ -1055,13 +1059,17 @@ addTimeRangeTagsToData <- function(timeRangeColumns, dataOld, configTable, appli
         tRange <- eval(parse(text = configList[[col]]))
       }
 
-      dt <- rbind(
-        dt,
-        dataOld[xValues >= tRange[1] &
-                  xValues <= tRange[2] &
-                  scenarioIndex == scenarioIndex] %>%
-          dplyr::mutate(timeRangeTag = tag)
-      )
+      dataNew <- dataOld[xValues >= tRange[1] &
+                           xValues <= tRange[2] &
+                           scenarioIndex == scenarioIndex] %>%
+        dplyr::mutate(timeRangeTag = tag)
+
+      timeshift <- timeTags[tag==gsub("^timeRange_", "", col)]$timeShift
+      if (is.na(timeshift) | timeshift == '') timeshift <- tRange[1]
+      if(!is.finite(timeshift)) timeshift <- 0
+      dataNew[,xValues := xValues - timeshift]
+
+      dt <- rbind(dt,dataNew)
     }
   }
   return(dt)
@@ -1073,7 +1081,7 @@ addTimeRangeTagsToData <- function(timeRangeColumns, dataOld, configTable, appli
 #' and merging with output paths to create a comprehensive data table for plotting.
 #'
 #' @param dtCaption A data.table containing the initial caption data with at least a `plotId` column.
-#' @param timeTags A data.table with time tags and corresponding captions, must include `Tag` and `captionText` columns.
+#' @param timeTags A data.table with time tags and corresponding captions, must include `tag` and `captionText` columns.
 #' @param dtOutputPaths A data.table containing output paths with at least `outputPathId` and `displayName` columns.
 #' @param nFacetColumns An integer specifying the number of facet columns, defaults to NULL.
 #' @param nMaxFacetRows An integer specifying the maximum number of facet rows.
@@ -1099,7 +1107,7 @@ finalizeCaptionTable <- function(dtCaption, timeTags, dtOutputPaths, nFacetColum
   }
 
 
-  dtCaption[, plotTag := toupper(letters[plotId])]
+  dtCaption[, plotTag := generatePlotTag(plotId)]
 
   dtCaption$plotTag <-
     factor(dtCaption$plotTag,

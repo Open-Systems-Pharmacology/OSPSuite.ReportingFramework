@@ -13,16 +13,14 @@ An object storing configuration used project-wide
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{pKParameterFile}}{Path to the file containing BMLM Identification
-Initialize}
+\item{\code{pKParameterFile}}{Path to the file containing BMLM Identification}
 }
 \if{html}{\out{</div>}}
 }
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
-\item{\code{pKParameterFile}}{Path to the file containing BMLM Identification
-Initialize}
+\item{\code{pKParameterFile}}{Path to the file containing BMLM Identification}
 }
 \if{html}{\out{</div>}}
 }
@@ -46,6 +44,11 @@ Initialize}
 \if{html}{\out{<a id="method-ProjectConfiguration-new"></a>}}
 \if{latex}{\out{\hypertarget{method-ProjectConfiguration-new}{}}}
 \subsection{Method \code{new()}}{
+Initializes the ProjectConfiguration object with a specified configuration file path.
+
+
+Read configuration from file
+Initialize
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ProjectConfigurationRF$new(projectConfigurationFilePath = character())}\if{html}{\out{</div>}}
 }
@@ -74,6 +77,7 @@ print prints a summary of the Project Configuration.
 \if{html}{\out{<a id="method-ProjectConfiguration-addAddOnfileToConfiguration"></a>}}
 \if{latex}{\out{\hypertarget{method-ProjectConfiguration-addAddOnfileToConfiguration}{}}}
 \subsection{Method \code{addAddOnfileToConfiguration()}}{
+Adds an add-on file to the project configuration.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ProjectConfigurationRF$addAddOnfileToConfiguration(
   property,
@@ -86,13 +90,13 @@ print prints a summary of the Project Configuration.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{property}}{Property to add}
+\item{\code{property}}{A string representing the name of the property to add.}
 
-\item{\code{value}}{Value of added property}
+\item{\code{value}}{A string representing the path of the value to add.}
 
-\item{\code{templatePath}}{path of file template}
+\item{\code{description}}{A string providing a description of the property.}
 
-\item{\code{projectConfigurationFilePath}}{A string representing the path to the}
+\item{\code{templatePath}}{A string representing the path of the template file.}
 }
 \if{html}{\out{</div>}}
 }

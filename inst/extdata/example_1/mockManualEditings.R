@@ -28,7 +28,7 @@ mockManualEditings.DataDictionary <- function(projectConfiguration){
   # - tpDictionary
   tpDictionary <- xlsxReadData(wb = wb,sheetName = 'tpDictionary')
 
-  tpDictionary <- tpDictionary[!(targetColumn  %in% c("yErrorType",'yErrorValues','yMin','yMax','nBelowLLOQ','numberOfPatients','population','country'))]
+  tpDictionary <- tpDictionary[!(targetColumn  %in% c("yErrorType",'yErrorValues','yMin','yMax','nBelowLLOQ','numberOfIndividuals','population','country'))]
 
   tpDictionary[ targetColumn == 'subjectId']$sourceColumn <- "SID"
   tpDictionary[ targetColumn == 'individualId']$sourceColumn <- "SID"

@@ -14,14 +14,14 @@ getPredictionsForScenarios(
 \arguments{
 \item{scenarioResults}{A list of scenario results, each containing population and covariate information.}
 
-\item{aggregationFun}{A function for aggregation (optional). If provided, it will be used to aggregate the simulated results.}
-
-\item{identifier}{A character vector of identifiers for matching, defaults to c("outputPath", "individualId").}
-
-\item{dataObserved}{A data.table containing observed data, which must include the required columns:
+\item{dataObservedForMatch}{A data.table containing observed data, which must include the required columns:
 'scenario', 'outputPathId', 'yValues', and 'yUnit'.
 The unit factors (`unitFactorX` and `unitFactorY`) are necessary for proper scaling of the predicted values
 and can be generated using the `prepareDataForMatch` function prior to calling this function.}
+
+\item{aggregationFun}{A function for aggregation (optional). If provided, it will be used to aggregate the simulated results.}
+
+\item{identifier}{A character vector of identifiers for matching, defaults to c("outputPath", "individualId").}
 }
 \value{
 A data.table containing the predicted values for each scenario, along with the scenario name and other relevant identifiers.
