@@ -5,7 +5,7 @@
 \alias{DATACLASS}
 \title{enumeration keys for DataClass}
 \format{
-An object of class \code{list} of length 3.
+An object of class \code{list} of length 5.
 }
 \usage{
 DATACLASS

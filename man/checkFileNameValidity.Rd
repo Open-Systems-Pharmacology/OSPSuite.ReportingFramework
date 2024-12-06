@@ -4,35 +4,28 @@
 \alias{checkFileNameValidity}
 \title{Check File Name Validity}
 \usage{
-checkFileNameValidity(files, dataSets = NULL)
+checkFileNameValidity(fileName, isDataSet = FALSE)
 }
 \arguments{
-\item{files}{A character vector of file names to validate. Each file name should have
-a valid extension (xml, txt, or csv) and must not exceed 64 characters in length.}
+\item{fileName}{A character string representing the filename to be checked.}
 
-\item{dataSets}{A character vector of dataset names to validate. Each dataset name must
-not exceed 32 characters in length. This parameter is optional.}
+\item{isDataSet}{A logical value indicating whether the filename is for a dataset.
+If TRUE, only "txt" is allowed as a file extension with a maximum
+length of 32 characters. If FALSE, "xml", "txt", and "csv" are allowed
+with a maximum length of 64 characters.}
 }
 \value{
-A character vector containing the names of invalid files and datasets that do not meet the specified criteria.
+A logical value: TRUE if the filename is valid, FALSE otherwise.
+        If invalid, a warning is issued detailing the specific reason(s).
 }
 \description{
-This function checks the validity of file names and dataset names based on specified criteria,
-including allowed file extensions and maximum length restrictions.
-}
-\details{
-The function checks the following conditions for file names:
-- Must match the regular expression pattern allowing only lowercase letters, numbers, and underscores.
-- Must end with one of the allowed file extensions.
-- Must not exceed the maximum length of 64 characters.
-
-For dataset names, the function checks that they do not exceed the maximum length of 32 characters.
+This function checks if a given filename is valid based on specified criteria,
+including allowed file extensions, maximum length, and that it does not start
+with a numerical digit.
 }
 \examples{
-# Example usage:
-files <- c("valid_file.xml", "invalid_file.txt", "too_long_file_name_exceeding_the_limit.csv")
-dataSets <- c("validDataset", "invalidDatasetNameThatIsWayTooLong")
-invalidNames <- checkFileNameValidity(files, dataSets)
-print(invalidNames)
+checkFileNameValidity("valid_file.txt")
+checkFileNameValidity("1invalid_file.txt")
+checkFileNameValidity("too_long_filename_that_exceeds_the_limit.txt", isDataSet = TRUE)
 
 }

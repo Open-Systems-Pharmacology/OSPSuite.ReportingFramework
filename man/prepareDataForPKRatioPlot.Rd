@@ -13,26 +13,23 @@ prepareDataForPKRatioPlot(
 )
 }
 \arguments{
-\item{onePlotConfig}{A data.table containing the plot configuration.}
+\item{onePlotConfig}{A data.table containing the plot configuration for the current plot.}
 
-\item{pkParameterDT}{A data.table with PK parameters.}
+\item{pkParameterDT}{A data.table with PK parameters that will be used for ratio calculations.}
 
-\item{coefficientOfVariation}{Coefficient of variation for simulations.}
+\item{pkParameterObserved}{A data.table containing observed PK parameters. This parameter is optional.}
 
-\item{nBootstrap}{Number of bootstrap samples.}
+\item{ratioCalculationMethod}{A string specifying the method used for calculating ratios (e.g., 'byBootsTrapping').}
 
-\item{nObservationDefault}{Default number of observations.}
-
-\item{confLevel}{Confidence level for intervals.}
-
-\item{statFun}{Function to compute statistics.}
-
-\item{seed}{Random seed for reproducibility.}
+\item{ratioCalculationInputs}{A list containing inputs specific to the method used for calculating ratios.}
 }
 \value{
-A data.table containing the prepared plot data.
+A data.table containing the prepared plot data, including calculated ratios and relevant
+        statistics for plotting.
 }
 \description{
-Prepares the data necessary for generating a DDI ratio plot.
+Prepares the necessary data for generating a DDI ratio plot. This function handles the merging
+of configuration data with observed PK parameters and calculates the ratios based on the specified
+method.
 }
 \keyword{internal}

@@ -1,15 +1,51 @@
-#' Sets options to the values they should have for a valid run
+#' Sets options for a reporting frame work workflow.
 #'
-#' relevant options are
-#'   - watermark for figures (see vignette(package = 'ospsuite.plots',topic = 'ospsuite_plots'))
-#'   - OSPSuite.RF.skipFailingPlots
-#'   - OSPSuite.RF.stopHelperFunction  stops helper function during valid runs
+#' Typically a workflow is applied in two different cases.
+#' 1. As valid run, the result of a workflow is intended as a package,
+#'    which can be used to generate final reports, in this case figures
+#'    should not have watermarks, functions which manipulate inputs are not allowed,
+#'    and the workflow stops if an error occurs during.
+#' 2. For exploratory analysis or preparation of a valid run.
 #'
+#' A workflow can also produce a ePackage (see vignette XXX)
+#' This function configures several options that affect the behavior of the
+#' reporting frame work workflow. It allows for the enabling or disabling of watermarks,
+#' controls the handling of failing plots, manages the execution of helper functions,
+#' and specifies ePackage generation and plot export options.
 #'
-#' @param isValidRun  if TRUE
+#' Relevant options include:
+#'
+#' - `ospsuite.plots.watermark_enabled`: Set to TRUE when `isValidRun` is FALSE
+#'   to display watermarks on figures, and FALSE when `isValidRun` is TRUE.
+#'
+#' - `OSPSuite.RF.skipFailingPlots`: Set to TRUE when `isValidRun` is FALSE
+#'   to skip plots that fail to generate, and FALSE when `isValidRun` is TRUE.
+#'
+#' - `OSPSuite.RF.stopHelperFunction`: Set to TRUE when `isValidRun` is TRUE
+#'   to stop the execution of helper functions during valid runs.
+#'
+#' - `OSPSuite.RF.withEPackage`: Set to TRUE if `ePackageGeneration` is either
+#'   'withEpackage' or 'onlyEpackage', indicating that EPackage generation should occur.
+#'
+#' - `OSPSuite.RF.withPlotExport`: Set to TRUE if `ePackageGeneration` is either
+#'   'None' or 'withEpackage', indicating that plot export should occur.
+#'
+#' @param isValidRun A logical value indicating if the run is valid. If TRUE,
+#'        options are set for a valid run; if FALSE, options are set for an invalid run.
+#' @param ePackageGeneration A character string indicating the type of ePackage generation.
+#'        Options include:
+#'
+#'        - 'None': No ePackage generation.
+#'
+#'        - 'withEPackage': Generate ePackage alongside the run.
+#'
+#'        - 'onlyEPackage': Only generate ePackage without exporting figures.
 #'
 #' @export
-executeAsValidRun <- function(isValidRun) {
+setWorkflowOptions <- function(isValidRun,ePackageGeneration = c('None','withEPackage','onlyEPackage')) {
+
+  match.arg(ePackageGeneration)
+
   # set options to enable watermarks
   options(ospsuite.plots.watermark_enabled = !isValidRun)
 
@@ -18,6 +54,13 @@ executeAsValidRun <- function(isValidRun) {
 
   # stop helper functions
   options(OSPSuite.RF.stopHelperFunction = isValidRun)
+
+  # generateEpackages
+  options(OSPSuite.RF.withEPackage = ePackageGeneration %in% c('withEPackage','onlyEPackage'))
+
+  # plotAndTableExport
+  options(OSPSuite.RF.withPlotExport = ePackageGeneration %in% c('None','withEPackage'))
+
 
   return(invisible())
 }

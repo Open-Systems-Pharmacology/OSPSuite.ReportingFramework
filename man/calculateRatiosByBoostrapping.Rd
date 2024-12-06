@@ -16,26 +16,30 @@ calculateRatiosByBoostrapping(
 )
 }
 \arguments{
-\item{configList}{A data.table containing the configuration for the current workflow.}
+\item{configList}{A data.table containing the configuration for the current workflow, including
+reference and scenario details.}
 
-\item{pkParameterDT}{A data.table with PK parameters.}
+\item{pkParameterDT}{A data.table with PK parameters that will be used for ratio calculations.}
 
-\item{coefficientOfVariation}{Coefficient of variation for simulations.}
+\item{coefficientOfVariation}{A numeric value representing the coefficient of variation for simulations.}
 
-\item{nObservations}{Number of observations to simulate.}
+\item{nObservations}{An integer representing the number of observations to simulate.}
 
-\item{nBootstrap}{Number of bootstrap samples.}
+\item{nBootstrap}{An integer specifying the number of bootstrap samples to generate.}
 
-\item{confLevel}{Confidence level for intervals.}
+\item{confLevel}{A numeric value representing the confidence level for intervals.}
 
-\item{statFun}{Function to compute statistics.}
+\item{statFun}{A function to compute statistics from the bootstrap samples.}
 
-\item{seed}{Random seed for reproducibility.}
+\item{seed}{An integer for setting the random seed to ensure reproducibility of results.}
 }
 \value{
-A data.table containing the bootstrapped statistics.
+A data.table containing the calculated bootstrapped statistics, including the ratio and
+        confidence intervals.
 }
 \description{
-Calculates ratios for the specified workflow based on the provided configuration.
+Calculates ratios for the specified workflow based on the provided configuration. This function
+handles the merging of reference and scenario data and computes the ratios using the specified
+statistical method.
 }
 \keyword{internal}

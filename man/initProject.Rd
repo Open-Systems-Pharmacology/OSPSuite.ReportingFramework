@@ -2,21 +2,43 @@
 % Please edit documentation in R/esqlabsR_bracket.R
 \name{initProject}
 \alias{initProject}
-\title{Initialize Project}
+\title{Initialize Project Directory}
 \usage{
-initProject(rootDirectory = "..", sourceFolder, overwrite = FALSE)
+initProject(
+  configurationDirectory = ".",
+  sourceConfigurationXlsx = system.file("templates", "ProjectConfiguration.xlsx", package
+    = "ospsuite.reportingframework"),
+  overwrite = FALSE
+)
 }
 \arguments{
-\item{rootDirectory}{A string defining the path where to initialize the project.
-default to current working directory.}
+\item{configurationDirectory}{A character string specifying the path to the project
+directory to be initialized. Defaults to the current working directory ('.').}
 
-\item{sourceFolder}{path of template directory available is
-`templateDirectory()` default path of `ospsuite.reportingframework`
-`esqlabsR:::example_directory("TestProject")`  default path for Esqlabs-projects}
+\item{sourceConfigurationXlsx}{A character string representing the path to the source
+Excel file containing the project configuration. By default, it uses the template
+provided by the 'ospsuite.reportingframework' package.}
 
-\item{overwrite}{A boolean, if TRUE existing files will be overwritten}
+\item{overwrite}{A logical value indicating whether to overwrite existing files in the
+project directory. Defaults to FALSE, meaning existing files will not be overwritten.}
+}
+\value{
+This function returns an invisible NULL. It is used for its side effects of
+creating directories and copying files rather than producing a value.
 }
 \description{
-Creates the default project folder structure with excels file templates in
-the working directory.
+This function initializes a project directory by creating necessary subdirectories
+and copying configuration files from a source Excel file. It reads the directory
+structure and files specified in the provided Excel template and sets up the project
+environment accordingly.
+}
+\examples{
+\dontrun{
+# Initialize a project in the current directory
+initProject()
+
+# Initialize a project in a specified directory and allow overwriting
+initProject(configurationDirectory = "my_project", overwrite = TRUE)
+}
+
 }

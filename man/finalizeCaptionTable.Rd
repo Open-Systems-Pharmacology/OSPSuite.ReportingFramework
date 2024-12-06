@@ -16,7 +16,7 @@ finalizeCaptionTable(
 \arguments{
 \item{dtCaption}{A data.table containing the initial caption data with at least a `plotId` column.}
 
-\item{timeTags}{A data.table with time tags and corresponding captions, must include `Tag` and `captionText` columns.}
+\item{timeTags}{A data.table with time tags and corresponding captions, must include `tag` and `captionText` columns.}
 
 \item{dtOutputPaths}{A data.table containing output paths with at least `outputPathId` and `displayName` columns.}
 

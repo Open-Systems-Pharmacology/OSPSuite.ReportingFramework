@@ -4,7 +4,11 @@
 \alias{readObservedDataByDictionary}
 \title{Read data by dictionary}
 \usage{
-readObservedDataByDictionary(projectConfiguration, spreadData = TRUE)
+readObservedDataByDictionary(
+  projectConfiguration,
+  spreadData = TRUE,
+  dataClassType = c("timeprofile", "pkParameter")
+)
 }
 \arguments{
 \item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}

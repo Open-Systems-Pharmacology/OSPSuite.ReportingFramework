@@ -160,9 +160,9 @@ getIndividualMatchForScenario <- function(projectConfiguration,
                                           scenario,
                                           dtScenarios) {
   # avoid warnings for global variables
-  scenario_name <- observedIndividualId <- NULL # nolint object_name_linter
+  scenarioName <- observedIndividualId <- NULL # nolint object_name_linter
 
-  dtScenarioRow <- dtScenarios[scenario_name == scenario]
+  dtScenarioRow <- dtScenarios[scenarioName == scenario]
 
   # check if is is a population scenario with a static population file
   if (is.na(dtScenarioRow$populationId) ||

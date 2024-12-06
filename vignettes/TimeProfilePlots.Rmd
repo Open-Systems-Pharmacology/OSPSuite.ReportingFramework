@@ -275,7 +275,7 @@ Here is an example of how the first few rows of your Excel sheet might look:
 
 
 ```{r load-template, eval=TRUE, echo=FALSE}
-templateFilePath <- system.file("templates", "templateProject", "Scripts", "ReportingFramework", "Plots.xlsx",
+templateFilePath <- system.file("templates", "Plots.xlsx",
   package = "ospsuite.reportingframework", mustWork = TRUE
 )
 

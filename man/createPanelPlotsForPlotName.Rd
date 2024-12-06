@@ -42,7 +42,13 @@ used for all facet types.}
 \item{aggregationFun}{Function to aggregate simulated data.}
 
 \item{referenceScaleVector}{A named list that configures labels and colors for the display of
-reference scenarios. The names of the list are displayed as labels in the legend.}
+reference scenarios. The names of the list are displayed as labels in the legend.
+
+Default:
+referenceScaleVector = list(
+  Simulation = c(NA, NA),
+  Reference = c(NA, NA)
+)}
 }
 \value{
 Object of class `rmdContainer` with added figures.

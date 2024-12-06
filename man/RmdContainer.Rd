@@ -18,6 +18,10 @@ An object to create a .Rmd file during a plot function
 \if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
 \item{\code{digitsOfSignificance}}{digits for significance in table display}
+
+\item{\code{configTable}}{configuration Table}
+
+\item{\code{dataObserved}}{observedData used for this Rmd}
 }
 \if{html}{\out{</div>}}
 }

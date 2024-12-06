@@ -51,15 +51,3 @@ createDocumentFromTemplate <- function(template = "template_workflow",
 }
 
 
-#' Returns Path of template directory
-#'
-#' @return pathname
-#' @export
-templateDirectory <- function() {
-  system.file(
-    "templates",
-    "TemplateProject",
-    package = "ospsuite.reportingframework",
-    mustWork = TRUE
-  )
-}

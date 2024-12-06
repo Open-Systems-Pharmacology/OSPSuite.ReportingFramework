@@ -17,7 +17,9 @@ runPlot <- function(projectConfiguration,
                     subfolder = NULL,
                     inputs = list()) {
 
-  functionKeys <-  getFuncionKeys()
+  loadConfigTables(projectConfiguration)
+
+  functionKeys <-  getFunctionKeys()
 
   # validate inputs
   if (is.null(plotFunction)) {
@@ -26,6 +28,11 @@ runPlot <- function(projectConfiguration,
 
     if (is.null(subfolder)) {
       subfolder <- paste0(inputs$configTableSheet,functionKeys[[functionKey]]$subfolderOffset)
+    }
+  } else{
+    if (is.null(subfolder)) {
+      browser()
+      subfolder <-  gsub('^plot','',deparse(substitute(plotFunction)))
     }
   }
   checkmate::assertFunction(plotFunction)
@@ -47,6 +54,19 @@ runPlot <- function(projectConfiguration,
     ), inputs)
   )
 
+  if (getOption('OSPSuite.RF.withEPackage') &
+      (!is.null(rmdContainer$configTable))){
+    addScenariosToEPackage(projectConfiguration = projectConfiguration,
+                           configTable = rmdContainer$configTable,subfolder = subfolder)
+
+    if (nrow(rmdContainer$dataObserved) > 0 & exists(x = 'dataObserved')){
+      exportTimeProfileDataForEPackage(
+        projectConfiguration = projectConfiguration,
+        dataToExport = merge(rmdContainer$dataObserved, dataObserved, by = '.Id')
+      )
+    }
+  }
+
   # create rmd
   rmdContainer$writeRmd(fileName = paste0(subfolder, ".Rmd"))
 
@@ -58,7 +78,7 @@ runPlot <- function(projectConfiguration,
 #' This function returns a list of function keys associated with specific plotting functions and offset for subfolders
 #'
 #' @keywords internal
-getFuncionKeys <- function(){
+getFunctionKeys <- function(){
 
 
   list(TimeProfile_Panel = list(fun = plotTimeProfilePanels,
@@ -68,59 +88,16 @@ getFuncionKeys <- function(){
        PK_RatioForestByAggregation = list(fun = plotPKRatioForestPlotByRatioAggregation,
                                         subfolderOffset = '_ratio_aggregation'),
        PK_RatioForestByBootstrap = list(fun = plotPKRatioForestPlotByBoostrapping,
-                                        subfolderOffset = '_ratio_bootstrap')
+                                        subfolderOffset = '_ratio_bootstrap'),
+       Sensitivity = list(fun = plotSensitivity,
+                          subfolderOffset = '')
   )
 
 
 }
 
 
-#' adds the default configuration to the template configuration
-#'
-#' if the template does not exist in the plot-configuration file in the project directory
-#' it is taken from the plot-configuration file of the package installation.
-#' In this case formats are not preserved
-#'
-#' @param wb Plotconfiguration file
-#' @param templateSheet name of the template sheet
-#' @param sheetName name of new sheet
-#' @param dtNewConfig `data.table` with default configuration
-#'
-#' @return Plotconfiguration file
-#' @export
-addConfigToTemplate <- function(wb, templateSheet, sheetName, dtNewConfig) {
-  # get template
-  if (templateSheet %in% wb$sheet_names) {
-    templateConfiguration <- xlsxReadData(wb = wb, sheetName = templateSheet)
-  } else {
-    templateConfiguration <-
-      xlsxReadData(
-        wb = system.file(
-          "templates",
-          "templateProject",
-          "scripts",
-          "ReportingFramework",
-          "Plots.xlsx",
-          package = "ospsuite.reportingframework",
-          mustWork = TRUE
-        ),
-        sheetName = templateSheet
-      )
-  }
 
-  dtNewConfig <- rbind(templateConfiguration[1, ],
-                       dtNewConfig, # nolint indentation_linter
-                       fill = TRUE
-  )
-
-  if (templateSheet != sheetName) {
-    xlsxCloneAndSet(wb = wb, clonedSheet = templateSheet, sheetName = sheetName, dt = dtNewConfig)
-  } else {
-    xlsxWriteData(wb = wb, sheetName = sheetName, dt = dtNewConfig)
-  }
-
-  return(wb)
-}
 #' Generate R Markdown Container for Plotting
 #'
 #' This function initializes an R Markdown container and iterates through a configuration table to generate plots based on the provided plotting function.
@@ -632,6 +609,29 @@ validateNumericRangeColumns <- function(columns, data) {
 }
 
 
+#' Check if panel columns are filled consistently
+#'
+#' @template configTablePlots
+#' @param panelColumns Vector of columns which should be consistent.
+#' @keywords internal
+validatePanelConsistency <- function(
+    configTablePlots,
+    panelColumns) {
+  # avoid warning for global variable
+  plotName <- outputPathId <- NULL
+
+  # Check for unique values of panel columns for each `plotName`
+  uniquePanelValues <-
+    configTablePlots[, lapply(.SD, function(x) {
+      length(unique(x))
+    }), by = plotName, .SDcols = panelColumns]
+  tmp <- lapply(panelColumns, function(col) {  # nolint object_usage_linter
+    if (any(uniquePanelValues[[col]] > 1)) stop(paste("values for", col, "should be the same within each panel"))
+  })
+
+  return(invisible())
+}
+
 #' check if at least one of the following columns is selected
 #'
 #' @template configTablePlots
@@ -652,26 +652,26 @@ validateAtleastOneEntry <- function(configTablePlots, columnVector) {
 #' Validation of data.table with outputPath Ids
 #'
 #' @param dtOutputPaths data.table with outputPath Ids
-validateOutputIdsForPlot <- function(dtOutputPaths) {
+validateOutputIdsForPlot <- function() {
   # avoid warning for global variable
   outputPathId <- NULL
 
-  checkmate::assertFactor(dtOutputPaths$outputPathId, any.missing = FALSE,
+  checkmate::assertFactor(configEnv$outputPaths$outputPathId, any.missing = FALSE,
                           .var.name = 'Outputs column outputPathId')
-  checkmate::assertCharacter(dtOutputPaths$outputPath, any.missing = FALSE,
+  checkmate::assertCharacter(configEnv$outputPaths$outputPath, any.missing = FALSE,
                              .var.name = 'Outputs column outputPath')
-  checkmate::assertCharacter(dtOutputPaths$displayName, any.missing = FALSE,
+  checkmate::assertCharacter(configEnv$outputPaths$displayNameOutputs, any.missing = FALSE,
                              .var.name = 'Outputs column displayName')
 
-  if (any(!is.na(dtOutputPaths$color))) {
-    checkmate::assertCharacter(dtOutputPaths$color, any.missing = FALSE,
+  if (any(!is.na(configEnv$outputPaths$color))) {
+    checkmate::assertCharacter(configEnv$outputPaths$color, any.missing = FALSE,
                                .var.name = 'Outputs column color')
   }
 
   # Check for unique values for outputpathids
-  uniqueColumns <- c("displayName", "displayUnit")
+  uniqueColumns <- c("displayNameOutputs", "displayUnit")
   uniqueIDValues <-
-    dtOutputPaths[, lapply(.SD, function(x) {
+    configEnv$outputPaths[, lapply(.SD, function(x) {
       length(unique(x))
     }), by = outputPathId, .SDcols = uniqueColumns]
   tmp <- lapply(uniqueColumns, function(col) { # nolint object_usage
@@ -680,7 +680,7 @@ validateOutputIdsForPlot <- function(dtOutputPaths) {
 
   # check validity of units
   invisible(lapply(
-    unique(dtOutputPaths$displayUnit),
+    unique(configEnv$outputPaths$displayUnit),
     function(unit) {
       tryCatch(
         {
@@ -699,23 +699,21 @@ validateOutputIdsForPlot <- function(dtOutputPaths) {
 #' Validation of data.table with outputPath Ids
 #'
 #' @param projectConfiguration ProjectConfiguration object
-validateDataGroupIdsForPlot <- function(projectConfiguration) {
+validateDataGroupIdsForPlot <- function() {
   # avoid warning for global variable
   outputPathId <- NULL
 
-  dtDataGroupIds <<- getDataGroups(projectConfiguration)
-
   checkmate::assertFactor(
-    dtDataGroupIds$group,
+    configEnv$dataGroupIds$group,
     any.missing = FALSE,
     unique = TRUE,
     .var.name = 'DataGroups column group'
   )
-  checkmate::assertCharacter(dtDataGroupIds$displayName,
+  checkmate::assertCharacter(configEnv$dataGroupIds$displayNameData,
                              any.missing = FALSE,
                              .var.name = 'DataGroups column displayName')
 
-  if (any(!is.na(dtDataGroupIds$color))) {
+  if (any(!is.na(configEnv$dataGroupIds$color))) {
     checkmate::assertCharacter(dtOutputPaths$color, any.missing = FALSE,
                                .var.name = 'DataGroups column color')
   }

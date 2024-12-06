@@ -6,27 +6,25 @@
 \usage{
 loadPKAnalysisPerScenario(
   scenarioName,
-  scenarioResult,
+  scenario,
   pkParameterSheets,
-  withRecalculation,
   projectConfiguration
 )
 }
 \arguments{
 \item{scenarioName}{The name of the scenario to process.}
 
-\item{scenarioResult}{A list containing the results of the scenario.}
-
 \item{pkParameterSheets}{A vector with names of the sheets in the PK parameter file to read.}
 
-\item{withRecalculation}{A boolean indicating whether to recalculate PK parameters if results already exist.}
-
 \item{projectConfiguration}{A list containing project configuration, including the PK parameter file.}
+
+\item{scenarioResult}{A list containing the results of the scenario.}
 }
 \value{
 A data.table containing the processed PK analyses.
 }
 \description{
-This function loads PK analysis results from a CSV file or recalculates them if specified.
+This function loads PK analysis results from a CSV file .
 It also processes each specified PK parameter sheet for the scenario.
 }
+\keyword{internal}

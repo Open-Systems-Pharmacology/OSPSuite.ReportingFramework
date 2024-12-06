@@ -186,7 +186,7 @@ test_that("validateAtleastOneEntry function test", {
 # Create example data for testing
 dtOutputPaths <- data.table(
   outputPathId = c("id1", "id1", "id2", "id2"),
-  displayName = c("Display1", "Display1", "Display2", "Display2"),
+  displayNameOutputs = c("Display1", "Display1", "Display2", "Display2"),
   displayUnit = c("Unit1", "Unit1", "Unit1", "Unit2")
 )
 

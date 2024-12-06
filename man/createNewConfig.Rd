@@ -4,14 +4,14 @@
 \alias{createNewConfig}
 \title{Create New Configuration for Time Profile Plots}
 \usage{
-createNewConfig(scenarios, projectConfiguration, dataObserved)
+createNewConfig(scenarios, dataObserved)
 }
 \arguments{
 \item{scenarios}{A data.table containing scenario definitions.}
 
-\item{projectConfiguration}{A ProjectConfiguration class object.}
-
 \item{dataObserved}{Optional. A data object containing observed data, if available.}
+
+\item{projectConfiguration}{A ProjectConfiguration class object.}
 }
 \value{
 A data.table containing the new configuration for time profile plots.

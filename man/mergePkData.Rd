@@ -11,16 +11,17 @@ mergePkData(
 )
 }
 \arguments{
-\item{configTable}{A data.table containing the configuration data.}
+\item{configTable}{A data.table containing the configuration data that needs to be enriched with PK parameters.}
 
-\item{pkParameterObserved}{A data.table containing observed pharmacokinetic parameters.}
+\item{pkParameterObserved}{A data.table containing observed pharmacokinetic parameters. This parameter is optional.}
 
-\item{columns}{A character vector of additional columns to include in the merge.}
+\item{columns}{A character vector of additional columns to include in the merge, such as calculated ratios.}
 }
 \value{
-A data.table resulting from the merge operation with missing columns added as NA.
+A data.table resulting from the merge operation, with missing columns added as NA where necessary.
 }
 \description{
-This function merges a configuration table with observed pharmacokinetic parameters.
+This function merges a configuration table with observed pharmacokinetic parameters. It ensures that the
+configuration data includes relevant PK parameter information for further analysis and plotting.
 }
 \keyword{internal}

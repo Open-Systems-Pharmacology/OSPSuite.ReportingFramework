@@ -12,16 +12,20 @@ getCaptionForRatioPlot(
 )
 }
 \arguments{
-\item{outputPathIdLoop}{The output path ID for the current plot.}
+\item{outputPathIdLoop}{The output path ID for the current plot, used to retrieve relevant information.}
 
-\item{plotData}{A data.table containing the plot data.}
+\item{plotData}{A data.table containing the plot data, which includes calculated ratios and parameters.}
 
-\item{pkParameterDT}{A data.table with PK parameters.}
+\item{pkParameterDT}{A data.table with PK parameters that will be used for generating the caption.}
+
+\item{plotCaptionAddon}{An optional string to append additional information to the caption.}
 }
 \value{
-A string containing the caption for the plot.
+A string containing the caption for the plot, summarizing the key elements of the analysis.
 }
 \description{
-Generates a caption for the DDI ratio plot based on the output path ID and plot data.
+Generates a caption for the DDI ratio plot based on the output path ID and plot data. This function
+constructs a descriptive caption that summarizes the content of the plot, including information about
+the scenarios and parameters being visualized.
 }
 \keyword{internal}

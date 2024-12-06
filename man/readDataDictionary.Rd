@@ -4,12 +4,7 @@
 \alias{readDataDictionary}
 \title{Read data dictionary}
 \usage{
-readDataDictionary(
-  dictionaryFile,
-  sheet,
-  data,
-  dataClass = grep("^tp", unlist(DATACLASS), value = TRUE)
-)
+readDataDictionary(dictionaryFile, sheet, data, dataClass)
 }
 \arguments{
 \item{dictionaryFile}{The file containing the data dictionary.}

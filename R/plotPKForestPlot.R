@@ -1,21 +1,37 @@
-' Common PK Ratio Plot Function
+#' Common PK Ratio Plot Function
 #'
 #' This internal function performs common validation and configuration setup for PK ratio plots.
+#' It ensures that the input data is valid and prepares the necessary configuration for generating
+#' pharmacokinetic (PK) ratio plots. The function also handles the reading of configuration tables
+#' and the setup for observed PK parameters if provided.
 #'
-#' @param projectConfiguration A ProjectConfiguration object.
-#' @param subfolder A string specifying the subfolder for output.
-#' @param configTableSheet Name of the sheet containing configuration tables.
-#' @param pkParameterDT A data.table with PK parameters.
-#' @param pkParameterObserved A data.table with observed PK parameters (optional).
-#' @param ratioCalculationInputs A list of inputs specific to the ratio calculation method.
-#' @param ratioCalculationMethod A string specifying the method for ratio calculation.
-#' @param vlineIntercept Intercept for vertical line on plots.
-#' @param scaleVectors A list of aesthetic parameters for plots.
-#' @param digitsToRound Number of digits to round in output.
-#' @param digitsToShow Number of digits to display.
-#' @param xlabel Label for x-axis.
+#' @param projectConfiguration A ProjectConfiguration object that contains settings and parameters
+#'        for the project, including file paths and other configurations.
+#' @param subfolder A string specifying the subfolder within the project directory where output files
+#'        will be saved.
+#' @param configTableSheet A string representing the name of the sheet that contains configuration
+#'        tables relevant for generating the plots.
+#' @param pkParameterDT A data.table containing PK parameters, which includes columns such as
+#'        scenario names, parameter types, individual IDs, values, output path IDs, display names,
+#'        and units.
+#' @param pkParameterObserved A data.table with observed PK parameters. This parameter is optional
+#'        and can be NULL if only simulated data is to be used.
+#' @param ratioCalculationInputs A list containing inputs specific to the method used for calculating
+#'        ratios, such as aggregation functions or simulation parameters.
+#' @param ratioCalculationMethod A string that specifies the method to be used for calculating ratios.
+#'        Possible values include 'byRatioAggregation' or 'byBootsTrapping'.
+#' @param vlineIntercept A numeric value that specifies the intercept for any vertical lines to be drawn
+#'        on the plots, typically used to indicate a reference line.
+#' @param scaleVectors A list containing aesthetic parameters for the plots, such as colors, fills, and shapes
+#'        for different data types (e.g., simulated vs. observed).
+#' @param digitsToRound An integer specifying the number of digits to round numerical outputs to.
+#' @param digitsToShow An integer specifying the number of digits to display in plot annotations.
+#' @param xlabel A string representing the label to be used for the x-axis in the plots.
+#' @param tableLabels A list of labels for tables generated in the plot. This should correspond to the
+#'        various statistics displayed in the plot.
 #'
-#' @return An RmdContainer object with generated plots.
+#' @return An RmdContainer object that contains the generated plots and any related information for
+#'         further processing or exporting.
 #'
 #' @keywords internal
 commonPKRatioPlot <- function(projectConfiguration,
@@ -50,6 +66,13 @@ commonPKRatioPlot <- function(projectConfiguration,
     pkParameterDT = pkParameterDT
   )
 
+  # switch to naming convention of forrestplot
+  if (!is.null(pkParameterObserved))
+  data.table::setnames(x = pkParameterObserved,
+                       old = c('values','minValue','maxValue','numberOfIndividuals','parameter','errorValues'),
+                       new = c('x', 'xMin', 'xMax', 'numberOfObservations','pkParameter', 'xErrorValues'),
+                       skip_absent = TRUE)
+
   rmdContainer <- generateRmdContainer(
     projectConfiguration,
     subfolder,
@@ -76,36 +99,41 @@ commonPKRatioPlot <- function(projectConfiguration,
 #' Plot PK Ratio by Ratio Aggregation
 #'
 #' This function generates plots for pharmacokinetic (PK) ratios using various aggregation methods.
+#' It allows users to visualize the ratios based on different statistical techniques, making it easier
+#' to interpret the pharmacokinetic data.
 #'
-#' The function allows for different aggregation techniques, including:
-#' - Geometric and Arithmetic Standard Deviations
+#' The function supports multiple aggregation methods, including:
+#' - Geometric Standard Deviations
+#' - Arithmetic Standard Deviations
 #' - Percentiles
 #' - A user-defined custom function for aggregation
 #'
-#' @param projectConfiguration A ProjectConfiguration object containing project settings.
-#' @param subfolder A string specifying the output directory.
-#' @param configTableSheet Name of the sheet containing configuration tables.
-#' @param pkParameterDT A data.table with PK parameters.
-#' @param pkParameterObserved A data.table with observed PK parameters (optional).
+#' @param projectConfiguration A ProjectConfiguration object containing project settings and parameters.
+#' @param subfolder A string specifying the output directory where the plots will be saved.
+#' @param configTableSheet A string representing the name of the sheet that contains configuration tables.
+#' @param pkParameterDT A data.table with PK parameters, including required columns for analysis.
+#' @param pkParameterObserved A data.table with observed PK parameters. This parameter is optional.
 #' @param aggregationFlag A character string indicating the aggregation method. Options include:
 #' - "GeometricStdDev"
 #' - "ArithmeticStdDev"
 #' - "Percentiles"
 #' - "Custom"
-#' @param percentiles A numeric vector of percentiles to calculate if aggregationFlag is "Percentiles". Default is c(5, 50, 95).
+#' @param percentiles A numeric vector of percentiles to calculate if aggregationFlag is "Percentiles".
+#'        Default is c(5, 50, 95).
 #' @param customFunction A custom function for aggregation if aggregationFlag is "Custom". Default is NULL.
-#'  The custom function should take a numeric vector `y` as input and return a list containing:
+#'        The function should take a numeric vector `y` as input and return a list containing:
 #' - `yValues`: The aggregated value (e.g., mean).
-#' - `yMin`: The lower value of the aggregated data, (e.g. mean - sd).
-#' - `yMax`: The upper value of the aggregated data, (e.g. mean + sd).
-#' @param vlineIntercept Intercept for vertical line on plots.
-#' @param scaleVectors A list of aesthetic parameters for plots.
-#' @param digitsToRound Number of digits to round in output.
-#' @param digitsToShow Number of digits to display.
-#' @param xlabel Label for the x-axis.
-#' @param tableLabels Labels for tables generated in the plot.
+#' - `yMin`: The lower value of the aggregated data (e.g., mean - sd).
+#' - `yMax`: The upper value of the aggregated data (e.g., mean + sd).
+#' @param vlineIntercept A numeric value for the intercept of the vertical line on plots.
+#' @param scaleVectors A list of aesthetic parameters for the plots, including colors and shapes.
+#' @param digitsToRound An integer specifying the number of digits to round in output.
+#' @param digitsToShow An integer specifying the number of digits to display in plot annotations.
+#' @param xlabel A string representing the label for the x-axis in the plots.
+#' @param tableLabels A list of labels for tables generated in the plot.
 #'
-#' @return An RmdContainer object containing the generated plots and related information.
+#' @return An RmdContainer object containing the generated plots and related information for further
+#'         processing or exporting.
 #'
 #' @export
 plotPKRatioForestPlotByRatioAggregation <- function(projectConfiguration,
@@ -160,26 +188,30 @@ plotPKRatioForestPlotByRatioAggregation <- function(projectConfiguration,
 
 #' Plot PK Ratio by Bootstrapping
 #'
-#' This function generates plots for PK ratios using bootstrapping methods.
+#' This function generates plots for PK ratios using bootstrapping methods. It allows users to visualize
+#' the variability and uncertainty in PK ratios based on simulated data.
 #'
-#' @param projectConfiguration A ProjectConfiguration object.
-#' @param subfolder A string specifying the subfolder for output.
-#' @param configTableSheet Name of the sheet containing configuration tables.
-#' @param pkParameterDT A data.table with PK parameters.
-#' @param pkParameterObserved A data.table with observed PK parameters (optional).
-#' @param coefficientOfVariation Coefficient of variation for simulations.
-#' @param nObservationDefault Default number of observations.
-#' @param nBootstrap Number of bootstrap samples.
-#' @param statFun Function to compute statistics.
-#' @param confLevel Confidence level for intervals.
-#' @param seed Random seed for reproducibility.
-#' @param vlineIntercept Intercept for vertical line on plots.
-#' @param scaleVectors A list of aesthetic parameters for plots.
-#' @param digitsToRound Number of digits to round in output.
-#' @param digitsToShow Number of digits to display.
-#' @param xlabel Label for x-axis.
 #'
-#' @return An RmdContainer object with generated plots.
+#' @param description projectConfiguration A ProjectConfiguration object containing project settings and parameters.
+#' @param subfolder A string specifying the output directory for the generated plots.
+#' @param configTableSheet A string representing the name of the sheet that contains configuration tables.
+#' @param pkParameterDT A data.table with PK parameters, including required columns for analysis.
+#' @param pkParameterObserved A data.table with observed PK parameters. This parameter is optional.
+#' @param coefficientOfVariation A numeric value representing the coefficient of variation for simulations.
+#' @param nObservationDefault An integer representing the default number of observations for simulations.
+#' @param nBootstrap An integer specifying the number of bootstrap samples to generate.
+#' @param statFun A function to compute statistics from the bootstrap samples. Default is the geometric mean.
+#' @param confLevel A numeric value representing the confidence level for intervals (e.g., 0.9 for 90%).
+#' @param seed An integer for setting the random seed to ensure reproducibility of results.
+#' @param vlineIntercept A numeric value for the intercept of the vertical line on plots.
+#' @param scaleVectors A list of aesthetic parameters for the plots, including colors and shapes.
+#' @param digitsToRound An integer specifying the number of digits to round in output.
+#' @param digitsToShow An integer specifying the number of digits to display in plot annotations.
+#' @param xlabel A string representing the label for the x-axis in the plots.
+#' @param tableLabels A character vector of labels for tables generated in the plot.
+#'
+#' @return An RmdContainer object containing the generated plots and related information for further
+#'         processing or exporting.
 #'
 #' @export
 plotPKRatioForestPlotByBoostrapping <- function(projectConfiguration,
@@ -242,24 +274,24 @@ plotPKRatioForestPlotByBoostrapping <- function(projectConfiguration,
 
 #' Create PK Ratio Plot
 #'
-#' Creates a plot for the PK ratio based on the provided configuration.
+#' Creates a plot for the PK ratio based on the provided configuration. This function handles the
+#' preparation of data, plotting, and exporting of the generated plot.
 #'
-#' @param onePlotConfig A data.table containing the plot configuration.
-#' @param rmdContainer An RmdContainer object.
-#' @param pkParameterDT A data.table with PK parameters.
-#' @param coefficientOfVariation Coefficient of variation for simulations.
-#' @param nObservationDefault Default number of observations.
-#' @param nBootstrap Number of bootstrap samples.
-#' @param confLevel Confidence level for intervals.
-#' @param statFun Function to compute statistics.
-#' @param seed Random seed for reproducibility.
-#' @param vlineIntercept Intercept for vertical line on plots.
-#' @param scaleVectors A list of aesthetic parameters for plots.
-#' @param digitsToRound Number of digits to round in output.
-#' @param digitsToShow Number of digits to display.
-#' @param xlabel Label for x-axis.
+#' @param onePlotConfig A data.table containing the plot configuration, including details such as
+#'        scenario names and parameters to be plotted.
+#' @param rmdContainer An RmdContainer object that will hold the generated plot and related information.
+#' @param pkParameterDT A data.table with PK parameters, including the necessary columns for analysis.
+#' @param pkParameterObserved A data.table with observed PK parameters. This parameter is optional.
+#' @param ratioCalculationMethod A string specifying the method used for calculating ratios (e.g., 'byBootsTrapping').
+#' @param ratioCalculationInputs A list containing inputs specific to the method used for calculating ratios.
+#' @param vlineIntercept A numeric value for the intercept of the vertical line on plots.
+#' @param scaleVectors A list of aesthetic parameters for the plots, including colors and shapes.
+#' @param digitsToRound An integer specifying the number of digits to round in output.
+#' @param digitsToShow An integer specifying the number of digits to display in plot annotations.
+#' @param xlabel A string representing the label for the x-axis in the plots.
+#' @param tableLabels A list of labels for tables generated in the plot.
 #'
-#' @return An updated RmdContainer object with the added plot.
+#' @return An updated RmdContainer object with the added plot and related information.
 createPkPlotForPlotName <- function(onePlotConfig,
                                     rmdContainer,
                                     pkParameterDT,
@@ -292,8 +324,9 @@ createPkPlotForPlotName <- function(onePlotConfig,
     # adjust names for function call
     data.table::setnames(
       plotData,
-      old = c('scenarioGroup','scenarioCaptionName','parameterDisplayName','xMin','xMax','xErrorValues'),
-      new = c('displayGroup', 'displayName', 'parameter','xmin','xmax','xrange')
+      old = c('scenarioGroup','scenarioLongName','parameterDisplayName','xMin','xMax','xErrorValues'),
+      new = c('displayGroup', 'displayName', 'parameter','xmin','xmax','xrange'),
+      skip_absent = TRUE
     )
 
     plotObject <- ospsuite_plotForest(plotData,
@@ -327,18 +360,18 @@ createPkPlotForPlotName <- function(onePlotConfig,
 
 #' Prepare Data for DDI Ratio Plot
 #'
-#' Prepares the data necessary for generating a DDI ratio plot.
+#' Prepares the necessary data for generating a DDI ratio plot. This function handles the merging
+#' of configuration data with observed PK parameters and calculates the ratios based on the specified
+#' method.
 #'
-#' @param onePlotConfig A data.table containing the plot configuration.
-#' @param pkParameterDT A data.table with PK parameters.
-#' @param coefficientOfVariation Coefficient of variation for simulations.
-#' @param nBootstrap Number of bootstrap samples.
-#' @param nObservationDefault Default number of observations.
-#' @param confLevel Confidence level for intervals.
-#' @param statFun Function to compute statistics.
-#' @param seed Random seed for reproducibility.
+#' @param onePlotConfig A data.table containing the plot configuration for the current plot.
+#' @param pkParameterDT A data.table with PK parameters that will be used for ratio calculations.
+#' @param pkParameterObserved A data.table containing observed PK parameters. This parameter is optional.
+#' @param ratioCalculationInputs A list containing inputs specific to the method used for calculating ratios.
+#' @param ratioCalculationMethod A string specifying the method used for calculating ratios (e.g., 'byBootsTrapping').
 #'
-#' @return A data.table containing the prepared plot data.
+#' @return A data.table containing the prepared plot data, including calculated ratios and relevant
+#'         statistics for plotting.
 #'
 #' @keywords internal
 prepareDataForPKRatioPlot <- function(onePlotConfig,
@@ -361,10 +394,10 @@ prepareDataForPKRatioPlot <- function(onePlotConfig,
       dataForConfig[is.na(numberOfObservations),numberOfObservations := ratioCalculationInputs$nObservationDefault]
 
     dataForConfig <- dataForConfig %>%
-      merge(pkParameterDT[,c('parameter','displayName')] %>%
+      merge(pkParameterDT[,c('parameter','displayNamePKParameter')] %>%
               unique() %>%
-              data.table::setnames(old = c('parameter','displayName'),
-                                   new = c('pkParameter','parameterDisplayName')),
+              data.table::setnames(old = c('parameter'),
+                                   new = c('pkParameter')),
             by = 'pkParameter')
 
     # get rows for simulated PK
@@ -372,11 +405,11 @@ prepareDataForPKRatioPlot <- function(onePlotConfig,
       switch(ratioCalculationMethod,
              byBootsTrapping =
                data.table::rbindlist(
-                 lapply(dataForConfig$parameterDisplayName,
+                 lapply(dataForConfig$displayNamePKParameter,
                         function(pkIdentifier){
                           calculateRatiosByBoostrapping(
                             configList = configList,
-                            pkParameterDT = pkParameterDT[displayName == pkIdentifier],
+                            pkParameterDT = pkParameterDT[displayNamePKParameter == pkIdentifier],
                             coefficientOfVariation = ratioCalculationInputs$coefficientOfVariation,
                             nObservations = dataForConfig[parameterDisplayName == pkIdentifier]$numberOfObservations,
                             nBootstrap = ratioCalculationInputs$nBootstrap,
@@ -388,11 +421,11 @@ prepareDataForPKRatioPlot <- function(onePlotConfig,
                         })),
              byRatioAggregation =
                data.table::rbindlist(
-                 lapply(dataForConfig$parameterDisplayName,
+                 lapply(dataForConfig$displayNamePKParameter,
                         function(pkIdentifier){
                           calculateRatiosByAggregation(
                             configList = configList,
-                            pkParameterDT = pkParameterDT[displayName == pkIdentifier],
+                            pkParameterDT = pkParameterDT[displayNamePKParameter == pkIdentifier],
                             aggregationFun = ratioCalculationInputs$aggregationFun) %>%
                             dplyr::mutate(parameterDisplayName = pkIdentifier)
                         }))
@@ -402,12 +435,12 @@ prepareDataForPKRatioPlot <- function(onePlotConfig,
     plotData <- rbind(
       plotData,
       rbind(
-        cbind(configList[,c('scenarioCaptionName',
+        cbind(configList[,c('scenarioLongName',
                             'scenarioGroup')],
               plotDataSim
         ) %>%
           dplyr::mutate(type = 'simulated'),
-        dataForConfig[!is.na(x),c('scenarioCaptionName',
+        dataForConfig[!is.na(x),c('scenarioLongName',
                                   'scenarioGroup',
                                   'parameterDisplayName',
                                   'x',
@@ -426,8 +459,8 @@ prepareDataForPKRatioPlot <- function(onePlotConfig,
   }
 
   # Ensure order by creating factors
-  plotData$scenarioCaptionName <- factor(plotData$scenarioCaptionName,
-                                         levels = unique(onePlotConfig$scenarioCaptionName),
+  plotData$scenarioLongName <- factor(plotData$scenarioLongName,
+                                         levels = unique(onePlotConfig$scenarioLongName),
                                          ordered = TRUE)
 
   plotData$type <- factor(plotData$type,
@@ -441,18 +474,22 @@ prepareDataForPKRatioPlot <- function(onePlotConfig,
 
 #' Calculate Ratios for Workflow
 #'
-#' Calculates ratios for the specified workflow based on the provided configuration.
+#' Calculates ratios for the specified workflow based on the provided configuration. This function
+#' handles the merging of reference and scenario data and computes the ratios using the specified
+#' statistical method.
 #'
-#' @param configList A data.table containing the configuration for the current workflow.
-#' @param pkParameterDT A data.table with PK parameters.
-#' @param coefficientOfVariation Coefficient of variation for simulations.
-#' @param nObservations Number of observations to simulate.
-#' @param nBootstrap Number of bootstrap samples.
-#' @param confLevel Confidence level for intervals.
-#' @param statFun Function to compute statistics.
-#' @param seed Random seed for reproducibility.
+#' @param configList A data.table containing the configuration for the current workflow, including
+#'        reference and scenario details.
+#' @param pkParameterDT A data.table with PK parameters that will be used for ratio calculations.
+#' @param coefficientOfVariation A numeric value representing the coefficient of variation for simulations.
+#' @param nObservations An integer representing the number of observations to simulate.
+#' @param nBootstrap An integer specifying the number of bootstrap samples to generate.
+#' @param confLevel A numeric value representing the confidence level for intervals.
+#' @param statFun A function to compute statistics from the bootstrap samples.
+#' @param seed An integer for setting the random seed to ensure reproducibility of results.
 #'
-#' @return A data.table containing the bootstrapped statistics.
+#' @return A data.table containing the calculated bootstrapped statistics, including the ratio and
+#'         confidence intervals.
 #'
 #' @keywords internal
 calculateRatiosByBoostrapping <- function(configList,
@@ -507,18 +544,16 @@ calculateRatiosByBoostrapping <- function(configList,
 
 #' Calculate Ratios for Workflow
 #'
-#' Calculates ratios for the specified workflow based on the provided configuration.
+#' Calculates ratios for the specified workflow based on the provided configuration, using an aggregation
+#' function. This function merges reference and scenario data and computes the ratios accordingly.
 #'
-#' @param configList A data.table containing the configuration for the current workflow.
-#' @param pkParameterDT A data.table with PK parameters.
-#' @param coefficientOfVariation Coefficient of variation for simulations.
-#' @param nObservations Number of observations to simulate.
-#' @param nBootstrap Number of bootstrap samples.
-#' @param confLevel Confidence level for intervals.
-#' @param statFun Function to compute statistics.
-#' @param seed Random seed for reproducibility.
+#' @param configList A data.table containing the configuration for the current workflow, including
+#'        reference and scenario details.
+#' @param pkParameterDT A data.table with PK parameters that will be used for ratio calculations.
+#' @param aggregationFun A function used for aggregating the ratios calculated from the data.
 #'
-#' @return A data.table containing the bootstrapped statistics.
+#' @return A data.table containing the aggregated statistics, including the calculated ratio and relevant
+#'         confidence intervals.
 #'
 #' @keywords internal
 calculateRatiosByAggregation <- function(configList,
@@ -558,13 +593,16 @@ calculateRatiosByAggregation <- function(configList,
 # plotHelper --------------
 #' Get Caption for DDI Ratio Plot
 #'
-#' Generates a caption for the DDI ratio plot based on the output path ID and plot data.
+#' Generates a caption for the DDI ratio plot based on the output path ID and plot data. This function
+#' constructs a descriptive caption that summarizes the content of the plot, including information about
+#' the scenarios and parameters being visualized.
 #'
-#' @param outputPathIdLoop The output path ID for the current plot.
-#' @param plotData A data.table containing the plot data.
-#' @param pkParameterDT A data.table with PK parameters.
+#' @param outputPathIdLoop The output path ID for the current plot, used to retrieve relevant information.
+#' @param plotData A data.table containing the plot data, which includes calculated ratios and parameters.
+#' @param pkParameterDT A data.table with PK parameters that will be used for generating the caption.
+#' @param plotCaptionAddon An optional string to append additional information to the caption.
 #'
-#' @return A string containing the caption for the plot.
+#' @return A string containing the caption for the plot, summarizing the key elements of the analysis.
 #'
 #' @keywords internal
 getCaptionForRatioPlot <- function(outputPathIdLoop,
@@ -579,6 +617,7 @@ getCaptionForRatioPlot <- function(outputPathIdLoop,
   if (!is.na(plotCaptionAddon) & plotCaptionAddon !=''){
     captiontxt = paste(captiontxt,plotCaptionAddon)
   }
+  return(captiontxt)
 }
 
 
@@ -587,20 +626,20 @@ getCaptionForRatioPlot <- function(outputPathIdLoop,
 
 #' Read PK Ratio Configuration Table
 #'
-#' Reads and validates the PK ratio configuration table from the specified sheet.
+#' Reads and validates the PK ratio configuration table from the specified sheet in the project configuration.
+#' This function ensures that the configuration data is structured correctly and contains all necessary
+#' information for generating plots.
 #'
-#' @param projectConfiguration A ProjectConfiguration object.
-#' @param sheetName Name of the sheet to read from.
-#' @param pkParameterDT A data.table with PK parameters.
+#' @param projectConfiguration A ProjectConfiguration object containing project settings and parameters.
+#' @param sheetName A string representing the name of the sheet to read from the project configuration file.
+#' @param pkParameterDT A data.table with PK parameters that will be used for validation against the config.
 #'
-#' @return A validated configuration table as a data.table.
+#' @return A validated configuration table as a data.table, ready for use in generating plots.
 #'
 #' @keywords internal
 readPKForestConfigTable <- function(projectConfiguration, sheetName, pkParameterDT) {
   # Initialize variable used in data.tables
   level <- NULL
-
-  dtOutputPaths <- getOutputPathIds(projectConfiguration)
 
   # Read configuration tables
   configTable <- xlsxReadData(
@@ -613,7 +652,7 @@ readPKForestConfigTable <- function(projectConfiguration, sheetName, pkParameter
 
   validateConfigTablePlots(
     configTablePlots = configTablePlots,
-    charactersWithoutMissing = c("plotName","scenarioCaptionName","scenario"),
+    charactersWithoutMissing = c("plotName","scenarioLongName","scenario"),
     charactersWithMissing = c("scenarioGroup","plotCaptionAddon",'dataGroupId'),
     logicalColumns = NULL,
     numericRangeColumns = NULL,
@@ -638,9 +677,7 @@ readPKForestConfigTable <- function(projectConfiguration, sheetName, pkParameter
     panelColumns = c(
       "plotCaptionAddon",
       "outputPathId"
-    ),
-    dtOutputPaths = dtOutputPaths
-  )
+    ))
 
 
   return(configTable)
@@ -650,12 +687,14 @@ readPKForestConfigTable <- function(projectConfiguration, sheetName, pkParameter
 
 #' Merge Pharmacokinetic PK Parameter to config Table
 #'
-#' This function merges a configuration table with observed pharmacokinetic parameters.
+#' This function merges a configuration table with observed pharmacokinetic parameters. It ensures that the
+#' configuration data includes relevant PK parameter information for further analysis and plotting.
 #'
-#' @param configTable A data.table containing the configuration data.
-#' @param pkParameterObserved A data.table containing observed pharmacokinetic parameters.
-#' @param columns A character vector of additional columns to include in the merge.
-#' @return A data.table resulting from the merge operation with missing columns added as NA.
+#' @param configTable A data.table containing the configuration data that needs to be enriched with PK parameters.
+#' @param pkParameterObserved A data.table containing observed pharmacokinetic parameters. This parameter is optional.
+#' @param columns A character vector of additional columns to include in the merge, such as calculated ratios.
+#'
+#' @return A data.table resulting from the merge operation, with missing columns added as NA where necessary.
 #'
 #' @keywords internal
 mergePkData <- function(configTable, pkParameterObserved, columns = c('x', 'xMin', 'xMax', 'numberOfObservations')) {
@@ -665,16 +704,16 @@ mergePkData <- function(configTable, pkParameterObserved, columns = c('x', 'xMin
     data.table::setDT() %>%
     .[,pkParameter := trimws(pkParameter)]
 
-
   if (!is.null(pkParameterObserved)) {
     # Select relevant columns including the keys and the specified columns
-    relevantColumns <- unique(c('pkParameter', 'group', columns))
+    relevantColumns <- unique(c('pkParameter', 'group', intersect(columns,names(pkParameterObserved))))
 
-    dataForConfig <- merge(
-      data.table::setnames(configTable, 'dataGroupId', 'group'),
+    dataForConfig <- merge(dataForConfig %>%
+      data.table::setnames('dataGroupId', 'group'),
       pkParameterObserved[, ..relevantColumns, with = FALSE] %>%
         unique(),
-      by = c('pkParameter', 'group')
+      by = c('pkParameter', 'group'),
+      all.x = TRUE
     )
   }
 

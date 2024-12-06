@@ -1,43 +1,59 @@
-#' Initialize Project
+#' Initialize Project Directory
 #'
-#' @description
+#' This function initializes a project directory by creating necessary subdirectories
+#' and copying configuration files from a source Excel file. It reads the directory
+#' structure and files specified in the provided Excel template and sets up the project
+#' environment accordingly.
 #'
-#' Creates the default project folder structure with excels file templates in
-#' the working directory.
+#' @param configurationDirectory A character string specifying the path to the project
+#' directory to be initialized. Defaults to the current working directory ('.').
 #'
-#' @param rootDirectory A string defining the path where to initialize the project.
-#'  default to current working directory.
-#' @param sourceFolder path of template directory available is
-#'    `templateDirectory()` default path of `ospsuite.reportingframework`
-#'    `esqlabsR:::example_directory("TestProject")`  default path for Esqlabs-projects
-#' @param overwrite A boolean, if TRUE existing files will be overwritten
+#' @param sourceConfigurationXlsx A character string representing the path to the source
+#' Excel file containing the project configuration. By default, it uses the template
+#' provided by the 'ospsuite.reportingframework' package.
+#'
+#' @param overwrite A logical value indicating whether to overwrite existing files in the
+#' project directory. Defaults to FALSE, meaning existing files will not be overwritten.
+#'
+#' @return This function returns an invisible NULL. It is used for its side effects of
+#' creating directories and copying files rather than producing a value.
+#'
+#' @examples
+#' \dontrun{
+#' # Initialize a project in the current directory
+#' initProject()
+#'
+#' # Initialize a project in a specified directory and allow overwriting
+#' initProject(configurationDirectory = "my_project", overwrite = TRUE)
+#' }
 #'
 #' @export
-initProject <- function(rootDirectory = "..",
-                        sourceFolder,
+initProject <- function(configurationDirectory = '.',
+                        sourceConfigurationXlsx  = system.file("templates", "ProjectConfiguration.xlsx",package = "ospsuite.reportingframework"),
                         overwrite = FALSE) {
-  rootDirectory <- fs::path_abs(rootDirectory)
+  configurationDirectory <- fs::path_abs(configurationDirectory)
 
-  checkmate::assertDirectoryExists(sourceFolder)
+  checkmate::assertFileExists(sourceConfigurationXlsx)
 
+  dt <- xlsxReadData(sourceConfigurationXlsx)
 
-  dirsToCopy <- fs::path_rel(path = list.dirs(file.path(sourceFolder)), start = sourceFolder)
+  dirsToCreate <- dt$value[file.info(dt$value)$isdir]
 
-  for (d in dirsToCopy) {
-    if (!dir.exists(file.path(rootDirectory, d))) {
-      dir.create(file.path(rootDirectory, d), recursive = TRUE, showWarnings = FALSE)
+  for (d in dirsToCreate) {
+    if (!dir.exists(file.path(configurationDirectory, d))) {
+      dir.create(file.path(configurationDirectory, d), recursive = TRUE, showWarnings = FALSE)
     }
+  }
 
-    fileList <- fs::path_rel(path = fs::dir_ls(file.path(sourceFolder, d), type = "file"), start = sourceFolder)
+  filesToCopy <- dt$value[!file.info(dt$value)$isdir]
 
-    for (f in fileList) {
-      if (!file.exists(file.path(rootDirectory, f)) | overwrite) {
-        file.copy(
-          from = file.path(sourceFolder, f),
-          to = file.path(rootDirectory, f),
-          overwrite = overwrite
-        )
-      }
+  for (f in filesToCopy){
+    if (!file.exists(file.path(configurationDirectory, f)) | overwrite) {
+      file.copy(
+        from = file.path(system.file("templates", package = "ospsuite.reportingframework"), f),
+        to = file.path(configurationDirectory, f),
+        overwrite = overwrite
+      )
     }
   }
 
@@ -57,6 +73,22 @@ initProject <- function(rootDirectory = "..",
 createProjectConfiguration <- function (path = file.path("ProjectConfiguration.xlsx"))
 {
   projectConfiguration <- ProjectConfigurationRF$new(projectConfigurationFilePath = path)
+
+
+  if (getOption('OSPSuite.RF.withEPackage',default = FALSE)){
+    if (!('electronicPackageFolder' %in% names(projectConfiguration$addOns))){
+      projectConfiguration$addAddOnFolderToConfiguration(value = file.path(gsub(
+        '/ReportingFramework$',
+        '',
+        fs::path_rel(
+          projectConfiguration$outputFolder,
+          start = projectConfiguration$projectConfigurationDirPath
+        )
+      ), 'ePackage'),
+      property = 'electronicPackageFolder',
+      description = 'Folder for electronicPackage')
+    }
+  }
   return(projectConfiguration)
 }
 
@@ -85,7 +117,13 @@ createScenarios.wrapped <- function(projectConfiguration, # nolint
       )
     )
 
-  if (doCheckScenarioNameValidity) checkScenarioNameValidity(names(scenarioList))
+  synchronizeScenariosWithPlots(projectConfiguration)
+  synchronizeScenariosOutputsWithPlots(projectConfiguration)
+
+  if (doCheckScenarioNameValidity)
+    invisible(lapply(paste0(names(scenarioList), '.xml'), function(fileName) {
+      checkFileNameValidity(fileName =  fileName)
+    }))
 
 
   return(scenarioList)
@@ -131,9 +169,11 @@ runAndSaveScenarios <- function(projectConfiguration,
                                 withResimulation = TRUE,
                                 ...) { # nolint
 
-  outputFolder <- file.path(projectConfiguration$outputFolder, "SimulationResults")
+  outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult)
+  outputFolderPK <- file.path(projectConfiguration$outputFolder, EXPORTDIR$pKAnalysisResults)
 
   scenarioResults = list()
+  dtScenarios <- getScenarioDefinitions(wbScenarios = projectConfiguration$scenariosFile)
 
   for (sc in names(scenarioList)) {
     if (file.exists(file.path(outputFolder,paste0(sc,'.csv'))) &
@@ -142,7 +182,7 @@ runAndSaveScenarios <- function(projectConfiguration,
 
       scenarioResults[sc] <- esqlabsR::loadScenarioResults(
         scenarioNames = sc,
-        resultsFolder = file.path(projectConfiguration$outputFolder, "SimulationResults")
+        resultsFolder = file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult)
       )
 
       # add population
@@ -167,6 +207,17 @@ runAndSaveScenarios <- function(projectConfiguration,
         outputFolder = outputFolder,
         ...
       )
+
+    }
+
+    if (!file.exists(file.path(outputFolderPK,paste0(sc,'.csv'))) |
+        withResimulation){
+      pkParameterSheets <- dtScenarios[scenarioName == sc & !is.na(pKParameter)]$pKParameter
+      if (length(pkParameterSheets) > 0){
+        calculatePKParameter(projectConfiguration,
+                             scenarioResult = scenarioResults[[sc]],
+                             pkParameterSheets = pkParameterSheets)
+      }
     }
   }
 

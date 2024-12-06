@@ -10,7 +10,6 @@ ProjectConfigurationRF <- R6::R6Class(   # nolint object_name_linter
   active = list(
     #' @field pKParameterFile Path to the file containing BMLM Identification
     addOns = function() {
-      browser
       if (length(private$.projectConfigurationDataAddOns) == 0) {
         return(list())
       } else{
@@ -29,6 +28,21 @@ ProjectConfigurationRF <- R6::R6Class(   # nolint object_name_linter
     .addOnFile = function(property,value) {
       if (!missing(value)) {
         private$.projectConfigurationDataAddOns[[property]]$value <- value
+      }
+    },
+    #' @description Adds new line to configuration xlsx
+    .writeToConfigXlsx = function(property,value,description){
+      if (!(property %in% names(private$.projectConfigurationDataAddOns))){
+        wb = openxlsx::loadWorkbook(self$projectConfigurationFilePath)
+        dtConfiguration <- xlsxReadData(wb = wb,sheetName =  wb$sheet_names[1])
+        if (!(property %in% dtConfiguration$propety)){
+          dtConfiguration <- rbind(dtConfiguration,
+                                   data.table(property = property,
+                                              value = value,
+                                              description = description))
+          xlsxWriteData(wb = wb,sheetName =  wb$sheet_names[1],dt = dtConfiguration)
+          openxlsx::saveWorkbook(wb,self$projectConfigurationFilePath,overwrite = TRUE)
+        }
       }
     },
     #' @description Read configuration from file
@@ -77,7 +91,7 @@ ProjectConfigurationRF <- R6::R6Class(   # nolint object_name_linter
     addAddOnfileToConfiguration = function(property,value,description,templatePath){
       checkmate::assertString(property)
       checkmate::assertString(value)
-
+      checkmate::assertString(description)
 
       if (!file.exists(file.path(self$configurationsFolder, value))) {
         checkmate::assertFileExists(templatePath)
@@ -87,23 +101,35 @@ ProjectConfigurationRF <- R6::R6Class(   # nolint object_name_linter
         ))
       }
 
-      if (!(property %in% names(private$.projectConfigurationDataAddOns))){
-        wb = openxlsx::loadWorkbook(self$projectConfigurationFilePath)
-        dtConfiguration <- xlsxReadData(wb = wb,sheetName =  wb$sheet_names[1])
-        if (!(property %in% dtConfiguration$propety)){
-          dtConfiguration <- rbind(dtConfiguration,
-                                   data.table(property = property,
-                                              value = value,
-                                              description = description))
-          xlsxWriteData(wb = wb,sheetName =  wb$sheet_names[1],dt = dtConfiguration)
-          openxlsx::saveWorkbook(wb,self$projectConfigurationFilePath,overwrite = TRUE)
-        }
+      private$.writeToConfigXlsx(property,value,description)
+
+      private$.addOnFile(property = property,
+                         value = value)
+
+      invisible(self)
+    },
+    #' @description Adds an add-on file to the project configuration.
+    #'
+    #' @param property A string representing the name of the property to add.
+    #' @param value A string representing the path of the value to add.
+    #' @param description A string providing a description of the property.
+    #' @param templatePath A string representing the path of the template file.
+    addAddOnFolderToConfiguration = function(property,value,description){
+      checkmate::assertString(property)
+      checkmate::assertString(value)
+      checkmate::assertString(description)
+
+      if (!dir.exists(value)) {
+        dir.create(value,recursive = TRUE)
       }
+
+      private$.writeToConfigXlsx(property,value,description)
 
       private$.addOnFile(property = property,
                          value = value)
 
       invisible(self)
     }
+
   )
 )

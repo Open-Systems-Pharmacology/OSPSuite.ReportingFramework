@@ -427,75 +427,64 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
   checkmate::assertNames(names(dtSimulated),
     must.include = c("xValues", "yValues", identifier)
   )
-
   # make sure to exclude nas and sorting is correct
   dtSimulated <- data.table::copy(dtSimulated) %>%
     dplyr::select(dplyr::all_of(c("xValues", "yValues", identifier))) %>%
     data.table::setorderv(c("xValues", identifier))
   dtSimulated <- dtSimulated[!is.nan(xValues) & !is.nan(yValues)]
 
-  dtObserved[, predicted := {
-    # Filter the simulated data based on the current group
-    filterConditions <- lapply(identifier, function(id) dtSimulated[[id]] == .BY[[id]])
-    filteredX <- dtSimulated[Reduce(`&`, filterConditions)]$xValues
-    filteredY <- dtSimulated[Reduce(`&`, filterConditions)]$yValues
+  dtObserved[, predicted := NA_real_]
 
-    # Get the current xValues from dtObserved
-    currentXValues <- xValues # This refers to the xValues column in dtObserved
+  for (iRow in seq_len(nrow(dtObserved))){
 
-    # Initialize an empty vector for predictions
-    predicted <- rep(NA, length(currentXValues))
+    dtSimulatedGroup <- dtSimulated %>%
+      merge(dtObserved[iRow,..identifier], by = identifier)
 
-    # Check if there are enough filtered points
-    if (length(filteredX) < 2) {
-      warning("Not enough data points for ", paste(identifier, .BY, collapse = ", "))
-    } else {
-      # Create a data.table for easier manipulation
-      dtSimulatedGroup <- data.table(x = filteredX, y = filteredY)
+    if (nrow(dtSimulatedGroup) > 2){
 
       # Calculate differences
-      dtSimulatedGroup[, diffY := c(NA, diff(y))]
+      dtSimulatedGroup[, diffY := c(NA, diff(yValues))]
       dtSimulatedGroup$diffY[1] <- dtSimulatedGroup$diffY[2]
-      dtSimulatedGroup[y <= 0, diffY := 0]
-      dtSimulatedGroup[data.table::shift(y, -1) <= 0, diffY := 0]
+      dtSimulatedGroup[yValues <= 0, diffY := 0]
+      dtSimulatedGroup[data.table::shift(yValues, -1) <= 0, diffY := 0]
 
-      maxX <- max(dtSimulatedGroup$x)
+      maxX <- max(dtSimulatedGroup$xValues)
 
-      # Loop through each xValue in the current group
-      for (i in seq_along(currentXValues)) {
-        xVal <- currentXValues[i]
+      xVal <- dtObserved$xValues[iRow]
 
-        # Find the closest x in the filtered data
-        closestIdx <- which(filteredX >= xVal)[1]
-        x <- dtSimulatedGroup$x
-        y <- dtSimulatedGroup$y
+      # Find the closest x in the filtered data
+      closestIdx <- which(dtSimulatedGroup$xValues >= xVal)[1]
+      x <- dtSimulatedGroup$xValues
+      y <- dtSimulatedGroup$yValues
 
-        # Check if the slope is positive or negative
-        if (length(closestIdx) < 1 | xVal > maxX) {
-          predicted[i] <- NA # Handle values outside limits
+      # Check if the slope is positive or negative
+      if (length(closestIdx) < 1 | xVal > maxX) {
+        dtObserved$predicted[iRow] <- NA_real_ # Handle values outside limits
+      } else {
+        if (dtSimulatedGroup$diffY[closestIdx] >= 0) {
+          # Linear extrapolation for increasing slope
+          dtObserved$predicted[iRow] <- stats::approx(
+            x = x,
+            y = y,
+            xout = xVal,
+            rule = 1
+          )$y
         } else {
-          if (dtSimulatedGroup$diffY[closestIdx] >= 0) {
-            # Linear extrapolation for increasing slope
-            predicted[i] <- stats::approx(
-              x = x,
-              y = y,
-              xout = xVal,
-              rule = 1
-            )$y
-          } else {
-            predicted[i] <- exp(stats::approx(
-              x = x[y>0],
-              y = log(y[y>0]),
-              xout = xVal,
-              rule = 1
-            )$y)
-          }
+          dtObserved$predicted[iRow] <- exp(stats::approx(
+            x = x[y>0],
+            y = log(y[y>0]),
+            xout = xVal,
+            rule = 1
+          )$y)
         }
-      }
+
+
     }
 
-    predicted # Return the predictions to be assigned to the new column
-  }, by = identifier]
+    }
+  }
+
+
 
   return(dtObserved) # Return the modified dtObserved
 }

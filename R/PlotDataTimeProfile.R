@@ -16,10 +16,9 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     #' @returns RmdContainer object
     initialize = function(projectConfiguration = projectConfiguration,
                           onePlotConfig = onePlotConfig) {
-      private$.dtOutputPaths <- getOutputPathIds(projectConfiguration = projectConfiguration)
-      private$.dtDataGroups <- getDataGroups(projectConfiguration = projectConfiguration)
-      private$.timeTags <- getTimeRangeTags(projectConfiguration = projectConfiguration)
-
+      private$.dtOutputPaths <- copy(configEnv$outputPaths)
+      private$.dtDataGroups <- copy(configEnv$dataGroupIds)
+      private$.timeTags <- copy(configEnv$timeTags)
       private$.configTable <- data.table::setDT(onePlotConfig)[, scenarioIndex := .I]
     },
 
@@ -40,7 +39,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         scenarioResults <- utils::modifyList(scenarioResults,
                                               esqlabsR::loadScenarioResults(
                                                 scenarioNames = setdiff(scenarioNames,names(scenarioResults)),
-                                                resultsFolder = file.path(projectConfiguration$outputFolder, "SimulationResults")
+                                                resultsFolder = file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult)
                                               )
         )
       }
@@ -177,7 +176,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     #' @param nMaxFacetRows maximal number of facet rows
     splitDataToPanels = function(nFacetColumns, nMaxFacetRows) {
       configTable <- data.table::copy(self$configTable) %>%
-        dplyr::select("scenarioIndex", "outputPathIds", "scenarioCaptionName", "dataGroupIds", "individualIds")
+        dplyr::select("scenarioIndex", "outputPathIds", "scenarioLongName", "dataGroupIds", "individualIds")
 
       dtCaption <- getPlotIdForColumns(configTable = configTable, col = "outputPathIds")
 
@@ -589,7 +588,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
           private[[fieldName]]$colorIndex <-
             factor(private[[fieldName]]$colorIndex,
                    levels = private$.dtOutputPaths$outputPathId, # nolint indentation_linter
-                   labels = private$.dtOutputPaths$displayName,
+                   labels = private$.dtOutputPaths$displayNameOutputs,
                    ordered = TRUE
             )
         }
@@ -1032,7 +1031,7 @@ getObservedUnitConversionDT <- function(dataObserved, dtUnit) {
 #' @param applicationTimes A list of application times.
 #' @return A data table with added time range tags.
 #' @keywords internal
-addTimeRangeTagsToData <- function(timeRangeColumns, dataOld, configTable, applicationTimes,timeTags) {
+addTimeRangeTagsToData = function(timeRangeColumns, dataOld, configTable, applicationTimes,timeTags) {
   # avoid warnings for global variables
   xValues <- NULL
 
@@ -1059,10 +1058,8 @@ addTimeRangeTagsToData <- function(timeRangeColumns, dataOld, configTable, appli
         tRange <- eval(parse(text = configList[[col]]))
       }
 
-      dataNew <- dataOld[xValues >= tRange[1] &
-                           xValues <= tRange[2] &
-                           scenarioIndex == scenarioIndex] %>%
-        dplyr::mutate(timeRangeTag = tag)
+      dataNew <- dataOld[xValues >= tRange[1] & xValues <= tRange[2] & scenarioIndex == scenarioIndex]
+      dataNew[, timeRangeTag := tag]
 
       timeshift <- timeTags[tag==gsub("^timeRange_", "", col)]$timeShift
       if (is.na(timeshift) | timeshift == '') timeshift <- tRange[1]
@@ -1121,13 +1118,12 @@ finalizeCaptionTable <- function(dtCaption, timeTags, dtOutputPaths, nFacetColum
   )
 
   dtCaption <- dtCaption %>%
-    merge(dtOutputPaths %>% dplyr::select(outputPathId, "displayName"),
+    merge(dtOutputPaths %>% dplyr::select('outputPathId', "displayNameOutputs"),
           by = "outputPathId" # nolint indentation_linter
     ) %>%
-    data.table::setnames("displayName", "outputDisplayName") %>%
     dplyr::select(dplyr::any_of(c(
       "scenarioIndex", "outputPathId", "plotTag", "counter",
-      "scenarioCaptionName", "outputDisplayName", "dataGroupIds",
+      "scenarioLongName", "displayNameOutputs", "dataGroupIds",
       "timeRangeTag", "timeRangeCaption", "individualId"
     )))
 

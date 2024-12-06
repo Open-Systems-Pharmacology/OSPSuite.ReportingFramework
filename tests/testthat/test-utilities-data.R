@@ -21,7 +21,7 @@ test_that("It should read and process data based on the provided project configu
   )
   expect_gte(nrow(dtIndividualBiometrics), 10)
 
-  dtOutputPaths <- getOutputPathIds(projectConfiguration)
+  dtOutputPaths <- getOutputPathIds(projectConfiguration$plotsFile)
   expect_contains(dtOutputPaths$outputPathId, c("PARENT", "METABOLITE"))
 })
 

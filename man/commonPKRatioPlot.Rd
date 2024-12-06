@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotPKForestPlot.R
 \name{commonPKRatioPlot}
 \alias{commonPKRatioPlot}
-\title{This internal function performs common validation and configuration setup for PK ratio plots.}
+\title{Common PK Ratio Plot Function}
 \usage{
 commonPKRatioPlot(
   projectConfiguration,
@@ -21,34 +21,51 @@ commonPKRatioPlot(
 )
 }
 \arguments{
-\item{projectConfiguration}{A ProjectConfiguration object.}
+\item{projectConfiguration}{A ProjectConfiguration object that contains settings and parameters
+for the project, including file paths and other configurations.}
 
-\item{subfolder}{A string specifying the subfolder for output.}
+\item{subfolder}{A string specifying the subfolder within the project directory where output files
+will be saved.}
 
-\item{configTableSheet}{Name of the sheet containing configuration tables.}
+\item{configTableSheet}{A string representing the name of the sheet that contains configuration
+tables relevant for generating the plots.}
 
-\item{pkParameterDT}{A data.table with PK parameters.}
+\item{pkParameterDT}{A data.table containing PK parameters, which includes columns such as
+scenario names, parameter types, individual IDs, values, output path IDs, display names,
+and units.}
 
-\item{pkParameterObserved}{A data.table with observed PK parameters (optional).}
+\item{pkParameterObserved}{A data.table with observed PK parameters. This parameter is optional
+and can be NULL if only simulated data is to be used.}
 
-\item{ratioCalculationInputs}{A list of inputs specific to the ratio calculation method.}
+\item{ratioCalculationInputs}{A list containing inputs specific to the method used for calculating
+ratios, such as aggregation functions or simulation parameters.}
 
-\item{ratioCalculationMethod}{A string specifying the method for ratio calculation.}
+\item{ratioCalculationMethod}{A string that specifies the method to be used for calculating ratios.
+Possible values include 'byRatioAggregation' or 'byBootsTrapping'.}
 
-\item{vlineIntercept}{Intercept for vertical line on plots.}
+\item{vlineIntercept}{A numeric value that specifies the intercept for any vertical lines to be drawn
+on the plots, typically used to indicate a reference line.}
 
-\item{scaleVectors}{A list of aesthetic parameters for plots.}
+\item{scaleVectors}{A list containing aesthetic parameters for the plots, such as colors, fills, and shapes
+for different data types (e.g., simulated vs. observed).}
 
-\item{digitsToRound}{Number of digits to round in output.}
+\item{digitsToRound}{An integer specifying the number of digits to round numerical outputs to.}
 
-\item{digitsToShow}{Number of digits to display.}
+\item{digitsToShow}{An integer specifying the number of digits to display in plot annotations.}
 
-\item{xlabel}{Label for x-axis.}
+\item{xlabel}{A string representing the label to be used for the x-axis in the plots.}
+
+\item{tableLabels}{A list of labels for tables generated in the plot. This should correspond to the
+various statistics displayed in the plot.}
 }
 \value{
-An RmdContainer object with generated plots.
+An RmdContainer object that contains the generated plots and any related information for
+        further processing or exporting.
 }
 \description{
 This internal function performs common validation and configuration setup for PK ratio plots.
+It ensures that the input data is valid and prepares the necessary configuration for generating
+pharmacokinetic (PK) ratio plots. The function also handles the reading of configuration tables
+and the setup for observed PK parameters if provided.
 }
 \keyword{internal}

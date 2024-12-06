@@ -32,6 +32,8 @@ RmdContainer <- R6::R6Class( # nolint
     #'
     #' @param fileName name of .Rmd file
     writeRmd = function(fileName) {
+      if (!getOption('OSPSuite.RF.withPlotExport',default = TRUE)) return(invisible())
+
       checkmate::assertPathForOutput(fileName, extension = "Rmd", overwrite = TRUE)
       if (basename(fileName) != fileName) {
         stop("Please insert fileName as basename, File will be saved in folder defined by class object")
@@ -97,6 +99,8 @@ RmdContainer <- R6::R6Class( # nolint
                                   ...) {
       private$.checkKeyIsUnique(key = figureKey)
 
+      if (!getOption('OSPSuite.RF.withPlotExport',default = TRUE)) return(invisible())
+
       dev <- ospsuite.plots::getOspsuite.plots.option(optionKey = ospsuite.plots::OptionKeys$export.device)
       ospsuite.plots::exportPlot(
         plotObject = plotObject,
@@ -135,6 +139,8 @@ RmdContainer <- R6::R6Class( # nolint
                                  ...) {
       private$.checkKeyIsUnique(key = tableKey)
       checkmate::assertCharacter(names(table), unique = TRUE)
+
+      if (!getOption('OSPSuite.RF.withPlotExport',default = TRUE)) return(invisible())
 
       # export
       utils::write.csv(
@@ -176,6 +182,25 @@ RmdContainer <- R6::R6Class( # nolint
         }
       }
       private$.digitsOfSignificance <- value
+    },
+    #' @field configTable configuration Table
+    configTable = function(value) {
+      if (missing(value)) {
+        value <- private$.configTable
+      } else {
+        checkmate::assertDataTable(value,null.ok = TRUE)
+      }
+      private$.configTable <- value
+    },
+    #' @field dataObserved observedData used for this Rmd
+    dataObserved = function(value) {
+      if (missing(value)) {
+        value <- private$.dataObserved
+      } else {
+        value <- unique(rbind(private$.dataObserved,
+                       value))
+      }
+      private$.dataObserved <- value
     }
   ),
   private = list(
@@ -193,6 +218,10 @@ RmdContainer <- R6::R6Class( # nolint
     .listOfKeys = c(),
     # boolean to tell, if last entry was a Key
     .listOfALLKeys = c(),
+    # ConfigurationTable use to build Object
+    .configTable = NULL,
+    # Identifier observed data use to build Object
+    .dataObserved = c(),
     # function to initialize rmdLines
     .startRMD = function(rmdfolder) {
       return(c(

@@ -11,20 +11,21 @@
 #'
 #' @export
 calculatePKParameter <- function(projectConfiguration,
-                                 scenarioResults = NULL,
+                                 scenarioResult,
                                  pkParameterSheets) {
-  checkmate::assertList(scenarioResults, types = "list", any.missing = FALSE, names = "named")
+
   checkmate::assertClass(projectConfiguration, classes = "ProjectConfiguration")
-  checkmate::assertCharacter(pkParameterSheets, any.missing = FALSE)
-
-
-  outputFolder <- file.path(projectConfiguration$outputFolder, "PKAnalysisResults")
-  if (!dir.exists(outputFolder)) dir.create(outputFolder)
-
-  dtOutputPaths <- getOutputPathIds(projectConfiguration)
-  if (nrow(dtOutputPaths) == 0) stop('Please define ouputPaths in plot configuration xlsx')
+  checkmate::assertList(scenarioResult,  any.missing = FALSE, names = "named")
+  checkmate::assertString(scenarioName)
 
   initializeParametersOfSheets(projectConfiguration,pkParameterSheets)
+
+  outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$pKAnalysisResults)
+  if (!dir.exists(outputFolder)) dir.create(outputFolder)
+
+  dtOutputPaths <- getOutputPathIds(projectConfiguration$plotsFile)
+  if (nrow(dtOutputPaths) == 0) stop('Please define ouputPaths in plot configuration xlsx')
+
 
   # Load or calculate PK analyses for all scenarios
   invisible(lapply(names(scenarioList), function(scenarioName) {
@@ -53,6 +54,8 @@ calculatePKParameter <- function(projectConfiguration,
 #' @param pkParameterSheets A vector of sheet names to update.
 #' @return NULL (updates are made in-place).
 initializeParametersOfSheets <- function(projectConfiguration, pkParameterSheets) {
+
+  dtScenarios <- getScenarioDefinitions(projectConfiguration$scenariosFile)
 
   ospsuite::removeAllUserDefinedPKParameters()
 
@@ -120,32 +123,31 @@ initializeParametersOfSheets <- function(projectConfiguration, pkParameterSheets
 #'
 #' @param projectConfiguration A list containing project configuration, including the PK parameter file.
 #' @param scenarioList A list of scenarios for which PK parameters are to be loaded.
-#' @param pkParameterSheets A vector containing the names of the sheets in the PK parameter file to read.
 #' @return A data.table containing the processed PK analyses.
 #'
 #' @export
 loadPKParameter <- function(projectConfiguration,
-                            scenarioList,
-                            pkParameterSheets) {
+                            scenarioList) {
   checkmate::assertList(scenarioList, types = "Scenario", any.missing = FALSE, names = "named",null.ok = TRUE)
   checkmate::assertClass(projectConfiguration, classes = "ProjectConfiguration")
-  checkmate::assertCharacter(pkParameterSheets, any.missing = FALSE)
 
-  dtOutputPaths <- getOutputPathIds(projectConfiguration)
+  dtScenarios <- getScenarioDefinitions(projectConfiguration$scenariosFile)
+
+  dtOutputPaths <- getOutputPathIds(projectConfiguration$plotsFile)
   if (nrow(dtOutputPaths) == 0) stop('Please define ouputPaths in plot configuration xlsx')
 
-  #  initializeParametersOfSheets(projectConfiguration,pkParameterSheets)
-
   # Load or calculate PK analyses for all scenarios
-  pkAnalysesList <- lapply(names(scenarioList), function(scenarioName) {
-    loadPKAnalysisPerScenario(scenarioName = scenarioName,
-                              scenario = scenarioList[[scenarioName]],
+  pkAnalysesList <- lapply(names(scenarioList), function(sc) {
+    pkParameterSheets <- dtScenarios[scenarioName == sc & !is.na(pKParameter)]$pKParameter
+
+    loadPKAnalysisPerScenario(scenarioName = sc,
+                              scenario = scenarioList[[sc]],
                               pkParameterSheet = pkParameterSheets,
                               projectConfiguration = projectConfiguration)
   })
 
   pkParameterDT <- merge(data.table::rbindlist(pkAnalysesList),
-                         dtOutputPaths[, c('outputPathId', 'displayName')],
+                         dtOutputPaths[, c('outputPathId', 'displayNameOutputs')],
                          by = 'outputPathId',
                          suffixes = c('', 'Output'))
 
@@ -173,7 +175,7 @@ loadPKAnalysisPerScenario <- function(scenarioName,scenario,
                                        scenario = scenario) %>%
     dplyr::mutate(scenarioName = scenarioName)
 
-  dtOutputPaths <- getOutputPathIds(projectConfiguration)
+  dtOutputPaths <- getOutputPathIds(projectConfiguration$plotsFile)
 
   # Process each PK parameter sheet
   resultsList <- list()
@@ -205,7 +207,9 @@ loadPKAnalysisPerScenario <- function(scenarioName,scenario,
                                 'outputPathId',
                                 'displayName',
                                 'displayUnit'
-                              )
+                              ) %>%
+                              setnames(old = c('displayName','displayUnit'),
+                                       new = c('displayNamePkParameter','displayUnitPKParameter'))
                           ))
 
   }
@@ -227,7 +231,7 @@ loadPKAnalysisPerScenario <- function(scenarioName,scenario,
 #' @export
 loadPkAnalysisRawData <- function(projectConfiguration, scenarioName,scenario) {
 
-  outputFolder <- file.path(projectConfiguration$outputFolder, "PKAnalysisResults")
+  outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$pKAnalysisResults)
   if (!dir.exists(outputFolder)) dir.create(outputFolder)
 
   fileName  = file.path(outputFolder, paste0(scenarioName, '.csv'))

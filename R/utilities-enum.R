@@ -25,3 +25,12 @@ DATACLASS <- ospsuite.utils::enum(c( # nolint
   pkAggregated = "pk Aggregated",
   tpTwinPop = "tp Virtual Twin Population"
 ))
+
+#' @title enumeration keys for exportDirectories
+#' @export
+EXPORTDIR <- ospsuite.utils::enum(c( # nolint
+  simulationResult = "SimulationResults",
+  sensitivityResults = "SensitivityResults",
+  pKAnalysisResults = "PKAnalysisResults",
+  analysisProgram = "AnalysisProgram"
+))

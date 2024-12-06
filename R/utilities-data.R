@@ -506,24 +506,16 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
   dtDataGroupIdsNew <-
     dtDataGroupIdsNew[!(group %in% dtDataGroupIds$group)]
 
-  # Rename with capitals
-  for (col in names(dtDataGroupIdsNew)) {
-    newName <- grep(col, names(dtDataGroupIds), ignore.case = TRUE, value = TRUE)
-    if (length(newName) > 0) {
-      names(dtDataGroupIdsNew)[names(dtDataGroupIdsNew) == col] <- newName
-    }
+  if (nrow(dtDataGroupIdsNew) > 0){
+
+    dtDataGroupIds <- rbind(dtDataGroupIds,
+                            dtDataGroupIdsNew, # nolint indentation_linter
+                            fill = TRUE)
+
+    xlsxWriteData(wb = wb, sheetName = "DataGroups", dt = dtDataGroupIds)
+    openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+
   }
-
-  dtDataGroupIds <- rbind(dtDataGroupIds,
-                          dtDataGroupIdsNew, # nolint indentation_linter
-                          fill = TRUE)
-
-
-  identifierCols <- intersect(c("group", "studyId", "studyArm"), names(dtDataGroupIds))
-
-
-  xlsxWriteData(wb = wb, sheetName = "DataGroups", dt = dtDataGroupIds)
-  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
 
   return(invisible())
 }
@@ -553,19 +545,21 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
   dtOutputPaths <- xlsxReadData(wb = wb, sheetName = "Outputs")
 
-  dtOutputPathsNew <- dataDT[, c("outputPathId")] %>%
+  dtOutputPathsNew <- dataDT[!(outputPathId %in% dtOutputPaths$outputPathId), c("outputPathId")] %>%
     unique() %>%
     dplyr::mutate(outputPathId = as.character(outputPathId))
 
-  dtOutputPaths <- rbind(dtOutputPaths,
-                         dtOutputPathsNew, # nolint indentation_linter
-                         fill = TRUE
-  )
+  if (nrow(dtOutputPathsNew) > 0){
+    dtOutputPaths <- rbind(dtOutputPaths,
+                           dtOutputPathsNew, # nolint indentation_linter
+                           fill = TRUE
+    )
 
-  dtOutputPaths <- dtOutputPaths[!duplicated(dtOutputPaths, by = "outputPathId")]
+    xlsxWriteData(wb = wb, sheetName = "Outputs", dt = dtOutputPaths)
+    openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
 
-  xlsxWriteData(wb = wb, sheetName = "Outputs", dt = dtOutputPaths)
-  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+    synchronizeScenariosWithPlots(projectConfiguration)
+  }
 
   return(invisible())
 }
@@ -984,9 +978,6 @@ setDataTypeAttributes <- function(dataDT, dict = NULL) {
       xlsxReadData(
         wb = system.file(
           "templates",
-          "templateProject",
-          "Scripts",
-          "ReportingFramework",
           "DataImportConfiguration.xlsx",
           package = "ospsuite.reportingframework",
           mustWork = TRUE

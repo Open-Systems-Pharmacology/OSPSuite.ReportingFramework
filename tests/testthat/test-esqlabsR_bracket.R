@@ -77,7 +77,7 @@ test_that("initProject creates project folder structure", {
 
 
 
-  expect_true(length(list.files(file.path(projectConfiguration$outputFolder, "SimulationResults"))) > 0)
+  expect_true(length(list.files(file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult))) > 0)
 })
 
 cleanupLogFileForTest(projectConfiguration)

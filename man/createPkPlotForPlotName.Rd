@@ -20,37 +20,35 @@ createPkPlotForPlotName(
 )
 }
 \arguments{
-\item{onePlotConfig}{A data.table containing the plot configuration.}
+\item{onePlotConfig}{A data.table containing the plot configuration, including details such as
+scenario names and parameters to be plotted.}
 
-\item{rmdContainer}{An RmdContainer object.}
+\item{rmdContainer}{An RmdContainer object that will hold the generated plot and related information.}
 
-\item{pkParameterDT}{A data.table with PK parameters.}
+\item{pkParameterDT}{A data.table with PK parameters, including the necessary columns for analysis.}
 
-\item{vlineIntercept}{Intercept for vertical line on plots.}
+\item{pkParameterObserved}{A data.table with observed PK parameters. This parameter is optional.}
 
-\item{scaleVectors}{A list of aesthetic parameters for plots.}
+\item{ratioCalculationMethod}{A string specifying the method used for calculating ratios (e.g., 'byBootsTrapping').}
 
-\item{digitsToRound}{Number of digits to round in output.}
+\item{ratioCalculationInputs}{A list containing inputs specific to the method used for calculating ratios.}
 
-\item{digitsToShow}{Number of digits to display.}
+\item{vlineIntercept}{A numeric value for the intercept of the vertical line on plots.}
 
-\item{xlabel}{Label for x-axis.}
+\item{scaleVectors}{A list of aesthetic parameters for the plots, including colors and shapes.}
 
-\item{coefficientOfVariation}{Coefficient of variation for simulations.}
+\item{digitsToRound}{An integer specifying the number of digits to round in output.}
 
-\item{nObservationDefault}{Default number of observations.}
+\item{digitsToShow}{An integer specifying the number of digits to display in plot annotations.}
 
-\item{nBootstrap}{Number of bootstrap samples.}
+\item{xlabel}{A string representing the label for the x-axis in the plots.}
 
-\item{confLevel}{Confidence level for intervals.}
-
-\item{statFun}{Function to compute statistics.}
-
-\item{seed}{Random seed for reproducibility.}
+\item{tableLabels}{A list of labels for tables generated in the plot.}
 }
 \value{
-An updated RmdContainer object with the added plot.
+An updated RmdContainer object with the added plot and related information.
 }
 \description{
-Creates a plot for the PK ratio based on the provided configuration.
+Creates a plot for the PK ratio based on the provided configuration. This function handles the
+preparation of data, plotting, and exporting of the generated plot.
 }

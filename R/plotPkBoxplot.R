@@ -9,7 +9,7 @@ plotPKBoxwhisker <- function(projectConfiguration,
   checkmate::assertClass(projectConfiguration, classes = 'ProjectConfiguration')
   checkmate::assertString(subfolder)
   checkmate::assertDataTable(pkParameterDT)
-  checkmate::assertNames(names(pkParameterDT), must.include = c("scenarioName", "parameter", "individualId", "value", "outputPathId", "displayName", "displayUnit"))
+  checkmate::assertNames(names(pkParameterDT), must.include = c("scenarioName", "parameter", "individualId", "value", "outputPathId", "displayNamePKParameter", "displayUnitPKParameter"))
   checkmate::assertFlag(asRatio)
   # Read configuration tables
   configTable <- readPKBoxwhiskerConfigTable(
@@ -59,7 +59,7 @@ createPKBoxPlotForPlotName <- function(onePlotConfig,
 
       plotObject <-
         ospsuite.plots::plotBoxWhisker(data =   plotData,
-                                       mapping = aes(x = scenarioCaptionName,
+                                       mapping = aes(x = scenarioLongName,
                                                      y = value,
                                                      fill = colorIndex),
                                        yscale = yScale,
@@ -93,7 +93,7 @@ createPKBoxPlotForPlotName <- function(onePlotConfig,
     dtExport <-  plotDataPk %>%
       data.table::setDT() %>%
       .[, as.list(plotObject$statFun(value)),
-        by = c("displayNameOutput","scenarioCaptionName")
+        by = c("displayNameOutput","scenarioLongName")
       ] %>%
       setnames( old =  c("ymin", "lower", "middle", "upper", "ymax"),
                 new = paste(percentiles))
@@ -118,8 +118,8 @@ prepareDataForPKBoxplot <- function(onePlotConfig,pkParameterDT){
     dplyr::select(!c('level', 'header')) %>%
     merge(pkParameterDT %>%
             unique() %>%
-            data.table::setnames(old = c('parameter', 'displayName','scenarioName'),
-                                 new = c('pkParameter', 'parameterDisplayName','scenario')),
+            data.table::setnames(old = c('parameter', 'scenarioName'),
+                                 new = c('pkParameter','scenario')),
           by = c('scenario', 'pkParameter', 'outputPathId')
     )
 
@@ -137,8 +137,8 @@ prepareDataForPKBoxplot <- function(onePlotConfig,pkParameterDT){
                                          levels = unique(plotData$displayNameOutput),
                                          ordered = TRUE)
 
-    plotData$scenarioCaptionName <- factor(plotData$scenarioCaptionName,
-                                           levels = unique(onePlotConfig$scenarioCaptionName),
+    plotData$scenarioLongName <- factor(plotData$scenarioLongName,
+                                           levels = unique(onePlotConfig$scenarioLongName),
                                            ordered = TRUE)
     # add Tag for faceting
     plotData[,plotTag := toupper(letters[as.numeric(displayNameOutput)])]
@@ -190,7 +190,7 @@ getCaptionForBoxwhiskerPlot <- function(plotDataPk,percentiles, yScale,plotCapti
 
   dtCaption <-
     plotDataPk[, c(
-      "scenarioCaptionName",
+      "scenarioLongName",
       'displayNameOutput',
       'plotTag',
       "plotCaptionAddon",
@@ -203,7 +203,7 @@ getCaptionForBoxwhiskerPlot <- function(plotDataPk,percentiles, yScale,plotCapti
                        "of",
                        pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"),
                        "for",
-                       pasteFigureTags(dtCaption, captionColumn = "scenarioCaptionName"))
+                       pasteFigureTags(dtCaption, captionColumn = "scenarioLongName"))
 
   if (!is.null(percentiles)){
     captiontext <- paste(captiontext,
@@ -221,9 +221,9 @@ getCaptionForBoxwhiskerPlot <- function(plotDataPk,percentiles, yScale,plotCapti
   captiontext <- paste(
     plotTypeTxt,
     "for",
-    pasteFigureTags(dtCaption, captionColumn = "outputDisplayName"),
+    pasteFigureTags(dtCaption, captionColumn = "displayNameOutputs"),
     "for",
-    pasteFigureTags(dtCaption, captionColumn = "scenarioCaptionName"),
+    pasteFigureTags(dtCaption, captionColumn = "scenarioLongName"),
     individualtext,
 
   )
@@ -246,9 +246,6 @@ readPKBoxwhiskerConfigTable <- function(projectConfiguration, sheetName, pkParam
   # Initialize variable used in data.tables
   level <- NULL
 
-
-  dtOutputPaths <- getOutputPathIds(projectConfiguration)
-
   # Read configuration tables
   configTable <- xlsxReadData(
     wb = projectConfiguration$plotsFile,
@@ -260,7 +257,7 @@ readPKBoxwhiskerConfigTable <- function(projectConfiguration, sheetName, pkParam
 
   validateConfigTablePlots(
     configTablePlots = configTablePlots,
-    charactersWithoutMissing = c("plotName","scenario","scenarioCaptionName",'pkParameters','outputPathIds'),
+    charactersWithoutMissing = c("plotName","scenario","scenarioLongName",'pkParameters','outputPathIds'),
     charactersWithMissing = c("plotCaptionAddon"),
     logicalColumns = NULL,
     numericRangeColumns = c("ylimit_linear", "ylimit_log"),
@@ -297,9 +294,7 @@ readPKBoxwhiskerConfigTable <- function(projectConfiguration, sheetName, pkParam
       "ylimit_linear",
       "ylimit_log",
       "facetScale"
-    ),
-    dtOutputPaths = dtOutputPaths
-  )
+    ))
 
 
   return(configTable)
@@ -312,17 +307,17 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(projectConfiguration,
                                                 overwrite = FALSE) {
 
   # avoid warnings for global variables during check
-  scenario_name <- NULL
+  scenarioName <- NULL
 
   # this function stops in valid runs
   stopHelperFunction()
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
-  scenarios <- getScenarioDefinitions(projectConfiguration)
+  scenarios <- getScenarioDefinitions(projectConfiguration$scenariosFile)
 
   if (sheetName %in% wb$sheet_names & !overwrite) {
     dtNewHeader <- xlsxReadData(wb, sheetName = sheetName, skipDescriptionRow = TRUE)
-    scenarios <- scenarios[!(scenario_name %in% unique(dtNewHeader$scenario))]
+    scenarios <- scenarios[!(scenarioName %in% unique(dtNewHeader$scenario))]
   } else {
     dtNewHeader <- data.table(
       level = 1,
@@ -335,18 +330,17 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(projectConfiguration,
     .[, .(outputPathIds = paste(unique(outputPathId), collapse = ', ')), by = pkParameters]
 
   # Create a new data.table with all combinations of pkParameters and scenario names
-  dtNewConfig <- dt[, .(scenarioCaptionName = scenarios$scenario_name,
-                        scenario = scenarios$scenario_name,
+  dtNewConfig <- dt[, .(scenario = scenarios$scenarioName,
                         yScale = 'linear, log',
                         facetScale = 'fixed'),
                     by = .(outputPathIds, pkParameters)]
 
 
-  wb <- addConfigToTemplate(
+  wb <- addDataAsTemplateToXlsx(
     wb = wb,
     templateSheet = "PKParameter_Boxplot",
     sheetName = sheetName,
-    dtNewConfig = rbind(dtNewHeader,
+    dtNewData = rbind(dtNewHeader,
                         dtNewConfig, # nolint indentation_linter
                         fill = TRUE
     )

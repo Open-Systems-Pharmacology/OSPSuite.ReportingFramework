@@ -4,14 +4,12 @@
 \alias{validateVirtualTwinPop}
 \title{Validate Virtual Twin Population in Plot Configuration}
 \usage{
-validateVirtualTwinPop(configTablePlots, projectConfiguration, dtScenarios)
+validateVirtualTwinPop(configTablePlots, projectConfiguration)
 }
 \arguments{
 \item{configTablePlots}{A data table containing the plot configuration, including scenario names and individual IDs.}
 
 \item{projectConfiguration}{A configuration object containing project-specific settings.}
-
-\item{dtScenarios}{A data table containing scenario details.}
 }
 \description{
 This function validates the virtual twin population specified in the plot configuration table.

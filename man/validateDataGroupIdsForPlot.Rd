@@ -4,7 +4,7 @@
 \alias{validateDataGroupIdsForPlot}
 \title{Validation of data.table with outputPath Ids}
 \usage{
-validateDataGroupIdsForPlot(projectConfiguration)
+validateDataGroupIdsForPlot()
 }
 \arguments{
 \item{projectConfiguration}{ProjectConfiguration object}

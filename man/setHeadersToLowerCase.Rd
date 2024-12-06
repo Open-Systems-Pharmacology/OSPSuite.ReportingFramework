@@ -9,6 +9,9 @@ setHeadersToLowerCase(dt)
 \arguments{
 \item{dt}{A data.table object whose column names need to be converted to lowercase.}
 }
+\value{
+The modified data.table with updated column names.
+}
 \description{
-This function takes a data.table and converts the first letter of all column names to lowercase,
+This function takes a data.table and converts the first letter of all column names to lowercase.
 }

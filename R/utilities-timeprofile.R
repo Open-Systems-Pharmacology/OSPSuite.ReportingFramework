@@ -12,7 +12,6 @@
 loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, outputPathsPerScenario, aggregationFun) {
   dtSimulated <- data.table()
 
-  dtScenarios <- getScenarioDefinitions(projectConfiguration)
   for (scenarioName in names(outputPathsPerScenario)) {
 
     individualMatch <- NULL
@@ -56,8 +55,8 @@ prepareDataForMatch <- function(projectConfiguration, dataObserved, scenarioList
   dataObservedForMatch <- data.table::copy(dataObserved)
 
   # Retrieve data groups and output paths
-  dtDataGroups <- getDataGroups(projectConfiguration)
-  dtOutputs <- getOutputPathIds(projectConfiguration)
+  dtDataGroups <- getDataGroups(projectConfiguration$plotsFile)
+  dtOutputs <- getOutputPathIds(projectConfiguration$plotsFile)
   scenarioNames <- names(scenarioList)
 
   # Check if all scenario names are in the default scenarios
@@ -201,7 +200,6 @@ getPredictionsForScenarios <- function(scenarioResults,
 
   # Validate input names
   checkmate::assertNames(names(dataObservedForMatch), must.include = c('scenario', 'unitFactorX','unitFactorY',identifier))
-
   # Initialize a list to store results for each scenario
   resultsList <- list()
 
@@ -307,32 +305,46 @@ getPredictionsForScenarios <- function(scenarioResults,
 #'
 calculateLogLikelihood <- function(yValue, predicted, model, sigma, isCensored, lloq, lowerBound = 0) {
 
-  # Check that all inputs are of length 1 when called with mapply
-  checkmate::assertNumeric(yValue, len = 1)
-  checkmate::assertNumeric(predicted, len = 1)
-  checkmate::assertChoice(model, c("absolute", "proportional", "log_absolute"))
-  checkmate::assertNumeric(sigma, len = 1)
-  checkmate::assertLogical(isCensored, len = 1)
-  checkmate::assertNumeric(lloq, len = 1)
-  checkmate::assertNumeric(lowerBound, len = 1)
+  # Validate that all inputs are of the correct type and length
+  checkmate::assertNumeric(yValue, len = 1)  # yValue should be a single numeric value
+  checkmate::assertNumeric(predicted, len = 1)  # predicted should be a single numeric value
+  checkmate::assertChoice(model, c("absolute", "proportional", "log_absolute"))  # model must be one of the specified choices
+  checkmate::assertNumeric(sigma, len = 1)  # sigma should be a single numeric value
+  checkmate::assertLogical(isCensored, len = 1)  # isCensored should be a single logical value
+  checkmate::assertNumeric(lloq, len = 1)  # lloq should be a single numeric value
+  checkmate::assertNumeric(lowerBound, len = 1)  # lowerBound should be a single numeric value
 
-  if (predicted < lowerBound) {
+  # If predicted value is NA or below the lower bound, return log(0) (indicating a very low likelihood)
+  if (is.na(predicted) || predicted < lowerBound) {
     return(log(0))
-  } else if (isCensored) {
-    p <- switch(model,
-                absolute = pnorm(q = c(lloq, lowerBound), mean = predicted, sd = sigma, log = FALSE),
-                proportional = pnorm(q = c(lloq, lowerBound), mean = predicted, sd = sigma * predicted, log = FALSE),
-                log_absolute = plnorm(q = c(lloq, lowerBound), meanlog = log(predicted), sdlog = sigma, log = FALSE))
+  }
 
-    if (p[1] <= p[2]) stop(paste("Invalid probabilities for", model, "model: predicted =", predicted, "lloq =", lloq, "lowerBound =", lowerBound))
-    return(log(p[1] - p[2]) - log(1 - p[2]))
+  # Calculate the probability of being below the lower bound based on the selected model
+  pLB <- switch(model,
+                absolute = pnorm(q = lowerBound, mean = predicted, sd = sigma, log = FALSE),
+                proportional = pnorm(q = lowerBound, mean = predicted, sd = sigma * predicted, log = FALSE),
+                log_absolute = plnorm(q = lowerBound, meanlog = log(predicted), sdlog = sigma, log = FALSE))
+
+  # If the data is censored, calculate the probability of being above the lower limit of quantification (lloq)
+  if (isCensored) {
+    p <- switch(model,
+                absolute = pnorm(q = clloq, mean = predicted, sd = sigma, log = FALSE),
+                proportional = pnorm(q = lloq, mean = predicted, sd = sigma * predicted, log = FALSE),
+                log_absolute = plnorm(q = lloq, meanlog = log(predicted), sdlog = sigma, log = FALSE))
+    p <- log(p - pLB)  # Log-transform the probability adjusted for the lower bound
   } else {
+    # If the data is notored, calculate the log likelihood based on the chosen model
     p <- switch(model,
                 absolute = dnorm(x = yValue, mean = predicted, sd = sigma, log = TRUE),
                 proportional = dnorm(x = yValue, mean = predicted, sd = sigma * predicted, log = TRUE),
                 log_absolute = dlnorm(x = yValue, meanlog = log(predicted), sdlog = sigma, log = TRUE))
-    return(p)
+    return(p)  # Return the log likelihood for uncensored data
   }
+
+  # Adjust the log likelihood by subtracting the log probability of being below the lower bound
+  p <- p - log(1 - pLB)
+
+  return(p)  # Return the final log likelihood value
 }
 
 

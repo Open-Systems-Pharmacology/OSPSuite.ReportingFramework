@@ -11,7 +11,7 @@ plotPKRatioForestPlotByRatioAggregation(
   pkParameterDT,
   pkParameterObserved = NULL,
   aggregationFlag = c("GeometricStdDev", "ArithmeticStdDev", "Percentiles", "Custom"),
-  percentiles = c(5, 50, 95),
+  percentiles = c(0.05, 0.5, 0.95),
   customFunction = NULL,
   vlineIntercept = 1,
   scaleVectors = list(simulated = list(color = "darkgrey", fill = "darkgrey", shape =
@@ -24,15 +24,15 @@ plotPKRatioForestPlotByRatioAggregation(
 )
 }
 \arguments{
-\item{projectConfiguration}{A ProjectConfiguration object containing project settings.}
+\item{projectConfiguration}{A ProjectConfiguration object containing project settings and parameters.}
 
-\item{subfolder}{A string specifying the output directory.}
+\item{subfolder}{A string specifying the output directory where the plots will be saved.}
 
-\item{configTableSheet}{Name of the sheet containing configuration tables.}
+\item{configTableSheet}{A string representing the name of the sheet that contains configuration tables.}
 
-\item{pkParameterDT}{A data.table with PK parameters.}
+\item{pkParameterDT}{A data.table with PK parameters, including required columns for analysis.}
 
-\item{pkParameterObserved}{A data.table with observed PK parameters (optional).}
+\item{pkParameterObserved}{A data.table with observed PK parameters. This parameter is optional.}
 
 \item{aggregationFlag}{A character string indicating the aggregation method. Options include:
 - "GeometricStdDev"
@@ -40,35 +40,40 @@ plotPKRatioForestPlotByRatioAggregation(
 - "Percentiles"
 - "Custom"}
 
-\item{percentiles}{A numeric vector of percentiles to calculate if aggregationFlag is "Percentiles". Default is c(5, 50, 95).}
+\item{percentiles}{A numeric vector of percentiles to calculate if aggregationFlag is "Percentiles".
+Default is c(5, 50, 95).}
 
 \item{customFunction}{A custom function for aggregation if aggregationFlag is "Custom". Default is NULL.
- The custom function should take a numeric vector `y` as input and return a list containing:
+       The function should take a numeric vector `y` as input and return a list containing:
 - `yValues`: The aggregated value (e.g., mean).
-- `yMin`: The lower value of the aggregated data, (e.g. mean - sd).
-- `yMax`: The upper value of the aggregated data, (e.g. mean + sd).}
+- `yMin`: The lower value of the aggregated data (e.g., mean - sd).
+- `yMax`: The upper value of the aggregated data (e.g., mean + sd).}
 
-\item{vlineIntercept}{Intercept for vertical line on plots.}
+\item{vlineIntercept}{A numeric value for the intercept of the vertical line on plots.}
 
-\item{scaleVectors}{A list of aesthetic parameters for plots.}
+\item{scaleVectors}{A list of aesthetic parameters for the plots, including colors and shapes.}
 
-\item{digitsToRound}{Number of digits to round in output.}
+\item{digitsToRound}{An integer specifying the number of digits to round in output.}
 
-\item{digitsToShow}{Number of digits to display.}
+\item{digitsToShow}{An integer specifying the number of digits to display in plot annotations.}
 
-\item{xlabel}{Label for the x-axis.}
+\item{xlabel}{A string representing the label for the x-axis in the plots.}
 
-\item{tableLabels}{Labels for tables generated in the plot.}
+\item{tableLabels}{A list of labels for tables generated in the plot.}
 }
 \value{
-An RmdContainer object containing the generated plots and related information.
+An RmdContainer object containing the generated plots and related information for further
+        processing or exporting.
 }
 \description{
 This function generates plots for pharmacokinetic (PK) ratios using various aggregation methods.
+It allows users to visualize the ratios based on different statistical techniques, making it easier
+to interpret the pharmacokinetic data.
 }
 \details{
-The function allows for different aggregation techniques, including:
-- Geometric and Arithmetic Standard Deviations
+The function supports multiple aggregation methods, including:
+- Geometric Standard Deviations
+- Arithmetic Standard Deviations
 - Percentiles
 - A user-defined custom function for aggregation
 }

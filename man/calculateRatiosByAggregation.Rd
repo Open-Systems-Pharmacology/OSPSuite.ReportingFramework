@@ -7,26 +7,19 @@
 calculateRatiosByAggregation(configList, pkParameterDT, aggregationFun)
 }
 \arguments{
-\item{configList}{A data.table containing the configuration for the current workflow.}
+\item{configList}{A data.table containing the configuration for the current workflow, including
+reference and scenario details.}
 
-\item{pkParameterDT}{A data.table with PK parameters.}
+\item{pkParameterDT}{A data.table with PK parameters that will be used for ratio calculations.}
 
-\item{coefficientOfVariation}{Coefficient of variation for simulations.}
-
-\item{nObservations}{Number of observations to simulate.}
-
-\item{nBootstrap}{Number of bootstrap samples.}
-
-\item{confLevel}{Confidence level for intervals.}
-
-\item{statFun}{Function to compute statistics.}
-
-\item{seed}{Random seed for reproducibility.}
+\item{aggregationFun}{A function used for aggregating the ratios calculated from the data.}
 }
 \value{
-A data.table containing the bootstrapped statistics.
+A data.table containing the aggregated statistics, including the calculated ratio and relevant
+        confidence intervals.
 }
 \description{
-Calculates ratios for the specified workflow based on the provided configuration.
+Calculates ratios for the specified workflow based on the provided configuration, using an aggregation
+function. This function merges reference and scenario data and computes the ratios accordingly.
 }
 \keyword{internal}

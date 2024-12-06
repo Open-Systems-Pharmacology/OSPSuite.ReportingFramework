@@ -16,7 +16,7 @@ plotTimeProfilePanels(
   aggregationFlag = c("GeometricStdDev", "ArithmeticStdDev", "Percentiles", "Custom"),
   percentiles = c(5, 50, 95),
   customFunction = NULL,
-  referenceScaleVector = list(Control = c(NA, NA), Reference = c(NA, NA))
+  referenceScaleVector = list(Simulation = c(NA, NA), Reference = c(NA, NA))
 )
 }
 \arguments{
@@ -24,7 +24,7 @@ plotTimeProfilePanels(
 including file paths and scenario definitions. This is essential for the function to access the necessary data.}
 
 \item{subfolder}{A character string specifying the subfolder within the output directory where
-the plots will be saved.}
+the plots will be saved. Default is name of configTableSheet}
 
 \item{configTableSheet}{The name of the sheet in the Excel plot configuration file that defines
 the plot settings.}
@@ -44,17 +44,33 @@ used for all facet types.}
 \item{facetAspectRatio}{A numeric value specifying the aspect ratio for the facets (default is 0.5).}
 
 \item{aggregationFlag}{A character vector indicating the type of aggregation function to use
-for simulated data. Options include "GeometricStdDev", "ArithmeticStdDev", "Percentiles",
-and "Custom" (default is "GeometricStdDev").}
+for simulated data. Options include "GeometricStdDev" (Default), "ArithmeticStdDev", "Percentiles",
+and "Custom".}
 
 \item{percentiles}{A numeric vector of percentiles to consider if the aggregation method is set
 to "Percentiles" (default is c(5, 50, 95)).}
 
-\item{customFunction}{An optional custom function for aggregation. This function should take a
-numeric vector as input and return a list containing aggregated values and error types.}
+\item{customFunction}{An optional custom function for aggregation.
+A custom function should take a numeric vector `y` as input and return a list containing:
+
+- `yValues`: The aggregated value (e.g., mean).
+
+- `yMin`: The lower value of the aggregated data, (e.g. mean - sd).
+
+- `yMax`: The upper value of the aggregated data, (e.g. mean + sd).
+
+- `yErrorType`: A string indicating the type of error associated with the aggregation,
+it is used in plot legends and captions. It must be a concatenation of the descriptor of yValues and the descriptor of yMin - yMax range
+separated by "|" (e.g., "mean | standard deviation" or "median | 5th - 95th percentile").}
 
 \item{referenceScaleVector}{A named list that configures labels and colors for the display of
-reference scenarios. The names of the list are displayed as labels in the legend.}
+reference scenarios. The names of the list are displayed as labels in the legend.
+
+Default:
+referenceScaleVector = list(
+  Simulation = c(NA, NA),
+  Reference = c(NA, NA)
+)}
 }
 \value{
 Generates time profile plots and saves them to the specified output directory.
@@ -66,7 +82,7 @@ from the provided observed data. This function is designed to visualize complex 
 data by allowing for multiple plots organized in a user-defined layout.
 }
 \details{
-This function is particularly useful for researchers and analysts who need to visualize
+This function is particularly useful for researchers who need to visualize
 concentration-time profiles of various scenarios, compare predicted versus observed data,
 and analyze residuals cohesively. For more detailed information, please refer to the
 accompanying vignettes:
@@ -76,4 +92,52 @@ accompanying vignettes:
 The function primarily focuses on simulated scenarios, with each panel displaying the
 result of one scenario. Plots containing more than one scenario or only observed data are not
 supported.
+}
+\examples{
+\dontrun{
+# Example of using the referenceScaleVector parameter for a DDI Analysis
+referenceScaleVector = list(
+  DDI = c("#843C39FF", "#AD494AFF"),
+  Control = c("#3182BDFF", "#6BAED6FF")
+)
+
+# The scenario would be labeled as 'DDI', with aesthetic color as dark red ("#843C39FF") and
+# aesthetic fill as light red ("#AD494AFF").
+# The reference scenario would be labeled 'Control', with aesthetic color as dark blue ("#3182BDFF") and
+# aesthetic fill as light blue ("#6BAED6FF").
+
+# Example of using the referenceScaleVector parameter for a comparison between a pediatric
+# and an adult simulation using the default colors
+referenceScaleVector = list(
+  'Pediatric population' = c(NA, NA),
+  'Adult population' = c(NA, NA)
+)
+
+# The scenario would be labeled as 'Pediatric population', with aesthetic color as dark blue ("#3182BDFF") and
+# aesthetic fill as light blue ("#6BAED6FF").
+# The reference scenario would be labeled 'Adult population', with both aesthetic color and fill as 'grey'.
+
+# Example of using the aggregationFlag parameter "Custom"
+plotTimeProfilePanels(
+  projectConfiguration = myProjectConfig,
+  configTableSheet = "PlotSettings",
+  dataObserved = myObservedData,
+  scenarioResults = myScenarioResults,
+  aggregationFlag = c("Custom"),
+  customFunction = function(y) {
+list(yValues = mean(y), yMin = mean(y) - sd(y), yMax = mean(y) + sd(y), yErrorType = "mean | standard deviation")
+  }
+)
+
+# Example of using the aggregationFlag parameter "Percentiles"
+plotTimeProfilePanels(
+  projectConfiguration = myProjectConfig,
+  configTableSheet = "PlotSettings",
+  dataObserved = myObservedData,
+  scenarioResults = myScenarioResults,
+  aggregationFlag = c("Percentiles"),
+  percentiles = c(0.025, 0.5, 0.975)
+)
+}
+
 }

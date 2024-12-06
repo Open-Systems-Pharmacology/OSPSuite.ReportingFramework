@@ -7,16 +7,18 @@
 readPKForestConfigTable(projectConfiguration, sheetName, pkParameterDT)
 }
 \arguments{
-\item{projectConfiguration}{A ProjectConfiguration object.}
+\item{projectConfiguration}{A ProjectConfiguration object containing project settings and parameters.}
 
-\item{sheetName}{Name of the sheet to read from.}
+\item{sheetName}{A string representing the name of the sheet to read from the project configuration file.}
 
-\item{pkParameterDT}{A data.table with PK parameters.}
+\item{pkParameterDT}{A data.table with PK parameters that will be used for validation against the config.}
 }
 \value{
-A validated configuration table as a data.table.
+A validated configuration table as a data.table, ready for use in generating plots.
 }
 \description{
-Reads and validates the PK ratio configuration table from the specified sheet.
+Reads and validates the PK ratio configuration table from the specified sheet in the project configuration.
+This function ensures that the configuration data is structured correctly and contains all necessary
+information for generating plots.
 }
 \keyword{internal}

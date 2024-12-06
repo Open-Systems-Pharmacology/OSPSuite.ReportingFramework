@@ -28,41 +28,45 @@ plotPKRatioForestPlotByBoostrapping(
 )
 }
 \arguments{
-\item{projectConfiguration}{A ProjectConfiguration object.}
+\item{subfolder}{A string specifying the output directory for the generated plots.}
 
-\item{subfolder}{A string specifying the subfolder for output.}
+\item{configTableSheet}{A string representing the name of the sheet that contains configuration tables.}
 
-\item{configTableSheet}{Name of the sheet containing configuration tables.}
+\item{pkParameterDT}{A data.table with PK parameters, including required columns for analysis.}
 
-\item{pkParameterDT}{A data.table with PK parameters.}
+\item{pkParameterObserved}{A data.table with observed PK parameters. This parameter is optional.}
 
-\item{pkParameterObserved}{A data.table with observed PK parameters (optional).}
+\item{coefficientOfVariation}{A numeric value representing the coefficient of variation for simulations.}
 
-\item{coefficientOfVariation}{Coefficient of variation for simulations.}
+\item{nObservationDefault}{An integer representing the default number of observations for simulations.}
 
-\item{nObservationDefault}{Default number of observations.}
+\item{nBootstrap}{An integer specifying the number of bootstrap samples to generate.}
 
-\item{nBootstrap}{Number of bootstrap samples.}
+\item{statFun}{A function to compute statistics from the bootstrap samples. Default is the geometric mean.}
 
-\item{statFun}{Function to compute statistics.}
+\item{confLevel}{A numeric value representing the confidence level for intervals (e.g., 0.9 for 90%).}
 
-\item{confLevel}{Confidence level for intervals.}
+\item{seed}{An integer for setting the random seed to ensure reproducibility of results.}
 
-\item{seed}{Random seed for reproducibility.}
+\item{vlineIntercept}{A numeric value for the intercept of the vertical line on plots.}
 
-\item{vlineIntercept}{Intercept for vertical line on plots.}
+\item{scaleVectors}{A list of aesthetic parameters for the plots, including colors and shapes.}
 
-\item{scaleVectors}{A list of aesthetic parameters for plots.}
+\item{digitsToRound}{An integer specifying the number of digits to round in output.}
 
-\item{digitsToRound}{Number of digits to round in output.}
+\item{digitsToShow}{An integer specifying the number of digits to display in plot annotations.}
 
-\item{digitsToShow}{Number of digits to display.}
+\item{xlabel}{A string representing the label for the x-axis in the plots.}
 
-\item{xlabel}{Label for x-axis.}
+\item{tableLabels}{A character vector of labels for tables generated in the plot.}
+
+\item{description}{projectConfiguration A ProjectConfiguration object containing project settings and parameters.}
 }
 \value{
-An RmdContainer object with generated plots.
+An RmdContainer object containing the generated plots and related information for further
+        processing or exporting.
 }
 \description{
-This function generates plots for PK ratios using bootstrapping methods.
+This function generates plots for PK ratios using bootstrapping methods. It allows users to visualize
+the variability and uncertainty in PK ratios based on simulated data.
 }

@@ -83,6 +83,7 @@ xlsxWriteData <- function(wb, sheetName, dt) {
 #' @param sheetName A character string specifying the name of the new sheet.
 #' @param dt A `data.table` with new content.
 #'
+#' @return An invisible NULL value.
 #' @export
 xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
   if (!(sheetName %in% wb$sheet_names)) {
@@ -103,7 +104,7 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 #'
 #' @param wb A workbook object or a character string specifying the path to the xlsx file.
 #' @param sheetName A character string specifying the name of the sheet to read.
-#' @param skipDescriptionRow A logical value indicating if the first row should be interpreted as a description and skipped. Additionally column Comment is skipped
+#' @param skipDescriptionRow A logical value indicating if the first row should be interpreted as a description and skipped. Additionally, the 'Comment' column is skipped.
 #' @param alwaysCharacter A character vector with column names or regex patterns that should be returned as character (typically identifiers).
 #' @param emptyAsNA A logical value. If TRUE, empty strings are converted to NA.
 #' @param convertHeaders A logical value. If TRUE, column names are converted to start with a lowercase letter.
@@ -170,6 +171,53 @@ xlsxReadData <- function(wb, sheetName,
 
   return(dt)
 }
+
+#' Add new data to a config file using a template sheet
+#'
+#' If the template does not exist in the configuration file in the project directory,
+#' it is taken from the configuration file of the package installation.
+#' In this case, formats are not preserved.
+#'
+#' @param wb Current configuration file.
+#' @param templateSheet Name of the template sheet.
+#' @param sheetName Name of the new sheet.
+#' @param dtNewData A `data.table` with new data.
+#' @param templateXlsx A character string specifying the template xlsx file name (default is "Plots.xlsx").
+#'
+#' @return The current configuration file with the added sheet.
+#' @export
+addDataAsTemplateToXlsx <- function(wb, templateSheet, sheetName, dtNewData,templateXlsx = "Plots.xlsx") {
+  # get template
+  if (templateSheet %in% wb$sheet_names) {
+    templateConfiguration <- xlsxReadData(wb = wb, sheetName = templateSheet)
+  } else {
+    templateConfiguration <-
+      xlsxReadData(
+        wb = system.file(
+          "templates",
+          templateXlsx,
+          package = "ospsuite.reportingframework",
+          mustWork = TRUE
+        ),
+        sheetName = templateSheet
+      )
+  }
+
+  dtNewData <- rbind(templateConfiguration[1, ],
+                     dtNewData, # nolint indentation_linter
+                       fill = TRUE
+  )
+
+  if (templateSheet != sheetName) {
+    xlsxCloneAndSet(wb = wb, clonedSheet = templateSheet, sheetName = sheetName, dt = dtNewData)
+  } else {
+    xlsxWriteData(wb = wb, sheetName = sheetName, dt = dtNewData)
+  }
+
+  return(wb)
+}
+
+
 # auxiliary ---------
 
 #' Split the elements of a vector by comma
@@ -196,9 +244,11 @@ splitInputs <- function(originalVector) {
 
 #' Convert Data Table Column Names to Lowercase
 #'
-#' This function takes a data.table and converts the first letter of all column names to lowercase,
+#' This function takes a data.table and converts the first letter of all column names to lowercase.
 #'
 #' @param dt A data.table object whose column names need to be converted to lowercase.
+#'
+#' @return The modified data.table with updated column names.
 setHeadersToLowerCase <- function(dt){
   data.table::setnames(dt, sapply(names(dt), function(x)
     paste0(tolower(substring(
@@ -232,91 +282,113 @@ separateAndTrim <- function(data, columnName) {
 }
 
 
-# get special tables ---------
+# synchronize configuration tables ---------
 
-#' Load the properties for data groups
+
+
+#' Synchronize Scenarios Between Scenario and Plot Files
 #'
-#' @template projectConfig
+#' This function synchronizes scenarios between two Excel files: one containing
+#' scenarios for a project and the other containing scenarios related to plots.
+#' It adds any missing scenarios from the scenarios file to the plots file.
 #'
-#' @return A `data.table` with data group IDs.
-#' @export
-getDataGroups <- function(projectConfiguration) {
-  dtDataGroups <- xlsxReadData(
-    wb = projectConfiguration$plotsFile,
-    sheetName = "DataGroups",
-    skipDescriptionRow = TRUE
-  )
+#' @param projectConfiguration An object of class ProjectConfiguration containing the file paths for scenariosFile and plotsFile.
+#'
+#' @return Returns invisibly.
+#' @keywords internal
+synchronizeScenariosWithPlots <- function(projectConfiguration) {
 
-  dtDataGroups$group <- factor(dtDataGroups$group,
-    levels = unique(dtDataGroups$group),
-    ordered = TRUE
-  )
+  # Load the workbooks for scenarios and plots
+  wbSc <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
+  wbPl <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
-  return(dtDataGroups)
+  # Read data from the specified sheets
+  scenariosSc <- xlsxReadData(wbSc, sheetName = 'Scenarios')
+  scenariosPl <- xlsxReadData(wbPl, sheetName = 'Scenarios')
+
+  # Identify scenarios that are in scenariosSc but not in scenariosPl
+  scenariosToAdd <- setdiff(scenariosSc$scenario_name, scenariosPl$scenario)
+
+  # If there are new scenarios to add, append them to scenariosPl
+  if (length(scenariosToAdd) > 0) {
+    # Create a data table for the new scenarios to add
+    newScenarios <- data.table(
+      scenario = scenariosToAdd,
+      longName = gsub('_', ' ', scenariosToAdd),  # Replace underscores with spaces for long name
+      shortName = gsub('_', ' ', scenariosToAdd)  # Replace underscores with spaces for short name
+    )
+
+    # Append new scenarios to the existing scenariosPl
+    scenariosPl <- rbind(scenariosPl, newScenarios, fill = TRUE)
+
+    # Write the updated scenarios back to the plots workbook
+    xlsxWriteData(wb = wbPl, sheetName = 'Scenarios', scenariosPl)
+    openxlsx::saveWorkbook(wb = wbPl,file = projectConfiguration$plotsFile,overwrite = TRUE)
+  }
+
+  return(invisible())
 }
 
-#' Load the scenario definitions
+#' Synchronize Scenario Outputs with Plot Outputs
 #'
-#' @template projectConfig
+#' This function synchronizes output paths between two Excel files: one containing
+#' scenario outputs and the other containing plot outputs. It only writes back to the
+#' Excel files if changes are detected in the output paths.
 #'
-#' @return A `data.table` with scenario definitions.
-#' @export
-getScenarioDefinitions <- function(projectConfiguration) {
-  return(xlsxReadData(
-    wb = projectConfiguration$scenariosFile,
-    sheetName = "Scenarios",
-    skipDescriptionRow = FALSE
-  ))
+#' @param projectConfiguration An object of class ProjectConfiguration containing the file paths for scenariosFile and plotsFile.
+#'
+#' @return Returns invisibly.
+#' @keywords internal
+synchronizeScenariosOutputsWithPlots <- function(projectConfiguration) {
+
+  # Load the workbooks for scenarios and plots
+  wbSc <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
+  wbPl <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+
+  # Read data from the specified sheets
+  outputsSc <- xlsxReadData(wbSc, sheetName = 'OutputPaths')
+  outputsPl <- xlsxReadData(wbPl, sheetName = 'Outputs')
+
+  # Merge the outputs based on the outputPathId
+  opMerged <- merge(outputsSc, outputsPl[-1], by = 'outputPathId', all = TRUE, suffixes = c('.sc', '.pl'), sort = FALSE)
+
+  # Initialize the outputPath column
+  opMerged[, outputPath := '']
+
+  # Check for inconsistencies between scenario and plot output paths
+  if (nrow(opMerged[!is.na(outputPath.sc) & !is.na(outputPath.pl) & outputPath.sc != outputPath.pl]) > 0) {
+    warning('Output definition in Scenario.xlsx and Plot.xlsx is inconsistent. Please synchronize manually')
+  }
+
+  # Synchronize output paths based on availability
+  opMerged[!is.na(outputPath.sc) & !is.na(outputPath.pl) & outputPath.sc == outputPath.pl, outputPath := outputPath.pl]
+  opMerged[!is.na(outputPath.sc) & is.na(outputPath.pl), outputPath := outputPath.sc]
+  opMerged[is.na(outputPath.sc) & !is.na(outputPath.pl), outputPath := outputPath.pl]
+
+  opMerged[,outputPath.sc:= NULL]
+  opMerged[,outputPath.pl:= NULL]
+
+
+  # Set column order for better readability
+  data.table::setcolorder(opMerged, c('outputPathId', 'outputPath'))
+
+  # Write back to Scenario workbook if changes are detected
+  if (any(!(opMerged$outputPathId %in% outputsSc$outputPathId)) |
+      any(!(opMerged[!is.na(outputPath)]$outputPath %in% outputsSc[!is.na(outputPath)]$outputPath))) {
+    xlsxWriteData(wbSc, sheetName = 'OutputPaths', opMerged[, c('outputPathId', 'outputPath')])
+    openxlsx::saveWorkbook(wb = wbSc,file = projectConfiguration$scenariosFile,overwrite = TRUE)
+  }
+  # Write back to Plot workbook if changes are detected
+  if (any(!(opMerged$outputPathId %in% outputsPl$outputPathId)) |
+      any(!(opMerged[!is.na(outputPath)]$outputPath %in% outputsPl[!is.na(outputPath)]$outputPath))) {
+    xlsxWriteData(wbPl, sheetName = 'Outputs', rbind(outputsPl[1],opMerged))
+    openxlsx::saveWorkbook(wb = wbPl,file = projectConfiguration$plotsFile,overwrite = TRUE)
+  }
+
+  return(invisible())
 }
 
-#' Load the output configurations
-#'
-#' @template projectConfig
-#'
-#' @return A `data.table` with output configurations.
-#' @export
-getOutputPathIds <- function(projectConfiguration) {
-  # avoid warning for global variable
-  displayUnit <- NULL
 
-  dtOutputPaths <- xlsxReadData(
-    wb = projectConfiguration$plotsFile,
-    sheetName = "Outputs",
-    skipDescriptionRow = TRUE
-  )
 
-  dtOutputPaths[, displayUnit := gsub("Âµ", "\u00B5", as.character(displayUnit))]
-  dtOutputPaths[is.na(displayUnit), displayUnit := ""]
 
-  dtOutputPaths$outputPathId <- factor(dtOutputPaths$outputPathId,
-    levels = unique(dtOutputPaths$outputPathId),
-    ordered = TRUE
-  )
 
-  return(dtOutputPaths)
-}
-
-#' Load the time range tags
-#'
-#' @template projectConfig
-#'
-#' @return A `data.table` with time range tags.
-#' @export
-getTimeRangeTags <- function(projectConfiguration) {
-  # avoid warning for global variable
-  captionText <- NULL
-
-  dtTimeRange <- xlsxReadData(
-    wb = projectConfiguration$plotsFile,
-    sheetName = "TimeRange",
-    skipDescriptionRow = TRUE,
-    emptyAsNA = FALSE
-  )
-
-  dtTimeRange$tag <- factor(dtTimeRange$tag,
-    levels = unique(dtTimeRange$tag),
-    ordered = TRUE
-  )
-
-  return(dtTimeRange)
-}

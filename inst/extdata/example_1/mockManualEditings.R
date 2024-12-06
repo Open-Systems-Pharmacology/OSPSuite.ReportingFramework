@@ -285,11 +285,11 @@ mockManualEditings.DataGroups <- function(projectConfiguration,dataObserved,tuto
 
     # add properties for concentration
     dtOutputs[outputPathId == 'Concentration', outputPath := "Organism|PeripheralVenousBlood|DrugX|Plasma (Peripheral Venous Blood)"]
-    dtOutputs[outputPathId == 'Concentration', displayName := "DrugX Plasma"]
+    dtOutputs[outputPathId == 'Concentration', displayNameOutputs := "DrugX Plasma"]
     dtOutputs[outputPathId == 'Concentration', displayUnit := "µg/L"]
     # add properties for concentration
     dtOutputs[outputPathId == 'Fraction', outputPath := "Organism|Kidney|Urine|DrugX|Fraction excreted to urine"]
-    dtOutputs[outputPathId == 'Fraction', displayName := "Fraction excreted to urine"]
+    dtOutputs[outputPathId == 'Fraction', displayNameOutputs := "Fraction excreted to urine"]
 
     xlsxWriteData(wb = wb, sheetName  = 'Outputs', dt = dtOutputs)
 
@@ -369,7 +369,7 @@ mockManualEditings.TimePlot <- function(projectConfiguration,dataObserved,tutori
     dtPlots[plotName == 'individual_1_iv',timeRange_firstApplication:= NA]
     dtPlots[plotName == 'individual_1_iv',timeRange_lastApplication:= NA]
     # set caption description of scenario
-    dtPlots[plotName == 'individual_1_iv', scenarioCaptionName := 'individual 1 of study 000']
+    dtPlots[plotName == 'individual_1_iv', scenarioLongName := 'individual 1 of study 000']
     # dataGroupIds is empty and has to be set manually as this scenario was not selected as DefaultScenario in the DataGroups configuration
     dtPlots[plotName == 'individual_1_iv', dataGroupIds := 'IV']
     # Filter the data for the simulated individual
@@ -413,14 +413,14 @@ mockManualEditings.TimePlot <- function(projectConfiguration,dataObserved,tutori
     dtPlots[plotName == 'virtual_twin_population_iv-2', individualIds := '5,6,7']
     # plot both outputs in one panel
     dtPlots[plotName %in% c('virtual_twin_population_iv-1','virtual_twin_population_iv-2'),outputPathIds :=  "(Concentration, Fraction)"]
-    dtPlots[plotName %in% c('virtual_twin_population_iv-1','virtual_twin_population_iv-2'), scenarioCaptionName := 'individual simualtions of study 000']
+    dtPlots[plotName %in% c('virtual_twin_population_iv-1','virtual_twin_population_iv-2'), scenarioLongName := 'individual simualtions of study 000']
 
 
     # use Scenario virtual_twin_population_po as use case for shortcut '*'
     dtPlots <- addHeaderLineBeforePlot(dtPlots,'virtual_twin_population_po',3,'shortcut for individual filter')
     # Filter all data for the simulated individual
     dtPlots[plotName == 'virtual_twin_population_po', individualIds := '*']
-    dtPlots[plotName == 'virtual_twin_population_po', scenarioCaptionName := 'individual simualtions of study 000']
+    dtPlots[plotName == 'virtual_twin_population_po', scenarioLongName := 'individual simualtions of study 000']
     dtPlots[plotName == 'virtual_twin_population_po',facetType := "Scenario vs Output"]
 
     # add goodness for fit plot in new line
@@ -439,8 +439,8 @@ mockManualEditings.TimePlot <- function(projectConfiguration,dataObserved,tutori
     dtPlots <- addHeaderLineBeforePlot(dtPlots, 'random_population_iv',2,'Adding Random Populations and use of aggregated data')
     # merge in one plot
     dtPlots[plotName %in% c('random_population_iv','random_population_po'), plotName := 'random_population']
-    dtPlots[scenario == 'random_population_iv', scenarioCaptionName := 'random population simulation of a 1mg 5min iv administration']
-    dtPlots[scenario == 'random_population_po', scenarioCaptionName := 'random population simulation of a 5mg oral administration']
+    dtPlots[scenario == 'random_population_iv', scenarioLongName := 'random population simulation of a 1mg 5min iv administration']
+    dtPlots[scenario == 'random_population_po', scenarioLongName := 'random population simulation of a 5mg oral administration']
     dtPlots[plotName == 'random_population',plotCaptionAddon := '']
     # single dose, only Time range total makes sense
     dtPlots[plotName ==  'random_population',timeRange_firstApplication:= NA]
@@ -460,8 +460,8 @@ mockManualEditings.TimePlot <- function(projectConfiguration,dataObserved,tutori
     dtPlots[referenceScenario == 'reference_population_iv', dataGroupIds := 'IV']
     dtPlots[referenceScenario == 'reference_population_po', dataGroupIds := 'PO']
 
-    dtPlots[referenceScenario == 'reference_population_iv', scenarioCaptionName := 'random population simulation of a 1mg 5min iv administration']
-    dtPlots[referenceScenario == 'reference_population_po', scenarioCaptionName := 'random population simulation of a 5mg oral administration']
+    dtPlots[referenceScenario == 'reference_population_iv', scenarioLongName := 'random population simulation of a 1mg 5min iv administration']
+    dtPlots[referenceScenario == 'reference_population_po', scenarioLongName := 'random population simulation of a 5mg oral administration']
     dtPlots[plotName == 'reference',plotCaptionAddon := 'Reference population has doubled CYP3A4 liver ontogeny.']
 
     # single dose, only Time range total makes sense

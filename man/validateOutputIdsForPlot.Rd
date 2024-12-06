@@ -4,7 +4,7 @@
 \alias{validateOutputIdsForPlot}
 \title{Validation of data.table with outputPath Ids}
 \usage{
-validateOutputIdsForPlot(dtOutputPaths)
+validateOutputIdsForPlot()
 }
 \arguments{
 \item{dtOutputPaths}{data.table with outputPath Ids}

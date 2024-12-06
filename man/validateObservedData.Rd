@@ -4,7 +4,7 @@
 \alias{validateObservedData}
 \title{Validate Observed Data}
 \usage{
-validateObservedData(dataDT)
+validateObservedData(dataDT, dataClassType)
 }
 \arguments{
 \item{dataDT}{A data.table containing observed data with the following relevant columns:

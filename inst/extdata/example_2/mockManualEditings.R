@@ -87,12 +87,12 @@ mockManualEditings.outputPath <- function(projectConfiguration){
                       data.table(
                         outputPathId = 'Concentration',
                         outputPath =  "Organism|PeripheralVenousBlood|DrugX|Plasma (Peripheral Venous Blood)",
-                        displayName = "DrugX Plasma",
+                        displayNameOutputs = "DrugX Plasma",
                         displayUnit ="µg/L"),
                      data.table(
                        outputPathId = 'Fraction',
                        outputPath =  "Organism|Kidney|Urine|DrugX|Fraction excreted to urine",
-                       displayName = "Fraction excreted to urine",
+                       displayNameOutputs = "Fraction excreted to urine",
                        displayUnit =""),
                      fill = TRUE)
 

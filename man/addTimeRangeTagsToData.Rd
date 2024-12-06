@@ -8,7 +8,8 @@ addTimeRangeTagsToData(
   timeRangeColumns,
   dataOld,
   configTable,
-  applicationTimes
+  applicationTimes,
+  timeTags
 )
 }
 \arguments{

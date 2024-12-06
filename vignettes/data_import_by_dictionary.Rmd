@@ -161,7 +161,7 @@ By filling out the Excel table with the required information, you can ensure tha
 # Example Sheets
 
 ```{r load-template, eval=TRUE, echo=FALSE}
-templateFilePath <- system.file("templates", "templateProject", "Scripts", "ReportingFramework", "DataImportConfiguration.xlsx",
+templateFilePath <- system.file("templates", "DataImportConfiguration.xlsx",
   package = "ospsuite.reportingframework", mustWork = TRUE
 )
 

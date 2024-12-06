@@ -76,17 +76,21 @@ initLogfunction <- function(projectConfiguration,
 
   optionstxt <- paste(
     "\n\n",
-    "Options for valid run:\n",
+    "Options for workflow:\n",
     "OSPSuite.plots.watermark_enabled:", ospsuite.plots::getOspsuite.plots.option(
       ospsuite.plots::OptionKeys$watermark_enabled
     ), "\n",
     "OSPSuite.RF.skipFailingPlots:", ifelse(getOption("OSPSuite.RF.skipFailingPlots", default = FALSE),
-      "Failing Plots are skipped",
+      "Failing Plots are skipped with warning",
       "Failing Plots throw errors"
     ), "\n",
     "OSPSuite.RF.stopHelperFunction:", ifelse(getOption("OSPSuite.RF.stopHelperFunction", default = FALSE),
                                             "Stops in helper functions",
-                                            "Executes helper functions"
+                                            "Workflow executes helper functions"
+    ), "\n",
+    "OSPSuite.RF.withEPackage:", ifelse(getOption("OSPSuite.RF.withEPackage", default = FALSE),
+                                              "Workflow generates ePackage",
+                                              "ePackage is not generated"
     ), "\n"
   )
   addMessageToLog(optionstxt)
