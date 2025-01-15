@@ -8,7 +8,7 @@ xlsxReadData(
   wb,
   sheetName,
   skipDescriptionRow = FALSE,
-  alwaysCharacter = c("group", "Id$", "Ids$"),
+  alwaysCharacter = c("Group", "Id$", "Ids$"),
   emptyAsNA = TRUE,
   convertHeaders = TRUE
 )
@@ -18,7 +18,10 @@ xlsxReadData(
 
 \item{sheetName}{A character string specifying the name of the sheet to read.}
 
-\item{skipDescriptionRow}{A logical value indicating if the first row should be interpreted as a description and skipped. Additionally, the 'Comment' column is skipped.}
+\item{skipDescriptionRow}{A logical value or an integer indicating whether the first row
+(or rows, if an integer) should be treated as description rows and skipped during reading.
+ When set to TRUE, the first row is skipped; when set to a positive integer, that number of rows will be skipped.
+The 'Comment' column is also excluded from the resulting data table.}
 
 \item{alwaysCharacter}{A character vector with column names or regex patterns that should be returned as character (typically identifiers).}
 

@@ -248,6 +248,8 @@ Get the data for the filtered time range
 
 \item{\code{plotCounter}}{counter for different plots}
 
+\item{\code{yScale}}{scale of y-axis}
+
 \item{\code{typeFilter}}{filter for data type}
 }
 \if{html}{\out{</div>}}

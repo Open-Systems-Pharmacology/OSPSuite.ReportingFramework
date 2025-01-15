@@ -179,33 +179,10 @@ The `initProject` function is designed to create the necessary directory structu
 ## Function Definition
 
 The function takes the following parameters:
- - `rootDirectory`: The root directory where the project structure will be created. By default, it is set to the parent directory (`".."`).
- - `sourceFolder`: The folder containing the template files and directories that you want to copy to your project.
+ - `configurationDirectory`: The directory where the configuration xlsx will be stored. By default, it is set to the current directory (`"."`).
+ - `sourceConfigurationXlsx`: The configuration file listing all files and directorys needed for the projectconfiguration and their path relative to the configuration paths files.
  - `overwrite`: A boolean value indicating whether to overwrite existing files in the root directory. It is set to `FALSE` by default.
 
-If you use as 'sourceFolder' the `templateDirectory()` you will get this folder structure
-
-
-```{r, echo = FALSE}
-fs::dir_tree(path = templateDirectory())
-```
-
-## Functionality
-
-The function lists all directories within the `sourceFolder` and iterates through them. For each directory:
-   - If the directory does not exist in the `rootDirectory`, it creates the directory.
-   - It then lists all files in the directory and checks if they already exist in the `rootDirectory`. If a file does not exist or if `overwrite` is set to `TRUE`, it copies the file to the `rootDirectory`.
-
-### Example:
-```{r,echo=TRUE,eval=FALSE}
-initProject(
-  rootDirectory = file.path("..", ".."),
-  sourceFolder = templateDirectory(),
-  overwrite = FALSE
-)
-```
-
-In this example, the project structure will be created two levels up from the current directory, using the files and folders from the specified template directory. Existing files will not be overwritten.
 
 ## Conclusion
 

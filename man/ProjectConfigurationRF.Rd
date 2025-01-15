@@ -10,17 +10,10 @@ An object storing configuration used project-wide
 \section{Super classes}{
 \code{\link[ospsuite.utils:Printable]{ospsuite.utils::Printable}} -> \code{\link[esqlabsR:ProjectConfiguration]{esqlabsR::ProjectConfiguration}} -> \code{ProjectConfiguration}
 }
-\section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
-\describe{
-\item{\code{pKParameterFile}}{Path to the file containing BMLM Identification}
-}
-\if{html}{\out{</div>}}
-}
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
 \describe{
-\item{\code{pKParameterFile}}{Path to the file containing BMLM Identification}
+\item{\code{addOns}}{list with non default configurations}
 }
 \if{html}{\out{</div>}}
 }

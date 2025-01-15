@@ -609,28 +609,43 @@ validateNumericRangeColumns <- function(columns, data) {
 }
 
 
-#' Check if panel columns are filled consistently
+#' Validate Consistency of Values Within Groups
 #'
-#' @template configTablePlots
-#' @param panelColumns Vector of columns which should be consistent.
-#' @keywords internal
-validatePanelConsistency <- function(
-    configTablePlots,
-    panelColumns) {
-  # avoid warning for global variable
-  plotName <- outputPathId <- NULL
+#' This function checks whether specified columns in a data table have consistent values
+#' within groups defined by one or more grouping columns. If any column contains more than
+#' one unique value within a group, an error is raised.
+#'
+#' @param dt A data.table or data.frame containing the data to be validated.
+#' @param valueColumns A character vector of column names to check for consistency.
+#' @param groupingColumns A character vector of column names that define the groups.
+#'        Default is 'plotName'.
+#'
+#' @return Returns NULL (invisible) if all checks pass. Raises an error if any value
+#'         column contains inconsistent values within a group.
+#'
+#' @export
+validateGroupConsistency <- function(
+    dt,
+    valueColumns,
+    groupingColumns = 'plotName') {
 
-  # Check for unique values of panel columns for each `plotName`
-  uniquePanelValues <-
-    configTablePlots[, lapply(.SD, function(x) {
+  # Check for unique values of value columns for each group defined by groupingColumns
+  uniqueValueCounts <-
+    dt[, lapply(.SD, function(x) {
       length(unique(x))
-    }), by = plotName, .SDcols = panelColumns]
-  tmp <- lapply(panelColumns, function(col) {  # nolint object_usage_linter
-    if (any(uniquePanelValues[[col]] > 1)) stop(paste("values for", col, "should be the same within each panel"))
+    }), by = groupingColumns,
+    .SDcols = valueColumns]
+
+  # Check if any value column has more than one unique value within each group
+  lapply(valueColumns, function(col) {
+    if (any(uniqueValueCounts[[col]] > 1)) {
+      stop(paste("Values for", col, "should be the same within each group defined by", paste(groupingColumns, collapse = ", ")))
+    }
   })
 
   return(invisible())
 }
+
 
 #' check if at least one of the following columns is selected
 #'

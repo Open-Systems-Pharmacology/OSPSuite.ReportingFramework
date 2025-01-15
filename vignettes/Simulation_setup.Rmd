@@ -31,13 +31,6 @@ This vignette focuses on the differences in project structure and population typ
 This package uses a slightly different project structure but can also work with the default esqlabsR structure or any other customized structure. You can define your structure by providing a template structure with an adjusted 'ProjectConfiguration.xlsx'.
 
 
-### Default structure:
-
-```{r, echo = FALSE}
-fs::dir_tree(path = templateDirectory())
-```
-
-
 ## Populations
 
 This package recognizes two kinds of populations:

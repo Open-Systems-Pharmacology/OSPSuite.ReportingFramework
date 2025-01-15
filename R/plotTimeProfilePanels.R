@@ -988,9 +988,9 @@ validateConfigTableForTimeProfiles <- function(configTable, dataObserved, projec
 
   validateTimeRangeColumns(configTablePlots)
 
-  validatePanelConsistency(
-    configTablePlots = configTablePlots,
-    panelColumns = c(
+  validateGroupConsistency(
+    dt = configTablePlots,
+    valueColumns = c(
       "timeUnit",
       "yScale",
       "ylimit_linear",

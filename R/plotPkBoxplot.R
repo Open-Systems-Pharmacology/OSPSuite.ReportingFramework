@@ -285,9 +285,9 @@ readPKBoxwhiskerConfigTable <- function(projectConfiguration, sheetName, pkParam
     )
   )
 
-  validatePanelConsistency(
-    configTablePlots = configTablePlots,
-    panelColumns = c(
+  validateGroupConsistency(
+    dt = configTablePlots,
+    valueColumns = c(
       'pkParameters',
       "yScale",
       "plotCaptionAddon",

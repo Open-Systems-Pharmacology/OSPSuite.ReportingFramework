@@ -94,9 +94,9 @@ readSensitivityConfigTable <- function(sheetName,projectConfiguration){
   )
 
 
-  validatePanelConsistency(
-    configTablePlots = configTablePlots,
-    panelColumns = c(
+  validateGroupConsistency(
+    dt = configTablePlots,
+    valueColumns = c(
       "sensitivityParameterSheet",
       "threshold"
     )

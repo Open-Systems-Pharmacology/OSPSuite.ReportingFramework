@@ -8,7 +8,7 @@ ProjectConfigurationRF <- R6::R6Class(   # nolint object_name_linter
   inherit = esqlabsR::ProjectConfiguration,
   cloneable = TRUE,
   active = list(
-    #' @field pKParameterFile Path to the file containing BMLM Identification
+    #' @field addOns list with non default configurations
     addOns = function() {
       if (length(private$.projectConfigurationDataAddOns) == 0) {
         return(list())

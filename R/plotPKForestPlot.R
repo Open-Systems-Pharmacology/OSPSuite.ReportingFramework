@@ -672,9 +672,9 @@ readPKForestConfigTable <- function(projectConfiguration, sheetName, pkParameter
     )
   )
 
-  validatePanelConsistency(
-    configTablePlots = configTablePlots,
-    panelColumns = c(
+  validateGroupConsistency(
+    dt = configTablePlots,
+    valueColumns = c(
       "plotCaptionAddon",
       "outputPathId"
     ))

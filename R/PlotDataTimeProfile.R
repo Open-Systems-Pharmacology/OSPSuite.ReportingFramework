@@ -328,6 +328,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     #'
     #' @param filterName name of time range filter
     #' @param typeFilter filter for data type
+    #' @param yScale scale of y-axis
     #' @param plotCounter counter for different plots
     #'
     #' @return `data.table` with filtered plot data

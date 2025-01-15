@@ -268,6 +268,7 @@ writeTableToLog <- function(dt, filename = "run.log") {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
   if (is.null(logFileFolder)) {
     warning("Logfile was not initialized")
+    print(dt)
     return(invisible())
   }
   verbose <- getOption("OSPSuite.RF.verbose", default = TRUE)
@@ -283,6 +284,7 @@ writeTableToLog <- function(dt, filename = "run.log") {
   if (verbose) {
     print(dt)
   }
+
   return(invisible())
 }
 
@@ -315,6 +317,11 @@ setShowLogMessages <- function(verbose = TRUE) {
 #' @export
 saveSessionInfo <- function() {
   sessionInfo <- paste(utils::capture.output(sessionInfo()), collapse = "\n")
+
+  if (is.null(logFileFolder)) {
+    warning("Logfile was not initialized")
+    return(invisible())
+  }
 
   # Write session info to log file
   writeToLog(

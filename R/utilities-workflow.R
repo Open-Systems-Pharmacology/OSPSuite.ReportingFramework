@@ -44,7 +44,7 @@
 #' @export
 setWorkflowOptions <- function(isValidRun,ePackageGeneration = c('None','withEPackage','onlyEPackage')) {
 
-  match.arg(ePackageGeneration)
+  ePackageGeneration <- match.arg(ePackageGeneration,several.ok = FALSE)
 
   # set options to enable watermarks
   options(ospsuite.plots.watermark_enabled = !isValidRun)

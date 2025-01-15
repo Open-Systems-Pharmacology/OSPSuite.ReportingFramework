@@ -8,9 +8,9 @@ configTablePlots <- data.table(
   outputPathIds = c("id1", "id2", "id3", "id4")
 )
 
-test_that("validatePanelConsistency function test", {
+test_that("validateGroupConsistency function test", {
   # Test if the function correctly checks for unique values of panel columns for each PlotName
-  expect_error(validatePanelConsistency(configTablePlots, c("column1", "column2")))
+  expect_error(validateGroupConsistency(configTablePlots, c("column1", "column2")))
 
 })
 

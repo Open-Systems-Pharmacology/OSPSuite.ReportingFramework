@@ -30,14 +30,20 @@
 #' @export
 initProject <- function(configurationDirectory = '.',
                         sourceConfigurationXlsx  = system.file("templates", "ProjectConfiguration.xlsx",package = "ospsuite.reportingframework"),
+                        templatePath = system.file("templates", package = "ospsuite.reportingframework"),
                         overwrite = FALSE) {
   configurationDirectory <- fs::path_abs(configurationDirectory)
 
   checkmate::assertFileExists(sourceConfigurationXlsx)
+  checkmate::assertDirectoryExists(templatePath)
 
   dt <- xlsxReadData(sourceConfigurationXlsx)
+  filesAvailable <- list.files(templatePath)
 
-  dirsToCreate <- dt$value[file.info(dt$value)$isdir]
+  filesToCopy <- intersect(dt$value,filesAvailable) %>% unique()
+
+  dirsToCreate <- setdiff(dt$value,c(filesToCopy)) %>%
+    unique()
 
   for (d in dirsToCreate) {
     if (!dir.exists(file.path(configurationDirectory, d))) {
@@ -45,12 +51,10 @@ initProject <- function(configurationDirectory = '.',
     }
   }
 
-  filesToCopy <- dt$value[!file.info(dt$value)$isdir]
-
   for (f in filesToCopy){
     if (!file.exists(file.path(configurationDirectory, f)) | overwrite) {
       file.copy(
-        from = file.path(system.file("templates", package = "ospsuite.reportingframework"), f),
+        from = file.path(templatePath, f),
         to = file.path(configurationDirectory, f),
         overwrite = overwrite
       )

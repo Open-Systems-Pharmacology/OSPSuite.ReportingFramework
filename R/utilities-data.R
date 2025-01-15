@@ -493,7 +493,8 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
 
   colsSelected <- unique(c(
     identifierCols,
-    getColumnsForColumnType(dt = dataDT, columnTypes = "metadata")
+    setdiff(getColumnsForColumnType(dt = dataDT, columnTypes = "metadata"),
+            c('compartmnt','molecule','organ'))
   ))
 
   dtDataGroupIdsNew <- dataDT %>%

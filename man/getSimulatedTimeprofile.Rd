@@ -25,6 +25,5 @@ is only filled for individual populations otherwise NULL}
 A data.table with the processed time profile data.
 }
 \description{
-This helper function processes simulation results into a data table format for time profiles.
+This function processes simulation results into a data table format for time profiles.
 }
-\keyword{internal}

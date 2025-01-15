@@ -8,6 +8,7 @@ initProject(
   configurationDirectory = ".",
   sourceConfigurationXlsx = system.file("templates", "ProjectConfiguration.xlsx", package
     = "ospsuite.reportingframework"),
+  templatePath = system.file("templates", package = "ospsuite.reportingframework"),
   overwrite = FALSE
 )
 }

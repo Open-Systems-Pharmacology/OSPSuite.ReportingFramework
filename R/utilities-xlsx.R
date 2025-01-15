@@ -104,7 +104,10 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 #'
 #' @param wb A workbook object or a character string specifying the path to the xlsx file.
 #' @param sheetName A character string specifying the name of the sheet to read.
-#' @param skipDescriptionRow A logical value indicating if the first row should be interpreted as a description and skipped. Additionally, the 'Comment' column is skipped.
+#' @param skipDescriptionRow A logical value or an integer indicating whether the first row
+#'     (or rows, if an integer) should be treated as description rows and skipped during reading.
+#'      When set to TRUE, the first row is skipped; when set to a positive integer, that number of rows will be skipped.
+#'     The 'Comment' column is also excluded from the resulting data table.
 #' @param alwaysCharacter A character vector with column names or regex patterns that should be returned as character (typically identifiers).
 #' @param emptyAsNA A logical value. If TRUE, empty strings are converted to NA.
 #' @param convertHeaders A logical value. If TRUE, column names are converted to start with a lowercase letter.
@@ -113,7 +116,7 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 #' @export
 xlsxReadData <- function(wb, sheetName,
                          skipDescriptionRow = FALSE,
-                         alwaysCharacter = c("group", "Id$", "Ids$"),
+                         alwaysCharacter = c("Group", "Id$", "Ids$"),
                          emptyAsNA = TRUE,
                          convertHeaders = TRUE) {
   if (!any(class(wb) %in% "Workbook")) checkmate::assertFileExists(wb)
@@ -123,14 +126,13 @@ xlsxReadData <- function(wb, sheetName,
     xlsxFile = wb,
     sheet = sheetName,
     sep.names = " ",
-    skipEmptyRows = TRUE
+    skipEmptyRows = TRUE,
   ))
 
-  if (skipDescriptionRow) {
-    dt <- dt[-1, ]
-    dt <- dt %>% dplyr::select(!any_of('comment'))
+  if (as.logical(skipDescriptionRow)) {
+    dt <- dt[-seq_len(as.integer(skipDescriptionRow)) ]
+    dt <- dt %>% dplyr::select(!any_of('Comment'))
   }
-
   # Capture all columns matching the patterns in alwaysCharacter
   idColumns <- unlist(lapply(alwaysCharacter, function(pattern) {
     grep(pattern, names(dt), value = TRUE)
