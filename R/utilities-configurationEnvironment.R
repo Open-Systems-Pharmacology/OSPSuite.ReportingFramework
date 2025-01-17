@@ -6,7 +6,7 @@
 #'
 #' @return An invisible value indicating that the loading was successful.
 #' @export
-loadConfigTables <- function(projectConfiguration) {
+loadConfigTableEnvironment <- function(projectConfiguration) {
   # Initialize the global configuration environment
   if (!exists("configEnv", envir = .GlobalEnv)) {
     configEnv <<- new.env() # Assign to the global environment
@@ -122,13 +122,18 @@ getScenarioDefinitions <- function(wbScenarios,wbPlots = NULL) {
     skipDescriptionRow = FALSE
   )
 
+  if (nrow(pkParameter) > 0){
   scenarios <- merge(scenariosSc,
         pkParameter,
         by = "scenario_name",
         all.x = TRUE,
         sort = FALSE
-  ) %>%
-    setnames("scenario_name", "scenarioName")
+  )} else{
+    scenarios <- copy(scenariosSc)
+    scenarios[,pKParameter:= NA]
+  }
+
+  setnames(scenarios,old = "scenario_name", new = "scenarioName")
 
   if (!is.null(wbPlots)){
     scenariosPl <- xlsxReadData(

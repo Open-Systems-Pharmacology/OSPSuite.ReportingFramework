@@ -109,27 +109,18 @@ library(ospsuite.reportingframework)
 # (see vignette(package = 'ospsuite.plots',topic = 'ospsuite_plots'))
 ospsuite.plots::setDefaults()
 theme_update(legend.position = "top")
-# configure panel labels to be used as Tags A,B,...
-theme_update(strip.background = element_rect(fill = NA, color = NA))
-theme_update(strip.text = element_text(hjust = 0, vjust = 1))
 
-# Set this to TRUE if you want to execute the workflow as a final valid run.
+# Set isValidRun to TRUE if you want to execute the workflow as a final valid run.
 # It then won't set watermarks to figures and does not skip failing plot generations
 # (see vignette OSPSuite_ReportingFramework)
-executeAsValidRun(isValidRun = FALSE)
+setWorkflowOptions(isValidRun = FALSE)
 
 # Setup project structure -------------------------------------------------
-# creates project directory
-# (see help initProject and https://esqlabs.github.io/esqlabsR/articles/esqlabsR.html)
-# if you go with the default structure defined by 'sourceFolder = templateDirectory()'
-# this workflow file should be saved in Scripts/ReportingFramework,
-# root directory is then two layers up.
-initProject(
-  rootDirectory = file.path("..", ".."),
-  sourceFolder = templateDirectory(),
-  overwrite = FALSE
-)
-
+# creates project directory (see vignette https://esqlabs.github.io/esqlabsR/articles/esqlabsR-project-structure.html)
+# and help initProject 
+# if you go with default structure this workflow file should be saved in Scripts/ReportingFramework,
+initProject()
+initProject()
 
 # get paths of all relevant project files
 projectConfiguration <-
@@ -346,7 +337,7 @@ scenarioList <-
     doCheckScenarioNameValidity = TRUE
   )
 
-runAndSaveScenarios(
+scenarioResults <- runAndSaveScenarios(
   projectConfiguration = projectConfiguration,
   scenarioList = scenarioList,
   simulationRunOptions = SimulationRunOptions$new(
@@ -418,13 +409,14 @@ Please comment all plot functions which we do not use and execute the ones for t
 
 ```{r}
 runPlot(
-  functionKey = "TimeProfile_Panel",
-  projectConfiguration = projectConfiguration,
-  inputs = list(
+    functionKey = "TimeProfiles",
+    projectConfiguration = projectConfiguration,
     configTableSheet = "TimeProfiles",
-    dataObserved = dataObserved
+    inputs = list(
+      dataObserved = dataObserved,
+      scenarioResults = scenarioResults
+    )
   )
-)
 ```
 
 All figures and captions are filed in 'Outputs/ReportingFramework/TimeProfiles' as png and text-files.
@@ -527,7 +519,7 @@ scenarioList <-
     doCheckScenarioNameValidity = TRUE
   )
 
-runAndSaveScenarios(
+scenarioResults <- runAndSaveScenarios(
   projectConfiguration = projectConfiguration,
   scenarioList = scenarioList,
   simulationRunOptions = SimulationRunOptions$new(

@@ -6,8 +6,7 @@
 \usage{
 plotTimeProfilePanels(
   projectConfiguration,
-  subfolder,
-  configTableSheet,
+  onePlotConfig,
   dataObserved,
   scenarioResults = list(),
   nFacetColumns = 2,
@@ -16,18 +15,13 @@ plotTimeProfilePanels(
   aggregationFlag = c("GeometricStdDev", "ArithmeticStdDev", "Percentiles", "Custom"),
   percentiles = c(5, 50, 95),
   customFunction = NULL,
-  referenceScaleVector = list(Simulation = c(NA, NA), Reference = c(NA, NA))
+  referenceScaleVector = list(Simulation = c(NA, NA), Reference = c(NA, NA)),
+  ...
 )
 }
 \arguments{
 \item{projectConfiguration}{An object of class ProjectConfiguration containing the project settings,
 including file paths and scenario definitions. This is essential for the function to access the necessary data.}
-
-\item{subfolder}{A character string specifying the subfolder within the output directory where
-the plots will be saved. Default is name of configTableSheet}
-
-\item{configTableSheet}{The name of the sheet in the Excel plot configuration file that defines
-the plot settings.}
 
 \item{dataObserved}{A data.table or DataCombined object containing the observed data to be plotted.}
 
@@ -71,6 +65,12 @@ referenceScaleVector = list(
   Simulation = c(NA, NA),
   Reference = c(NA, NA)
 )}
+
+\item{configTableSheet}{The name of the sheet in the Excel plot configuration file that defines
+the plot settings.}
+
+\item{subfolder}{A character string specifying the subfolder within the output directory where
+the plots will be saved. Default is name of configTableSheet}
 }
 \value{
 Generates time profile plots and saves them to the specified output directory.

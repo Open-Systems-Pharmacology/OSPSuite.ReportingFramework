@@ -1,21 +1,15 @@
 test_that("initProject copies files from sourceFolder to destination", {
   # Set up a temporary directory for testing
   tempDir <- tempdir()
-  sourceFolder <- file.path(tempDir, "source")
-  destinationFolder <- file.path(tempDir, "destination")
+  configurationDirectory  <- file.path(tempDir, "Scripts","ReportingFramework")
 
-  # Create some files in the source folder
-  invisible(dir.create(sourceFolder))
-  invisible(file.create(file.path(sourceFolder, "file1.txt")))
-  invisible(dir.create(file.path(sourceFolder, "folder")))
-  invisible(file.create(file.path(sourceFolder, "folder", "file2.txt")))
 
   # Call the initProject function
-  invisible(initProject(rootDirectory = destinationFolder, sourceFolder = sourceFolder, overwrite = FALSE))
+  invisible(initProject(configurationDirectory = configurationDirectory, overwrite = FALSE))
 
   # Check if the files were copied to the destination folder
-  expect_true(file.exists(file.path(destinationFolder, "file1.txt")))
-  expect_true(file.exists(file.path(destinationFolder, "folder", "file2.txt")))
+  expect_true(file.exists(file.path(configurationDirectory, "Plots.xlsx")))
+  expect_true(file.exists(file.path(destinationFolder, "folder", "Scenarios.xlsx")))
 
   # Clean up: delete the temporary directories and files
   unlink(tempDir, recursive = TRUE)

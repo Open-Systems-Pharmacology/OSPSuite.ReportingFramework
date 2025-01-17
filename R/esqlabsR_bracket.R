@@ -37,6 +37,12 @@ initProject <- function(configurationDirectory = '.',
   checkmate::assertFileExists(sourceConfigurationXlsx)
   checkmate::assertDirectoryExists(templatePath)
 
+  file.copy(
+    from = sourceConfigurationXlsx,
+    to = file.path(configurationDirectory, basename(sourceConfigurationXlsx)),
+    overwrite = overwrite
+  )
+
   dt <- xlsxReadData(sourceConfigurationXlsx)
   filesAvailable <- list.files(templatePath)
 

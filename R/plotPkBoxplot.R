@@ -18,23 +18,23 @@ plotPKBoxwhisker <- function(projectConfiguration,
     pkParameterDT = pkParameterDT
   )
 
-  rmdContainer <- generateRmdContainer(
+  rmdPlotManager <- generateRmdContainer(
     projectConfiguration,
     subfolder,
     configTable,
-    function(onePlotConfig, rmdContainer, ...) {
+    function(onePlotConfig, rmdPlotManager, ...) {
       createPKBoxPlotForPlotName(onePlotConfig = onePlotConfig,
-                                  rmdContainer = rmdContainer,
+                                  rmdPlotManager = rmdPlotManager,
                                   pkParameterDT = pkParameterDT)
     }
   )
 
-  return(rmdContainer)
+  return(rmdPlotManager)
 }
 
 
 createPKBoxPlotForPlotName <- function(onePlotConfig,
-                           rmdContainer,
+                           rmdPlotManager,
                            pkParameterDT,
                            xAxisTextAngle,
                            facetAspectRatio){
@@ -80,7 +80,7 @@ createPKBoxPlotForPlotName <- function(onePlotConfig,
         plotObject <- plotObject +
         theme(axis.text.x = element_text(angle = 45,hjust = 1))
 
-      rmdContainer$addAndExportFigure(
+      rmdPlotManager$addAndExportFigure(
         plotObject = plotObject,
         caption = getCaptionForBoxwhiskerPlot(plotDataPk = plotDataPk,
                                               yScale = yScale,

@@ -62,7 +62,7 @@ Default is c(5, 50, 95).}
 \item{tableLabels}{A list of labels for tables generated in the plot.}
 }
 \value{
-An RmdContainer object containing the generated plots and related information for further
+An RmdPlotManager object containing the generated plots and related information for further
         processing or exporting.
 }
 \description{

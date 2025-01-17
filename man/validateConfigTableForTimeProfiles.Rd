@@ -4,11 +4,7 @@
 \alias{validateConfigTableForTimeProfiles}
 \title{Validation of config table for time profiles plots}
 \usage{
-validateConfigTableForTimeProfiles(
-  configTable,
-  dataObserved,
-  projectConfiguration
-)
+validateConfigTableForTimeProfiles(configTable, dataObserved, ...)
 }
 \arguments{
 \item{configTable}{Plot configuration table.}

@@ -2,7 +2,7 @@ test_that("multiplication works", {
 
   startPath = getwd()
 
-  runExample1()
+  suppressWarnings(runExample1())
 
 
   setwd(startPath)

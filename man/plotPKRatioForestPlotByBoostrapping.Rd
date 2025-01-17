@@ -63,7 +63,7 @@ plotPKRatioForestPlotByBoostrapping(
 \item{description}{projectConfiguration A ProjectConfiguration object containing project settings and parameters.}
 }
 \value{
-An RmdContainer object containing the generated plots and related information for further
+An RmdPlotManager object containing the generated plots and related information for further
         processing or exporting.
 }
 \description{

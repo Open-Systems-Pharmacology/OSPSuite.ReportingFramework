@@ -30,20 +30,11 @@ theme_update(legend.position = 'top')
 # Set this to TRUE if you want to execute the workflow as a final valid run.
 # It then won't set watermarks to figures and does not skip failing plot generations
 # (see vignette OSPSuite_ReportingFramework)
-executeAsValidRun(isValidRun = FALSE)
+setWorkflowOptions(isValidRun = FALSE)
 options(OSPSuite.RF.skipFailingPlots = FALSE)
 
 # Setup project structure -------------------------------------------------
-# creates project directory (see vignette https://esqlabs.github.io/esqlabsR/articles/esqlabsR-project-structure.html)
-# and help initProject for source Folder Selection
-# if you go with default structure defined by  'sourceFolder = templateDirectory()'
-# this workflow file should be saved in Scripts/ReportingFramework,
-# root directory is then two layers up.
-initProject(
-  rootDirectory = file.path("..",'..'),
-  sourceFolder = templateDirectory(),
-  overwrite = FALSE
-)
+initProject()
 
 # copy files needed for tutorials to the correct folders
 file.copy(from = system.file(
@@ -88,19 +79,19 @@ projectConfiguration <-
     createScenarios.wrapped(projectConfiguration = projectConfiguration,
                             scenarioNames = NULL,
                             doCheckScenarioNameValidity = TRUE)
-  # run initialized scenarios
-  scenarioResults <- runAndSaveScenarios(projectConfiguration = projectConfiguration,
-                                         scenarioList = scenarioList,
-                                         simulationRunOptions = SimulationRunOptions$new(
-                                           numberOfCores = NULL,
-                                           checkForNegativeValues = NULL,
-                                           showProgress = TRUE
-                                         ),
-                                         withResimulation = FALSE)
 
   # calculate PK Parameter
   mockManualEditings.PKParameter(projectConfiguration)
   mockManualEditings.outputPath(projectConfiguration)
+
+  # run initialized scenarios
+  scenarioResults <- runAndSaveScenarios(projectConfiguration = projectConfiguration,
+                                         scenarioList = scenarioList,
+                                         simulationRunOptions = SimulationRunOptions$new(
+                                           showProgress = TRUE
+                                         ),
+                                         withResimulation = FALSE)
+
 
   pkParameterDT <- calculateOrLoadPKParameter(projectConfiguration = projectConfiguration,
                                               scenarioResults = scenarioResults,
@@ -123,8 +114,8 @@ projectConfiguration <-
   runPlot(
     functionKey = "PK_Boxwhisker_Absolute",
     projectConfiguration = projectConfiguration,
+    configTableSheet = "PKParameter_Boxplot",
     inputs = list(
-      configTableSheet = "PKParameter_Boxplot",
       pkParameterDT = pkParameterDT
     )
   )

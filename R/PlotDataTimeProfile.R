@@ -3,7 +3,7 @@
 #' @description An object to collect plotData and other information to create a time profile plot
 #' @export
 PlotDataTimeProfile <- R6::R6Class( # nolint
-  "RmdContainer",
+  "RmdPlotManager",
   inherit = ospsuite.utils::Printable,
   cloneable = TRUE,
   public = list(
@@ -13,7 +13,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     #' @param onePlotConfig plot configuration for one plot
     #' @param dataObserved `data.table` with observed data
     #' @param aggregationFun function to aggregate simulated data
-    #' @returns RmdContainer object
+    #' @returns RmdPlotManager object
     initialize = function(projectConfiguration = projectConfiguration,
                           onePlotConfig = onePlotConfig) {
       private$.dtOutputPaths <- copy(configEnv$outputPaths)
@@ -33,7 +33,6 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         private$.configTable$scenario,
         private$.configTable[!is.na(referenceScenario)]$referenceScenario
       )
-
       # Load simulated results
       if (length(setdiff(scenarioNames,names(scenarioResults)))>0){
         scenarioResults <- utils::modifyList(scenarioResults,

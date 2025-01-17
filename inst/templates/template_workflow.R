@@ -19,26 +19,18 @@ library(ospsuite.reportingframework)
 # (see vignette(package = 'ospsuite.plots',topic = 'ospsuite_plots'))
 ospsuite.plots::setDefaults()
 theme_update(legend.position = 'top')
-# configure panel labels to be used as Tags A,B,...
-theme_update(strip.background = element_rect(fill = NA,color = NA))
-theme_update(strip.text = element_text(hjust = 0,vjust = 1))
 
 # Set this to TRUE if you want to execute the workflow as a final valid run.
 # It then won't set watermarks to figures and does not skip failing plot generations
 # (see vignette OSPSuite_ReportingFramework)
-executeAsValidRun(isValidRun = FALSE)
+setWorkflowOptions(isValidRun = FALSE)
 
 # Setup project structure -------------------------------------------------
 # creates project directory
 # (see help initProject and https://esqlabs.github.io/esqlabsR/articles/esqlabsR.html)
-# if you go with the default structure defined by 'sourceFolder = templateDirectory()'
+# if you go with the default structure
 # this workflow file should be saved in Scripts/ReportingFramework,
-# root directory is then two layers up.
-initProject(
-  rootDirectory = file.path("..",'..'),
-  sourceFolder = templateDirectory(),
-  overwrite = FALSE
-)
+initProject()
 
 
 # get paths of all relevant project files
@@ -132,7 +124,7 @@ logCatch({
   #' - **Time Profile Plotting Tutorial**
 
   runPlot(
-    functionKey = "TimeProfile_Panel",
+    functionKey = "TimeProfiles",
     projectConfiguration = projectConfiguration,
     inputs = list(
       configTableSheet = "TimeProfiles",

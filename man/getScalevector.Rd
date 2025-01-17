@@ -2,18 +2,19 @@
 % Please edit documentation in R/utilities-plot.R
 \name{getScalevector}
 \alias{getScalevector}
-\title{returns a scalevector usable for manual scaling in ggplot}
+\title{Returns a Scale Vector Usable for Manual Scaling in ggplot}
 \usage{
 getScalevector(namesOfScaleVector, listOfValues)
 }
 \arguments{
-\item{namesOfScaleVector}{names of the vector}
+\item{namesOfScaleVector}{Names of the vector.}
 
-\item{listOfValues}{list of possible entry, take the first where all values are not NA}
+\item{listOfValues}{List of possible entries. Takes the first where all values are not NA.}
 }
 \value{
-scaleVector
+A scale vector.
 }
 \description{
-returns a scalevector usable for manual scaling in ggplot
+Returns a Scale Vector Usable for Manual Scaling in ggplot
 }
+\keyword{internal}

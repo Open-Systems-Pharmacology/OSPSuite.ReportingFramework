@@ -28,37 +28,11 @@ mockManualEditings.Population <- function(projectConfiguration){
 
 mockManualEditings.Scenario <- function(projectConfiguration){
 
-
-  # # add a sheet with parameters to adjust application
-  # wb <- openxlsx::loadWorkbook(projectConfiguration$applicationsFile)
-  # dtPar <- xlsxReadData(wb,sheetName = wb$sheet_names[1])
-  # # delete template rows
-  # dtPar <- dtPar[FALSE]
-  # dtPar <- rbind(dtPar,
-  #                data.table( 'container Path' = 'Applications|iv 1 mg (5 min)|Application_1|ProtocolSchemaItem',
-  #                            'parameter Name' = 'Dose',
-  #                            value = 0,
-  #                            units = 'mg'
-  #                ),
-  #                data.table( 'container Path' = 'Applications|iv 1 mg (5 min)|Application_1|ProtocolSchemaItem',
-  #                            'parameter Name' = 'DosePerBodyWeight ',
-  #                            value = 0.015,
-  #                            units = 'mg/kg'
-  #                )
-  # )
-  #
-  # xlsxCloneAndSet(wb = wb, clonedSheet = wb$sheet_names[1],sheetName = '0.015mgPerBW',dt = dtPar)
-  #
-  #
-  # openxlsx::saveWorkbook(wb, projectConfiguration$applicationsFile, overwrite = TRUE)
-  #
-  # wb <- openxlsx::loadWorkbook(projectConfiguration$applicationsFile)
-
   # set scenarios
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
   dtScenario <- xlsxReadData(wb = wb,sheetName  = 'Scenarios')
-  dtPops <- xlsxReadData(wb = projectConfiguration$populationsFile,sheetName  = 'Demographics')
+  dtPop <- xlsxReadData(wb = projectConfiguration$populationsFile,sheetName  = 'Demographics')
 
   # delete the template lines
   dtScenario <- dtScenario[FALSE]
@@ -72,6 +46,14 @@ mockManualEditings.Scenario <- function(projectConfiguration){
                      fill = TRUE)
 
   xlsxWriteData(wb = wb, sheetName  = 'Scenarios', dt = dtScenario)
+
+  # add PK Parameter sheets
+  dtPK <- data.table(scenario_name = dtScenario$scenario_name,
+                     pKParameter = "PK_Plasma, PK_Fraction" )
+
+  xlsxWriteData(wb = wb,sheetName  = 'PKParameter',dt = dtPK)
+
+  # save both sheets
   openxlsx::saveWorkbook(wb, projectConfiguration$scenariosFile, overwrite = TRUE)
 
 }

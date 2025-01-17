@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-plot.R
 \name{addFacets}
 \alias{addFacets}
-\title{Add facets to a ggplot object}
+\title{Add Facets to a ggplot Object}
 \usage{
 addFacets(plotObject, facetScale, facetAspectRatio = 0.5, nFacetColumns)
 }
@@ -13,13 +13,13 @@ addFacets(plotObject, facetScale, facetAspectRatio = 0.5, nFacetColumns)
 
 \item{facetAspectRatio}{A numeric value specifying the aspect ratio of the facets. Default is 0.5.}
 
-\item{nFacetColumns}{An integer specifying the number of columns to use for the facet layout. If NULL no faceting is done}
+\item{nFacetColumns}{An integer specifying the number of columns to use for the facet layout. If NULL, no faceting is done.}
 }
 \value{
 An updated ggplot object with facets added.
 }
 \description{
 This function adds facets to a given ggplot object, allowing for better visualization of data subsets.
-Faceting is done by variable plotTag
+Faceting is done by the variable `plotTag`.
 }
 \keyword{internal}

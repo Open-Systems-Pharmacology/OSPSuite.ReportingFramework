@@ -30,7 +30,7 @@
 #' @param tableLabels A list of labels for tables generated in the plot. This should correspond to the
 #'        various statistics displayed in the plot.
 #'
-#' @return An RmdContainer object that contains the generated plots and any related information for
+#' @return An RmdPlotManager object that contains the generated plots and any related information for
 #'         further processing or exporting.
 #'
 #' @keywords internal
@@ -73,13 +73,13 @@ commonPKRatioPlot <- function(projectConfiguration,
                        new = c('x', 'xMin', 'xMax', 'numberOfObservations','pkParameter', 'xErrorValues'),
                        skip_absent = TRUE)
 
-  rmdContainer <- generateRmdContainer(
+  rmdPlotManager <- generateRmdContainer(
     projectConfiguration,
     subfolder,
     configTable,
-    function(onePlotConfig, rmdContainer, ...) {
+    function(onePlotConfig, rmdPlotManager, ...) {
       createPkPlotForPlotName(onePlotConfig = onePlotConfig,
-                              rmdContainer = rmdContainer,
+                              rmdPlotManager = rmdPlotManager,
                               pkParameterDT = pkParameterDT,
                               pkParameterObserved = pkParameterObserved,
                               ratioCalculationMethod = ratioCalculationMethod,
@@ -93,7 +93,7 @@ commonPKRatioPlot <- function(projectConfiguration,
     }
   )
 
-  return(rmdContainer)
+  return(rmdPlotManager)
 }
 
 #' Plot PK Ratio by Ratio Aggregation
@@ -132,7 +132,7 @@ commonPKRatioPlot <- function(projectConfiguration,
 #' @param xlabel A string representing the label for the x-axis in the plots.
 #' @param tableLabels A list of labels for tables generated in the plot.
 #'
-#' @return An RmdContainer object containing the generated plots and related information for further
+#' @return An RmdPlotManager object containing the generated plots and related information for further
 #'         processing or exporting.
 #'
 #' @export
@@ -210,7 +210,7 @@ plotPKRatioForestPlotByRatioAggregation <- function(projectConfiguration,
 #' @param xlabel A string representing the label for the x-axis in the plots.
 #' @param tableLabels A character vector of labels for tables generated in the plot.
 #'
-#' @return An RmdContainer object containing the generated plots and related information for further
+#' @return An RmdPlotManager object containing the generated plots and related information for further
 #'         processing or exporting.
 #'
 #' @export
@@ -279,7 +279,7 @@ plotPKRatioForestPlotByBoostrapping <- function(projectConfiguration,
 #'
 #' @param onePlotConfig A data.table containing the plot configuration, including details such as
 #'        scenario names and parameters to be plotted.
-#' @param rmdContainer An RmdContainer object that will hold the generated plot and related information.
+#' @param rmdPlotManager An RmdPlotManager object that will hold the generated plot and related information.
 #' @param pkParameterDT A data.table with PK parameters, including the necessary columns for analysis.
 #' @param pkParameterObserved A data.table with observed PK parameters. This parameter is optional.
 #' @param ratioCalculationMethod A string specifying the method used for calculating ratios (e.g., 'byBootsTrapping').
@@ -291,9 +291,9 @@ plotPKRatioForestPlotByBoostrapping <- function(projectConfiguration,
 #' @param xlabel A string representing the label for the x-axis in the plots.
 #' @param tableLabels A list of labels for tables generated in the plot.
 #'
-#' @return An updated RmdContainer object with the added plot and related information.
+#' @return An updated RmdPlotManager object with the added plot and related information.
 createPkPlotForPlotName <- function(onePlotConfig,
-                                    rmdContainer,
+                                    rmdPlotManager,
                                     pkParameterDT,
                                     pkParameterObserved,
                                     ratioCalculationMethod,
@@ -344,7 +344,7 @@ createPkPlotForPlotName <- function(onePlotConfig,
 
 
     # Export
-    rmdContainer$addAndExportFigure(
+    rmdPlotManager$addAndExportFigure(
       plotObject = plotObject,
       caption = getCaptionForRatioPlot(outputPathIdLoop = outputPathIdLoop,
                                        plotData = plotData,
@@ -355,7 +355,7 @@ createPkPlotForPlotName <- function(onePlotConfig,
     )
   }
 
-  return(rmdContainer)
+  return(rmdPlotManager)
 }
 
 #' Prepare Data for DDI Ratio Plot

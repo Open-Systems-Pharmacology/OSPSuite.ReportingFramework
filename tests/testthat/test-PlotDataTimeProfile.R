@@ -83,10 +83,12 @@ test_that("getObservedUnitConversionDT works correctly", {
 
 test_that("addTimeRangeTagsToData works correctly", {
   timeRangeColumns <- c("timeRange_Tag1")
+
   observedData <- randomObservedData()
   result <- addTimeRangeTagsToData(timeRangeColumns,
     dataOld = observedData, configTable,
-    applicationTimes = list(list(startOfFirstApplication = 0, endOfFirstApplication = 10))
+    applicationTimes = list(list(startOfFirstApplication = 0, endOfFirstApplication = 10)),
+    timeTags = timeTags
   )
   expect_true("timeRangeTag" %in% names(result))
   expect_equal(nrow(result), sum(observedData$xValues <= 10)) # Check number of rows

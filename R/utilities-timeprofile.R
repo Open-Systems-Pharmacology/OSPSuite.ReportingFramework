@@ -20,7 +20,6 @@ loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, out
         data.table(individualId = simulatedResults[[scenarioName]]$population$allIndividualIds,
                    observedIndividualId = simulatedResults[[scenarioName]]$population$getCovariateValues('ObservedIndividualId'))
     }
-
     dtSimulated <- rbind(
       dtSimulated,
       getSimulatedTimeprofile(
@@ -121,12 +120,14 @@ getApplicationTimes <- function(outputPathsPerScenario, simulatedResults) {
 #' @return A data.table with the processed time profile data.
 #' @export
 getSimulatedTimeprofile <- function(simulatedResult, outputPaths, aggregationFun, individualMatch) {
+  # reduce list of outputPaths to available paths
+    outputPaths <- intersect(outputPaths,
+                             simulatedResult$results$allQuantityPaths)
   dt <- ospsuite::simulationResultsToDataFrame(
     simulationResults = simulatedResult$results,
     quantitiesOrPaths = outputPaths
   ) %>%
     data.table::setDT()
-
   # Rename columns
   data.table::setnames(
     x = dt,

@@ -12,27 +12,18 @@ source(system.file(
 # (see vignette vignette(package = 'ospsuite.plots',topic = 'ospsuite_plots'))
 ospsuite.plots::setDefaults()
 theme_update(legend.position = 'top')
-# configure panel labels to be used as Tags A,B,...
-theme_update(strip.background = element_rect(fill = NA,color = NA))
-theme_update(strip.text = element_text(hjust = 0,vjust = 1))
 
 # Set this to TRUE if you want to execute the workflow as a final valid run.
 # It then won't set watermarks to figures and does not skip failing plot generations
 # (see vignette OSPSuite_ReportingFramework)
-executeAsValidRun(isValidRun = FALSE)
+setWorkflowOptions(isValidRun = FALSE)
 options(OSPSuite.RF.skipFailingPlots = FALSE)
 
 # Setup project structure -------------------------------------------------
 # creates project directory (see vignette https://esqlabs.github.io/esqlabsR/articles/esqlabsR-project-structure.html)
-# and help initProject for source Folder Selection
-# if you go with default structure defined by  'sourceFolder = templateDirectory()'
-# this workflow file should be saved in Scripts/ReportingFramework,
-# root directory is then two layers up.
-initProject(
-  rootDirectory = file.path("..",'..'),
-  sourceFolder = templateDirectory(),
-  overwrite = FALSE
-)
+# and help initProject
+# if you go with default structure this workflow file should be saved in Scripts/ReportingFramework,
+initProject()
 
 # available are two model files  for an IV and a po administration  "iv 1 mg (5 min).pkml" "po 3 mg (solution).pkml"
 # and a data file 'observedData_drugX.csv' for a cross over study- This contains plasma concentration and fraction excreted to Urine for 7 individuals
@@ -53,6 +44,7 @@ file.copy(from = system.file(
   mustWork = TRUE),
   to = file.path('..','..','Models',"po 3 mg (solution).pkml"),overwrite = TRUE)
 
+dir.create(file.path('..','..','Data'))
 file.copy(from = system.file(
   "extdata","example_1",'observedData_drugX.csv',
   package = "ospsuite.reportingframework",
@@ -165,7 +157,7 @@ logCatch({
 
     if (tutorialstep <= 4)
       # run initialized scenarios
-      runAndSaveScenarios(projectConfiguration = projectConfiguration,
+      scenarioResults <- runAndSaveScenarios(projectConfiguration = projectConfiguration,
                           scenarioList = scenarioList,
                           simulationRunOptions = SimulationRunOptions$new(
                             numberOfCores = NULL,
@@ -194,12 +186,26 @@ logCatch({
       mockManualEditings.TimePlot(projectConfiguration = projectConfiguration,dataObserved = dataObserved,tutorialstep)
 
   }
+
+
+  scenarioList <-
+    createScenarios.wrapped(projectConfiguration = projectConfiguration,
+                            scenarioNames = NULL,
+                            doCheckScenarioNameValidity = TRUE)
+  scenarioResults <- runAndSaveScenarios(projectConfiguration = projectConfiguration,
+                                         scenarioList = scenarioList,
+                                         simulationRunOptions = SimulationRunOptions$new(showProgress = TRUE),
+                                         withResimulation = FALSE)
+
+  mockManualEditings.DataGroups(projectConfiguration = projectConfiguration,dataObserved = dataObserved,tutorialstep)
+
   runPlot(
-    functionKey = "TimeProfile_Panel",
+    functionKey = "TimeProfiles",
     projectConfiguration = projectConfiguration,
+    configTableSheet = "TimeProfiles",
     inputs = list(
-      configTableSheet = "TimeProfiles",
-      dataObserved = dataObserved
+      dataObserved = dataObserved,
+      scenarioResults = scenarioResults
     )
   )
 

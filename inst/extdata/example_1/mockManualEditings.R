@@ -172,8 +172,16 @@ mockManualEditings.Scenario <- function(projectConfiguration,dataObserved,tutori
     openxlsx::saveWorkbook(wb, projectConfiguration$modelParamsFile, overwrite = TRUE)
   }
 
-
   wb <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
+
+  if (tutorialstep == 1){
+    dtOutputs <- xlsxReadData(wb = wb,sheetName  = 'OutputPaths')
+    dtOutputs <- dtOutputs[outputPathId %in% c(dtOutputs$outputPathId[1],'Concentration','Fraction')]
+    xlsxWriteData(wb = wb, sheetName  = 'OutputPaths', dt = dtOutputs)
+
+  }
+
+
 
   dtScenario <- xlsxReadData(wb = wb,sheetName  = 'Scenarios')
 
@@ -277,7 +285,7 @@ mockManualEditings.DataGroups <- function(projectConfiguration,dataObserved,tuto
   xlsxWriteData(wb = wb, sheetName  = 'DataGroups', dt = dtDataGroups)
 
   # outputpathids
-  if (tutorialstep == 1){
+  if (tutorialstep %in% c(1,5)){
     dtOutputs <- xlsxReadData(wb = wb,sheetName = 'Outputs')
 
     # delete template lines, keeping only the ones added by data import
@@ -290,6 +298,8 @@ mockManualEditings.DataGroups <- function(projectConfiguration,dataObserved,tuto
     # add properties for concentration
     dtOutputs[outputPathId == 'Fraction', outputPath := "Organism|Kidney|Urine|DrugX|Fraction excreted to urine"]
     dtOutputs[outputPathId == 'Fraction', displayNameOutputs := "Fraction excreted to urine"]
+
+    dtOutputs[,displayName := outputPathId]
 
     xlsxWriteData(wb = wb, sheetName  = 'Outputs', dt = dtOutputs)
 
@@ -346,10 +356,12 @@ mockManualEditings.TimePlot <- function(projectConfiguration,dataObserved,tutori
     dtTimeRange <- rbind(dtTimeRange,
                          data.table(tag = 'h0_6',
                                     captionText = 'Zoom on first 6 hours',
-                                    timeLabel = 'Time'),
+                                    timeLabel = 'Time',
+                                    timeShift = 0),
                          data.table(tag = 'h6_24',
                                     captionText = 'Zoom on time range 6 to 24 hours',
-                                    timeLabel = 'Time after dose')) %>%
+                                    timeLabel = 'Time after dose',
+                                    timeShift = 0)) %>%
       unique()
 
 

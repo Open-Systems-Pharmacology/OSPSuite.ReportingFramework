@@ -21,7 +21,7 @@ plotSensitivity(
 \item{scenarioList}{A list of scenarios for which the sensitivity analysis will be performed.}
 }
 \value{
-An RmdContainer object containing the generated sensitivity plots.
+An RmdPlotManager object containing the generated sensitivity plots.
 }
 \description{
 This function generates sensitivity plots based on the provided project configuration and scenario list.

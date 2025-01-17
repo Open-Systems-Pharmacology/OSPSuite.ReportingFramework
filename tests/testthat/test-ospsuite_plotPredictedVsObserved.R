@@ -54,10 +54,9 @@ test_that("Function handles insufficient data gracefully", {
     outputPathId = rep("1", 1)
   )
 
-  expect_warning(
-    result <- addPredictedValues(dtObservedInsufficient, dtSimulatedInsufficient, c("plotTag", "outputPathId")),
-    "Not enough data points for"
-  )
+  result <- addPredictedValues(dtObservedInsufficient, dtSimulatedInsufficient, c("plotTag", "outputPathId"))
+
+  expect_true(is.na(result$predicted))
 })
 
 # Test with mixed data

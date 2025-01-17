@@ -59,7 +59,7 @@ for different data types (e.g., simulated vs. observed).}
 various statistics displayed in the plot.}
 }
 \value{
-An RmdContainer object that contains the generated plots and any related information for
+An RmdPlotManager object that contains the generated plots and any related information for
         further processing or exporting.
 }
 \description{

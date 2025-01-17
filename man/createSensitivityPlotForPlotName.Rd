@@ -6,7 +6,7 @@
 \usage{
 createSensitivityPlotForPlotName(
   onePlotConfig,
-  rmdContainer,
+  rmdPlotManager,
   projectConfiguration,
   scenarioList
 )
@@ -14,14 +14,14 @@ createSensitivityPlotForPlotName(
 \arguments{
 \item{onePlotConfig}{A data frame containing the configuration for a single plot.}
 
-\item{rmdContainer}{An RmdContainer object to which the plot will be added.}
+\item{rmdPlotManager}{An RmdPlotManager object to which the plot will be added.}
 
 \item{projectConfiguration}{A list containing project configuration settings.}
 
 \item{scenarioList}{A list of scenarios for which the sensitivity analysis will be performed.}
 }
 \value{
-The updated RmdContainer object with the added plot.
+The updated RmdPlotManager object with the added plot.
 }
 \description{
 This function creates a sensitivity plot based on the provided plot configuration and adds it to the Rmd container.

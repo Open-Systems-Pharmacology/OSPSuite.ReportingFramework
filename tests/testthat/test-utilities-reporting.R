@@ -4,14 +4,14 @@ initLogfunction(projectConfiguration = projectConfiguration, verbose = FALSE)
 
 test_that("Rendering", {
   rmdfolder <- projectConfiguration$outputFolder
-  rmdContainer <- RmdContainer$new(rmdfolder = rmdfolder, "timeProfiles")
+  rmdPlotManager <- RmdPlotManager$new(rmdfolder = rmdfolder, "timeProfiles")
 
-  rmdContainer$addHeader("Section 1")
+  rmdPlotManager$addHeader("Section 1")
 
   plotObject <- ggplot2::ggplot(data.frame(x = seq(1:3), y = seq(2:4))) +
     ggplot2::geom_point(ggplot2::aes(x = x, y = y))
 
-  rmdContainer$addAndExportFigure(
+  rmdPlotManager$addAndExportFigure(
     plotObject = plotObject,
     caption = "My First Figure with footnotes",
     footNoteLines = c("footnote 1", "footnote 2"),
@@ -25,14 +25,14 @@ test_that("Rendering", {
   ) %>%
     .[, as.list(quantile(x)), by = "class"]
 
-  rmdContainer$addAndExportTable(
+  rmdPlotManager$addAndExportTable(
     table = dt,
     caption = "my Table",
     tableKey = "myTable"
   )
 
   testPath <- file.path(rmdfolder, "Test.Rmd")
-  rmdContainer$writeRmd(basename(testPath))
+  rmdPlotManager$writeRmd(basename(testPath))
 
   renderWord(testPath, quiet = TRUE)
   expect_true(file.exists(file.path(rmdfolder, "Test.docx")))

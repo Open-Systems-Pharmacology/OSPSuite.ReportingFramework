@@ -7,7 +7,7 @@
 #' @param configTableSheet A string indicating the name of the configuration table sheet to be read.
 #' @param scenarioList A list of scenarios for which the sensitivity analysis will be performed.
 #'
-#' @return An RmdContainer object containing the generated sensitivity plots.
+#' @return An RmdPlotManager object containing the generated sensitivity plots.
 #' @export
 plotSensitivity <- function(projectConfiguration,
                             subfolder,
@@ -24,22 +24,22 @@ configTable <-
 
 
 # call plot function per plotName
-rmdContainer <- generateRmdContainer(
+rmdPlotManager <- generateRmdContainer(
   projectConfiguration = projectConfiguration,
   subfolder = subfolder,
   configTable = configTable,
   plotFunction =
-    function(onePlotConfig, rmdContainer, ...) {
+    function(onePlotConfig, rmdPlotManager, ...) {
       createSensitivityPlotForPlotName(
         onePlotConfig = onePlotConfig,
-        rmdContainer = rmdContainer,
+        rmdPlotManager = rmdPlotManager,
         projectConfiguration = projectConfiguration,
         scenarioList = scenarioList)
     }
 )
 
 
-return(rmdContainer)
+return(rmdPlotManager)
 
 }
 
@@ -116,15 +116,15 @@ readSensitivityConfigTable <- function(sheetName,projectConfiguration){
 #' This function creates a sensitivity plot based on the provided plot configuration and adds it to the Rmd container.
 #'
 #' @param onePlotConfig A data frame containing the configuration for a single plot.
-#' @param rmdContainer An RmdContainer object to which the plot will be added.
+#' @param rmdPlotManager An RmdPlotManager object to which the plot will be added.
 #' @param projectConfiguration A list containing project configuration settings.
 #' @param scenarioList A list of scenarios for which the sensitivity analysis will be performed.
 #'
-#' @return The updated RmdContainer object with the added plot.
+#' @return The updated RmdPlotManager object with the added plot.
 #'
 #' @keywords internal
 createSensitivityPlotForPlotName <- function(onePlotConfig,
-                                             rmdContainer,
+                                             rmdPlotManager,
                                              projectConfiguration,
                                              scenarioList){
 
@@ -152,7 +152,7 @@ createSensitivityPlotForPlotName <- function(onePlotConfig,
                           nFacetColumns = length(levels(plotData$plotTag)))
 
 
-  rmdContainer$addAndExportFigure(
+  rmdPlotManager$addAndExportFigure(
     plotObject = plotObject,
     caption = getCaptionForSensitivityPlot(plotData = plotData,
                                            projectConfiguration = projectConfiguration,
@@ -161,7 +161,7 @@ createSensitivityPlotForPlotName <- function(onePlotConfig,
     width = 20
   )
 
-  return(rmdContainer)
+  return(rmdPlotManager)
 }
 
 #' Prepare Sensitivity Plot Data

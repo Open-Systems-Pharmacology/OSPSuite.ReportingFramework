@@ -6,7 +6,7 @@
 \usage{
 createPkPlotForPlotName(
   onePlotConfig,
-  rmdContainer,
+  rmdPlotManager,
   pkParameterDT,
   pkParameterObserved,
   ratioCalculationMethod,
@@ -23,7 +23,7 @@ createPkPlotForPlotName(
 \item{onePlotConfig}{A data.table containing the plot configuration, including details such as
 scenario names and parameters to be plotted.}
 
-\item{rmdContainer}{An RmdContainer object that will hold the generated plot and related information.}
+\item{rmdPlotManager}{An RmdPlotManager object that will hold the generated plot and related information.}
 
 \item{pkParameterDT}{A data.table with PK parameters, including the necessary columns for analysis.}
 
@@ -46,7 +46,7 @@ scenario names and parameters to be plotted.}
 \item{tableLabels}{A list of labels for tables generated in the plot.}
 }
 \value{
-An updated RmdContainer object with the added plot and related information.
+An updated RmdPlotManager object with the added plot and related information.
 }
 \description{
 Creates a plot for the PK ratio based on the provided configuration. This function handles the
