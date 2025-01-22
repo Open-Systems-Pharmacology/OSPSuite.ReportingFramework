@@ -12,7 +12,8 @@
 #' @export
 calculatePKParameter <- function(projectConfiguration,
                                  scenarioResult,
-                                 pkParameterSheets) {
+                                 pkParameterSheets,
+                                 scenarioName) {
 
   checkmate::assertClass(projectConfiguration, classes = "ProjectConfiguration")
   checkmate::assertList(scenarioResult,  any.missing = FALSE, names = "named")
@@ -27,20 +28,16 @@ calculatePKParameter <- function(projectConfiguration,
   if (nrow(dtOutputPaths) == 0) stop('Please define ouputPaths in plot configuration xlsx')
 
 
-  # Load or calculate PK analyses for all scenarios
-  invisible(lapply(names(scenarioList), function(scenarioName) {
+  # Load or calculate PK analyses
 
-    message(paste("Calculate  PK analysis result of", scenarioName))
+  message(paste("Calculate  PK analysis result of", scenarioName))
 
-    pkAnalyses <- ospsuite::calculatePKAnalyses(results = scenarioResults[[scenarioName]]$results)
+  pkAnalyses <- ospsuite::calculatePKAnalyses(results = scenarioResult$results)
 
-    ospsuite::exportPKAnalysesToCSV(
-      pkAnalyses = pkAnalyses,
-      filePath = file.path(outputFolder, paste0(scenarioName, '.csv'))
-    )
-
-  }))
-
+  ospsuite::exportPKAnalysesToCSV(
+    pkAnalyses = pkAnalyses,
+    filePath = file.path(outputFolder, paste0(scenarioName, '.csv'))
+  )
 
   return(invisible())
 }
@@ -72,7 +69,7 @@ initializeParametersOfSheets <- function(projectConfiguration, pkParameterSheets
   }
 
   # Loop through each PK parameter sheet
-  for (pkParameterSheet in pkParameterSheets) {
+  for (pkParameterSheet in splitInputs(pkParameterSheets)) {
 
     dtPkParameterDefinition <- xlsxReadData(wb = projectConfiguration$addOns$pKParameterFile,
                                             sheetName = pkParameterSheet,
@@ -145,11 +142,9 @@ loadPKParameter <- function(projectConfiguration,
                               pkParameterSheet = pkParameterSheets,
                               projectConfiguration = projectConfiguration)
   })
-
   pkParameterDT <- merge(data.table::rbindlist(pkAnalysesList),
-                         dtOutputPaths[, c('outputPathId', 'displayNameOutputs')],
-                         by = 'outputPathId',
-                         suffixes = c('', 'Output'))
+                         dtScenarios[,c('scenarioName','populationId')],
+                         by = 'scenarioName')
 
   return(pkParameterDT)
 }
@@ -179,7 +174,7 @@ loadPKAnalysisPerScenario <- function(scenarioName,scenario,
 
   # Process each PK parameter sheet
   resultsList <- list()
-  for (pkParameterSheet in pkParameterSheets) {
+  for (pkParameterSheet in splitInputs(pkParameterSheets)) {
 
     dtPkParameterDefinition <- xlsxReadData(wb = projectConfiguration$addOns$pKParameterFile,
                                             sheetName = pkParameterSheet,
@@ -209,7 +204,7 @@ loadPKAnalysisPerScenario <- function(scenarioName,scenario,
                                 'displayUnit'
                               ) %>%
                               setnames(old = c('displayName','displayUnit'),
-                                       new = c('displayNamePkParameter','displayUnitPKParameter'))
+                                       new = c('displayNamePKParameter','displayUnitPKParameter'))
                           ))
 
   }

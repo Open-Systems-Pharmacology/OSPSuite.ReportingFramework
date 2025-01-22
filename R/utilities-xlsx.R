@@ -203,6 +203,7 @@ addDataAsTemplateToXlsx <- function(wb, templateSheet, sheetName, dtNewData,temp
         ),
         sheetName = templateSheet
       )
+    xlsxAddSheet(wb, templateSheet, templateConfiguration)
   }
 
   dtNewData <- rbind(templateConfiguration[1, ],

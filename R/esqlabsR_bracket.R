@@ -226,7 +226,8 @@ runAndSaveScenarios <- function(projectConfiguration,
       if (length(pkParameterSheets) > 0){
         calculatePKParameter(projectConfiguration,
                              scenarioResult = scenarioResults[[sc]],
-                             pkParameterSheets = pkParameterSheets)
+                             pkParameterSheets = pkParameterSheets,
+                             scenarioName = sc)
       }
     }
   }

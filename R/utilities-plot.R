@@ -73,6 +73,7 @@ runPlot <- function(projectConfiguration,
                                      functionKey = functionKey,
                                      plotFunction = plotFunction,
                                      configTableSheet = configTableSheet)
+
   # read configuration table
   configTable <-
     readConfigTableForPlot(sheetName = configTableSheet,
@@ -155,21 +156,27 @@ readConfigTableForPlot <- function(sheetName, validateConfigTableFunction,inputs
 
   # filter rows with selected plotNames
   if ('plotName' %in% names(configTable) & !is.null(plotNames)){
+    checkmate::assertNames(plotNames,subset.of = configTable[!is.na(plotName)]$plotName)
     configTable <- configTable[plotName %in% plotNames]
   }
-
   # add scenario names
   if ('scenario' %in% names(configTable)){
     configTable <-
       merge(
         configTable,
-        configEnv$scenarios[, c('scenarioName', 'longName')],
+        configEnv$scenarios[, c('scenarioName', 'longName','shortName')],
         by.x = 'scenario',
         by.y = 'scenarioName',
         all.x = TRUE,
         sort = FALSE
       ) %>%
-      data.table::setnames('longName','scenarioLongName')
+      data.table::setnames(old = c('longName','shortName'),
+                           c('scenarioLongName','scenarioShortName'))
+
+    if ('scenarioName' %in% names(configTable)){
+      configTable[!is.na(scenarioName) & scenarioName !='',
+                  scenarioLongName := scenarioName]
+    }
   }
 
   # validate
@@ -201,6 +208,10 @@ addFacets <- function(plotObject,
   # avoid warnings for global variables during check
   plotTag <- NULL
 
+  plotObject <- plotObject +
+    ggplot2::theme(aspect.ratio = facetAspectRatio)
+
+
   if (!is.null(nFacetColumns)) {
     plotObject <- plotObject +
       ggplot2::facet_wrap(
@@ -208,8 +219,7 @@ addFacets <- function(plotObject,
         scales = facetScale,
         ncol = nFacetColumns
       ) +
-      ggplot2::theme(aspect.ratio = facetAspectRatio,
-                     strip.background = element_rect(fill = NA,color = NA),
+      ggplot2::theme(strip.background = element_rect(fill = NA,color = NA),
                      strip.text = element_text(hjust = 0,vjust = 1))
 
   }
@@ -473,6 +483,49 @@ formatPercentiles <- function(percentiles,suffix = '',allAsPercentiles = FALSE){
 generatePlotTag <- function(index){
   toupper(letters[index])
 }
+
+#' Get Y-axis Limits for Plotting
+#'
+#' This function retrieves the y-axis limits from a given plot configuration
+#' based on the specified y-axis scale (linear or logarithmic). It also allows
+#' for additional arguments to be passed for further customization.
+#'
+#' @param onePlotConfig A list containing the plot configuration, which must
+#' include `ylimit_linear` and `ylimit_log` elements.
+#'
+#' @param yScale A character string indicating the type of scale to use for the
+#' y-axis. It should be either "linear" or "log".
+#'
+#' @param ... Additional arguments that can be passed to customize the y-scale.
+#' These can include `yscale.args` for further customization of the y-axis scale.
+#'
+#' @return A list of y-scale arguments, including limits, which can be used
+#' in plotting functions.
+#' @keywords internal
+getYlimits <- function(onePlotConfig,yScale,...){
+
+  dotargs = list(...)
+  if ( 'yscale.args' %in% dotargs) {
+    yscale.args = dotargs$yscale.args
+  } else {
+    yscale.args = list()
+  }
+
+  if (tolower(yScale) == 'linear'){
+    scaleTxt <- onePlotConfig$ylimit_linear[1]
+  } else {
+    scaleTxt <- onePlotConfig$ylimit_log[1]
+  }
+  if (!is.na(scaleTxt)){
+    yscale.args <- modifyList(yscale.args,
+    list(limits = eval(parse(text = scaleTxt))))
+  }
+
+  return(yscale.args)
+
+}
+
+
 
 # validation ----------------
 #' Validate Configuration Table for Plots
@@ -773,6 +826,33 @@ validateDataGroupIdsForPlot <- function() {
   if (any(!is.na(configEnv$dataGroupIds$color))) {
     checkmate::assertCharacter(dtOutputPaths$color, any.missing = FALSE,
                                .var.name = 'DataGroups column color')
+  }
+
+  return(invisible())
+}
+
+#' Validate Color Vector
+#'
+#' This function checks if the provided color vector meets the following criteria:
+#' - It has a length of 2.
+#' - It is named.
+#' - All values are either NA or valid color names.
+#'
+#' @param colorVector A character vector of colors, which should have a length of 2.
+#'
+#' @return Returns `invisible()` if the checks pass.
+#'
+#' @throws An error if any of the checks fail.
+#' @keywords internal
+validateColorVector <- function(colorVector) {
+  # Check if the length is 2
+  checkmate::assertVector(colorVector, len = 2,any.missing = TRUE,names = 'named')
+
+  # Check if all values are either NA or valid colors
+  validColors <- sapply(colorVector, function(x) is.na(x) || isTRUE(grDevices::col2rgb(x, alpha = TRUE)[1] >= 0))
+
+  if (!all(validColors)) {
+    stop("All values in colorVector must be either NA or valid color names.")
   }
 
   return(invisible())

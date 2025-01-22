@@ -16,8 +16,6 @@ RmdPlotManager <- R6::R6Class( # nolint
     initialize = function(rmdfolder, suppressExport = FALSE) {
       private$.rmdfolder <- rmdfolder
       self$suppressExport <- suppressExport
-      private$.rmdLines <- private$.startRMD(rmdfolder)
-
       self$validateConfigTableFunction  <- validateConfigTableForPlots
 
       return(self)
@@ -57,17 +55,15 @@ RmdPlotManager <- R6::R6Class( # nolint
                  self$plotFunction = plotTimeProfilePanels
                  self$validateConfigTableFunction = validateConfigTableForTimeProfiles
                },
-               PK_Boxwhisker_Absolute = {
-                 self$plotFunction = plotTimeProfilePanels
-                 subfolderOffset = '_abs'
+               PK_Boxwhisker = {
+                 self$plotFunction = plotPKBoxwhisker
+                 self$validateConfigTableFunction = validatePKBoxwhiskerConfigTable
                },
                PK_RatioForestByAggregation = {
                  self$plotFunction = plotPKRatioForestPlotByRatioAggregation
-                 subfolderOffset = '_ratio_aggregation'
                },
                PK_RatioForestByAggregation = {
                  self$plotFunction = plotPKRatioForestPlotByBoostrapping
-                 subfolderOffset = '_ratio_bootstrap'
                },
                stop('functionKey is unknown. Must be one of "TimeProfiles", "PK_Boxwhisker_Absolute",
                     "PK_RatioForestByAggregation", PK_RatioForestByAggregation')
@@ -76,9 +72,8 @@ RmdPlotManager <- R6::R6Class( # nolint
       }
 
       # construct and create subfolder
-      if (is.null(subfolder)) {
-        subfolder <- paste0(configTableSheet, subfolderOffset)
-      }
+      if (is.null(subfolder)) subfolder <- configTableSheet
+
       private$.subfolder <- subfolder
 
       checkmate::assert_path_for_output(file.path(private$.rmdfolder, private$.subfolder),
@@ -87,6 +82,10 @@ RmdPlotManager <- R6::R6Class( # nolint
       if (!dir.exists(file.path(private$.rmdfolder, private$.subfolder))) {
         dir.create(file.path(private$.rmdfolder, private$.subfolder), recursive = TRUE)
       }
+
+      # add start of rmd
+      private$.rmdLines <- private$.startRMD(rmdfolder)
+
     },
     #' @description
     #' Write the .Rmd file.
@@ -172,13 +171,13 @@ RmdPlotManager <- R6::R6Class( # nolint
           self$addAndExportFigure(plotObject = obj,
                                   caption = caption,
                                   figureKey = key,
-                                  footNoteLines = attr(object,'footNoteLines'),
-                                  exportArguments = attr(object,'exportArguments'))
-        } else if (is.data.table()){
-          self$addAndExportTable(plotObject = obj,
+                                  footNoteLines = attr(obj,'footNoteLines'),
+                                  exportArguments = attr(obj,'exportArguments'))
+        } else if (is.data.table(obj)){
+          self$addAndExportTable(table = obj,
                                   caption = caption,
-                                  figureKey = key,
-                                  footNoteLines = attr(object,'footNoteLines'))
+                                  tableKey = key,
+                                  footNoteLines = attr(obj,'footNoteLines'))
 
         }
       }
@@ -241,7 +240,6 @@ RmdPlotManager <- R6::R6Class( # nolint
       checkmate::assertCharacter(names(table), unique = TRUE)
 
       if (private$.suppressExport) return(invisible())
-
       # export
       utils::write.csv(
         x = table,

@@ -43,6 +43,11 @@ mockManualEditings.Scenario <- function(projectConfiguration){
                        populationId =  dtPop$populationName,
                        readPopulationFromCSV = 1,
                        modelFile = 'iv 1 mg (5 min).pkml'),
+                     data.table(
+                       scenario_name = paste0(gsub('-','_',dtPop$populationName),'_po'),
+                       populationId =  dtPop$populationName,
+                       readPopulationFromCSV = 1,
+                       modelFile = 'po 3 mg (solution).pkml'),
                      fill = TRUE)
 
   xlsxWriteData(wb = wb, sheetName  = 'Scenarios', dt = dtScenario)
@@ -69,17 +74,22 @@ mockManualEditings.outputPath <- function(projectConfiguration){
                       data.table(
                         outputPathId = 'Concentration',
                         outputPath =  "Organism|PeripheralVenousBlood|DrugX|Plasma (Peripheral Venous Blood)",
-                        displayNameOutputs = "DrugX Plasma",
+                        displayName = "drugX plasma concentration",
                         displayUnit ="µg/L"),
                      data.table(
                        outputPathId = 'Fraction',
                        outputPath =  "Organism|Kidney|Urine|DrugX|Fraction excreted to urine",
-                       displayNameOutputs = "Fraction excreted to urine",
+                       displayName = "drugX excreted to urine",
                        displayUnit =""),
                      fill = TRUE)
 
   xlsxWriteData(wb = wb, sheetName  = 'Outputs', dt = dtOutputs)
 
+  # scenarioName
+  dtScenario <- xlsxReadData(wb = wb,sheetName = 'Scenarios')
+  dtScenario[,shortName := gsub(' po','',shortName)]
+
+  xlsxWriteData(wb = wb, sheetName  = 'Scenarios', dt = dtScenario)
 
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
 
@@ -127,8 +137,11 @@ mockManualEditings.PlotBoxwhsiker <- function(projectConfiguration){
 
 
   dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_Boxplot')
+  dt$header[2] <- 'PK Parameter of Pediatric Populations'
 
-  dt[!is.na(scenario),plotCaptionAddon := '1mg iv application']
+  dt <- dt[!grep('_po$',scenario)]
+
+  dt[!is.na(scenario),plotCaptionAddon := 'Virtual pediatric simulations of 1mg iv application in comparison to an adult virtual population']
   dt[!is.na(scenario) & scenario != 'adults',referenceScenario := 'adults']
   dt[!is.na(scenario),plotName := outputPathIds]
 
@@ -141,4 +154,23 @@ mockManualEditings.PlotBoxwhsiker <- function(projectConfiguration){
 }
 
 
+mockManualEditings.PlotBoxwhsiker2 <- function(projectConfiguration){
 
+  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+
+  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_Boxplot2')
+  dt$header[2] <- 'PK Parameter of IV ad PO administrations'
+
+  dt[!is.na(scenario),plotName := outputPathIds]
+
+  dt[grep('_po$',scenario), referenceScenario := gsub('_po','',scenario)]
+  dt[!is.na(scenario),plotCaptionAddon := 'Virtual population simulations of 1mg iv application in comparison to 3mg po simulation']
+
+  dt[plotName == 'Fraction',ylimit_linear := "c(0,2)"]
+
+  xlsxWriteData(wb = wb, sheetName  = 'PKParameter_Boxplot2', dt = dt)
+
+  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+
+
+}

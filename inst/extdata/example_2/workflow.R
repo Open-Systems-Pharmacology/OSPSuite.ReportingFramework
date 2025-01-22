@@ -7,6 +7,8 @@ if (!dir.exists(file.path(rootDirectory,'Scripts','ReportingFramework')))
   dir.create(file.path(rootDirectory,'Scripts','ReportingFramework'),recursive = TRUE)
 
 
+setwd("~/GitHub/OSPSuite.Plots")
+load_all()
 setwd("~/GitHub/OSPSuiteReportingFramework")
 load_all()
 setwd(file.path(rootDirectory,'Scripts','ReportingFramework'))
@@ -31,7 +33,6 @@ theme_update(legend.position = 'top')
 # It then won't set watermarks to figures and does not skip failing plot generations
 # (see vignette OSPSuite_ReportingFramework)
 setWorkflowOptions(isValidRun = FALSE)
-options(OSPSuite.RF.skipFailingPlots = FALSE)
 
 # Setup project structure -------------------------------------------------
 initProject()
@@ -43,6 +44,12 @@ file.copy(from = system.file(
   mustWork = TRUE),
   to = file.path('..','..','Models',"iv 1 mg (5 min).pkml"),overwrite = TRUE)
 
+# copy files needed for tutorials to the correct folders
+file.copy(from = system.file(
+  "extdata","example_1","po 3 mg (solution).pkml",
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE),
+  to = file.path('..','..','Models',"po 3 mg (solution).pkml"),overwrite = TRUE)
 
 
 # get paths of all relevant project files
@@ -93,41 +100,55 @@ projectConfiguration <-
                                          withResimulation = FALSE)
 
 
-  pkParameterDT <- calculateOrLoadPKParameter(projectConfiguration = projectConfiguration,
-                                              scenarioResults = scenarioResults,
-                                              scenarioList = scenarioList,
-                                              pkParameterSheets = c('PK_Plasma','PK_Fraction'),
-                                              withRecalculation = FALSE)
+  pkParameterDT <- loadPKParameter(projectConfiguration = projectConfiguration,
+                                              scenarioList = scenarioList)
 
 
   # Create Output Plots -----------------------------------------------------
   # (see vignette OSPSuite_ReportingFramework.Rmd  section  Plot Functionality)
   # figures and captions are filed in <rootdirectory>\Outputs\ReportingFramework\TimeProfiles
 
+  ## Box whisker different Populations --------
   addDefaultConfigForPKBoxwhsikerPlots(projectConfiguration = projectConfiguration,
                                                    pkParameterDT = pkParameterDT,
                                                    sheetName = "PKParameter_Boxplot",
                                                    overwrite = TRUE)
   mockManualEditings.PlotBoxwhsiker(projectConfiguration)
 
-
   runPlot(
-    functionKey = "PK_Boxwhisker_Absolute",
+    functionKey = "PK_Boxwhisker",
     projectConfiguration = projectConfiguration,
     configTableSheet = "PKParameter_Boxplot",
     inputs = list(
-      pkParameterDT = pkParameterDT
+      pkParameterDT = pkParameterDT,
+      colorVector = c(pediatric = NA,adult = NA)
     )
   )
 
+  ## Box whisker same Populations --------
+  addDefaultConfigForPKBoxwhsikerPlots(projectConfiguration = projectConfiguration,
+                                       pkParameterDT = pkParameterDT,
+                                       sheetName = "PKParameter_Boxplot2",
+                                       overwrite = TRUE)
+  mockManualEditings.PlotBoxwhsiker(projectConfiguration)
 
 
+  runPlot(
+    functionKey = "PK_Boxwhisker",
+    projectConfiguration = projectConfiguration,
+    configTableSheet = "PKParameter_Boxplot2",
+    inputs = list(
+      pkParameterDT = pkParameterDT,
+      colorVector = c(po = NA,iv = NA)
+    )
+  )
 
   # Create Report document --------------------------------------------------
   mergeRmds(projectConfiguration = projectConfiguration,
             newName = "appendix",
             title = "Appendix",
-            sourceRmds = c("TimeProfiles")
+            sourceRmds = c("PKParameter_Boxplot",
+                           "PKParameter_Boxplot2")
   )
 
   renderWord(fileName = file.path(projectConfiguration$outputFolder,"appendix.Rmd"))
