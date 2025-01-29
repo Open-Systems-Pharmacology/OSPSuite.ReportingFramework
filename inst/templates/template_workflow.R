@@ -124,7 +124,7 @@ logCatch({
   #' - **Time Profile Plotting Tutorial**
 
   runPlot(
-    functionKey = "TimeProfiles",
+    functionKey = "plotTimeProfiles",
     projectConfiguration = projectConfiguration,
     inputs = list(
       configTableSheet = "TimeProfiles",

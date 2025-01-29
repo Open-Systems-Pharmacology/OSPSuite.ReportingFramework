@@ -409,7 +409,7 @@ Please comment all plot functions which we do not use and execute the ones for t
 
 ```{r}
 runPlot(
-    functionKey = "TimeProfiles",
+    functionKey = "plotTimeProfiles",
     projectConfiguration = projectConfiguration,
     configTableSheet = "TimeProfiles",
     inputs = list(

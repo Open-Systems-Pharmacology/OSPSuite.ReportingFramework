@@ -4,7 +4,7 @@
 #' and organizes the necessary files for an electronic package export. It also
 #' generates logs and summary files for review.
 #'
-#' @param projectConfiguration A list containing project-specific configurations,
+#' @param projectConfiguration A ProjectConfiguration object containing project-specific configurations,
 #'                             including paths for electronic package folders and
 #'                             output directories.
 #' @param configTable A data.table containing configuration details for scenarios,
@@ -43,7 +43,7 @@ addScenariosToEPackage <- function(projectConfiguration, configTable, subfolder)
 #'
 #' This function creates the analysis directory if it does not already exist.
 #'
-#' @param projectConfiguration A list containing project-specific configurations.
+#' @param projectConfiguration A ProjectConfiguration object containing project-specific configurations.
 #'
 #' @return The path to the created analysis directory.
 #' @keywords internal
@@ -58,7 +58,7 @@ createAnalysisDirectory <- function(projectConfiguration) {
 #' This function reads the filename dictionary from the specified path or initializes
 #' an empty one if it does not exist.
 #'
-#' @param projectConfiguration A list containing project-specific configurations.
+#' @param projectConfiguration A ProjectConfiguration object containing project-specific configurations.
 #'
 #' @return A data.table containing the filename dictionary.
 #' @keywords internal
@@ -114,7 +114,7 @@ prepareConfigTableExport <- function(configTable) {
 #' @param configTableToExport A data.table containing the configuration table to export.
 #' @param fileNameDict A data.table containing the filename dictionary.
 #' @param invalidFilenames A vector of invalid filenames encountered during validation.
-#' @param projectConfiguration A list containing project-specific configurations.
+#' @param projectConfiguration A ProjectConfiguration object containing project-specific configurations.
 #'
 #' @return The updated configuration table with valid filenames.
 #' @keywords internal
@@ -203,7 +203,7 @@ validateAndUpdateFilenames <- function(configTableToExport, fileNameDict, invali
 #'
 #' @param fileNameDict A data.table containing the filename dictionary.
 #' @param invalidFilenames A vector of invalid filenames encountered during validation.
-#' @param projectConfiguration A list containing project-specific configurations.
+#' @param projectConfiguration A ProjectConfiguration object containing project-specific configurations.
 #'
 #' @return The updated filename dictionary.
 #' @keywords internal
@@ -252,14 +252,14 @@ copyFilesToAnalysisProgram <- function(configTableToExport, dirAnalysisProgram) 
 #' This function creates the export log file based on the configuration table.
 #'
 #' @param configTableToExport A data.table containing the configuration table to export.
-#' @param projectConfiguration A list containing project-specific configurations.
+#' @param projectConfiguration A ProjectConfiguration object containing project-specific configurations.
 #'
 #' @return The path to the created export log file.
 #' @keywords internal
 createExportLogFile <- function(configTableToExport, projectConfiguration) {
   exportLogFile <- file.path(getOption('OSPSuite.RF.logFileFolder', default = projectConfiguration$addOns$electronicPackageFolder),
                              'ePackageFileExport.csv')
-  if (file.exists('exportLog')) {
+  if (file.exists(exportLogFile)) {
     configTableToExport <- rbind(data.table::fread(exportLogFile),
                                  configTableToExport,
                                  fill = TRUE) %>%
@@ -273,7 +273,7 @@ createExportLogFile <- function(configTableToExport, projectConfiguration) {
 #' This function creates a reviewer aid table based on the configuration table.
 #'
 #' @param configTableToExport A data.table containing the configuration table to export.
-#' @param projectConfiguration A list containing project-specific configurations.
+#' @param projectConfiguration A ProjectConfiguration object containing project-specific configurations.
 #' @keywords internal
 createReviewerAidTable <- function(configTableToExport, projectConfiguration) {
   tableForReviewerAidPdfFile <- file.path(projectConfiguration$addOns$electronicPackageFolder, 'templateReviewerAid.csv')
@@ -303,7 +303,7 @@ createReviewerAidTable <- function(configTableToExport, projectConfiguration) {
 #' This function creates a summary overview table based on the configuration table.
 #'
 #' @param configTableToExport A data.table containing the configuration table to export.
-#' @param projectConfiguration A list containing project-specific configurations.
+#' @param projectConfiguration A ProjectConfiguration object containing project-specific configurations.
 #' @keywords internal
 createSummaryOverviewTable <- function(configTableToExport, projectConfiguration) {
   summaryOverview <- configTableToExport[, c('scenarioLongName', 'pkmlFileValid', 'populationCsvValid')] %>%
@@ -327,11 +327,16 @@ createSummaryOverviewTable <- function(configTableToExport, projectConfiguration
   }
   data.table::fwrite(summaryOverview, file = filenameOverview)
 }
-
-
-
-
-
+#' Export Time Profile Data for Electronic Package
+#'
+#' This function exports time profile data for the electronic package by merging
+#' the provided data with configuration details and saving it in the specified format.
+#'
+#' @param projectConfiguration A ProjectConfiguration object containing project-specific configurations.
+#' @param dataToExport A data.table containing the data to be exported.
+#'
+#' @return This function does not return a value. It performs file operations to save the exported data.
+#' @keywords internal
 exportTimeProfileDataForEPackage <- function(projectConfiguration,dataToExport){
 
 
@@ -476,4 +481,43 @@ checkFileNameValidity <- function(fileName, isDataSet = FALSE) {
 
   return(TRUE)  # Return TRUE if all conditions are met
 }
+
+#' Export PK Parameters with IOV for Electronic Package
+#'
+#' This function exports pharmacokinetic (PK) parameters with inter-observation variability (IOV)
+#' for the electronic package, saving them in separate CSV files based on scenarios.
+#'
+#' @param projectConfiguration A ProjectConfiguration object containing project-specific configurations.
+#' @param pkParameterDT A data.table containing PK parameter data.
+#'
+#' @return This function does not return a value. It performs file operations to save the exported PK parameters.
+#' @keywords internal
+exportPKWithIOVForEPackage <- function(projectConfiguration,pkParameterDT){
+  if (getOption('OSPSuite.RF.withEPackage',default = FALSE)){
+
+    exportDir <- file.path(projectConfiguration$addOns$electronicPackageFolder,'PKParameterWithIOV')
+    checkmate::assertPathForOutput(exportDir)
+    if (!dir.exists(exportDir)) dir.create(exportDir)
+
+    dtList <- split(pkParameterDT,by = c('scenario','referenceScenario','outputPathId','pkParameter'))
+
+    invisible(lapply(names(dtList),
+           function(dtName){
+             fileName <- paste0(dtName,'.csv')
+             utils::write.csv(
+               x = dtList[[dtName]],
+               file = file.path(exportDir,fileName),
+               fileEncoding = "UTF8",
+               row.names = FALSE
+             )
+           }
+    ))
+
+
+  }
+   return(invisible())
+
+}
+
+
 

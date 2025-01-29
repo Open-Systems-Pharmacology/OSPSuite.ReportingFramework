@@ -4,7 +4,7 @@ initLogfunction(projectConfiguration = projectConfiguration, verbose = FALSE)
 
 test_that("Rendering", {
   rmdfolder <- projectConfiguration$outputFolder
-  rmdPlotManager <- RmdPlotManager$new(rmdfolder = rmdfolder, "timeProfiles")
+  rmdPlotManager <- RmdPlotManager$new(rmdfolder = rmdfolder)
 
   rmdPlotManager$addHeader("Section 1")
 

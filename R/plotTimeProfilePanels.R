@@ -118,7 +118,7 @@
 #' }
 #'
 #' @export
-plotTimeProfilePanels <- function(projectConfiguration,
+plotTimeProfiles <- function(projectConfiguration,
                                   onePlotConfig,
                                   dataObserved,
                                   scenarioResults = list(),
@@ -824,7 +824,7 @@ getGeomLLOQAttributesForTP <- function(plotData) {
 #' @param configTable Plot configuration table.
 #' @template observedDataDT
 #' @keywords internal
-validateConfigTableForTimeProfiles <- function(configTable, dataObserved, ...) {
+validateTimeProfilesConfig <- function(configTable, dataObserved, ...) {
   # avoid warning for global variable
   individualId <- NULL
 

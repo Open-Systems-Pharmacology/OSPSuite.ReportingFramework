@@ -45,30 +45,15 @@ RmdPlotManager <- R6::R6Class( # nolint
       }
 
       # Select the plot function based on the functionKey
-      subfolderOffset = ''
       if (is.null(functionKey)) {
         checkmate::assertFunction(plotFunction)
         self$plotFunction =plotFunction
       } else {
-        switch(functionKey,
-               TimeProfiles = {
-                 self$plotFunction = plotTimeProfilePanels
-                 self$validateConfigTableFunction = validateConfigTableForTimeProfiles
-               },
-               PK_Boxwhisker = {
-                 self$plotFunction = plotPKBoxwhisker
-                 self$validateConfigTableFunction = validatePKBoxwhiskerConfigTable
-               },
-               PK_RatioForestByAggregation = {
-                 self$plotFunction = plotPKRatioForestPlotByRatioAggregation
-               },
-               PK_RatioForestByAggregation = {
-                 self$plotFunction = plotPKRatioForestPlotByBoostrapping
-               },
-               stop('functionKey is unknown. Must be one of "TimeProfiles", "PK_Boxwhisker_Absolute",
-                    "PK_RatioForestByAggregation", PK_RatioForestByAggregation')
+        checkmate::assertNames(functionKey,subset.of = unlist(FUNCTIONKEYS))
 
-        )
+        self$plotFunction <- get(functionKey)
+        self$validateConfigTableFunction <- get(paste0(gsub('^plot','validate',functionKey),'Config'))
+
       }
 
       # construct and create subfolder

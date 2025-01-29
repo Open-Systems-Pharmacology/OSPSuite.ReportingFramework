@@ -116,7 +116,7 @@ projectConfiguration <-
   mockManualEditings.PlotBoxwhsiker(projectConfiguration)
 
   runPlot(
-    functionKey = "PK_Boxwhisker",
+    functionKey = "plotPKBoxwhisker",
     projectConfiguration = projectConfiguration,
     configTableSheet = "PKParameter_Boxplot",
     inputs = list(
@@ -134,7 +134,7 @@ projectConfiguration <-
 
 
   runPlot(
-    functionKey = "PK_Boxwhisker",
+    functionKey = "plotPKBoxwhisker",
     projectConfiguration = projectConfiguration,
     configTableSheet = "PKParameter_Boxplot2",
     inputs = list(
@@ -142,6 +142,28 @@ projectConfiguration <-
       colorVector = c(po = NA,iv = NA)
     )
   )
+
+  ## Forest same Populations --------
+  addDefaultConfigForPKForestPlots(projectConfiguration = projectConfiguration,
+                                       pkParameterDT = pkParameterDT,
+                                       sheetName = "PKParameter_ForestAbs",
+                                       overwrite = TRUE)
+  mockManualEditings.PlotForest(projectConfiguration)
+
+  runPlot(
+    functionKey = "plotPKForestAbsoluteValuesWithVariance",
+    projectConfiguration = projectConfiguration,
+    configTableSheet = "PKParameter_ForestAbs",
+    inputs = list(
+      pkParameterDT = pkParameterDT,
+      colorVector = c(po = NA,iv = NA)
+    )
+  )
+
+
+
+
+
 
   # Create Report document --------------------------------------------------
   mergeRmds(projectConfiguration = projectConfiguration,

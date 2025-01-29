@@ -200,7 +200,7 @@ logCatch({
   mockManualEditings.DataGroups(projectConfiguration = projectConfiguration,dataObserved = dataObserved,tutorialstep)
 
   runPlot(
-    functionKey = "TimeProfiles",
+    functionKey = "plotTimeProfiles",
     projectConfiguration = projectConfiguration,
     configTableSheet = "TimeProfiles",
     inputs = list(
