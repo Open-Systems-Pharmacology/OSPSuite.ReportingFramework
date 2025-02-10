@@ -1,3 +1,92 @@
+
+mockManualEditings.Cleanup <- function(projectConfiguration){
+
+  # delete examples
+  for (xlsfile in c(projectConfiguration$scenariosFile,
+                    projectConfiguration$applicationsFile,
+                    projectConfiguration$populationsFile,
+                    projectConfiguration$individualsFile,
+                    projectConfiguration$modelParamsFile)){
+
+    # cleanup scenarios in Plots
+    wb <- openxlsx::loadWorkbook(xlsfile)
+
+    for (sheetName in wb$sheet_names){
+      dt <- xlsxReadData(wb = wb,sheetName  = sheetName)
+      dt <- dt[FALSE]
+      xlsxWriteData(wb = wb,sheetName  = sheetName,dt = dt)
+    }
+    # save all sheets
+    openxlsx::saveWorkbook(wb, xlsfile, overwrite = TRUE)
+
+  }
+
+}
+
+mockManualEditings.DataDictionary <- function(projectConfiguration){
+
+  # add all data files which are used in the project
+  wb <- openxlsx::loadWorkbook(projectConfiguration$dataImporterConfigurationFile)
+
+  dtDataFiles <- xlsxReadData(wb = wb,sheetName  = 'DataFiles')
+  dtDataFiles <- dtDataFiles[c(1)]
+
+
+  dtDataFiles <- rbind(dtDataFiles,
+                       data.table(dataFile = file.path('..','..','Data','Cmax_ratio_Case2.csv'),
+                                  dictionary = 'pkDictionary_Cmax_ratio_Case2',
+                                  dataFilter = '',
+                                  dataClass = DATACLASS$pkAggregated
+                       )
+
+  )
+
+  xlsxWriteData(wb = wb, sheetName  = 'DataFiles', dt = dtDataFiles)
+
+  # - pkDictionary
+  pkDictionary <- xlsxReadData(wb = wb,sheetName = 'pkDictionary',skipDescriptionRow = FALSE)
+
+  pkDictionary <- rbind(pkDictionary[1],
+                        pkDictionary[targetColumn  %in% c("studyId","group","outputPathId","parameter",
+                                                          "values","unit","errorType","minValue","maxValue","numberOfIndividuals")])
+
+  pkDictionary[ targetColumn == 'values']$sourceColumn = "Geomean"
+  pkDictionary[ targetColumn == 'parameter']$sourceColumn = "Parameter"
+  pkDictionary[targetColumn == 'outputPathId', `:=`(
+    sourceColumn = "",
+    filter = 'TRUE',
+    filterValue = '"Concentration"')]
+  pkDictionary[targetColumn == 'numberOfIndividuals', `:=`(
+    sourceColumn = "N",
+    filter = '',
+    filterValue = '')]
+  pkDictionary[targetColumn == 'minValue', `:=`(
+    sourceColumn = "CI90_LowerLimit",
+    filter = '',
+    filterValue = '')]
+  pkDictionary[targetColumn == 'maxValue', `:=`(
+    sourceColumn = "CI90_UpperLimit",
+    filter = '',
+    filterValue = '')]
+  pkDictionary[targetColumn == 'unit', `:=`(
+    sourceColumn = "",
+    filter = 'TRUE',
+    filterValue = '')]
+  pkDictionary[targetColumn == 'group', `:=`(
+    sourceColumn = "",
+    filter = 'TRUE',
+    filterValue = 'paste("Case2_pkRatio",Group,sep = "_")')]
+  pkDictionary[targetColumn == 'errorType', `:=`(
+    sourceColumn = "",
+    filter = 'TRUE',
+    filterValue = '"geomean | 90% CI"')]
+
+  xlsxCloneAndSet(wb = wb,clonedSheet = 'pkDictionary',sheetName = 'pkDictionary_Cmax_ratio_Case2',dt = pkDictionary)
+
+  openxlsx::saveWorkbook(wb, projectConfiguration$dataImporterConfigurationFile, overwrite = TRUE)
+}
+
+
 mockManualEditings.Population <- function(projectConfiguration){
 
     # add virtual population with in biometric ranges of observed data
@@ -58,8 +147,15 @@ mockManualEditings.Scenario <- function(projectConfiguration){
 
   xlsxWriteData(wb = wb,sheetName  = 'PKParameter',dt = dtPK)
 
-  # save both sheets
+  # cleanup scenarios in Plots
+  dtOutputs <- xlsxReadData(wb = wb,sheetName  = 'OutputPaths')
+  dtOutputs <- dtOutputs[outputPathId %in% c('Concentration','Fraction')]
+
+  xlsxWriteData(wb = wb,sheetName  = 'OutputPaths',dt = dtOutputs)
+
+  # save all sheets
   openxlsx::saveWorkbook(wb, projectConfiguration$scenariosFile, overwrite = TRUE)
+
 
 }
 
@@ -88,7 +184,7 @@ mockManualEditings.outputPath <- function(projectConfiguration){
   # scenarioName
   dtScenario <- xlsxReadData(wb = wb,sheetName = 'Scenarios')
   dtScenario[,shortName := gsub(' po','',shortName)]
-  dtScenario[,section := 'Dose finding']
+  dtScenario[,longName := gsub(' po','',longName)]
 
   xlsxWriteData(wb = wb, sheetName  = 'Scenarios', dt = dtScenario)
 
@@ -132,84 +228,81 @@ mockManualEditings.PKParameter <- function(projectConfiguration){
 }
 
 
-mockManualEditings.PlotBoxwhsiker <- function(projectConfiguration){
+mockManualEditings.PlotBoxwhsiker1 <- function(projectConfiguration){
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
-
   dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_Boxplot')
-  dt$header[2] <- 'PK Parameter of Pediatric Populations'
+  dt$header[2] <- 'Use Case 1: Pediatric vs adult'
+
+  if (!any(dt[!is.na(level)]$level == 2)){
+    dt <- dt[c(1,2,seq(2,nrow(dt)))]
+    dt$level[3] <- 2
+  }
+  dt$header[3] <- 'Boxwhisker plots'
 
   dt <- dt[!grep('_po$',scenario)]
 
-  dt[!is.na(scenario),plotCaptionAddon := 'Virtual pediatric simulations of 1mg iv application in comparison to an adult virtual population']
-  dt[!is.na(scenario) & scenario != 'adults',referenceScenario := 'adults']
-  dt[!is.na(scenario),plotName := outputPathIds]
+  dt[!c(1,which(is.na(scenario))),plotCaptionAddon := 'Virtual pediatric simulations of 1mg iv application in comparison to an adult virtual population']
+  dt[!c(1,which(is.na(scenario))),plotName := outputPathIds]
+  dt[!c(1,which(is.na(scenario))),colorLegend := 'pediatric|adult']
+  dt[plotName == outputPathIds &  scenario != 'adults',referenceScenario := 'adults']
 
-  xlsxWriteData(wb = wb, sheetName  = 'PKParameter_Boxplot', dt = dt)
-
+  xlsxCloneAndSet(wb = wb,clonedSheet = 'PKParameter_Boxplot', sheetName  = 'PKParameter_Boxplot1', dt = dt)
 
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
 
-
 }
 
-mockManualEditings.PlotForest <- function(projectConfiguration){
+mockManualEditings.PlotForest1 <- function(projectConfiguration){
 
 
   # PKParameter_ForestAbs
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
-  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs')
-  dt$header[2] <- 'Forest Absolute with Variance'
+  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs1')
+  dt$header[2] <- 'Forest Absolute Values with Variance'
   dt$level[2] <- 2
-
-  dt[grep('_po$',scenario), referenceScenario := gsub('_po','',scenario)]
-  dt[!is.na(scenario),plotCaptionAddon := 'Virtual population simulations of 3mg iv application in comparison to 1mg iv simulation']
 
   dt[grep('_po$',scenario), scenarioGroup := 'PO']
   dt[!c(grep('_po$',scenario),1,2), scenarioGroup := 'IV']
 
-  xlsxWriteData(wb = wb, sheetName  = 'PKParameter_ForestAbs', dt = dt)
+  dt[!is.na(scenario),plotCaptionAddon := 'Pediatric populations simulations in comparison to adults']
+
+  xlsxWriteData(wb = wb, sheetName  = 'PKParameter_ForestAbs1', dt = dt)
+  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+
+  # PKParameter_ForestAbsCI
+  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+
+  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs1')
+  dt$header[2] <- 'Forest AbsoulteValues with CI'
+
+  xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = 'PKParameter_ForestAbsCI1',dt = dt)
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
 
 
   # PKParameter_ForestRatio
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
-  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs')
+  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs1')
   dt$header[2] <- 'Forest Ratio with Variance'
-  dt[grep('_po$',scenario), referenceScenario := gsub('_po','',scenario)]
+  dt[scenarioGroup == 'PO', referenceScenario := 'adults_po']
+  dt[scenarioGroup == 'IV', referenceScenario := 'adults']
 
-  dt <- dt[!is.na(level) | !is.na(referenceScenario)]
-  dt[grep('_po$',scenario), scenarioGroup := 'PO/IV']
+  dt <- dt[!grep('adults',scenario)]
 
-  xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = 'PKParameter_ForestRatio',dt = dt)
+  xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = 'PKParameter_ForestRatio1',dt = dt)
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
 
   # PKParameter_ForestRatioCI
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
-  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestRatio')
+  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestRatio1')
   dt$header[2] <- 'Forest Ratio with CI'
-  dt[grep('_po$',scenario), scenarioGroup := 'pediatric']
-  dt[grep('adults',scenario), scenarioGroup := 'adult']
 
-  xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = 'PKParameter_ForestRatioCI',dt = dt)
+  xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = 'PKParameter_ForestRatioCI1',dt = dt)
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
 
 
@@ -221,18 +314,85 @@ mockManualEditings.PlotBoxwhsiker2 <- function(projectConfiguration){
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
   dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_Boxplot2')
-  dt$header[2] <- 'PK Parameter of IV ad PO administrations'
 
-  dt[!is.na(scenario),plotName := outputPathIds]
+  dt$header[2] <- 'Use Case 2: IV vs PO Crossover Study'
 
+  if (!any(dt[!is.na(level)]$level == 2)){
+    dt <- dt[c(1,2,seq(2,nrow(dt)))]
+    dt$level[3] <- 2
+  }
+  dt$header[3] <- 'Boxwhisker plots'
+
+  dt <- dt[!outputPathIds == 'Fraction']
+
+  dt[!c(1,which(is.na(scenario))),plotName := outputPathIds]
+
+  # set IV as reference
   dt[grep('_po$',scenario), referenceScenario := gsub('_po','',scenario)]
-  dt[!is.na(scenario),plotCaptionAddon := 'Virtual population simulations of 1mg iv application in comparison to 3mg po simulation']
+  dt[!c(1,which(is.na(scenario))),plotCaptionAddon := 'Virtual population simulations of 3mg po application in comparison to 1mg iv simulation']
+  dt[!c(1,which(is.na(scenario))),colorLegend := 'PO administration, 3mg|IV administration, 1mg']
+  dt[!c(1,which(is.na(scenario))),pkParameters := 'AUC_inf']
 
-  dt[plotName == 'Fraction',ylimit_linear := "c(0,2)"]
 
   xlsxWriteData(wb = wb, sheetName  = 'PKParameter_Boxplot2', dt = dt)
 
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
 
+}
+
+
+mockManualEditings.PlotForest2 <- function(projectConfiguration){
+
+
+  # PKParameter_ForestAbs
+  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+
+  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs2')
+  dt$header[2] <- 'Forest Absolute Values with Variance'
+  dt$level[2] <- 2
+
+  dt[grep('_po$',scenario), referenceScenario := gsub('_po','',scenario)]
+  dt[!is.na(scenario),plotCaptionAddon := 'Virtual population simulations of 3mg po application and 1mg iv simulation']
+
+  dt[grep('_po$',scenario), scenarioGroup := 'PO']
+  dt[!c(grep('_po$',scenario),1,2), scenarioGroup := 'IV']
+
+  xlsxWriteData(wb = wb, sheetName  = 'PKParameter_ForestAbs2', dt = dt)
+  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+
+  # PKParameter_ForestAbsCI
+  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+
+  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs2')
+  dt$header[2] <- 'Forest Absolute Values with CI'
+
+  xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = 'PKParameter_ForestAbsCI2',dt = dt)
+  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+
+  # PKParameter_ForestRatio
+  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+
+  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs2')
+  dt$header[2] <- 'Forest Ratio with Variance'
+  dt[grep('_po$',scenario), referenceScenario := gsub('_po','',scenario)]
+
+  dt <- dt[!is.na(level) | !is.na(referenceScenario)]
+  dt[grep('_po$',scenario), scenarioGroup := 'pediatric']
+  dt[grep('adults',scenario), scenarioGroup := '']
+
+  xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = 'PKParameter_ForestRatio2',dt = dt)
+  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+
+  # PKParameter_ForestRatioCI
+  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+
+  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestRatio2')
+  dt$header[2] <- 'Forest Ratio with CI'
+
+  dt[plotName == 'PKForest',dataGroupId := paste('Case2_pkRatio',referenceScenario,sep = '_')]
+
+  xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = 'PKParameter_ForestRatioCI2',dt = dt)
+  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
 
 }
+

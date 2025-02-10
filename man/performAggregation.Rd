@@ -9,12 +9,12 @@ performAggregation(dataToAggregate, aggregationFun, aggrCriteria)
 \arguments{
 \item{dataToAggregate}{A data.table containing the data to be aggregated.}
 
-\item{aggregationFun}{aggregation function}
+\item{aggregationFun}{A function to aggregate the data.}
 
-\item{aggrCriteria}{A character vector specifying the columns to group}
+\item{aggrCriteria}{A character vector specifying the columns to group by.}
 }
 \value{
-A data.table containing aggregated results.
+A data.table containing aggregated results with counts and aggregated values.
 }
 \description{
 This function performs the aggregation of observed data based on the specified criteria.

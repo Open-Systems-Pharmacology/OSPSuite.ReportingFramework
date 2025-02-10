@@ -2,16 +2,17 @@
 % Please edit documentation in R/utilities-aggregation.R
 \name{getErrorTypeForPercentiles}
 \alias{getErrorTypeForPercentiles}
-\title{creates text for percentiles}
+\title{Creates text for percentiles}
 \usage{
 getErrorTypeForPercentiles(percentiles)
 }
 \arguments{
-\item{percentiles}{numeric vectors with percentiles}
+\item{percentiles}{A numeric vector containing percentiles.}
 }
 \value{
-character with with `errorType` for given percentiles
+A character string with the error type for the given percentiles.
 }
 \description{
-creates text for percentiles
+This function generates a descriptive text based on the provided percentiles.
 }
+\keyword{internal}

@@ -9,7 +9,7 @@ createExportLogFile(configTableToExport, projectConfiguration)
 \arguments{
 \item{configTableToExport}{A data.table containing the configuration table to export.}
 
-\item{projectConfiguration}{A list containing project-specific configurations.}
+\item{projectConfiguration}{A ProjectConfiguration object containing project-specific configurations.}
 }
 \value{
 The path to the created export log file.

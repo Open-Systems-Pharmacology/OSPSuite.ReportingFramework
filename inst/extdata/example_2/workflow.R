@@ -13,16 +13,11 @@ setwd("~/GitHub/OSPSuiteReportingFramework")
 load_all()
 setwd(file.path(rootDirectory,'Scripts','ReportingFramework'))
 
-
-source(system.file(
-  "extdata", "example_2", "mockManualEditings.R",
-  package = "ospsuite.reportingframework",
-  mustWork = TRUE
-))
-
 # Initialization  ----------------------------------------------------------
 # load libraries and source project specific code
 #library(ospsuite.reportingframework)
+
+##truncStart_init
 
 # set graphic all defaults
 # (see vignette vignette(package = 'ospsuite.plots',topic = 'ospsuite_plots'))
@@ -36,6 +31,31 @@ setWorkflowOptions(isValidRun = FALSE)
 
 # Setup project structure -------------------------------------------------
 initProject()
+
+# get paths of all relevant project files
+projectConfiguration <-
+  ospsuite.reportingframework::createProjectConfiguration(
+    path =  file.path("ProjectConfiguration.xlsx"))
+
+##truncStop_init
+
+# setup xlsx
+source(system.file(
+  "extdata", "example_2", "mockManualEditings.R",
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE
+))
+
+mockManualEditings.Cleanup(projectConfiguration)
+mockManualEditings.DataDictionary(projectConfiguration)
+mockManualEditings.Population(projectConfiguration)
+mockManualEditings.Scenario(projectConfiguration)
+ospsuite.reportingframework:::synchronizeScenariosOutputsWithPlots(projectConfiguration)
+ospsuite.reportingframework:::synchronizeScenariosWithPlots(projectConfiguration)
+mockManualEditings.outputPath(projectConfiguration)
+mockManualEditings.PKParameter(projectConfiguration)
+
+##truncStart_exampleSetup
 
 # copy files needed for tutorials to the correct folders
 file.copy(from = system.file(
@@ -51,11 +71,15 @@ file.copy(from = system.file(
   mustWork = TRUE),
   to = file.path('..','..','Models',"po 3 mg (solution).pkml"),overwrite = TRUE)
 
+source(system.file(
+  "extdata", "example_2", "generateRandomData.R",
+  package = "ospsuite.reportingframework",
+  mustWork = TRUE
+))
 
-# get paths of all relevant project files
-projectConfiguration <-
-  ospsuite.reportingframework::createProjectConfiguration(
-    path =  file.path("ProjectConfiguration.xlsx"))
+##truncStop_exampleSetup
+
+
 
 # start log Catch loop which catches all errors, warnins and messages in a logfile
 # (see vignette OSPSuite_ReportingFramework)
@@ -64,12 +88,13 @@ projectConfiguration <-
   # initialize log file
   initLogfunction(projectConfiguration = projectConfiguration)
 
+
   # read observed data
-  #dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration)
+  dataObservedPK <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,
+                                                 dataClassType = 'pkParameter')
 
 
   # export populations ------------------------------------------------------
-  mockManualEditings.Population(projectConfiguration)
 
   # exports all populations defined in population.xlsx sheet "Demographics"
   exportRandomPopulations(projectConfiguration = projectConfiguration,
@@ -79,7 +104,6 @@ projectConfiguration <-
 
   # Simulations ------------------------------------------------------
   # set up Scenarios
-  mockManualEditings.Scenario(projectConfiguration)
 
   # initialize  all scenarios previously defined in scenario.xlsx
   scenarioList <-
@@ -88,8 +112,6 @@ projectConfiguration <-
                             doCheckScenarioNameValidity = TRUE)
 
   # calculate PK Parameter
-  mockManualEditings.PKParameter(projectConfiguration)
-  mockManualEditings.outputPath(projectConfiguration)
 
   # run initialized scenarios
   scenarioResults <- runAndSaveScenarios(projectConfiguration = projectConfiguration,
@@ -108,69 +130,198 @@ projectConfiguration <-
   # (see vignette OSPSuite_ReportingFramework.Rmd  section  Plot Functionality)
   # figures and captions are filed in <rootdirectory>\Outputs\ReportingFramework\TimeProfiles
 
-  ## Box whisker different Populations --------
+  ## Case 1 different Populations --------
+  ### Box whisker  --------
   addDefaultConfigForPKBoxwhsikerPlots(projectConfiguration = projectConfiguration,
                                                    pkParameterDT = pkParameterDT,
                                                    sheetName = "PKParameter_Boxplot",
                                                    overwrite = TRUE)
-  mockManualEditings.PlotBoxwhsiker(projectConfiguration)
+  mockManualEditings.PlotBoxwhsiker1(projectConfiguration)
 
   runPlot(
-    functionKey = "plotPKBoxwhisker",
+    nameOfplotFunction = "plotPKBoxwhisker",
     projectConfiguration = projectConfiguration,
-    configTableSheet = "PKParameter_Boxplot",
+    configTableSheet = "PKParameter_Boxplot1",
     inputs = list(
-      pkParameterDT = pkParameterDT,
-      colorVector = c(pediatric = NA,adult = NA)
+      pkParameterDT = pkParameterDT
     )
   )
 
-  ## Box whisker same Populations --------
+  ### Forest  --------
+  addDefaultConfigForPKForestPlots(projectConfiguration = projectConfiguration,
+                                   pkParameterDT = pkParameterDT,
+                                   sheetName = "PKParameter_ForestAbs1",
+                                   overwrite = TRUE)
+
+  runPlot(
+    nameOfplotFunction = "plotPKForestAbsoluteValuesWithVariance",
+    projectConfiguration = projectConfiguration,
+    configTableSheet = "PKParameter_ForestAbs1",
+    inputs = list(
+      pkParameterDT = pkParameterDT
+    )
+  )
+
+  runPlot(
+    nameOfplotFunction = "plotPKForestAbsoluteValuesWithCI",
+    projectConfiguration = projectConfiguration,
+    configTableSheet = "PKParameter_ForestAbsCI1",
+    inputs = list(
+      pkParameterDT = pkParameterDT,
+      nObservationDefault = 16,
+      relWidth = c(3,1)
+    )
+  )
+
+  runPlot(
+    nameOfplotFunction = "plotPKForestRatiosWithVariance",
+    projectConfiguration = projectConfiguration,
+    configTableSheet = "PKParameter_ForestRatio1",
+    inputs = list(
+      pkParameterDT = pkParameterDT,
+      aggregationFlag = "Percentiles" # "ArithmeticStdDev" # "GeometricStdDev",
+    )
+  )
+
+  runPlot(
+    nameOfplotFunction = "plotPKForestRatiosWithCI",
+    projectConfiguration = projectConfiguration,
+    configTableSheet = "PKParameter_ForestRatioCI1",
+    inputs = list(
+      pkParameterDT = pkParameterDT,
+      nObservationDefault = 16
+    )
+  )
+
+
+
+  ## Case 2 same Populations --------
+  ### Box whisker same Populations --------
   addDefaultConfigForPKBoxwhsikerPlots(projectConfiguration = projectConfiguration,
                                        pkParameterDT = pkParameterDT,
                                        sheetName = "PKParameter_Boxplot2",
                                        overwrite = TRUE)
-  mockManualEditings.PlotBoxwhsiker(projectConfiguration)
+  mockManualEditings.PlotBoxwhsiker2(projectConfiguration)
 
 
   runPlot(
-    functionKey = "plotPKBoxwhisker",
+    nameOfplotFunction = "plotPKBoxwhisker",
     projectConfiguration = projectConfiguration,
     configTableSheet = "PKParameter_Boxplot2",
     inputs = list(
-      pkParameterDT = pkParameterDT,
-      colorVector = c(po = NA,iv = NA)
+      pkParameterDT = pkParameterDT
     )
   )
 
   ## Forest same Populations --------
   addDefaultConfigForPKForestPlots(projectConfiguration = projectConfiguration,
                                        pkParameterDT = pkParameterDT,
-                                       sheetName = "PKParameter_ForestAbs",
+                                       sheetName = "PKParameter_ForestAbs2",
                                        overwrite = TRUE)
-  mockManualEditings.PlotForest(projectConfiguration)
+  mockManualEditings.PlotForest2(projectConfiguration)
 
   runPlot(
-    functionKey = "plotPKForestAbsoluteValuesWithVariance",
+    nameOfplotFunction = "plotPKForestAbsoluteValuesWithVariance",
     projectConfiguration = projectConfiguration,
-    configTableSheet = "PKParameter_ForestAbs",
+    configTableSheet = "PKParameter_ForestAbs2",
+    inputs = list(
+      pkParameterDT = pkParameterDT
+    )
+  )
+
+
+  runPlot(
+    nameOfplotFunction = "plotPKForestAbsoluteValuesWithCI",
+    projectConfiguration = projectConfiguration,
+    configTableSheet = "PKParameter_ForestAbsCI2",
     inputs = list(
       pkParameterDT = pkParameterDT,
-      colorVector = c(po = NA,iv = NA)
+      nObservationDefault = 16
+    )
+  )
+
+
+  runPlot(
+    nameOfplotFunction = "plotPKForestRatiosWithVariance",
+    projectConfiguration = projectConfiguration,
+    configTableSheet = "PKParameter_ForestRatio2",
+    inputs = list(
+      pkParameterDT = pkParameterDT
+    )
+  )
+
+
+  runPlot(
+    nameOfplotFunction = "plotPKForestRatiosWithCI",
+    projectConfiguration = projectConfiguration,
+    configTableSheet = "PKParameter_ForestRatioCI2",
+    inputs = list(
+      pkParameterDT = pkParameterDT,
+      coefficientOfVariation = 0.3,
+      nObservationDefault = 16,
+      pkParameterObserved = dataObservedPK
+    )
+  )
+
+# test same population whit algorithm for different -----------
+  pkParameterDTTest <- copy(pkParameterDT)
+  pkParameterDTTest[grep('_po$',pkParameterDT2$scenarioName),populationId := paste0(populationId,'_po')]
+
+  runPlot(
+    nameOfplotFunction = "plotPKBoxwhisker",
+    projectConfiguration = projectConfiguration,
+    configTableSheet = "PKParameter_Boxplot2",
+    rmdName = "PKParameter_Boxplot2_Test",
+    inputs = list(
+      pkParameterDT = pkParameterDTTest
+    )
+  )
+
+  runPlot(
+    nameOfplotFunction = "plotPKForestRatiosWithCI",
+    projectConfiguration = projectConfiguration,
+    configTableSheet = "PKParameter_ForestRatioCI2",
+    rmdName = "PKParameter_ForestRatioCI2_Test",
+    inputs = list(
+      pkParameterDT = pkParameterDTTest,
+      nObservationDefault = 16,
+      pkParameterObserved = dataObservedPK
     )
   )
 
 
 
+  source(system.file(
+    "extdata", "example_2", "compareCsvAlgorithmTest.R",
+    package = "ospsuite.reportingframework",
+    mustWork = TRUE
+  ))
 
+  runPlot(
+    nameOfplotFunction = "plotMethodComparison",
+    projectConfiguration = projectConfiguration,
+    rmdName = 'MethodTest',
+    configTableSheet = NULL,
+    inputs = list(
+    )
+  )
 
 
   # Create Report document --------------------------------------------------
   mergeRmds(projectConfiguration = projectConfiguration,
             newName = "appendix",
             title = "Appendix",
-            sourceRmds = c("PKParameter_Boxplot",
-                           "PKParameter_Boxplot2")
+            sourceRmds = c("PKParameter_Boxplot1",
+                           "PKParameter_ForestAbs1",
+                           "PKParameter_ForestAbsCI1",
+                           "PKParameter_ForestRatio1",
+                           "PKParameter_ForestRatioCI1",
+                           "PKParameter_Boxplot2",
+                           "PKParameter_ForestAbs2",
+                           "PKParameter_ForestAbsCI2",
+                           "PKParameter_ForestRatio2",
+                           "PKParameter_ForestRatioCI2"
+                           )
   )
 
   renderWord(fileName = file.path(projectConfiguration$outputFolder,"appendix.Rmd"))

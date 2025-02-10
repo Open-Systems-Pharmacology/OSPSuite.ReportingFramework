@@ -7,14 +7,14 @@
 getAggregationFunction(aggregationFlag, percentiles, customFunction)
 }
 \arguments{
-\item{aggregationFlag}{A character string indicating the aggregation method.}
+\item{aggregationFlag}{A character string indicating the aggregation method. Must be one of the options from `ospsuite::DataErrorType` or "Percentiles" or "Custom".}
 
-\item{percentiles}{A numeric vector of percentiles to calculate if aggregationFlag is "Percentiles".}
+\item{percentiles}{A numeric vector of percentiles to calculate if aggregationFlag is "Percentiles". Must have a length of 3, sorted, and within the range [0, 1].}
 
-\item{customFunction}{A custom function for aggregation if aggregationFlag is "Custom".}
+\item{customFunction}{A custom function for aggregation if aggregationFlag is "Custom". Must be a valid function.}
 }
 \value{
-the aggregation function
+A function that performs the specified aggregation.
 }
 \description{
 This function retrieves the appropriate aggregation function based on the specified aggregation flag.

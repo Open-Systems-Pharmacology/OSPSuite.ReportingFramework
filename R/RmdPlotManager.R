@@ -11,66 +11,54 @@ RmdPlotManager <- R6::R6Class( # nolint
     #' @description
     #' Initialize a new instance of the class.
     #' @param rmdfolder Folder where the .Rmd file should be saved.
+    #' @param rmdName A character string representing the name of the .Rmd file and folder where where output files will be stored
     #' @param suppressExport A logical value indicating whether to suppress export. Default is FALSE.
+    #' @param nameOfplotFunction The name of the plotfunction as character.
+    #' @param digitsOfSignificance digitsOfSignificance of displayed tables
+    #'
     #' @return An instance of the RmdPlotManager object.
-    initialize = function(rmdfolder, suppressExport = FALSE) {
+    initialize = function(rmdfolder,rmdName, nameOfplotFunction,suppressExport = FALSE,digitsOfSignificance = 3) {
       private$.rmdfolder <- rmdfolder
       self$suppressExport <- suppressExport
       self$validateConfigTableFunction  <- validateConfigTableForPlots
+      self$digitsOfSignificance <- digitsOfSignificance
 
-      return(self)
-    },
-    #' @description
-    #' Evaluate and select a plotting function based on the provided
-    #' `functionKey` or `plotFunction`. Constructs a subfolder for output
-    #' based on the provided `subfolder` and `configTableSheet`.
-    #' @param subfolder A character string representing the name of the subfolder
-    #'   where output files will be stored. If not provided, it will be constructed
-    #'   from `configTableSheet`.
-    #' @param functionKey A character string that specifies which plotting function
-    #'   to use. Valid options are "TimeProfiles", "PK_Boxwhisker_Absolute",
-    #'   "PK_RatioForestByAggregation", and "PK_RatioForestByAggregation".
-    #' @param plotFunction A function to be used for plotting if `functionKey` is
-    #'   not provided. Must be a valid R function.
-    #' @param configTableSheet A character string representing the name of the
-    #'   configuration table sheet. Required if `subfolder` is not provided.
-    evaluateFunctionkey = function( subfolder,functionKey = NULL,plotFunction = NULL,configTableSheet = NULL){
+      if (!suppressExport){
+        if (is.null(rmdName)){
+          stop('Please provide name of .rmd and subfolder with variable rmdName')
+        }
+        tools::file_path_sans_ext(rmdName)
 
-      if (is.null(plotFunction) & is.null(functionKey)){
-        stop('Please provide either plotFunction or valid functionKey')
+        private$.rmdName <- rmdName
+
+        checkmate::assert_path_for_output(file.path(private$.rmdfolder, private$.rmdName),
+                                          overwrite = TRUE)
+
+        if (!dir.exists(file.path(private$.rmdfolder, private$.rmdName))) {
+          dir.create(file.path(private$.rmdfolder, private$.rmdName), recursive = TRUE)
+        }
       }
 
-      if (is.null(configTableSheet) & is.null(subfolder)){
-        stop('Please provide name of subfolder')
-      }
+      checkmate::assertCharacter(nameOfplotFunction)
+      if (!exists(nameOfplotFunction, where = globalenv(), mode = "function"))
+        stop(paste('Function',nameOfplotFunction, 'does not exist'))
+      self$plotFunction <- get(nameOfplotFunction)
 
-      # Select the plot function based on the functionKey
-      if (is.null(functionKey)) {
-        checkmate::assertFunction(plotFunction)
-        self$plotFunction =plotFunction
+      # Generate the name of the validation function based on the string name of plotFunction
+      nameOfValidationFunction <- paste0(gsub('^plot', 'validate', nameOfplotFunction), 'Config')
+
+      # Check if the validation function exists
+      if (exists(nameOfValidationFunction, where = globalenv(), mode = "function")) {
+        self$validateConfigTableFunction <- get(nameOfValidationFunction)
       } else {
-        checkmate::assertNames(functionKey,subset.of = unlist(FUNCTIONKEYS))
-
-        self$plotFunction <- get(functionKey)
-        self$validateConfigTableFunction <- get(paste0(gsub('^plot','validate',functionKey),'Config'))
-
-      }
-
-      # construct and create subfolder
-      if (is.null(subfolder)) subfolder <- configTableSheet
-
-      private$.subfolder <- subfolder
-
-      checkmate::assert_path_for_output(file.path(private$.rmdfolder, private$.subfolder),
-                                        overwrite = TRUE)
-
-      if (!dir.exists(file.path(private$.rmdfolder, private$.subfolder))) {
-        dir.create(file.path(private$.rmdfolder, private$.subfolder), recursive = TRUE)
+        # otherwise use default function
+        self$validateConfigTableFunction <- validateConfigTableForPlots
       }
 
       # add start of rmd
       private$.rmdLines <- private$.startRMD(rmdfolder)
 
+      return(self)
     },
     #' @description
     #' Write the .Rmd file.
@@ -79,7 +67,7 @@ RmdPlotManager <- R6::R6Class( # nolint
     writeRmd = function(fileName = NULL) {
       if (private$.suppressExport) return(invisible())
 
-      if (is.null(fileName)) fileName = paste0(private$.subfolder, ".Rmd")
+      if (is.null(fileName)) fileName = paste0(private$.rmdName, ".Rmd")
 
       checkmate::assertPathForOutput(fileName, extension = "Rmd", overwrite = TRUE)
       if (basename(fileName) != fileName) {
@@ -139,7 +127,6 @@ RmdPlotManager <- R6::R6Class( # nolint
     #' @param plotList A list of plots to export.
     #' @return NULL. The function exports the plots to the specified location.
     exportPlotList = function(plotList){
-
       if (private$.suppressExport) {
         return(invisible())
       }
@@ -152,7 +139,7 @@ RmdPlotManager <- R6::R6Class( # nolint
           caption <- 'Missing'
         }
 
-        if (is.ggplot(obj)){
+        if (is.ggplot(obj) | 'CombinedPlot' %in% class(obj)){
           self$addAndExportFigure(plotObject = obj,
                                   caption = caption,
                                   figureKey = key,
@@ -175,6 +162,7 @@ RmdPlotManager <- R6::R6Class( # nolint
     #' @param figureKey A key used to generate file names; it should be unique for the folder.
     #' @param caption A character string for the caption text.
     #' @param footNoteLines A character string for figure footnotes.
+    #' @param exportArguments additional arguments passed on to ospsuite.plots::export
     #' @param ... Additional parameters passed to `ospsuite.plots::exportPlot()`.
     #' @return NULL. The function exports the figure and its metadata.
     addAndExportFigure = function(plotObject,
@@ -188,10 +176,12 @@ RmdPlotManager <- R6::R6Class( # nolint
         return(invisible())
       }
 
+      exportArguments <- private$.checkAndAdjustExportArguments(plotObject,exportArguments)
+
       do.call(what = ospsuite.plots::exportPlot,
               args = c(list(
                 plotObject = plotObject,
-                filepath = file.path(private$.rmdfolder, private$.subfolder),
+                filepath = file.path(private$.rmdfolder, private$.rmdName),
                 filename = figureKey),
                 exportArguments)
       )
@@ -230,7 +220,7 @@ RmdPlotManager <- R6::R6Class( # nolint
         x = table,
         file = file.path(
           private$.rmdfolder,
-          private$.subfolder,
+          private$.rmdName,
           ospsuite.plots::validateFilename(paste0(tableKey, ".csv"))
         ),
         na = "",
@@ -256,7 +246,6 @@ RmdPlotManager <- R6::R6Class( # nolint
   # active ----
   active = list(
     #' @field digitsOfSignificance Digits for significance in table display.
-    #' @return An integer representing the number of significant digits.
     digitsOfSignificance = function(value) {
       if (missing(value)) {
         value <- private$.digitsOfSignificance
@@ -269,7 +258,6 @@ RmdPlotManager <- R6::R6Class( # nolint
       private$.digitsOfSignificance <- value
     },
     #' @field configTable Configuration table.
-    #' @return A data.table representing the configuration table.
     configTable = function(value) {
       if (missing(value)) {
         value <- private$.configTable
@@ -279,7 +267,6 @@ RmdPlotManager <- R6::R6Class( # nolint
       private$.configTable <- value
     },
     #' @field dataObserved Observed data used for this Rmd.
-    #' @return A data.table containing observed data.
     dataObserved = function(value) {
       if (missing(value)) {
         value <- private$.dataObserved
@@ -290,7 +277,6 @@ RmdPlotManager <- R6::R6Class( # nolint
       private$.dataObserved <- value
     },
     #' @field plotFunction Function to create plot list.
-    #' @return A function used to generate plots.
     plotFunction = function(value) {
       if (missing(value)) {
         return(private$.plotFunction)  # Return the stored function
@@ -300,7 +286,6 @@ RmdPlotManager <- R6::R6Class( # nolint
       }
     },
     #' @field validateConfigTableFunction Function to read config table.
-    #' @return A function used to validate the configuration table.
     validateConfigTableFunction = function(value) {
       if (missing(value)) {
         return(private$.validateConfigTableFunction)  # Return the stored function
@@ -310,7 +295,6 @@ RmdPlotManager <- R6::R6Class( # nolint
       }
     },
     #' @field suppressExport A logical value indicating whether to suppress export.
-    #' @return A logical value indicating if export is suppressed.
     suppressExport = function(value) {
       if (missing(value)) {
         return(private$.suppressExport)  # Return the stored function
@@ -328,7 +312,7 @@ RmdPlotManager <- R6::R6Class( # nolint
     # folder where .Rmd is saved
     .rmdfolder = NULL,
     # subfolder of rmdfolder where figures are saved
-    .subfolder = NULL,
+    .rmdName = NULL,
     # digits for table display
     .digitsOfSignificance = 3,
     # boolean to tell, if last entry was a Key
@@ -352,7 +336,7 @@ RmdPlotManager <- R6::R6Class( # nolint
       return(c(
         startRmd(),
         "  ",
-        paste0("```{r setup_", private$.subfolder, ", include=FALSE}"),
+        paste0("```{r setup_", private$.rmdName, ", include=FALSE}"),
         'if (!exists("setupDone"))',
         '   knitr::opts_chunk$set(echo = FALSE,warning = FALSE,results = "asis",error = FALSE,message = FALSE)',
         "```",
@@ -375,7 +359,7 @@ RmdPlotManager <- R6::R6Class( # nolint
         paste0('keyList <- c("', paste(private$.listOfKeys, collapse = '",\n"'), '")'),
         " ",
         "numbersOf <- addFiguresAndTables(keyList = keyList,",
-        paste0('            subfolder = "', private$.subfolder, '",'),
+        paste0('            subfolder = "', private$.rmdName, '",'),
         "            numbersOf = numbersOf,",
         "            customStyles = params$customStyles,",
         paste0("            digitsOfSignificance = ", self$digitsOfSignificance, ")"),
@@ -399,7 +383,7 @@ RmdPlotManager <- R6::R6Class( # nolint
       }
       writeLines(
         text = textLines,
-        con = file.path(private$.rmdfolder, private$.subfolder, paste0(key, extension))
+        con = file.path(private$.rmdfolder, private$.rmdName, paste0(key, extension))
       )
 
       return(invisible())
@@ -415,6 +399,30 @@ RmdPlotManager <- R6::R6Class( # nolint
       if (key %in% private$.listOfALLKeys) {
         stop(paste0('key "', key, '" was already added. The figure and table keys must be unique'))
       }
+    },
+    # adjust height if necessary
+    .checkAndAdjustExportArguments = function(plotObject,exportArguments){
+      if (is.null(exportArguments)) return(exportArguments)
+
+      if (!is.null(exportArguments[['heightToWidth']]) &  is.null(exportArguments[['height']])){
+
+        if (!is.null(exportArguments[['width']])){
+          width = exportArguments[['width']]
+        } else {
+          width = getOspsuite.plots.option(optionKey = OptionKeys$export.width)
+        }
+
+        if ('CombinedPlot' %in% class(plotObject)){
+          dimensions <- calculatePlotDimensions(plotObject$plotObject, width)
+        } else {
+          dimensions <- calculatePlotDimensions(plotObject, width)
+        }
+
+        exportArguments[['height']] <- exportArguments[['heightToWidth']]*width + dimensions$heightOffset
+        exportArguments[['heightToWidth']] = NULL
+      }
+
+      return(exportArguments)
     }
   )
 )

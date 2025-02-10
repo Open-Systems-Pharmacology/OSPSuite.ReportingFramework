@@ -273,11 +273,10 @@ getCaptionForSensitivityPlot <- function(plotData,projectConfiguration,plotCapti
     pasteFigureTags(dtCaption, captionColumn = "displayNameOutputs"),
     "for",
     pasteFigureTags(dtCaption, captionColumn = "scenarioLongName"),
-    ".",
-    ifelse(!is.na(plotCaptionAddon[1]),
-           plotCaptionAddon[1],
-           '')
-  )
+    ".")
+
+  captiontext <- addCaptionTextAddon(captiontext,plotCaptionAddon[1])
+
   return(captiontext)
 
 

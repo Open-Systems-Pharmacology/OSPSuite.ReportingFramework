@@ -43,10 +43,10 @@ The `plotTimeProfilePanels` function can be invoked through the `runPlot` interf
 
 ```{r, echo=TRUE,eval=FALSE}
 runPlot(
-  functionKey = "TimeProfile_Panel",
+  nameOfplotFunction = "TimeProfiles",
   projectConfiguration = projectConfiguration,
+  configTableSheet = "TimeProfiles",
   inputs = list(
-    configTableSheet,
     dataObserved,
     nFacetColumns = 2,
     nMaxFacetRows = 4,
@@ -63,7 +63,7 @@ runPlot(
 
 #### Parameters
 
-- *functionKey:*  This parameter is used to select the plotfunction, its sets the subfolder of the outputFolder, where the created plots are saved to the selected "sheetName"
+- *nameOfplotFunction:*  This parameter is used to select the plotfunction
 
 - *projectConfiguration:* An object containing the project settings, including file paths and scenario definitions. This is essential for the function to access the necessary data.
 
@@ -282,7 +282,7 @@ templateFilePath <- system.file("templates", "Plots.xlsx",
 dtPlots <-
   xlsxReadData(
     wb = templateFilePath,
-    sheet = "TimeProfile_Panel",
+    sheet = "TimeProfiles",
     skipDescriptionRow = TRUE,
     emptyAsNA = FALSE,
     convertHeaders = FALSE

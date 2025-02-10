@@ -102,7 +102,7 @@ logCatch({
 
   # TODO
   # runPlot(
-  #   functionKey = "Demographics",
+  #   nameOfplotFunction = "Demographics",
   #   projectConfg = projectConfiguration,
   #   inputs = list(
   #     configTable = "Demographics",
@@ -112,7 +112,7 @@ logCatch({
   # )
 
   # Timeprofile Plots
-  #' The `TimeProfile_Panel` function creates a series of time profile plots as facet panels
+  #' The `plotTimeProfiles` function creates a series of time profile plots as facet panels
   #' from the provided observed data. This function is designed to visualize complex time-dependent
   #' data by allowing for multiple plots organized in a user-defined layout.
   #'
@@ -124,7 +124,7 @@ logCatch({
   #' - **Time Profile Plotting Tutorial**
 
   runPlot(
-    functionKey = "plotTimeProfiles",
+    nameOfplotFunction = "plotTimeProfiles",
     projectConfiguration = projectConfiguration,
     inputs = list(
       configTableSheet = "TimeProfiles",
@@ -135,7 +135,7 @@ logCatch({
 
   #TODO
   # runPlot(
-  #   functionKey = "PKParameter",
+  #   nameOfplotFunction = "PKParameter",
   #   projectConfg = projectConfiguration,
   #   inputs = list(configTable = "PKParameter")
   # )
@@ -143,15 +143,14 @@ logCatch({
 
   #TODO
   # runPlot(
-  #   functionKey = "DDIRatio",
+  #   nameOfplotFunction = "DDIRatio",
   #   projectConfg = projectConfiguration,
   #   inputs = list(configTable = "DDIRatio")
   # )
 
   # see vignette (TODO)
   runPlot(
-    functionKey = NULL,
-    plotFunction = myProjectSpecificfunction(),
+    nameOfplotFunction = myProjectSpecificfunction(),
     subfolder = "myCustomPlots",
     projectConfiguration = projectConfiguration,
     inputs = list()

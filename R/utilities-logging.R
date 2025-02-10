@@ -318,6 +318,8 @@ setShowLogMessages <- function(verbose = TRUE) {
 saveSessionInfo <- function() {
   sessionInfo <- paste(utils::capture.output(sessionInfo()), collapse = "\n")
 
+  logFileFolder <- getOption('OSPSuite.RF.logFileFolder')
+
   if (is.null(logFileFolder)) {
     warning("Logfile was not initialized")
     return(invisible())

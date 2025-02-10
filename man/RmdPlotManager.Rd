@@ -31,7 +31,6 @@ An object to create a .Rmd file during a plot function
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-RmdPlotManager-new}{\code{RmdPlotManager$new()}}
-\item \href{#method-RmdPlotManager-evaluateFunctionkey}{\code{RmdPlotManager$evaluateFunctionkey()}}
 \item \href{#method-RmdPlotManager-writeRmd}{\code{RmdPlotManager$writeRmd()}}
 \item \href{#method-RmdPlotManager-addHeader}{\code{RmdPlotManager$addHeader()}}
 \item \href{#method-RmdPlotManager-addNewline}{\code{RmdPlotManager$addNewline()}}
@@ -48,7 +47,13 @@ An object to create a .Rmd file during a plot function
 \subsection{Method \code{new()}}{
 Initialize a new instance of the class.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RmdPlotManager$new(rmdfolder, suppressExport = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{RmdPlotManager$new(
+  rmdfolder,
+  rmdName,
+  nameOfplotFunction,
+  suppressExport = FALSE,
+  digitsOfSignificance = 3
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -56,48 +61,18 @@ Initialize a new instance of the class.
 \describe{
 \item{\code{rmdfolder}}{Folder where the .Rmd file should be saved.}
 
+\item{\code{rmdName}}{A character string representing the name of the .Rmd file and folder where where output files will be stored}
+
+\item{\code{nameOfplotFunction}}{The name of the plotfunction as character.}
+
 \item{\code{suppressExport}}{A logical value indicating whether to suppress export. Default is FALSE.}
+
+\item{\code{digitsOfSignificance}}{digitsOfSignificance of displayed tables}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 An instance of the RmdPlotManager object.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-evaluateFunctionkey"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-evaluateFunctionkey}{}}}
-\subsection{Method \code{evaluateFunctionkey()}}{
-Evaluate and select a plotting function based on the provided
-`functionKey` or `plotFunction`. Constructs a subfolder for output
-based on the provided `subfolder` and `configTableSheet`.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RmdPlotManager$evaluateFunctionkey(
-  subfolder,
-  functionKey = NULL,
-  plotFunction = NULL,
-  configTableSheet = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{subfolder}}{A character string representing the name of the subfolder
-where output files will be stored. If not provided, it will be constructed
-from `configTableSheet`.}
-
-\item{\code{functionKey}}{A character string that specifies which plotting function
-to use. Valid options are "TimeProfiles", "PK_Boxwhisker_Absolute",
-"PK_RatioForestByAggregation", and "PK_RatioForestByAggregation".}
-
-\item{\code{plotFunction}}{A function to be used for plotting if `functionKey` is
-not provided. Must be a valid R function.}
-
-\item{\code{configTableSheet}}{A character string representing the name of the
-configuration table sheet. Required if `subfolder` is not provided.}
-}
-\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
@@ -222,6 +197,8 @@ Add and export a figure with caption and footnote.
 \item{\code{figureKey}}{A key used to generate file names; it should be unique for the folder.}
 
 \item{\code{footNoteLines}}{A character string for figure footnotes.}
+
+\item{\code{exportArguments}}{additional arguments passed on to ospsuite.plots::export}
 
 \item{\code{...}}{Additional parameters passed to `ospsuite.plots::exportPlot()`.}
 }

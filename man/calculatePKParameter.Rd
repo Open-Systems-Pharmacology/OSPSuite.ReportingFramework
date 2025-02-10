@@ -4,7 +4,12 @@
 \alias{calculatePKParameter}
 \title{Calculate and load PK Parameters}
 \usage{
-calculatePKParameter(projectConfiguration, scenarioResult, pkParameterSheets)
+calculatePKParameter(
+  projectConfiguration,
+  scenarioResult,
+  pkParameterSheets,
+  scenarioName
+)
 }
 \arguments{
 \item{projectConfiguration}{A list containing project configuration, including output folder and PK parameter file.}

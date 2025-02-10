@@ -5,12 +5,12 @@
 #' @return projectConfiguration
 setUpTestProject <- function(withModel = FALSE) {
   rootDirectory <- tempdir()
-  if (!dir.exists(rootDirectory)) dir.create(rootDirectory)
-  initProject(
-    rootDirectory = rootDirectory,
-    sourceFolder = templateDirectory(),
-    overwrite = FALSE
-  )
+  if (!dir.exists(file.path(rootDirectory,'Scripts','ReportingFramework')))
+    dir.create(file.path(rootDirectory,'Scripts','ReportingFramework'),recursive = TRUE)
+
+  setwd(file.path(rootDirectory,'Scripts','ReportingFramework'))
+
+  initProject()
 
   projectConfiguration <-
     ospsuite.reportingframework::createProjectConfiguration(

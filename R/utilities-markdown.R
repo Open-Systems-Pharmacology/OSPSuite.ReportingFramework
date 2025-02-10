@@ -206,6 +206,7 @@ mdTable <- function(tableNumber,
                     subfolder,
                     customStyles,
                     digitsOfSignificance = 3,
+                    addNewPage = TRUE,
                     ...) {
   validateMdFigureTableInputs(
     subfolder = subfolder,
@@ -242,6 +243,7 @@ mdTable <- function(tableNumber,
     footNoteCustomStyle = customStyles$FigureFootnote
   )
 
+  if (addNewPage) mdNewpage()
 
   return(invisible())
 }

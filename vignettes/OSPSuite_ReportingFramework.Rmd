@@ -268,7 +268,7 @@ The plot configuration excel file has two sheets ("DataGroups" and "Outputs") wh
 ## Using runPlot
 
 The `runPlot` function is the primary interface for generating plots within the workflow. It takes the following key parameters:
- - `functionKey`: The key that identifies which plot function to execute. For example, `"TimeProfile_Panel"` for the TimeProfile plot.
+ - `nameOfplotFunction`: The name of the  plot function to execute. For example, `"ploTimeProfiles"` for the TimeProfile plot.
  - `projectConfiguration`: The configuration object that contains project settings and paths.
  - `inputs`: A list of additional inputs required by the specific plot function.
  
@@ -276,10 +276,10 @@ The `runPlot` function is the primary interface for generating plots within the 
  
 ```{r,echo=TRUE,eval=FALSE}
 runPlot(
-  functionKey = "TimeProfile_Panel",
+  nameOfplotFunction = "TimeProfiles",
   projectConfiguration = projectConfiguration,
+  configTableSheet = "TimeProfiles",
   inputs = list(
-    configTableSheet = "TimeProfiles_1",
     dataObserved = dataObserved
   )
 )
@@ -310,8 +310,7 @@ Once you have defined your custom plot function, you can call it using the `runP
 
 ```{r,echo=TRUE,eval=FALSE}
 runPlot(
-  functionKey = NULL, # No function key for custom functions
-  plotFunction = myPlotFunction,
+  nameOfplotFunction = 'myPlotFunction',
   subfolder = "MyCustomPlots",
   projectConfiguration = projectConfiguration,
   inputs = list() # Additional inputs can be passed as needed

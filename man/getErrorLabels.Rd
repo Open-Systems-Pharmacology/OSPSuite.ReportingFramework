@@ -2,16 +2,17 @@
 % Please edit documentation in R/utilities-aggregation.R
 \name{getErrorLabels}
 \alias{getErrorLabels}
-\title{extracts error labels}
+\title{Extracts error labels}
 \usage{
 getErrorLabels(yErrorType)
 }
 \arguments{
-\item{yErrorType}{descriptor saved in data}
+\item{yErrorType}{A string descriptor indicating the type of error.}
 }
 \value{
-character vector length 2 with descriptor for mean and range
+A character vector of length 2 containing descriptors for mean and range.
 }
 \description{
-extracts error labels
+This function retrieves error labels based on the provided error type descriptor.
 }
+\keyword{internal}

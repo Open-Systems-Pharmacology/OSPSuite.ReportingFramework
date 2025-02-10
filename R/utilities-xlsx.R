@@ -252,6 +252,7 @@ splitInputs <- function(originalVector) {
 #' @param dt A data.table object whose column names need to be converted to lowercase.
 #'
 #' @return The modified data.table with updated column names.
+#' @export
 setHeadersToLowerCase <- function(dt){
   data.table::setnames(dt, sapply(names(dt), function(x)
     paste0(tolower(substring(

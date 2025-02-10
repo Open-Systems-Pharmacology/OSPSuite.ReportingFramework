@@ -3,7 +3,7 @@ projectConfiguration <- setUpTestProject()
 initLogfunction(projectConfiguration = projectConfiguration, verbose = FALSE)
 
 test_that("generation of default template works", {
-  executeAsValidRun(FALSE)
+  setWorkflowOptions(isValidRun = FALSE)
   addDefaultConfigForTimeProfilePlots(
     projectConfiguration = projectConfiguration,
     sheetName = "TimeProfileNew", overwrite = FALSE
@@ -194,6 +194,34 @@ dtOutputPaths <- data.table(
 test_that("validateOutputIdsForPlot function test", {
   # Test if the function correctly find the inconsistency in displayUnit
   expect_error(validateOutputIdsForPlot(dtOutputPaths))
+})
+
+# ColorVector
+test_that("getColorVectorForLegend works correctly with valid inputs", {
+  colorLegend <- "red|green|blue"
+  colorVector <- c(red = "#FF0000", green = "#00FF00", blue = "#0000FF")
+
+  result <- getColorVectorForLegend(colorLegend, colorVector)
+
+  expect_equal(result, c(red = "#FF0000", green = "#00FF00", blue = "#0000FF"))
+})
+
+test_that("getColorVectorForLegend returns default colors when colorVector is empty", {
+  colorLegend <- "red|green|blue"
+  colorVector <- character(0)  # Empty character vector
+
+  result <- getColorVectorForLegend(colorLegend, colorVector)
+
+  expect_no_error(validateColorVector(result))
+})
+
+test_that("getColorVectorForLegend handles missing colors gracefully", {
+  colorLegend <- "red|green|blue"
+  colorVector <- c(red = "#FF0000", blue = "#0000FF")  # Missing green
+
+  result <- getColorVectorForLegend(colorLegend, colorVector)
+
+  expect_no_error(validateColorVector(result))
 })
 
 

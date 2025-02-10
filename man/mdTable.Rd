@@ -12,6 +12,7 @@ mdTable(
   subfolder,
   customStyles,
   digitsOfSignificance = 3,
+  addNewPage = TRUE,
   ...
 )
 }
@@ -29,6 +30,8 @@ mdTable(
 \item{customStyles}{list of custom styles usable for figure and table captions and footnotes}
 
 \item{digitsOfSignificance}{significance digits to display (default 3)}
+
+\item{addNewPage}{boolean if TRUE (default) new page is added after}
 
 \item{...}{passed to `knitr::kable`}
 }

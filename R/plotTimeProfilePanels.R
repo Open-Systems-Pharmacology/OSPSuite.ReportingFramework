@@ -325,15 +325,15 @@ generatePlotForPlotType <- function(plotData,
             ggplot2::labs(x = plotData$getTimeLabelForTimeRange(timeRangeFilter))
         }
         # prepare for export
-        setattr(plotObject,'caption',
-                getCaptionForPlot(plotData,
-                                  yScale = yScale, # nolint indentation_linter
-                                  timeRangeFilter = timeRangeFilter,
-                                  plotType = plotType,
-                                  plotCounter = plotCounter
-                )
-        )
-        setattr(plotObject,'footNoteLines',
+        plotObject <- setExportAttributes(
+          object = plotObject,
+          caption = getCaptionForPlot(plotData,
+                                      yScale = yScale, # nolint indentation_linter
+                                      timeRangeFilter = timeRangeFilter,
+                                      plotType = plotType,
+                                      plotCounter = plotCounter
+          ),
+          footNoteLines =
                 getFootNoteLines(
                   dataObserved = plotData$getDataForTimeRange(
                     filterName = timeRangeFilter,
@@ -726,11 +726,11 @@ getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotC
     individualtext,
     "on a", ifelse(yScale == "linear", "linear", "logarithmic"),
     "y-scale.",
-    pasteFigureTags(dtCaption, captionColumn = "timeRangeCaption", endWithDot = TRUE),
-    ifelse(!is.na(plotData$configTable$plotCaptionAddon[1]),
-           plotData$configTable$plotCaptionAddon[1],
-           '')
+    pasteFigureTags(dtCaption, captionColumn = "timeRangeCaption", endWithDot = TRUE)
   )
+  captiontext <- addCaptionTextAddon(captiontext,plotCaptionAddon[1])
+
+
   return(captiontext)
 }
 #' Constructs footnote lines for aggregated data and data references
@@ -823,7 +823,7 @@ getGeomLLOQAttributesForTP <- function(plotData) {
 #' @template projectConfig
 #' @param configTable Plot configuration table.
 #' @template observedDataDT
-#' @keywords internal
+#' @export
 validateTimeProfilesConfig <- function(configTable, dataObserved, ...) {
   # avoid warning for global variable
   individualId <- NULL
@@ -1146,7 +1146,7 @@ addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
 
   wb <- addDataAsTemplateToXlsx(
     wb = wb,
-    templateSheet = "TimeProfile_Panel",
+    templateSheet = "TimeProfiles",
     sheetName = sheetName,
     dtNewData = rbind(dtNewHeader,
                         dtNewConfig, # nolint indentation_linter

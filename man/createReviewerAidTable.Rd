@@ -9,7 +9,7 @@ createReviewerAidTable(configTableToExport, projectConfiguration)
 \arguments{
 \item{configTableToExport}{A data.table containing the configuration table to export.}
 
-\item{projectConfiguration}{A list containing project-specific configurations.}
+\item{projectConfiguration}{A ProjectConfiguration object containing project-specific configurations.}
 }
 \description{
 This function creates a reviewer aid table based on the configuration table.

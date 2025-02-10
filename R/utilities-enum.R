@@ -35,14 +35,3 @@ EXPORTDIR <- ospsuite.utils::enum(c( # nolint
   analysisProgram = "AnalysisProgram"
 ))
 
-
-#' @title functionKeys for default function plotting
-#' @export
-FUNCTIONKEYS <- ospsuite.utils::enum(c( # nolint
-  plotTimeProfiles = "plotTimeProfiles",
-  plotPKBoxwhisker = "plotPKBoxwhisker",
-  plotPKForestAbsoluteValuesWithVariance = "plotPKForestAbsoluteValuesWithVariance",
-  plotPKForestAbsoluteValuesWithCI = "plotPKForestAbsoluteValuesWithCI",
-  plotPKForestRatiosWithVariance = "plotPKForestRatiosWithVariance",
-  plotPKForestRatiosWithCI = "plotPKForestRatiosWithCI"
-))

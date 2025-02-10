@@ -11,7 +11,7 @@ updateFileNameDictionary(fileNameDict, invalidFilenames, projectConfiguration)
 
 \item{invalidFilenames}{A vector of invalid filenames encountered during validation.}
 
-\item{projectConfiguration}{A list containing project-specific configurations.}
+\item{projectConfiguration}{A ProjectConfiguration object containing project-specific configurations.}
 }
 \value{
 The updated filename dictionary.

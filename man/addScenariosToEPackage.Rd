@@ -7,7 +7,7 @@
 addScenariosToEPackage(projectConfiguration, configTable, subfolder)
 }
 \arguments{
-\item{projectConfiguration}{A list containing project-specific configurations,
+\item{projectConfiguration}{A ProjectConfiguration object containing project-specific configurations,
 including paths for electronic package folders and
 output directories.}
 

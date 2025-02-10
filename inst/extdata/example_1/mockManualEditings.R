@@ -391,8 +391,8 @@ mockManualEditings.TimePlot <- function(projectConfiguration,dataObserved,tutori
     dtPlots <- copyLine(dtPlots = dtPlots,plotName = 'individual_1_iv')
     dtPlots[plotName == 'individual_1_iv', ]$plotName[2] <- 'individual_1_iv-gof'
     cols = c("plot_PredictedVsObserved", "plot_ResidualsAsHistogram", "plot_ResidualsVsTime", "plot_ResidualsVsObserved",  "plot_QQ" )
-    dtPlots[plotName == 'individual_1_iv-gof',(cols) := TRUE]
-    dtPlots[plotName == 'individual_1_iv-gof',plot_TimeProfiles := FALSE]
+    dtPlots[plotName == 'individual_1_iv-gof',(cols) := 1]
+    dtPlots[plotName == 'individual_1_iv-gof',plot_TimeProfiles := 0]
     # select only Concentraion, as for gof plots two different dimensions like Concentration and Fraction are not possible
     dtPlots[plotName == 'individual_1_iv-gof',outputPathIds :=  "Concentration"]
 
@@ -439,8 +439,8 @@ mockManualEditings.TimePlot <- function(projectConfiguration,dataObserved,tutori
     dtPlots <- copyLine(dtPlots,plotName = 'virtual_twin_population_po')
     dtPlots[plotName == 'virtual_twin_population_po',]$plotName[2] <- 'virtual_twin_population_po-gof'
     cols = c("plot_PredictedVsObserved", "plot_ResidualsAsHistogram", "plot_ResidualsVsTime", "plot_ResidualsVsObserved",  "plot_QQ" )
-    dtPlots[plotName == 'virtual_twin_population_po-gof',(cols) := TRUE]
-    dtPlots[plotName == 'virtual_twin_population_po-gof',plot_TimeProfiles := FALSE]
+    dtPlots[plotName == 'virtual_twin_population_po-gof',(cols) := 1]
+    dtPlots[plotName == 'virtual_twin_population_po-gof',plot_TimeProfiles := 0]
     # plot all individuals in one panel
     dtPlots[plotName == 'virtual_twin_population_po-gof', individualIds := '(*)']
     # select only Concentration, as for gof plots two different dimensions like Concentration and Fraction are not possible
