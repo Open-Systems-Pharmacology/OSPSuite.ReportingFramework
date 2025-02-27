@@ -61,7 +61,6 @@ plotPKBoxwhisker <- function(projectConfiguration,
                              xAxisTextAngle = 0,
                              colorVector = c(scenario = NA, referenceScenario = NA),
                              facetAspectRatio = 0.5,
-                             nBootstrap = 1000,
                              ...){
 
   checkmate::assertDataTable(pkParameterDT)
@@ -74,15 +73,14 @@ plotPKBoxwhisker <- function(projectConfiguration,
 
   plotList <- list()
   for (plotType in c("Absolute", "Ratio")) {
-    if (as.logical(onePlotConfig[[paste0('plot_',plotType)]][1])){
+    if (any(as.logical(onePlotConfig[[paste0('plot_',plotType)]]))){
       plotList <- c(plotList,
-                    generateBoxwhiskerPlotForPlotType(onePlotConfig = onePlotConfig,
+                    generateBoxwhiskerPlotForPlotType(onePlotConfig = onePlotConfig[as.logical(get(paste0('plot_',plotType))) == TRUE],
                                                       pkParameterDT = pkParameterDT,
                                                       percentiles = percentiles,
                                                       xAxisTextAngle =xAxisTextAngle,
                                                       colorVector = colorVector,
                                                       facetAspectRatio = facetAspectRatio,
-                                                      nBootstrap = nBootstrap,
                                                       asRatio = plotType == 'Ratio',
                                                       ...)
       )
@@ -111,18 +109,14 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
                                               xAxisTextAngle,
                                               colorVector,
                                               facetAspectRatio,
-                                              nBootstrap,
                                               asRatio,
                                               ...) {
 
-  # Determine ratio mode
-  ratioMode <- getRatioMode(onePlotConfig, pkParameterDT, asRatio)
   # Prepare data for plotting
   plotData <- prepareDataForPKBoxplot(onePlotConfig = onePlotConfig,
                                       pkParameterDT = pkParameterDT,
                                       colorVector = colorVector,
-                                      ratioMode = ratioMode,
-                                      nBootstrap = nBootstrap,
+                                      asRatio = asRatio,
                                       percentiles = percentiles)
   if (nrow(plotData) == 0) {
     warning(paste('No data for',onePlotConfig$plotName[1]))
@@ -140,11 +134,15 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
   for (plotNameLoop in unique(plotData$plotName)) {
     plotDataPk <- plotData[plotName == plotNameLoop]
 
+    plotDataSummary <- getSummaryTable(plotDataPk = plotDataPk,
+                                       onePlotConfig = onePlotConfig,
+                                       percentiles = percentiles)
+
     # Loop through yScale values
     for (yScale in splitInputs(onePlotConfig$yScale[1])) {
       plotObject <- createBaseBoxWhisker(plotDataPk = plotDataPk,
                                          yScale = yScale,
-                                         ratioMode = ratioMode,
+                                         asRatio = asRatio,
                                          colorVector = colorVector,
                                          onePlotConfig = onePlotConfig,
                                          ...)
@@ -168,7 +166,7 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
                                               yScale = yScale,
                                               percentiles = percentiles,
                                               plotCaptionAddon = onePlotConfig$plotCaptionAddon[1],
-                                              ratioMode = ratioMode))
+                                              asRatio = asRatio))
       # Create figure key and store plot
       figureKey <- paste(plotNameLoop,
                          ifelse(yScale == "log", "log", "linear"),
@@ -177,19 +175,16 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
       plotList[[figureKey]] <- plotObject
     }
 
-    # Generate table for the last plot
-    exportList = list()
-
-    for(plotDataPkTag in split(plotDataPk,by = 'plotTag')){
+    # Export table
+    for(plotDataSummaryTag in split(plotDataSummary,by = 'plotTag')){
 
       tableKey <- paste(plotNameLoop, ifelse(asRatio, 'ratio', 'abs'), sep = "-")
       if (uniqueN(plotDataPk$plotTag) > 1) tableKey <- paste(tableKey,plotDataPkTag$plotTag[1],sep = "-")
 
-      plotList[[tableKey]] <- addAsTable(plotDataPk = plotDataPkTag,
-                                         plotObject = plotObject,
-                                         onePlotConfig = onePlotConfig,
-                                         ratioMode = ratioMode,
-                                         percentiles = percentiles)
+      plotList[[tableKey]] <- prepareTableForExport(dtExport = plotDataSummaryTag,
+                                                    plotCaptionAddon = onePlotConfig$plotCaptionAddon[1],
+                                                    asRatio = asRatio,
+                                                    plotDataPk = plotDataPk)
     }
   }
   return(plotList)
@@ -207,7 +202,7 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
 #' @param percentiles A vector of percentiles to calculate.
 #' @return A data.table prepared for plotting.
 #' @keywords internal
-prepareDataForPKBoxplot <- function(onePlotConfig,pkParameterDT,colorVector,ratioMode,nBootstrap,percentiles){
+prepareDataForPKBoxplot <- function(onePlotConfig,pkParameterDT,colorVector,asRatio,nBootstrap,percentiles){
 
   plotData <- data.table::copy(onePlotConfig)
 
@@ -231,27 +226,15 @@ prepareDataForPKBoxplot <- function(onePlotConfig,pkParameterDT,colorVector,rati
       plotData[,plotName := paste(plotName,pkParameter,sep = '_')]
     }
 
-    if (ratioMode != 'none'){
-      plotData <- plotData[!is.na(referenceScenario)]
-
-      if (ratioMode == 'individualRatios'){
+    if (asRatio){
         plotData <- merge(plotData,
                           pkParameterDT[,c('scenarioName',"parameter","individualId","outputPathId","value","populationId")] %>%
                             setnames(old = c('scenarioName','parameter'),
                                      new = c('referenceScenario','pkParameter')),
                           by = c('referenceScenario',"pkParameter","individualId","outputPathId"),
-                          suffixes = c('','.reference'))
-        plotData[,ratio := value/value.reference]
-      } else  if (ratioMode == 'ratioOfPopulation'){
-        plotData <-  merge(plotData[, !c("individualId", "value"), with = FALSE] %>%  unique(),
-                           getPopulationRatioByBootstrapping(plotData = plotData,
-                                                             pkParameterDT = pkParameterDT,
-                                                             nBootstrap = nBootstrap,
-                                                             percentiles = percentiles),
-                           by = c('scenario',"pkParameter","outputPathId"))
-      } else {
-        stop(paste('RatioMode is unkown:',ratioMode))
-      }
+                          suffixes = c('.base','.reference'))
+        plotData[,value := value.base/value.reference]
+
     } else {
       plotData[,isReference := scenario %in% referenceScenario, by = c('plotName')]
       plotData[,colorIndex := ifelse(isReference == TRUE,names(colorVector)[2],names(colorVector)[1])]
@@ -272,6 +255,8 @@ prepareDataForPKBoxplot <- function(onePlotConfig,pkParameterDT,colorVector,rati
 
   return(plotData)
 }
+# auxiliaries  ------------
+
 #' Add Summary Table from Plot Data
 #'
 #' Generates a summary table from the box-and-whisker plot data.
@@ -283,32 +268,36 @@ prepareDataForPKBoxplot <- function(onePlotConfig,pkParameterDT,colorVector,rati
 #' @param percentiles A vector of percentiles to calculate.
 #' @return A data.table summarizing the plot data.
 #' @keywords internal
-addAsTable <- function(plotDataPk,plotObject,ratioMode,onePlotConfig,percentiles){
+getSummaryTable <- function(plotDataPk,asRatio,onePlotConfig,percentiles){
 
-  dtExport <- switch (
-    ratioMode,
-    'none' = plotDataPk %>%
-      data.table::setDT() %>%
-      .[, as.list(plotObject$statFun(value)),
-        by = intersect(c("scenarioShortName","colorIndex"),names(plotDataPk))
-      ],
-    'individualRatios' = plotDataPk %>%
-      data.table::setDT() %>%
-      .[, as.list(plotObject$statFun(ratio)),
-        by = intersect(c("scenarioShortName","colorIndex"),names(plotDataPk))
-      ],
-    'ratioOfPopulation' = plotDataPk[,c('scenarioShortName',
-                                        'N','N reference',
-                                        'arithMean', 'arithSd', 'arithCV',
-                                        'geoMean','geoSd','geoCV',
-                                        'ymin','lower','middle','upper','ymax')] %>%
-      setnames(old = c('ymin','lower','middle','upper','ymax',
-                       'arithMean','arithSd','arithCV',
-                       'geoMean','geoSd','geoCV'),
-               new = c(paste(scales::label_ordinal()(x = percentiles * 100),'percentile'),
-                       "arith mean","arith standard deviation","arith CV",
-                       "geo mean","geo standard deviation","geo CV"))
-  )
+  # add names of box whisker limits to ggplot for use in function getBoxWhiskerLimits
+  statFun <- function(y) {
+    y <- y[!is.na(y)]
+    rQuantiles <- stats::quantile(y, probs = percentiles, names = FALSE, na.rm = TRUE)
+    names(rQuantiles) <- paste(scales::label_ordinal()(x = percentiles * 100),'percentile')
+
+    r <- c(N = length(y),
+           rQuantiles,
+           "arith mean" = mean(y),
+           "arith standard deviation" = sd(y),
+           "arith CV" = sd(y)/mean(y),
+           "geo mean"	= exp(mean(log(y))),
+           "geo standard deviation"	= exp(sd(log(y))),
+           "geo CV" = sqrt(exp((log(sd(y)))^2)-1)
+    )
+
+    return(r)
+  }
+
+  dtExport <- plotDataPk %>%
+    .[, as.list(statFun(value)),
+      by = intersect(c("scenarioShortName", "colorIndex",'plotTag'), names(plotDataPk))
+    ]
+
+  return(dtExport)
+}
+
+prepareTableForExport <- function(dtExport,asRatio,plotCaptionAddon,plotDataPk){
   # reorder
   setorderv(dtExport,'scenarioShortName')
 
@@ -330,84 +319,15 @@ addAsTable <- function(plotDataPk,plotObject,ratioMode,onePlotConfig,percentiles
   dtExport <- setExportAttributes(
     object = dtExport,
     caption = getCaptionForBoxwhiskerPlot(plotDataPk = plotDataPk,
-                                          plotCaptionAddon = onePlotConfig$plotCaptionAddon[1],
+                                          plotCaptionAddon = plotCaptionAddon,
                                           isPlotCaption = FALSE,
-                                          ratioMode = ratioMode)
+                                          asRatio = asRatio)
   )
 
   return(dtExport)
 }
 
-# auxiliaries  ------------
-#' Calculate Population Ratio by Bootstrapping
-#'
-#' Calculates population ratios using bootstrapping techniques.
-#'
-#' @param plotData A data.table containing plot data.
-#' @param pkParameterDT A data.table containing PK parameter data.
-#' @param nBootstrap Number of bootstrap samples.
-#' @param percentiles A vector of percentiles to calculate.
-#' @return A data.table containing bootstrapped ratio statistics.
-#' @keywords internal
-getPopulationRatioByBootstrapping <- function(plotData,pkParameterDT,nBootstrap,percentiles){
 
-  # Apply the function to each unique combination of PKParameter and outputPathId
-  resultList <- lapply(split(plotData,by = c('outputPathId','pkParameter','scenario')), function(dtDefault) {
-    dtReference <- merge(dtDefault %>%
-                           dplyr::select('outputPathId','pkParameter','referenceScenario') %>%
-                           unique() %>%
-                           setnames(old = 'referenceScenario', new = 'scenario'),
-                         pkParameterDT[,c('scenarioName',"parameter","individualId","outputPathId","value","populationId")] %>%
-                           setnames(old = c('scenarioName','parameter'),
-                                    new = c('scenario','pkParameter')),
-                         by = c('scenario',"pkParameter","outputPathId"))
-
-    setSeedForPKParameter(scenarioName = dtDefault$scenario[1],referenceScenarion = dtReference$scenario[1],
-                          outputPathId = dtDefault$outputPathId[1],pkParameter = dtDefault$pkParameter[1])
-
-
-    boxWhiskerAggregationFun = function(y){
-      y <- y[(!is.na(y))]
-      arithMean <- mean(y)
-      arithSd <- sd(y)
-      arithCV <- arithSd/arithMean
-      rQuantiles <- stats::setNames(quantile(y, probs = percentiles,names = FALSE),
-                                    c('ymin','lower','middle','upper','ymax'))
-      return(as.list(c(arithMean = arithMean,
-                       arithSd = arithSd,
-                       arithCV = arithCV,
-                       rQuantiles))
-      )
-
-
-    }
-
-    result <- aggregateRatiosByBootstrapping(nBootstrap = nBootstrap,
-                                             value =  dtDefault[!is.na(value)]$value,
-                                             valueReference = dtReference[!is.na(value)]$value,
-                                             aggregationFun = boxWhiskerAggregationFun,
-                                             confLevel = NULL)
-
-    # add quantities which are calculated analytical
-    lValues = log( dtDefault[!is.na(value) & value>0]$value)
-    lReferenceValues = log( dtReference[!is.na(value) & value>0]$value)
-    result[['geoMean']] <- exp(mean(lValues) - mean(lReferenceValues))
-    result[['geoSd']] <- exp(sqrt((sd(lValues))^2 + (sd(lReferenceValues))^2))
-    result[['geoCV']] <- sqrt(exp((sd(lValues))^2 + (sd(lReferenceValues))^2) - 1)
-    # add identifier and counts
-    result[['scenario']] <- dtDefault$scenario[1]
-    result[['outputPathId']] <- dtDefault$outputPathId[1]
-    result[['pkParameter']] <- dtDefault$pkParameter[1]
-    result[['N']] <- length(dtDefault[!is.na(value)]$value)
-    result[['N reference']] <- length(dtReference[!is.na(value)]$value)
-    return(result)
-
-  })
-
-  # Combine results into a single data.table
-  return(rbindlist(resultList))
-
-}
 #' Get Caption for Box-and-Whisker Plot
 #'
 #' Generates a caption for the box-and-whisker plot based on the data and configuration.
@@ -425,7 +345,7 @@ getCaptionForBoxwhiskerPlot <-function(plotDataPk,
                                        yScale = NULL,
                                        plotCaptionAddon,
                                        isPlotCaption = TRUE,
-                                       ratioMode) {
+                                       asRatio) {
   dtCaption <-
     plotDataPk[, c(
       "scenarioLongName",
@@ -437,15 +357,7 @@ getCaptionForBoxwhiskerPlot <-function(plotDataPk,
     )] %>%  unique()
 
 
-  captiontext <- switch(ratioMode,
-                        'none' = paste("Population summary statistics of",
-                                       dtCaption$displayNamePKParameter[1]),
-                        'individualRatios' = paste('Population summary statistics of',
-                                                   dtCaption$displayNamePKParameter[1], 'ratios'),
-                        'ratioOfPopulation' = paste('Ratio of population summary statistics of',
-                                                    dtCaption$displayNamePKParameter[1]))
-
-  captiontext <- paste(captiontext,
+  captiontext <- paste(paste0("Population summary statistics of",ifelse(asRatio,' ratios','')),
                        "of",
                        pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"))
 
@@ -477,89 +389,38 @@ getCaptionForBoxwhiskerPlot <-function(plotDataPk,
 #'
 #' @return A ggplot object representing the box and whisker plot.
 #' @keywords internal
-createBaseBoxWhisker <- function(plotDataPk, yScale, ratioMode, colorVector, onePlotConfig, ...) {
-  ylabelUnit <- 'ratio'
-  switch(ratioMode,
-         'individualRatios' = {
-           plotObject <- ospsuite.plots::plotBoxWhisker(data = plotDataPk,
-                                                        mapping = aes(x = scenarioShortName, y = ratio),
-                                                        yscale = yScale,
-                                                        yscale.args = getXorYlimits(onePlotConfig, yScale, ...))
-         },
-         'ratioOfPopulation' = {
-           plotObject <- ospsuite.plots::initializePlot()  +
-             geom_boxplot(data = plotDataPk,
-                          mapping = aes(x = scenarioShortName, lower = lower, upper = upper,
-                                        middle = middle, ymin = ymin, ymax = ymax),
-                          stat = "identity")
+createBaseBoxWhisker <- function(plotDataPk, yScale, asRatio, colorVector, onePlotConfig, ...) {
 
-           plotObject <- plotObject %>%
-             ospsuite.plots::addYscale(plotObject = .,
-                                       yscale = yScale,
-                                       yscale.args = getXorYlimits(onePlotConfig, yScale, ...))
-         },
-         'none' = {
-           ylabelUnit <- ifelse(plotDataPk$displayUnit[1] != '',
-                                paste0('[', plotDataPk$displayUnit[1], ']'), '')
+  # Define the mapping for aes() based on asRatio
+  aesMapping <- aes(x = scenarioShortName, y = value)
+  if (!asRatio) {
+    aesMapping <- structure(utils::modifyList(aesMapping, aes(fill = colorIndex)), class = "uneval")
+  }
 
-           plotObject <- ospsuite.plots::plotBoxWhisker(data = plotDataPk,
-                                                        mapping = aes(x = scenarioShortName, y = value, fill = colorIndex),
-                                                        yscale = yScale,
-                                                        yscale.args = getXorYlimits(onePlotConfig, yScale, ...)) +
-             scale_fill_manual(values = colorVector) +
-             theme(legend.title = element_blank())
-         }
-  )
+  # Create the plot object
+  plotObject <- ospsuite.plots::plotBoxWhisker(data = plotDataPk,
+                                               mapping = aesMapping,
+                                               yscale = yScale,
+                                               yscale.args = getXorYlimits(onePlotConfig, yScale, ...))
+  if (!asRatio) {
+    plotObject <- plotObject +
+      scale_fill_manual(values = colorVector) +
+      theme(legend.title = element_blank())
+  }
 
-
+  # Set ylabelUnit based on asRatio condition
+  ylabelUnit <- if (asRatio) {
+    'ratio'
+  } else {
+    ifelse(plotDataPk$displayUnit[1] != '',
+           paste0('[', plotDataPk$displayUnit[1], ']'), '')
+  }
   plotObject <- plotObject +
     labs(x = '', y = paste(plotDataPk$displayNamePKParameter[1], ylabelUnit))
 
   return(plotObject)
 }
-#' Get Ratio Mode for Plot Configuration
-#'
-#' This function determines the ratio mode for a given plot configuration based on the provided parameters.
-#' It checks if the scenarios in the plot configuration have the same or different base populations.
-#'
-#' @param onePlotConfig A data frame containing the plot configuration with columns 'plotName', 'scenario', and 'referenceScenario'.
-#' @param pkParameterDT A data frame containing parameter details, including 'scenarioName' and 'populationId'.
-#' @param asRatio A logical value indicating whether to calculate the ratio mode. If FALSE, the function returns 'none'.
-#'
-#' @return A character string indicating the ratio mode. Possible values are:
-#' - 'none' if `asRatio` is FALSE.
-#' - 'individualRatios' if all population IDs match between scenarios.
-#' - 'ratioOfPopulation' if all population IDs are different between scenarios.
-#'
-#' @keywords internal
-getRatioMode <- function(onePlotConfig, pkParameterDT, asRatio) {
-  if (!asRatio) return('none')
 
-  pkParameterDTScenarios <- pkParameterDT[, c('scenarioName', 'populationId')] %>%
-    unique()
-
-  dtPop <- merge(onePlotConfig[, c('plotName', 'scenario', 'referenceScenario')] %>%
-                   unique(),
-                 pkParameterDTScenarios,
-                 by.x = 'scenario',
-                 by.y = 'scenarioName') %>%
-    merge(pkParameterDTScenarios,
-          by.x = 'referenceScenario',
-          by.y = 'scenarioName',
-          suffixes = c('', '.reference'))
-
-  if (all(dtPop$populationId == dtPop$populationId.reference)) {
-    ratioMode <- 'individualRatios'
-  } else if (all(dtPop$populationId != dtPop$populationId.reference)) {
-    ratioMode <- 'ratioOfPopulation'
-  } else {
-    print(dtPop)
-    stop('Within one plot you must either compare always scenarios with the same base population or
-             always scenarios with different base populations')
-  }
-
-  return(ratioMode)
-}
 
 # validation ------------
 #' Validate PK Box-and-Whisker Configuration Table
@@ -617,10 +478,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT,...) {
       "plotCaptionAddon",
       "ylimit_linear",
       "ylimit_log",
-      "facetScale",
-      "plot_Absolute",
-      "plot_Ratio"
-
+      "facetScale"
     ))
 
   tmp <- separateAndTrim(configTablePlots, "outputPathIds")
@@ -635,13 +493,40 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT,...) {
   validateColorLegend(dt = configTablePlots[!is.na(referenceScenario)])
 
 
+  tmp <- configTablePlots[as.logical(plot_Ratio) == FALSE & as.logical(plot_Absolute) == FALSE] %>%  unique()
+  if (nrow(tmp) > 0){
+    print(tmp)
+    stop('Please select either Plot_Ratio or Plot_Absolute!')
+  }
+
+
   # check if reference Scenarios are there
-  validateExistenceOfReferenceForRatio(configTablePlots = configTablePlots[plot_Ratio == TRUE ])
+  validateExistenceOfReferenceForRatio(configTablePlots = configTablePlots[as.logical(plot_Ratio) == TRUE ],pkParameterDT)
+
+  # check if populations are consistent for ratio plots
+  tmp <- configTablePlots[as.logical(plot_Ratio) == TRUE & !is.na(referenceScenario),c('plotName','scenario','referenceScenario')] %>%  unique()
+  tmp <- tmp %>%
+    merge(pkParameterDT[,c('scenarioName','populationId')] %>%
+            unique(),
+          by.x = 'scenario',
+          by.y = 'scenarioName') %>%
+    merge(pkParameterDT[,c('scenarioName','populationId')] %>%
+            unique(),
+          by.x = 'referenceScenario',
+          by.y = 'scenarioName',
+          suffixes = c('','.reference'))
+
+  tmp <- tmp[populationId != populationId.reference]
+  if (nrow(tmp) > 0){
+    print(tmp)
+    stop('Ratio plots are only available if scenario and referenceScenario is based on the same population')
+  }
+
 
   return(invisible())
 }
 
-validateExistenceOfReferenceForRatio <- function(configTablePlots){
+validateExistenceOfReferenceForRatio <- function(configTablePlots,pkParameterDT){
 
   if (nrow(configTablePlots) == 0)   return(invisible())
 
@@ -650,6 +535,7 @@ validateExistenceOfReferenceForRatio <- function(configTablePlots){
   if (any(tmp$isValid == FALSE)){
     stop(paste('For ratio plots at lease one reference scenario has to be selected. Check PlotName',paste(tmp$plotName,collapse = ', ')))
   }
+
   return(invisible())
 
 }
@@ -698,7 +584,7 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(projectConfiguration,
                         yScale = 'linear, log',
                         facetScale = 'fixed',
                         plot_Absolute = 1,
-                        plot_Ratio = 1),
+                        plot_Ratio = 0),
                     by = .(outputPathIds, pkParameters)]
 
 

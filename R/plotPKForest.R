@@ -1246,6 +1246,50 @@ getFootnoteLinesForForrestPlots <- function(plotData,ratioMode,asCI,dtDataRefere
 
 }
 
+#' Get Ratio Mode for Plot Configuration
+#'
+#' This function determines the ratio mode for a given plot configuration based on the provided parameters.
+#' It checks if the scenarios in the plot configuration have the same or different base populations.
+#'
+#' @param onePlotConfig A data frame containing the plot configuration with columns 'plotName', 'scenario', and 'referenceScenario'.
+#' @param pkParameterDT A data frame containing parameter details, including 'scenarioName' and 'populationId'.
+#' @param asRatio A logical value indicating whether to calculate the ratio mode. If FALSE, the function returns 'none'.
+#'
+#' @return A character string indicating the ratio mode. Possible values are:
+#' - 'none' if `asRatio` is FALSE.
+#' - 'individualRatios' if all population IDs match between scenarios.
+#' - 'ratioOfPopulation' if all population IDs are different between scenarios.
+#'
+#' @keywords internal
+getRatioMode <- function(onePlotConfig, pkParameterDT, asRatio) {
+  if (!asRatio) return('none')
+
+  pkParameterDTScenarios <- pkParameterDT[, c('scenarioName', 'populationId')] %>%
+    unique()
+
+  dtPop <- merge(onePlotConfig[, c('plotName', 'scenario', 'referenceScenario')] %>%
+                   unique(),
+                 pkParameterDTScenarios,
+                 by.x = 'scenario',
+                 by.y = 'scenarioName') %>%
+    merge(pkParameterDTScenarios,
+          by.x = 'referenceScenario',
+          by.y = 'scenarioName',
+          suffixes = c('', '.reference'))
+
+  if (all(dtPop$populationId == dtPop$populationId.reference)) {
+    ratioMode <- 'individualRatios'
+  } else if (all(dtPop$populationId != dtPop$populationId.reference)) {
+    ratioMode <- 'ratioOfPopulation'
+  } else {
+    print(dtPop)
+    stop('Within one plot you must either compare always scenarios with the same base population or
+             always scenarios with different base populations')
+  }
+
+  return(ratioMode)
+}
+
 # validation ---------
 #' Validate PK Forest Absolute Values with Variance Configuration
 #'

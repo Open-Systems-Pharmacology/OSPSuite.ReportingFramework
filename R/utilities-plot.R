@@ -135,7 +135,7 @@ runPlot <- function(projectConfiguration,
             if (!getOption("OSPSuite.RF.skipFailingPlots", default = FALSE)) {
               stop(err)
             } else {
-              warning(paste("Error during creation of:", onePlotConfig$plotName[1], "Message:", conditionMessage(err)))
+              warning(paste0("Error during creation of plot: '", onePlotConfig$plotName[1], "':\n ", conditionMessage(err)))
             }
           })
         }

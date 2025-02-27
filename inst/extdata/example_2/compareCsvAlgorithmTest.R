@@ -77,10 +77,12 @@ plotMethodComparison <- function(projectConfiguration,
   # Set attributes for the plot export
   plotObject <- setExportAttributes(object = plotObject,
                                     caption =  'Comparison of geometric mean and geometric standarddeviation calculation')
-  plotList[['GeohMean']] <- plotObject
+  plotList[['GeoMean']] <- plotObject
 
   # the return value of the function must be the list of plots and tables
   return(plotList)
 }
+
+
 
 

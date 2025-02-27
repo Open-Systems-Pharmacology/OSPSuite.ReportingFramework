@@ -329,6 +329,7 @@ mockManualEditings.PlotBoxwhsiker2 <- function(projectConfiguration){
 
   # set IV as reference
   dt[grep('_po$',scenario), referenceScenario := gsub('_po','',scenario)]
+  dt[grep('_po$',scenario), plot_Ratio := 1]
   dt[!c(1,which(is.na(scenario))),plotCaptionAddon := 'Virtual population simulations of 3mg po application in comparison to 1mg iv simulation']
   dt[!c(1,which(is.na(scenario))),colorLegend := 'PO administration, 3mg|IV administration, 1mg']
   dt[!c(1,which(is.na(scenario))),pkParameters := 'AUC_inf']

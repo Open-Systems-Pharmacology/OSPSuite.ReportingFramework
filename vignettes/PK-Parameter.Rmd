@@ -1,0 +1,141 @@
+---
+title: "PK-Parameter"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{PK-Parameter}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(ospsuite.reportingframework)
+```
+
+# Required Sample Size 
+
+
+With:
+
+$Z$ = Z-score (for 95% confidence, ( Z \approx 1.96 ))
+$prec$ = required precision (default 0.01)
+$\sigma$ = standard deviation of the logarithm of the data (which can be approximated by the geometric standard deviation).
+$p$ is the expected proportion at the desired percentile (e.g., for the 50th percentile, ( p = 0.5 )).
+
+
+**Mean**
+
+$$ E = \frac{SD}{\sqrt{n_t}} \cdot z_{\alpha/2} $$
+
+Where:
+
+( $SD$ ) is the sample standard deviation,
+( $z_{\alpha/2}$ ) is the critical value from the Z-distribution for a desired confidence level,
+( $n_t$ ) is the sample size of my test sample.
+
+```{r echo=FALSE, eval=FALSE}
+# Your data vector
+y <- rnorm(100,mean = 1) # Replace with your actual data
+
+# Parameters
+prec <- 0.01  # Desired precision
+confidence_level <- 0.95  # Confidence level
+alpha <- 1 - confidence_level
+z_alpha_over_2 <- qnorm(1 - alpha / 2)
+
+# Calculate the sample standard deviation from your data
+SD <- sd(y)
+
+# Calculate the required sample size
+n <- (SD * z_alpha_over_2 / prec)^2
+n <- ceiling(n)  # Round up to the nearest whole number
+
+# Output the required sample size
+cat("Required sample size for estimating the mean:", n, "\n")
+
+n_t = length(y)
+SE =sd(y)/sqrt(n_t)
+
+
+E = 
+
+n = (sd(y)/(mean(y)*0.01))^2
+
+
+```
+
+
+$$ n = \left( \frac{Z \cdot \text{SD}}{prec \cdot \text{mean}} \right)^2 $$
+
+**SD**
+
+To determine the required sample size ( n ) for estimating the standard deviation with a specified precision ( \text{prec} = 0.01 ), you can use the formula for the margin of error in estimating the standard deviation. The margin of error ( E ) for the standard deviation can be approximated using the following formula:
+
+$$ E = \frac{SD}{\sqrt{n}} \cdot z_{\alpha/2}$$
+
+Where:
+
+$SD$ is the sample standard deviation,
+( z_{\alpha/2} ) is the critical value from the Z-distribution for a desired confidence level (for example, for 95% confidence, ( z_{\alpha/2} \approx 1.96 )),
+( n ) is the sample size.
+To solve for ( n ), rearranging the formula gives:
+
+$$ n = \left( \frac{SD \cdot z_{\alpha/2}}{prec} \right)^2 $$
+
+```{r echo=FALSE, eval = FALSE}
+# Your data vector
+y <- c(...)  # Replace with your actual data
+
+# Parameters
+prec <- 0.01  # Desired precision
+confidence_level <- 0.95  # Confidence level
+alpha <- 1 - confidence_level
+z_alpha_over_2 <- qnorm(1 - alpha / 2)
+
+# Estimate the standard deviation from your sample
+SD <- sd(y)
+
+# Calculate required sample size
+n <- (SD * z_alpha_over_2 / prec)^2
+n <- ceiling(n)  # Round up to the nearest whole number
+
+# Output the required sample size
+cat("Required sample size:", n, "\n")
+```
+
+
+
+**Geometric Mean**
+
+$$ n = \left( \frac{Z \cdot \text{geometric SD}}{prec \cdot \text{geometric mean}} \right)^2 $$
+
+
+
+**Geometric Standard Deviation**
+
+The geometric standard deviation ( GSD ) can be estimated from the logarithm of the data. The formula for the margin of error in estimating the geometric standard deviation is:
+
+$$ E = \frac{GSD}{\sqrt{n}} \cdot z_{\alpha/2} $$
+
+Where:
+
+$GSD$ is the geometric standard deviation,
+$ z_{\alpha/2} $ is the critical value from the Z-distribution for a desired confidence level,
+( n ) is the sample size.
+To solve for ( n ), we rearrange the formula:
+
+$ n = \left( \frac{GSD \cdot z_{\alpha/2}}{E} \right)^2 $
+
+
+
+
+**Percentiles**
+
+$$ n = \left( \frac{Z^2 \cdot p(1-p)}{E^2} \right)$$
+

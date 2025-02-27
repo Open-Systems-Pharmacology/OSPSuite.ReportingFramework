@@ -19,6 +19,7 @@ library(ospsuite.reportingframework)
 # (see vignette(package = 'ospsuite.plots',topic = 'ospsuite_plots'))
 ospsuite.plots::setDefaults()
 theme_update(legend.position = 'top')
+options(knitr.kable.NA = '')
 
 # Set this to TRUE if you want to execute the workflow as a final valid run.
 # It then won't set watermarks to figures and does not skip failing plot generations

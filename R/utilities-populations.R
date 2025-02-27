@@ -394,30 +394,28 @@ setCustomParamsToPopulation <- function(scenario) {
 #' @return A list of parameters for the specified sheets.
 #' @keywords internal
 .readParameterSheetList <- function(projectConfiguration, dtTwinPops, sim) {
-  params <- mapply(
-    function(sheet, file) {
-      .getAllParameterForSheets(
-        projectConfiguration = projectConfiguration,
-        sheets = .cleanUpSheetList(dtTwinPops[[sheet]]),
-        paramsXLSpath = file,
-        sim = sim
-      )
-    },
-    c("modelParameterSheets", "individualId", "applicationProtocol"),
-    c(
-      projectConfiguration$modelParamsFile,
-      projectConfiguration$individualsFile,
-      projectConfiguration$applicationsFile
-    ),
-    SIMPLIFY = FALSE
+  # Define the sheets and corresponding files
+  sheets <- c("modelParameterSheets", "individualId", "applicationProtocol")
+  files <- c(
+    projectConfiguration$modelParamsFile,
+    projectConfiguration$individualsFile,
+    projectConfiguration$applicationsFile
   )
+
+  # Use mclapply for parallel processing
+  params <- parallel::mclapply(1:length(sheets), function(i) {
+    .getAllParameterForSheets(
+      projectConfiguration = projectConfiguration,
+      sheets = .cleanUpSheetList(dtTwinPops[[sheets[i]]]),
+      paramsXLSpath = files[i],
+      sim = sim
+    )
+  }, mc.cores = parallel::detectCores() - 1)  # Use all but one core
+
+  params <- stats::setNames(params,sheets)
 
   return(params)
 }
-
-
-
-
 #' Generate Population Files
 #'
 #' This function generates population files based on individual biometrics and parameters.
@@ -430,10 +428,8 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @keywords internal
 .generatePopulationFiles <- function(dtTwinPops, params, dtIndividualBiometrics, projectConfiguration, sim) {
-  # initilaize variable to avoid warnings for global variables during check
-  individualId <- NULL
 
-  for (indId in dtIndividualBiometrics$individualId) {
+  resultsList <- parallel::mclapply(dtIndividualBiometrics$individualId, function(indId) {
     biomForInd <- dtIndividualBiometrics[individualId == indId, ]
     individualCharacteristics <- .createIndividualCharacteristics(biomForInd)
     individual <- ospsuite::createIndividual(individualCharacteristics)
@@ -446,10 +442,16 @@ setCustomParamsToPopulation <- function(scenario) {
       sim = sim
     )
 
+    return(list(indId = indId, results = results))
+  }, mc.cores = parallel::detectCores() - 1)  # Use all but one core
+
+  # Combine results back into params
+  for (result in resultsList) {
+    indId <- result$indId
     if (is.null(params$individualId[[indId]])) {
-      params$individualId[[indId]] <- results
+      params$individualId[[indId]] <- result$results
     } else {
-      params$individualId[[indId]] <- utils::modifyList(params$individualId[[indId]], results)
+      params$individualId[[indId]] <- utils::modifyList(params$individualId[[indId]], result$results)
     }
   }
 
@@ -465,6 +467,8 @@ setCustomParamsToPopulation <- function(scenario) {
 
     .savePopulationFile(poptable, dPop$populationName[1], projectConfiguration)
   }
+
+  return(invisible())
 }
 
 #' Create Individual Characteristics
@@ -569,7 +573,11 @@ setCustomParamsToPopulation <- function(scenario) {
     }
 
     if (nrow(poptable) > 1) {
-      checkmate::assertNames(names(popRow), permutation.of = names(poptable))
+      tmp <- c(setdiff(names(popRow),names(poptable)),
+               setdiff(names(poptable),names(popRow)))
+      if (length(tmp) > 1)
+        stop(paste('population parameter mus be consistent within a virtual population. Check',
+                   paste(tmp,collapse = ', '), 'for', popRow$ObservedIndividualId))
     }
 
     poptable <- rbind(poptable, data.table::as.data.table(popRow))
@@ -655,7 +663,7 @@ setCustomParamsToPopulation <- function(scenario) {
   paths <- NULL
 
   dtSelection <- data.table(
-    pName = c("individualId", "Population", "Gender", "Height [cm]", "Age [year(s)]", "Gestational Age [week(s)]"),
+    pName = c("individualId", "population", "gender", "height [cm]", "age [year(s)]", "gestational Age [week(s)]"),
     units = c("", "", "", "dm", "year(s)", "week(s)"),
     paths = c("ObservedIndividualId", "Population", "Gender", "Organism|Height", "Organism|Age", "Organism|Gestational age")
   )
