@@ -77,24 +77,7 @@ mockManualEditings.Population <- function(projectConfiguration,dataObserved,tuto
 
 
 
-  if (tutorialstep == 1){
 
-    # individuals
-    wb <- openxlsx::loadWorkbook(projectConfiguration$individualsFile)
-    dtInds <- xlsxReadData(wb = wb,sheetName  = "IndividualBiometrics" )
-    # delete template rows
-    dtInds <- dtInds[individualId != 'MALE']
-    dtInds <- dtInds[individualId != 'FEMALE']
-
-    # add ontogeny to individual imported by readObservedDataByDictionary
-    dtInds[,protein := as.character(protein)]
-    dtInds[,protein := 'CYP3A4,UGT1A4']
-    dtInds[,ontogeny := as.character(ontogeny)]
-    dtInds[,ontogeny := 'CYP3A4,UGT1A4']
-
-    xlsxWriteData(wb = wb, sheetName  = 'IndividualBiometrics', dt = dtInds)
-    openxlsx::saveWorkbook(wb, projectConfiguration$individualsFile, overwrite = TRUE)
-  }
   if (tutorialstep == 2){
 
     # check configuration for virtual twin population settings and adjust population name
@@ -172,11 +155,40 @@ mockManualEditings.Scenario <- function(projectConfiguration,dataObserved,tutori
     openxlsx::saveWorkbook(wb, projectConfiguration$modelParamsFile, overwrite = TRUE)
   }
 
+  # adjsut individuals
+  if (tutorialstep == 1){
+
+    # individuals
+    wb <- openxlsx::loadWorkbook(projectConfiguration$individualsFile)
+    dtInds <- xlsxReadData(wb = wb,sheetName  = "IndividualBiometrics" )
+    # delete template rows
+    dtInds <- dtInds[individualId != 'MALE']
+    dtInds <- dtInds[individualId != 'FEMALE']
+
+    # add ontogeny to individual imported by readObservedDataByDictionary
+    dtInds[,protein := as.character(protein)]
+    dtInds[,protein := 'CYP3A4,UGT1A4']
+    dtInds[,ontogeny := as.character(ontogeny)]
+    dtInds[,ontogeny := 'CYP3A4,UGT1A4']
+
+    xlsxWriteData(wb = wb, sheetName  = 'IndividualBiometrics', dt = dtInds)
+    openxlsx::saveWorkbook(wb, projectConfiguration$individualsFile, overwrite = TRUE)
+
+    tmp <- xlsxReadData(wb = wb,sheetName  = "template_Ind" )
+    tmp <- tmp[-1]
+    for (individualId in dtInds$individualId){
+      xlsxCloneAndSet(wb = wb,clonedSheet = "template_Ind",sheetName = individualId,dt = tmp)
+    }
+    openxlsx::saveWorkbook(wb, projectConfiguration$individualsFile, overwrite = TRUE)
+
+
+  }
+
   wb <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
 
   if (tutorialstep == 1){
     dtOutputs <- xlsxReadData(wb = wb,sheetName  = 'OutputPaths')
-    dtOutputs <- dtOutputs[outputPathId %in% c(dtOutputs$outputPathId[1],'Concentration','Fraction')]
+    dtOutputs <- dtOutputs[outputPathId %in% c('Concentration','Fraction')]
     xlsxWriteData(wb = wb, sheetName  = 'OutputPaths', dt = dtOutputs)
 
   }

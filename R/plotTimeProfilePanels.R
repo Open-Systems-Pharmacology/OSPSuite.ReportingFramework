@@ -324,6 +324,7 @@ generatePlotForPlotType <- function(plotData,
           plotObject <- plotObject +
             ggplot2::labs(x = plotData$getTimeLabelForTimeRange(timeRangeFilter))
         }
+
         # prepare for export
         plotObject <- setExportAttributes(
           object = plotObject,
@@ -728,7 +729,7 @@ getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotC
     "y-scale.",
     pasteFigureTags(dtCaption, captionColumn = "timeRangeCaption", endWithDot = TRUE)
   )
-  captiontext <- addCaptionTextAddon(captiontext,plotCaptionAddon[1])
+  captiontext <- addCaptionTextAddon(captiontext,plotData$configTable$plotCaptionAddon[1])
 
 
   return(captiontext)
@@ -1183,12 +1184,12 @@ createNewConfig <- function(scenarios, dataObserved) {
     yScale = "linear, log",
     facetScale = "fixed",
     facetType = FACETTYPE[[1]],
-    plot_TimeProfiles = TRUE,
-    plot_PredictedVsObserved = FALSE,
-    plot_ResidualsAsHistogram = FALSE,
-    plot_ResidualsVsTime = FALSE,
-    plot_ResidualsVsObserved = FALSE,
-    plot_QQ = FALSE
+    plot_TimeProfiles = 1,
+    plot_PredictedVsObserved = 0,
+    plot_ResidualsAsHistogram = 0,
+    plot_ResidualsVsTime = 0,
+    plot_ResidualsVsObserved = 0,
+    plot_QQ = 0
   )
 
   if (any(!is.na(configEnv$dataGroupIds$defaultScenario))) {

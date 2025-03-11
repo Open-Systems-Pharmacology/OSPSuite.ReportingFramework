@@ -402,17 +402,22 @@ setCustomParamsToPopulation <- function(scenario) {
     projectConfiguration$applicationsFile
   )
 
-  # Use mclapply for parallel processing
-  params <- parallel::mclapply(1:length(sheets), function(i) {
-    .getAllParameterForSheets(
-      projectConfiguration = projectConfiguration,
-      sheets = .cleanUpSheetList(dtTwinPops[[sheets[i]]]),
-      paramsXLSpath = files[i],
-      sim = sim
-    )
-  }, mc.cores = parallel::detectCores() - 1)  # Use all but one core
+  # Use mapply to apply the function in parallel
+  params <- mapply(
+    function(sheet, file) {
+      .getAllParameterForSheets(
+        projectConfiguration = projectConfiguration,
+        sheets = .cleanUpSheetList(dtTwinPops[[sheet]]),
+        paramsXLSpath = file,
+        sim = sim
+      )
+    },
+    sheets,
+    files,
+    SIMPLIFY = FALSE
+  )
 
-  params <- stats::setNames(params,sheets)
+  params <- stats::setNames(params, sheets)
 
   return(params)
 }
@@ -429,7 +434,9 @@ setCustomParamsToPopulation <- function(scenario) {
 #' @keywords internal
 .generatePopulationFiles <- function(dtTwinPops, params, dtIndividualBiometrics, projectConfiguration, sim) {
 
-  resultsList <- parallel::mclapply(dtIndividualBiometrics$individualId, function(indId) {
+
+  # Use foreach for parallel processing
+  resultsList <- lapply(dtIndividualBiometrics$individualId, function(indId){
     biomForInd <- dtIndividualBiometrics[individualId == indId, ]
     individualCharacteristics <- .createIndividualCharacteristics(biomForInd)
     individual <- ospsuite::createIndividual(individualCharacteristics)
@@ -443,7 +450,7 @@ setCustomParamsToPopulation <- function(scenario) {
     )
 
     return(list(indId = indId, results = results))
-  }, mc.cores = parallel::detectCores() - 1)  # Use all but one core
+  })
 
   # Combine results back into params
   for (result in resultsList) {
@@ -608,27 +615,50 @@ setCustomParamsToPopulation <- function(scenario) {
     return(list())
   }
 
-  params <- lapply(sheets, function(sheet) {
+  # Set up the parallel backend
+  numCores <- parallel::detectCores() - 1  # Use one less than the total number of cores
+  cl <- parallel::makeCluster(numCores)
+  doParallel::registerDoParallel(cl)
+
+  # Initialize an empty list to store results
+  dtSheets <- list()
+
+  # Use foreach to parallelize the loop
+  dtSheets <- foreach::foreach(sheet = sheets, .packages = c("esqlabsR", "data.table")) %dopar% {
     tmp <- esqlabsR::readParametersFromXLS(paramsXLSpath = paramsXLSpath, sheets = sheet) %>%
       data.table::as.data.table()
-    if (nrow(tmp) == 0) stop(paste('empty table',paramsXLSpath,sheet))
 
-    tmp[, `:=`(
-      dimension = ospsuite::getParameter(paths, container = sim)$dimension
-    ),
-    by = "paths"
-    ]
-    tmp[, `:=`(
-      baseValue = ospsuite::toBaseUnit(quantityOrDimension = dimension, values = values, unit = units)
-    ),
-    by = "paths"
-    ]
+    if (nrow(tmp) > 0) {
+      list(sheet = sheet, data = tmp)  # Return a list with the sheet name and data
+    } else {
+      NULL  # Return NULL if no data
+    }
+  }
 
-    results <- stats::setNames(as.list(tmp$baseValue), tmp$paths)
-    return(results)
-  })
+  # Stop the cluster
+  parallel::stopCluster(cl)
 
-  names(params) <- sheets
+  # Combine results and convert units
+  params <- list()
+  for (result in dtSheets){
+
+    if (!is.null(result)){
+      tmp <- result$data
+      tmp[, `:=`(
+        dimension = ospsuite::getParameter(paths, container = sim)$dimension
+      ),
+      by = "paths"
+      ]
+      tmp[, `:=`(
+        baseValue = ospsuite::toBaseUnit(quantityOrDimension = dimension, values = values, unit = units)
+      ),
+      by = "paths"
+      ]
+
+      params[[result$sheet]] <- stats::setNames(as.list(tmp$baseValue), tmp$paths)
+    }
+  }
+
   return(params)
 }
 

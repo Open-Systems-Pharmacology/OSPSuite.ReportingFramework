@@ -10,7 +10,7 @@ getCaptionForBoxwhiskerPlot(
   yScale = NULL,
   plotCaptionAddon,
   isPlotCaption = TRUE,
-  ratioMode
+  asRatio
 )
 }
 \arguments{

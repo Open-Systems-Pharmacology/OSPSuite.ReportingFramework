@@ -7,7 +7,7 @@
 createBaseBoxWhisker(
   plotDataPk,
   yScale,
-  ratioMode,
+  asRatio,
   colorVector,
   onePlotConfig,
   ...
@@ -18,14 +18,14 @@ createBaseBoxWhisker(
 
 \item{yScale}{A character string indicating the scale for the y-axis (e.g., "linear", "log").}
 
-\item{ratioMode}{A character string indicating the mode of ratio to be used for plotting
-(e.g., "individualRatios", "ratioOfPopulation", "none").}
-
 \item{colorVector}{A vector of colors to be used for filling the plot.}
 
 \item{onePlotConfig}{A list containing configuration settings for the plot.}
 
 \item{...}{Additional arguments to be passed to the plotting functions.}
+
+\item{ratioMode}{A character string indicating the mode of ratio to be used for plotting
+(e.g., "individualRatios", "ratioOfPopulation", "none").}
 }
 \value{
 A ggplot object representing the box and whisker plot.

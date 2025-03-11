@@ -14,6 +14,9 @@
 #' @export
 runExample1 <- function(rootDirectory = NULL){
 
+  library(data.table)
+  library(tidyr)
+
   if (is.null(rootDirectory)){
     rootDirectory <- tempdir()
   }

@@ -12,7 +12,6 @@ plotPKBoxwhisker(
   xAxisTextAngle = 0,
   colorVector = c(scenario = NA, referenceScenario = NA),
   facetAspectRatio = 0.5,
-  nBootstrap = 1000,
   ...
 )
 }
@@ -39,11 +38,11 @@ your color vector could be colorVector = c(DDI = 'red',control = 'blue'), if no 
 faceting the plots. Default is 0.5, which may need adjustment based on the
 number of facets and plot dimensions.}
 
-\item{nBootstrap}{An integer specifying the number of bootstrap samples to
-use when calculating ratios. Default is 1000.}
-
 \item{...}{Additional arguments passed to plotting functions for further
 customization.}
+
+\item{nBootstrap}{An integer specifying the number of bootstrap samples to
+use when calculating ratios. Default is 1000.}
 }
 \value{
 A list of generated plots. Each plot is an object that can be rendered

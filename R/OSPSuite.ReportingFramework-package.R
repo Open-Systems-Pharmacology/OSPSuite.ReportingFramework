@@ -18,6 +18,7 @@
 #' @importFrom data.table :=
 #' @importFrom data.table data.table
 #' @importFrom tidyr  %>%
+#' @importFrom foreach %dopar%
 #' @importFrom rlang %||%
 ## usethis namespace: end
 NULL

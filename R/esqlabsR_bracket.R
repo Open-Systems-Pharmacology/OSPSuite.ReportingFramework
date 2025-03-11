@@ -119,8 +119,9 @@ createProjectConfiguration <- function (path = file.path("ProjectConfiguration.x
 createScenarios.wrapped <- function(projectConfiguration, # nolint
                                     scenarioNames = NULL,
                                     doCheckScenarioNameValidity = TRUE) {
+
   scenarioList <-
-    esqlabsR::createScenarios(
+    esqlabsR::createScenarios(scenarioConfigurations =
       esqlabsR::readScenarioConfigurationFromExcel(
         scenarioNames = scenarioNames,
         projectConfiguration = projectConfiguration
@@ -336,3 +337,6 @@ extendPopulationByUserDefinedParams_RF <- function(population, # nolint
     population$setParameterValues(parameterOrPath = path, values = vals)
   }
 }
+
+
+

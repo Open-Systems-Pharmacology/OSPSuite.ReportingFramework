@@ -8,7 +8,7 @@ prepareDataForPKBoxplot(
   onePlotConfig,
   pkParameterDT,
   colorVector,
-  ratioMode,
+  asRatio,
   nBootstrap,
   percentiles
 )
@@ -20,11 +20,11 @@ prepareDataForPKBoxplot(
 
 \item{colorVector}{A named vector for colors.}
 
-\item{ratioMode}{Mode indicating if the plot is for ratios.}
-
 \item{nBootstrap}{Number of bootstrap samples.}
 
 \item{percentiles}{A vector of percentiles to calculate.}
+
+\item{ratioMode}{Mode indicating if the plot is for ratios.}
 }
 \value{
 A data.table prepared for plotting.
