@@ -117,7 +117,7 @@ setWorkflowOptions(isValidRun = FALSE)
 
 # Setup project structure -------------------------------------------------
 # creates project directory (see vignette https://esqlabs.github.io/esqlabsR/articles/esqlabsR-project-structure.html)
-# and help initProject 
+# and help initProject
 # if you go with default structure this workflow file should be saved in Scripts/ReportingFramework,
 initProject()
 initProject()
@@ -281,7 +281,7 @@ tmp <- xlsxReadData(
   convertHeaders = FALSE
 )
 
-tmp$displayUnit <- gsub('Â','',tmp$displayUnit)
+tmp$displayUnit <- gsub("Â", "", tmp$displayUnit)
 
 knitr::kable(tmp)
 ```
@@ -401,7 +401,7 @@ dtPlots <- xlsxReadData(
 dtPlots <- dtPlots[-4]
 
 knitr::kable(dtPlots[1:4]
-             %>% dplyr::select(!c("TimeRange_h0_6", "TimeRange_h6_24")))
+%>% dplyr::select(!c("TimeRange_h0_6", "TimeRange_h6_24")))
 ```
 
 
@@ -409,14 +409,14 @@ Please comment all plot functions which we do not use and execute the ones for t
 
 ```{r}
 runPlot(
-    nameOfplotFunction = "plotTimeProfiles",
-    projectConfiguration = projectConfiguration,
-    configTableSheet = "TimeProfiles",
-    inputs = list(
-      dataObserved = dataObserved,
-      scenarioResults = scenarioResults
-    )
+  nameOfplotFunction = "plotTimeProfiles",
+  projectConfiguration = projectConfiguration,
+  configTableSheet = "TimeProfiles",
+  inputs = list(
+    dataObserved = dataObserved,
+    scenarioResults = scenarioResults
   )
+)
 ```
 
 All figures and captions are filed in 'Outputs/ReportingFramework/TimeProfiles' as png and text-files.

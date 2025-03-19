@@ -24,8 +24,8 @@ addDefaultConfigForPKForestPlots(
 NULL (invisible).
 
 #' @seealso
-\code{\link{plotPKForestAbsoluteValuesWithVariance}}, \code{\link{plotPKForestAbsoluteValuesWithCI}},
-\code{\link{plotPKForestRatiosWithVariance}}, \code{\link{plotPKForestRatiosWithCI}},
+\code{\link{plotPKForestAggregatedAbsoluteValues}}, \code{\link{plotPKForestPointEstimateOfAbsoluteValues}},
+\code{\link{plotPKForestAggregatedRatios}}, \code{\link{plotPKForestPointEstimateOfRatios}},
 }
 \description{
 Adds default configurations for forest plots to the `Plots.xlsx` configuration file.

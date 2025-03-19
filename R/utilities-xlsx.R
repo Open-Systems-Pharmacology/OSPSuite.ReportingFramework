@@ -34,7 +34,6 @@ xlsxAddSheet <- function(wb, sheetName, dt) {
 #' @return An invisible NULL value.
 #' @export
 xlsxWriteData <- function(wb, sheetName, dt) {
-
   # make a copy otherwise data.table outside may be changed
   dt <- data.table::copy(dt)
 
@@ -43,30 +42,32 @@ xlsxWriteData <- function(wb, sheetName, dt) {
   }
 
   # Read existing data to determine dimensions
-  existingData <- xlsxReadData(wb, sheetName = sheetName,convertHeaders = FALSE)
+  existingData <- xlsxReadData(wb, sheetName = sheetName, convertHeaders = FALSE)
 
   # Check if existingData has more rows than dt
   if (nrow(existingData) > nrow(dt)) {
     # Add a data.table with NA values
     na_rows <- data.table(matrix(NA, nrow = nrow(existingData) - nrow(dt), ncol = ncol(dt)))
-    data.table::setnames(na_rows, names(dt))  # Set the column names to match dt
+    data.table::setnames(na_rows, names(dt)) # Set the column names to match dt
     dt <- rbind(dt, na_rows)
   }
 
   # Convert data.table column names to match correct upper an lower case
 
-  data.table::setnames(dt, old = names(dt),
-                       new = unlist(lapply(names(dt), function(x){
-                         ix = which(tolower(x) == tolower(names(existingData)))
-                          if (length(ix) == 1){
-                            newName = names(existingData)[ix]
-                          } else if (length(ix) > 1) {
-                            stop(paste('ambigiuos header names in', sheetName, paste(names(existingData)[ix],sep = ',')))
-                          } else {
-                            newName = x
-                          }
-                         return(newName)
-                         })))
+  data.table::setnames(dt,
+    old = names(dt),
+    new = unlist(lapply(names(dt), function(x) {
+      ix <- which(tolower(x) == tolower(names(existingData)))
+      if (length(ix) == 1) {
+        newName <- names(existingData)[ix]
+      } else if (length(ix) > 1) {
+        stop(paste("ambigiuos header names in", sheetName, paste(names(existingData)[ix], sep = ",")))
+      } else {
+        newName <- x
+      }
+      return(newName)
+    }))
+  )
 
   # Write new data
   openxlsx::writeData(wb = wb, sheet = sheetName, x = dt)
@@ -130,8 +131,8 @@ xlsxReadData <- function(wb, sheetName,
   ))
 
   if (as.logical(skipDescriptionRow)) {
-    dt <- dt[-seq_len(as.integer(skipDescriptionRow)) ]
-    dt <- dt %>% dplyr::select(!any_of('Comment'))
+    dt <- dt[-seq_len(as.integer(skipDescriptionRow))]
+    dt <- dt %>% dplyr::select(!any_of("Comment"))
   }
   # Capture all columns matching the patterns in alwaysCharacter
   idColumns <- unlist(lapply(alwaysCharacter, function(pattern) {
@@ -168,8 +169,9 @@ xlsxReadData <- function(wb, sheetName,
   }
 
   # Convert column names to start with a lowercase letter
-  if (convertHeaders)
+  if (convertHeaders) {
     dt <- setHeadersToLowerCase(dt)
+  }
 
   return(dt)
 }
@@ -188,7 +190,7 @@ xlsxReadData <- function(wb, sheetName,
 #'
 #' @return The current configuration file with the added sheet.
 #' @export
-addDataAsTemplateToXlsx <- function(wb, templateSheet, sheetName, dtNewData,templateXlsx = "Plots.xlsx") {
+addDataAsTemplateToXlsx <- function(wb, templateSheet, sheetName, dtNewData, templateXlsx = "Plots.xlsx") {
   # get template
   if (templateSheet %in% wb$sheet_names) {
     templateConfiguration <- xlsxReadData(wb = wb, sheetName = templateSheet)
@@ -207,8 +209,8 @@ addDataAsTemplateToXlsx <- function(wb, templateSheet, sheetName, dtNewData,temp
   }
 
   dtNewData <- rbind(templateConfiguration[1, ],
-                     dtNewData, # nolint indentation_linter
-                       fill = TRUE
+    dtNewData, # nolint indentation_linter
+    fill = TRUE
   )
 
   if (templateSheet != sheetName) {
@@ -253,11 +255,12 @@ splitInputs <- function(originalVector) {
 #'
 #' @return The modified data.table with updated column names.
 #' @export
-setHeadersToLowerCase <- function(dt){
-  data.table::setnames(dt, sapply(names(dt), function(x)
+setHeadersToLowerCase <- function(dt) {
+  data.table::setnames(dt, sapply(names(dt), function(x) {
     paste0(tolower(substring(
       x, 1, 1
-    )), substring(x, 2))))
+    )), substring(x, 2))
+  }))
   return(dt)
 }
 
@@ -301,14 +304,13 @@ separateAndTrim <- function(data, columnName) {
 #' @return Returns invisibly.
 #' @keywords internal
 synchronizeScenariosWithPlots <- function(projectConfiguration) {
-
   # Load the workbooks for scenarios and plots
   wbSc <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
   wbPl <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
   # Read data from the specified sheets
-  scenariosSc <- xlsxReadData(wbSc, sheetName = 'Scenarios')
-  scenariosPl <- xlsxReadData(wbPl, sheetName = 'Scenarios')
+  scenariosSc <- xlsxReadData(wbSc, sheetName = "Scenarios")
+  scenariosPl <- xlsxReadData(wbPl, sheetName = "Scenarios")
 
   # Identify scenarios that are in scenariosSc but not in scenariosPl
   scenariosToAdd <- setdiff(scenariosSc$scenario_name, scenariosPl$scenario)
@@ -318,16 +320,16 @@ synchronizeScenariosWithPlots <- function(projectConfiguration) {
     # Create a data table for the new scenarios to add
     newScenarios <- data.table(
       scenario = scenariosToAdd,
-      longName = gsub('_', ' ', scenariosToAdd),  # Replace underscores with spaces for long name
-      shortName = gsub('_', ' ', scenariosToAdd)  # Replace underscores with spaces for short name
+      longName = gsub("_", " ", scenariosToAdd), # Replace underscores with spaces for long name
+      shortName = gsub("_", " ", scenariosToAdd) # Replace underscores with spaces for short name
     )
 
     # Append new scenarios to the existing scenariosPl
     scenariosPl <- rbind(scenariosPl, newScenarios, fill = TRUE)
 
     # Write the updated scenarios back to the plots workbook
-    xlsxWriteData(wb = wbPl, sheetName = 'Scenarios', scenariosPl)
-    openxlsx::saveWorkbook(wb = wbPl,file = projectConfiguration$plotsFile,overwrite = TRUE)
+    xlsxWriteData(wb = wbPl, sheetName = "Scenarios", scenariosPl)
+    openxlsx::saveWorkbook(wb = wbPl, file = projectConfiguration$plotsFile, overwrite = TRUE)
   }
 
   return(invisible())
@@ -344,24 +346,23 @@ synchronizeScenariosWithPlots <- function(projectConfiguration) {
 #' @return Returns invisibly.
 #' @keywords internal
 synchronizeScenariosOutputsWithPlots <- function(projectConfiguration) {
-
   # Load the workbooks for scenarios and plots
   wbSc <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
   wbPl <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
   # Read data from the specified sheets
-  outputsSc <- xlsxReadData(wbSc, sheetName = 'OutputPaths')
-  outputsPl <- xlsxReadData(wbPl, sheetName = 'Outputs')
+  outputsSc <- xlsxReadData(wbSc, sheetName = "OutputPaths")
+  outputsPl <- xlsxReadData(wbPl, sheetName = "Outputs")
 
   # Merge the outputs based on the outputPathId
-  opMerged <- merge(outputsSc, outputsPl[-1], by = 'outputPathId', all = TRUE, suffixes = c('.sc', '.pl'), sort = FALSE)
+  opMerged <- merge(outputsSc, outputsPl[-1], by = "outputPathId", all = TRUE, suffixes = c(".sc", ".pl"), sort = FALSE)
 
   # Initialize the outputPath column
-  opMerged[, outputPath := '']
+  opMerged[, outputPath := ""]
 
   # Check for inconsistencies between scenario and plot output paths
   if (nrow(opMerged[!is.na(outputPath.sc) & !is.na(outputPath.pl) & outputPath.sc != outputPath.pl]) > 0) {
-    warning('Output definition in Scenario.xlsx and Plot.xlsx is inconsistent. Please synchronize manually')
+    warning("Output definition in Scenario.xlsx and Plot.xlsx is inconsistent. Please synchronize manually")
   }
 
   # Synchronize output paths based on availability
@@ -369,30 +370,25 @@ synchronizeScenariosOutputsWithPlots <- function(projectConfiguration) {
   opMerged[!is.na(outputPath.sc) & is.na(outputPath.pl), outputPath := outputPath.sc]
   opMerged[is.na(outputPath.sc) & !is.na(outputPath.pl), outputPath := outputPath.pl]
 
-  opMerged[,outputPath.sc:= NULL]
-  opMerged[,outputPath.pl:= NULL]
+  opMerged[, outputPath.sc := NULL]
+  opMerged[, outputPath.pl := NULL]
 
 
   # Set column order for better readability
-  data.table::setcolorder(opMerged, c('outputPathId', 'outputPath'))
+  data.table::setcolorder(opMerged, c("outputPathId", "outputPath"))
 
   # Write back to Scenario workbook if changes are detected
   if (any(!(opMerged$outputPathId %in% outputsSc$outputPathId)) |
-      any(!(opMerged[!is.na(outputPath)]$outputPath %in% outputsSc[!is.na(outputPath)]$outputPath))) {
-    xlsxWriteData(wbSc, sheetName = 'OutputPaths', opMerged[, c('outputPathId', 'outputPath')])
-    openxlsx::saveWorkbook(wb = wbSc,file = projectConfiguration$scenariosFile,overwrite = TRUE)
+    any(!(opMerged[!is.na(outputPath)]$outputPath %in% outputsSc[!is.na(outputPath)]$outputPath))) {
+    xlsxWriteData(wbSc, sheetName = "OutputPaths", opMerged[, c("outputPathId", "outputPath")])
+    openxlsx::saveWorkbook(wb = wbSc, file = projectConfiguration$scenariosFile, overwrite = TRUE)
   }
   # Write back to Plot workbook if changes are detected
   if (any(!(opMerged$outputPathId %in% outputsPl$outputPathId)) |
-      any(!(opMerged[!is.na(outputPath)]$outputPath %in% outputsPl[!is.na(outputPath)]$outputPath))) {
-    xlsxWriteData(wbPl, sheetName = 'Outputs', rbind(outputsPl[1],opMerged))
-    openxlsx::saveWorkbook(wb = wbPl,file = projectConfiguration$plotsFile,overwrite = TRUE)
+    any(!(opMerged[!is.na(outputPath)]$outputPath %in% outputsPl[!is.na(outputPath)]$outputPath))) {
+    xlsxWriteData(wbPl, sheetName = "Outputs", rbind(outputsPl[1], opMerged))
+    openxlsx::saveWorkbook(wb = wbPl, file = projectConfiguration$plotsFile, overwrite = TRUE)
   }
 
   return(invisible())
 }
-
-
-
-
-

@@ -16,7 +16,6 @@ test_that("generation of default template works", {
 
 # Test cases for concatWithAnd function
 test_that("concatWithAnd works correctly", {
-
   # Test with no elements
   expect_equal(concatWithAnd(character(0)), "")
 
@@ -41,7 +40,6 @@ test_that("concatWithAnd works correctly", {
 
   # Test with ws
   expect_equal(concatWithAnd(c("apple ", "", " cherry")), "apple and cherry")
-
 })
 
 
@@ -51,15 +49,15 @@ test_that("concatWithAnd works correctly", {
 test_that("formatPercentiles returns correct labels for specific values", {
   suffix <- " percentile"
 
-  expect_equal(formatPercentiles(c(0), suffix), c('min'))
-  expect_equal(formatPercentiles(c(0.5), suffix), c('median'))
-  expect_equal(formatPercentiles(c(1), suffix), c('max'))
+  expect_equal(formatPercentiles(c(0), suffix), c("min"))
+  expect_equal(formatPercentiles(c(0.5), suffix), c("median"))
+  expect_equal(formatPercentiles(c(1), suffix), c("max"))
 })
 
 test_that("formatPercentiles formats integers correctly", {
   suffix <- " percentile"
 
-  result <- formatPercentiles(c(25, 75, 99)/100, suffix)
+  result <- formatPercentiles(c(25, 75, 99) / 100, suffix)
   expect_equal(result[[1]], "25th percentile")
   expect_equal(result[[2]], "75th percentile")
   expect_equal(result[[3]], "99th percentile")
@@ -68,7 +66,7 @@ test_that("formatPercentiles formats integers correctly", {
 test_that("formatPercentiles formats non-integers correctly", {
   suffix <- " percentile"
 
-  result <- formatPercentiles(c(99.5, 33.3)/100, suffix)
+  result <- formatPercentiles(c(99.5, 33.3) / 100, suffix)
   expect_equal(result[[1]], "99.5th percentile")
   expect_equal(result[[2]], "33.3th percentile")
 })
@@ -76,10 +74,10 @@ test_that("formatPercentiles formats non-integers correctly", {
 test_that("formatPercentiles handles mixed input correctly", {
   suffix <- " percentile"
 
-  result <- formatPercentiles(c(0, 50, 100, 25.5, 75)/100, suffix)
-  expect_equal(result[[1]], 'min')
-  expect_equal(result[[2]], 'median')
-  expect_equal(result[[3]], 'max')
+  result <- formatPercentiles(c(0, 50, 100, 25.5, 75) / 100, suffix)
+  expect_equal(result[[1]], "min")
+  expect_equal(result[[2]], "median")
+  expect_equal(result[[3]], "max")
   expect_equal(result[[4]], "25.5th percentile")
   expect_equal(result[[5]], "75th percentile")
 })
@@ -87,7 +85,7 @@ test_that("formatPercentiles handles mixed input correctly", {
 test_that("formatPercentiles handles mixed input correctly when allAsPercentiles is TRUE", {
   suffix <- " percentile"
 
-  result <- formatPercentiles(c(0, 50, 100, 25.5, 75)/100, suffix, TRUE)
+  result <- formatPercentiles(c(0, 50, 100, 25.5, 75) / 100, suffix, TRUE)
   expect_equal(result, c("0th percentile", "50th percentile", "100th percentile", "25.5th percentile", "75th percentile"))
 })
 
@@ -208,7 +206,7 @@ test_that("getColorVectorForLegend works correctly with valid inputs", {
 
 test_that("getColorVectorForLegend returns default colors when colorVector is empty", {
   colorLegend <- "red|green|blue"
-  colorVector <- character(0)  # Empty character vector
+  colorVector <- character(0) # Empty character vector
 
   result <- getColorVectorForLegend(colorLegend, colorVector)
 
@@ -217,7 +215,7 @@ test_that("getColorVectorForLegend returns default colors when colorVector is em
 
 test_that("getColorVectorForLegend handles missing colors gracefully", {
   colorLegend <- "red|green|blue"
-  colorVector <- c(red = "#FF0000", blue = "#0000FF")  # Missing green
+  colorVector <- c(red = "#FF0000", blue = "#0000FF") # Missing green
 
   result <- getColorVectorForLegend(colorLegend, colorVector)
 

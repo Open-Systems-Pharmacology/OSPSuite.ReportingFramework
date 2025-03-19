@@ -10,7 +10,7 @@ filterParameterSimulated(
   onePlotConfig,
   ratioMode,
   coefficientOfVariation,
-  asCI
+  asPointeEstimate
 )
 }
 \arguments{
@@ -27,9 +27,9 @@ single plot, including plot name, x-axis scale, and other aesthetic settings.}
 
 \item{coefficientOfVariation}{A numeric value representing the coefficient of
  variation, which may be used to assess variability in the data. Only relevant for crossover studies (see details)
-(for `plotPKForestAbsoluteValuesWithCI` and `plotPKForestRatiosWithCI`)}
+(for `plotPKForestPointEstimateOfAbsoluteValues` and `plotPKForestPointEstimateOfRatios`)}
 
-\item{asCI}{Logical indicating if confidence intervals should be calculated.}
+\item{asPointeEstimate}{Logical indicating if confidence intervals should be calculated.}
 }
 \value{
 Filtered data table of simulated PK parameters.

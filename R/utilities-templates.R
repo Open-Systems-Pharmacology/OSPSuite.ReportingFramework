@@ -49,5 +49,3 @@ createDocumentFromTemplate <- function(template = "template_workflow",
     paste(templateContent, collapse = "\n") # Concatenate the lines into a single string
   invisible(rstudioapi::documentNew(text = templateText)) # Create a new document in RStudio using the template content
 }
-
-

@@ -41,8 +41,8 @@ getDataGroups <- function(wbPlots) {
     setnames(old = "displayName", new = "displayNameData")
 
   dtDataGroups$group <- factor(dtDataGroups$group,
-                               levels = unique(dtDataGroups$group),
-                               ordered = TRUE
+    levels = unique(dtDataGroups$group),
+    ordered = TRUE
   )
 
   return(dtDataGroups)
@@ -68,8 +68,8 @@ getOutputPathIds <- function(wbPlots) {
   dtOutputPaths[is.na(displayUnit), displayUnit := ""]
 
   dtOutputPaths$outputPathId <- factor(dtOutputPaths$outputPathId,
-                                       levels = unique(dtOutputPaths$outputPathId),
-                                       ordered = TRUE
+    levels = unique(dtOutputPaths$outputPathId),
+    ordered = TRUE
   )
 
   return(dtOutputPaths)
@@ -92,8 +92,8 @@ getTimeRangeTags <- function(wbPlots) {
   )
 
   dtTimeRange$tag <- factor(dtTimeRange$tag,
-                            levels = unique(dtTimeRange$tag),
-                            ordered = TRUE
+    levels = unique(dtTimeRange$tag),
+    ordered = TRUE
   )
 
   return(dtTimeRange)
@@ -108,8 +108,7 @@ getTimeRangeTags <- function(wbPlots) {
 #'
 #' @return A `data.table` with scenario definitions.
 #' @export
-getScenarioDefinitions <- function(wbScenarios,wbPlots = NULL) {
-
+getScenarioDefinitions <- function(wbScenarios, wbPlots = NULL) {
   scenariosSc <- xlsxReadData(
     wb = wbScenarios,
     sheetName = "Scenarios",
@@ -122,36 +121,35 @@ getScenarioDefinitions <- function(wbScenarios,wbPlots = NULL) {
     skipDescriptionRow = FALSE
   )
 
-  if (nrow(pkParameter) > 0){
-  scenarios <- merge(scenariosSc,
-        pkParameter,
-        by = "scenario_name",
-        all.x = TRUE,
-        sort = FALSE
-  )} else{
+  if (nrow(pkParameter) > 0) {
+    scenarios <- merge(scenariosSc,
+      pkParameter,
+      by = "scenario_name",
+      all.x = TRUE,
+      sort = FALSE
+    )
+  } else {
     scenarios <- copy(scenariosSc)
-    scenarios[,pKParameter:= NA]
+    scenarios[, pKParameter := NA]
   }
 
-  setnames(scenarios,old = "scenario_name", new = "scenarioName")
+  setnames(scenarios, old = "scenario_name", new = "scenarioName")
 
-  if (!is.null(wbPlots)){
+  if (!is.null(wbPlots)) {
     scenariosPl <- xlsxReadData(
       wb = wbPlots,
       sheetName = "Scenarios",
       skipDescriptionRow = FALSE
-    )  %>%
+    ) %>%
       setnames("scenario", "scenarioName")
 
     scenarios <- merge(scenariosPl,
-                       scenarios,
-                       by = "scenarioName",
-                       all.y = TRUE,
-                       sort = FALSE
+      scenarios,
+      by = "scenarioName",
+      all.y = TRUE,
+      sort = FALSE
     )
   }
 
   return(scenarios)
 }
-
-

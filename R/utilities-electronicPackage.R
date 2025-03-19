@@ -16,11 +16,10 @@
 #'
 #' @export
 addScenariosToEPackage <- function(projectConfiguration, configTable, subfolder) {
-
   checkmate::assertDataTable(configTable)
-  checkmate::assertNames(names(configTable), must.include = 'scenario')
+  checkmate::assertNames(names(configTable), must.include = "scenario")
 
-  message(paste('Electronic Package: Export files for ',subfolder))
+  message(paste("Electronic Package: Export files for ", subfolder))
 
   dirAnalysisProgram <- createAnalysisDirectory(projectConfiguration)
 
@@ -63,7 +62,7 @@ createAnalysisDirectory <- function(projectConfiguration) {
 #' @return A data.table containing the filename dictionary.
 #' @keywords internal
 readOrInitializeFileNameDictionary <- function(projectConfiguration) {
-  filePathDictionary <- file.path(projectConfiguration$addOns$electronicPackageFolder, 'filenameDictionary.csv')
+  filePathDictionary <- file.path(projectConfiguration$addOns$electronicPackageFolder, "filenameDictionary.csv")
   if (file.exists(filePathDictionary)) {
     fileNameDict <- data.table::fread(filePathDictionary)
     checkmate::assertCharacter(fileNameDict$filename, unique = TRUE, null.ok = TRUE)
@@ -86,23 +85,26 @@ readOrInitializeFileNameDictionary <- function(projectConfiguration) {
 #' @keywords internal
 prepareConfigTableExport <- function(configTable) {
   configTableToExport <- rbind(
-    configTable[is.na(level), c('scenario', 'scenarioLongName', 'dataGroupIds')] %>%
-      separateAndTrim(columnName = 'dataGroupIds') %>%
-      merge(configEnv$dataGroupIds[, c('group', 'displayNameData', 'dataSection')],
-            by.x = 'dataGroupId',
-            by.y = 'group',
-            all.x = TRUE) %>%
+    configTable[is.na(level), c("scenario", "scenarioLongName", "dataGroupIds")] %>%
+      separateAndTrim(columnName = "dataGroupIds") %>%
+      merge(configEnv$dataGroupIds[, c("group", "displayNameData", "dataSection")],
+        by.x = "dataGroupId",
+        by.y = "group",
+        all.x = TRUE
+      ) %>%
       unique(),
-    configTable[!is.na(referenceScenario) & !(referenceScenario %in% configTable$scenario), 'referenceScenario'] %>%
-      data.table::setnames(old = 'referenceScenario', new = 'scenario') %>%
-      dplyr::mutate(comment = 'as referencescenario') %>%
+    configTable[!is.na(referenceScenario) & !(referenceScenario %in% configTable$scenario), "referenceScenario"] %>%
+      data.table::setnames(old = "referenceScenario", new = "scenario") %>%
+      dplyr::mutate(comment = "as referencescenario") %>%
       unique(),
     fill = TRUE
   ) %>%
-    merge(configEnv$scenarios[, c('scenarioName', 'populationId')] %>%
-            data.table::setnames(old = 'populationId', new = 'sourcePouplation'),
-          by.x = 'scenario',
-          by.y = 'scenarioName')
+    merge(
+      configEnv$scenarios[, c("scenarioName", "populationId")] %>%
+        data.table::setnames(old = "populationId", new = "sourcePouplation"),
+      by.x = "scenario",
+      by.y = "scenarioName"
+    )
 
   return(configTableToExport)
 }
@@ -119,21 +121,19 @@ prepareConfigTableExport <- function(configTable) {
 #' @return The updated configuration table with valid filenames.
 #' @keywords internal
 validateAndUpdateFilenames <- function(configTableToExport, fileNameDict, invalidFilenames, projectConfiguration) {
-
-
   fileNameDict <- readOrInitializeFileNameDictionary(projectConfiguration)
 
   invalidFilenames <- c()
 
-  configTableToExport[, pkmlFile := paste0(scenario, '.pkml')]
+  configTableToExport[, pkmlFile := paste0(scenario, ".pkml")]
   checkmate::assertFileExists(file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult, unique(configTableToExport$pkmlFile)))
-  configTableToExport[, pkmlFileValid := '']
+  configTableToExport[, pkmlFileValid := ""]
 
   for (iRow in seq_len(nrow(configTableToExport))) {
     newFile <- if (configTableToExport$pkmlFile[iRow] %in% fileNameDict$filename) {
       fileNameDict[configTableToExport$pkmlFile[iRow] == filename]$filenameNew
     } else {
-      paste0(configTableToExport$scenario[iRow], '.xml')
+      paste0(configTableToExport$scenario[iRow], ".xml")
     }
 
     if (checkFileNameValidity(newFile, isDataSet = FALSE)) {
@@ -144,18 +144,18 @@ validateAndUpdateFilenames <- function(configTableToExport, fileNameDict, invali
   }
 
   # Evaluate population files and build new simulation file name
-  configTableToExport[, populationCsv := '']
-  configTableToExport[, populationCsvValid := '']
+  configTableToExport[, populationCsv := ""]
+  configTableToExport[, populationCsvValid := ""]
 
   for (iRow in seq_len(nrow(configTableToExport))) {
     sourcePopulationFile <- file.path(
       projectConfiguration$populationsFolder,
-      paste0(configTableToExport$sourcePouplation[iRow], '.csv')
+      paste0(configTableToExport$sourcePouplation[iRow], ".csv")
     )
     scenarioPopulationFile <- file.path(
       projectConfiguration$outputFolder,
       EXPORTDIR$simulationResult,
-      paste0(configTableToExport$scenario[iRow], '_population.csv')
+      paste0(configTableToExport$scenario[iRow], "_population.csv")
     )
 
     checkmate::assertFile(scenarioPopulationFile)
@@ -208,10 +208,14 @@ validateAndUpdateFilenames <- function(configTableToExport, fileNameDict, invali
 #' @return The updated filename dictionary.
 #' @keywords internal
 updateFileNameDictionary <- function(fileNameDict, invalidFilenames, projectConfiguration) {
-  fileNameDict <- rbind(fileNameDict,
-                        data.table(filename = invalidFilenames,
-                                   filenameNew = ''))
-  filePathDictionary <- file.path(projectConfiguration$addOns$electronicPackageFolder, 'filenameDictionary.csv')
+  fileNameDict <- rbind(
+    fileNameDict,
+    data.table(
+      filename = invalidFilenames,
+      filenameNew = ""
+    )
+  )
+  filePathDictionary <- file.path(projectConfiguration$addOns$electronicPackageFolder, "filenameDictionary.csv")
   data.table::fwrite(fileNameDict, file = filePathDictionary)
   return(fileNameDict)
 }
@@ -224,18 +228,22 @@ updateFileNameDictionary <- function(fileNameDict, invalidFilenames, projectConf
 #' @keywords internal
 copyFilesToAnalysisProgram <- function(configTableToExport, dirAnalysisProgram) {
   tmp <- rbind(
-    configTableToExport[, c('pkmlFile', 'pkmlFileValid')] %>%
+    configTableToExport[, c("pkmlFile", "pkmlFileValid")] %>%
       unique() %>%
       .[, pkmlFile := file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult, pkmlFile)] %>%
-      data.table::setnames(old = c('pkmlFile', 'pkmlFileValid'),
-                           new = c('from', 'to')),
-    configTableToExport[, c('populationCsv', 'populationCsvValid')] %>%
+      data.table::setnames(
+        old = c("pkmlFile", "pkmlFileValid"),
+        new = c("from", "to")
+      ),
+    configTableToExport[, c("populationCsv", "populationCsvValid")] %>%
       unique() %>%
-      data.table::setnames(old = c('populationCsv', 'populationCsvValid'),
-                           new = c('from', 'to'))
+      data.table::setnames(
+        old = c("populationCsv", "populationCsvValid"),
+        new = c("from", "to")
+      )
   )
 
-  tmp <- tmp[to != '']
+  tmp <- tmp[to != ""]
   for (iRow in seq_len(nrow(tmp))) {
     file.copy(
       from = tmp$from[iRow],
@@ -257,12 +265,15 @@ copyFilesToAnalysisProgram <- function(configTableToExport, dirAnalysisProgram) 
 #' @return The path to the created export log file.
 #' @keywords internal
 createExportLogFile <- function(configTableToExport, projectConfiguration) {
-  exportLogFile <- file.path(getOption('OSPSuite.RF.logFileFolder', default = projectConfiguration$addOns$electronicPackageFolder),
-                             'ePackageFileExport.csv')
+  exportLogFile <- file.path(
+    getOption("OSPSuite.RF.logFileFolder", default = projectConfiguration$addOns$electronicPackageFolder),
+    "ePackageFileExport.csv"
+  )
   if (file.exists(exportLogFile)) {
     configTableToExport <- rbind(data.table::fread(exportLogFile),
-                                 configTableToExport,
-                                 fill = TRUE) %>%
+      configTableToExport,
+      fill = TRUE
+    ) %>%
       unique()
   }
   data.table::fwrite(configTableToExport, file = exportLogFile)
@@ -276,23 +287,27 @@ createExportLogFile <- function(configTableToExport, projectConfiguration) {
 #' @param projectConfiguration A ProjectConfiguration object containing project-specific configurations.
 #' @keywords internal
 createReviewerAidTable <- function(configTableToExport, projectConfiguration) {
-  tableForReviewerAidPdfFile <- file.path(projectConfiguration$addOns$electronicPackageFolder, 'templateReviewerAid.csv')
+  tableForReviewerAidPdfFile <- file.path(projectConfiguration$addOns$electronicPackageFolder, "templateReviewerAid.csv")
 
-  configTableToExport[, pkmlFileValid := ifelse(pkmlFileValid == '', '!!!invalidFileName', pkmlFileValid)]
-  configTableToExport[, populationCsvValid := ifelse(populationCsvValid == '' & populationCsv != '',
-                                                     '!!!invalidFileName',
-                                                     basename(populationCsvValid))]
+  configTableToExport[, pkmlFileValid := ifelse(pkmlFileValid == "", "!!!invalidFileName", pkmlFileValid)]
+  configTableToExport[, populationCsvValid := ifelse(populationCsvValid == "" & populationCsv != "",
+    "!!!invalidFileName",
+    basename(populationCsvValid)
+  )]
 
-  tableForReviewerAidPdf <- configTableToExport[, c('scenarioLongName', 'pkmlFileValid', 'populationCsvValid', 'dataSection')] %>%
-    data.table::setnames(old = c('scenarioLongName', 'pkmlFileValid', 'populationCsvValid', 'dataSection'),
-                         new = c('Report name', 'Model name (*.xml)', 'Population file (*.csv)', 'Observed data building block subfolder')) %>%
+  tableForReviewerAidPdf <- configTableToExport[, c("scenarioLongName", "pkmlFileValid", "populationCsvValid", "dataSection")] %>%
+    data.table::setnames(
+      old = c("scenarioLongName", "pkmlFileValid", "populationCsvValid", "dataSection"),
+      new = c("Report name", "Model name (*.xml)", "Population file (*.csv)", "Observed data building block subfolder")
+    ) %>%
     unique()
 
-  filenameReviewerAid <- file.path(projectConfiguration$addOns$electronicPackageFolder, 'reviewerAid.csv')
+  filenameReviewerAid <- file.path(projectConfiguration$addOns$electronicPackageFolder, "reviewerAid.csv")
   if (file.exists(filenameReviewerAid)) {
     tableForReviewerAidPdf <- rbind(data.table::fread(filenameReviewerAid),
-                                    tableForReviewerAidPdf,
-                                    fill = TRUE) %>%
+      tableForReviewerAidPdf,
+      fill = TRUE
+    ) %>%
       unique()
   }
   data.table::fwrite(tableForReviewerAidPdf, file = filenameReviewerAid)
@@ -306,23 +321,26 @@ createReviewerAidTable <- function(configTableToExport, projectConfiguration) {
 #' @param projectConfiguration A ProjectConfiguration object containing project-specific configurations.
 #' @keywords internal
 createSummaryOverviewTable <- function(configTableToExport, projectConfiguration) {
-  summaryOverview <- configTableToExport[, c('scenarioLongName', 'pkmlFileValid', 'populationCsvValid')] %>%
-    tidyr::pivot_longer(cols = c('pkmlFileValid', 'populationCsvValid'), names_to = 'fileType', values_to = 'Report/Document Name') %>%
+  summaryOverview <- configTableToExport[, c("scenarioLongName", "pkmlFileValid", "populationCsvValid")] %>%
+    tidyr::pivot_longer(cols = c("pkmlFileValid", "populationCsvValid"), names_to = "fileType", values_to = "Report/Document Name") %>%
     data.table::setDT() %>%
-    .[, scenarioLongName := ifelse(fileType == 'pkmlFileValid', scenarioLongName, '')] %>%
+    .[, scenarioLongName := ifelse(fileType == "pkmlFileValid", scenarioLongName, "")] %>%
     unique() %>%
-    data.table::setnames(old = c('scenarioLongName'),
-                         new = c('Content of Document')) %>%
-    .[, ('Document Type') := ifelse(fileType == 'pkmlFileValid', 'UTF-8 file (xml format)', 'UTF-8 file')] %>%
-    .[, ('Location in eCTD') := 'M5'] %>%
+    data.table::setnames(
+      old = c("scenarioLongName"),
+      new = c("Content of Document")
+    ) %>%
+    .[, ("Document Type") := ifelse(fileType == "pkmlFileValid", "UTF-8 file (xml format)", "UTF-8 file")] %>%
+    .[, ("Location in eCTD") := "M5"] %>%
     .[, fileType := NULL] %>%
-    data.table::setcolorder(c('Report/Document Name', 'Content of Document', 'Document Type', 'Location in eCTD'))
+    data.table::setcolorder(c("Report/Document Name", "Content of Document", "Document Type", "Location in eCTD"))
 
-  filenameOverview <- file.path(projectConfiguration$addOns$electronicPackageFolder, 'summaryOverview.csv')
+  filenameOverview <- file.path(projectConfiguration$addOns$electronicPackageFolder, "summaryOverview.csv")
   if (file.exists(filenameOverview)) {
     summaryOverview <- rbind(data.table::fread(filenameOverview),
-                             summaryOverview,
-                             fill = TRUE) %>%
+      summaryOverview,
+      fill = TRUE
+    ) %>%
       unique()
   }
   data.table::fwrite(summaryOverview, file = filenameOverview)
@@ -337,69 +355,76 @@ createSummaryOverviewTable <- function(configTableToExport, projectConfiguration
 #'
 #' @return This function does not return a value. It performs file operations to save the exported data.
 #' @keywords internal
-exportTimeProfileDataForEPackage <- function(projectConfiguration,dataToExport){
+exportTimeProfileDataForEPackage <- function(projectConfiguration, dataToExport) {
+  dataToExport <- merge(
+    dataToExport %>%
+      dplyr::select(!any_of(c(
+        setdiff(intersect(names(dataToExport), names(configEnv$dataGroupIds)), "group"),
+        ".Id", "individualId", "dataType"
+      ))),
+    configEnv$dataGroupIds %>%
+      dplyr::select(!any_of(c("shape", "reference", "defaultScenario"))),
+    by = "group"
+  )
 
+  data.table::setnames(
+    x = dataToExport,
+    old = c("dataSection", "scenario", "studyId", "group", "dose", "route", "molecule", "species", "organ", "compartment"),
+    new = c("Section", "Simulation", "Study Id", "Group Id", "Dose", "Route", "Molecule", "Species", "Organ", "Compartment"),
+    skip_absent = TRUE
+  )
 
-  dataToExport <- merge(dataToExport %>%
-                          dplyr::select(!any_of(c(setdiff(intersect(names(dataToExport),names(configEnv$dataGroupIds)),'group'),
-                                                  '.Id','individualId','dataType'))),
-                        configEnv$dataGroupIds %>%
-                          dplyr::select(!any_of(c('shape','reference','defaultScenario'))),
-                        by = 'group')
-
-  data.table::setnames(x = dataToExport,
-                       old = c('dataSection','scenario','studyId','group','dose','route','molecule','species','organ','compartment'),
-                       new = c("Section","Simulation","Study Id","Group Id","Dose","Route","Molecule","Species","Organ","Compartment"),
-                       skip_absent = TRUE)
-
-  for (dataByClass in split(dataToExport, by = 'dataClass')){
-
+  for (dataByClass in split(dataToExport, by = "dataClass")) {
     dataByClass <- setDT(dataByClass)
 
-    if (dataByClass$dataClass[1] == DATACLASS$tpAggregated){
-      dataByErrorList <- split(dataToExport, by = 'yErrorType')
-    } else{
+    if (dataByClass$dataClass[1] == DATACLASS$tpAggregated) {
+      dataByErrorList <- split(dataToExport, by = "yErrorType")
+    } else {
       dataByErrorList <- list(dataByClass)
     }
 
-    for (dataByError in dataByErrorList){
-
+    for (dataByError in dataByErrorList) {
       dataByError <- setDT(dataByError)
 
-      if (dplyr::n_distinct(dataByError$xUnit) == 1){
-        data.table::setnames(x = dataByError,
-                             old = "xValues",
-                             new = paste0("Time [",dataByError$xUnit[1],']'))
-        dataByError[,xUnit := NULL]
+      if (dplyr::n_distinct(dataByError$xUnit) == 1) {
+        data.table::setnames(
+          x = dataByError,
+          old = "xValues",
+          new = paste0("Time [", dataByError$xUnit[1], "]")
+        )
+        dataByError[, xUnit := NULL]
       }
 
-      if (dataByError$dataClass[1] == DATACLASS$tpIndividual){
-        data.table::setnames(x = dataByError,old =  'yValues',"Measurement")
-      } else if (dataByError$yErrorType[1] == ospsuite::DataErrorType$ArithmeticStdDev){
-        data.table::setnames(x = dataByError,old =  'yValues',"Mean")
-        data.table::setnames(x = dataByError,old =  'yErrorValues',"Sd")
-      } else if (dataByError$yErrorType[1] == ospsuite::DataErrorType$GeometricStdDev){
-        data.table::setnames(x = dataByError,old =  'yValues',"GeoMean")
-        data.table::setnames(x = dataByError,old =  'yErrorValues',"GeoSd")
+      if (dataByError$dataClass[1] == DATACLASS$tpIndividual) {
+        data.table::setnames(x = dataByError, old = "yValues", "Measurement")
+      } else if (dataByError$yErrorType[1] == ospsuite::DataErrorType$ArithmeticStdDev) {
+        data.table::setnames(x = dataByError, old = "yValues", "Mean")
+        data.table::setnames(x = dataByError, old = "yErrorValues", "Sd")
+      } else if (dataByError$yErrorType[1] == ospsuite::DataErrorType$GeometricStdDev) {
+        data.table::setnames(x = dataByError, old = "yValues", "GeoMean")
+        data.table::setnames(x = dataByError, old = "yErrorValues", "GeoSd")
       }
 
-      suffix = names(DATACLASS[DATACLASS == dataByError$dataClass[1]])
-      if (dataByError$dataClass[1] == DATACLASS$tpAggregated){
-        suffix = paste0(suffix,'_',dataByError$yErrorType[1])
+      suffix <- names(DATACLASS[DATACLASS == dataByError$dataClass[1]])
+      if (dataByError$dataClass[1] == DATACLASS$tpAggregated) {
+        suffix <- paste0(suffix, "_", dataByError$yErrorType[1])
       }
 
-      filenameData <- file.path(projectConfiguration$addOns$electronicPackageFolder,
-                                paste0('dataObserved_',suffix,'.csv'))
+      filenameData <- file.path(
+        projectConfiguration$addOns$electronicPackageFolder,
+        paste0("dataObserved_", suffix, ".csv")
+      )
       if (file.exists(filenameData)) {
         tmp <- utils::read.csv(
           file = filenameData,
-          fileEncoding = "UTF8",check.names = FALSE
+          fileEncoding = "UTF8", check.names = FALSE
         ) %>%
           setDT()
 
         dataByError <- rbind(tmp,
-                              dataByError,
-                              fill = TRUE) %>%
+          dataByError,
+          fill = TRUE
+        ) %>%
           unique()
       }
       utils::write.csv(
@@ -408,16 +433,8 @@ exportTimeProfileDataForEPackage <- function(projectConfiguration,dataToExport){
         fileEncoding = "UTF8",
         row.names = FALSE
       )
-
     }
-
   }
-
-
-
-
-
-
 }
 
 
@@ -443,7 +460,6 @@ exportTimeProfileDataForEPackage <- function(projectConfiguration,dataToExport){
 #'
 #' @export
 checkFileNameValidity <- function(fileName, isDataSet = FALSE) {
-
   # Define the allowed file extensions and maximum length
   if (isDataSet) {
     maxLengthForFiles <- 32
@@ -476,10 +492,10 @@ checkFileNameValidity <- function(fileName, isDataSet = FALSE) {
 
   if (length(warnings) > 0) {
     warning(paste(warnings, collapse = "\n"))
-    return(FALSE)  # Return FALSE if there are warnings
+    return(FALSE) # Return FALSE if there are warnings
   }
 
-  return(TRUE)  # Return TRUE if all conditions are met
+  return(TRUE) # Return TRUE if all conditions are met
 }
 
 #' Export PK Parameters with IOV for Electronic Package
@@ -492,32 +508,26 @@ checkFileNameValidity <- function(fileName, isDataSet = FALSE) {
 #'
 #' @return This function does not return a value. It performs file operations to save the exported PK parameters.
 #' @keywords internal
-exportPKWithIOVForEPackage <- function(projectConfiguration,pkParameterDT){
-  if (getOption('OSPSuite.RF.withEPackage',default = FALSE)){
-
-    exportDir <- file.path(projectConfiguration$addOns$electronicPackageFolder,'PKParameterWithIOV')
+exportPKWithIOVForEPackage <- function(projectConfiguration, pkParameterDT) {
+  if (getOption("OSPSuite.RF.withEPackage", default = FALSE)) {
+    exportDir <- file.path(projectConfiguration$addOns$electronicPackageFolder, "PKParameterWithIOV")
     checkmate::assertPathForOutput(exportDir)
     if (!dir.exists(exportDir)) dir.create(exportDir)
 
-    dtList <- split(pkParameterDT,by = c('scenario','referenceScenario','outputPathId','pkParameter'))
+    dtList <- split(pkParameterDT, by = c("scenario", "referenceScenario", "outputPathId", "pkParameter"))
 
-    invisible(lapply(names(dtList),
-           function(dtName){
-             fileName <- paste0(dtName,'.csv')
-             utils::write.csv(
-               x = dtList[[dtName]],
-               file = file.path(exportDir,fileName),
-               fileEncoding = "UTF8",
-               row.names = FALSE
-             )
-           }
+    invisible(lapply(
+      names(dtList),
+      function(dtName) {
+        fileName <- paste0(dtName, ".csv")
+        utils::write.csv(
+          x = dtList[[dtName]],
+          file = file.path(exportDir, fileName),
+          fileEncoding = "UTF8",
+          row.names = FALSE
+        )
+      }
     ))
-
-
   }
-   return(invisible())
-
+  return(invisible())
 }
-
-
-

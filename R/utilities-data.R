@@ -12,29 +12,30 @@
 #' @export
 readObservedDataByDictionary <- function(projectConfiguration,
                                          spreadData = TRUE,
-                                         dataClassType = c('timeprofile','pkParameter')) {
+                                         dataClassType = c("timeprofile", "pkParameter")) {
   # avoid warning for global variable
   individualId <- outputPathId <- dataType <- NULL
 
   dataClassType <- match.arg(dataClassType)
 
-  wb = openxlsx::loadWorkbook(projectConfiguration$dataImporterConfigurationFile)
+  wb <- openxlsx::loadWorkbook(projectConfiguration$dataImporterConfigurationFile)
   dataList <- xlsxReadData(
     wb = wb,
     sheetName = "DataFiles",
     skipDescriptionRow = TRUE
   )
-  checkmate::assertCharacter(dataList$dataClass,any.missing = FALSE)
-  dataList <- switch (dataClassType,
-                      timeprofile = dataList[dataClass %in% grep("^tp", unlist(DATACLASS), value = TRUE)],
-                      pkParameter = dataList[dataClass %in% grep("^pk", unlist(DATACLASS), value = TRUE)]                    )
-  if (nrow(dataList) == 0) stop(paste('no datafiles defined for',dataClassType))
+  checkmate::assertCharacter(dataList$dataClass, any.missing = FALSE)
+  dataList <- switch(dataClassType,
+    timeprofile = dataList[dataClass %in% grep("^tp", unlist(DATACLASS), value = TRUE)],
+    pkParameter = dataList[dataClass %in% grep("^pk", unlist(DATACLASS), value = TRUE)]
+  )
+  if (nrow(dataList) == 0) stop(paste("no datafiles defined for", dataClassType))
 
   checkmate::assertFileExists(fs::path_abs(
     start = projectConfiguration$projectConfigurationDirPath,
     path = dataList$dataFile
   ))
-  checkmate::assertNames(dataList$dictionary,subset.of = wb$sheet_names)
+  checkmate::assertNames(dataList$dictionary, subset.of = wb$sheet_names)
 
   # Loop through selected data files
   dataDT <- data.table()
@@ -53,14 +54,14 @@ readObservedDataByDictionary <- function(projectConfiguration,
     )
 
     dataDT <- rbind(dataDT,
-                    convertDataByDictionary( # nolint indentation_linter
-                      data = tmpData,
-                      dataFilter = d$dataFilter,
-                      dict = tmpdict,
-                      dictionaryName = d$dictionary
-                    ) %>%
-                      dplyr::mutate(dataClass = d$dataClass),
-                    fill = TRUE
+      convertDataByDictionary( # nolint indentation_linter
+        data = tmpData,
+        dataFilter = d$dataFilter,
+        dict = tmpdict,
+        dictionaryName = d$dictionary
+      ) %>%
+        dplyr::mutate(dataClass = d$dataClass),
+      fill = TRUE
     )
     # Get unique dictionary for columnType
     tmpdict <-
@@ -79,7 +80,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
 
   dataDT <- setDataTypeAttributes(dataDT, dict)
 
-  validateObservedData(dataDT = dataDT,dataClassType)
+  validateObservedData(dataDT = dataDT, dataClassType)
 
   # Spread data to other tables
   if (spreadData) {
@@ -164,7 +165,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
 #' It does not return a value.
 #'
 #' @export
-validateObservedData <- function(dataDT,dataClassType) {
+validateObservedData <- function(dataDT, dataClassType) {
   # Initialize variables used for data.tables
   yUnit <- NULL
 
@@ -187,7 +188,7 @@ validateObservedData <- function(dataDT,dataClassType) {
   # Check data validity
   colIdentifier <-
     intersect(
-      c("individualId", "group", "outputPathId", "xValues","parameter"),
+      c("individualId", "group", "outputPathId", "xValues", "parameter"),
       names(dataDT)
     )
   if (any(duplicated(dataDT, by = colIdentifier))) {
@@ -203,7 +204,7 @@ validateObservedData <- function(dataDT,dataClassType) {
     c(
       "lloq", "yUnit",
       "yErrorValues", "yErrorType", "nBelowLLOQ",
-      "unit","errorValues","errorType"  # columns for pkParameter
+      "unit", "errorValues", "errorType" # columns for pkParameter
     )
   )) {
     if (any(is.na(dataDT[[col]]) | dataDT[[col]] == "")) {
@@ -213,18 +214,18 @@ validateObservedData <- function(dataDT,dataClassType) {
 
 
 
-  validateDataUnit <- function(colIdentifier,colUnit){
+  validateDataUnit <- function(colIdentifier, colUnit) {
     if (any(dataDT[, .(N = dplyr::n_distinct(get(colUnit))), by = colIdentifier]$N > 1)) { # nolint
-      tmp <- dataObserved[,.N,by = c('group',colIdentifier,colUnit)]
-      tmp <- merge(tmp,tmp[duplicated(tmp[,c('group', colIdentifier )]),c('group',colIdentifier)],by = c('group',colIdentifier))
+      tmp <- dataObserved[, .N, by = c("group", colIdentifier, colUnit)]
+      tmp <- merge(tmp, tmp[duplicated(tmp[, c("group", colIdentifier)]), c("group", colIdentifier)], by = c("group", colIdentifier))
       writeTableToLog(tmp)
       stop(
-        paste(colUnit,"ambiguous in columns", paste(colIdentifier, collapse = ", "))
+        paste(colUnit, "ambiguous in columns", paste(colIdentifier, collapse = ", "))
       )
     }
   }
 
-  validateErrorType <- function(errorTypeCol,errorValuesCol,minCol,maxCol){
+  validateErrorType <- function(errorTypeCol, errorValuesCol, minCol, maxCol) {
     if (errorTypeCol %in% names(dataDT)) {
       if (any(dataDT$yErrorType %in% unlist(ospsuite::DataErrorType))) {
         checkmate::assertNames(
@@ -240,14 +241,13 @@ validateObservedData <- function(dataDT,dataClassType) {
     }
   }
 
-  if (dataClassType == 'timeprofile'){
-    validateDataUnit(colIdentifier = c("outputPathId"),colUnit = 'yUnit')
-    validateErrorType(errorTypeCol = 'yErrorType',errorValuesCol = 'yErrorValues',minCol = "yMin",maxCol = "yMax")
-  }else if (dataClassType == 'pkParameter'){
-    validateDataUnit(colIdentifier = c("outputPathId","parameter"),colUnit = 'unit')
-    validateErrorType(errorTypeCol = 'errorType',errorValuesCol = 'errorValues',minCol = "minValue",maxCol = "maxValue")
+  if (dataClassType == "timeprofile") {
+    validateDataUnit(colIdentifier = c("outputPathId"), colUnit = "yUnit")
+    validateErrorType(errorTypeCol = "yErrorType", errorValuesCol = "yErrorValues", minCol = "yMin", maxCol = "yMax")
+  } else if (dataClassType == "pkParameter") {
+    validateDataUnit(colIdentifier = c("outputPathId", "parameter"), colUnit = "unit")
+    validateErrorType(errorTypeCol = "errorType", errorValuesCol = "errorValues", minCol = "minValue", maxCol = "maxValue")
   }
-
 }
 
 
@@ -383,7 +383,8 @@ convertDataByDictionary <- function(data,
             "'"
           ))
           stop(conditionMessage(err))
-        })
+        }
+      )
     }
   }
 
@@ -406,8 +407,9 @@ convertDataByDictionary <- function(data,
     dplyr::select(unique(dict$targetColumn))
 
   # Add time unit
-  if ('xValues' %in% dict$targetColumn)
+  if ("xValues" %in% dict$targetColumn) {
     data[, xUnit := dict[targetColumn == "xValues"]$sourceUnit]
+  }
 
   # Transfer identifier to character without commas
   data <- convertIdentifierColumns(
@@ -450,8 +452,8 @@ convertBiometrics <- function(data, dict, dictionaryName) {
   if ("gender" %in% dict$targetColumn) {
     data[, gender := ifelse(gender == 1, "MALE", gender)]
     data[, gender := ifelse(gender == 2, "FEMALE", gender)]
-    data[, gender := ifelse(gender == 'M', "MALE", gender)]
-    data[, gender := ifelse(gender == 'F', "FEMALE", gender)]
+    data[, gender := ifelse(gender == "M", "MALE", gender)]
+    data[, gender := ifelse(gender == "F", "FEMALE", gender)]
     data[, gender := toupper(gender)]
 
     data[, gender := ifelse(gender != "MALE" & gender != "FEMALE", "UNKNOWN", gender)]
@@ -493,8 +495,10 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
 
   colsSelected <- unique(c(
     identifierCols,
-    setdiff(getColumnsForColumnType(dt = dataDT, columnTypes = "metadata"),
-            c('compartmnt','molecule','organ'))
+    setdiff(
+      getColumnsForColumnType(dt = dataDT, columnTypes = "metadata"),
+      c("compartmnt", "molecule", "organ")
+    )
   ))
 
   dtDataGroupIdsNew <- dataDT %>%
@@ -507,15 +511,14 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
   dtDataGroupIdsNew <-
     dtDataGroupIdsNew[!(group %in% dtDataGroupIds$group)]
 
-  if (nrow(dtDataGroupIdsNew) > 0){
-
+  if (nrow(dtDataGroupIdsNew) > 0) {
     dtDataGroupIds <- rbind(dtDataGroupIds,
-                            dtDataGroupIdsNew, # nolint indentation_linter
-                            fill = TRUE)
+      dtDataGroupIdsNew, # nolint indentation_linter
+      fill = TRUE
+    )
 
     xlsxWriteData(wb = wb, sheetName = "DataGroups", dt = dtDataGroupIds)
     openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
-
   }
 
   return(invisible())
@@ -550,10 +553,10 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
     unique() %>%
     dplyr::mutate(outputPathId = as.character(outputPathId))
 
-  if (nrow(dtOutputPathsNew) > 0){
+  if (nrow(dtOutputPathsNew) > 0) {
     dtOutputPaths <- rbind(dtOutputPaths,
-                           dtOutputPathsNew, # nolint indentation_linter
-                           fill = TRUE
+      dtOutputPathsNew, # nolint indentation_linter
+      fill = TRUE
     )
 
     xlsxWriteData(wb = wb, sheetName = "Outputs", dt = dtOutputPaths)
@@ -707,16 +710,18 @@ addMetaDataToDataSet <- function(dataSet, groupData) {
 #' @param overwrite If TRUE, existing rows will be overwritten.
 #' @export
 addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALSE) {
-
-  if (!('individualId' %in% names(dataDT))) return(invisible())
+  if (!("individualId" %in% names(dataDT))) {
+    return(invisible())
+  }
 
   checkmate::assertFileExists(projectConfiguration$individualsFile)
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$individualsFile)
 
   dtIndividualBiometrics <- xlsxReadData(wb = wb, sheetName = "IndividualBiometrics")
-  if (overwrite)
-    dtIndividualBiometrics <- dtIndividualBiometrics[1,]
+  if (overwrite) {
+    dtIndividualBiometrics <- dtIndividualBiometrics[1, ]
+  }
 
   biometrics <-
     dataDT %>%
@@ -740,15 +745,16 @@ addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALS
   # Merge old and new tables
   dtIndividualBiometrics <-
     rbind(dtIndividualBiometrics,
-          biometrics, # nolint indentation_linter
-          fill = TRUE
+      biometrics, # nolint indentation_linter
+      fill = TRUE
     )
 
   # If overwrite FALSE take original located at the top, otherwise take new rows located at the bottom
   dtIndividualBiometrics <-
     dtIndividualBiometrics[!duplicated(dtIndividualBiometrics,
-                                       by = "individualId",
-                                       fromLast = overwrite)]
+      by = "individualId",
+      fromLast = overwrite
+    )]
   xlsxWriteData(wb = wb, sheetName = "IndividualBiometrics", dt = dtIndividualBiometrics)
 
   openxlsx::saveWorkbook(wb, projectConfiguration$individualsFile, overwrite = TRUE)
@@ -778,10 +784,11 @@ convertDataCombinedToDataTable <- function(datacombined) {
 
   # Set DataClass
   dataDT[, dataClass := ifelse(any(!is.na(yErrorValues)), DATACLASS$tpAggregated, DATACLASS$tpIndividual),
-         by = "group"] # nolint indentation_linter
+    by = "group"
+  ] # nolint indentation_linter
 
   if (any(dataDT$dataClass == DATACLASS$tpIndividual) &&
-      !("individualId" %in% names(dataDT))) { # nolint indentation_linter
+    !("individualId" %in% names(dataDT))) { # nolint indentation_linter
     stop("IndividualData needs meta data individualId")
   }
 }
@@ -893,8 +900,8 @@ prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
   dataToAggregate[, group := paste(group, groupSuffix, sep = "_")]
 
   checkmate::assertNames(unique(dataToAggregate$group),
-                         disjunct.from = unique(dataObserved$group), # nolint indentation_linter
-                         .var.name = "new group names"
+    disjunct.from = unique(dataObserved$group), # nolint indentation_linter
+    .var.name = "new group names"
   )
 
   return(dataToAggregate)
@@ -944,8 +951,8 @@ addUniqueColumns <- function(dataObserved, aggregatedData) {
 
   colsToCheck <- setdiff(names(dataObserved), identifier)
   columnISUnique <- dataObserved[, lapply(.SD, function(x) length(unique(x))),
-                                 by = identifier, # nolint indentation_linter
-                                 .SDcols = colsToCheck
+    by = identifier, # nolint indentation_linter
+    .SDcols = colsToCheck
   ] %>%
     .[, lapply(.SD, function(x) all(x == 1)), .SDcols = colsToCheck] %>%
     unlist()
@@ -955,9 +962,9 @@ addUniqueColumns <- function(dataObserved, aggregatedData) {
     unique()
 
   aggregatedData <- merge(aggregatedData,
-                          tmp, # nolint indentation_linter
-                          by = identifier,
-                          all.x = TRUE
+    tmp, # nolint indentation_linter
+    by = identifier,
+    all.x = TRUE
   )
 
   return(aggregatedData)
@@ -1065,10 +1072,11 @@ getIndividualDataGroups <- function(dataObserved, groups, minN = 2) {
 
   tmp <-
     dataObserved[, .(N = dplyr::n_distinct(individualId)),
-                 by = c("group", "dataClass", "dataType")] # nolint indentation_linter
+      by = c("group", "dataClass", "dataType")
+    ] # nolint indentation_linter
   groupsAvailable <- unique(tmp[dataClass == DATACLASS$tpIndividual &
-                                  dataType == "observed" &
-                                  N >= minN]$group)
+    dataType == "observed" &
+    N >= minN]$group)
 
 
   if (is.null(groups)) {

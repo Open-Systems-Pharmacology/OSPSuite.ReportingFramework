@@ -34,4 +34,3 @@ EXPORTDIR <- ospsuite.utils::enum(c( # nolint
   pKAnalysisResults = "PKAnalysisResults",
   analysisProgram = "AnalysisProgram"
 ))
-

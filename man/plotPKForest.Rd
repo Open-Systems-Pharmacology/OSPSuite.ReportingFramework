@@ -10,14 +10,12 @@ plotPKForest(
   pkParameterDT,
   pkParameterObserved,
   ratioMode,
-  asCI,
+  asPointeEstimate,
   aggregationFlag = NULL,
   aggregationFun,
   percentiles = NULL,
-  coefficientOfVariation = NA,
-  nObservationDefault = NA,
-  nBootstrap = NA,
   confLevel = NULL,
+  nBootstrap = 100,
   vlineIntercept,
   withTable = TRUE,
   relWidths = NULL,
@@ -43,33 +41,25 @@ metadata.}
 
 \item{ratioMode}{Mode for ratio calculations.}
 
-\item{asCI}{Logical indicating if confidence intervals should be calculated.}
+\item{asPointeEstimate}{Logical indicating if confidence intervals should be calculated.}
 
 \item{aggregationFlag}{A character string indicating the method of aggregation
  for variance calculation. Options include "GeometricStdDev", "ArithmeticStdDev",
  and "Percentiles".
-(for `plotPKForestAbsoluteValuesWithVariance` and `plotPKForestRatiosWithVariance`):}
+(for `plotPKForestAggregatedAbsoluteValues` and `plotPKForestAggregatedRatios`):}
 
 \item{percentiles}{A numeric vector specifying which percentiles to calculate
 and display in the plot, only relevant if `aggregationFlag = "Percentiles"`
-(for `plotPKForestAbsoluteValuesWithVariance` and `plotPKForestRatiosWithVariance`):}
-
-\item{coefficientOfVariation}{A numeric value representing the coefficient of
- variation, which may be used to assess variability in the data. Only relevant for crossover studies (see details)
-(for `plotPKForestAbsoluteValuesWithCI` and `plotPKForestRatiosWithCI`)}
-
-\item{nObservationDefault}{An integer specifying the default number of observations
-to use for bootstrapping.
-(for `plotPKForestAbsoluteValuesWithCI` and `plotPKForestRatiosWithCI`)}
-
-\item{nBootstrap}{An integer indicating the number of bootstrap samples to draw
-for calculating confidence intervals.
-(for `plotPKForestAbsoluteValuesWithCI`, `plotPKForestRatiosWithCI` and
-`plotPKForestRatiosWithVariance`)}
+(for `plotPKForestAggregatedAbsoluteValues` and `plotPKForestAggregatedRatios`):}
 
 \item{confLevel}{A numeric value between 0 and 1 indicating the desired confidence
  level for the intervals (e.g., 0.9 for 90% confidence).
-(for `plotPKForestAbsoluteValuesWithCI` and `plotPKForestRatiosWithCI`)}
+(for `plotPKForestPointEstimateOfAbsoluteValues` and `plotPKForestPointEstimateOfRatios`)}
+
+\item{nBootstrap}{An integer indicating the number of bootstrap samples to draw
+for calculating confidence intervals.
+(for `plotPKForestPointEstimateOfAbsoluteValues`, `plotPKForestPointEstimateOfRatios` and
+`plotPKForestAggregatedRatios`)}
 
 \item{vlineIntercept}{Optional numeric value indicating where to draw a vertical
 line on the plot, often used to denote a reference value.}
@@ -97,7 +87,15 @@ labels in the plot to enhance readability.}
  This must be a function accepting as input a numeric vector and returning a numeric value.
  The input is formatted as a named list, the name is used in plot legends and captions
   c('geometric mean' = function(y) exp(mean(log(y[y>0]))))
-(for `plotPKForestAbsoluteValuesWithCI` and `plotPKForestRatiosWithCI`)}
+(for `plotPKForestPointEstimateOfAbsoluteValues` and `plotPKForestPointEstimateOfRatios`)}
+
+\item{coefficientOfVariation}{A numeric value representing the coefficient of
+ variation, which may be used to assess variability in the data. Only relevant for crossover studies (see details)
+(for `plotPKForestPointEstimateOfAbsoluteValues` and `plotPKForestPointEstimateOfRatios`)}
+
+\item{nObservationDefault}{An integer specifying the default number of observations
+to use for bootstrapping.
+(for `plotPKForestPointEstimateOfAbsoluteValues` and `plotPKForestPointEstimateOfRatios`)}
 }
 \value{
 A list containing the generated plot objects.
@@ -105,17 +103,17 @@ A list containing the generated plot objects.
 \description{
 This is one of a group of functions which generates PK forest plots for pharmacokinetic (PK) parameters, providing visualizations
 that can include absolute values or ratios, along with options for displaying variance
-or confidence intervals. These functions allow for the comparison of simulated and observed
+or point estimates. These functions allow for the comparison of simulated and observed
 PK parameter data across different scenarios, aiding in the interpretation of variability
 and uncertainty in the estimates.
 
 Available functions are:
 
 \describe{
-  \item{\code{plotPKForestAbsoluteValuesWithVariance}}{Generates a PK forest plot displaying absolute values along with variance.}
-  \item{\code{plotPKForestAbsoluteValuesWithCI}}{Generates a PK forest plot displaying absolute values along with confidence intervals using bootstrapping.}
-  \item{\code{plotPKForestRatiosWithVariance}}{Generates a PK forest plot displaying ratios of PK parameters along with variance.}
-  \item{\code{plotPKForestRatiosWithCI}}{Generates a PK forest plot displaying ratios of PK parameters along with confidence intervals using bootstrapping.}
+  \item{\code{plotPKForestAggregatedAbsoluteValues}}{Generates a PK forest plot displaying absolute values along with variance.}
+  \item{\code{plotPKForestPointEstimateOfAbsoluteValues}}{Generates a PK forest plot displaying point estimates.}
+  \item{\code{plotPKForestAggregatedRatios}}{Generates a PK forest plot displaying ratios of PK parameters along with variance.}
+  \item{\code{plotPKForestPointEstimateOfRatios}}{Generates a PK forest plot displaying point estimates of ratios of PK parameters.}
 }
 }
 \details{
@@ -127,9 +125,7 @@ For the ratio calculation, the function distinguishes between two cases:
   (same `PopulationId` in scenario configuration), the plots will show summary statistics of
   individual ratios.}
   \item{Case 2:}{If the scenarios are based on \strong{different populations}, the plots
-  will display the ratio of summary statistics, using bootstrapping methods. During each bootstrapping
-  step, `nSamples` are drawn and aggregated. `nSamples` is the minimum number of individuals from both populations.
-  Displayed are the median values of the aggregated results.}
+  will display the ratio of summary statistics. This ratio is only available for \code{plotPKForestPointEstimateOfRatios}}
 }
 
 To support the creation of the configuration table a support function \code{addDefaultConfigForPKForestPlots} is available
@@ -139,8 +135,8 @@ outputPathId, and PKParameter identifier. This ensures that results are consiste
 combination is used in different plots and that they are reproducible.
 }
 \seealso{
-\code{\link{plotPKForestAbsoluteValuesWithVariance}}, \code{\link{plotPKForestAbsoluteValuesWithCI}},
-\code{\link{plotPKForestRatiosWithVariance}}, \code{\link{plotPKForestRatiosWithCI}},
+\code{\link{plotPKForestAggregatedAbsoluteValues}}, \code{\link{plotPKForestPointEstimateOfAbsoluteValues}},
+\code{\link{plotPKForestAggregatedRatios}}, \code{\link{plotPKForestPointEstimateOfRatios}},
 \code{\link{addDefaultConfigForPKForestPlots}}
 }
 \keyword{internal}

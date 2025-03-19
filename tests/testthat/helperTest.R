@@ -5,10 +5,11 @@
 #' @return projectConfiguration
 setUpTestProject <- function(withModel = FALSE) {
   rootDirectory <- tempdir()
-  if (!dir.exists(file.path(rootDirectory,'Scripts','ReportingFramework')))
-    dir.create(file.path(rootDirectory,'Scripts','ReportingFramework'),recursive = TRUE)
+  if (!dir.exists(file.path(rootDirectory, "Scripts", "ReportingFramework"))) {
+    dir.create(file.path(rootDirectory, "Scripts", "ReportingFramework"), recursive = TRUE)
+  }
 
-  setwd(file.path(rootDirectory,'Scripts','ReportingFramework'))
+  setwd(file.path(rootDirectory, "Scripts", "ReportingFramework"))
 
   initProject()
 

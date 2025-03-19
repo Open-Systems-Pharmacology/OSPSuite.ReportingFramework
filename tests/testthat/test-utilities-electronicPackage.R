@@ -1,4 +1,3 @@
-
 test_that("Valid filenames return TRUE", {
   expect_true(checkFileNameValidity("valid_file.txt"))
   expect_true(checkFileNameValidity("another_valid_file.csv", isDataSet = FALSE))
@@ -27,4 +26,3 @@ test_that("Filenames with valid extensions but invalid pattern return warnings",
 test_that("Filenames without extensions return warnings", {
   expect_warning(checkFileNameValidity("invalid_file_without_extension"))
 })
-

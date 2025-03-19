@@ -24,27 +24,23 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
 
   # Check if the 'VirtualTwinPopulation' sheet exists
   if (!("VirtualTwinPopulation" %in% wb$sheet_names)) {
-
     # convert old version
     wbPop <- openxlsx::loadWorkbook(projectConfiguration$populationsFile)
-    if (("VirtualTwinPopulation" %in% wbPop$sheet_names)){
+    if (("VirtualTwinPopulation" %in% wbPop$sheet_names)) {
       dtTwinPops <- xlsxReadData(wbPop, "VirtualTwinPopulation")
 
       xlsxAddSheet(wb = wb, sheetName = "VirtualTwinPopulation", dt = dtTwinPops)
-      openxlsx::saveWorkbook(wb = wb,file = projectConfiguration$individualsFile,overwrite = TRUE)
-      openxlsx::removeWorksheet(wbPop,"VirtualTwinPopulation")
-      openxlsx::saveWorkbook(wb = wbPop,fil = projectConfiguration$populationsFile,overwrite = TRUE)
+      openxlsx::saveWorkbook(wb = wb, file = projectConfiguration$individualsFile, overwrite = TRUE)
+      openxlsx::removeWorksheet(wbPop, "VirtualTwinPopulation")
+      openxlsx::saveWorkbook(wb = wbPop, fil = projectConfiguration$populationsFile, overwrite = TRUE)
 
       message("shift sheet 'VirtualTwinPopulation' from 'Indvidual.xslx' to 'Population.xlsx'")
-
-    } else{
-
+    } else {
       dtTwinPops <- xlsxReadData(projectConfiguration$scenariosFile, sheetName = "Scenarios") %>%
         data.table::setnames("populationId", "populationName") %>%
         dplyr::mutate("dataGroups" = "") %>%
         dplyr::select(c("populationName", "dataGroups", "individualId", "modelParameterSheets", "applicationProtocol")) %>%
         dplyr::filter(FALSE)
-
     }
   } else {
     dtTwinPops <- xlsxReadData(wb, "VirtualTwinPopulation")
@@ -166,8 +162,8 @@ getIndividualMatchForScenario <- function(projectConfiguration,
 
   # check if is is a population scenario with a static population file
   if (is.na(dtScenarioRow$populationId) ||
-      is.na(dtScenarioRow$readPopulationFromCSV) || # nolint indentation_linter
-      dtScenarioRow$readPopulationFromCSV == 0) {
+    is.na(dtScenarioRow$readPopulationFromCSV) || # nolint indentation_linter
+    dtScenarioRow$readPopulationFromCSV == 0) {
     return(NULL)
   }
 
@@ -204,12 +200,13 @@ getIndividualMatchForScenario <- function(projectConfiguration,
 #' @examples
 #' \dontrun{
 #' exportRandomPopulations(projectConfiguration,
-#'                         populationNames = c("Population1", "Population2"),
-#'                         customParameters = list(list(path = "param1", values = c(1, 2))),
-#'                         overwrite = TRUE)
+#'   populationNames = c("Population1", "Population2"),
+#'   customParameters = list(list(path = "param1", values = c(1, 2))),
+#'   overwrite = TRUE
+#' )
 #' }
 #' @export
-exportRandomPopulations <- function(projectConfiguration, populationNames = NULL, customParameters = NULL,overwrite = FALSE) {
+exportRandomPopulations <- function(projectConfiguration, populationNames = NULL, customParameters = NULL, overwrite = FALSE) {
   # Check for valid customParameter if provided
   if (!is.null(customParameters)) {
     # Validate that customParameter is a list
@@ -261,14 +258,15 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
       poptable <- ospsuite::populationToDataFrame(population$population) %>%
         data.table::setDT()
 
-      if (!is.null(customParameters)){
+      if (!is.null(customParameters)) {
         for (cp in customParameters) {
-          if (length(cp$values) != 1 & length(cp$values) != nrow(poptable))
-            stop(paste('Inconsitent number of values for',cp$path,'in',dPop$populationName))
-          poptable[[cp$path]] = cp$values
+          if (length(cp$values) != 1 & length(cp$values) != nrow(poptable)) {
+            stop(paste("Inconsitent number of values for", cp$path, "in", dPop$populationName))
+          }
+          poptable[[cp$path]] <- cp$values
         }
       }
-      .savePopulationFile(poptable = poptable,populationName = dPop$populationName,projectConfiguration = projectConfiguration)
+      .savePopulationFile(poptable = poptable, populationName = dPop$populationName, projectConfiguration = projectConfiguration)
 
       return(invisible())
     }
@@ -353,7 +351,7 @@ setCustomParamsToPopulation <- function(scenario) {
 
   checkmate::assertClass(scenario, classes = "Scenario")
   if (scenario$scenarioType != "Population" ||
-      is.null(scenario$finalCustomParams$paths)) { # nolint indentation_linter
+    is.null(scenario$finalCustomParams$paths)) { # nolint indentation_linter
     return(scenario)
   }
 
@@ -433,10 +431,8 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @keywords internal
 .generatePopulationFiles <- function(dtTwinPops, params, dtIndividualBiometrics, projectConfiguration, sim) {
-
-
   # Use foreach for parallel processing
-  resultsList <- lapply(dtIndividualBiometrics$individualId, function(indId){
+  resultsList <- lapply(dtIndividualBiometrics$individualId, function(indId) {
     biomForInd <- dtIndividualBiometrics[individualId == indId, ]
     individualCharacteristics <- .createIndividualCharacteristics(biomForInd)
     individual <- ospsuite::createIndividual(individualCharacteristics)
@@ -539,7 +535,6 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @keywords internal
 .savePopulationFile <- function(poptable, populationName, projectConfiguration) {
-
   utils::write.csv(
     x = poptable,
     file = file.path(
@@ -580,11 +575,16 @@ setCustomParamsToPopulation <- function(scenario) {
     }
 
     if (nrow(poptable) > 1) {
-      tmp <- c(setdiff(names(popRow),names(poptable)),
-               setdiff(names(poptable),names(popRow)))
-      if (length(tmp) > 1)
-        stop(paste('population parameter mus be consistent within a virtual population. Check',
-                   paste(tmp,collapse = ', '), 'for', popRow$ObservedIndividualId))
+      tmp <- c(
+        setdiff(names(popRow), names(poptable)),
+        setdiff(names(poptable), names(popRow))
+      )
+      if (length(tmp) > 1) {
+        stop(paste(
+          "population parameter mus be consistent within a virtual population. Check",
+          paste(tmp, collapse = ", "), "for", popRow$ObservedIndividualId
+        ))
+      }
     }
 
     poptable <- rbind(poptable, data.table::as.data.table(popRow))
@@ -616,7 +616,7 @@ setCustomParamsToPopulation <- function(scenario) {
   }
 
   # Set up the parallel backend
-  numCores <- parallel::detectCores() - 1  # Use one less than the total number of cores
+  numCores <- parallel::detectCores() - 1 # Use one less than the total number of cores
   cl <- parallel::makeCluster(numCores)
   doParallel::registerDoParallel(cl)
 
@@ -629,9 +629,9 @@ setCustomParamsToPopulation <- function(scenario) {
       data.table::as.data.table()
 
     if (nrow(tmp) > 0) {
-      list(sheet = sheet, data = tmp)  # Return a list with the sheet name and data
+      list(sheet = sheet, data = tmp) # Return a list with the sheet name and data
     } else {
-      NULL  # Return NULL if no data
+      NULL # Return NULL if no data
     }
   }
 
@@ -640,9 +640,8 @@ setCustomParamsToPopulation <- function(scenario) {
 
   # Combine results and convert units
   params <- list()
-  for (result in dtSheets){
-
-    if (!is.null(result)){
+  for (result in dtSheets) {
+    if (!is.null(result)) {
       tmp <- result$data
       tmp[, `:=`(
         dimension = ospsuite::getParameter(paths, container = sim)$dimension

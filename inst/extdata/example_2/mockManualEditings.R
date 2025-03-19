@@ -254,59 +254,46 @@ mockManualEditings.PlotBoxwhsiker1 <- function(projectConfiguration){
 
 }
 
-mockManualEditings.PlotForest1 <- function(projectConfiguration){
+mockManualEditings.PlotForest1 <- function(projectConfiguration,sheetName){
 
-
-  # PKParameter_ForestAbs
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+  switch(sheetName,
+         'PKParameter_ForestAbs1' = {
+           dt <- xlsxReadData(wb = wb,sheetName = sheetName)
 
-  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs1')
-  dt$header[2] <- 'Forest Absolute Values with Variance'
-  dt$level[2] <- 2
+           dt$header[2] <- 'Forest aggregated absolute values'
+           dt$level[2] <- 2
 
-  dt[grep('_po$',scenario), scenarioGroup := 'PO']
-  dt[!c(grep('_po$',scenario),1,2), scenarioGroup := 'IV']
+           dt <- dt[!c(grep('_po$',scenario)),]
 
-  dt[!is.na(scenario),plotCaptionAddon := 'Pediatric populations simulations in comparison to adults']
+           dt[grep('adults',scenario), scenarioGroup := 'Adult']
+           dt[!c(grep('adults',scenario),1,2), scenarioGroup := 'Pediatric']
 
-  xlsxWriteData(wb = wb, sheetName  = 'PKParameter_ForestAbs1', dt = dt)
+           dt[!is.na(scenario),plotCaptionAddon := 'Pediatric populations simulations in comparison to adults']
+           xlsxWriteData(wb = wb, sheetName  = sheetName, dt = dt)
+
+         },
+         'PKParameter_ForestAbsPE1' = {
+           dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs1')
+           dt$header[2] <- 'Forest point estimates of absolute values'
+
+           xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = sheetName,dt = dt)
+         },
+         'PKParameter_ForestRatioPE1' = {
+           dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbsPE1')
+           dt$header[2] <- 'Forest point estimates of ratios'
+
+           dt <- dt[is.na(scenarioGroup) | scenarioGroup != 'Adult']
+           dt[scenarioGroup == 'Pediatric', referenceScenario := 'adults']
+
+           xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = sheetName,dt = dt)
+
+         }
+  )
+
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
 
-  # PKParameter_ForestAbsCI
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
-
-  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs1')
-  dt$header[2] <- 'Forest AbsoulteValues with CI'
-
-  xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = 'PKParameter_ForestAbsCI1',dt = dt)
-  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
-
-
-  # PKParameter_ForestRatio
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
-
-  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs1')
-  dt$header[2] <- 'Forest Ratio with Variance'
-  dt[scenarioGroup == 'PO', referenceScenario := 'adults_po']
-  dt[scenarioGroup == 'IV', referenceScenario := 'adults']
-
-  dt <- dt[!grep('adults',scenario)]
-
-  xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = 'PKParameter_ForestRatio1',dt = dt)
-  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
-
-  # PKParameter_ForestRatioCI
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
-
-  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestRatio1')
-  dt$header[2] <- 'Forest Ratio with CI'
-
-  xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = 'PKParameter_ForestRatioCI1',dt = dt)
-  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
 }
-
-
-
 
 
 mockManualEditings.PlotBoxwhsiker2 <- function(projectConfiguration){
@@ -342,57 +329,54 @@ mockManualEditings.PlotBoxwhsiker2 <- function(projectConfiguration){
 }
 
 
-mockManualEditings.PlotForest2 <- function(projectConfiguration){
+mockManualEditings.PlotForest2 <- function(projectConfiguration,sheetName){
 
-
-  # PKParameter_ForestAbs
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+  switch(sheetName,
+         'PKParameter_ForestAbs2' = {
+           dt <- xlsxReadData(wb = wb,sheetName = sheetName)
 
-  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs2')
-  dt$header[2] <- 'Forest Absolute Values with Variance'
-  dt$level[2] <- 2
+           dt$header[2] <- 'Forest aggregated absolute values'
+           dt$level[2] <- 2
 
-  dt[grep('_po$',scenario), referenceScenario := gsub('_po','',scenario)]
-  dt[!is.na(scenario),plotCaptionAddon := 'Virtual population simulations of 3mg po application and 1mg iv simulation']
+           dt[grep('_po$',scenario), scenarioGroup := 'PO']
+           dt[!c(grep('_po$',scenario),1,2), scenarioGroup := 'IV']
 
-  dt[grep('_po$',scenario), scenarioGroup := 'PO']
-  dt[!c(grep('_po$',scenario),1,2), scenarioGroup := 'IV']
+           dt[!is.na(scenario),plotCaptionAddon := 'Virtual population simulations of 3mg po application and 1mg iv simulation']
+           xlsxWriteData(wb = wb, sheetName  = sheetName, dt = dt)
 
-  xlsxWriteData(wb = wb, sheetName  = 'PKParameter_ForestAbs2', dt = dt)
-  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+         },
+         'PKParameter_ForestRatio2' = {
+           dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs2')
 
-  # PKParameter_ForestAbsCI
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+           dt$header[2] <- 'Forest aggregated ratios'
+           dt$level[2] <- 2
 
-  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs2')
-  dt$header[2] <- 'Forest Absolute Values with CI'
+           dt[grep('_po$',scenario), referenceScenario := gsub('_po','',scenario)]
 
-  xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = 'PKParameter_ForestAbsCI2',dt = dt)
-  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+           dt <- dt[!is.na(level) | !is.na(referenceScenario)]
+           dt[grep('_po$',scenario), scenarioGroup := 'pediatric']
+           dt[grep('adults',scenario), scenarioGroup := '']
 
-  # PKParameter_ForestRatio
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+           xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = 'PKParameter_ForestRatio2',dt = dt)
 
-  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs2')
-  dt$header[2] <- 'Forest Ratio with Variance'
-  dt[grep('_po$',scenario), referenceScenario := gsub('_po','',scenario)]
+         },
+         'PKParameter_ForestAbsPE2' = {
+           dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestAbs2')
+           dt$header[2] <- 'Forest point estiamtes of absolute values'
 
-  dt <- dt[!is.na(level) | !is.na(referenceScenario)]
-  dt[grep('_po$',scenario), scenarioGroup := 'pediatric']
-  dt[grep('adults',scenario), scenarioGroup := '']
+           xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = sheetName,dt = dt)
+         },
+         'PKParameter_ForestRatioPE2' = {
+           dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestRatio2')
+           dt$header[2] <- 'Forest point estiamtes of ratios'
+           dt[grep('_po$',scenario), dataGroupId := paste0('Case2_pkRatio_',gsub('_po','',scenario))]
 
-  xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = 'PKParameter_ForestRatio2',dt = dt)
-  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+           xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = sheetName,dt = dt)
 
-  # PKParameter_ForestRatioCI
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+         }
+  )
 
-  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestRatio2')
-  dt$header[2] <- 'Forest Ratio with CI'
-
-  dt[plotName == 'PKForest',dataGroupId := paste('Case2_pkRatio',referenceScenario,sep = '_')]
-
-  xlsxCloneAndSet(wb,clonedSheet = 'PKParameter_Forest',sheetName = 'PKParameter_ForestRatioCI2',dt = dt)
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
 
 }

@@ -1,0 +1,213 @@
+---
+title: "Precision"  # Corrected the spelling
+output: html_document
+date: "2025-03-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,warning=FALSE, message=FALSE)
+library(ospsuite.reportingframework)
+library(data.table)
+
+setDefaults()
+```
+
+```{r inputs}
+# Input Parameters
+set.seed(1234)
+y <- rlnorm(100, meanlog = log(0.8), sdlog = log(1.4))
+
+prec <- 0.01  # Desired precision
+confidence_level <- 0.90  # Confidence level
+
+n_s = length(y)
+alpha <- 1 - confidence_level
+z_alpha_over_2 <- qnorm(1 - alpha / 2)
+
+outputs = list()
+```
+
+```{r functions}
+addTableRow <- function(estimator,Q,E,n_p,prec){
+
+  tmp <- data.table(estimator = estimator,
+                  value = Q,
+                  'E' = E,
+                  'E_p' =  Q*prec,
+                  'n_p' = ceiling(n_p))
+
+    
+}
+
+```
+
+
+```{r plot}
+ggplot() + 
+  geom_histogram(mapping = aes(x = y)) +
+  labs(title = "Histogram of Random Sample y", x = "y values", y = "Frequency")  # Added labels
+```
+
+
+```{r Mean}
+# Calculate Mean and Sample Size Needed for Mean
+Q <- mean(y)
+SE <- sd(y)/sqrt(n_s)
+
+n_p = ((z_alpha_over_2*sd(y))/(Q*prec))^2
+outputs[['Mean']] <- addTableRow(estimator = 'Mean',
+                                 Q =Q,
+                                 E = SE*z_alpha_over_2,
+                                 n_p = n_p,
+                                 prec = prec)
+```
+
+```{r SD}
+# Calculate Standard Deviation and Sample Size Needed for SD
+Q <- sd(y)
+SE <- Q/sqrt(2*(n_s-1))
+n_p = (z_alpha_over_2/prec)^2/2+1
+
+outputs[['SD']] <- addTableRow(estimator = 'SD',
+                                 Q =Q,
+                                 E = SE*z_alpha_over_2,
+                                 n_p = n_p,
+                                 prec = prec)
+
+```
+
+```{r geomean}
+# Calculate Geometric Mean and Sample Size Needed for Geometric Mean
+Q <- exp(mean(log(y)))
+
+SE = Q *sd(log(y))/sqrt(n_s)
+
+n_p = ((z_alpha_over_2*sd(log(y)))/(prec))^2
+
+outputs[['GM']] <- addTableRow(estimator = 'Geo mean',
+                                 Q =Q,
+                                 E = SE*z_alpha_over_2,
+                                 n_p = n_p,
+                                 prec = prec)
+
+```
+
+```{r gsd}
+# Calculate Geometric Standard Deviation (GSD) and Sample Size Needed for GSD
+Q <- exp(sd(log(y)))  # Calculate GSD as exp(sd(log(y)))
+
+SE = Q *sd(log(y))/sqrt(2*(n_s-1))
+
+n_p = ((z_alpha_over_2*sd(log(y)))/(prec))^2*1/2 +1
+
+outputs[['GSD']] <- addTableRow(estimator = 'Geo sd',
+                                 Q =Q,
+                                 E = SE*z_alpha_over_2,
+                                 n_p = n_p,
+                                 prec = prec)
+
+
+
+```
+
+```{r median}
+# Calculate Median and Sample Size Needed for Median
+median_value <- median(y)
+IQR_value <- IQR(y)  # Calculate Interquartile Range
+
+# Standard Error for Median
+SE_median <- 1.253 * IQR_value / sqrt(n_s)
+
+# Sample Size Needed for Median
+n_p_median = ((z_alpha_over_2 * IQR_value) / prec)^2
+
+outputs[['Median']] <- addTableRow(estimator = 'Median',
+                                     Q = median_value,
+                                     E = SE_median * z_alpha_over_2,
+                                     n_p = n_p_median,
+                                     prec = prec)
+```
+
+```{r table}
+# Combine Outputs and Format Table
+tmp <- rbindlist(outputs)
+for (col in c('value', 'E', 'E_p')) {
+  tmp[, (col) := signif(get(col), 3)]
+}
+
+knitr::kable(tmp, format.args = list(big.mark = ','),
+             col.names = c('Estimator','Estimated value (V)','Margin of error (E)',
+             'Desired margin of error','Sample size needed (n_p)'))
+```
+
+\newline
+
+### Input parameters and general formulas
+
+- \(y\) random sample (geomean 0.8, geosd 1.4)  
+- \(n_s\) sample size (=`r n_s`)  
+- \(prec\) desired precision (=`r prec`)  
+- \(z_{\alpha/2}\) critical z-value used to calculate the margin of error for the confidence interval (= `r confidence_level*100`%)  
+- Margin of error: \(E = z_{\alpha/2} \cdot SE\)  
+- Desired margin of error: \(E_p = \text{Value} \cdot \text{prec}\)  
+ 
+
+### Mean 
+
+**Value** 
+$$M = \frac{1}{n_s}\sum{y_i}$$  
+$$SD = \sqrt{\frac{1}{n_s-1}\sum{(y_i-M)^2}}$$  
+**Standard error**: 
+$$SE = \frac{SD}{\sqrt{n_s}}$$
+**n_p**: 
+$$E_p = M \cdot \text{prec} = z_{\alpha/2} \cdot SE_p = z_{\alpha/2} \cdot \frac{SD}{\sqrt{n_p}} $$
+
+$$n_p = \left(\frac{z_{\alpha/2} \cdot SD}{ M \cdot \text{prec}} \right)^2$$
+
+### Standard Deviation (SD)
+
+**Value:** $SD$  
+**Standard error:** 
+$$SE = \frac{SD}{\sqrt{2 \cdot(n_s-1)}}$$
+**n_p**: 
+$$E_p = SD \cdot \text{prec} = z_{\alpha/2} \cdot SE_p = \frac{z_{\alpha/2} \cdot SD}{\sqrt{2 \cdot(n_p-1)}} $$
+$$n_p = \left(\frac{z_{\alpha/2} }{\text{prec}} \right)^2 \cdot \frac{1}{2}+1$$
+
+### Geometric Mean (GM)
+
+**Value:** 
+$$GM = exp\left( \frac{1}{n_s}\sum{log(y_i)}\right)$$
+
+$$V(f) = \left(\frac{df}{dx} \right)^2V(x)$$
+$$SE = \frac{GM \cdot SD(log(y))}{\sqrt{n_s}}$$
+**n_p**: 
+$$E_p = GM \cdot \text{prec} = z_{\alpha/2} \cdot SE_p = z_{\alpha/2} \cdot \frac{GM \cdot SD(log(y))}{\sqrt{n_p}} $$
+
+$$n_p = \left(\frac{z_{\alpha/2} \cdot SD(log(y))}{\text{prec}} \right)^2$$
+
+
+
+### Geometric Standard Deviation (GSD)
+
+**Value:** 
+
+$$GSD = \exp(SD(\log(y)))$$
+**Standard error:** 
+$$SE = \frac{GSD \cdot SD(log(y))}{\sqrt{2 \cdot(n_s-1)}}$$
+**n_p**: 
+$$E_p = GSD \cdot \text{prec} = z_{\alpha/2} \cdot SE_p = \frac{z_{\alpha/2} \cdot GSD \cdot SD(log(y))}{\sqrt{2 \cdot(n_p-1)}}$$
+
+$$n_p = \left(\frac{z_{\alpha/2} \cdot SD(log(y))}{\text{prec}} \right)^2 \cdot \frac{1}{2}+1$$
+
+### Median 
+
+**Value** 
+$$\text{Median} = \text{med}(y)$$  
+
+**Standard error**: 
+$$SE = \frac{1.253 \cdot IQR(y)}{\sqrt{n_s}}$$  
+
+**n_p**: 
+$$E_p = \text{Median} \cdot \text{prec} = z_{\alpha/2} \cdot SE_p = z_{\alpha/2} \cdot \frac{IQR(y)}{\sqrt{n_p}} $$
+
+$$n_p = \left(\frac{z_{\alpha/2} \cdot IQR(y)}{\text{prec}} \right)^2$$

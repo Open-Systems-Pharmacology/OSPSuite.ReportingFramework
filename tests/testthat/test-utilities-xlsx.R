@@ -11,5 +11,3 @@ test_that("Splits vectors is working", {
 
   expect_equal(splitVector, NULL)
 })
-
-

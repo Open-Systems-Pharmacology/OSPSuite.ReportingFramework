@@ -4,10 +4,12 @@
 \alias{getErrorTypeForPercentiles}
 \title{Creates text for percentiles}
 \usage{
-getErrorTypeForPercentiles(percentiles)
+getErrorTypeForPercentiles(percentiles, legendsize)
 }
 \arguments{
 \item{percentiles}{A numeric vector containing percentiles.}
+
+\item{legendsize}{An integer indicating the size of the legendvector. Supported values are 2 or 3.}
 }
 \value{
 A character string with the error type for the given percentiles.

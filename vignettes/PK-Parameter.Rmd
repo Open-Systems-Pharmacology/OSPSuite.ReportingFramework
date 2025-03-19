@@ -1,141 +1,130 @@
 ---
-title: "PK-Parameter"
+title: "PK Parameters"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{PK-Parameter}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{PK Parameters}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
+  warning = FALSE,
+  message = FALSE,
   comment = "#>"
 )
 ```
 
-```{r setup}
+```{r setup, echo = FALSE}
 library(ospsuite.reportingframework)
+library(data.table)
 ```
 
-# Required Sample Size 
+## Calculate PK Parameters for Scenarios
 
+This vignette provides an overview of how to calculate and visualize pharmacokinetic (PK) parameters for different scenarios using the functions available in the `ospsuite.reportingframework` package.
 
-With:
+## Import Observed Data
 
-$Z$ = Z-score (for 95% confidence, ( Z \approx 1.96 ))
-$prec$ = required precision (default 0.01)
-$\sigma$ = standard deviation of the logarithm of the data (which can be approximated by the geometric standard deviation).
-$p$ is the expected proportion at the desired percentile (e.g., for the 50th percentile, ( p = 0.5 )).
+Before running the analysis, you need to import the observed PK data. This can be done using a data.table containing the relevant observed parameters, which can then be compared against simulated data.
 
+## Available Plot Types
 
-**Mean**
+### Overview of Plot Types
 
-$$ E = \frac{SD}{\sqrt{n_t}} \cdot z_{\alpha/2} $$
+```{r, echo = FALSE}
+# Create a data frame for the plot types overview
+plotTypes <- rbind(
+  data.table(
+    Plot_Type = "[**Box-whisker plots**](#box-whisker-plots)",
+    Objective = "Display and compare distributions of different scenarios.",
+    Simulated_Data = "Displayed are percentiles as box-whiskers.",
+    Observed_Data = "",
+    Numeric_Values = "Tables containing the numeric values are exported additionally to each plot as CSV.",
+    Data_Types = "Absolute values and ratios of crossover studies."
+  ),
+  data.table(
+    Plot_Type = "[**Forest plots of aggregated distributions**](#forest-plots)",
+    Objective = "Compare aggregated distributions of different scenarios. Compare observed data with simulated values.",
+    Simulated_Data = "Displayed is point and range (e.g., geometric mean and geometric standard deviation).",
+    Observed_Data = "Aggregated data can be added as point range.",
+    Numeric_Values = "Tables containing the numeric values are optionally displayed.",
+    Data_Types = "Absolute values and ratios of crossover studies."
+  ),
+  data.table(
+    Plot_Type = "[**Forest plots of point estimators**](#forestestimator)",
+    Objective = "Compare point estimators (e.g., DDI Ratios) of different scenarios. Compare observed data with simulated values.",
+    Simulated_Data = "Estimator is displayed as a point.",
+    Observed_Data = "Aggregated data can be added as point range.",
+    Numeric_Values = "Tables containing the numeric values are optionally displayed.",
+    Data_Types = "Absolute values, ratios of crossover studies, and ratios of scenarios if different studies."
+  ),
+  data.table(
+    Plot_Type = "[**Histograms**](#histograms)",
+    Objective = "Display and compare distributions of different scenarios.",
+    Simulated_Data = "Displayed is the distribution as a histogram.",
+    Observed_Data = "",
+    Numeric_Values = "",
+    Data_Types = "Absolute values and ratios of crossover studies."
+  ),
+  data.table(
+    Plot_Type = "[**Range plots**](#rangeplots)",
+    Objective = "Display dependence of PK parameters vs. population parameters (e.g., age).",
+    Simulated_Data = "Displayed is aggregated distribution per bin of population parameter.",
+    Observed_Data = "",
+    Numeric_Values = "Exported are the aggregated values per bin.",
+    Data_Types = "Absolute values and ratios of crossover studies."
+  )
+)
 
-Where:
-
-( $SD$ ) is the sample standard deviation,
-( $z_{\alpha/2}$ ) is the critical value from the Z-distribution for a desired confidence level,
-( $n_t$ ) is the sample size of my test sample.
-
-```{r echo=FALSE, eval=FALSE}
-# Your data vector
-y <- rnorm(100,mean = 1) # Replace with your actual data
-
-# Parameters
-prec <- 0.01  # Desired precision
-confidence_level <- 0.95  # Confidence level
-alpha <- 1 - confidence_level
-z_alpha_over_2 <- qnorm(1 - alpha / 2)
-
-# Calculate the sample standard deviation from your data
-SD <- sd(y)
-
-# Calculate the required sample size
-n <- (SD * z_alpha_over_2 / prec)^2
-n <- ceiling(n)  # Round up to the nearest whole number
-
-# Output the required sample size
-cat("Required sample size for estimating the mean:", n, "\n")
-
-n_t = length(y)
-SE =sd(y)/sqrt(n_t)
-
-
-E = 
-
-n = (sd(y)/(mean(y)*0.01))^2
-
-
+# Print the table using kable
+knitr::kable(plotTypes,
+  format = "markdown", escape = FALSE, align = "l",
+  col.names = gsub("_", " ", names(plotTypes))
+)
 ```
 
+#### Box-whisker plots {#box-whisker-plots}
 
-$$ n = \left( \frac{Z \cdot \text{SD}}{prec \cdot \text{mean}} \right)^2 $$
+Box-whisker plots provide a visual representation of the distribution of PK parameters across different scenarios. Default percentiles are set to 0.05, 0.25, 0.5, 0.75, and 0.95. Data outliers can be added as points. Additionally, tables containing the number of individuals, percentiles, mean, standard deviation (SD), geometric mean, geometric SD, and geometric coefficient of variation (CV) of the simulated data are exported alongside each plot.
 
-**SD**
+To generate these plots use plotfunction `plotPKBoxwhisker` as input for the `runPlot` function.
 
-To determine the required sample size ( n ) for estimating the standard deviation with a specified precision ( \text{prec} = 0.01 ), you can use the formula for the margin of error in estimating the standard deviation. The margin of error ( E ) for the standard deviation can be approximated using the following formula:
+#### Forest plots of aggregated distributions {#forest-plots}
 
-$$ E = \frac{SD}{\sqrt{n}} \cdot z_{\alpha/2}$$
+Forest plots allow for the comparison of aggregated distributions of different scenarios. The estimator for mean and range can be selected, with available options including arithmetic mean and standard deviation; geometric mean and standard deviation; and custom functions. This functionality is particularly useful for visualizing how simulated data aligns with observed data, enhancing the interpretability of PK parameter estimates.
 
-Where:
+To generate these plots use plotfunction `plotPKForestAggregatedAbsoluteValues` or `plotPKForestAggregatedRatios` as input for the `runPlot` function.
 
-$SD$ is the sample standard deviation,
-( z_{\alpha/2} ) is the critical value from the Z-distribution for a desired confidence level (for example, for 95% confidence, ( z_{\alpha/2} \approx 1.96 )),
-( n ) is the sample size.
-To solve for ( n ), rearranging the formula gives:
+#### Forest plots of estimators {#forestestimator}
 
-$$ n = \left( \frac{SD \cdot z_{\alpha/2}}{prec} \right)^2 $$
+Forest plots of estimators provide a means to compare point estimators (e.g., DDI Ratios) across different scenarios. These plots can include observed data, allowing for a direct comparison between simulated and actual outcomes. The estimators are displayed as points, with confidence intervals represented as ranges. This visualization aids in understanding the variability and reliability of the estimators.
 
-```{r echo=FALSE, eval = FALSE}
-# Your data vector
-y <- c(...)  # Replace with your actual data
+In addition to the point estimates and their confidence intervals, the precision watermark is an important feature of these plots. The precision watermark indicates whether the precision requirements for the displayed estimates have been met. 
 
-# Parameters
-prec <- 0.01  # Desired precision
-confidence_level <- 0.95  # Confidence level
-alpha <- 1 - confidence_level
-z_alpha_over_2 <- qnorm(1 - alpha / 2)
+**Mechanism Behind the Precision Watermark:**
+- The precision is calculated based on the relationship between the estimated values (xValues) and their corresponding minimum (xMin) and maximum (xMax) confidence interval bounds.
+- If the calculated precision falls below a predefined threshold (e.g., 0.01), the watermark is activated, displaying a warning label such as "Outside precision requirement" on the plot. The threshold is set by the option "OSPSuite.RF.RequiredPrecisison"
+- This alert serves to inform users that the estimates may not be reliable due to insufficient sample sizes or high variability in the data, prompting them to consider re-evaluating the simulations or increasing the sample size for improved precision.
 
-# Estimate the standard deviation from your sample
-SD <- sd(y)
+By including the precision watermark, users are better equipped to assess the reliability of the point estimates and make informed decisions based on the visualized data.
 
-# Calculate required sample size
-n <- (SD * z_alpha_over_2 / prec)^2
-n <- ceiling(n)  # Round up to the nearest whole number
+To generate these plots use plotfunction `plotPKForestPointEstimateOfAbsoluteValues` or `plotPKForestPointEstimateOfRatios`
+as input for the `runPlot` function.
 
-# Output the required sample size
-cat("Required sample size:", n, "\n")
-```
+#### Histograms of distributions {#histograms}
 
+Histograms display the distribution of PK parameters for different scenarios. By visualizing the frequency of parameter values, histograms provide insights into the underlying distribution shapes, such as normality or skewness, which are critical for statistical analysis and interpretation.
 
+#### Range plots {#rangeplots}
 
-**Geometric Mean**
+Range plots illustrate the dependence of PK parameters on population parameters, such as age. Aggregated distributions are displayed per bin of population parameters, allowing for the identification of trends and patterns. Exported are the aggregated values per bin, which can be useful for further statistical analysis and reporting. Data types include both absolute values and ratios of crossover studies, providing a comprehensive view of the relationships between parameters.
 
-$$ n = \left( \frac{Z \cdot \text{geometric SD}}{prec \cdot \text{geometric mean}} \right)^2 $$
+#### Ratio Calculation
 
-
-
-**Geometric Standard Deviation**
-
-The geometric standard deviation ( GSD ) can be estimated from the logarithm of the data. The formula for the margin of error in estimating the geometric standard deviation is:
-
-$$ E = \frac{GSD}{\sqrt{n}} \cdot z_{\alpha/2} $$
-
-Where:
-
-$GSD$ is the geometric standard deviation,
-$ z_{\alpha/2} $ is the critical value from the Z-distribution for a desired confidence level,
-( n ) is the sample size.
-To solve for ( n ), we rearrange the formula:
-
-$ n = \left( \frac{GSD \cdot z_{\alpha/2}}{E} \right)^2 $
-
-
-
-
-**Percentiles**
-
-$$ n = \left( \frac{Z^2 \cdot p(1-p)}{E^2} \right)$$
+The ratio calculation distinguishes between scenarios with the same populations and those with different populations. If the scenarios being compared are based on the same populations, the plots will show summary statistics of individual ratios. In contrast, for scenarios based on different populations, the ratios are calculated using summary statistics derived from bootstrapping methods, providing a more robust estimate of variability.
 

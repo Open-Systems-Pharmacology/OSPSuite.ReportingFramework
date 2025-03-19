@@ -4,14 +4,19 @@
 \alias{getFootnoteLinesForForrestPlots}
 \title{Get Footnote Lines for Forest Plots}
 \usage{
-getFootnoteLinesForForrestPlots(plotData, ratioMode, asCI, dtDataReference)
+getFootnoteLinesForForrestPlots(
+  plotData,
+  ratioMode,
+  asPointeEstimate,
+  dtDataReference
+)
 }
 \arguments{
 \item{plotData}{Data table containing plot data.}
 
 \item{ratioMode}{Mode for ratio calculations.}
 
-\item{asCI}{Logical indicating if confidence intervals should be calculated.}
+\item{asPointeEstimate}{Logical indicating if confidence intervals should be calculated.}
 
 \item{dtDataReference}{Optional data reference.}
 }

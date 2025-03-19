@@ -27,7 +27,6 @@ test_that("It should read and process data based on the provided project configu
 
 
 test_that("It should check the validity of the observed dataset", {
-
   # Create a sample observed dataset for testing
   observedData <- data.table(
     individualId = c(1, 2, 3),
@@ -38,13 +37,13 @@ test_that("It should check the validity of the observed dataset", {
     yUnit = c("mg/L", "mg/L", "mg/L"),
     lloq = c(1.0, 1.0, 1.0)
   )
-  data.table::setattr(observedData[['individualId']], "columnType", 'identifier')
-  data.table::setattr(observedData[['group']], "columnType", 'identifier')
-  data.table::setattr(observedData[['outputPathId']], "columnType", 'identifier')
-  data.table::setattr(observedData[['xValues']], "columnType", 'timeprofile')
-  data.table::setattr(observedData[['yValues']], "columnType", 'timeprofile')
-  data.table::setattr(observedData[['yUnit']], "columnType", 'timeprofile')
-  data.table::setattr(observedData[['lloq']], "columnType", 'timeprofile')
+  data.table::setattr(observedData[["individualId"]], "columnType", "identifier")
+  data.table::setattr(observedData[["group"]], "columnType", "identifier")
+  data.table::setattr(observedData[["outputPathId"]], "columnType", "identifier")
+  data.table::setattr(observedData[["xValues"]], "columnType", "timeprofile")
+  data.table::setattr(observedData[["yValues"]], "columnType", "timeprofile")
+  data.table::setattr(observedData[["yUnit"]], "columnType", "timeprofile")
+  data.table::setattr(observedData[["lloq"]], "columnType", "timeprofile")
 
   # Add your assertions here to test the validation result
   expect_invisible(validateObservedData(observedData))

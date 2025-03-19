@@ -10,10 +10,10 @@
 #'  but is also possible to generate a customized function ( see detials). Available are
 #'  - plotTimeProfiles
 #'  - plotPKBoxwhisker
-#'  - plotPKForestAbsoluteValuesWithVariance
-#'  - plotPKForestAbsoluteValuesWithCI
-#'  - plotPKForestRatiosWithVariance
-#'  - plotPKForestRatiosWithCI
+#'  - plotPKForestAggregatedAbsoluteValues
+#'  - plotPKForestPointEstimateOfAbsoluteValues
+#'  - plotPKForestAggregatedRatios
+#'  - plotPKForestPointEstimateOfRatios
 #'  for more details check the help of these functions
 #' @param configTableSheet A character string representing the name of the sheet in the "Plots" configuration table
 #'  from which to read plot configurations. It should have at least the columns "Header","Levels" and "PlotName"
@@ -42,14 +42,13 @@
 #' This function can be called directly: `openFigureTemplate().` Additionally, the template is available as an RStudio Add-in for easy access.
 #'
 #' @examples
-#'
 #' \dontrun{
 #' # Run the plot generation function with Rmd export
 #' runPlot(
 #'   projectConfiguration = projectConfiguration,
 #'   nameOfplotFunction = "plotTimeProfiles",
 #'   configTableSheet = "TimeProfiles",
-#'   inputs = list(dataObserved = dataObserved,scenarioResults = scenarioResults)
+#'   inputs = list(dataObserved = dataObserved, scenarioResults = scenarioResults)
 #' )
 #'
 #' # Run the plot generation function without Rmd export, returning a plot list
@@ -58,7 +57,7 @@
 #'   nameOfplotFunction = "plotTimeProfiles",
 #'   configTableSheet = "TimeProfiles",
 #'   plotNames = c("Plot1", "Plot2"),
-#'   inputs = list(dataObserved = dataObserved,scenarioResults = scenarioResults)
+#'   inputs = list(dataObserved = dataObserved, scenarioResults = scenarioResults)
 #' )
 #'
 #' # open the template for custom plot functions
@@ -74,15 +73,14 @@ runPlot <- function(projectConfiguration,
                     suppressExport = FALSE,
                     digitsOfSignificanceCSVDisplay = 3,
                     inputs = list()) {
-
   loadConfigTableEnvironment(projectConfiguration)
 
-  suppressExport = suppressExport | !is.null(plotNames)
+  suppressExport <- suppressExport | !is.null(plotNames)
 
   # Initialize PlotManager for RMD generation
   rmdPlotManager <- RmdPlotManager$new(
     rmdfolder = file.path(projectConfiguration$outputFolder),
-    suppressExport = !getOption('OSPSuite.RF.withPlotExport',default = TRUE) |
+    suppressExport = !getOption("OSPSuite.RF.withPlotExport", default = TRUE) |
       suppressExport,
     rmdName = rmdName,
     nameOfplotFunction = nameOfplotFunction,
@@ -91,16 +89,23 @@ runPlot <- function(projectConfiguration,
 
   # read configuration table
   configTable <-
-    readConfigTableForPlot(sheetName = configTableSheet,
-                           validateConfigTableFunction = rmdPlotManager$validateConfigTableFunction,
-                           plotNames = plotNames,
-                           inputs = inputs)
+    readConfigTableForPlot(
+      sheetName = configTableSheet,
+      validateConfigTableFunction = rmdPlotManager$validateConfigTableFunction,
+      plotNames = plotNames,
+      inputs = inputs
+    )
 
-  if (is.null(configTable)){
-    plotList <- do.call(what = rmdPlotManager$plotFunction,
-                        args = c(list(projectConfiguration = projectConfiguration,
-                                      configTable = NULL),
-                                 inputs)
+  if (is.null(configTable)) {
+    plotList <- do.call(
+      what = rmdPlotManager$plotFunction,
+      args = c(
+        list(
+          projectConfiguration = projectConfiguration,
+          configTable = NULL
+        ),
+        inputs
+      )
     )
     rmdPlotManager$exportPlotList(plotList)
   } else {
@@ -118,42 +123,52 @@ runPlot <- function(projectConfiguration,
         iEnd <- if (length(iEndX) == 0) nrow(configTable) else levelLines[iEndX] - 1
 
         for (onePlotConfig in split(configTable[seq(iRow, iEnd)], by = "plotName")) {
-          tryCatch({
-            plotListiRow <- do.call(what = rmdPlotManager$plotFunction,
-                                args = c(list(projectConfiguration = projectConfiguration,
-                                              onePlotConfig = onePlotConfig),
-                                         inputs)
-                                )
-            # save data for ePackage if available
-            rmdPlotManager$dataObserved <- plotListiRow[['dataObservedIndices']]
-            plotListiRow[['dataObservedIndices']] <- NULL
+          tryCatch(
+            {
+              plotListiRow <- do.call(
+                what = rmdPlotManager$plotFunction,
+                args = c(
+                  list(
+                    projectConfiguration = projectConfiguration,
+                    onePlotConfig = onePlotConfig
+                  ),
+                  inputs
+                )
+              )
+              # save data for ePackage if available
+              rmdPlotManager$dataObserved <- plotListiRow[["dataObservedIndices"]]
+              plotListiRow[["dataObservedIndices"]] <- NULL
 
-            rmdPlotManager$exportPlotList(plotListiRow)
+              rmdPlotManager$exportPlotList(plotListiRow)
 
-            if (rmdPlotManager$suppressExport) plotList <- c(plotList,plotListiRow)
-          }, error = function(err) {
-            if (!getOption("OSPSuite.RF.skipFailingPlots", default = FALSE)) {
-              stop(err)
-            } else {
-              warning(paste0("Error during creation of plot: '", onePlotConfig$plotName[1], "':\n ", conditionMessage(err)))
+              if (rmdPlotManager$suppressExport) plotList <- c(plotList, plotListiRow)
+            },
+            error = function(err) {
+              if (!getOption("OSPSuite.RF.skipFailingPlots", default = FALSE)) {
+                stop(err)
+              } else {
+                warning(paste0("Error during creation of plot: '", onePlotConfig$plotName[1], "':\n ", conditionMessage(err)))
+              }
             }
-          })
+          )
         }
         iRow <- iEnd + 1
       }
     }
   }
 
-  if (getOption('OSPSuite.RF.withEPackage') &
-      !suppressExport &
-      (!is.null(rmdPlotManager$configTable))){
-    addScenariosToEPackage(projectConfiguration = projectConfiguration,
-                           configTable = rmdPlotManager$configTable,subfolder = rmdName)
+  if (getOption("OSPSuite.RF.withEPackage") &
+    !suppressExport &
+    (!is.null(rmdPlotManager$configTable))) {
+    addScenariosToEPackage(
+      projectConfiguration = projectConfiguration,
+      configTable = rmdPlotManager$configTable, subfolder = rmdName
+    )
 
-    if (nrow(rmdPlotManager$dataObserved) > 0 & exists(x = 'dataObserved')){
+    if (nrow(rmdPlotManager$dataObserved) > 0 & exists(x = "dataObserved")) {
       exportTimeProfileDataForEPackage(
         projectConfiguration = projectConfiguration,
-        dataToExport = merge(rmdPlotManager$dataObserved, dataObserved, by = '.Id')
+        dataToExport = merge(rmdPlotManager$dataObserved, dataObserved, by = ".Id")
       )
     }
   }
@@ -178,11 +193,12 @@ runPlot <- function(projectConfiguration,
 #' @return A data.table containing the filtered and validated configuration table, or NULL if sheetName is NULL.
 #'
 #' @keywords internal
-readConfigTableForPlot <- function(sheetName, validateConfigTableFunction,inputs,plotNames){
-
+readConfigTableForPlot <- function(sheetName, validateConfigTableFunction, inputs, plotNames) {
   plotName <- scenarioName <- NULL
 
-  if (is.null(sheetName)) return(NULL)
+  if (is.null(sheetName)) {
+    return(NULL)
+  }
 
   # read configuration tables
   configTable <- xlsxReadData(
@@ -192,35 +208,43 @@ readConfigTableForPlot <- function(sheetName, validateConfigTableFunction,inputs
   )
 
   # filter rows with selected plotNames
-  if ('plotName' %in% names(configTable) & !is.null(plotNames)){
-    checkmate::assertNames(plotNames,subset.of = configTable[!is.na(plotName)]$plotName)
+  if ("plotName" %in% names(configTable) & !is.null(plotNames)) {
+    checkmate::assertNames(plotNames, subset.of = configTable[!is.na(plotName)]$plotName)
     configTable <- configTable[plotName %in% plotNames]
   }
 
   # add scenario names
-  if ('scenario' %in% names(configTable)){
+  if ("scenario" %in% names(configTable)) {
     configTable <-
       merge(
         configTable,
-        configEnv$scenarios[, c('scenarioName', 'longName','shortName')],
-        by.x = 'scenario',
-        by.y = 'scenarioName',
+        configEnv$scenarios[, c("scenarioName", "longName", "shortName")],
+        by.x = "scenario",
+        by.y = "scenarioName",
         all.x = TRUE,
         sort = FALSE
       ) %>%
-      data.table::setnames(old = c('longName','shortName'),
-                           c('scenarioLongName','scenarioShortName'))
+      data.table::setnames(
+        old = c("longName", "shortName"),
+        c("scenarioLongName", "scenarioShortName")
+      )
 
-    if ('scenarioName' %in% names(configTable)){
-      configTable[!is.na(scenarioName) & scenarioName !='',
-                  scenarioLongName := scenarioName]
+    if ("scenarioName" %in% names(configTable)) {
+      configTable[
+        !is.na(scenarioName) & scenarioName != "",
+        scenarioLongName := scenarioName
+      ]
     }
   }
 
   # validate
-  do.call(what = validateConfigTableFunction,
-          args = c(list(configTable = configTable),
-                   inputs))
+  do.call(
+    what = validateConfigTableFunction,
+    args = c(
+      list(configTable = configTable),
+      inputs
+    )
+  )
 
 
   return(configTable)
@@ -257,9 +281,10 @@ addFacets <- function(plotObject,
         scales = facetScale,
         ncol = nFacetColumns
       ) +
-      ggplot2::theme(strip.background = element_rect(fill = NA,color = NA),
-                     strip.text = element_text(hjust = 0,vjust = 1))
-
+      ggplot2::theme(
+        strip.background = element_rect(fill = NA, color = NA),
+        strip.text = element_text(hjust = 0, vjust = 1)
+      )
   }
 
   return(plotObject)
@@ -282,7 +307,7 @@ addFacets <- function(plotObject,
 setExportAttributes <- function(object,
                                 caption = NULL,
                                 footNoteLines = NULL,
-                                exportArguments = NULL){
+                                exportArguments = NULL) {
   attributesToSet <- list(
     caption = caption,
     footNoteLines = footNoteLines,
@@ -297,7 +322,6 @@ setExportAttributes <- function(object,
 
 
   return(object)
-
 }
 
 
@@ -357,8 +381,8 @@ getDefaultColorsForScaleVector <- function(shade = c("dark", "light"), n) {
   if (n <= 10) {
     colorVector <-
       switch(shade,
-             dark = ggsci::pal_d3("category20c")(20)[1:n], # nolint indentation_linter
-             light = ggsci::pal_d3("category20c")(20)[(10 + 1):(10 + n)]
+        dark = ggsci::pal_d3("category20c")(20)[1:n], # nolint indentation_linter
+        light = ggsci::pal_d3("category20c")(20)[(10 + 1):(10 + n)]
       )
   } else {
     if (n > length(ospsuite.plots::colorMaps[["ospDefault"]])) {
@@ -470,7 +494,7 @@ getColorVectorForLegend <- function(colorLegend, colorVector) {
   names(colorVectorNew) <- colorLegendList
 
   # Modify the default colors with the provided color vector
-  colorVectorNew <- unlist(utils::modifyList(as.list(colorVectorNew), as.list( colorVector[colorLegendList])))
+  colorVectorNew <- unlist(utils::modifyList(as.list(colorVectorNew), as.list(colorVector[colorLegendList])))
 
   return(colorVectorNew)
 }
@@ -535,7 +559,7 @@ addCaptionTextAddon <- function(captiontext, plotCaptionAddon) {
     captiontext <- paste0(captiontext, ".")
   }
 
-  if (!is.na(plotCaptionAddon) && plotCaptionAddon !='') {
+  if (!is.na(plotCaptionAddon) && plotCaptionAddon != "") {
     if (!grepl("\\.$", captiontext)) {
       plotCaptionAddon <- paste0(plotCaptionAddon, ".")
     }
@@ -555,9 +579,8 @@ addCaptionTextAddon <- function(captiontext, plotCaptionAddon) {
 #'
 #' @keywords internal
 concatWithAnd <- function(textVector) {
-
   textVector <- trimws(textVector)
-  textVector <- textVector[textVector != '']
+  textVector <- textVector[textVector != ""]
 
   n <- length(textVector)
 
@@ -573,8 +596,8 @@ concatWithAnd <- function(textVector) {
 }
 
 
-' Process Percentiles
-#'
+" Process Percentiles
+#"
 #' This function takes a numeric vector of percentiles and maps specific values to their corresponding labels.
 #' It also formats other numeric values based on whether they are integers or not.
 #'
@@ -582,21 +605,19 @@ concatWithAnd <- function(textVector) {
 #' @param suffix A character string to append to formatted percentile values.
 #'
 #' @return A vector containing the mapped labels for specific percentiles and formatted strings for others.
-formatPercentiles <- function(percentiles,suffix = '',allAsPercentiles = FALSE){
-
-  lapply(percentiles*100, function(p) {
-    if (p == 0 & !allAsPercentiles){
-      'min'
-    } else if (p == 50 & !allAsPercentiles){
-      'median'
-    } else if (p == 100 & !allAsPercentiles){
-      'max'
+formatPercentiles <- function(percentiles, suffix = "", allAsPercentiles = FALSE) {
+  lapply(percentiles * 100, function(p) {
+    if (p == 0 & !allAsPercentiles) {
+      "min"
+    } else if (p == 50 & !allAsPercentiles) {
+      "median"
+    } else if (p == 100 & !allAsPercentiles) {
+      "max"
     } else if (p %% 1 == 0) {
       paste0(scales::label_ordinal()(x = p), suffix)
     } else {
-      paste0(p, 'th', suffix)
+      paste0(p, "th", suffix)
     }
-
   }) %>% unlist()
 }
 
@@ -611,7 +632,7 @@ formatPercentiles <- function(percentiles,suffix = '',allAsPercentiles = FALSE){
 #' @return A character string representing the uppercase letter
 #' corresponding to the given index.
 #' @keywords internal
-generatePlotTag <- function(index){
+generatePlotTag <- function(index) {
   toupper(letters[index])
 }
 
@@ -637,29 +658,29 @@ generatePlotTag <- function(index){
 #' @return A list of y-scale arguments, including limits, which can be used
 #' in plotting functions.
 #' @keywords internal
-getXorYlimits <- function(onePlotConfig,xOryScale,direction = c('y','x'),...){
+getXorYlimits <- function(onePlotConfig, xOryScale, direction = c("y", "x"), ...) {
+  direction <- match.arg(direction)
 
-  direction <-match.arg(direction)
-
-  dotargs = list(...)
-  if ( paste0(direction,'scale.args') %in% dotargs) {
-    xOrYscale.args = dotargs[[paste0(direction,'scale.args')]]
+  dotargs <- list(...)
+  if (paste0(direction, "scale.args") %in% dotargs) {
+    xOrYscale.args <- dotargs[[paste0(direction, "scale.args")]]
   } else {
-    xOrYscale.args = list()
+    xOrYscale.args <- list()
   }
 
-  if (tolower(xOryScale) == 'linear'){
-    scaleTxt <- onePlotConfig[[paste0(direction,'limit_linear')]][1]
+  if (tolower(xOryScale) == "linear") {
+    scaleTxt <- onePlotConfig[[paste0(direction, "limit_linear")]][1]
   } else {
-    scaleTxt <- onePlotConfig[[paste0(direction,'limit_log')]][1]
+    scaleTxt <- onePlotConfig[[paste0(direction, "limit_log")]][1]
   }
-  if (!is.null(scaleTxt) && !is.na(scaleTxt)){
-    xOrYscale.args <- modifyList(xOrYscale.args,
-    list(limits = eval(parse(text = scaleTxt))))
+  if (!is.null(scaleTxt) && !is.na(scaleTxt)) {
+    xOrYscale.args <- modifyList(
+      xOrYscale.args,
+      list(limits = eval(parse(text = scaleTxt)))
+    )
   }
 
   return(xOrYscale.args)
-
 }
 
 
@@ -672,7 +693,7 @@ getXorYlimits <- function(onePlotConfig,xOryScale,direction = c('y','x'),...){
 #' @param configTable A data.table containing the plot configuration to be validated.
 #' @return NULL. The function will throw an error if the validation fails.
 #' @keywords internal
-validateConfigTableForPlots <- function(configTable){
+validateConfigTableForPlots <- function(configTable, ...) {
   configTablePlots <- validateHeaders(configTable)
   validateOutputIdsForPlot()
   validateDataGroupIdsForPlot()
@@ -704,9 +725,11 @@ validateHeaders <- function(configTable) {
 
   configTablePlots <- configTable[is.na(level)]
   if (!all(configTablePlots[,
-                            lapply(.SD, function(x)
-                              all(is.na(x))),   # nolint indentation_linter
-                            .SDcols = "header"])) {
+    lapply(.SD, function(x) {
+      all(is.na(x))
+    }), # nolint indentation_linter
+    .SDcols = "header"
+  ])) {
     stop("Invalid plot configuration table. Missing header for level")
   }
 
@@ -732,7 +755,6 @@ validateConfigTablePlots <- function(configTablePlots,
                                      logicalColumns = NULL,
                                      numericRangeColumns = NULL,
                                      subsetList = list()) {
-
   # Validate character columns
   if (!is.null(charactersWithoutMissing)) {
     invisible(lapply(charactersWithoutMissing, function(col) validateColumn(col, configTablePlots, "character", FALSE)))
@@ -779,8 +801,7 @@ validateConfigTablePlots <- function(configTablePlots,
 #' @return NULL. The function will throw an error if the validation fails.
 #' @keywords internal
 validateColumn <- function(col, data, type, anyMissing = FALSE) {
-  switch(
-    type,
+  switch(type,
     character = checkmate::assertCharacter(
       data[[col]],
       any.missing = anyMissing,
@@ -806,12 +827,13 @@ validateSubsetList <- function(subsetList, data) {
   for (subsetCheck in subsetList) {
     invisible(lapply(subsetCheck$cols, function(col) {
       if (any(!is.na(data[[col]]))) {
-        if (is.null(subsetCheck$allowedValues))
-          stop(paste("Plot configuration column", col,'has entries but no allowed values.
-                     Did you forget some inputs e.g. observedData?'))
+        if (is.null(subsetCheck$allowedValues)) {
+          stop(paste("Plot configuration column", col, "has entries but no allowed values.
+                     Did you forget some inputs e.g. observedData?"))
+        }
         splitAllowed <- subsetCheck$splitAllowed
         if (is.null(subsetCheck$splitAllowed)) splitAllowed <- TRUE
-        if (splitAllowed){
+        if (splitAllowed) {
           x <- gsub("[()]", "", splitInputs(data[!is.na(get(col))][[col]]))
         } else {
           x <- data[!is.na(get(col))][[col]]
@@ -867,14 +889,15 @@ validateNumericRangeColumns <- function(columns, data) {
 validateGroupConsistency <- function(
     dt,
     valueColumns,
-    groupingColumns = 'plotName') {
-
+    groupingColumns = "plotName") {
   # Check for unique values of value columns for each group defined by groupingColumns
   uniqueValueCounts <-
     dt[, lapply(.SD, function(x) {
       length(unique(x))
-    }), by = groupingColumns,
-    .SDcols = valueColumns]
+    }),
+    by = groupingColumns,
+    .SDcols = valueColumns
+    ]
 
   # Check if any value column has more than one unique value within each group
   lapply(valueColumns, function(col) {
@@ -911,16 +934,24 @@ validateOutputIdsForPlot <- function() {
   # avoid warning for global variable
   outputPathId <- NULL
 
-  checkmate::assertFactor(configEnv$outputPaths$outputPathId, any.missing = FALSE,
-                          .var.name = 'Outputs column outputPathId')
-  checkmate::assertCharacter(configEnv$outputPaths$outputPath, any.missing = FALSE,
-                             .var.name = 'Outputs column outputPath')
-  checkmate::assertCharacter(configEnv$outputPaths$displayNameOutputs, any.missing = FALSE,
-                             .var.name = 'Outputs column displayName')
+  checkmate::assertFactor(configEnv$outputPaths$outputPathId,
+    any.missing = FALSE,
+    .var.name = "Outputs column outputPathId"
+  )
+  checkmate::assertCharacter(configEnv$outputPaths$outputPath,
+    any.missing = FALSE,
+    .var.name = "Outputs column outputPath"
+  )
+  checkmate::assertCharacter(configEnv$outputPaths$displayNameOutputs,
+    any.missing = FALSE,
+    .var.name = "Outputs column displayName"
+  )
 
   if (any(!is.na(configEnv$outputPaths$color))) {
-    checkmate::assertCharacter(configEnv$outputPaths$color, any.missing = FALSE,
-                               .var.name = 'Outputs column color')
+    checkmate::assertCharacter(configEnv$outputPaths$color,
+      any.missing = FALSE,
+      .var.name = "Outputs column color"
+    )
   }
 
   # Check for unique values for outputpathids
@@ -962,21 +993,24 @@ validateDataGroupIdsForPlot <- function() {
     configEnv$dataGroupIds$group,
     any.missing = FALSE,
     unique = TRUE,
-    .var.name = 'DataGroups column group'
+    .var.name = "DataGroups column group"
   )
   checkmate::assertCharacter(configEnv$dataGroupIds$displayNameData,
-                             any.missing = FALSE,
-                             .var.name = 'DataGroups column displayName')
+    any.missing = FALSE,
+    .var.name = "DataGroups column displayName"
+  )
 
   if (any(!is.na(configEnv$dataGroupIds$color))) {
-    checkmate::assertCharacter(dtOutputPaths$color, any.missing = FALSE,
-                               .var.name = 'DataGroups column color')
+    checkmate::assertCharacter(dtOutputPaths$color,
+      any.missing = FALSE,
+      .var.name = "DataGroups column color"
+    )
   }
 
   return(invisible())
 }
-' Validate Color Legend
-#'
+" Validate Color Legend
+#"
 #' This function checks if the `colorLegend` column in a data.table contains
 #' valid entries. Each entry must be a character string concatenated from
 #' two characters separated by a pipe (`|`). If any entry does not meet this
@@ -988,14 +1022,13 @@ validateDataGroupIdsForPlot <- function() {
 #' @return NULL The function stops execution if invalid entries are found.
 #'
 #' @keywords internal
-validateColorLegend <- function(dt){
+validateColorLegend <- function(dt) {
+  dt <- dt[!grep("\\|", colorLegend)]
 
-  dt <- dt[!grep('\\|',colorLegend)]
-
-  if (nrow(dt) > 0){
-    print(dt[,c('plotName','colorLegend')] %>%
-            unique())
-    stop('colorLegend must be a character string concatenated from two characters separated by |.')
+  if (nrow(dt) > 0) {
+    print(dt[, c("plotName", "colorLegend")] %>%
+      unique())
+    stop("colorLegend must be a character string concatenated from two characters separated by |.")
   }
 
   return(invisible())
@@ -1013,7 +1046,7 @@ validateColorLegend <- function(dt){
 #' @keywords internal
 validateColorVector <- function(colorVector) {
   # Check if vector is named
-  checkmate::assertVector(colorVector,names = 'named')
+  checkmate::assertVector(colorVector, names = "named")
 
   # Check if all values are either NA or valid colors
   validColors <- sapply(colorVector, function(x) is.na(x) || isTRUE(grDevices::col2rgb(x, alpha = TRUE)[1] >= 0))

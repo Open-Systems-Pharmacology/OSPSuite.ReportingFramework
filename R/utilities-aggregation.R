@@ -4,13 +4,15 @@
 #'
 #' @param aggregationFlag A character string indicating the aggregation method. Must be one of the options from `ospsuite::DataErrorType` or "Percentiles" or "Custom".
 #' @param percentiles A numeric vector of percentiles to calculate if aggregationFlag is "Percentiles". Must have a length of 3, sorted, and within the range [0, 1].
+#' @param legendsize An integer indicating the size of the legend vector. Supported values are 2 or 3 (relevant for percentiles)
 #' @param customFunction A custom function for aggregation if aggregationFlag is "Custom". Must be a valid function.
 #'
 #' @return A function that performs the specified aggregation.
 #' @export
 getAggregationFunction <- function(aggregationFlag,
                                    percentiles,
-                                   customFunction) {
+                                   customFunction,
+                                   legendsize = 2) {
   checkmate::assertChoice(
     aggregationFlag,
     c(
@@ -50,7 +52,7 @@ getAggregationFunction <- function(aggregationFlag,
       len = 3,
       sorted = TRUE
     )
-    yErroryType <- getErrorTypeForPercentiles(percentiles)
+    yErroryType <- getErrorTypeForPercentiles(percentiles, legendsize = legendsize)
     aggregationFunction <-
       function(y) {
         y <- y[!is.na(y)]
@@ -74,17 +76,27 @@ getAggregationFunction <- function(aggregationFlag,
 #' This function generates a descriptive text based on the provided percentiles.
 #'
 #' @param percentiles A numeric vector containing percentiles.
+#' @param legendsize An integer indicating the size of the legendvector. Supported values are 2 or 3.
 #'
 #' @return A character string with the error type for the given percentiles.
 #' @keywords internal
-getErrorTypeForPercentiles <- function(percentiles) {
+getErrorTypeForPercentiles <- function(percentiles, legendsize) {
   mName <- formatPercentiles(percentiles[2], suffix = " percentile")
-
-  yMinTxt <- formatPercentiles(percentiles[1], suffix = ifelse(percentiles[3] == 1, " percentile", ""))
 
   yMaxTxt <- formatPercentiles(percentiles[3], suffix = " percentile")
 
-  return(paste(mName, "|", trimws(yMinTxt), "-", trimws(yMaxTxt)))
+  result <- switch(as.character(legendsize),
+    "2" = {
+      yMinTxt <- formatPercentiles(percentiles[1], suffix = ifelse(percentiles[3] == 1, " percentile", ""))
+      paste(mName, "|", trimws(yMinTxt), "-", trimws(yMaxTxt))
+    },
+    "3" = {
+      yMinTxt <- formatPercentiles(percentiles[1], suffix = " percentile")
+      paste(mName, "|", trimws(yMinTxt), "|", trimws(yMaxTxt))
+    },
+    stop("Error: legendsize not covered. Please provide a legendsize of 2 or 3.")
+  )
+  return(result)
 }
 
 #' Perform Aggregation
@@ -158,26 +170,34 @@ getAggregatedVariance <- function(dt,
                                   aggregationFun,
                                   valueColumn,
                                   identifier,
-                                  direction = c('y','x')) {
-  direction <-  match.arg(direction)
+                                  direction = c("y", "x")) {
+  # initialize to avoid linter messages
+  yMin <- yValues <- NULL
 
-  dtAggregated <- dt[, as.list(aggregationFun(get(valueColumn))), by = identifier]
+  direction <- match.arg(direction)
 
-  if (!is.null(dtAggregated$yErrorValues)){
+  dtAggregated <- dt[, as.list(c(
+    list(N = length(!is.na(get(valueColumn)))),
+    aggregationFun(get(valueColumn))
+  )), by = identifier]
+
+  if (!is.null(dtAggregated$yErrorValues)) {
     if (dtAggregated$yErrorType[1] == ospsuite::DataErrorType$ArithmeticStdDev) {
-      dtAggregated[,yMin := yValues - yErrorValues]
-      dtAggregated[,yMax := yValues + yErrorValues]
+      dtAggregated[, yMin := yValues - yErrorValues]
+      dtAggregated[, yMax := yValues + yErrorValues]
     }
     if (dtAggregated$yErrorType[1] == ospsuite::DataErrorType$GeometricStdDev) {
-      dtAggregated[,yMin := yValues/yErrorValues]
-      dtAggregated[,yMax := yValues*yErrorValues]
+      dtAggregated[, yMin := yValues / yErrorValues]
+      dtAggregated[, yMax := yValues * yErrorValues]
     }
   }
 
-  if (direction == 'x'){
-    data.table::setnames(dtAggregated,old = c('yMin','yValues','yMax','yErrorValues','yErrorType'),
-                         new = c('xMin', 'x', 'xMax','xErrorValues','xErrorType'),
-                         skip_absent = TRUE)
+  if (direction == "x") {
+    data.table::setnames(dtAggregated,
+      old = c("yMin", "yValues", "yMax", "yErrorValues", "yErrorType"),
+      new = c("xMin", "xValues", "xMax", "xErrorValues", "xErrorType"),
+      skip_absent = TRUE
+    )
   }
 
 
@@ -185,74 +205,114 @@ getAggregatedVariance <- function(dt,
 }
 
 
-#' Aggregate Ratios by Bootstrapping
+#' Calculate Aggregation and Confidence Interval by Group
 #'
-#' This function calculates statistics the results based on bootstrapping.
+#' This function calculates a specified aggregation function (e.g., geometric mean)
+#' and the associated confidence interval using bootstrapping, grouped by specified identifiers.
+#' The function allows for flexible definitions of the aggregation function and can handle
+#' different value columns and output formats based on the specified direction.
+#' A unique seed for bootstrapping is generated for each group of identifiers to ensure
+#' reproducibility of the bootstrap samples.
 #'
-#' @param nBootstrap An integer specifying the number of bootstrap samples to generate.
-#' @param sampleSize number of samples to draw per bootstrap
-#' @param value A numeric vector containing the values to aggregate.
-#' @param valueReference A numeric vector containing the reference values for aggregation.
-#' @param aggregationFunction A function to aggregate the bootstrapped samples.
-#' @param confLevel A numeric value indicating the confidence level for the confidence intervals (optional).
-#' @param percentiles additional parameter passed to aggregationFunction
+#' @param dt A data.table containing the data. It must include the columns specified in
+#'   `identifier` and the `valueColumn`.
+#' @param aggregationFun A function to calculate the aggregation (e.g., geometric mean).
+#'   This function should accept a numeric vector and return a single numeric value.
+#' @param confLevel A numeric value representing the confidence level for the confidence interval.
+#'   The default value is 0.9, corresponding to a 90% confidence interval.
+#' @param identifier A character vector of column names in the data.table to group by.
+#'   The function will calculate the aggregation and confidence interval for each unique combination
+#'   of these identifiers.
+#' @param nBootstrap An integer specifying the number of bootstrap samples to use. The default is 100.
+#' @param valueColumn The name of the column containing the values to aggregate. The default is 'value'.
+#' @param direction A character string indicating the direction of the results. It can be either
+#'   'y' (default) or 'x'. This affects how the results are named in the output data.table.
 #'
-#' @return A data frame containing the aggregated ratios and their confidence intervals.
-#' @keywords internal
-aggregateRatiosByBootstrapping <- function(nBootstrap,value,valueReference,aggregationFun,confLevel = NULL,sampleSize = NULL){
+#' @return A data.table containing the following columns:
+#'   - `yValues`: The estimated value from the aggregation function.
+#'   - `yMin`: The lower bound of the confidence interval.
+#'   - `yMax`: The upper bound of the confidence interval.
+#'   - `seed`: The seed used for bootstrapping, derived from the identifiers.
+#'   - `yErrorType`: A descriptive string indicating the aggregation function and confidence interval bounds.
+#'
+#' @examples
+#' \dontrun{
+#' # Example usage
+#' pkParameterDT <- data.table(
+#'   pkParameter = c("A", "A", "B", "B"),
+#'   outputPathId = c(1, 1, 2, 2),
+#'   scenario = c("S1", "S2", "S1", "S2"),
+#'   value = c(10, 20, 15, 25)
+#' )
+#'
+#' result <- calculateAggregationWithCIBYGroup(
+#'   dt = pkParameterDT,
+#'   aggregationFun = function(y) exp(mean(log(y[y > 0]))),
+#'   confLevel = 0.9,
+#'   identifier = c("pkParameter", "outputPathId", "scenario"),
+#'   nBootstrap = 100,
+#'   valueColumn = "value",
+#'   direction = "y"
+#' )
+#' }
+#'
+#' @export
+calculateAggregationWithCIBYGroup <- function(dt,
+                                              aggregationFun,
+                                              confLevel = 0.9,
+                                              identifier,
+                                              nBootstrap = 100,
+                                              valueColumn = "value",
+                                              direction = "y") {
+  # Check if the identifiers are present in the data.table
+  checkmate::assertNames(c(identifier, valueColumn), subset.of = names(dt))
 
-  n1 <- length(value)
-  n2 <- length(valueReference)
-  if (is.null(sampleSize)){
-    sampleSize <- min(n1, n2)
-  } else {
-    if (sampleSize > min(n1, n2)){
-      warning(paste('not enough simulated values for boostrapping with sampleSize',sampleSize, 'for',
-                    scenarioName, pkParameter, outputPathId))
-
-    }
+  # Create a function for bootstrapping
+  bootFun <- function(data, indices) {
+    sampleData <- data[indices]
+    return(aggregationFun[[1]](sampleData))
   }
 
-  bstrap <-   replicate(nBootstrap,
-                        aggregationFun(y = sample(value, size = sampleSize, replace = FALSE)/
-                                         sample(valueReference, size = sampleSize, replace = FALSE)),
-                        simplify = FALSE
-  )
+  # get rid of nas
+  dt <- copy(dt)[!is.na(valueColumn)]
 
-  if (is.list(bstrap[[1]])){
-    bstrap <- rbindlist(bstrap)
-  } else {
-    bstrap <- list(value = unlist(bstrap))
+  # Group by the identifiers and calculate the aggregation and confidence interval
+  results <- dt[,
+    {
+      # us for this group of identifier always the same seed
+      set.seed(sum(utf8ToInt(paste(.BY, collapse = "_"))))
+
+      # Perform bootstrapping
+      bootResults <- boot::boot(data = get(valueColumn), statistic = bootFun, R = nBootstrap)
+
+      # Calculate confidence interval
+      ci <- boot::boot.ci(bootResults, type = "basic", conf = confLevel)
+
+      # Store the results in a list
+      list(
+        N = length(bootResults$data),
+        yValues = ci$t0,
+        yMin = ci$basic[4],
+        yMax = ci$basic[5]
+      )
+    },
+    by = identifier
+  ]
+
+  results[, yErrorType := paste(names(aggregationFun),
+    paste0(confLevel * 100, "%CI lower"),
+    paste0(confLevel * 100, "%CI upper"),
+    sep = "|"
+  )]
+
+  if (direction == "x") {
+    data.table::setnames(results,
+      old = c("yMin", "yValues", "yMax", "yErrorValues", "yErrorType"),
+      new = c("xMin", "xValues", "xMax", "xErrorValues", "xErrorType"),
+      skip_absent = TRUE
+    )
   }
 
-  # Initialize a list to store results
-  results <- list()
-
-  # Calculate median and confidence intervals for each numeric column
-  for (col in names(bstrap)) {
-    if (is.numeric(bstrap[[col]])){
-      medianValue <- median(bstrap[[col]], na.rm = TRUE)
-      # Store results in a named list
-      results[[col]] <- medianValue
-
-      if (!is.null(confLevel)){
-        alpha <- 1-confLevel  # For 90% confidence interval
-        lowerBound <- quantile(bstrap[[col]], probs = alpha / 2, na.rm = TRUE,names = FALSE)
-        upperBound <- quantile(bstrap[[col]], probs = 1 - alpha / 2, na.rm = TRUE,names = FALSE)
-        results[[paste0(col, "_lower")]] <- lowerBound
-        results[[paste0(col, "_upper")]] <- upperBound
-      }
-    } else {
-      if (dplyr::n_distinct(bstrap[[col]]) > 1){
-        warning('aggrgeationFlag not unique')
-      }
-      results[[col]] <- bstrap[[col]][1]
-    }
-  }
+  # Return the results
   return(results)
-
-
 }
-
-
-

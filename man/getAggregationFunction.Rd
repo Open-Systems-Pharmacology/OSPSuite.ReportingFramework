@@ -4,7 +4,12 @@
 \alias{getAggregationFunction}
 \title{Get Aggregation Function}
 \usage{
-getAggregationFunction(aggregationFlag, percentiles, customFunction)
+getAggregationFunction(
+  aggregationFlag,
+  percentiles,
+  customFunction,
+  legendsize = 2
+)
 }
 \arguments{
 \item{aggregationFlag}{A character string indicating the aggregation method. Must be one of the options from `ospsuite::DataErrorType` or "Percentiles" or "Custom".}
@@ -12,6 +17,8 @@ getAggregationFunction(aggregationFlag, percentiles, customFunction)
 \item{percentiles}{A numeric vector of percentiles to calculate if aggregationFlag is "Percentiles". Must have a length of 3, sorted, and within the range [0, 1].}
 
 \item{customFunction}{A custom function for aggregation if aggregationFlag is "Custom". Must be a valid function.}
+
+\item{legendsize}{An integer indicating the size of the legend vector. Supported values are 2 or 3 (relevant for percentiles)}
 }
 \value{
 A function that performs the specified aggregation.

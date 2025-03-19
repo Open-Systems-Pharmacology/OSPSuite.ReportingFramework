@@ -7,7 +7,7 @@
 getTableLabelsForPKForest(
   plotData,
   percentiles,
-  asCI,
+  asPointeEstimate,
   confLevel,
   ratioMode,
   aggregationFun
@@ -18,7 +18,7 @@ getTableLabelsForPKForest(
 
 \item{percentiles}{Percentiles for the plot.}
 
-\item{asCI}{Logical indicating if confidence intervals should be calculated.}
+\item{asPointeEstimate}{Logical indicating if confidence intervals should be calculated.}
 
 \item{confLevel}{Confidence level for intervals.}
 

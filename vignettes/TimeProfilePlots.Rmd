@@ -287,7 +287,6 @@ dtPlots <-
     emptyAsNA = FALSE,
     convertHeaders = FALSE
   )
-
 ```
 
 ```{r example-table, echo=FALSE,eval=TRUE}

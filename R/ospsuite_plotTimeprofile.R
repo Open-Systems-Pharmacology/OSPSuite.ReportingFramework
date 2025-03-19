@@ -90,7 +90,7 @@ ospsuite_plotTimeProfile <- function(plotData, # nolint
 #'   yUnit = ospUnits$`Concentration [mass]`$`µg/l`
 #' ))
 #' }
-ospsuite_plotPredictedVsObserved <- function(plotData, #nolint
+ospsuite_plotPredictedVsObserved <- function(plotData, # nolint
                                              metaData = NULL,
                                              mapping = ggplot2::aes(),
                                              ...) {
@@ -155,7 +155,7 @@ ospsuite_plotPredictedVsObserved <- function(plotData, #nolint
 #'   yUnit = ospUnits$`Concentration [mass]`$`µg/l`
 #' ))
 #' }
-ospsuite_plotResidualsVsTime <- function(plotData, #nolint
+ospsuite_plotResidualsVsTime <- function(plotData, # nolint
                                          metaData = NULL,
                                          mapping = ggplot2::aes(),
                                          ...) {
@@ -222,7 +222,7 @@ ospsuite_plotResidualsVsTime <- function(plotData, #nolint
 #'   yUnit = ospUnits$`Concentration [mass]`$`µg/l`
 #' ))
 #' }
-ospsuite_plotResidualsVsObserved <- function(plotData, #nolint
+ospsuite_plotResidualsVsObserved <- function(plotData, # nolint
                                              metaData = NULL,
                                              mapping = ggplot2::aes(),
                                              ...) {
@@ -289,7 +289,7 @@ ospsuite_plotResidualsVsObserved <- function(plotData, #nolint
 #'   yUnit = ospUnits$`Concentration [mass]`$`µg/l`
 #' ))
 #' }
-ospsuite_plotResidualsAsHistogram <- function(plotData, #nolint
+ospsuite_plotResidualsAsHistogram <- function(plotData, # nolint
                                               metaData = NULL,
                                               mapping = ggplot2::aes(),
                                               ...) {
@@ -355,7 +355,7 @@ ospsuite_plotResidualsAsHistogram <- function(plotData, #nolint
 #'   yUnit = ospUnits$`Concentration [mass]`$`µg/l`
 #' ))
 #' }
-ospsuite_plotQuantileQuantilePlot <- function(plotData, #nolint
+ospsuite_plotQuantileQuantilePlot <- function(plotData, # nolint
                                               metaData = NULL,
                                               mapping = ggplot2::aes(),
                                               ...) {
@@ -435,13 +435,11 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
 
   dtObserved[, predicted := NA_real_]
 
-  for (iRow in seq_len(nrow(dtObserved))){
-
+  for (iRow in seq_len(nrow(dtObserved))) {
     dtSimulatedGroup <- dtSimulated %>%
-      merge(dtObserved[iRow,..identifier], by = identifier)
+      merge(dtObserved[iRow, ..identifier], by = identifier) #nolint
 
-    if (nrow(dtSimulatedGroup) > 2){
-
+    if (nrow(dtSimulatedGroup) > 2) {
       # Calculate differences
       dtSimulatedGroup[, diffY := c(NA, diff(yValues))]
       dtSimulatedGroup$diffY[1] <- dtSimulatedGroup$diffY[2]
@@ -471,16 +469,13 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
           )$y
         } else {
           dtObserved$predicted[iRow] <- exp(stats::approx(
-            x = x[y>0],
-            y = log(y[y>0]),
+            x = x[y > 0],
+            y = log(y[y > 0]),
             xout = xVal,
             rule = 1
           )$y)
         }
-
-
-    }
-
+      }
     }
   }
 
@@ -616,11 +611,11 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
   plotData <- plotData[, which(colSums(is.na(plotData)) != nrow(plotData)), with = FALSE]
 
   if ("yErrorType" %in% names(plotData) &&
-      any(plotData[["yErrorType"]] %in% unlist(ospsuite::DataErrorType))) { #nolint
+    any(plotData[["yErrorType"]] %in% unlist(ospsuite::DataErrorType))) { # nolint
     checkmate::assertNames(names(plotData),
-                           must.include = c("yErrorValues"), #nolint
-                           disjunct.from = c("yMin", "yMax"),
-                           .var.name = "columns needed for yErrorValues"
+      must.include = c("yErrorValues"), # nolint
+      disjunct.from = c("yMin", "yMax"),
+      .var.name = "columns needed for yErrorValues"
     )
 
     if (length(unique(plotData[!is.na(yErrorType)][["yErrorType"]])) > 1) {

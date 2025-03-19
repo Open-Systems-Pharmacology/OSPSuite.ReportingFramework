@@ -23,10 +23,10 @@ This should include paths to input files and output directories.}
 but is also possible to generate a customized function ( see detials). Available are
 - plotTimeProfiles
 - plotPKBoxwhisker
-- plotPKForestAbsoluteValuesWithVariance
-- plotPKForestAbsoluteValuesWithCI
-- plotPKForestRatiosWithVariance
-- plotPKForestRatiosWithCI
+- plotPKForestAggregatedAbsoluteValues
+- plotPKForestPointEstimateOfAbsoluteValues
+- plotPKForestAggregatedRatios
+- plotPKForestPointEstimateOfRatios
 for more details check the help of these functions}
 
 \item{configTableSheet}{A character string representing the name of the sheet in the "Plots" configuration table

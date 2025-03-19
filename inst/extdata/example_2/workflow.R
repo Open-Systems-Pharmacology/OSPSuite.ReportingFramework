@@ -154,7 +154,7 @@ source(system.file(
                                    overwrite = TRUE)
 
   runPlot(
-    nameOfplotFunction = "plotPKForestAbsoluteValuesWithVariance",
+    nameOfplotFunction = "plotPKForestAggregatedAbsoluteValues",
     projectConfiguration = projectConfiguration,
     configTableSheet = "PKParameter_ForestAbs1",
     inputs = list(
@@ -163,7 +163,7 @@ source(system.file(
   )
 
   runPlot(
-    nameOfplotFunction = "plotPKForestAbsoluteValuesWithCI",
+    nameOfplotFunction = "plotPKForestPointEstimateOfAbsoluteValues",
     projectConfiguration = projectConfiguration,
     configTableSheet = "PKParameter_ForestAbsCI1",
     inputs = list(
@@ -174,7 +174,7 @@ source(system.file(
   )
 
   runPlot(
-    nameOfplotFunction = "plotPKForestRatiosWithVariance",
+    nameOfplotFunction = "plotPKForestAggregatedRatios",
     projectConfiguration = projectConfiguration,
     configTableSheet = "PKParameter_ForestRatio1",
     inputs = list(
@@ -184,7 +184,7 @@ source(system.file(
   )
 
   runPlot(
-    nameOfplotFunction = "plotPKForestRatiosWithCI",
+    nameOfplotFunction = "plotPKForestPointEstimateOfAbsoluteRatios",
     projectConfiguration = projectConfiguration,
     configTableSheet = "PKParameter_ForestRatioCI1",
     inputs = list(
@@ -221,7 +221,7 @@ source(system.file(
   mockManualEditings.PlotForest2(projectConfiguration)
 
   runPlot(
-    nameOfplotFunction = "plotPKForestAbsoluteValuesWithVariance",
+    nameOfplotFunction = "plotPKForestAggregatedAbsoluteValues",
     projectConfiguration = projectConfiguration,
     configTableSheet = "PKParameter_ForestAbs2",
     inputs = list(
@@ -231,7 +231,7 @@ source(system.file(
 
 
   runPlot(
-    nameOfplotFunction = "plotPKForestAbsoluteValuesWithCI",
+    nameOfplotFunction = "plotPKForestPointEstimateOfAbsoluteValues",
     projectConfiguration = projectConfiguration,
     configTableSheet = "PKParameter_ForestAbsCI2",
     inputs = list(
@@ -242,7 +242,7 @@ source(system.file(
 
 
   runPlot(
-    nameOfplotFunction = "plotPKForestRatiosWithVariance",
+    nameOfplotFunction = "plotPKForestAggregatedRatios",
     projectConfiguration = projectConfiguration,
     configTableSheet = "PKParameter_ForestRatio2",
     inputs = list(
@@ -252,7 +252,7 @@ source(system.file(
 
 
   runPlot(
-    nameOfplotFunction = "plotPKForestRatiosWithCI",
+    nameOfplotFunction = "plotPKForestPointEstimateOfAbsoluteRatios",
     projectConfiguration = projectConfiguration,
     configTableSheet = "PKParameter_ForestRatioCI2",
     inputs = list(
@@ -278,7 +278,7 @@ source(system.file(
   )
 
   runPlot(
-    nameOfplotFunction = "plotPKForestRatiosWithCI",
+    nameOfplotFunction = "plotPKForestPointEstimateOfAbsoluteRatios",
     projectConfiguration = projectConfiguration,
     configTableSheet = "PKParameter_ForestRatioCI2",
     rmdName = "PKParameter_ForestRatioCI2_Test",

@@ -42,9 +42,8 @@
 #'        - 'onlyEPackage': Only generate ePackage without exporting figures.
 #'
 #' @export
-setWorkflowOptions <- function(isValidRun,ePackageGeneration = c('None','withEPackage','onlyEPackage')) {
-
-  ePackageGeneration <- match.arg(ePackageGeneration,several.ok = FALSE)
+setWorkflowOptions <- function(isValidRun, ePackageGeneration = c("None", "withEPackage", "onlyEPackage")) {
+  ePackageGeneration <- match.arg(ePackageGeneration, several.ok = FALSE)
 
   # set options to enable watermarks
   options(ospsuite.plots.watermark_enabled = !isValidRun)
@@ -56,10 +55,10 @@ setWorkflowOptions <- function(isValidRun,ePackageGeneration = c('None','withEPa
   options(OSPSuite.RF.stopHelperFunction = isValidRun)
 
   # generateEpackages
-  options(OSPSuite.RF.withEPackage = ePackageGeneration %in% c('withEPackage','onlyEPackage'))
+  options(OSPSuite.RF.withEPackage = ePackageGeneration %in% c("withEPackage", "onlyEPackage"))
 
   # plotAndTableExport
-  options(OSPSuite.RF.withPlotExport = ePackageGeneration %in% c('None','withEPackage'))
+  options(OSPSuite.RF.withPlotExport = ePackageGeneration %in% c("None", "withEPackage"))
 
 
   return(invisible())

@@ -11,7 +11,6 @@ configTablePlots <- data.table(
 test_that("validateGroupConsistency function test", {
   # Test if the function correctly checks for unique values of panel columns for each PlotName
   expect_error(validateGroupConsistency(configTablePlots, c("column1", "column2")))
-
 })
 
 

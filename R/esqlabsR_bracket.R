@@ -28,8 +28,8 @@
 #' }
 #'
 #' @export
-initProject <- function(configurationDirectory = '.',
-                        sourceConfigurationXlsx  = system.file("templates", "ProjectConfiguration.xlsx",package = "ospsuite.reportingframework"),
+initProject <- function(configurationDirectory = ".",
+                        sourceConfigurationXlsx = system.file("templates", "ProjectConfiguration.xlsx", package = "ospsuite.reportingframework"),
                         templatePath = system.file("templates", package = "ospsuite.reportingframework"),
                         overwrite = FALSE) {
   configurationDirectory <- fs::path_abs(configurationDirectory)
@@ -46,9 +46,9 @@ initProject <- function(configurationDirectory = '.',
   dt <- xlsxReadData(sourceConfigurationXlsx)
   filesAvailable <- list.files(templatePath)
 
-  filesToCopy <- intersect(dt$value,filesAvailable) %>% unique()
+  filesToCopy <- intersect(dt$value, filesAvailable) %>% unique()
 
-  dirsToCreate <- setdiff(dt$value,c(filesToCopy)) %>%
+  dirsToCreate <- setdiff(dt$value, c(filesToCopy)) %>%
     unique()
 
   for (d in dirsToCreate) {
@@ -57,7 +57,7 @@ initProject <- function(configurationDirectory = '.',
     }
   }
 
-  for (f in filesToCopy){
+  for (f in filesToCopy) {
     if (!file.exists(file.path(configurationDirectory, f)) | overwrite) {
       file.copy(
         from = file.path(templatePath, f),
@@ -80,23 +80,24 @@ initProject <- function(configurationDirectory = '.',
 #'
 #' @return Object of type `ProjectConfigurationRF`
 #' @export
-createProjectConfiguration <- function (path = file.path("ProjectConfiguration.xlsx"))
-{
+createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xlsx")) {
   projectConfiguration <- ProjectConfigurationRF$new(projectConfigurationFilePath = path)
 
 
-  if (getOption('OSPSuite.RF.withEPackage',default = FALSE)){
-    if (!('electronicPackageFolder' %in% names(projectConfiguration$addOns))){
-      projectConfiguration$addAddOnFolderToConfiguration(value = file.path(gsub(
-        '/ReportingFramework$',
-        '',
-        fs::path_rel(
-          projectConfiguration$outputFolder,
-          start = projectConfiguration$projectConfigurationDirPath
-        )
-      ), 'ePackage'),
-      property = 'electronicPackageFolder',
-      description = 'Folder for electronicPackage')
+  if (getOption("OSPSuite.RF.withEPackage", default = FALSE)) {
+    if (!("electronicPackageFolder" %in% names(projectConfiguration$addOns))) {
+      projectConfiguration$addAddOnFolderToConfiguration(
+        value = file.path(gsub(
+          "/ReportingFramework$",
+          "",
+          fs::path_rel(
+            projectConfiguration$outputFolder,
+            start = projectConfiguration$projectConfigurationDirPath
+          )
+        ), "ePackage"),
+        property = "electronicPackageFolder",
+        description = "Folder for electronicPackage"
+      )
     }
   }
   return(projectConfiguration)
@@ -119,22 +120,23 @@ createProjectConfiguration <- function (path = file.path("ProjectConfiguration.x
 createScenarios.wrapped <- function(projectConfiguration, # nolint
                                     scenarioNames = NULL,
                                     doCheckScenarioNameValidity = TRUE) {
-
   scenarioList <-
-    esqlabsR::createScenarios(scenarioConfigurations =
-      esqlabsR::readScenarioConfigurationFromExcel(
-        scenarioNames = scenarioNames,
-        projectConfiguration = projectConfiguration
-      )
+    esqlabsR::createScenarios(
+      scenarioConfigurations =
+        esqlabsR::readScenarioConfigurationFromExcel(
+          scenarioNames = scenarioNames,
+          projectConfiguration = projectConfiguration
+        )
     )
 
   synchronizeScenariosWithPlots(projectConfiguration)
   synchronizeScenariosOutputsWithPlots(projectConfiguration)
 
-  if (doCheckScenarioNameValidity)
-    invisible(lapply(paste0(names(scenarioList), '.xml'), function(fileName) {
-      checkFileNameValidity(fileName =  fileName)
+  if (doCheckScenarioNameValidity) {
+    invisible(lapply(paste0(names(scenarioList), ".xml"), function(fileName) {
+      checkFileNameValidity(fileName = fileName)
     }))
+  }
 
 
   return(scenarioList)
@@ -179,16 +181,18 @@ runAndSaveScenarios <- function(projectConfiguration,
                                 simulationRunOptions = NULL,
                                 withResimulation = TRUE,
                                 ...) { # nolint
+  # initialize to avoid linter messages
+  scenarioName <- pKParameter <- NULL
 
   outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult)
   outputFolderPK <- file.path(projectConfiguration$outputFolder, EXPORTDIR$pKAnalysisResults)
 
-  scenarioResults = list()
+  scenarioResults <- list()
   dtScenarios <- getScenarioDefinitions(wbScenarios = projectConfiguration$scenariosFile)
 
   for (sc in names(scenarioList)) {
-    if (file.exists(file.path(outputFolder,paste0(sc,'.csv'))) &
-        !withResimulation){
+    if (file.exists(file.path(outputFolder, paste0(sc, ".csv"))) &
+      !withResimulation) {
       message(paste("Load simulation result of", sc))
 
       scenarioResults[sc] <- esqlabsR::loadScenarioResults(
@@ -197,38 +201,38 @@ runAndSaveScenarios <- function(projectConfiguration,
       )
 
       # add population
-      popFile = file.path(outputFolder,paste0(sc,'_population.csv'))
-      if (file.exists(popFile)){
-        scenarioResults[[sc]][['population']] <- ospsuite::loadPopulation(popFile)
+      popFile <- file.path(outputFolder, paste0(sc, "_population.csv"))
+      if (file.exists(popFile)) {
+        scenarioResults[[sc]][["population"]] <- ospsuite::loadPopulation(popFile)
       }
-
-    } else{
-
+    } else {
       message(paste("Start simulation of", sc))
 
       # make sure custom params are not again overwritten by population
       scenarioList[[sc]] <- setCustomParamsToPopulation(scenarioList[[sc]])
 
-      scenarioResults[sc] <- esqlabsR::runScenarios(scenarios = scenarioList[sc],
-                                                    simulationRunOptions = simulationRunOptions)
+      scenarioResults[sc] <- esqlabsR::runScenarios(
+        scenarios = scenarioList[sc],
+        simulationRunOptions = simulationRunOptions
+      )
 
       esqlabsR::saveScenarioResults(
-        simulatedScenariosResults =  scenarioResults[sc],
+        simulatedScenariosResults = scenarioResults[sc],
         projectConfiguration = projectConfiguration,
         outputFolder = outputFolder,
         ...
       )
-
     }
 
-    if (!file.exists(file.path(outputFolderPK,paste0(sc,'.csv'))) |
-        withResimulation){
+    if (!file.exists(file.path(outputFolderPK, paste0(sc, ".csv"))) |
+      withResimulation) {
       pkParameterSheets <- dtScenarios[scenarioName == sc & !is.na(pKParameter)]$pKParameter
-      if (length(pkParameterSheets) > 0){
+      if (length(pkParameterSheets) > 0) {
         calculatePKParameter(projectConfiguration,
-                             scenarioResult = scenarioResults[[sc]],
-                             pkParameterSheets = pkParameterSheets,
-                             scenarioName = sc)
+          scenarioResult = scenarioResults[[sc]],
+          pkParameterSheets = pkParameterSheets,
+          scenarioName = sc
+        )
       }
     }
   }
@@ -251,7 +255,7 @@ runAndSaveScenarios <- function(projectConfiguration,
 #'   copy of esqlabsR::extendPopulationFromXLS but columnNames always withdot
 #'
 #' @export
-extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { #nolint
+extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { # nolint
   ospsuite.utils::validateIsOfType(population, "Population")
   ospsuite.utils::validateIsString(XLSpath)
   ospsuite.utils::validateIsString(sheet, nullAllowed = TRUE)
@@ -267,7 +271,7 @@ extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { #nol
   data <- readExcel(path = XLSpath, sheet = sheet)
   names(data) <- gsub(" ", "\\.", names(data))
   if (!all(columnNames %in% names(data))) {
-    stop(messages$errorWrongXLSStructure(filePath = XLSpath, expectedColNames = columnNames)) #nolint
+    stop(messages$errorWrongXLSStructure(filePath = XLSpath, expectedColNames = columnNames)) # nolint
   }
 
   paramPaths <- c(dim(data)[[1]])
@@ -337,6 +341,3 @@ extendPopulationByUserDefinedParams_RF <- function(population, # nolint
     population$setParameterValues(parameterOrPath = path, values = vals)
   }
 }
-
-
-

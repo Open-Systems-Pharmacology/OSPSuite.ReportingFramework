@@ -13,12 +13,13 @@ loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, out
   dtSimulated <- data.table()
 
   for (scenarioName in names(outputPathsPerScenario)) {
-
     individualMatch <- NULL
-    if ("ObservedIndividualId" %in% simulatedResults[[scenarioName]]$population$allCovariateNames){
+    if ("ObservedIndividualId" %in% simulatedResults[[scenarioName]]$population$allCovariateNames) {
       individualMatch <-
-        data.table(individualId = simulatedResults[[scenarioName]]$population$allIndividualIds,
-                   observedIndividualId = simulatedResults[[scenarioName]]$population$getCovariateValues('ObservedIndividualId'))
+        data.table(
+          individualId = simulatedResults[[scenarioName]]$population$allIndividualIds,
+          observedIndividualId = simulatedResults[[scenarioName]]$population$getCovariateValues("ObservedIndividualId")
+        )
     }
     dtSimulated <- rbind(
       dtSimulated,
@@ -121,8 +122,10 @@ getApplicationTimes <- function(outputPathsPerScenario, simulatedResults) {
 #' @export
 getSimulatedTimeprofile <- function(simulatedResult, outputPaths, aggregationFun, individualMatch) {
   # reduce list of outputPaths to available paths
-    outputPaths <- intersect(outputPaths,
-                             simulatedResult$results$allQuantityPaths)
+  outputPaths <- intersect(
+    outputPaths,
+    simulatedResult$results$allQuantityPaths
+  )
   dt <- ospsuite::simulationResultsToDataFrame(
     simulationResults = simulatedResult$results,
     quantitiesOrPaths = outputPaths
@@ -138,7 +141,7 @@ getSimulatedTimeprofile <- function(simulatedResult, outputPaths, aggregationFun
   if (!is.null(individualMatch)) {
     dt <- dt %>%
       dplyr::select(c("IndividualId", "xValues", "yValues", "paths", "dimension", "yUnit", "molWeight")) %>%
-      merge(individualMatch, by.x = "IndividualId",by.y = "individualId") %>%
+      merge(individualMatch, by.x = "IndividualId", by.y = "individualId") %>%
       dplyr::mutate(IndividualId = NULL) %>%
       data.table::setnames(old = "observedIndividualId", new = "individualId") %>%
       dplyr::mutate(dataClass = DATACLASS$tpTwinPop)

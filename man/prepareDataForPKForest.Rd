@@ -6,35 +6,34 @@
 \usage{
 prepareDataForPKForest(
   onePlotConfig,
-  pkParameterDT,
+  pkParameterFiltered,
   pkParameterObserved,
   ratioMode,
-  asCI,
-  aggregationFun,
-  aggregationFlag,
+  asPointeEstimate,
   nBootstrap,
   confLevel,
-  nObservationDefault
+  aggregationFun,
+  aggregationFlag
 )
 }
 \arguments{
 \item{onePlotConfig}{Configuration for the plot.}
 
-\item{pkParameterDT}{Data table containing PK parameter data.}
-
 \item{pkParameterObserved}{Optional data table for observed PK parameters.}
 
 \item{ratioMode}{Mode for ratio calculations.}
 
-\item{asCI}{Logical indicating if confidence intervals should be calculated.}
+\item{asPointeEstimate}{Logical indicating if confidence intervals should be calculated.}
+
+\item{nBootstrap}{Number of bootstrap samples.}
+
+\item{confLevel}{Confidence level for intervals.}
 
 \item{aggregationFun}{Function used for aggregation.}
 
 \item{aggregationFlag}{Optional aggregation method.}
 
-\item{nBootstrap}{Number of bootstrap samples.}
-
-\item{confLevel}{Confidence level for intervals.}
+\item{pkParameterDT}{Data table containing PK parameter data.}
 
 \item{nObservationDefault}{Default number of observations.}
 }

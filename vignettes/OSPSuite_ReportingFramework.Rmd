@@ -310,7 +310,7 @@ Once you have defined your custom plot function, you can call it using the `runP
 
 ```{r,echo=TRUE,eval=FALSE}
 runPlot(
-  nameOfplotFunction = 'myPlotFunction',
+  nameOfplotFunction = "myPlotFunction",
   subfolder = "MyCustomPlots",
   projectConfiguration = projectConfiguration,
   inputs = list() # Additional inputs can be passed as needed
@@ -384,17 +384,16 @@ Below is a visual representation of the package structure. Displayed are the rel
 Grey are the configuration tables, blue the observed data, red the simulation results
 
 ```{r}
-
 # Create a diagram
 grViz("
 digraph package_structure {
-  
+
   // Set layout direction
   graph [rankdir=LR];
 
   // Node definitions with color coding
   node [fontname = Helvetica, shape = rectangle, style = filled]
-  
+
   // Observed Data Subcluster
   subgraph cluster_observed {
     label = 'Observed Data'
@@ -405,32 +404,32 @@ digraph package_structure {
     Group_obs [label = 'Group' , fillcolor = lightblue]
     OutputPathId_obs [label = 'OutputPathId' , fillcolor = lightblue]
   }
-  
+
   // Simulation Results Subcluster
   subgraph cluster_random_population {
     label = 'Random Population'
     style = filled;
     fillcolor = lightcoral;
-    
+
     ScenarioName_random [label = 'ScenarioName' , fillcolor = lightcoral]
     Paths_random [label = 'Paths' , fillcolor = lightcoral]
   }
-    
+
   subgraph cluster_virtual_twin_population {
     label = 'Virtual-Twin Population'
     style = filled;
     fillcolor = lightcoral;
-    
+
     ScenarioName_virtual [label = 'ScenarioName' , fillcolor = lightcoral]
     Paths_virtual [label = 'Paths' , fillcolor = lightcoral]
     ObservedIndividualId_virtual [label = 'ObservedIndividualId' , fillcolor = lightcoral]
   }
-    
+
   subgraph cluster_individual_res {
     label = 'Individual'
     style = filled;
     fillcolor = lightcoral;
-    
+
     ScenarioName_ind [label = 'ScenarioName' , fillcolor = lightcoral]
     Paths_ind [label = 'Paths' , fillcolor = lightcoral]
   }
@@ -440,33 +439,33 @@ digraph package_structure {
     label = 'Scenario.xlsx Scenarios'
     style = filled;
     fillcolor = lightgrey;
-    
+
     Scenario_Name_sc [label = 'Scenario_Name' , fillcolor = lightgrey]
     IndividualId_sc [label = 'IndividualId' , fillcolor = lightgrey]
     PopulationName_sc [label = 'PopulationName' , fillcolor = lightgrey]
   }
-    
+
   subgraph cluster_individual {
     label = 'Individual.xlsx IndividualBiometrics'
     style = filled;
     fillcolor = lightgrey;
-    
+
     IndividualId_ind [label = 'IndividualId' , fillcolor = lightgrey]
   }
-    
+
   subgraph cluster_demographics {
     label = 'Population.xlsx Demographics'
     style = filled;
     fillcolor = lightgrey;
-    
+
     PopulationId_rPop [label = 'PopulationId' , fillcolor = lightgrey]
   }
-    
+
   subgraph cluster_VirtualTwinPopulation {
     label = 'Population.xlsx VirtualTwinPopulation'
     style = filled;
     fillcolor = lightgrey;
-    
+
     IndividualId_pop [label = 'IndividualId' , fillcolor = lightgrey]
     PopulationId_vPop [label = 'PopulationId' , fillcolor = lightgrey]
   }
@@ -475,7 +474,7 @@ digraph package_structure {
     label = 'Plots.xlsx DataGroup'
     style = filled;
     fillcolor = lightgrey;
-    
+
     outputPathId_p [label = 'outputPathId' , fillcolor = lightgrey]
     outputPath_p [label = 'outputPath' , fillcolor = lightgrey]
   }
@@ -484,7 +483,7 @@ digraph package_structure {
     label = 'Plots.xlsx Output'
     style = filled;
     fillcolor = lightgrey;
-    
+
     groups_d [label = 'DataGroups' , fillcolor = lightgrey]
     defaultScenario [label = 'defaultScenario' , fillcolor = lightgrey]
   }
@@ -493,7 +492,7 @@ digraph package_structure {
     label = 'Plots.xlsx anyPlot'
     style = filled;
     fillcolor = lightgrey;
-    
+
     outputPathId_pl [label = 'outputPathIds' , fillcolor = lightgrey]
     DataGroupIds_pl [label = 'DataGroupIds' , fillcolor = lightgrey]
     ScenarioName_pl [label = 'ScenarioName' , fillcolor = lightgrey]
@@ -501,37 +500,36 @@ digraph package_structure {
 
   // Population CSV
   population_csv [label = 'Population CSV' , fillcolor = lightyellow]
-  
+
   // Relationships
   Scenario_Name_sc -> ScenarioName_random
   Scenario_Name_sc -> ScenarioName_virtual
   Scenario_Name_sc -> ScenarioName_ind
-  
+
   IndividualId_sc -> IndividualId_ind
   IndividualId_obs -> IndividualId_ind
   IndividualId_pop -> IndividualId_ind
   ObservedIndividualId_virtual -> IndividualId_ind
-  
+
   PopulationName_sc -> PopulationId_rPop
   PopulationName_sc -> PopulationId_vPop
   PopulationId_rPop -> population_csv
   PopulationId_vPop -> population_csv
-  
+
   OutputPathId_obs -> outputPathId_p  -> outputPathId_pl
   Paths_random -> outputPath_p
   Paths_ind -> outputPath_p
   Paths_virtual -> outputPath_p
-  
+
   Group_obs -> groups_d -> DataGroupIds_pl
   Scenario_Name_sc ->  defaultScenario -> ScenarioName_pl
-  
+
   groups_d -> defaultScenario
-  
+
   // Edge styling
   edge [color = grey]
 }
 ")
-
 ```
 
 

@@ -4,7 +4,7 @@
 \alias{validateConfigTableForPlots}
 \title{Validate Configuration Table for Plots}
 \usage{
-validateConfigTableForPlots(configTable)
+validateConfigTableForPlots(configTable, ...)
 }
 \arguments{
 \item{configTable}{A data.table containing the plot configuration to be validated.}

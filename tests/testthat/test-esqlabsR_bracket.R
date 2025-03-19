@@ -1,7 +1,7 @@
 test_that("initProject copies files from sourceFolder to destination", {
   # Set up a temporary directory for testing
   tempDir <- tempdir()
-  configurationDirectory  <- file.path(tempDir, "Scripts","ReportingFramework")
+  configurationDirectory <- file.path(tempDir, "Scripts", "ReportingFramework")
 
 
   # Call the initProject function

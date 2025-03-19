@@ -85,12 +85,12 @@ initLogfunction <- function(projectConfiguration,
       "Failing Plots throw errors"
     ), "\n",
     "OSPSuite.RF.stopHelperFunction:", ifelse(getOption("OSPSuite.RF.stopHelperFunction", default = FALSE),
-                                            "Stops in helper functions",
-                                            "Workflow executes helper functions"
+      "Stops in helper functions",
+      "Workflow executes helper functions"
     ), "\n",
     "OSPSuite.RF.withEPackage:", ifelse(getOption("OSPSuite.RF.withEPackage", default = FALSE),
-                                              "Workflow generates ePackage",
-                                              "ePackage is not generated"
+      "Workflow generates ePackage",
+      "ePackage is not generated"
     ), "\n"
   )
   addMessageToLog(optionstxt)
@@ -318,7 +318,7 @@ setShowLogMessages <- function(verbose = TRUE) {
 saveSessionInfo <- function() {
   sessionInfo <- paste(utils::capture.output(sessionInfo()), collapse = "\n")
 
-  logFileFolder <- getOption('OSPSuite.RF.logFileFolder')
+  logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
 
   if (is.null(logFileFolder)) {
     warning("Logfile was not initialized")
