@@ -37,8 +37,7 @@ metadata.}
 
 \item{nBootstrap}{An integer indicating the number of bootstrap samples to draw
 for calculating confidence intervals.
-(for `plotPKForestPointEstimateOfAbsoluteValues`, `plotPKForestPointEstimateOfRatios` and
-`plotPKForestAggregatedRatios`)}
+(for `plotPKForestPointEstimateOfAbsoluteValues`, `plotPKForestPointEstimateOfRatios`)}
 
 \item{confLevel}{A numeric value between 0 and 1 indicating the desired confidence
  level for the intervals (e.g., 0.9 for 90% confidence).

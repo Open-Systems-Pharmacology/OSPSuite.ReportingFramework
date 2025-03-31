@@ -4,25 +4,10 @@
 \alias{getTableLabelsForPKForest}
 \title{Get Table Labels for PK Forest}
 \usage{
-getTableLabelsForPKForest(
-  plotData,
-  percentiles,
-  asPointeEstimate,
-  confLevel,
-  ratioMode,
-  aggregationFun
-)
+getTableLabelsForPKForest(plotData)
 }
 \arguments{
 \item{plotData}{Data table containing plot data.}
-
-\item{percentiles}{Percentiles for the plot.}
-
-\item{asPointeEstimate}{Logical indicating if confidence intervals should be calculated.}
-
-\item{confLevel}{Confidence level for intervals.}
-
-\item{ratioMode}{Mode for ratio calculations.}
 }
 \value{
 A named vector of table labels.

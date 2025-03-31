@@ -2,14 +2,9 @@
 % Please edit documentation in R/plotPKForest.R
 \name{updateScalevector}
 \alias{updateScalevector}
-\title{This function updates the scale vectors for simulated and observed data based on the provided input.}
+\title{Update Scale Vectors}
 \usage{
 updateScalevector(scaleVectorsInput)
-}
-\arguments{
-\item{scaleVectorsInput}{A list containing user-defined scale vectors for simulated and observed data.
-The list should have two components: `simulated` and `observed`, each containing a list of properties
-to modify the default scale vector settings.}
 }
 \value{
 A list containing updated scale vectors for both simulated and observed data. Each component of the

@@ -4,14 +4,7 @@
 \alias{prepareDataForPKBoxplot}
 \title{Prepare Data for PK Boxplot}
 \usage{
-prepareDataForPKBoxplot(
-  onePlotConfig,
-  pkParameterDT,
-  colorVector,
-  asRatio,
-  nBootstrap,
-  percentiles
-)
+prepareDataForPKBoxplot(onePlotConfig, pkParameterDT, colorVector, asRatio)
 }
 \arguments{
 \item{onePlotConfig}{Configuration for a single plot.}
@@ -19,10 +12,6 @@ prepareDataForPKBoxplot(
 \item{pkParameterDT}{A data.table containing PK parameter data.}
 
 \item{colorVector}{A named vector for colors.}
-
-\item{nBootstrap}{Number of bootstrap samples.}
-
-\item{percentiles}{A vector of percentiles to calculate.}
 
 \item{ratioMode}{Mode indicating if the plot is for ratios.}
 }

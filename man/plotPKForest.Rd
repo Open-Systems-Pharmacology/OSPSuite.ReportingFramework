@@ -58,8 +58,7 @@ and display in the plot, only relevant if `aggregationFlag = "Percentiles"`
 
 \item{nBootstrap}{An integer indicating the number of bootstrap samples to draw
 for calculating confidence intervals.
-(for `plotPKForestPointEstimateOfAbsoluteValues`, `plotPKForestPointEstimateOfRatios` and
-`plotPKForestAggregatedRatios`)}
+(for `plotPKForestPointEstimateOfAbsoluteValues`, `plotPKForestPointEstimateOfRatios`)}
 
 \item{vlineIntercept}{Optional numeric value indicating where to draw a vertical
 line on the plot, often used to denote a reference value.}
@@ -87,14 +86,6 @@ labels in the plot to enhance readability.}
  This must be a function accepting as input a numeric vector and returning a numeric value.
  The input is formatted as a named list, the name is used in plot legends and captions
   c('geometric mean' = function(y) exp(mean(log(y[y>0]))))
-(for `plotPKForestPointEstimateOfAbsoluteValues` and `plotPKForestPointEstimateOfRatios`)}
-
-\item{coefficientOfVariation}{A numeric value representing the coefficient of
- variation, which may be used to assess variability in the data. Only relevant for crossover studies (see details)
-(for `plotPKForestPointEstimateOfAbsoluteValues` and `plotPKForestPointEstimateOfRatios`)}
-
-\item{nObservationDefault}{An integer specifying the default number of observations
-to use for bootstrapping.
 (for `plotPKForestPointEstimateOfAbsoluteValues` and `plotPKForestPointEstimateOfRatios`)}
 }
 \value{

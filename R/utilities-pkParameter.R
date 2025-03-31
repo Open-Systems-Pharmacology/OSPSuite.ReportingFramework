@@ -29,7 +29,8 @@ calculatePKParameter <- function(projectConfiguration,
 
   # Load or calculate PK analyses
 
-  message(paste("Calculate  PK analysis result of", scenarioName))
+  writeToLog(type = 'Info',
+             msg = paste("Calculate  PK analysis result of", scenarioName))
 
   pkAnalyses <- ospsuite::calculatePKAnalyses(results = scenarioResult$results)
 
@@ -146,8 +147,9 @@ loadPKParameter <- function(projectConfiguration,
     )
   })
   pkParameterDT <- merge(data.table::rbindlist(pkAnalysesList),
-    dtScenarios[, c("scenarioName", "populationId")],
-    by = "scenarioName"
+                         dtScenarios[, c("scenarioName", "populationId")],
+                         by.x = "scenario",
+                         by.y = "scenarioName"
   )
 
   return(pkParameterDT)
@@ -173,7 +175,7 @@ loadPKAnalysisPerScenario <- function(scenarioName, scenario,
     scenarioName = scenarioName,
     scenario = scenario
   ) %>%
-    dplyr::mutate(scenarioName = scenarioName)
+    dplyr::mutate(scenario = scenarioName)
 
   dtOutputPaths <- getOutputPathIds(projectConfiguration$plotsFile)
 
@@ -204,7 +206,7 @@ loadPKAnalysisPerScenario <- function(scenarioName, scenario,
           ) %>%
           dplyr::mutate(value = value * unitFactor) %>%
           dplyr::select(
-            "scenarioName",
+            "scenario",
             "parameter",
             "individualId",
             "value",
@@ -213,8 +215,8 @@ loadPKAnalysisPerScenario <- function(scenarioName, scenario,
             "displayUnit"
           ) %>%
           setnames(
-            old = c("displayName", "displayUnit"),
-            new = c("displayNamePKParameter", "displayUnitPKParameter")
+            old = c("parameter","displayName", "displayUnit"),
+            new = c("pkParameter","displayNamePKParameter", "displayUnitPKParameter")
           )
       )
     )
@@ -241,7 +243,8 @@ loadPkAnalysisRawData <- function(projectConfiguration, scenarioName, scenario) 
   fileName <- file.path(outputFolder, paste0(scenarioName, ".csv"))
   if (!file.exists(fileName)) stop(paste("PK Parameter for", scenarioName, "calculated!"))
 
-  message(paste("Load PK analysis result of", scenarioName))
+  writeToLog(type = 'Info',
+             msg = paste("Load PK analysis result of", scenarioName))
 
   pkAnalyses <- ospsuite::importPKAnalysesFromCSV(
     filePath = fileName,
@@ -304,11 +307,11 @@ addUnitFactorsToPKDefinition <- function(scenario,
   # Split outputPathIds into a list and merge with dtO to create a comprehensive parameter definition
   dtPkParameterDefinition <-
     dtPkParameterDefinition[, .(outputPathId = splitInputs(outputPathIds)),
-      by = c("name", "displayName", "displayUnit")
+                            by = c("name", "displayName", "displayUnit")
     ] %>%
     merge(dtO,
-      by.x = c("name", "outputPathId"),
-      by.y = c("parameter", "outputPathId")
+          by.x = c("name", "outputPathId"),
+          by.y = c("parameter", "outputPathId")
     )
 
   # Check if the resulting dtPkParameterDefinition is empty; if so, stop execution with an error message
@@ -328,4 +331,118 @@ addUnitFactorsToPKDefinition <- function(scenario,
 
   # Return the modified dtPkParameterDefinition with unit factors included
   return(dtPkParameterDefinition)
+}
+#plot Support --------
+mergePKParameterWithConfigTable <- function(onePlotConfig,
+                                            pkParameterDT,
+                                            colorVector = NULL,
+                                            asRatio = FALSE) {
+
+  # initialize to avoid linter messages
+  displayNameOutput <- plotTag <- isReference <- isReference <- colorIndex <- referenceScenario <- NULL
+
+  onePlotConfig <- data.table::copy(onePlotConfig)
+  for (col in intersect(names(onePlotConfig),
+                        c("scenarios","pkParameters","outputPathIds"))){
+    onePlotConfig <- separateAndTrim(onePlotConfig, col)
+  }
+
+  mergedData <- onePlotConfig %>%
+    dplyr::select(!dplyr::any_of(c("level", "header"))) %>%
+    merge(
+      pkParameterDT %>%
+        unique(),
+      by = c("scenario", "pkParameter", "outputPathId")
+    ) %>%
+    merge(configEnv$outputPaths[, c("outputPathId", "displayNameOutputs")],
+          by = "outputPathId"
+    )
+
+  if (nrow(mergedData) == 0) stop(paste('no PK-Parameter available for',onePlotConfig$plotName[1]))
+
+
+  if (asRatio) {
+    mergedData <- setValueToRatio(mergedData, pkParameterDT)
+  } else if (!is.null(colorVector)) {
+    mergedData[, isReference := scenario %in% referenceScenario, by = c("plotName")]
+    mergedData[, colorIndex := ifelse(isReference == TRUE, names(colorVector)[2], names(colorVector)[1])]
+    mergedData$colorIndex <- factor(mergedData$colorIndex, levels = names(colorVector))
+  }
+
+  # Ensure order by creating factors
+  mergedData$displayNameOutput <- factor(mergedData$displayNameOutput,
+                                         levels = unique(mergedData$displayNameOutput),
+                                         ordered = TRUE
+  )
+
+  mergedData$scenarioShortName <- factor(mergedData$scenarioShortName,
+                                         levels = unique(onePlotConfig$scenarioShortName),
+                                         ordered = TRUE
+  )
+
+  return(mergedData)
+}
+#' Set Value to Ratio
+#'
+#' This function computes the ratio of values between base and reference scenarios
+#' for specified pharmacokinetic parameters. It merges the configuration data with
+#' pharmacokinetic parameter data and calculates the ratio based on the provided
+#' individual IDs and output path IDs.
+#'
+#' @param mergedData A data.table containing configuration data with columns for
+#'               referenceScenario, pkParameter, individualId, and outputPathId.
+#' @param pkParameterDT A data.table containing pharmacokinetic parameter data
+#'                      including scenario names, parameters, individual IDs,
+#'                      output path IDs, values, and population IDs.
+#'
+#' @return A data.table containing the merged data with column `value`
+#'         representing the ratio of base to reference values.
+#'
+#' @keywords internal
+setValueToRatio <- function(mergedData, pkParameterDT) {
+  mergedData <- merge(mergedData,
+                      pkParameterDT[, c("scenario", "pkParameter", "individualId", "outputPathId", "value", "populationId")] %>%
+                        setnames(
+                          old = c("scenario"),
+                          new = c("referenceScenario")
+                        ),
+                      by = c("referenceScenario", "pkParameter", "individualId", "outputPathId"),
+                      suffixes = c(".base", ".reference")
+  )
+  mergedData[, value := value.base / value.reference]
+
+
+  return(mergedData)
+}
+
+#' Validate Pharmacokinetic Parameter Data Table
+#'
+#' This function validates the structure and content of the provided
+#' pharmacokinetic parameter data table (`pkParameterDT`). It checks
+#' whether the data table has the required columns and ensures that the
+#' combination of `outputPathId` and `parameter` is unique with consistent
+#' `displayUnitPKParameter`.
+#'
+#' @param pkParameterDT A data.table containing pharmacokinetic parameters
+#'                      with the following required columns:
+#'                      scenario, pkParameter, individualId, value,
+#'                      outputPathId, displayNamePKParameter,
+#'                      and displayUnitPKParameter.
+#'
+#' @return None. The function will stop execution if validation fails,
+#'         otherwise returns invisibly.
+#'
+#' @keywords internal
+validatePKParameterDT <- function(pkParameterDT) {
+  checkmate::assertDataTable(pkParameterDT)
+  checkmate::assertNames(names(pkParameterDT), must.include = c("scenario", "pkParameter", "individualId", "value", "outputPathId", "displayNamePKParameter", "displayUnitPKParameter"))
+
+  tmp <- pkParameterDT[, c("pkParameter", "outputPathId", "displayUnitPKParameter")] %>%
+    unique()
+
+  if (any(duplicated(tmp[, c("outputPathId", "pkParameter")]))) {
+    stop("Please check pkParameterDT. It seems that displayUnitPKParameter is not consistent for outputPathId and pkParameter")
+  }
+
+  return(invisible())
 }

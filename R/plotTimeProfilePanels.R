@@ -131,7 +131,7 @@ plotTimeProfiles <- function(projectConfiguration,
                                "Percentiles",
                                "Custom"
                              ),
-                             percentiles = c(5, 50, 95),
+                             percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1,3,5)],
                              customFunction = NULL,
                              referenceScaleVector = list(
                                Simulation = c(NA, NA),

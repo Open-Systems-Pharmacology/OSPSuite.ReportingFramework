@@ -54,19 +54,21 @@ reproducibility of the bootstrap samples.
 \examples{
 \dontrun{
 # Example usage
-pkParameterDT <- data.table(pkParameter = c('A', 'A', 'B', 'B'),
-                             outputPathId = c(1, 1, 2, 2),
-                             scenario = c('S1', 'S2', 'S1', 'S2'),
-                             value = c(10, 20, 15, 25))
+pkParameterDT <- data.table(
+  pkParameter = c("A", "A", "B", "B"),
+  outputPathId = c(1, 1, 2, 2),
+  scenario = c("S1", "S2", "S1", "S2"),
+  value = c(10, 20, 15, 25)
+)
 
 result <- calculateAggregationWithCIBYGroup(
   dt = pkParameterDT,
   aggregationFun = function(y) exp(mean(log(y[y > 0]))),
   confLevel = 0.9,
-  identifier = c('pkParameter', 'outputPathId', 'scenario'),
+  identifier = c("pkParameter", "outputPathId", "scenario"),
   nBootstrap = 100,
-  valueColumn = 'value',
-  direction = 'y'
+  valueColumn = "value",
+  direction = "y"
 )
 }
 

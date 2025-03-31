@@ -1,56 +1,27 @@
 test_that("initProject copies files from sourceFolder to destination", {
   # Set up a temporary directory for testing
-  tempDir <- tempdir()
-  configurationDirectory <- file.path(tempDir, "Scripts", "ReportingFramework")
+  projectDir <- file.path(tempdir(),'testInit')
+
+  configurationDirectory <- file.path(projectDir, "Scripts", "ReportingFramework")
+  if (!dir.exists(configurationDirectory)) dir.create(configurationDirectory,recursive = TRUE)
 
 
   # Call the initProject function
   invisible(initProject(configurationDirectory = configurationDirectory, overwrite = FALSE))
 
   # Check if the files were copied to the destination folder
-  expect_true(file.exists(file.path(configurationDirectory, "Plots.xlsx")))
-  expect_true(file.exists(file.path(destinationFolder, "folder", "Scenarios.xlsx")))
+  fileList <- list.files(configurationDirectory)
+  expect_gte(length(fileList ),expected = 9)
+  expect_true("Plots.xlsx" %in% fileList )
 
   # Clean up: delete the temporary directories and files
-  unlink(tempDir, recursive = TRUE)
+  unlink(projectDir, recursive = TRUE)
 })
 
-test_that("initProject does not overwrite existing files when overwrite = FALSE", {
-  # Set up a temporary directory for testing
-  tempDir <- tempdir()
-  sourceFolder <- file.path(tempDir, "source")
-  destinationFolder <- file.path(tempDir, "destination")
 
-  # Create some files in the source folder
-  invisible(dir.create(sourceFolder, recursive = TRUE))
-  invisible(file.create(file.path(sourceFolder, "file1.txt")))
-  writeLines("This is source file1 content", file.path(sourceFolder, "file1.txt"))
+test_that("TestProject has corect format", {
+  l <- buildTestProjectory()
 
-  # Create the same files in the destination folder
-  invisible(dir.create(destinationFolder, recursive = TRUE))
-  invisible(file.create(file.path(destinationFolder, "file1.txt")))
-  writeLines("This is destination file1 content", file.path(destinationFolder, "file1.txt"))
-
-  # Call the initProject function with overwrite = FALSE
-  invisible(initProject(rootDirectory = destinationFolder, sourceFolder = sourceFolder, overwrite = FALSE))
-
-  # Check if the existing files in the destination folder were not overwritten
-  expect_equal(readLines(file.path(destinationFolder, "file1.txt")), "This is destination file1 content")
-
-
-  invisible(initProject(rootDirectory = destinationFolder, sourceFolder = sourceFolder, overwrite = TRUE))
-
-  # Check if the existing files in the destination folder were not overwritten
-  expect_equal(readLines(file.path(destinationFolder, "file1.txt")), "This is source file1 content")
-
-  # Clean up: delete the temporary directories and files
-  unlink(tempDir, recursive = TRUE)
-})
-
-# initialize logging. Is always needed
-projectConfiguration <- suppressMessages(setUpTestProject(withModel = TRUE))
-
-test_that("initProject creates project folder structure", {
   expect_s3_class(projectConfiguration, "ProjectConfiguration")
 
   scenarioList <-

@@ -193,7 +193,7 @@ runAndSaveScenarios <- function(projectConfiguration,
   for (sc in names(scenarioList)) {
     if (file.exists(file.path(outputFolder, paste0(sc, ".csv"))) &
       !withResimulation) {
-      message(paste("Load simulation result of", sc))
+      writeToLog(type = 'Info',msg = paste("Load simulation result of", sc))
 
       scenarioResults[sc] <- esqlabsR::loadScenarioResults(
         scenarioNames = sc,
@@ -206,7 +206,7 @@ runAndSaveScenarios <- function(projectConfiguration,
         scenarioResults[[sc]][["population"]] <- ospsuite::loadPopulation(popFile)
       }
     } else {
-      message(paste("Start simulation of", sc))
+      writeToLog(type = 'Info',msg = paste("Start simulation of", sc))
 
       # make sure custom params are not again overwritten by population
       scenarioList[[sc]] <- setCustomParamsToPopulation(scenarioList[[sc]])

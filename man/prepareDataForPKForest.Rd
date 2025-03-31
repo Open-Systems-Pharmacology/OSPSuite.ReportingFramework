@@ -34,8 +34,6 @@ prepareDataForPKForest(
 \item{aggregationFlag}{Optional aggregation method.}
 
 \item{pkParameterDT}{Data table containing PK parameter data.}
-
-\item{nObservationDefault}{Default number of observations.}
 }
 \value{
 A list of prepared data for the PK forest plot.

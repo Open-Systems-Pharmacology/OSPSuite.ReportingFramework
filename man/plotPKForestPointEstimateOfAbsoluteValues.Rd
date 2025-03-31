@@ -48,8 +48,7 @@ metadata.}
 
 \item{nBootstrap}{An integer indicating the number of bootstrap samples to draw
 for calculating confidence intervals.
-(for `plotPKForestPointEstimateOfAbsoluteValues`, `plotPKForestPointEstimateOfRatios` and
-`plotPKForestAggregatedRatios`)}
+(for `plotPKForestPointEstimateOfAbsoluteValues`, `plotPKForestPointEstimateOfRatios`)}
 
 \item{scaleVectors}{A list containing user-defined scale vectors for the plot aesthetics
 for simulated and observed data. The list can have up to two components: `simulated` and

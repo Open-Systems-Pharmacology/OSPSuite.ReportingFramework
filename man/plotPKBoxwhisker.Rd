@@ -40,9 +40,6 @@ number of facets and plot dimensions.}
 
 \item{...}{Additional arguments passed to plotting functions for further
 customization.}
-
-\item{nBootstrap}{An integer specifying the number of bootstrap samples to
-use when calculating ratios. Default is 1000.}
 }
 \value{
 A list of generated plots. Each plot is an object that can be rendered
@@ -72,13 +69,14 @@ When calculating ratios, the function distinguishes between two cases:
 \examples{
 # Example usage of plotPKBoxwhisker
 \dontrun{
-plotList <- plotPKBoxwhisker(projectConfiguration = myProjectConfig,
-                               onePlotConfig = myPlotConfig,
-                               pkParameterDT = myPKData,
-                               percentiles = c(0.05, 0.25, 0.5, 0.75, 0.95),
-                               xAxisTextAngle = 45,
-                               colorVector = c(DDI = "red", control = "blue"),
-                               facetAspectRatio = 1,
-                               nBootstrap = 1000)
+plotList <- plotPKBoxwhisker(
+  projectConfiguration = myProjectConfig,
+  onePlotConfig = myPlotConfig,
+  pkParameterDT = myPKData,
+  percentiles = c(0.05, 0.25, 0.5, 0.75, 0.95),
+  xAxisTextAngle = 45,
+  colorVector = c(DDI = "red", control = "blue"),
+  facetAspectRatio = 1,
+)
 }
 }

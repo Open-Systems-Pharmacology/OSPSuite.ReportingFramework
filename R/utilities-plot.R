@@ -212,8 +212,10 @@ readConfigTableForPlot <- function(sheetName, validateConfigTableFunction, input
     checkmate::assertNames(plotNames, subset.of = configTable[!is.na(plotName)]$plotName)
     configTable <- configTable[plotName %in% plotNames]
   }
-
   # add scenario names
+  if ("scenarios" %in% names(configTable)){
+   configTable <- separateAndTrim(data = configTable,columnName = 'scenarios')
+  }
   if ("scenario" %in% names(configTable)) {
     configTable <-
       merge(
@@ -487,7 +489,7 @@ generateColorScaleVectors <- function(dt,
 getColorVectorForLegend <- function(colorLegend, colorVector) {
   validateColorVector(colorVector)
 
-  colorLegendList <- strsplit(as.character(colorLegend), "\\|")[[1]]
+  colorLegendList <- trimws(strsplit(as.character(colorLegend), "\\|")[[1]])
 
   # Generate default colors for the scale vector
   colorVectorNew <- getDefaultColorsForScaleVector(n = length(colorLegendList))
@@ -560,7 +562,7 @@ addCaptionTextAddon <- function(captiontext, plotCaptionAddon) {
   }
 
   if (!is.na(plotCaptionAddon) && plotCaptionAddon != "") {
-    if (!grepl("\\.$", captiontext)) {
+    if (!grepl("\\.$", plotCaptionAddon)) {
       plotCaptionAddon <- paste0(plotCaptionAddon, ".")
     }
     captiontext <- paste0(captiontext, " ", plotCaptionAddon)
@@ -779,7 +781,7 @@ validateConfigTablePlots <- function(configTablePlots,
   validateSubsetList(subsetList, configTablePlots)
 
   if (!is.null(numericRangeColumns)) {
-    validateNumericRangeColumns(numericRangeColumns, configTablePlots)
+    validateNumericVectorColumns(numericRangeColumns, configTablePlots,len=2)
   }
 
   return(invisible())
@@ -815,8 +817,6 @@ validateColumn <- function(col, data, type, anyMissing = FALSE) {
     )
   )
 }
-
-
 #' validate Subset List
 #'
 #' Validates the subset list against the provided data frame.
@@ -849,28 +849,31 @@ validateSubsetList <- function(subsetList, data) {
 }
 
 
-
 #' validate Numeric Range Columns
 #'
 #' Validates numeric range columns in the provided data frame.
 #'
 #' @param columns A vector of column names to validate.
 #' @param data A data frame containing the columns to validate.
-validateNumericRangeColumns <- function(columns, data) {
+#' @param .. additionally parameters parsed to checkmate::assertNumeric
+validateNumericVectorColumns <- function(columns, data,...) {
   for (col in columns) {
     if (any(!is.na(data[[col]]))) {
-      x <- data[!is.na(get(col)), ][[col]]
-      if (length(x) > 0) {
-        valid <- is.numeric(eval(parse(text = x))) && length(eval(parse(text = x))) == 2
-        if (!valid) {
-          stop(paste("Invalid inputs in plot configuration column", col))
-        }
-      }
+      xList <- data[!is.na(get(col)), ][[col]]
+      for (xcharacter in xList)
+        tryCatch(
+          {x <- eval(parse(text = xcharacter))},
+          error = function(e) {
+            stop(paste("Invalid inputs in plot configuration column", col))
+          })
+      checkmate::assertNumeric(x = x,.var.name = paste("Plot configuration column", col),...)
+      # do.call(what = checkmate::assertNumeric,
+      #         args = c(list(x = x,.var.name = paste("Plot configuration column", col)),
+      #                  list(...))
+      #)
     }
   }
 }
-
-
 #' Validate Consistency of Values Within Groups
 #'
 #' This function checks whether specified columns in a data table have consistent values

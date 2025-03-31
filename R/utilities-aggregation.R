@@ -57,9 +57,9 @@ getAggregationFunction <- function(aggregationFlag,
       function(y) {
         y <- y[!is.na(y)]
         return(list(
-          yMin = stats::quantile(y, probs = percentiles[1]),
-          yValues = stats::quantile(y, probs = percentiles[2]),
-          yMax = stats::quantile(y, probs = percentiles[3]),
+          yMin = stats::quantile(y, probs = percentiles[1],names = FALSE),
+          yValues = stats::quantile(y, probs = percentiles[2],names = FALSE),
+          yMax = stats::quantile(y, probs = percentiles[3],names = FALSE),
           yErrorType = yErroryType
         ))
       }

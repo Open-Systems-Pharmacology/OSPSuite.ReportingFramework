@@ -13,7 +13,7 @@ plotTimeProfiles(
   nMaxFacetRows = 4,
   facetAspectRatio = 0.5,
   aggregationFlag = c("GeometricStdDev", "ArithmeticStdDev", "Percentiles", "Custom"),
-  percentiles = c(5, 50, 95),
+  percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1, 3, 5)],
   customFunction = NULL,
   referenceScaleVector = list(Simulation = c(NA, NA), Reference = c(NA, NA)),
   ...
@@ -96,7 +96,7 @@ supported.
 \examples{
 \dontrun{
 # Example of using the referenceScaleVector parameter for a DDI Analysis
-referenceScaleVector = list(
+referenceScaleVector <- list(
   DDI = c("#843C39FF", "#AD494AFF"),
   Control = c("#3182BDFF", "#6BAED6FF")
 )
@@ -108,9 +108,9 @@ referenceScaleVector = list(
 
 # Example of using the referenceScaleVector parameter for a comparison between a pediatric
 # and an adult simulation using the default colors
-referenceScaleVector = list(
-  'Pediatric population' = c(NA, NA),
-  'Adult population' = c(NA, NA)
+referenceScaleVector <- list(
+  "Pediatric population" = c(NA, NA),
+  "Adult population" = c(NA, NA)
 )
 
 # The scenario would be labeled as 'Pediatric population', with aesthetic color as dark blue ("#3182BDFF") and
@@ -125,7 +125,7 @@ plotTimeProfilePanels(
   scenarioResults = myScenarioResults,
   aggregationFlag = c("Custom"),
   customFunction = function(y) {
-list(yValues = mean(y), yMin = mean(y) - sd(y), yMax = mean(y) + sd(y), yErrorType = "mean | standard deviation")
+    list(yValues = mean(y), yMin = mean(y) - sd(y), yMax = mean(y) + sd(y), yErrorType = "mean | standard deviation")
   }
 )
 

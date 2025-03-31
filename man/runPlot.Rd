@@ -67,14 +67,13 @@ Users can utilize the `openFigureTemplate` function to open a template for creat
 This function can be called directly: `openFigureTemplate().` Additionally, the template is available as an RStudio Add-in for easy access.
 }
 \examples{
-
 \dontrun{
 # Run the plot generation function with Rmd export
 runPlot(
   projectConfiguration = projectConfiguration,
   nameOfplotFunction = "plotTimeProfiles",
   configTableSheet = "TimeProfiles",
-  inputs = list(dataObserved = dataObserved,scenarioResults = scenarioResults)
+  inputs = list(dataObserved = dataObserved, scenarioResults = scenarioResults)
 )
 
 # Run the plot generation function without Rmd export, returning a plot list
@@ -83,7 +82,7 @@ plotList <- runPlot(
   nameOfplotFunction = "plotTimeProfiles",
   configTableSheet = "TimeProfiles",
   plotNames = c("Plot1", "Plot2"),
-  inputs = list(dataObserved = dataObserved,scenarioResults = scenarioResults)
+  inputs = list(dataObserved = dataObserved, scenarioResults = scenarioResults)
 )
 
 # open the template for custom plot functions

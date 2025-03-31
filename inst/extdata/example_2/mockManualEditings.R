@@ -227,7 +227,6 @@ mockManualEditings.PKParameter <- function(projectConfiguration){
   openxlsx::saveWorkbook(wb, projectConfiguration$addOns$pKParameterFile, overwrite = TRUE)
 }
 
-
 mockManualEditings.PlotBoxwhsiker1 <- function(projectConfiguration){
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
@@ -295,6 +294,21 @@ mockManualEditings.PlotForest1 <- function(projectConfiguration,sheetName){
 
 }
 
+mockManualEditings.Demographics2 <- function(projectConfiguration){
+
+  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+
+  dt <- xlsxReadData(wb = wb,sheetName = 'DemographicPlots2')
+
+  dt[plotName == 'demographics', scenarios := gsub('adults, ','',scenarios)]
+  dt[plotName == 'demographics', referenceScenario := 'adults']
+  dt[plotName == 'demographics', colorLegend := 'pediatrics|adults']
+
+  xlsxWriteData(wb = wb, sheetName  = 'DemographicPlots2', dt = dt)
+
+  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+
+}
 
 mockManualEditings.PlotBoxwhsiker2 <- function(projectConfiguration){
 

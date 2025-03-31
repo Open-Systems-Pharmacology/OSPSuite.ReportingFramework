@@ -1,0 +1,204 @@
+# Boxplots ----------------
+#' @title object to map data for boxplots
+#' @description  R6 class for mapping variable to `data`
+#' @export
+#' @family MappedData classes
+MappedDataRangeDistribution <- R6::R6Class( # nolint
+  "MappedDataRangeDistribution",
+  inherit = MappedData,
+  public = list(
+    #' @field xscale scale of x axis
+    xscale = NULL,
+    #' @param data data.frame used for mapping
+    #' @param mapping list of aesthetic mappings
+    #' @param groupAesthetics vector of aesthetics, which are used for columns mapped with aesthetic `groupby`
+    #' @param direction direction of plot either "x" or "y"
+    #' @param isObserved A `boolean` if TRUE mappings mdv, lloq, error and error_relative are evaluated
+    #' @param xscale scale of x-axis either 'linear' or 'log'
+    #' @param yscale scale of y-axis either 'linear' or 'log'
+    #' @param xlimits limits for x-axis (may be NULL)
+    #' @param ylimits limits for y-axis (may be NULL)
+    #' @param residualScale scale of x residuals
+    #' @param residualAesthetic aesthetic used for mapping residuals
+    #'
+    #' @description Create a new `MappedDataRangeDistribution` object
+    #'
+    #' @return `MappedDataRangeDistribution` class object
+    initialize = function(data,
+                          mapping,
+                          groupAesthetics = NULL,
+                          direction = "y",
+                          isObserved = TRUE,
+                          xlimits = NULL,
+                          ylimits = NULL,
+                          xscale = 'linear',
+                          yscale = 'linear',
+                          residualScale = NULL,
+                          residualAesthetic = "y",
+                          modeOfBinning = NA,
+                          numberOfBins = NA,
+                          breaks = NA) {
+      super$initialize(
+        data = data,
+        mapping = mapping,
+        groupAesthetics = groupAesthetics,
+        direction = direction,
+        isObserved = isObserved,
+        xlimits = xlimits,
+        ylimits = ylimits,
+        xscale = xscale,
+        yscale = yscale,
+        residualScale = residualScale,
+        residualAesthetic = residualAesthetic
+      )
+
+      # add specifics fo rangeplots
+      match.arg(modeOfBinning,unlist(BINNINGMODE,use.names = FALSE),several.ok = FALSE)
+      if (modeOfBinning == BINNINGMODE$breaks) {
+        checkmate::assertNumeric(breaks,any.missing = FALSE)
+        private$breaks <- sort(unique(breaks))
+        numberOfBins <- length(private$breaks)
+      } else {
+        checkmate::assertIntegerish(numberOfBins,lower = 2,any.missing = FALSE,len = 1)
+      }
+
+      private$modeOfBinning = modeOfBinning
+      private$numberOfBins = numberOfBins
+      private$breaks = breaks
+      self$xscale = xscale
+
+    },
+    #' set binning columns
+    setBins = function() {
+      if (private$modeOfBinning == BINNINGMODE$number){
+        functionName <- 'cut_number'
+        functionArgs <-  list(n = private$numberOfBins)
+      } else if(private$modeOfBinning == BINNINGMODE$interval){
+
+        if(self$xscale == 'log'){
+          cut_interval_log <- function(x,...){cut_interval(log(x),...)}
+          functionName <- 'cut_interval_log'
+        } else {
+          functionName <- 'cut_interval'
+        }
+        functionArgs <-  list(n = private$numberOfBins)
+      } else if (private$modeOfBinning == BINNINGMODE$breaks){
+        functionName <- 'cut'
+        functionArgs <- list(breaks = private$breaks,
+             include.lowest = TRUE)
+      }
+      self$data <- self$data %>%
+        dplyr::mutate(.bin = do.call(what = functionName,
+                                     args = c(list(x = !!self$mapping[['x']],
+                                                   right = FALSE,
+                                                   ordered_result = TRUE),
+                                              functionArgs)))
+
+      return(invisible(self))
+    },
+    # create a data table with binborder information
+    setBorderDataTable = function(identifier = 'IndividualId'){
+
+      checkmate::assertNames(c('.bin',identifier),subset.of = names(self$data))
+
+      # get datatable with unique x values
+      tmp <- copy(self$data) %>%
+        dplyr::select(dplyr::all_of(c('.bin',identifier)))
+      tmp$.x = private$getDataForAesthetic(aesthetic = 'x')
+      tmp <- tmp %>%
+        unique() %>%
+        setDT()
+
+      borders <- tmp[!is.na(.bin),.(N = .N,
+                             minValue = min(.x),
+                             medianX = median(.x),
+                             maxValue = max(.x)),
+                          by = '.bin']
+
+      setorderv(borders,'minValue')
+
+      # duplicate last row to determine right border of table/plot
+      borders <- rbind(borders,
+                       borders[nrow(borders)])
+      borders[nrow(borders), maxValue := maxValue*1.001]
+      borders[nrow(borders), minValue := maxValue]
+
+      # set breaks
+      if (private$modeOfBinning == BINNINGMODE$breaks){
+        borders$breaks = private$breaks
+      } else {
+        # duplicate first row to support calculation of minimal break
+          borders <- rbind(borders[1],
+                           borders)
+          borders[1, minValue := minValue/1.001]
+          borders[1, maxValue := minValue]
+
+          borders[, breaksRaw := (minValue + shift(maxValue, type = "lag")) / 2]
+          borders[,diff := minValue - shift(maxValue, type = "lag")]
+          borders[,diffN := 10^ceiling(-log10(diff))]
+          borders[,breaks := round(breaksRaw*diffN)/diffN]
+
+          borders <- borders[-1,]
+          borders[,breaksRaw:= NULL]
+          borders[,diff:= NULL]
+          borders[,diffN:= NULL]
+      }
+
+      private$.borders <- borders
+    },
+    setXMapping = function(asStepPlot){
+      private$asStepPlot <- asStepPlot
+      if (asStepPlot){
+        tmp <- setDT(copy(self$border))
+        if (self$xscale == 'linear'){
+          tmp[,breaksRight := shift(breaks, type = "lead") -
+                0.001*(maxValue-minValue)]
+        } else {
+          tmp[,breaksRight := exp(log(shift(breaks, type = "lead")) -
+                0.001*(log(maxValue)-log(minValue)))]
+        }
+        tmp <- tmp[!is.na(breaksRight)]
+
+        self$data <- rbind(self$data %>%
+                             merge(tmp[,c('.bin','breaks')],
+                                   by = '.bin'),
+                           self$data %>%
+                             merge(tmp[,c('.bin','breaksRight')],
+                                   by = '.bin') %>%
+                             setnames(old = 'breaksRight',
+                                      new = 'breaks'),
+                           setDT(self$data)[is.na(.bin)] %>%
+                             dplyr::mutate(breaks = min(self$border$breaks,na.rm = TRUE)),
+                           setDT(self$data)[is.na(.bin)] %>%
+                             dplyr::mutate(breaks = max(self$border$breaks,na.rm = TRUE)))
+
+        private$addOverwriteAes(aes(x = breaks))
+
+      } else {
+        self$data <- rbind(self$data %>%
+          merge(self$border[,c('.bin','medianX')],
+                by = '.bin'),
+          setDT(self$data)[is.na(.bin)] %>%
+            dplyr::mutate(medianX = min(self$border$medianX,na.rm = TRUE)),
+          setDT(self$data)[is.na(.bin)] %>%
+            dplyr::mutate(medianX = max(self$border$medianX,na.rm = TRUE)))
+
+        private$addOverwriteAes(aes(x = medianX))
+      }
+    }
+  ),
+  ## active -------
+  active = list(
+    border = function(){
+      return(private$.borders)
+    }
+  ),
+  ## private -------
+  private = list(
+    modeOfBinning = NA,
+    numberOfBins = NA,
+    breaks = NA,
+    .borders = NA,
+    asStepPlot = NA
+  )
+)

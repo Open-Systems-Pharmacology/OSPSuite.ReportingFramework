@@ -279,7 +279,7 @@ setHeadersToLowerCase <- function(dt) {
 #' @keywords internal
 separateAndTrim <- function(data, columnName) {
   # Separate rows based on the specified column and trim whitespace
-  separatedData <- data %>%
+  separatedData <- copy(data) %>%
     tidyr::separate_rows(!!sym(columnName), sep = ",") %>%
     data.table::setDT() %>%
     .[, (columnName) := trimws(get(columnName))] %>%

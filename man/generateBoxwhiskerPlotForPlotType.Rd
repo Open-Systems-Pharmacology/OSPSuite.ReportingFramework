@@ -31,8 +31,6 @@ generateBoxwhiskerPlotForPlotType(
 \item{asRatio}{Logical indicating if the plot is for ratios.}
 
 \item{...}{Additional arguments passed to plotting functions.}
-
-\item{nBootstrap}{Number of bootstrap samples.}
 }
 \value{
 A list of generated plots for the specified plot type.

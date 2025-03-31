@@ -13,10 +13,6 @@ validatePointEstimateInputs(nBootstrap, confLevel, statFun)
 
 \item{statFun}{Statistical function for bootstrapping.}
 
-\item{nObservationDefault}{Default number of observations.}
-
-\item{coefficientOfVariation}{Coefficient of variation for the data.}
-
 \item{ratioMode}{Mode for ratio calculations.}
 }
 \value{

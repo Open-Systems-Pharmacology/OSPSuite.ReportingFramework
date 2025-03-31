@@ -61,7 +61,6 @@ plotPKBoxwhisker <- function(projectConfiguration,
                              colorVector = c(scenario = NA, referenceScenario = NA),
                              facetAspectRatio = 0.5,
                              ...) {
-  validatePKParameterDT(pkParameterDT)
   checkmate::assertNumeric(xAxisTextAngle, any.missing = FALSE)
   checkmate::assertNumeric(facetAspectRatio, any.missing = FALSE)
 
@@ -120,8 +119,7 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
     onePlotConfig = onePlotConfig,
     pkParameterDT = pkParameterDT,
     colorVector = colorVector,
-    asRatio = asRatio,
-    percentiles = percentiles
+    asRatio = asRatio
   )
   if (nrow(plotData) == 0) {
     warning(paste("No data for", onePlotConfig$plotName[1]))
@@ -214,60 +212,24 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
 #' @param pkParameterDT A data.table containing PK parameter data.
 #' @param colorVector A named vector for colors.
 #' @param ratioMode Mode indicating if the plot is for ratios.
-#' @param percentiles A vector of percentiles to calculate.
 #' @return A data.table prepared for plotting.
 #' @keywords internal
-prepareDataForPKBoxplot <- function(onePlotConfig, pkParameterDT, colorVector, asRatio, percentiles) {
+prepareDataForPKBoxplot <- function(onePlotConfig, pkParameterDT, colorVector, asRatio) {
+
   # initialize to avoid linter messages
-  displayNameOutput <- plotTag <- isReference <- isReference <- colorIndex <- referenceScenario <- NULL
+  displayNameOutput <- plotTag <- NULL
 
-  plotData <- data.table::copy(onePlotConfig)
+  plotData <- mergePKParameterWithConfigTable(onePlotConfig = onePlotConfig,
+                                              pkParameterDT = pkParameterDT,
+                                              colorVector = colorVector,
+                                              asRatio = asRatio)
 
-  plotData <- separateAndTrim(plotData, "outputPathIds")
-  plotData <- separateAndTrim(plotData, "pkParameters")
-
-  plotData <- plotData %>%
-    dplyr::select(!c("level", "header")) %>%
-    merge(
-      pkParameterDT %>%
-        unique() %>%
-        data.table::setnames(
-          old = c("parameter", "scenarioName"),
-          new = c("pkParameter", "scenario")
-        ),
-      by = c("scenario", "pkParameter", "outputPathId")
-    ) %>%
-    merge(configEnv$outputPaths[, c("outputPathId", "displayNameOutputs")],
-      by = "outputPathId"
-    )
-
-
-  if (nrow(plotData) > 0) {
-    if (dplyr::n_distinct(plotData$pkParameter) > 1) {
-      plotData[, plotName := paste(plotName, pkParameter, sep = "_")]
-    }
-
-    if (asRatio) {
-      plotData <- setValueToRatio(plotData, pkParameterDT)
-    } else {
-      plotData[, isReference := scenario %in% referenceScenario, by = c("plotName")]
-      plotData[, colorIndex := ifelse(isReference == TRUE, names(colorVector)[2], names(colorVector)[1])]
-      plotData$colorIndex <- factor(plotData$colorIndex, levels = names(colorVector))
-    }
-
-    # Ensure order by creating factors
-    plotData$displayNameOutput <- factor(plotData$displayNameOutput,
-      levels = unique(plotData$displayNameOutput),
-      ordered = TRUE
-    )
-
-    plotData$scenarioShortName <- factor(plotData$scenarioShortName,
-      levels = unique(onePlotConfig$scenarioShortName),
-      ordered = TRUE
-    )
-    # add Tag for faceting
-    plotData[, plotTag := generatePlotTag(as.numeric(displayNameOutput))]
+  if (dplyr::n_distinct(plotData$pkParameter) > 1) {
+    plotData[, plotName := paste(plotName, pkParameter, sep = "_")]
   }
+
+  # add Tag for faceting
+  plotData[, plotTag := generatePlotTag(as.numeric(displayNameOutput))]
 
   return(plotData)
 }
@@ -455,38 +417,7 @@ createBaseBoxWhisker <- function(plotDataPk, yScale, asRatio, colorVector, onePl
 
   return(plotObject)
 }
-#' Set Value to Ratio
-#'
-#' This function computes the ratio of values between base and reference scenarios
-#' for specified pharmacokinetic parameters. It merges the configuration data with
-#' pharmacokinetic parameter data and calculates the ratio based on the provided
-#' individual IDs and output path IDs.
-#'
-#' @param config A data.table containing configuration data with columns for
-#'               referenceScenario, pkParameter, individualId, and outputPathId.
-#' @param pkParameterDT A data.table containing pharmacokinetic parameter data
-#'                      including scenario names, parameters, individual IDs,
-#'                      output path IDs, values, and population IDs.
-#'
-#' @return A data.table containing the merged data with column `value`
-#'         representing the ratio of base to reference values.
-#'
-#' @keywords internal
-setValueToRatio <- function(config, pkParameterDT) {
-  plotData <- merge(config,
-    pkParameterDT[, c("scenarioName", "parameter", "individualId", "outputPathId", "value", "populationId")] %>%
-      setnames(
-        old = c("scenarioName", "parameter"),
-        new = c("referenceScenario", "pkParameter")
-      ),
-    by = c("referenceScenario", "pkParameter", "individualId", "outputPathId"),
-    suffixes = c(".base", ".reference")
-  )
-  plotData[, value := value.base / value.reference]
 
-
-  return(plotData)
-}
 
 # validation ------------
 #' Validate PK Box-and-Whisker Configuration Table
@@ -501,11 +432,12 @@ setValueToRatio <- function(config, pkParameterDT) {
 #' @keywords internal
 validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   # initialize to avoid linter messages
-  plot_Ratio <- plot_Absolute referenceScenario <- value.reference <- value.base <- value <- NULL #nolint
+  plot_Ratio <- plot_Absolute <- referenceScenario <- value.reference <- value.base <- value <- NULL #nolint
 
   configTablePlots <- validateHeaders(configTable)
   validateOutputIdsForPlot()
   validateDataGroupIdsForPlot()
+  validatePKParameterDT(pkParameterDT)
 
   validateConfigTablePlots(
     configTablePlots = configTablePlots,
@@ -651,39 +583,6 @@ validateExistenceOfReferenceForRatio <- function(configTablePlots, pkParameterDT
 
   return(invisible())
 }
-#' Validate Pharmacokinetic Parameter Data Table
-#'
-#' This function validates the structure and content of the provided
-#' pharmacokinetic parameter data table (`pkParameterDT`). It checks
-#' whether the data table has the required columns and ensures that the
-#' combination of `outputPathId` and `parameter` is unique with consistent
-#' `displayUnitPKParameter`.
-#'
-#' @param pkParameterDT A data.table containing pharmacokinetic parameters
-#'                      with the following required columns:
-#'                      scenarioName, parameter, individualId, value,
-#'                      outputPathId, displayNamePKParameter,
-#'                      and displayUnitPKParameter.
-#'
-#' @return None. The function will stop execution if validation fails,
-#'         otherwise returns invisibly.
-#'
-#' @keywords internal
-validatePKParameterDT <- function(pkParameterDT) {
-  checkmate::assertDataTable(pkParameterDT)
-  checkmate::assertNames(names(pkParameterDT), must.include = c("scenarioName", "parameter", "individualId", "value", "outputPathId", "displayNamePKParameter", "displayUnitPKParameter"))
-
-  tmp <- pkParameterDT[, c("parameter", "outputPathId", "displayUnitPKParameter")] %>%
-    unique()
-
-  if (any(duplicated(tmp[, c("outputPathId", "parameter")]))) {
-    stop("Please check pkParameterDT. It seems that displayUnitPKParameter is not consistent for outputPathId and parameter")
-  }
-
-  return(invisible())
-}
-
-
 
 # support usability --------------------
 #' Add Default Configuration for PK Box-and-Whisker Plots
@@ -701,10 +600,7 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(projectConfiguration,
                                                  sheetName = "PKParameter_Boxplot",
                                                  overwrite = FALSE) {
   # initialize to avoid linter messages
-  pkParameters <- outputPathIds <- outputPathId <- parameter <- NULL
-
-  # avoid warnings for global variables during check
-  scenarioName <- NULL
+  pkParameters <- outputPathIds <- outputPathId <- parameter <- scenarioName <- NULL
 
   # this function stops in valid runs
   stopHelperFunction()

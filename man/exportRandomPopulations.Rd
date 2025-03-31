@@ -33,8 +33,9 @@ This function generates virtual populations based on demographic data and export
 \examples{
 \dontrun{
 exportRandomPopulations(projectConfiguration,
-                        populationNames = c("Population1", "Population2"),
-                        customParameters = list(list(path = "param1", values = c(1, 2))),
-                        overwrite = TRUE)
+  populationNames = c("Population1", "Population2"),
+  customParameters = list(list(path = "param1", values = c(1, 2))),
+  overwrite = TRUE
+)
 }
 }

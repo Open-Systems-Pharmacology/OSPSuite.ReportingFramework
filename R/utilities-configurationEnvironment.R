@@ -20,10 +20,10 @@ loadConfigTableEnvironment <- function(projectConfiguration) {
   configEnv$dataGroupIds <- getDataGroups(wbPlots)
   configEnv$timeTags <- getTimeRangeTags(wbPlots)
   configEnv$scenarios <- getScenarioDefinitions(wbScenarios = wbScenarios, wbPlots = wbPlots)
+  configEnv$modelParameter <- getModelParameterDefinitions(wbPlots)
 
   return(invisible())
 }
-
 #' Load the Properties for Data Groups
 #'
 #' This function loads the properties for data groups from the specified workbook.
@@ -74,7 +74,6 @@ getOutputPathIds <- function(wbPlots) {
 
   return(dtOutputPaths)
 }
-
 #' Load the Time Range Tags
 #'
 #' This function loads the time range tags from the specified workbook.
@@ -98,7 +97,33 @@ getTimeRangeTags <- function(wbPlots) {
 
   return(dtTimeRange)
 }
+#' Load the Model Parameter Definitions
+#'
+#' This function loads the model parameter definitions from the specified workbook.
+#'
+#' @param wbPlots The path to the workbook containing the model parameter definitions.
+#'
+#' @return A `data.table` with model parameter definitions.
+#' @export
+getModelParameterDefinitions <- function(wbPlots){
+  dtParameter <- xlsxReadData(
+    wb = wbPlots,
+    sheetName = "ModelParameter",
+    skipDescriptionRow = TRUE,
+  ) %>%
+    setnames(old = "displayName", new = "displayNameModelParameter")
 
+  dtParameter[, displayUnit := gsub("Âµ", "\u00B5", as.character(displayUnit))]
+  dtParameter[is.na(displayUnit), displayUnit := ""]
+
+  dtParameter$parameterId <- factor(dtParameter$parameterId,
+                                       levels = unique(dtParameter$parameterId),
+                                       ordered = TRUE
+  )
+
+  return(dtParameter)
+
+}
 #' Load the Scenario Definitions
 #'
 #' This function loads the scenario definitions from the specified workbooks.
