@@ -181,16 +181,16 @@ getAggregatedVariance <- function(dt,
     aggregationFun(get(valueColumn))
   )), by = identifier]
 
-  if (!is.null(dtAggregated$yErrorValues)) {
-    if (dtAggregated$yErrorType[1] == ospsuite::DataErrorType$ArithmeticStdDev) {
-      dtAggregated[, yMin := yValues - yErrorValues]
-      dtAggregated[, yMax := yValues + yErrorValues]
-    }
-    if (dtAggregated$yErrorType[1] == ospsuite::DataErrorType$GeometricStdDev) {
-      dtAggregated[, yMin := yValues / yErrorValues]
-      dtAggregated[, yMax := yValues * yErrorValues]
-    }
-  }
+  # if (!is.null(dtAggregated$yErrorValues)) {
+  #   if (dtAggregated$yErrorType[1] == ospsuite::DataErrorType$ArithmeticStdDev) {
+  #     dtAggregated[, yMin := yValues - yErrorValues]
+  #     dtAggregated[, yMax := yValues + yErrorValues]
+  #   }
+  #   if (dtAggregated$yErrorType[1] == ospsuite::DataErrorType$GeometricStdDev) {
+  #     dtAggregated[, yMin := yValues / yErrorValues]
+  #     dtAggregated[, yMax := yValues * yErrorValues]
+  #   }
+  # }
 
   if (direction == "x") {
     data.table::setnames(dtAggregated,
@@ -300,8 +300,8 @@ calculateAggregationWithCIBYGroup <- function(dt,
   ]
 
   results[, yErrorType := paste(names(aggregationFun),
-    paste0(confLevel * 100, "%CI lower"),
-    paste0(confLevel * 100, "%CI upper"),
+    paste0(confLevel * 100, "% CI lower"),
+    paste0(confLevel * 100, "% CI upper"),
     sep = "|"
   )]
 

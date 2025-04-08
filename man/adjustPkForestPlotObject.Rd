@@ -4,7 +4,12 @@
 \alias{adjustPkForestPlotObject}
 \title{Adjust PK Forest Plot Object}
 \usage{
-adjustPkForestPlotObject(combinedObject, scaleVectors, vlineIntercept)
+adjustPkForestPlotObject(
+  combinedObject,
+  scaleVectors,
+  vlineIntercept,
+  tableLabels
+)
 }
 \arguments{
 \item{combinedObject}{The plot object to adjust.}
@@ -12,6 +17,8 @@ adjustPkForestPlotObject(combinedObject, scaleVectors, vlineIntercept)
 \item{scaleVectors}{A list defining colors, fills, and shapes for the plot.}
 
 \item{vlineIntercept}{Optional vertical line intercept.}
+
+\item{tableLabels}{named vector with table headers}
 }
 \value{
 The adjusted plot object.

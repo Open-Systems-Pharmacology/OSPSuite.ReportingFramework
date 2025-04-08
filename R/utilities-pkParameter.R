@@ -346,9 +346,8 @@ mergePKParameterWithConfigTable <- function(onePlotConfig,
                         c("scenarios","pkParameters","outputPathIds"))){
     onePlotConfig <- separateAndTrim(onePlotConfig, col)
   }
-
-  mergedData <- onePlotConfig %>%
-    dplyr::select(!dplyr::any_of(c("level", "header"))) %>%
+  mergedData <- onePlotConfig[,  c("plotName","scenario", "pkParameter", "outputPathId",
+                                   "scenarioShortName","scenarioLongName")] %>%
     merge(
       pkParameterDT %>%
         unique(),
@@ -370,13 +369,20 @@ mergePKParameterWithConfigTable <- function(onePlotConfig,
   }
 
   # Ensure order by creating factors
-  mergedData$displayNameOutput <- factor(mergedData$displayNameOutput,
-                                         levels = unique(mergedData$displayNameOutput),
+  mergedData$displayNameOutputs <- factor(mergedData$displayNameOutputs,
+                                         levels = unique(mergedData$displayNameOutputs),
                                          ordered = TRUE
   )
 
-  mergedData$scenarioShortName <- factor(mergedData$scenarioShortName,
+  mergedData$scenarioShortName <- factor(mergedData$
+                                           scenarioShortName,
                                          levels = unique(onePlotConfig$scenarioShortName),
+                                         ordered = TRUE
+  )
+
+  mergedData$scenarioLongName <- factor(mergedData$
+                                           scenarioLongName,
+                                         levels = unique(onePlotConfig$scenarioLongName),
                                          ordered = TRUE
   )
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-testProject.R
 \name{prepareTestProject}
 \alias{prepareTestProject}
-\title{Build Test Project Directory}
+\title{Run Example 2 of the Reporting Framework}
 \usage{
 prepareTestProject(rootDirectory)
 }
@@ -16,6 +16,9 @@ A list containing:
   - `scenarioResults`: The results from running the scenarios.
 }
 \description{
+Build Test Project Directory
+}
+\details{
 This function creates a test project directory for users to experiment with examples
 in the `ospsuite.reportingframework` package.
 }

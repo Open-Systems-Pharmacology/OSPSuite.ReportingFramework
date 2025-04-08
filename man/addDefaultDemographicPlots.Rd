@@ -6,9 +6,11 @@
 \usage{
 addDefaultDemographicPlots(
   projectConfiguration,
-  pkParameterDT = NULL,
-  sheetName = "DemographicPlots",
-  overwrite = FALSE
+  pkParameterDT,
+  sheetName,
+  overwrite,
+  asRangePlot,
+  templateSheet
 )
 }
 \arguments{
@@ -17,6 +19,8 @@ addDefaultDemographicPlots(
 \item{sheetName}{Name of the sheet to create.}
 
 \item{overwrite}{Logical indicating if existing data should be overwritten.}
+
+\item{templateSheet}{Name of templateSheet in Configuration table}
 }
 \value{
 NULL (invisible).
@@ -24,3 +28,4 @@ NULL (invisible).
 \description{
 Adds default configurations for Pediatric demography plots to the `Plots.xlsx` configuration file.
 }
+\keyword{internal}

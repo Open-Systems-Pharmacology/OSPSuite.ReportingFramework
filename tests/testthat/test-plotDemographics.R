@@ -2,69 +2,81 @@
 pkParameterDT <- loadPKParameter(projectConfiguration = projectConfiguration,
                                  scenarioList = scenarioList)
 
+test_that("Default Config For Histograms", {
+  addDefaultConfigForHistograms(projectConfiguration = projectConfiguration,
+                                sheetName = "HistogramTest",
+                                pkParameterDT = pkParameterDT,
+                                overwrite = TRUE)
+
+  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+
+  expect_contains(wb$sheet_names,'HistogramTest')
+})
+
+test_that("Default Config For Histograms", {
+  addDefaultConfigForDistributionsVsDemographics(projectConfiguration = projectConfiguration,
+                                sheetName = "RangePlotTest",
+                                pkParameterDT = pkParameterDT,
+                                overwrite = TRUE)
+
+  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+
+  expect_contains(wb$sheet_names,'RangePlotTest')
+})
+
 # prepare configtable
-addDefaultDemographicPlots(projectConfiguration = projectConfiguration,
-                                    sheetName = "DemographicPlots1",
-                                    pkParameterDT = pkParameterDT,
-                                    overwrite = TRUE)
+mockManualEditingsPlotDemographicsTest(projectConfiguration)
 
-wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+test_that("PK histograms plots", {
+  skip_if_not_installed("vdiffr")
+  skip_if(getRversion() < "4.1")
 
-dt <- xlsxReadData(wb = wb, sheetName = 'DemographicPlots1')
+  # createPlots
+  plotList <- runPlot(
+    nameOfplotFunction = "plotHistograms",
+    projectConfiguration = projectConfiguration,
+    configTableSheet = "HistogramTest",
+    suppressExport = TRUE,
+    plotNames = 'pkparameter2',
+    inputs = list(scenarioList = scenarioList,
+                  pkParameterDT = pkParameterDT,
+                  colorVector = c( 'IV application' = 'red',
+                                   'PO application' = 'green'),
+                  plotAsFrequency = TRUE)
+  )
 
-# Update relevant fields for 'demographics' range plot test
-dt[plotName == 'demographics', `:=`(
-  scenarios = gsub('adults_iv, ', '', scenarios),
-  referenceScenario = 'adults_iv',
-  colorLegend = 'pediatrics|adults',
-  plotCaptionAddon = 'Pediatric virtual populations in comparison to an adult virtual population'
-)]
+  expect_equal(length(plotList),2)
 
-# Update relevant fields for 'pk' range plot test
-dt <- dt[!grepl('pkparameter1', plotName)]
-
-dt[plotName == 'pkparameter2', `:=`(
-  scenarios = dt[plotName == 'demographics', scenarios],
-  referenceScenario = dt[plotName == 'demographics', referenceScenario],
-  colorLegend = dt[plotName == 'demographics', colorLegend],
-  plotCaptionAddon = 'IV Application for pediatric virtual simulations in comparison to an adult virtual simulations'
-)]
-
-
-# Add Test for histogram
-dtnew <-  dt[plotName == 'pkparameter2'] %>%
-  separateAndTrim('scenarios') %>%
-  setnames('scenario','scenarios')
-dtnew[, `:=`(
-  plotName = 'pkhistograms',
-  parameterId_Bin = NA,
-  modeOfBinning = NA,
-  numberOfBins = NA,
-  referenceScenario = gsub('iv','po',scenarios),
-  colorLegend = 'IV application | PO application',
-  plotCaptionAddon = 'comparison of IV and PO application'
-  )]
-
-dt <- rbind(dt,dtnew)
-
-dtnew <-  dt[plotName == 'demographics']
-dtnew[, `:=`(
-  plotName = 'dmhistograms',
-  parameterIds = 'weight,gender',
-  parameterId_Bin = NA,
-  modeOfBinning = NA,
-  numberOfBins = NA
-)]
+  vdiffr::expect_doppelganger(
+    title = "pkhistograms_F_tEnd_linear",
+    fig = plotList$pkparameter2_F_tEnd_linear
+  )
+})
 
 
-dt <- rbind(dt[seq(1,which(dt$plotName == 'demographics'))],
-            dtnew,
-            dt[seq(which(dt$plotName == 'demographics')+1,nrow(dt))])
+test_that("demographic histograms plots", {
+  skip_if_not_installed("vdiffr")
+  skip_if(getRversion() < "4.1")
 
-xlsxWriteData(wb = wb, sheetName  = 'DemographicPlots1', dt = dt)
+  # createPlots
+  plotList <- runPlot(
+    nameOfplotFunction = "plotHistograms",
+    projectConfiguration = projectConfiguration,
+    configTableSheet = "HistogramTest",
+    suppressExport = TRUE,
+    plotNames = 'demographics',
+    inputs = list(scenarioList = scenarioList,
+                  pkParameterDT = pkParameterDT,
+                  colorVector = c(adults = 'grey'))
+  )
 
-openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+  expect_equal(length(plotList),2)
 
+  vdiffr::expect_doppelganger(
+    title = "dmhistograms_gender_linear",
+    fig = plotList$demographics_gender_linear
+  )
+})
 
 test_that("demographic range plots", {
   skip_if_not_installed("vdiffr")
@@ -72,9 +84,9 @@ test_that("demographic range plots", {
 
   # createPlots
   plotList <- runPlot(
-    nameOfplotFunction = "plotDemographics",
+    nameOfplotFunction = "plotDistributionVsDemographics",
     projectConfiguration = projectConfiguration,
-    configTableSheet = "DemographicPlots1",
+    configTableSheet = "RangePlotTest",
     suppressExport = TRUE,
     plotNames = 'demographics',
     inputs = list(scenarioList = scenarioList,
@@ -85,6 +97,7 @@ test_that("demographic range plots", {
   )
 
   expect_equal(length(plotList),6)
+  expect_equal(nrow(plotList[['demographics_weight']]),19)
 
   vdiffr::expect_doppelganger(
     title = "weight_linear",
@@ -97,9 +110,9 @@ test_that("PK range plots", {
   skip_if(getRversion() < "4.1")
 
   plotList <- runPlot(
-    nameOfplotFunction = "plotDemographics",
+    nameOfplotFunction = "plotDistributionVsDemographics",
     projectConfiguration = projectConfiguration,
-    configTableSheet = "DemographicPlots1",
+    configTableSheet = "RangePlotTest",
     suppressExport = TRUE,
     plotNames = 'pkparameter2',
     inputs = list(scenarioList = scenarioList,
@@ -120,58 +133,6 @@ test_that("PK range plots", {
   )
 })
 
-
-test_that("PK histograms plots", {
-  skip_if_not_installed("vdiffr")
-  skip_if(getRversion() < "4.1")
-
-  # createPlots
-  plotList <- runPlot(
-    nameOfplotFunction = "plotDemographics",
-    projectConfiguration = projectConfiguration,
-    configTableSheet = "DemographicPlots1",
-    suppressExport = TRUE,
-    plotNames = 'pkhistograms',
-    inputs = list(scenarioList = scenarioList,
-                  pkParameterDT = pkParameterDT,
-                  colorVector = c( 'IV application' = 'red',
-                                   'PO application' = 'green'),
-                  plotAsFrequency = TRUE)
-    )
-
-  expect_equal(length(plotList),2)
-
-  vdiffr::expect_doppelganger(
-    title = "pkhistograms_F_tEnd_linear",
-    fig = plotList$pkhistograms_F_tEnd_linear
-  )
-})
-
-
-test_that("demographic histograms plots", {
-  skip_if_not_installed("vdiffr")
-  skip_if(getRversion() < "4.1")
-
-  # createPlots
-  plotList <- runPlot(
-    nameOfplotFunction = "plotDemographics",
-    projectConfiguration = projectConfiguration,
-    configTableSheet = "DemographicPlots1",
-    suppressExport = TRUE,
-    plotNames = 'dmhistograms',
-    inputs = list(scenarioList = scenarioList,
-                  pkParameterDT = pkParameterDT,
-                  colorVector = c(pediatrics = ospsuite.plots::colorMaps[[1]][[1]],
-                                  adults = 'grey'))
-  )
-
-  expect_equal(length(plotList),2)
-
-  vdiffr::expect_doppelganger(
-    title = "dmhistograms_gender_linear",
-    fig = plotList$dmhistograms_gender_linear
-  )
-})
 
 
 

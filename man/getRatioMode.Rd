@@ -9,7 +9,7 @@ getRatioMode(onePlotConfig, pkParameterDT, asRatio)
 \arguments{
 \item{onePlotConfig}{A data frame containing the plot configuration with columns 'plotName', 'scenario', and 'referenceScenario'.}
 
-\item{pkParameterDT}{A data frame containing parameter details, including 'scenarioName' and 'populationId'.}
+\item{pkParameterDT}{A data frame containing parameter details, including 'scenario' and 'populationId'.}
 
 \item{asRatio}{A logical value indicating whether to calculate the ratio mode. If FALSE, the function returns 'none'.}
 }

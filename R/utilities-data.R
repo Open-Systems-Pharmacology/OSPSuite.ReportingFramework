@@ -122,7 +122,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
   }
 
   # Logging
-  message("Observed Data:")
+  writeToLog(type = 'Info',"Observed Data:")
   writeTableToLog(dataDT[, .(
     "No of data points" = .N,
     "No of individuals" = dplyr::n_distinct(individualId),
@@ -168,7 +168,6 @@ readObservedDataByDictionary <- function(projectConfiguration,
 validateObservedData <- function(dataDT, dataClassType) {
   # Initialize variables used for data.tables
   yUnit <- NULL
-
   # Check column Identifier
   columnsWithAttributes <- lapply(dataDT, attr, "columnType")
   columnsWithAttributes <-
@@ -188,7 +187,7 @@ validateObservedData <- function(dataDT, dataClassType) {
   # Check data validity
   colIdentifier <-
     intersect(
-      c("individualId", "group", "outputPathId", "xValues", "parameter"),
+      c("individualId", "group", "outputPathId", "xValues", "pkParameter"),
       names(dataDT)
     )
   if (any(duplicated(dataDT, by = colIdentifier))) {
@@ -213,15 +212,23 @@ validateObservedData <- function(dataDT, dataClassType) {
   }
 
 
-
   validateDataUnit <- function(colIdentifier, colUnit) {
-    if (any(dataDT[, .(N = dplyr::n_distinct(get(colUnit))), by = colIdentifier]$N > 1)) { # nolint
-      tmp <- dataObserved[, .N, by = c("group", colIdentifier, colUnit)]
-      tmp <- merge(tmp, tmp[duplicated(tmp[, c("group", colIdentifier)]), c("group", colIdentifier)], by = c("group", colIdentifier))
-      writeTableToLog(tmp)
-      stop(
-        paste(colUnit, "ambiguous in columns", paste(colIdentifier, collapse = ", "))
-      )
+    unitCounts <- dataDT[, .(N = uniqueN(get(colUnit))), by = colIdentifier]
+    ambiguousUnits <- unitCounts[N > 1]
+
+    if (nrow(ambiguousUnits) > 0) {
+      unitSummary <- dataDT[,
+                            .(units = paste('units:',gsub("NA", "emptyString",
+                                           paste(unique(get(colUnit)),
+                                                 collapse = ", ")))),
+                            by = colIdentifier]
+      tmp <- merge(ambiguousUnits, unitSummary, by = colIdentifier)
+
+      summaryString <- paste(apply(tmp[,!'N',with = FALSE], 1, function(x) {
+        paste(x,collapse =' ')
+      }), collapse = " | ")
+      warning(paste("Ambiguous units:", summaryString,
+                    "\nPlease check if this acceptable, e.g. pkParameter as ratio and absolute values."))
     }
   }
 
@@ -245,7 +252,7 @@ validateObservedData <- function(dataDT, dataClassType) {
     validateDataUnit(colIdentifier = c("outputPathId"), colUnit = "yUnit")
     validateErrorType(errorTypeCol = "yErrorType", errorValuesCol = "yErrorValues", minCol = "yMin", maxCol = "yMax")
   } else if (dataClassType == "pkParameter") {
-    validateDataUnit(colIdentifier = c("outputPathId", "parameter"), colUnit = "unit")
+    validateDataUnit(colIdentifier = c("outputPathId", "pkParameter"), colUnit = "unit")
     validateErrorType(errorTypeCol = "errorType", errorValuesCol = "errorValues", minCol = "minValue", maxCol = "maxValue")
   }
 }

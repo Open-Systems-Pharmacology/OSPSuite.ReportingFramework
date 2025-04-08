@@ -191,7 +191,8 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
     # Export table
     for (plotDataSummaryTag in split(plotDataSummary, by = "plotTag")) {
       tableKey <- paste(plotNameLoop, ifelse(asRatio, "ratio", "abs"), sep = "-")
-      if (uniqueN(plotDataPk$plotTag) > 1) tableKey <- paste(tableKey, plotDataPkTag$plotTag[1], sep = "-")
+      if (uniqueN(plotDataSummary$plotTag) > 1)
+        tableKey <- paste(tableKey, plotDataSummaryTag$plotTag[1], sep = "-")
 
       plotList[[tableKey]] <- prepareTableForExport(
         dtExport = plotDataSummaryTag,
@@ -254,7 +255,7 @@ getSummaryTable <- function(plotDataPk, asRatio, onePlotConfig, percentiles) {
   statFun <- function(y) {
     y <- y[!is.na(y)]
     rQuantiles <- stats::quantile(y, probs = percentiles, names = FALSE, na.rm = TRUE)
-    names(rQuantiles) <- paste(scales::label_ordinal()(x = percentiles * 100), "percentile")
+    names(rQuantiles) <- formatPercentiles(percentiles,suffix = ' percentile')
 
     r <- c(
       N = length(y),
@@ -398,6 +399,12 @@ createBaseBoxWhisker <- function(plotDataPk, yScale, asRatio, colorVector, onePl
     yscale = yScale,
     yscale.args = getXorYlimits(onePlotConfig, yScale, ...)
   )
+
+  if (uniqueN(plotDataPk$colorIndex) == 1) {
+    plotObject <- plotObject +
+      theme(legend.position = "none")
+  }
+
   if (!asRatio) {
     plotObject <- plotObject +
       scale_fill_manual(values = colorVector) +
@@ -448,11 +455,11 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
     subsetList = list(
       scenario = list(
         cols = c("scenario", "referenceScenario"),
-        allowedValues = unique(pkParameterDT$scenarioName)
+        allowedValues = unique(pkParameterDT$scenario)
       ),
       pkParameter = list(
         cols = c("pkParameters"),
-        allowedValues = unique(pkParameterDT$parameter)
+        allowedValues = unique(pkParameterDT$pkParameter)
       ),
       outputPathId = list(
         cols = c("outputPathIds"),
@@ -530,16 +537,15 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
 validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
   configTablePlots <- configTablePlots %>%
     merge(
-      pkParameterDT[, c("scenarioName", "populationId")] %>%
+      pkParameterDT[, c("scenario", "populationId")] %>%
         unique(),
-      by.x = "scenario",
-      by.y = "scenarioName"
+      by = "scenario",
     ) %>%
     merge(
-      pkParameterDT[, c("scenarioName", "populationId")] %>%
+      pkParameterDT[, c("scenario", "populationId")] %>%
         unique(),
       by.x = "referenceScenario",
-      by.y = "scenarioName",
+      by.y = "scenario",
       suffixes = c("", ".reference")
     )
 
@@ -619,11 +625,12 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(projectConfiguration,
   }
 
   # Create a unique combination of parameters and outputPathId
-  dt <- pkParameterDT[, .(pkParameters = paste(unique(parameter), collapse = ", ")), by = outputPathId] %>%
+  dt <- pkParameterDT[, .(pkParameters = paste(unique(pkParameter), collapse = ", ")), by = outputPathId] %>%
     .[, .(outputPathIds = paste(unique(outputPathId), collapse = ", ")), by = pkParameters]
 
   # Create a new data.table with all combinations of pkParameters and scenario names
   dtNewConfig <- dt[, .(
+    plotName = paste(splitInputs(pkParameters),collapse = '_'),
     scenario = scenarios$scenarioName,
     yScale = "linear, log",
     facetScale = "fixed",

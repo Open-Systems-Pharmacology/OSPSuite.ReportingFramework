@@ -125,7 +125,8 @@ runPlot <- function(projectConfiguration,
         for (onePlotConfig in split(configTable[seq(iRow, iEnd)], by = "plotName")) {
           tryCatch(
             {
-              plotListiRow <- do.call(
+
+                            plotListiRow <- do.call(
                 what = rmdPlotManager$plotFunction,
                 args = c(
                   list(
@@ -487,6 +488,8 @@ generateColorScaleVectors <- function(dt,
 #'         provided color legend.
 #' @keywords internal
 getColorVectorForLegend <- function(colorLegend, colorVector) {
+
+  checkmate::assertCharacter(colorLegend,any.missing = FALSE,len = 1)
   validateColorVector(colorVector)
 
   colorLegendList <- trimws(strsplit(as.character(colorLegend), "\\|")[[1]])
@@ -670,11 +673,13 @@ getXorYlimits <- function(onePlotConfig, xOryScale, direction = c("y", "x"), ...
     xOrYscale.args <- list()
   }
 
-  if (tolower(xOryScale) == "linear") {
-    scaleTxt <- onePlotConfig[[paste0(direction, "limit_linear")]][1]
-  } else {
-    scaleTxt <- onePlotConfig[[paste0(direction, "limit_log")]][1]
+  # Construct the column name
+  columnName <- paste0(direction, "limit_",tolower(xOryScale))
+  if (!(columnName %in% names(onePlotConfig))) {
+    columnName <- paste0("limit_",tolower(xOryScale))
   }
+  scaleTxt <- onePlotConfig[[columnName]][1]
+
   if (!is.null(scaleTxt) && !is.na(scaleTxt)) {
     xOrYscale.args <- modifyList(
       xOrYscale.args,
@@ -829,7 +834,7 @@ validateSubsetList <- function(subsetList, data) {
       if (any(!is.na(data[[col]]))) {
         if (is.null(subsetCheck$allowedValues)) {
           stop(paste("Plot configuration column", col, "has entries but no allowed values.
-                     Did you forget some inputs e.g. observedData?"))
+                     Did you forget some inputs e.g. observedData or pkParameterDT?"))
         }
         splitAllowed <- subsetCheck$splitAllowed
         if (is.null(subsetCheck$splitAllowed)) splitAllowed <- TRUE
@@ -840,7 +845,7 @@ validateSubsetList <- function(subsetList, data) {
         }
         checkmate::assertNames(
           x,
-          subset.of = subsetCheck$allowedValues,
+          subset.of = as.character(subsetCheck$allowedValues),
           .var.name = paste("Plot configuration column", col)
         )
       }
