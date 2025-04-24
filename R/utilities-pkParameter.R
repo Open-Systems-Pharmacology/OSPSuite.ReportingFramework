@@ -346,14 +346,15 @@ mergePKParameterWithConfigTable <- function(onePlotConfig,
                         c("scenarios","pkParameters","outputPathIds"))){
     onePlotConfig <- separateAndTrim(onePlotConfig, col)
   }
-  mergedData <- onePlotConfig[,  c("plotName","scenario", "pkParameter", "outputPathId",
-                                   "scenarioShortName","scenarioLongName")] %>%
+  mergedData <- onePlotConfig %>%
+    dplyr::select(dplyr::any_of(c("plotName","scenario","referenceScenario", "pkParameter", "outputPathId",
+                                   "scenarioShortName","scenarioLongName"))) %>%
     merge(
       pkParameterDT %>%
         unique(),
       by = c("scenario", "pkParameter", "outputPathId")
     ) %>%
-    merge(configEnv$outputPaths[, c("outputPathId", "displayNameOutputs")],
+    merge(configEnv$outputPaths[, c("outputPathId", "displayNameOutput")],
           by = "outputPathId"
     )
 
@@ -369,8 +370,8 @@ mergePKParameterWithConfigTable <- function(onePlotConfig,
   }
 
   # Ensure order by creating factors
-  mergedData$displayNameOutputs <- factor(mergedData$displayNameOutputs,
-                                         levels = unique(mergedData$displayNameOutputs),
+  mergedData$displayNameOutput <- factor(mergedData$displayNameOutput,
+                                         levels = unique(mergedData$displayNameOutput),
                                          ordered = TRUE
   )
 
@@ -406,6 +407,7 @@ mergePKParameterWithConfigTable <- function(onePlotConfig,
 #'
 #' @keywords internal
 setValueToRatio <- function(mergedData, pkParameterDT) {
+
   mergedData <- merge(mergedData,
                       pkParameterDT[, c("scenario", "pkParameter", "individualId", "outputPathId", "value", "populationId")] %>%
                         setnames(

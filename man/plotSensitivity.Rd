@@ -4,21 +4,16 @@
 \alias{plotSensitivity}
 \title{Plot Sensitivity Function}
 \usage{
-plotSensitivity(
-  projectConfiguration,
-  subfolder,
-  configTableSheet,
-  scenarioList
-)
+plotSensitivity(projectConfiguration, onePlotConfig, scenarioList)
 }
 \arguments{
 \item{projectConfiguration}{A list containing project configuration settings, including file paths and parameters.}
 
+\item{scenarioList}{A list of scenarios for which the sensitivity analysis will be performed.}
+
 \item{subfolder}{A string specifying the subfolder where the plots will be saved.}
 
 \item{configTableSheet}{A string indicating the name of the configuration table sheet to be read.}
-
-\item{scenarioList}{A list of scenarios for which the sensitivity analysis will be performed.}
 }
 \value{
 An RmdPlotManager object containing the generated sensitivity plots.

@@ -4,7 +4,7 @@
 \alias{mockManualEditingsScenario}
 \title{Mock Manual Editings for Scenarios}
 \usage{
-mockManualEditingsScenario(projectConfiguration)
+mockManualEditingsScenario(projectConfiguration, modelFiles)
 }
 \arguments{
 \item{projectConfiguration}{A ProjectConfiguration object containing project configuration details.}

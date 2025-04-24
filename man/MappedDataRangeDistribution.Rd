@@ -2,7 +2,7 @@
 % Please edit documentation in R/MappedDataRangePlot.R
 \name{MappedDataRangeDistribution}
 \alias{MappedDataRangeDistribution}
-\title{object to map data for boxplots}
+\title{object to map data for rangeplots}
 \description{
 R6 class for mapping variable to `data`
 }
@@ -14,6 +14,13 @@ R6 class for mapping variable to `data`
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
 \item{\code{xscale}}{scale of x axis}
+}
+\if{html}{\out{</div>}}
+}
+\section{Active bindings}{
+\if{html}{\out{<div class="r6-active-bindings">}}
+\describe{
+\item{\code{border}}{borders of the binning.}
 }
 \if{html}{\out{</div>}}
 }
@@ -84,40 +91,68 @@ Create a new `MappedDataRangeDistribution` object
 \item{\code{residualScale}}{scale of x residuals}
 
 \item{\code{residualAesthetic}}{aesthetic used for mapping residuals}
+
+\item{\code{modeOfBinning}}{method of binning (e.g., 'breaks', 'number', 'interval')}
+
+\item{\code{numberOfBins}}{number of bins to use for binning}
+
+\item{\code{breaks}}{breaks for binning if modeOfBinning is 'breaks'}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
 `MappedDataRangeDistribution` class object
-set binning columns
+Set binning columns
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MappedDataRangeDistribution-setBins"></a>}}
 \if{latex}{\out{\hypertarget{method-MappedDataRangeDistribution-setBins}{}}}
 \subsection{Method \code{setBins()}}{
+This method sets the bins for the data based on the specified mode of binning.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MappedDataRangeDistribution$setBins()}\if{html}{\out{</div>}}
 }
 
+\subsection{Returns}{
+The object itself (invisible)
+Create a data table with bin border information
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MappedDataRangeDistribution-setBorderDataTable"></a>}}
 \if{latex}{\out{\hypertarget{method-MappedDataRangeDistribution-setBorderDataTable}{}}}
 \subsection{Method \code{setBorderDataTable()}}{
+This method sets up a data table containing border information for the bins.
+Set x mapping for the plot
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MappedDataRangeDistribution$setBorderDataTable(identifier = "IndividualId")}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{identifier}}{Identifier for the data table (default is 'IndividualId')}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MappedDataRangeDistribution-setXMapping"></a>}}
 \if{latex}{\out{\hypertarget{method-MappedDataRangeDistribution-setXMapping}{}}}
 \subsection{Method \code{setXMapping()}}{
+This method sets the x mapping for the plot based on the specified parameters.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{MappedDataRangeDistribution$setXMapping(asStepPlot)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{asStepPlot}}{Logical indicating if the plot should be a step plot.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-MappedDataRangeDistribution-clone"></a>}}

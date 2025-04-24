@@ -202,7 +202,7 @@ getCaptionForSensitivityPlot <- function(plotData, projectConfiguration, plotCap
   dtCaption <- plotData %>%
     dplyr::select(c("plotTag", "outputPathId", "pKParameter", "scenarioLongName")) %>%
     unique() %>%
-    merge(configEnv$outputPaths[, c("outputPathId", "displayNameOutputs")],
+    merge(configEnv$outputPaths[, c("outputPathId", "displayNameOutput")],
           by = "outputPathId"
     )
 
@@ -211,7 +211,7 @@ getCaptionForSensitivityPlot <- function(plotData, projectConfiguration, plotCap
     "Sensitivity of",
     pasteFigureTags(dtCaption, captionColumn = "pKParameter"),
     "for",
-    pasteFigureTags(dtCaption, captionColumn = "displayNameOutputs"),
+    pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"),
     "for",
     pasteFigureTags(dtCaption, captionColumn = "scenarioLongName"),
     "sorted by absolute sensitivity."

@@ -34,22 +34,17 @@ test_that("splitCaptionByIndividuals works correctly", {
   expect_equal(nrow(result), 8) # Adjust based on expected output
 })
 
-test_that("determineFacetColumns works correctly", {
-  dtCaption <- getPlotIdForColumns(configTable, "outputPathIds")
-  result <- determineFacetColumns(dtCaption, 2, "vsOutput", "TestPlot")
-  expect_equal(result, 2) # Adjust based on expected output
-})
 
 test_that("addTimeTagsToCaption works correctly", {
   dtCaption <- getPlotIdForColumns(configTable, "outputPathIds")
-  result <- addTimeTagsToCaption(dtCaption, timeTags, "vsTimeRange")
+  result <- addTimeTagsToCaption(dtCaption, timeTags, splitPlotsPerTimeRange = 0)
   expect_true("timeRangeTag" %in% names(result))
   expect_contains(result$timeRangeTag, timeTags)
   expect_equal(nrow(result), length(timeTags) * nrow(dtCaption)) # Check number of rows after adding tags
 })
 
 test_that("setTimeRangeFilter works correctly", {
-  result <- setTimeRangeFilter("vsTimeRange", timeTags)
+  result <- setTimeRangeFilter(splitPlotsPerTimeRange = 1, timeTags)
   expect_equal(length(result), 2) # Check length of filters
 })
 
@@ -79,17 +74,4 @@ test_that("getObservedUnitConversionDT works correctly", {
   result <- getObservedUnitConversionDT(dataObserved, dtUnit)
   expect_true("unitFactor" %in% names(result))
   expect_equal(nrow(result), 2) # Check number of rows
-})
-
-test_that("addTimeRangeTagsToData works correctly", {
-  timeRangeColumns <- c("timeRange_Tag1")
-
-  observedData <- randomObservedData()
-  result <- addTimeRangeTagsToData(timeRangeColumns,
-    dataOld = observedData, configTable,
-    applicationTimes = list(list(startOfFirstApplication = 0, endOfFirstApplication = 10)),
-    timeTags = timeTags
-  )
-  expect_true("timeRangeTag" %in% names(result))
-  expect_equal(nrow(result), sum(observedData$xValues <= 10)) # Check number of rows
 })

@@ -22,9 +22,7 @@
 #'
 #' @param dataObserved A data.table or DataCombined object containing the observed data to be plotted.
 #'
-#' @param scenarioResults A list with simulated scenario results. This parameter may be an empty list or
-#' contain only some of all scenarios defined in the project configuration, in which
-#' case the function will attempt to load missing scenario results from the specified folder.
+#' @param scenarioResults A list with simulated scenario results.
 #'
 #' @param nFacetColumns An integer specifying the maximum number of facet columns (default is 2)
 #' used for the facet type "by Order".
@@ -54,14 +52,15 @@
 #' it is used in plot legends and captions. It must be a concatenation of the descriptor of yValues and the descriptor of yMin - yMax range
 #' separated by "|" (e.g., "mean | standard deviation" or "median | 5th - 95th percentile").
 #'
-#' @param referenceScaleVector A named list that configures labels and colors for the display of
-#' reference scenarios. The names of the list are displayed as labels in the legend.
+#' @param referenceScaleVector A named list that configures colors for the display of
+#' reference scenarios. The names msut be consistent with the labes defined in the config table column
+#' colorLegend. First entry corresponds to aesthetic 'color', second entry to aesthetic 'fill',
 #'
-#' Default:
 #' referenceScaleVector = list(
-#'   Simulation = c(NA, NA),
-#'   Reference = c(NA, NA)
+#'   Simulation = c('blue', 'lightblue'),
+#'   Reference = c('darkred', 'red')
 #' )
+#' # default is list()
 #'
 #' @return Generates time profile plots and saves them to the specified output directory.
 #' The function does not return any value.
@@ -121,8 +120,7 @@
 plotTimeProfiles <- function(projectConfiguration,
                              onePlotConfig,
                              dataObserved,
-                             scenarioResults = list(),
-                             nFacetColumns = 2,
+                             scenarioResults,
                              nMaxFacetRows = 4,
                              facetAspectRatio = 0.5,
                              aggregationFlag = c(
@@ -133,15 +131,12 @@ plotTimeProfiles <- function(projectConfiguration,
                              ),
                              percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1,3,5)],
                              customFunction = NULL,
-                             referenceScaleVector = list(
-                               Simulation = c(NA, NA),
-                               Reference = c(NA, NA)
-                             ),
+                             referenceScaleVector = list(),
                              ...) {
   # initialize data.table variables
   dataType <- .Id <- NULL #nolint
 
-  checkmate::assertIntegerish(nFacetColumns, lower = 1, len = 1)
+  checkmate::assertIntegerish(nMaxFacetRows, lower = 1, len = 1)
   checkmate::assertDouble(facetAspectRatio, lower = 0, len = 1)
 
   # use data.table format for dataObserved
@@ -160,8 +155,7 @@ plotTimeProfiles <- function(projectConfiguration,
   checkmate::assertDataTable(onePlotConfig)
   if (dplyr::n_distinct(onePlotConfig$plotName) > 1) stop("onePlotConfig conatinas more than one plotName")
 
-  message(paste("Create Plot", onePlotConfig$plotName[1]))
-
+  writeToLog(type = 'Info',paste("Create Plot", onePlotConfig$plotName[1]))
   plotData <- PlotDataTimeProfile$new(
     projectConfiguration = projectConfiguration,
     onePlotConfig = onePlotConfig
@@ -177,6 +171,13 @@ plotTimeProfiles <- function(projectConfiguration,
     dataObserved = dataObserved
   )
 
+  if (any(plotData$data$dataClass == DATACLASS$tpAggregated) &&
+          plotData$data[dataClass ==DATACLASS$tpAggregated,uniqueN(yErrorType)] > 1){
+    tmp <- unique(plotData$data[,c('dataType','yErrorType')])
+    stop(paste( 'Aggregation methods are not consistent! ',
+                paste(paste(tmp$dataType, tmp$yErrorType,sep = ': '),collapse = ', ')))
+  }
+
   # replicate and filter data for each Time Range Tag
   plotData$addTimeRangeTags()
 
@@ -185,7 +186,6 @@ plotTimeProfiles <- function(projectConfiguration,
 
   # split data to plot panels
   plotData$splitDataToPanels(
-    nFacetColumns = nFacetColumns,
     nMaxFacetRows = nMaxFacetRows
   )
 
@@ -239,7 +239,6 @@ generatePlotForPlotType <- function(plotData,
   if (!isPlotTypeNeededAndPossible(plotType, plotData)) {
     return(plotList)
   }
-
   for (timeRangeFilter in names(plotData$timeRangeTagFilter)) {
     for (yScale in splitInputs(plotData$configTable$yScale[1])) {
       for (plotCounter in unique(plotData$dtCaption$counter)) {
@@ -701,11 +700,9 @@ setManualScalevectors <- function(plotObject, plotData, plotType) {
 getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotCounter) {
   # avoid warning for global variable
   counter <- NULL
-
   dtCaption <-
     plotData$dtCaption[eval(parse(text = plotData$timeRangeTagFilter[[timeRangeFilter]])) &
       counter == plotCounter] # nolint indentation_linter
-
 
   plotTypeTxt <- switch(plotType,
     TP = "Concentration-time profiles", # nolint indentation_linter
@@ -720,24 +717,22 @@ getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotC
     individualtext <- pasteFigureTags(dtCaption, captionColumn = "individualId")
     if (individualtext != "") {
       individualtext <- paste(
-        individualtext,
-        "for subject",
-        pasteFigureTags(dtCaption, captionColumn = "individualId")
+        " for subject",
+        individualtext
       )
     }
   } else {
     individualtext <- ""
   }
-
-  captiontext <- paste(
+  captiontext <- paste0(
     plotTypeTxt,
-    "for",
-    pasteFigureTags(dtCaption, captionColumn = "displayNameOutputs"),
-    "for",
+    " for ",
+    pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"),
+    " for ",
     pasteFigureTags(dtCaption, captionColumn = "scenarioLongName"),
     individualtext,
-    "on a", ifelse(yScale == "linear", "linear", "logarithmic"),
-    "y-scale.",
+    " on a ", ifelse(yScale == "linear", "linear", "logarithmic"),
+    " y-scale.",
     pasteFigureTags(dtCaption, captionColumn = "timeRangeCaption", endWithDot = TRUE)
   )
   captiontext <- addCaptionTextAddon(captiontext, plotData$configTable$plotCaptionAddon[1])
@@ -836,7 +831,8 @@ getGeomLLOQAttributesForTP <- function(plotData) {
 #' @param configTable Plot configuration table.
 #' @template observedDataDT
 #' @export
-validateTimeProfilesConfig <- function(configTable, dataObserved, ...) {
+validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
+                                       scenarioResults,...) {
   # avoid warning for global variable
   individualId <- NULL
 
@@ -845,7 +841,7 @@ validateTimeProfilesConfig <- function(configTable, dataObserved, ...) {
   validateDataGroupIdsForPlot()
 
   checkmate::assertCharacter(configTablePlots$scenarioLongName, any.missing = FALSE, .var.name = "longName for relevant scenarios")
-
+  checkmate::assertList(scenarioList, any.missing = FALSE, null.ok = FALSE,min.len = 1)
   validateConfigTablePlots(
     configTablePlots = configTablePlots,
     charactersWithoutMissing = c(
@@ -854,7 +850,6 @@ validateTimeProfilesConfig <- function(configTable, dataObserved, ...) {
       "outputPathIds",
       "timeUnit",
       "facetScale",
-      "facetType",
       "yScale"
     ),
     charactersWithMissing =
@@ -867,9 +862,11 @@ validateTimeProfilesConfig <- function(configTable, dataObserved, ...) {
     numericColumns = c(
       "timeOffset",
       "timeOffset_Reference",
+      "nFacetColumns",
       "foldDistance_PvO"
     ),
     logicalColumns = c(
+      "splitPlotsPerTimeRange",
       "plot_TimeProfiles",
       "plot_PredictedVsObserved",
       "plot_ResidualsAsHistogram",
@@ -881,7 +878,7 @@ validateTimeProfilesConfig <- function(configTable, dataObserved, ...) {
     subsetList = list(
       scenario = list(
         cols = c("scenario", "referenceScenario"),
-        allowedValues = configEnv$scenarios$scenarioName
+        allowedValues = names(scenarioResults)
       ),
       dataGroupId = list(
         cols = c("dataGroupIds"),
@@ -906,10 +903,6 @@ validateTimeProfilesConfig <- function(configTable, dataObserved, ...) {
       facetScale = list(
         cols = c("facetScale"),
         allowedValues = c("fixed", "free", "free_x", "free_y")
-      ),
-      facetType = list(
-        cols = c("facetType"),
-        allowedValues = unname(unlist(FACETTYPE))
       )
     )
   )
@@ -923,8 +916,10 @@ validateTimeProfilesConfig <- function(configTable, dataObserved, ...) {
       "yScale",
       "ylimit_linear",
       "ylimit_log",
+      "colorLegend",
       "plotCaptionAddon",
-      "facetType",
+      "splitPlotsPerTimeRange",
+      "nFacetColumns",
       "facetScale",
       "plot_TimeProfiles",
       "plot_PredictedVsObserved",
@@ -945,6 +940,21 @@ validateTimeProfilesConfig <- function(configTable, dataObserved, ...) {
     configTablePlots = configTablePlots,
     scenarioResults = scenarioResults
   )
+
+  configTablePlots[, invalid:=!is.na(referenceScenario) & (length(grep('\\(',outputPathIds))>0),by  = .I]
+  tmp <- configTablePlots[invalid == TRUE]
+  if (nrow(tmp) > 0){
+    stop(paste0('Do not combine outputs in one panel with brackets () ',
+               'if you want to display reference scenarios.
+               Please check "',paste0(unique(tmp$plotName),collapse = '", "','"')))
+  }
+
+  configTablePlots[, invalid:=!is.na(referenceScenario) & is.na(colorLegend),by  = .I]
+  tmp <- configTablePlots[invalid == TRUE]
+  if (nrow(tmp) > 0){
+    stop(paste0('Plot configurations with reference scenarios need to have a color legend ',
+               'Please check "',paste0(unique(tmp$plotName),collapse = '", "','"')))
+  }
 
   return(invisible())
 }
@@ -1051,26 +1061,29 @@ validateOutputPathIdFormat <- function(configTablePlots, column = "outputPathIds
 #' @keywords internal
 validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
   # avoid warning for global variable
-  scenario <- dataGroupIds <- plot_TimeProfiles <- individualIds <- NULL # nolint object_name_linter
+  scenarioResult <- dataGroupIds <- plot_TimeProfiles <- individualIds <- NULL
 
-  popScenarios <- scenarioResults[unlist(lapply(scenarioResults, function(scenario) {
-    !is.null(scenario$population)
+  popScenarios <- scenarioResults[unlist(lapply(scenarioResults,
+                                                function(scenarioResult) {
+    (!is.null(scenarioResult$population) &&
+       "Population" %in% class(scenarioResult$population))
   }))]
 
-  indPopScenarios <- names(popScenarios[unlist(lapply(popScenarios, function(scenario) {
+
+  indScenariosNames <- names(popScenarios[unlist(lapply(popScenarios, function(scenario) {
     "ObservedIndividualId" %in% scenario$population$allCovariateNames
   }))])
 
   # individualIds is filled
-  if (any(is.na(configTablePlots[scenario %in% indPopScenarios]$individualIds))) {
+  if (any(is.na(configTablePlots[scenario %in% indScenariosNames]$individualIds))) {
     stop(paste(
       "For scenarios with virtual twin populations, column individualIds has to be filled.",
       'Use "*" or "(*)", if you want to plot all. (Brackets not allowed for Timeprofile Plots)',
-      "Check Scenarios:", paste(indPopScenarios, collapse = ", ")
+      "Check Scenarios:", paste(indScenariosNames, collapse = ", ")
     ))
   }
 
-  tmp <- configTablePlots[scenario %in% indPopScenarios & as.logical(plot_TimeProfiles)]
+  tmp <- configTablePlots[scenario %in% indScenariosNames & as.logical(plot_TimeProfiles)]
   errorRows <- which(grepl("\\(", tmp$individualIds) | grepl("\\)", tmp$individualIds))
   if (length(errorRows) > 0) {
     stop(paste(
@@ -1080,11 +1093,26 @@ validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
     ))
   }
 
-  tmp <- configTablePlots[!(scenario %in% indPopScenarios) & !is.na(individualIds) & is.na(dataGroupIds)]
+  tmp <- configTablePlots[!(scenario %in% indScenariosNames) &
+                            !is.na(individualIds)
+                          & is.na(dataGroupIds)]
   if (nrow(tmp) > 0) {
     warning(paste(
       'Column "individualIds" is filled but no data group is selected and
     scenario is not a virtual twin population scenario. "individualIds" will be ignored.',
+      "Check Plots:", paste(tmp$plotName, collapse = ", ")
+    ))
+  }
+
+  popScenariosNames <- setdiff(names(popScenarios),indScenariosNames)
+  tmp <- configTablePlots[!is.na(referenceScenario) &
+                            ((!(scenario %in% popScenariosNames) &
+                               (referenceScenario %in% popScenariosNames))
+                          | ((scenario %in% popScenariosNames) &
+                               !(referenceScenario %in% popScenariosNames)))]
+  if (nrow(tmp) > 0) {
+    stop(paste(
+      'scenario and referenceScenario must be both populations or both indviduals',
       "Check Plots:", paste(tmp$plotName, collapse = ", ")
     ))
   }
@@ -1193,9 +1221,10 @@ createNewConfig <- function(scenarios, dataObserved) {
     timeRange_total = TIMERANGE$total,
     timeRange_firstApplication = TIMERANGE$firstApplication,
     timeRange_lastApplication = TIMERANGE$lastApplication,
+    splitPlotsPerTimeRange = 1,
+    nFacetColumns = 3,
     yScale = "linear, log",
     facetScale = "fixed",
-    facetType = FACETTYPE[[1]],
     plot_TimeProfiles = 1,
     plot_PredictedVsObserved = 0,
     plot_ResidualsAsHistogram = 0,

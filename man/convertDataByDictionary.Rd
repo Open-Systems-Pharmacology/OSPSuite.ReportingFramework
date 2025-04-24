@@ -16,7 +16,7 @@ convertDataByDictionary(data, dataFilter, dict, dictionaryName)
 \item{dictionaryName}{The name of the dictionary.}
 }
 \value{
-The converted data.
+A `data.table` containing the converted data.
 }
 \description{
 This function converts the data based on the provided dictionary and filters.

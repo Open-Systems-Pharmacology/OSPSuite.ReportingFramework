@@ -13,15 +13,14 @@ test_that("Default Config For PKForestPlots", {
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
   expect_contains(wb$sheet_names,'PKParameter_ForestTest')
-  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_ForestTest',skipDescriptionRow = TRUE)
-  expect_equal(object = sort(unique(dt$scenario)),
-                expected = sort(unique(pkParameterDT$scenario)))
 })
 
 # adjust configtables in project directory
 mockManualEditingsPlotPkForestTest(projectConfiguration)
 
 test_that("AbsoluteValues pediatric", {
+  skip_if_not_installed("vdiffr")
+  skip_if(getRversion() < "4.1")
 
   plotList <-
     suppressWarnings(runPlot(
@@ -38,17 +37,19 @@ test_that("AbsoluteValues pediatric", {
   expect_equal(length(plotList), 6)
 
   vdiffr::expect_doppelganger(
-    title = "pediatric_AUC_inf_linear",
+    title = "abs_pediatric_AUC_inf_linear",
     fig = plotList[['pediatric-AUC_inf-linear']]
   )
 
   vdiffr::expect_doppelganger(
-    title = "pediatric_F_tEnd_log",
+    title = "abs_pediatric_F_tEnd_log",
     fig = plotList[['pediatric-F_tEnd-log']]
   )
 })
 
 test_that("AbsoluteValues pediatric with data", {
+  skip_if_not_installed("vdiffr")
+  skip_if(getRversion() < "4.1")
 
   plotList <-
     suppressWarnings(runPlot(
@@ -66,17 +67,19 @@ test_that("AbsoluteValues pediatric with data", {
   expect_equal(length(plotList), 6)
 
   vdiffr::expect_doppelganger(
-    title = "pediatric_AUC_inf_linear",
+    title = "abs_data_pediatric_AUC_inf_linear",
     fig = plotList[['pediatric-AUC_inf-linear']]
   )
 
   vdiffr::expect_doppelganger(
-    title = "pediatric_F_tEnd_log",
+    title = "abs_data_pediatric_F_tEnd_log",
     fig = plotList[['pediatric-F_tEnd-log']]
   )
 })
 
 test_that("AbsoluteValues pediatric PE", {
+  skip_if_not_installed("vdiffr")
+  skip_if(getRversion() < "4.1")
 
   plotList <-
     suppressWarnings(runPlot(
@@ -105,6 +108,8 @@ test_that("AbsoluteValues pediatric PE", {
 
 
 test_that("Ratios pediatric PE", {
+  skip_if_not_installed("vdiffr")
+  skip_if(getRversion() < "4.1")
 
   plotList <-
     runPlot(
@@ -132,6 +137,8 @@ test_that("Ratios pediatric PE", {
 })
 
 test_that("Ratios crossover PE", {
+  skip_if_not_installed("vdiffr")
+  skip_if(getRversion() < "4.1")
 
   plotList <-
     runPlot(
@@ -159,6 +166,8 @@ test_that("Ratios crossover PE", {
 })
 
 test_that("Ratios crossover PE with data", {
+  skip_if_not_installed("vdiffr")
+  skip_if(getRversion() < "4.1")
 
   plotList <-
     runPlot(

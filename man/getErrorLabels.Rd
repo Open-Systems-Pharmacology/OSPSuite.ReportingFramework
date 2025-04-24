@@ -10,7 +10,8 @@ getErrorLabels(yErrorType)
 \item{yErrorType}{A string descriptor indicating the type of error.}
 }
 \value{
-A character vector of length 2 containing descriptors for mean and range.
+A character vector of length 2 containing descriptors for mean and range,
+based on the specified error type.
 }
 \description{
 This function retrieves error labels based on the provided error type descriptor.

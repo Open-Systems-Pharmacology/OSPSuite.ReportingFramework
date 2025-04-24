@@ -1,9 +1,7 @@
-# set up directory with figures
-projectConfiguration <- setUpTestProject()
+# testProject was set up by setup.R
 
 # Unit tests for initLogfunction
 test_that("initLogfunction creates default log file folder when logFileFolder is NULL", {
-  suppressMessages(initLogfunction(projectConfiguration))
   expect_true(dir.exists(file.path(projectConfiguration$outputFolder, "Logs")))
 })
 
@@ -69,10 +67,8 @@ test_that("logCatch Logs messages when verbose is TRUE", {
 })
 
 
-# Define the example data
 exampleData <- data.table(x = 1:5, y = letters[1:5])
 
-# Write the unit test
 test_that("writeTableToLog function works as expected", {
   setShowLogMessages(FALSE)
   # Call the function with example data
@@ -86,4 +82,3 @@ test_that("writeTableToLog function works as expected", {
   expect_true(length(logContent) > 0, "Log file was created")
 })
 
-cleanupLogFileForTest(projectConfiguration)

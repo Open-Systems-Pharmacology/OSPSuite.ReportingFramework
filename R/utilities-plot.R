@@ -86,7 +86,6 @@ runPlot <- function(projectConfiguration,
     nameOfplotFunction = nameOfplotFunction,
     digitsOfSignificance = digitsOfSignificanceCSVDisplay
   )
-
   # read configuration table
   configTable <-
     readConfigTableForPlot(
@@ -311,6 +310,12 @@ setExportAttributes <- function(object,
                                 caption = NULL,
                                 footNoteLines = NULL,
                                 exportArguments = NULL) {
+
+  # Replace multiple spaces with a single space in the caption
+  if (!is.null(caption)) {
+    caption <- gsub(" +", " ", caption)
+  }
+
   attributesToSet <- list(
     caption = caption,
     footNoteLines = footNoteLines,
@@ -560,6 +565,7 @@ pasteFigureTags <- function(dtCaption, captionColumn, endWithDot = FALSE) {
 #' @return A modified caption text with the additional caption added if applicable.
 #' @keywords internal
 addCaptionTextAddon <- function(captiontext, plotCaptionAddon) {
+  captiontext <- trimws(captiontext)
   if (!grepl("\\.$", captiontext)) {
     captiontext <- paste0(captiontext, ".")
   }
@@ -950,7 +956,7 @@ validateOutputIdsForPlot <- function() {
     any.missing = FALSE,
     .var.name = "Outputs column outputPath"
   )
-  checkmate::assertCharacter(configEnv$outputPaths$displayNameOutputs,
+  checkmate::assertCharacter(configEnv$outputPaths$displayNameOutput,
     any.missing = FALSE,
     .var.name = "Outputs column displayName"
   )
@@ -963,7 +969,7 @@ validateOutputIdsForPlot <- function() {
   }
 
   # Check for unique values for outputpathids
-  uniqueColumns <- c("displayNameOutputs", "displayUnit")
+  uniqueColumns <- c("displayNameOutput", "displayUnit")
   uniqueIDValues <-
     configEnv$outputPaths[, lapply(.SD, function(x) {
       length(unique(x))

@@ -7,10 +7,10 @@
 groupDataByIdentifier(dataDT)
 }
 \arguments{
-\item{dataDT}{`data.table` to be grouped.}
+\item{dataDT}{A `data.table` to be grouped.}
 }
 \value{
-List with grouped data.
+A list with grouped data.
 }
 \description{
 Groups the data by identifier

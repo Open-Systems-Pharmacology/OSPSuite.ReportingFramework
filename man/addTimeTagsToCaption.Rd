@@ -4,14 +4,14 @@
 \alias{addTimeTagsToCaption}
 \title{Add Time Tags to Caption}
 \usage{
-addTimeTagsToCaption(dtCaption, timeTags, facetType)
+addTimeTagsToCaption(dtCaption, timeTags, splitPlotsPerTimeRange)
 }
 \arguments{
 \item{dtCaption}{A data table containing the caption data.}
 
 \item{timeTags}{A vector of time tags to be added.}
 
-\item{facetType}{The type of facet being used.}
+\item{splitPlotsPerTimeRange}{Boolean, if TRUE for each Timerange a plot is created}
 }
 \value{
 A data table with added time tags.

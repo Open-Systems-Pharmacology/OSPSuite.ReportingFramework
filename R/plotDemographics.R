@@ -118,7 +118,6 @@ plotHistograms <- function(projectConfiguration,
   )
   usePKParameter <- !any(splitInputs(onePlotConfig$parameterIds)
                          %in% configEnv$modelParameter$parameterId)
-
   checkmate::assertList(scenarioList, types = "Scenario", null.ok = usePKParameter)
   if (usePKParameter) validatePKParameterDT(pkParameterDT)
 
@@ -584,7 +583,7 @@ setPlotTag <- function(plotData, asRangePlot, usePKParameter) {
 
   plotTagIdentifier <- c()
   if (usePKParameter) {
-    plotTagIdentifier <- "displayNameOutputs"
+    plotTagIdentifier <- "displayNameOutput"
   }
   if (!asRangePlot) {
     plotTagIdentifier <- c("scenario", plotTagIdentifier)
@@ -749,14 +748,14 @@ getCaptionForDemographicPlot <- function(
     binLabel,
     valueScale,
     plotCaptionAddon) {
-  if ("displayNameOutputs" %in% names(idData)) {
+  if ("displayNameOutput" %in% names(idData)) {
     dtCaption <-
       idData[, c(
-        "displayNameOutputs",
+        "displayNameOutput",
         "plotTag"
       )] %>% unique()
 
-    outputText <- paste(" of", pasteFigureTags(dtCaption, captionColumn = "displayNameOutputs"))
+    outputText <- paste(" of", pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"))
   } else {
     outputText <- ""
   }
@@ -820,17 +819,17 @@ getFootnoteLinesForRangePlots <- function(errorLabels) {
 #' @keywords internal
 getNFacetsForDemographics <- function(idData, isRangePlot, nMaxFacetRows = 2) {
   # initialize to avoid linter messages
-  scenario <- displayNameOutputs <- plotTag <- NULL
+  scenario <- displayNameOutput <- plotTag <- NULL
 
   nFacetColumns <- NULL
 
   if (idData[, uniqueN(plotTag)] > 1) {
     if (isRangePlot) {
       nFacetColumns <- 1
-    } else if ("displayNameOutputs" %in% names(idData) &&
+    } else if ("displayNameOutput" %in% names(idData) &&
       idData[, uniqueN(scenario)] > 1 &&
-      idData[, uniqueN(displayNameOutputs)] > 1) {
-      nFacetColumns <- idData[, uniqueN(displayNameOutputs)]
+      idData[, uniqueN(displayNameOutput)] > 1) {
+      nFacetColumns <- idData[, uniqueN(displayNameOutput)]
     } else {
       nFacetColumns <- max(1,floor(idData[, uniqueN(scenario)] / nMaxFacetRows))
     }
@@ -846,11 +845,18 @@ getNFacetsForDemographics <- function(idData, isRangePlot, nMaxFacetRows = 2) {
 #' @param ... Additional arguments for validation.
 #' @return NULL (invisible).
 #' @export
-validateDistributionVsDemographicsConfig <- function(configTable, ...){
+validateDistributionVsDemographicsConfig <- function(configTable, scenarioList,...){
   # initialize to avoid linter messages
   modeOfBinning <- NULL
 
   configTablePlots <- validateHeaders(configTable)
+
+  popScenarios <- names(scenarioList[unlist(lapply(scenarioList,
+                                                function(scenario) {
+                                                  (!is.null(scenario$population) &&
+                                                     "Population" %in% class(scenario$population))
+                                                }))])
+
 
   validateConfigTablePlots(
     configTablePlots = configTablePlots,
@@ -860,11 +866,11 @@ validateDistributionVsDemographicsConfig <- function(configTable, ...){
     subsetList = list(
       scenario = list(
         cols = c("scenario"),
-        allowedValues = configEnv$scenarios$scenarioName
+        allowedValues = popScenarios
       ),
       referenceScenario = list(
         cols = c("referenceScenario"),
-        allowedValues = configEnv$scenarios$scenarioName,
+        allowedValues = popScenarios,
         splitAllowed = FALSE
       ),
       parameterId_Bin = list(
@@ -931,6 +937,20 @@ validateHistogramsConfig <- function(configTable,...){
 
   configTablePlots <- validateHeaders(configTable)
 
+  dotarg <- list(...)
+  if ("scenarioList" %in% names(dotarg)){
+    popScenarios <-
+      names(dotarg$scenarioList[unlist(lapply(dotarg$scenarioList,
+                                        function(scenario) {
+                                          (!is.null(scenario$population) &&
+                                             "Population" %in% class(scenario$population))
+                                        }))])
+  } else if ("pkParameterDT" %in% names(dotarg)){
+    popScenarios <- unique(pkParameterDT$scenario)
+  } else {
+    stop('Inputs are missing, please provide scenarioList and/or pkParameterDT')
+  }
+
   validateConfigTablePlots(
     configTablePlots = configTablePlots,
     charactersWithoutMissing = c("plotName", "parameterIds","scenario"),
@@ -939,11 +959,11 @@ validateHistogramsConfig <- function(configTable,...){
     subsetList = list(
       scenario = list(
         cols = c("scenario"),
-        allowedValues = configEnv$scenarios$scenarioName
+        allowedValues = popScenarios
       ),
       referenceScenario = list(
         cols = c("referenceScenario"),
-        allowedValues = configEnv$scenarios$scenarioName,
+        allowedValues = popScenarios,
         splitAllowed = FALSE
       ),
       yscale = list(
@@ -988,7 +1008,9 @@ validateHistogramsConfig <- function(configTable,...){
 #' @return NULL (invisible).
 #' @keywords internal
 validateParameterID <- function(configTablePlots, ...) {
-  if (any(splitInputs(configTablePlots$parameterIds) %in% configEnv$modelParameter$parameterId)) {
+  if (any(splitInputs(configTablePlots$parameterIds) %in%
+          configEnv$modelParameter$parameterId)) {
+
     validateConfigTablePlots(
       configTablePlots = configTablePlots,
       subsetList = list(
@@ -1000,7 +1022,7 @@ validateParameterID <- function(configTablePlots, ...) {
     )
   } else {
     dotarg <- list(...)
-    if (!("pkParameterDT") %in% names(dotarg)) {
+    if (!("pkParameterDT" %in% names(dotarg))) {
       stop(paste(
         "The ParameterIds are no valid modelparameters!
                  Are they PK-Parameter? But pkParameterDT is missing as input.",

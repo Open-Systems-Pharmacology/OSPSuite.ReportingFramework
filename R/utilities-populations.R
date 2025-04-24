@@ -52,7 +52,7 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
 
   # Check if any groups are available for virtual twin population creation
   if (length(groups) == 0) {
-    message("No groups available for virtual twin population creation")
+    writeToLog(type = 'Info',msg = "No groups available for virtual twin population creation")
     return(NULL)
   }
 
@@ -117,7 +117,7 @@ exportVirtualTwinPopulations <- function(projectConfiguration, modelFile, overwr
   }
   # If no populations left to generate, return with a message
   if (nrow(dtTwinPops) == 0) {
-    writeToLog("No new virtual twin populations to generate; all files already exist.")
+    writeToLog(type = 'Info',msg = "No new virtual twin populations to generate; all files already exist.")
     return(invisible())
   }
 
@@ -237,7 +237,8 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
   }
   # If no populations left to generate, return with a message
   if (nrow(dtPops) == 0) {
-    message("No new virtual populations to generate; all files already exist.")
+    writeToLog(type = 'Info',
+               msg = ("No new virtual populations to generate; all files already exist."))
     return(invisible())
   }
 

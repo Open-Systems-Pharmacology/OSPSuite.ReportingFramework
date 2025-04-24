@@ -7,13 +7,13 @@
 setDataTypeAttributes(dataDT, dict = NULL)
 }
 \arguments{
-\item{dataDT}{`data.table` with observed data.}
+\item{dataDT}{A `data.table` with observed data.}
 
 \item{dict}{Named list with columnNames and columnTypes; if NULL,
 list is produced by template saved in package installation.}
 }
 \value{
-`data.table` with attributes.
+A `data.table` with attributes.
 }
 \description{
 Sets columnType attribute according to dictionary

@@ -1,7 +1,14 @@
-projectConfiguration <- setUpTestProject()
+# testproject with variable projectconfiguration is set up by the setup.R for all tests simulataneously
 
 test_that("Creation and print of startlines", {
-  rmdPlotManager <- RmdPlotManager$new(rmdfolder = projectConfiguration$outputFolder, "timeProfiles")
+  rmdfolder <- projectConfiguration$outputFolder
+  expect_error(RmdPlotManager$new(rmdName = NULL,
+                                  rmdfolder = projectConfiguration$outputFolder,
+                                  nameOfplotFunction = "plotTimeProfiles"))
+
+  rmdPlotManager <- RmdPlotManager$new(rmdName = 'test',
+                                       rmdfolder = projectConfiguration$outputFolder,
+                                       nameOfplotFunction = "plotTimeProfiles")
   expect_s3_class(rmdPlotManager, "RmdPlotManager")
 
   testPath <- file.path(projectConfiguration$outputFolder, "Test.Rmd")
@@ -11,8 +18,18 @@ test_that("Creation and print of startlines", {
   expect_true(file.exists(testPath))
 })
 
+
+test_that("Initialization with invalid parameters", {
+  expect_error(RmdPlotManager$new(rmdName = NULL, rmdfolder = projectConfiguration$outputFolder, nameOfplotFunction = "plotTimeProfiles"))
+  expect_error(RmdPlotManager$new(rmdName = 'test', rmdfolder = NULL, nameOfplotFunction = "plotTimeProfiles"))
+  expect_error(RmdPlotManager$new(rmdName = 'test', rmdfolder = projectConfiguration$outputFolder, nameOfplotFunction = 123))
+  expect_error(RmdPlotManager$new(rmdName = 'test', rmdfolder = projectConfiguration$outputFolder, nameOfplotFunction = "nonExistentFunction"))
+})
+
 test_that("Headers, newlines", {
-  rmdPlotManager <- RmdPlotManager$new(rmdfolder = projectConfiguration$outputFolder, "timeProfiles")
+  rmdPlotManager <- RmdPlotManager$new(rmdName = 'test',
+                                       rmdfolder = projectConfiguration$outputFolder,
+                                       nameOfplotFunction = "plotTimeProfiles")
 
   rmdPlotManager$addHeader("Level 1")
   rmdPlotManager$addHeader("Level 2", level = 2)
@@ -29,7 +46,9 @@ test_that("Headers, newlines", {
 })
 
 test_that("Figure export", {
-  rmdPlotManager <- RmdPlotManager$new(rmdfolder = projectConfiguration$outputFolder, "timeProfiles")
+  rmdPlotManager <- RmdPlotManager$new(rmdName = 'test',
+                                       rmdfolder = projectConfiguration$outputFolder,
+                                       nameOfplotFunction = "plotTimeProfiles")
 
   rmdPlotManager$addHeader("Section 1")
 
@@ -44,9 +63,9 @@ test_that("Figure export", {
   )
 
   # files are exported
-  expect_true(file.exists(file.path(projectConfiguration$outputFolder, "timeProfiles", "Fig1.png")))
-  expect_true(file.exists(file.path(projectConfiguration$outputFolder, "timeProfiles", "Fig1.caption")))
-  expect_true(file.exists(file.path(projectConfiguration$outputFolder, "timeProfiles", "Fig1.footnote")))
+  expect_true(file.exists(file.path(projectConfiguration$outputFolder, "test", "Fig1.png")))
+  expect_true(file.exists(file.path(projectConfiguration$outputFolder, "test", "Fig1.caption")))
+  expect_true(file.exists(file.path(projectConfiguration$outputFolder, "test", "Fig1.footnote")))
 
   # it should not be possible to add the same key twice
   expect_error(
@@ -74,7 +93,9 @@ test_that("Figure export", {
 
 
 test_that("Table export export", {
-  rmdPlotManager <- RmdPlotManager$new(rmdfolder = projectConfiguration$outputFolder, "timeProfiles")
+  rmdPlotManager <- RmdPlotManager$new(rmdName = 'test',
+                                       rmdfolder = projectConfiguration$outputFolder,
+                                       nameOfplotFunction = "plotTimeProfiles")
 
   rmdPlotManager$addHeader("Section 1")
 
@@ -120,5 +141,3 @@ test_that("Table export export", {
   expect_no_error(rmdPlotManager$writeRmd(basename(testPath)))
 })
 
-
-cleanupLogFileForTest(projectConfiguration)

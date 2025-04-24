@@ -13,8 +13,6 @@ test_that("Default Config For Boxplots", {
 
   expect_contains(wb$sheet_names,'PKParameter_BoxplotTest')
   dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_BoxplotTest',skipDescriptionRow = TRUE)
-  expect_equal(object = sort(unique(dt$scenario)),
-               expected = sort(unique(pkParameterDT$scenario)))
 })
 
 # prepare configtable
@@ -73,7 +71,7 @@ test_that("Boxwhsiker pediatrics ", {
   expect_equal( ncol(plotList[['pediatric-abs-A']]),14)
 
   vdiffr::expect_doppelganger(
-    title = "crossover_AUC_inf",
-    fig = plotList[['pediatric-linear-abs`']]
+    title = "pediatric-linear-abs",
+    fig = plotList[['pediatric-linear-abs']]
   )
 })

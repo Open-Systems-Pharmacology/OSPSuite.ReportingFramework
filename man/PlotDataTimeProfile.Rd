@@ -154,14 +154,12 @@ Creates plotId for each scenario outputs group
 \if{latex}{\out{\hypertarget{method-RmdPlotManager-splitDataToPanels}{}}}
 \subsection{Method \code{splitDataToPanels()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$splitDataToPanels(nFacetColumns, nMaxFacetRows)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{PlotDataTimeProfile$splitDataToPanels(nMaxFacetRows)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{nFacetColumns}}{default number of facet columns}
-
 \item{\code{nMaxFacetRows}}{maximal number of facet rows
 @title Set factors for plotting}
 }

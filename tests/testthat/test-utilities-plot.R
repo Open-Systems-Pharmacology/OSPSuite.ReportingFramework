@@ -1,18 +1,4 @@
-# initialize logging. Is always needed
-projectConfiguration <- setUpTestProject()
-initLogfunction(projectConfiguration = projectConfiguration, verbose = FALSE)
-
-test_that("generation of default template works", {
-  setWorkflowOptions(isValidRun = FALSE)
-  addDefaultConfigForTimeProfilePlots(
-    projectConfiguration = projectConfiguration,
-    sheetName = "TimeProfileNew", overwrite = FALSE
-  )
-
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
-  expect_contains(wb$sheet_names, "TimeProfileNew")
-})
-
+# testProject was set up by setup.R
 
 # Test cases for concatWithAnd function
 test_that("concatWithAnd works correctly", {
@@ -41,10 +27,6 @@ test_that("concatWithAnd works correctly", {
   # Test with ws
   expect_equal(concatWithAnd(c("apple ", "", " cherry")), "apple and cherry")
 })
-
-
-
-
 
 test_that("formatPercentiles returns correct labels for specific values", {
   suffix <- " percentile"
@@ -184,7 +166,7 @@ test_that("validateAtleastOneEntry function test", {
 # Create example data for testing
 dtOutputPaths <- data.table(
   outputPathId = c("id1", "id1", "id2", "id2"),
-  displayNameOutputs = c("Display1", "Display1", "Display2", "Display2"),
+  displayNameOutput = c("Display1", "Display1", "Display2", "Display2"),
   displayUnit = c("Unit1", "Unit1", "Unit1", "Unit2")
 )
 
@@ -280,5 +262,3 @@ test_that("validateTimeRangeColumns function test", {
   # Test if the function correctly validates the inputs in the TimeRange columns
   expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 7)]))
 })
-
-cleanupLogFileForTest(projectConfiguration)

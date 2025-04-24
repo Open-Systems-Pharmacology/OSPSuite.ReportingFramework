@@ -11,13 +11,14 @@ readObservedDataByDictionary(
 )
 }
 \arguments{
-\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+\item{projectConfiguration}{An object containing project configuration details, including the path to the data importer configuration file.}
 
-\item{spreadData}{If TRUE, information derived from observed data, such as identifiers
-and biometrics, is spread to other tables.}
+\item{spreadData}{If TRUE, information derived from observed data, such as identifiers and biometrics, is spread to other tables.}
+
+\item{dataClassType}{A character string indicating the type of data class to process. Options are "timeprofile" or "pkParameter".}
 }
 \value{
-Processed data based on the dictionary.
+A `data.table` containing the processed data based on the dictionary. The structure includes relevant columns defined in the data dictionary.
 }
 \description{
 This function reads and processes data based on the provided project configuration.

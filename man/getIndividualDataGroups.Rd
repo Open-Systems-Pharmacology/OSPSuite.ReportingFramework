@@ -2,23 +2,24 @@
 % Please edit documentation in R/utilities-data.R
 \name{getIndividualDataGroups}
 \alias{getIndividualDataGroups}
-\title{filters observed data for individual groups which are suited for
+\title{Filters observed data for individual groups which are suited for
 aggregation or "Virtual Twin population" creation}
 \usage{
 getIndividualDataGroups(dataObserved, groups, minN = 2)
 }
 \arguments{
-\item{dataObserved}{A data.table containing observed data.}
+\item{dataObserved}{A `data.table` containing observed data.}
 
 \item{groups}{A character vector specifying the groups to aggregate.
 If NULL, all available groups are used.}
 
-\item{minN}{minimal number needed for group}
+\item{minN}{The minimal number needed for a group.}
 }
 \value{
-vector with suitable group Ids
+A vector with suitable group Ids.
 }
 \description{
-filters observed data for individual groups which are suited for
+Filters observed data for individual groups which are suited for
 aggregation or "Virtual Twin population" creation
 }
+\keyword{internal}

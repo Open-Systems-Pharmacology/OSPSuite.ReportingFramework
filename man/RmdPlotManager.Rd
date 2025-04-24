@@ -5,7 +5,7 @@
 \alias{RmdPlotManager}
 \title{RmdPlotManager}
 \description{
-An object to create a .Rmd file during a plot function
+Manages the creation and writing of .Rmd files for plots.
 }
 \section{Super class}{
 \code{\link[ospsuite.utils:Printable]{ospsuite.utils::Printable}} -> \code{RmdPlotManager}
@@ -61,13 +61,14 @@ Initialize a new instance of the class.
 \describe{
 \item{\code{rmdfolder}}{Folder where the .Rmd file should be saved.}
 
-\item{\code{rmdName}}{A character string representing the name of the .Rmd file and folder where where output files will be stored}
+\item{\code{rmdName}}{A character string for the name of the .Rmd file (without extension).}
 
 \item{\code{nameOfplotFunction}}{The name of the plotfunction as character.}
 
 \item{\code{suppressExport}}{A logical value indicating whether to suppress export. Default is FALSE.}
 
-\item{\code{digitsOfSignificance}}{digitsOfSignificance of displayed tables}
+\item{\code{digitsOfSignificance}}{Number of significant digits to display in tables.
+#'}
 }
 \if{html}{\out{</div>}}
 }
@@ -92,7 +93,7 @@ Write the .Rmd file.
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-NULL. The function writes the .Rmd file to the specified location.
+NULL. This function writes the .Rmd file to the specified location and returns nothing.
 }
 }
 \if{html}{\out{<hr>}}

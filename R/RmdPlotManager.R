@@ -1,6 +1,6 @@
 #' @title RmdPlotManager
 #' @docType class
-#' @description An object to create a .Rmd file during a plot function
+#' @description Manages the creation and writing of .Rmd files for plots.
 #' @export
 RmdPlotManager <- R6::R6Class( # nolint
   "RmdPlotManager",
@@ -11,11 +11,11 @@ RmdPlotManager <- R6::R6Class( # nolint
     #' @description
     #' Initialize a new instance of the class.
     #' @param rmdfolder Folder where the .Rmd file should be saved.
-    #' @param rmdName A character string representing the name of the .Rmd file and folder where where output files will be stored
+    #' @param rmdName A character string for the name of the .Rmd file (without extension).
     #' @param suppressExport A logical value indicating whether to suppress export. Default is FALSE.
     #' @param nameOfplotFunction The name of the plotfunction as character.
-    #' @param digitsOfSignificance digitsOfSignificance of displayed tables
-    #'
+    #' @param digitsOfSignificance Number of significant digits to display in tables.
+    #'     #'
     #' @return An instance of the RmdPlotManager object.
     initialize = function(rmdfolder, rmdName, nameOfplotFunction, suppressExport = FALSE, digitsOfSignificance = 3) {
       private$.rmdfolder <- rmdfolder
@@ -25,7 +25,7 @@ RmdPlotManager <- R6::R6Class( # nolint
 
       if (!suppressExport) {
         if (is.null(rmdName)) {
-          stop("Please provide name of .rmd and subfolder with variable rmdName")
+          stop("Please provide a valid name for the .Rmd file and its subfolder.")
         }
         tools::file_path_sans_ext(rmdName)
 
@@ -66,7 +66,7 @@ RmdPlotManager <- R6::R6Class( # nolint
     #' @description
     #' Write the .Rmd file.
     #' @param fileName Name of the .Rmd file. If NULL, the file name will default to the subfolder name.
-    #' @return NULL. The function writes the .Rmd file to the specified location.
+    #' @return NULL. This function writes the .Rmd file to the specified location and returns nothing.
     writeRmd = function(fileName = NULL) {
       if (private$.suppressExport) {
         return(invisible())

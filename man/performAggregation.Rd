@@ -7,14 +7,17 @@
 performAggregation(dataToAggregate, aggregationFun, aggrCriteria)
 }
 \arguments{
-\item{dataToAggregate}{A data.table containing the data to be aggregated.}
+\item{dataToAggregate}{A data.table containing the data to be aggregated.
+It must include the column 'yValues' and optionally 'lloq'.}
 
-\item{aggregationFun}{A function to aggregate the data.}
+\item{aggregationFun}{A function to aggregate the data.
+This function should accept a numeric vector and return a list with aggregated values.}
 
 \item{aggrCriteria}{A character vector specifying the columns to group by.}
 }
 \value{
-A data.table containing aggregated results with counts and aggregated values.
+A data.table containing aggregated results with counts (`numberOfIndividuals`),
+aggregated values, and the number of measurements below the lower limit of quantification (`nBelowLLOQ`).
 }
 \description{
 This function performs the aggregation of observed data based on the specified criteria.

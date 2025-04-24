@@ -1,45 +1,282 @@
-projectConfiguration <- suppressMessages(setUpTestProject())
+# testProject was set up by setup.R
 
-# Create example data for testing
-configTablePlots <- data.table(
-  plotName = c("Plot1", "Plot1", "Plot2", "Plot2"),
-  column1 = c("A", "A", "B", "B"),
-  column2 = c("X", "X", "X", "Y"),
-  outputPathIds = c("id1", "id2", "id3", "id4")
+scenarioResultsInd <- runAndSaveScenarios(projectConfiguration = projectConfiguration,
+                                       scenarioList = scenarioListInd,
+                                       simulationRunOptions = SimulationRunOptions$new(
+                                         showProgress = FALSE
+                                       ),
+                                       withResimulation = FALSE)
+
+dataObserved <- readObservedDataByDictionary(projectConfiguration)
+dataObserved <- rbind(dataObserved,
+                      aggregateObservedDataGroups(dataObserved = dataObserved,
+                                                   groups = '1234_adults_iv'),
+                      aggregateObservedDataGroups(dataObserved = dataObserved,
+                                                   groups = '1234_adults_po',
+                                                   aggregationFlag = 'Percentile'),
+                      fill = TRUE
 )
 
-test_that("validateGroupConsistency function test", {
-  # Test if the function correctly checks for unique values of panel columns for each PlotName
-  expect_error(validateGroupConsistency(configTablePlots, c("column1", "column2")))
+
+test_that("Default Config For Histograms", {
+  addDefaultConfigForTimeProfilePlots(projectConfiguration = projectConfiguration,
+                                                 sheetName = "TimeProfileTest",
+                                                 dataObserved = dataObserved,
+                                                 overwrite = TRUE)
+
+  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+
+  expect_contains(wb$sheet_names,'TimeProfileTest')
+})
+
+# add configuration for testcases
+mockManualEditingsPlotTimeProfileTest(projectConfiguration = projectConfiguration)
+
+test_that("Time profiles of individual scenarios", {
+  skip_if_not_installed("vdiffr")
+  skip_if(getRversion() < "4.1")
+
+  plotList <-
+    runPlot(nameOfplotFunction = 'plotTimeProfiles',
+            configTableSheet = 'TimeProfileTest',
+            projectConfiguration = projectConfiguration,
+            suppressExport = TRUE,
+            plotNames = c('Individuals_withData','Individuals_withoutData'),
+            inputs = list(
+              scenarioResults = scenarioResultsInd,
+              dataObserved = dataObserved
+            )
+    )
+
+  expect_equal(length(plotList),2)
+
+  for (pName in names(plotList)){
+    vdiffr::expect_doppelganger(
+      title = pName,
+      fig = plotList[[pName]]
+    )
+  }
+})
+
+test_that("Predicted vs observed of individual scenarios", {
+  skip_if_not_installed("vdiffr")
+  skip_if(getRversion() < "4.1")
+
+  plotList <-
+    runPlot(nameOfplotFunction = 'plotTimeProfiles',
+            configTableSheet = 'TimeProfileTest',
+            projectConfiguration = projectConfiguration,
+            suppressExport = TRUE,
+            plotNames = c('Individuals_withData_pvo'),
+            inputs = list(
+              scenarioResults = scenarioResultsInd,
+              dataObserved = dataObserved
+            )
+    )
+
+  for (pName in names(plotList)){
+    vdiffr::expect_doppelganger(
+      title = pName,
+      fig = plotList[[pName]]
+    )
+  }
+
 })
 
 
+test_that("Time profiles of virtual twin scenarios", {
+  skip_if_not_installed("vdiffr")
+  skip_if(getRversion() < "4.1")
 
-# Create example data for testing
-configTablePlots <- data.table(
-  value1 = c(1, 2, 3, 4),
-  value2 = c("A", "B", "C", "D"),
-  timeRange_Valid1 = c(NA, "total", "firstApplication", "lastApplication"),
-  timeRange_Valid2 = c("c(0,30)", NA, "c(0,40)", "lastApplication"),
-  timeRange_invalid1 = c("total", "invalid", "firstApplication", "lastApplication"),
-  timeRange_invalid1 = c("c(0,30,50)", "total", "firstApplication", "lastApplication"),
-  timeRange_invalid1 = c("c(0,NA)", "total", "firstApplication", "lastApplication")
-)
+  plotList <-
+    runPlot(nameOfplotFunction = 'plotTimeProfiles',
+            configTableSheet = 'TimeProfileTest',
+            projectConfiguration = projectConfiguration,
+            suppressExport = TRUE,
+            plotNames = c('VirtualTwin',
+                          'VirtualTwin_withData_all',
+                          'VirtualTwin_withData_selected',
+                          'VirtualTwin_withReferenceInd'),
+            inputs = list(
+              scenarioResults = scenarioResultsInd,
+              dataObserved = dataObserved
+            )
+    )
 
-# Write unit tests for the function
-test_that("validateTimeRangeColumns function test", {
-  # Test if the function correctly validates correct TimeRange Columns
-  expect_no_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4)]))
+  expect_equal(length(plotList),4)
 
-  # Test if the function correctly checks for at least one TimeRange Column
-  expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2)]))
+  for (pName in names(plotList)){
+    vdiffr::expect_doppelganger(
+      title = pName,
+      fig = plotList[[pName]]
+    )
+  }
 
-  # Test if the function correctly validates the inputs in the TimeRange columns
-  expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 5)]))
 
-  # Test if the function correctly validates the inputs in the TimeRange columns
-  expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 6)]))
+  expect_error(
+    runPlot(nameOfplotFunction = 'plotTimeProfiles',
+            configTableSheet = 'TimeProfileTest',
+            projectConfiguration = projectConfiguration,
+            suppressExport = TRUE,
+            plotNames = 'VirtualTwin_withReferencePop',
+            inputs = list(
+              scenarioResults = c(scenarioResults,
+                                  scenarioResultsInd),
+              dataObserved = dataObserved
+            )
+    )
+  )
 
-  # Test if the function correctly validates the inputs in the TimeRange columns
-  expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 7)]))
 })
+
+test_that("Predicted vs observed of virtual twin scenarios", {
+  skip_if_not_installed("vdiffr")
+  skip_if(getRversion() < "4.1")
+
+  plotList <-
+    runPlot(nameOfplotFunction = 'plotTimeProfiles',
+            configTableSheet = 'TimeProfileTest',
+            projectConfiguration = projectConfiguration,
+            suppressExport = TRUE,
+            plotNames = c('VirtualTwin_withData_selected_pvo'),
+            inputs = list(
+              scenarioResults = scenarioResultsInd,
+              dataObserved = dataObserved
+            )
+    )
+
+  for (pName in names(plotList)){
+    vdiffr::expect_doppelganger(
+      title = pName,
+      fig = plotList[[pName]]
+    )
+  }
+
+})
+
+test_that("Time profiles with populations", {
+  skip_if_not_installed("vdiffr")
+  skip_if(getRversion() < "4.1")
+
+  plotList <-
+    runPlot(nameOfplotFunction = 'plotTimeProfiles',
+            configTableSheet = 'TimeProfileTest',
+            projectConfiguration = projectConfiguration,
+            suppressExport = TRUE,
+            plotNames = c('Pop_withoutData',
+                          'Pop_withIndividualData',
+                          'Pop_withAggregatedData',
+                          'Pop_withReference'),
+            inputs = list(
+              scenarioResults = scenarioResults,
+              dataObserved = dataObserved
+            )
+    )
+
+
+  for (pName in names(plotList)){
+    vdiffr::expect_doppelganger(
+      title = pName,
+      fig = plotList[[pName]]
+    )
+  }
+
+  expect_error(runPlot(nameOfplotFunction = 'plotTimeProfiles',
+          configTableSheet = 'TimeProfileTest',
+          projectConfiguration = projectConfiguration,
+          suppressExport = TRUE,
+          plotNames = c('Pop_withReference_2'),
+          inputs = list(
+            scenarioResults = scenarioResults,
+            dataObserved = dataObserved
+          ))
+  )
+
+  expect_error(runPlot(nameOfplotFunction = 'plotTimeProfiles',
+                       configTableSheet = 'TimeProfileTest',
+                       projectConfiguration = projectConfiguration,
+                       suppressExport = TRUE,
+                       plotNames = c('Pop_withAggregatedData_Percentiles'),
+                       inputs = list(
+                         scenarioResults = scenarioResults,
+                         dataObserved = dataObserved
+                       ))
+  )
+
+
+})
+
+
+test_that("Predicted vs observed of populations", {
+  skip_if_not_installed("vdiffr")
+  skip_if(getRversion() < "4.1")
+
+  plotList <-
+    runPlot(nameOfplotFunction = 'plotTimeProfiles',
+            configTableSheet = 'TimeProfileTest',
+            projectConfiguration = projectConfiguration,
+            suppressExport = TRUE,
+            plotNames = 'Pop_withAggregatedData_pvo',
+            inputs = list(
+              scenarioResults = scenarioResults,
+              dataObserved = dataObserved
+            )
+    )
+
+  for (pName in names(plotList)){
+    vdiffr::expect_doppelganger(
+      title = pName,
+      fig = plotList[[pName]]
+    )
+  }
+
+})
+
+test_that("Time profiles vs time range", {
+
+  plotList <-
+    runPlot(nameOfplotFunction = 'plotTimeProfiles',
+            configTableSheet = 'TimeProfileTest',
+            projectConfiguration = projectConfiguration,
+            suppressExport = TRUE,
+            plotNames = c('Pop_withTimeRanges'),
+            inputs = list(
+              scenarioResults = scenarioResults,
+              dataObserved = dataObserved
+            )
+    )
+
+  for (pName in names(plotList)){
+    vdiffr::expect_doppelganger(
+      title = pName,
+      fig = plotList[[pName]]
+    )
+  }
+
+})
+
+test_that("Predicted vs observed vs time range", {
+  skip_if_not_installed("vdiffr")
+  skip_if(getRversion() < "4.1")
+
+  plotList <-
+    runPlot(nameOfplotFunction = 'plotTimeProfiles',
+            configTableSheet = 'TimeProfileTest',
+            projectConfiguration = projectConfiguration,
+            suppressExport = TRUE,
+            plotNames = c('Pop_withTimeRanges_pvo'),
+            inputs = list(
+              scenarioResults = scenarioResults,
+              dataObserved = dataObserved
+            )
+    )
+
+  for (pName in names(plotList)){
+    vdiffr::expect_doppelganger(
+      title = pName,
+      fig = plotList[[pName]]
+    )
+  }
+
+})
+

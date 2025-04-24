@@ -2,12 +2,26 @@
 #'
 #' This function retrieves the appropriate aggregation function based on the specified aggregation flag.
 #'
-#' @param aggregationFlag A character string indicating the aggregation method. Must be one of the options from `ospsuite::DataErrorType` or "Percentiles" or "Custom".
-#' @param percentiles A numeric vector of percentiles to calculate if aggregationFlag is "Percentiles". Must have a length of 3, sorted, and within the range [0, 1].
-#' @param legendsize An integer indicating the size of the legend vector. Supported values are 2 or 3 (relevant for percentiles)
-#' @param customFunction A custom function for aggregation if aggregationFlag is "Custom". Must be a valid function.
+#' @param aggregationFlag A character string indicating the aggregation method.
+#'       Must be one of the options from `ospsuite::DataErrorType`, "Percentiles", or "Custom".
+#' @param percentiles A numeric vector of percentiles to calculate
+#'      if `aggregationFlag` is "Percentiles".
+#'      Must have a length of 3, be sorted, and within the range [0, 1].
+#' @param legendsize An integer indicating the size of the legend vector.
+#'        Supported values are 2 or 3, which correspond to
+#'        different formats for displaying percentile results.
+#' @param customFunction A custom function for aggregation if `aggregationFlag` is "Custom".
+#' A custom function should take a numeric vector `y` as input and return a list containing:
+#' - `yValues`: The aggregated value (e.g., mean).
+#' - `yMin`: The lower value of the aggregated data, (e.g. mean - sd).
+#' - `yMax`: The upper value of the aggregated data, (e.g. mean + sd).
+#' - `yErrorType`: A string indicating the type of error associated with the aggregation,
+#' it is used in plot legends and captions.
+#' It must be a concatenation of the descriptor of yValues and the descriptor of yMin - yMax range
+#' separated by "|" (e.g., "mean | standard deviation" or "median | 5th - 95th percentile").
+#' If legendsize 3 is needed should contain 3 elements, e.g. "median | 5th percentile | 95th percentile"
 #'
-#' @return A function that performs the specified aggregation.
+#' @return A function that performs the specified aggregation. The returned function accepts a numeric vector and returns a list containing the aggregated values and error types.
 #' @export
 getAggregationFunction <- function(aggregationFlag,
                                    percentiles,
@@ -75,10 +89,11 @@ getAggregationFunction <- function(aggregationFlag,
 #'
 #' This function generates a descriptive text based on the provided percentiles.
 #'
-#' @param percentiles A numeric vector containing percentiles.
-#' @param legendsize An integer indicating the size of the legendvector. Supported values are 2 or 3.
+#' @param percentiles A numeric vector containing percentiles. Must be of length 3.
+#' @param legendsize An integer indicating the size of the legend vector. Supported values are 2 or 3, which affect the format of the output string.
 #'
-#' @return A character string with the error type for the given percentiles.
+#' @return A character string with the error type for the given percentiles,
+#' formatted according to the specified legendsize.
 #' @keywords internal
 getErrorTypeForPercentiles <- function(percentiles, legendsize) {
   mName <- formatPercentiles(percentiles[2], suffix = " percentile")
@@ -104,10 +119,13 @@ getErrorTypeForPercentiles <- function(percentiles, legendsize) {
 #' This function performs the aggregation of observed data based on the specified criteria.
 #'
 #' @param dataToAggregate A data.table containing the data to be aggregated.
+#' It must include the column 'yValues' and optionally 'lloq'.
 #' @param aggregationFun A function to aggregate the data.
+#' This function should accept a numeric vector and return a list with aggregated values.
 #' @param aggrCriteria A character vector specifying the columns to group by.
 #'
-#' @return A data.table containing aggregated results with counts and aggregated values.
+#' @return A data.table containing aggregated results with counts (`numberOfIndividuals`),
+#' aggregated values, and the number of measurements below the lower limit of quantification (`nBelowLLOQ`).
 #' @export
 performAggregation <- function(dataToAggregate,
                                aggregationFun,
@@ -141,7 +159,8 @@ performAggregation <- function(dataToAggregate,
 #'
 #' @param yErrorType A string descriptor indicating the type of error.
 #'
-#' @return A character vector of length 2 containing descriptors for mean and range.
+#' @return A character vector of length 2 containing descriptors for mean and range,
+#' based on the specified error type.
 #' @keywords internal
 getErrorLabels <- function(yErrorType) {
   errorLabels <-
@@ -159,12 +178,15 @@ getErrorLabels <- function(yErrorType) {
 #' This function calculates the aggregated variance based on the specified aggregation function and identifier.
 #'
 #' @param dt A data.table containing the data to aggregate.
+#' It must include the column specified in `valueColumn`.
 #' @param aggregationFun A function to aggregate the data.
+#' This function should accept a numeric vector and return a list with aggregated values.
 #' @param valueColumn A string indicating the column name containing the values to aggregate.
 #' @param identifier A character vector specifying the columns to group by.
-#' @param direction A character string specifying the direction of aggregation, either 'y' or 'x'.
+#' @param direction A character string specifying the direction of aggregation,
+#' either 'y' or 'x'.
 #'
-#' @return A data.table containing the aggregated variance results.
+#' @return A data.table containing the aggregated variance results, including the aggregated values and error types.
 #' @keywords internal
 getAggregatedVariance <- function(dt,
                                   aggregationFun,
@@ -219,7 +241,7 @@ getAggregatedVariance <- function(dt,
 #' @param aggregationFun A function to calculate the aggregation (e.g., geometric mean).
 #'   This function should accept a numeric vector and return a single numeric value.
 #' @param confLevel A numeric value representing the confidence level for the confidence interval.
-#'   The default value is 0.9, corresponding to a 90% confidence interval.
+#'   The default value is 0.9, corresponding to a 90% confidence interval. Must be between 0 and 1.
 #' @param identifier A character vector of column names in the data.table to group by.
 #'   The function will calculate the aggregation and confidence interval for each unique combination
 #'   of these identifiers.

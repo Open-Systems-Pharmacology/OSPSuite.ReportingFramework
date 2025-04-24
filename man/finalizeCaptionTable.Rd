@@ -9,8 +9,7 @@ finalizeCaptionTable(
   timeTags,
   dtOutputPaths,
   nFacetColumns,
-  nMaxFacetRows,
-  facetType
+  nMaxFacetRows
 )
 }
 \arguments{
@@ -23,8 +22,6 @@ finalizeCaptionTable(
 \item{nFacetColumns}{An integer specifying the number of facet columns, defaults to NULL.}
 
 \item{nMaxFacetRows}{An integer specifying the maximum number of facet rows.}
-
-\item{facetType}{The type of facet being used.}
 }
 \value{
 A data.table that includes updated plot IDs, plot tags, and merged output display names.

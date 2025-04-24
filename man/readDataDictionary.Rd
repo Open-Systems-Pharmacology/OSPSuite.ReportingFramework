@@ -16,7 +16,7 @@ readDataDictionary(dictionaryFile, sheet, data, dataClass)
 \item{dataClass}{Class of data, either "tp Individual" or "tp Aggregated".}
 }
 \value{
-The data dictionary.
+A `data.table` containing the data dictionary.
 }
 \description{
 This function reads the data dictionary based on the provided file and sheet.

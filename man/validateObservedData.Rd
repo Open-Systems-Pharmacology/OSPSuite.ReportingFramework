@@ -7,7 +7,7 @@
 validateObservedData(dataDT, dataClassType)
 }
 \arguments{
-\item{dataDT}{A data.table containing observed data with the following relevant columns:
+\item{dataDT}{A `data.table` containing observed data with the following relevant columns:
 - `individualId`: Unique identifier for individuals.
 - `group`: Group identifier.
 - `outputPathId`: Identifier for output paths.
@@ -24,7 +24,7 @@ NULL This function performs checks and stops execution if any validation fails.
 It does not return a value.
 }
 \description{
-This function checks the integrity and validity of observed data in a data.table.
+This function checks the integrity and validity of observed data in a `data.table`.
 It verifies the presence of required attributes, checks for duplicates, and ensures that
 there are no missing or empty values in the relevant columns. Additionally, it checks
 for ambiguities in the Y unit and validates error type columns.

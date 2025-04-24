@@ -7,12 +7,12 @@
 getColumnsForColumnType(dt, columnTypes)
 }
 \arguments{
-\item{dt}{`data.table` with attributes (e.g., imported by `readObservedDataByDictionary`).}
+\item{dt}{A `data.table` with attributes (e.g., imported by `readObservedDataByDictionary`).}
 
-\item{columnTypes}{Vector with required types.}
+\item{columnTypes}{A vector with required types.}
 }
 \value{
-Vector with column names.
+A vector with column names.
 }
 \description{
 Select all columns where the attribute `columnType` matches the requirement

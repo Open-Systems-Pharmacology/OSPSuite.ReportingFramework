@@ -622,11 +622,11 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
       stop("Please do not mix different error Types in one plot")
     }
 
-    if (any(plotData[["yErrorType"]] == ospsuite::DataErrorType$ArithmeticStdDev)) {
+    if (any(plotData[["yErrorType"]] == ospsuite::DataErrorType$ArithmeticStdDev,na.rm = TRUE)) {
       mapping <- structure(c(mapping, ggplot2::aes(error = yErrorValues)), class = "uneval")
     }
 
-    if (any(plotData[["yErrorType"]] == ospsuite::DataErrorType$GeometricStdDev)) {
+    if (any(plotData[["yErrorType"]] == ospsuite::DataErrorType$GeometricStdDev,na.rm = TRUE)) {
       mapping <- structure(c(mapping, ggplot2::aes(error_relative = yErrorValues)), class = "uneval")
     }
   } else if (any(c("yMin", "yMax") %in% names(plotData))) {

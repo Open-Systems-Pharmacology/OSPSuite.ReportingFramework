@@ -11,10 +11,10 @@
 #' @export
 loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, outputPathsPerScenario, aggregationFun) {
   dtSimulated <- data.table()
-
   for (scenarioName in names(outputPathsPerScenario)) {
     individualMatch <- NULL
-    if ("ObservedIndividualId" %in% simulatedResults[[scenarioName]]$population$allCovariateNames) {
+    if ("Population" %in% class(simulatedResults[[scenarioName]]$population) &&
+        "ObservedIndividualId" %in% simulatedResults[[scenarioName]]$population$allCovariateNames) {
       individualMatch <-
         data.table(
           individualId = simulatedResults[[scenarioName]]$population$allIndividualIds,
@@ -29,7 +29,8 @@ loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, out
         aggregationFun = aggregationFun,
         individualMatch = individualMatch
       ) %>%
-        dplyr::mutate(scenario = scenarioName)
+        dplyr::mutate(scenario = scenarioName),
+      fill  = TRUE
     )
   }
   return(dtSimulated)
@@ -252,7 +253,9 @@ filterIndividualID <- function(timeprofile, individualList) {
   # Initialize variables used for data.tables
   individualId <- NULL
 
-  if (!is.na(individualList) & "individualId" %in% names(timeprofile)) {
+  if (!is.na(individualList) &&
+      "individualId" %in% names(timeprofile) &&
+      any(!is.na(timeprofile$individualId))) {
     individualIds <- gsub("[()]", "", splitInputs(individualList))
     if (any(individualIds != "*")) {
       timeprofile <- timeprofile[individualId %in% individualIds, ]

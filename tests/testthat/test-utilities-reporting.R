@@ -1,10 +1,9 @@
-# set up directory with figures
-projectConfiguration <- setUpTestProject()
-initLogfunction(projectConfiguration = projectConfiguration, verbose = FALSE)
+# testProject was set up by setup.R
 
 test_that("Rendering", {
-  rmdfolder <- projectConfiguration$outputFolder
-  rmdPlotManager <- RmdPlotManager$new(rmdfolder = rmdfolder)
+  rmdPlotManager <- RmdPlotManager$new(rmdName = 'test',
+                                       rmdfolder = projectConfiguration$outputFolder,
+                                       nameOfplotFunction = "plotTimeProfiles")
 
   rmdPlotManager$addHeader("Section 1")
 
@@ -31,11 +30,10 @@ test_that("Rendering", {
     tableKey = "myTable"
   )
 
-  testPath <- file.path(rmdfolder, "Test.Rmd")
+  testPath <- file.path(projectConfiguration$outputFolder, "Test.Rmd")
   rmdPlotManager$writeRmd(basename(testPath))
 
   renderWord(testPath, quiet = TRUE)
-  expect_true(file.exists(file.path(rmdfolder, "Test.docx")))
+  expect_true(file.exists(file.path(projectConfiguration$outputFolder, "Test.docx")))
 })
 
-cleanupLogFileForTest(projectConfiguration)

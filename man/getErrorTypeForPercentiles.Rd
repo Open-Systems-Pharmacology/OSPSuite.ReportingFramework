@@ -7,12 +7,13 @@
 getErrorTypeForPercentiles(percentiles, legendsize)
 }
 \arguments{
-\item{percentiles}{A numeric vector containing percentiles.}
+\item{percentiles}{A numeric vector containing percentiles. Must be of length 3.}
 
-\item{legendsize}{An integer indicating the size of the legendvector. Supported values are 2 or 3.}
+\item{legendsize}{An integer indicating the size of the legend vector. Supported values are 2 or 3, which affect the format of the output string.}
 }
 \value{
-A character string with the error type for the given percentiles.
+A character string with the error type for the given percentiles,
+formatted according to the specified legendsize.
 }
 \description{
 This function generates a descriptive text based on the provided percentiles.

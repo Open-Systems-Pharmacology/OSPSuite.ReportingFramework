@@ -22,7 +22,7 @@ calculateAggregationWithCIBYGroup(
 This function should accept a numeric vector and return a single numeric value.}
 
 \item{confLevel}{A numeric value representing the confidence level for the confidence interval.
-The default value is 0.9, corresponding to a 90% confidence interval.}
+The default value is 0.9, corresponding to a 90% confidence interval. Must be between 0 and 1.}
 
 \item{identifier}{A character vector of column names in the data.table to group by.
 The function will calculate the aggregation and confidence interval for each unique combination

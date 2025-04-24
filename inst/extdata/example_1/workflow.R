@@ -79,7 +79,7 @@ logCatch({
     if (tutorialstep >= 3){
       # add aggregated  groups of data
       dataObserved <- rbind(dataObserved,
-                            aggregatedObservedDataGroups(dataObserved = dataObserved,
+                            aggregateObservedDataGroups(dataObserved = dataObserved,
                                                          groups = c('IV','PO')),
                             fill = TRUE
       )

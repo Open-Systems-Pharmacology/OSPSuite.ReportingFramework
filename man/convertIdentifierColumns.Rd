@@ -7,15 +7,15 @@
 convertIdentifierColumns(dt, identifierCols)
 }
 \arguments{
-\item{dt}{The input data.table.}
+\item{dt}{The input `data.table`.}
 
 \item{identifierCols}{A character vector specifying the columns to be updated.}
 }
 \value{
-The updated data.table.
+The updated `data.table`.
 }
 \description{
-This function updates the specified identifier columns in a data.table by replacing commas with underscores.
+This function updates the specified identifier columns in a `data.table` by replacing commas with underscores.
 It also checks for the presence of commas in the columns and generates a warning message if found.
 }
 \keyword{internal}

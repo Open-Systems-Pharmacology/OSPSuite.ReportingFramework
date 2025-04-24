@@ -1,12 +1,3 @@
-#' @title enumeration keys for type of facetting
-#' @export
-FACETTYPE <- ospsuite.utils::enum(c( # nolint
-  byOrder = "by order",
-  vsOutput = "Scenario vs Output",
-  vsTimeRange = "Scenario vs TimeRange",
-  byIndividual = "by Individual"
-))
-
 
 #' @title enumeration keys for Timerange shortcut
 #' @export

@@ -7,10 +7,10 @@
 updateDataGroupId(projectConfiguration, dataDT)
 }
 \arguments{
-\item{projectConfiguration}{An object of class `ProjectConfiguration` list containing configuration details, including:
-- `plotsFile`: A string representing the file path to the Excel workbook containing the Data Groups sheet.}
+\item{projectConfiguration}{An object of class `ProjectConfiguration`
+containing configuration details}
 
-\item{dataDT}{A data.table containing the new data to be added to the Data Groups sheet.
+\item{dataDT}{A `data.table` containing the new data to be added to the Data Groups sheet.
 It must have columns that can be matched with existing identifiers, including "group", "studyId", and "studyArm".}
 }
 \value{

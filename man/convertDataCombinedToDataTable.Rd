@@ -7,11 +7,11 @@
 convertDataCombinedToDataTable(datacombined)
 }
 \arguments{
-\item{datacombined}{The input DataCombined object.}
+\item{datacombined}{The input `DataCombined` object.}
 }
 \value{
-`data.table`.
+A `data.table` containing the converted data.
 }
 \description{
-Format corresponds to data.table produced by `readObservedDataByDictionary`.
+Format corresponds to `data.table` produced by `readObservedDataByDictionary`.
 }

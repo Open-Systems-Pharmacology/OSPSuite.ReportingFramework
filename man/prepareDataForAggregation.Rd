@@ -7,7 +7,7 @@
 prepareDataForAggregation(dataObserved, groups, groupSuffix)
 }
 \arguments{
-\item{dataObserved}{A data.table containing observed data.}
+\item{dataObserved}{A `data.table` containing observed data.}
 
 \item{groups}{A character vector specifying the groups to aggregate.
 If NULL, all available groups are used.}
@@ -16,7 +16,7 @@ If NULL, all available groups are used.}
 Default is 'aggregated'.}
 }
 \value{
-Prepared data for aggregation.
+Prepared data for aggregation as a `data.table`.
 }
 \description{
 Prepares data for aggregation

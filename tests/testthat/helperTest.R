@@ -112,7 +112,8 @@ mockManualEditingsPlotDemographicsTest <- function(projectConfiguration){
 
   # demographic histogram
   dt <- dt[!(intersect(grep('demographics',plotName),
-                       grep('adults',scenario)))]
+                       c(grep('adults',scenario),
+                         grep('i1234',scenario))))]
   dt[plotName == 'demographics', `:=`(
     parameterIds = 'weight,gender',
     referenceScenario = 'adults_iv',
@@ -138,7 +139,7 @@ mockManualEditingsPlotDemographicsTest <- function(projectConfiguration){
 
   # Update relevant fields for 'demographics' range plot test
   dt[plotName == 'demographics', `:=`(
-    scenarios = gsub('adults_iv, ', '', scenarios),
+    scenarios = "toddler_iv, children_iv, school_children_iv, adolescents_iv",
     referenceScenario = 'adults_iv',
     colorLegend = 'pediatrics|adults',
     ylimit_linear = 'c(0,NA)',
@@ -191,6 +192,243 @@ mockManualEditingsPlotSensitivityTest <- function(projectConfiguration,
                               plotCaptionAddon = 'Displayed are  model parameters participating to a total of `90` percent of the sensitivity .'))
 
   xlsxWriteData(wb = wb, sheetName  = sheetName, dt = dt)
+
+  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+
+}
+mockManualEditingsPlotTimeProfileTest <- function(projectConfiguration){
+
+  sheetName <- 'TimeProfileTest'
+  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+
+  # create new timerange tags
+  dtTimeRange <- xlsxReadData(wb, sheetName = "TimeRange")
+  dtTimeRange <- rbind(
+    dtTimeRange,
+    data.table(
+      tag = "h0_6",
+      captionText = "Zoom on first 6 hours",
+      timeLabel = "Time",
+      timeShift = 0
+    ),
+    data.table(
+      tag = "h6_24",
+      captionText = "Zoom on time range 6 to 24 hours",
+      timeLabel = "Time after dose",
+      timeShift = 6
+    )
+  ) %>%
+    unique()
+
+  xlsxWriteData(wb = wb, sheetName = "TimeRange", dt = dtTimeRange)
+
+
+  dt <- xlsxReadData(wb = wb,sheetName = sheetName)
+
+  # add custom time ranges
+  dt[, timeRange_h0_6 := as.character(NA)]
+  dt[, timeRange_h0_6 := NA]
+  dt[, timeRange_h6_24 := as.character(NA)]
+  dt[, timeRange_h6_24 := NA]
+
+
+  # individual data
+  dt[grep('i1234',scenario),`:=`(
+    plotCaptionAddon = 'IV application',
+    timeRange_firstApplication = NA,
+    timeRange_lastApplication = NA
+  )]
+  dt[grep('i1234',scenario)[c(1,2,3)],`:=`(
+    plotName = 'Individuals_withData',
+    outputPathIds = "Plasma, (CYP3A4total, CYP3A4Liver)",
+    yScale = 'linear',
+    dataGroupIds = "1234_adults_iv",
+    individualIds = toupper(gsub('_iv','',scenario)),
+    nFacetColumns = 2
+  )]
+  dt[grep('i1234',scenario)[c(4,5,6)],`:=`(
+    plotName = 'Individuals_withoutData',
+    nFacetColumns = 3,
+    yScale = 'log'
+  )]
+
+  dtnew <- dt[plotName == 'Individuals_withData']
+  dtnew[,`:=`(
+    plotName = 'Individuals_withData_pvo',
+    outputPathIds = "(CYP3A4total, CYP3A4Liver)",
+    plot_TimeProfiles = 0,
+    foldDistance_PvO = 1.5,
+    plot_PredictedVsObserved = 1,
+    plot_ResidualsAsHistogram = 1,
+    plot_ResidualsVsObserved = 1,
+    plot_ResidualsVsTime = 1,
+    plot_QQ = 1
+  )]
+
+  dt <- rbind(dt,dtnew)
+
+  # virtualpop
+  dt[scenario == 'p_1234_adults_iv',`:=`(
+    plotCaptionAddon = 'IV application',
+    timeRange_firstApplication = NA,
+    timeRange_lastApplication = NA,
+    individualIds = '*',
+    plotName = 'VirtualTwin',
+    outputPathIds = "Plasma",
+    yScale = 'linear',
+    nFacetColumns = 3
+
+  )]
+
+  dtnew <- dt[plotName == 'VirtualTwin']
+  dtnew[,`:=`(
+        plotName = 'VirtualTwin_withData_all',
+        outputPathIds = "Plasma",
+        yScale = 'log',
+        dataGroupIds = "1234_adults_iv",
+        facetScale = 'free',
+        timeUnit = 'min'
+  )]
+
+  dt <- rbind(dt,dtnew)
+
+  dtnew <- dt[plotName == 'VirtualTwin']
+  dtnew[,`:=`(
+    plotName = 'VirtualTwin_withData_selected',
+    outputPathIds = "Plasma",
+    yScale = 'log',
+    ylimit_log = 'c(0.01,100)',
+    dataGroupIds = "1234_adults_iv",
+    individualIds = paste(dt[plotName == 'Individuals_withData']$individualIds,collapse = ', ')
+  )]
+
+  dt <- rbind(dt,dtnew)
+
+  dtnew <- dt[plotName == 'VirtualTwin_withData_selected']
+  dtnew[,`:=`(
+    plotName = 'VirtualTwin_withReferenceInd',
+    referenceScenario = dt[grep('i1234',scenario)[4]]$scenario,
+    colorLegend = 'test individual | reference individual'
+  )]
+
+  dt <- rbind(dt,dtnew)
+
+  dtnew <- dt[plotName == 'VirtualTwin_withData_selected']
+  dtnew[,`:=`(
+    plotName = 'VirtualTwin_withReferencePop',
+    referenceScenario = 'adults_iv',
+    colorLegend = 'test individual | reference population'
+  )]
+
+  dtnew <- dt[plotName == 'VirtualTwin_withData_selected']
+  dtnew[,`:=`(
+    plotName = 'VirtualTwin_withData_selected_pvo',
+    individualIds = paste0('(',individualIds,')'),
+    outputPathIds = "Plasma",
+    plot_TimeProfiles = 0,
+    foldDistance_PvO = 1.5,
+    plot_PredictedVsObserved = 1
+  )]
+
+  dt <- rbind(dt,dtnew)
+
+
+  dt[scenario == 'toddler_iv',`:=`(
+    plotName = 'Pop_withoutData',
+    plotCaptionAddon = 'IV application',
+    timeRange_firstApplication = NA,
+    timeRange_lastApplication = NA,
+    outputPathIds = "Plasma, CYP3A4total, CYP3A4Liver",
+    yScale = 'linear',
+    nFacetColumns = 3
+  )]
+
+  dt[scenario == 'adults_iv',`:=`(
+    plotName = 'Pop_withIndividualData',
+    plotCaptionAddon = 'IV application',
+    timeRange_firstApplication = NA,
+    timeRange_lastApplication = NA,
+    outputPathIds = "Plasma, (CYP3A4total, CYP3A4Liver)",
+    yScale = 'log',
+    dataGroupIds = "1234_adults_iv",
+    nFacetColumns = 2
+  )]
+
+  dtnew <- dt[plotName == 'Pop_withIndividualData']
+  dtnew[,`:=`(
+    plotName = 'Pop_withAggregatedData',
+    dataGroupIds = "1234_adults_iv_aggregated"
+  )]
+
+  dt <- rbind(dt,dtnew)
+
+  dtnew <- dt[plotName == 'Pop_withIndividualData']
+  dtnew[,`:=`(
+    plotName = 'Pop_withAggregatedData_Percentiles',
+    dataGroupIds = "1234_adults_po_aggregated"
+  )]
+
+  dt <- rbind(dt,dtnew)
+
+  dtnew <- dt[plotName == 'Pop_withAggregatedData']
+  dtnew[,`:=`(
+    plotName = 'Pop_withAggregatedData_pvo',
+    outputPathIds = "Plasma",
+    plot_TimeProfiles = 0,
+    plot_PredictedVsObserved = 1
+  )]
+
+  dt <- rbind(dt,dtnew)
+
+
+  dtnew <- dt[plotName == 'Pop_withoutData']
+  dtnew[,`:=`(
+    plotName = 'Pop_withReference',
+    outputPathIds = "Plasma, CYP3A4total",
+    referenceScenario = "adults_iv",
+    colorLegend = 'toddler | adults',
+    yScale = 'log',
+    timeOffset = -4,
+    timeOffset_Reference = -6
+  )]
+
+  dt <- rbind(dt,dtnew)
+
+  dtnew <- dt[plotName == 'Pop_withReference']
+  dtnew[,`:=`(
+    plotName = 'Pop_withReference_2',
+    outputPathIds = "Plasma, (CYP3A4total, CYP3A4Liver)",
+    referenceScenario = "adults_iv",
+    colorLegend = 'toddler | adults'
+  )]
+  dt <- rbind(dt,dtnew)
+
+
+  dtnew <- dt[plotName == 'Pop_withoutData']
+  dtnew[,`:=`(
+    plotName = 'Pop_withTimeRanges',
+    timeRange_h0_6 = "c(0,6)",
+    timeRange_h6_24 = "c(6,24)",
+    splitPlotsPerTimeRange = 0
+  )]
+  dt <- rbind(dt,dtnew)
+
+
+  dtnew <- dt[plotName == 'Pop_withIndividualData']
+  dtnew[,`:=`(
+    plotName = 'Pop_withTimeRanges_pvo',
+    timeRange_h0_6 = "c(0,6)",
+    timeRange_h6_24 = "c(6,24)",
+    splitPlotsPerTimeRange = 0,
+    outputPathIds = "Plasma",
+    plot_TimeProfiles = 0,
+    foldDistance_PvO = 1.5,
+    plot_PredictedVsObserved = 1
+  )]
+  dt <- rbind(dt,dtnew)
+
+  xlsxWriteData(wb = wb, sheetName  = sheetName, dt = dt)
+
 
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
 

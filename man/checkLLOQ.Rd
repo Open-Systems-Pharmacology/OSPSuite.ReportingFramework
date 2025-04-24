@@ -4,14 +4,24 @@
 \alias{checkLLOQ}
 \title{Sets values which do not match the LLOQ criteria to NA}
 \usage{
-checkLLOQ(aggregatedData, lloq3Columns, lloq2Columns)
+checkLLOQ(
+  aggregatedData,
+  lloqCheckColumns2of3,
+  lloqCheckColumns1of2,
+  aggregationFlag
+)
 }
 \arguments{
-\item{aggregatedData}{`data.table` with aggregated data.}
+\item{aggregatedData}{A `data.table` with aggregated data.}
 
-\item{lloq3Columns}{A character vector specifying columns to check for LLOQ (Lower Limit of Quantification) for 3/3 data points. Default is NULL.}
+\item{lloqCheckColumns2of3}{A character vector specifying columns to check for LLOQ (Lower Limit of Quantification) for 1/3 data points.
+Default is NULL, is used only for aggregationFlag "Custom".}
 
-\item{lloq2Columns}{A character vector specifying columns to check for LLOQ for 2/3 data points. Default is NULL.}
+\item{lloqCheckColumns1of2}{A character vector specifying columns to check for LLOQ for 2/3 data points.
+Default is NULL, is used only for aggregationFlag "Custom".}
+
+\item{aggregationFlag}{A character string indicating the aggregation method.
+Options include "GeometricStdDev", "ArithmeticStdDev", "Percentiles", or "Custom".}
 }
 \value{
 Updated aggregatedData `data.table`.

@@ -8,14 +8,13 @@ plotTimeProfiles(
   projectConfiguration,
   onePlotConfig,
   dataObserved,
-  scenarioResults = list(),
-  nFacetColumns = 2,
+  scenarioResults,
   nMaxFacetRows = 4,
   facetAspectRatio = 0.5,
   aggregationFlag = c("GeometricStdDev", "ArithmeticStdDev", "Percentiles", "Custom"),
   percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1, 3, 5)],
   customFunction = NULL,
-  referenceScaleVector = list(Simulation = c(NA, NA), Reference = c(NA, NA)),
+  referenceScaleVector = list(),
   ...
 )
 }
@@ -25,12 +24,7 @@ including file paths and scenario definitions. This is essential for the functio
 
 \item{dataObserved}{A data.table or DataCombined object containing the observed data to be plotted.}
 
-\item{scenarioResults}{A list with simulated scenario results. This parameter may be an empty list or
-contain only some of all scenarios defined in the project configuration, in which
-case the function will attempt to load missing scenario results from the specified folder.}
-
-\item{nFacetColumns}{An integer specifying the maximum number of facet columns (default is 2)
-used for the facet type "by Order".}
+\item{scenarioResults}{A list with simulated scenario results.}
 
 \item{nMaxFacetRows}{An integer specifying the maximum number of facet rows (default is 4)
 used for all facet types.}
@@ -57,20 +51,24 @@ A custom function should take a numeric vector `y` as input and return a list co
 it is used in plot legends and captions. It must be a concatenation of the descriptor of yValues and the descriptor of yMin - yMax range
 separated by "|" (e.g., "mean | standard deviation" or "median | 5th - 95th percentile").}
 
-\item{referenceScaleVector}{A named list that configures labels and colors for the display of
-reference scenarios. The names of the list are displayed as labels in the legend.
+\item{referenceScaleVector}{A named list that configures colors for the display of
+reference scenarios. The names msut be consistent with the labes defined in the config table column
+colorLegend. First entry corresponds to aesthetic 'color', second entry to aesthetic 'fill',
 
-Default:
 referenceScaleVector = list(
-  Simulation = c(NA, NA),
-  Reference = c(NA, NA)
-)}
+  Simulation = c('blue', 'lightblue'),
+  Reference = c('darkred', 'red')
+)
+# default is list()}
 
 \item{configTableSheet}{The name of the sheet in the Excel plot configuration file that defines
 the plot settings.}
 
 \item{subfolder}{A character string specifying the subfolder within the output directory where
 the plots will be saved. Default is name of configTableSheet}
+
+\item{nFacetColumns}{An integer specifying the maximum number of facet columns (default is 2)
+used for the facet type "by Order".}
 }
 \value{
 Generates time profile plots and saves them to the specified output directory.

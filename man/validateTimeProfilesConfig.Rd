@@ -4,7 +4,12 @@
 \alias{validateTimeProfilesConfig}
 \title{Validation of config table for time profiles plots}
 \usage{
-validateTimeProfilesConfig(configTable, dataObserved, ...)
+validateTimeProfilesConfig(
+  configTable,
+  dataObserved = NULL,
+  scenarioResults,
+  ...
+)
 }
 \arguments{
 \item{configTable}{Plot configuration table.}

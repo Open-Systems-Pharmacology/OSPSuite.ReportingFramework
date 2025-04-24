@@ -62,7 +62,7 @@ getOutputPathIds <- function(wbPlots) {
     sheetName = "Outputs",
     skipDescriptionRow = TRUE
   ) %>%
-    setnames(old = "displayName", new = "displayNameOutputs")
+    setnames(old = "displayName", new = "displayNameOutput")
 
   dtOutputPaths[, displayUnit := gsub("Âµ", "\u00B5", as.character(displayUnit))]
   dtOutputPaths[is.na(displayUnit), displayUnit := ""]

@@ -4,19 +4,22 @@
 #'
 #' This function reads and processes data based on the provided project configuration.
 #'
-#' @template projectConfig
-#' @param spreadData If TRUE, information derived from observed data, such as identifiers
-#'   and biometrics, is spread to other tables.
+#' @param projectConfiguration An object containing project configuration details, including the path to the data importer configuration file.
+#' @param spreadData If TRUE, information derived from observed data, such as identifiers and biometrics, is spread to other tables.
+#' @param dataClassType A character string indicating the type of data class to process. Options are "timeprofile" or "pkParameter".
+#' @param filePathFilter A character vector with dataFiles to be selected, if NULL (default) all are selected.
 #'
-#' @return Processed data based on the dictionary.
+#' @return A `data.table` containing the processed data based on the dictionary. The structure includes relevant columns defined in the data dictionary.
 #' @export
 readObservedDataByDictionary <- function(projectConfiguration,
                                          spreadData = TRUE,
-                                         dataClassType = c("timeprofile", "pkParameter")) {
+                                         dataClassType = c("timeprofile", "pkParameter"),
+                                         filePathFilter = NULL) {
   # avoid warning for global variable
   individualId <- outputPathId <- dataType <- NULL
 
   dataClassType <- match.arg(dataClassType)
+
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$dataImporterConfigurationFile)
   dataList <- xlsxReadData(
@@ -30,6 +33,11 @@ readObservedDataByDictionary <- function(projectConfiguration,
     pkParameter = dataList[dataClass %in% grep("^pk", unlist(DATACLASS), value = TRUE)]
   )
   if (nrow(dataList) == 0) stop(paste("no datafiles defined for", dataClassType))
+
+  if (!is.null(filePathFilter)) {
+    checkmate::assertNames(filePathFilter,subset.of = dataList$dataFile)
+    dataList <- dataList[dataFile %in% filePathFilter]
+  }
 
   checkmate::assertFileExists(fs::path_abs(
     start = projectConfiguration$projectConfigurationDirPath,
@@ -136,12 +144,12 @@ readObservedDataByDictionary <- function(projectConfiguration,
 
 #' Validate Observed Data
 #'
-#' This function checks the integrity and validity of observed data in a data.table.
+#' This function checks the integrity and validity of observed data in a `data.table`.
 #' It verifies the presence of required attributes, checks for duplicates, and ensures that
 #' there are no missing or empty values in the relevant columns. Additionally, it checks
 #' for ambiguities in the Y unit and validates error type columns.
 #'
-#' @param dataDT A data.table containing observed data with the following relevant columns:
+#' @param dataDT A `data.table` containing observed data with the following relevant columns:
 #'   - `individualId`: Unique identifier for individuals.
 #'   - `group`: Group identifier.
 #'   - `outputPathId`: Identifier for output paths.
@@ -257,7 +265,6 @@ validateObservedData <- function(dataDT, dataClassType) {
   }
 }
 
-
 #' Read data dictionary
 #'
 #' This function reads the data dictionary based on the provided file and sheet.
@@ -267,7 +274,7 @@ validateObservedData <- function(dataDT, dataClassType) {
 #' @param data The data to be used with the dictionary.
 #' @param dataClass Class of data, either "tp Individual" or "tp Aggregated".
 #'
-#' @return The data dictionary.
+#' @return A `data.table` containing the data dictionary.
 #' @keywords internal
 readDataDictionary <- function(dictionaryFile,
                                sheet,
@@ -357,7 +364,7 @@ readDataDictionary <- function(dictionaryFile,
 #' @param dataFilter The filter to be applied to the data.
 #' @param dict The dictionary to be used for conversion.
 #' @param dictionaryName The name of the dictionary.
-#' @return The converted data.
+#' @return A `data.table` containing the converted data.
 #' @keywords internal
 convertDataByDictionary <- function(data,
                                     dataFilter,
@@ -433,7 +440,7 @@ convertDataByDictionary <- function(data,
 #'
 #' @inheritParams convertDataByDictionary
 #'
-#' @return `data.table` with converted columns.
+#' @return A `data.table` with converted columns.
 #' @keywords internal
 convertBiometrics <- function(data, dict, dictionaryName) {
   # Initialize variables used for data.tables
@@ -478,10 +485,9 @@ convertBiometrics <- function(data, dict, dictionaryName) {
 #' This function updates the Data Groups sheet in an Excel workbook based on a provided data table.
 #' It reads existing data group IDs, merges them with new data, and ensures that the identifiers remain unique.
 #'
-#' @param projectConfiguration An object of class `ProjectConfiguration` list containing configuration details, including:
-#'   - `plotsFile`: A string representing the file path to the Excel workbook containing the Data Groups sheet.
-#'
-#' @param dataDT A data.table containing the new data to be added to the Data Groups sheet.
+#' @param projectConfiguration An object of class `ProjectConfiguration`
+#' containing configuration details
+#' @param dataDT A `data.table` containing the new data to be added to the Data Groups sheet.
 #' It must have columns that can be matched with existing identifiers, including "group", "studyId", and "studyArm".
 #'
 #' @details
@@ -536,10 +542,9 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
 #' This function updates the Outputs sheet in an Excel workbook based on a provided data table,
 #' ensuring that output path IDs remain unique.
 #'
-#' @param projectConfiguration An object of class `ProjectConfiguration` containing configuration details, including:
-#'   - `plotsFile`: A string representing the file path to the Excel workbook containing the Outputs sheet.
+#' @param projectConfiguration An object of class `ProjectConfiguration` containing configuration details.
 #'
-#' @param dataDT A data.table containing new output path IDs to be added to the Outputs sheet.
+#' @param dataDT A `data.table` containing new output path IDs to be added to the Outputs sheet.
 #' It must include a column named "outputPathId".
 #'
 #' @details
@@ -575,18 +580,77 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
   return(invisible())
 }
 
+#' Add biometrics information to config
+#'
+#' @template projectConfig
+#' @param dataDT A `data.table` with observed data.
+#' @param overwrite If TRUE, existing rows will be overwritten.
+#' @export
+addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALSE) {
+  if (!("individualId" %in% names(dataDT))) {
+    return(invisible())
+  }
+
+  checkmate::assertFileExists(projectConfiguration$individualsFile)
+
+  wb <- openxlsx::loadWorkbook(projectConfiguration$individualsFile)
+
+  dtIndividualBiometrics <- xlsxReadData(wb = wb, sheetName = "IndividualBiometrics")
+  if (overwrite) {
+    dtIndividualBiometrics <- dtIndividualBiometrics[1, ]
+  }
+
+  biometrics <-
+    dataDT %>%
+    dplyr::select(
+      c(
+        "individualId",
+        names(dataDT)[unlist(lapply(dataDT, attr, "columnType")) == "biometrics"]
+      )
+    ) %>%
+    unique()
+
+  for (col in names(biometrics)) {
+    newName <- grep(col, names(dtIndividualBiometrics), ignore.case = TRUE, value = TRUE)
+    if (newName != "") {
+      data.table::setnames(biometrics, old = col, new = newName)
+    }
+  }
+
+  if (!("species" %in% names(biometrics))) biometrics[["species"]] <- ospsuite::Species$Human
+
+  # Merge old and new tables
+  dtIndividualBiometrics <-
+    rbind(dtIndividualBiometrics,
+          biometrics, # nolint indentation_linter
+          fill = TRUE
+    )
+
+  # If overwrite FALSE take original located at the top, otherwise take new rows located at the bottom
+  dtIndividualBiometrics <-
+    dtIndividualBiometrics[!duplicated(dtIndividualBiometrics,
+                                       by = "individualId",
+                                       fromLast = overwrite
+    )]
+  xlsxWriteData(wb = wb, sheetName = "IndividualBiometrics", dt = dtIndividualBiometrics)
+
+  openxlsx::saveWorkbook(wb, projectConfiguration$individualsFile, overwrite = TRUE)
+
+  return(invisible())
+}
+
 # Converts data.table with observed data to `DataCombined` object ----------
 
-#' Converts data.table with observed data to `DataCombined` object
+#' Converts data.table with observed data to `ospsuite::DataCombined` object
 #'
-#' The data.table must be formatted like a table produced by `readObservedDataByDictionary`.
+#' The `data.table` must be formatted like a table produced by `readObservedDataByDictionary`.
 #'
-#' @param dataDT `data.table` to convert.
+#' @param dataDT A `data.table` to convert.
 #'
-#' @return Object of class `DataCombined`.
+#' @return An object of class `DataCombined`.
 #' @export
 convertDataTableToDataCombined <- function(dataDT) {
-  validateObservedData(dataDT = dataDT)
+  validateObservedData(dataDT = dataDT,dataClassType = 'timeprofile')
 
   groupedData <- groupDataByIdentifier(dataDT = dataDT)
 
@@ -607,9 +671,9 @@ convertDataTableToDataCombined <- function(dataDT) {
 
 #' Groups the data by identifier
 #'
-#' @param dataDT `data.table` to be grouped.
+#' @param dataDT A `data.table` to be grouped.
 #'
-#' @return List with grouped data.
+#' @return A list with grouped data.
 #' @keywords internal
 groupDataByIdentifier <- function(dataDT) {
   checkmate::assert_disjunct(names(dataDT), ".groupBy")
@@ -637,9 +701,9 @@ groupDataByIdentifier <- function(dataDT) {
 
 #' Function to create data sets from grouped data
 #'
-#' @param groupData Data.table unique for identifier.
+#' @param groupData A `data.table` unique for identifier.
 #'
-#' @return Object of class 'DataSet'.
+#' @return An object of class 'DataSet'.
 #' @keywords internal
 createDataSets <- function(groupData) {
   # Initialize variables used for data.tables
@@ -688,10 +752,10 @@ createDataSets <- function(groupData) {
 
 #' Add meta data to a data set
 #'
-#' @param dataSet `DataSet` object with observed data.
+#' @param dataSet A `DataSet` object with observed data.
 #' @param groupData Corresponding `data.table` with meta data.
 #'
-#' @return `DataSet` with observed data with added metadata.
+#' @return A `DataSet` with observed data with added metadata.
 #' @keywords internal
 addMetaDataToDataSet <- function(dataSet, groupData) {
   metaColumns <-
@@ -710,74 +774,15 @@ addMetaDataToDataSet <- function(dataSet, groupData) {
   return(dataSet)
 }
 
-#' Add biometrics information to config
-#'
-#' @template projectConfig
-#' @param dataDT `data.table` with observed data.
-#' @param overwrite If TRUE, existing rows will be overwritten.
-#' @export
-addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALSE) {
-  if (!("individualId" %in% names(dataDT))) {
-    return(invisible())
-  }
-
-  checkmate::assertFileExists(projectConfiguration$individualsFile)
-
-  wb <- openxlsx::loadWorkbook(projectConfiguration$individualsFile)
-
-  dtIndividualBiometrics <- xlsxReadData(wb = wb, sheetName = "IndividualBiometrics")
-  if (overwrite) {
-    dtIndividualBiometrics <- dtIndividualBiometrics[1, ]
-  }
-
-  biometrics <-
-    dataDT %>%
-    dplyr::select(
-      c(
-        "individualId",
-        names(dataDT)[unlist(lapply(dataDT, attr, "columnType")) == "biometrics"]
-      )
-    ) %>%
-    unique()
-
-  for (col in names(biometrics)) {
-    newName <- grep(col, names(dtIndividualBiometrics), ignore.case = TRUE, value = TRUE)
-    if (newName != "") {
-      data.table::setnames(biometrics, old = col, new = newName)
-    }
-  }
-
-  if (!("species" %in% names(biometrics))) biometrics[["species"]] <- ospsuite::Species$Human
-
-  # Merge old and new tables
-  dtIndividualBiometrics <-
-    rbind(dtIndividualBiometrics,
-      biometrics, # nolint indentation_linter
-      fill = TRUE
-    )
-
-  # If overwrite FALSE take original located at the top, otherwise take new rows located at the bottom
-  dtIndividualBiometrics <-
-    dtIndividualBiometrics[!duplicated(dtIndividualBiometrics,
-      by = "individualId",
-      fromLast = overwrite
-    )]
-  xlsxWriteData(wb = wb, sheetName = "IndividualBiometrics", dt = dtIndividualBiometrics)
-
-  openxlsx::saveWorkbook(wb, projectConfiguration$individualsFile, overwrite = TRUE)
-
-  return(invisible())
-}
-
 # Converts `DataCombined` object to data.table  ----------
 
 #' Converts object of class `DataCombined` to data.table with attributes.
 #'
-#' Format corresponds to data.table produced by `readObservedDataByDictionary`.
+#' Format corresponds to `data.table` produced by `readObservedDataByDictionary`.
 #'
-#' @param datacombined The input DataCombined object.
+#' @param datacombined The input `DataCombined` object.
 #'
-#' @return `data.table`.
+#' @return A `data.table` containing the converted data.
 #' @export
 convertDataCombinedToDataTable <- function(datacombined) {
   # Initialize variables used for data.tables
@@ -809,23 +814,21 @@ convertDataCombinedToDataTable <- function(datacombined) {
 #' percentiles, or a user-defined custom function.
 #'
 #' The function also checks for values below the Lower Limit of Quantification (LLOQ) and adjusts the
-#' aggregated results accordingly.
-#'
-#' For custom functions, the `lloq3Columns` and `lloq2Columns` parameters are required to specify
-#' which columns should be checked against LLOQ thresholds. For other aggregation methods,
-#' these parameters can be set to NULL, as the function will handle LLOQ checks internally based
-#' on the aggregation type.
+#' aggregated results accordingly. For aggregationFlag 'GeometricStdDev' and 'GeometricStdDev', the statistics at any time point will only be calculated
+#' if at least 2/3 of the individual data were measured and were above the lower limit of quantification (lloq).
+#' For aggregationFlag 'Percentile', the statistics will only be calculated if less than or equal to 1/2 of the data is above LLOQ.
+#' If you use aggregationFlag 'Custom', please set parameters lloqCheckColumns2of3 and lloqCheckColumns1of2 accordingly.
 #'
 #' A custom function should take a numeric vector `y` as input and return a list containing:
 #' - `yValues`: The aggregated value (e.g., mean).
-#' - `yMin`: The lower value of the aggregated data, (e.g. mean - sd).
-#' - `yMax`: The upper value of the aggregated data, (e.g. mean + sd).
+#' - `yMin`: The lower value of the aggregated data (e.g., mean - sd).
+#' - `yMax`: The upper value of the aggregated data (e.g., mean + sd).
 #' - `yErrorType`: A string indicating the type of error associated with the aggregation,
 #' it is used in plot legends and captions.
 #' It must be a concatenation of the descriptor of yValues and the descriptor of yMin - yMax range
 #' separated by "|" (e.g., "mean | standard deviation" or "median | 5th - 95th percentile").
 #'
-#' @param dataObserved A data.table containing observed data.
+#' @param dataObserved A `data.table` containing observed data.
 #' @param groups A character vector specifying the groups to aggregate.
 #' If NULL, all available groups are used.
 #' @param aggregationFlag A character string indicating the aggregation method.
@@ -836,12 +839,14 @@ convertDataCombinedToDataTable <- function(datacombined) {
 #' Default is 'aggregated'.
 #' @param customFunction A custom function for aggregation if aggregationFlag is "Custom".
 #' Default is NULL.
-#' @param lloq3Columns A character vector specifying columns to check for LLOQ (Lower Limit of Quantification) for 3/3 data points. Default is NULL.
-#' @param lloq2Columns A character vector specifying columns to check for LLOQ for 2/3 data points. Default is NULL.
+#' @param lloqCheckColumns2of3 A character vector specifying columns to check for LLOQ (Lower Limit of Quantification) for 1/3 data points.
+#' Default is NULL, is used only for aggregationFlag "Custom".
+#' @param lloqCheckColumns1of2 A character vector specifying columns to check for LLOQ for 2/3 data points.
+#' Default is NULL, is used only for aggregationFlag "Custom".
 #'
-#' @return A data.table containing aggregated observed data.
+#' @return A `data.table` containing aggregated observed data.
 #' @export
-aggregatedObservedDataGroups <- function(dataObserved,
+aggregateObservedDataGroups <- function(dataObserved,
                                          groups = NULL,
                                          aggregationFlag = c(
                                            "GeometricStdDev",
@@ -849,11 +854,11 @@ aggregatedObservedDataGroups <- function(dataObserved,
                                            "Percentiles",
                                            "Custom"
                                          ),
-                                         percentiles = c(5, 50, 95),
-                                         groupSuffix = "aggregated",
-                                         customFunction = NULL,
-                                         lloq3Columns = NULL,
-                                         lloq2Columns = NULL) {
+                                        percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1,3,5)],
+                                        groupSuffix = "aggregated",
+                                        customFunction = NULL,
+                                        lloqCheckColumns2of3 = NULL,
+                                        lloqCheckColumns1of2 = NULL) {
   dataToAggregate <- prepareDataForAggregation(
     dataObserved = dataObserved,
     groups = groups,
@@ -872,7 +877,10 @@ aggregatedObservedDataGroups <- function(dataObserved,
     aggrCriteria = c("group", "outputPathId", "xValues")
   )
 
-  aggregatedData <- checkLLOQ(aggregatedData, lloq3Columns, lloq2Columns)
+  aggregatedData <- checkLLOQ(aggregatedData = aggregatedData,
+                              lloqCheckColumns2of3 = lloqCheckColumns2of3,
+                              lloqCheckColumns1of2 = lloqCheckColumns1of2,
+                              aggregationFlag = aggregationFlag)
 
   aggregatedData <- addUniqueColumns(dataToAggregate, aggregatedData)
   aggregatedData$dataClass <- DATACLASS$tpAggregated
@@ -884,9 +892,9 @@ aggregatedObservedDataGroups <- function(dataObserved,
 
 #' Prepares data for aggregation
 #'
-#' @inheritParams aggregatedObservedDataGroups
+#' @inheritParams aggregateObservedDataGroups
 #'
-#' @return Prepared data for aggregation.
+#' @return Prepared data for aggregation as a `data.table`.
 #' @keywords internal
 prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
   # avoid warning for global variable
@@ -895,6 +903,13 @@ prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
   if ("DataCombined" %in% class(dataObserved)) {
     dataObserved <- convertDataCombinedToDataTable(dataObserved)
   }
+
+  checkmate::assertDataTable(dataObserved, min.rows = 1)
+  checkmate::assertNames(names(dataObserved),
+                         must.include = c("xValues", "yValues", "lloq",
+                                          "individualId", "outputPathId", "group",
+                                          "dataType", "dataClass"))
+  checkmate::assertChoice(unique(dataObserved$dataClass), choices = DATACLASS$tpIndividual)
 
   groups <- getIndividualDataGroups(dataObserved, groups)
 
@@ -916,30 +931,45 @@ prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
 
 #' Sets values which do not match the LLOQ criteria to NA
 #'
-#' @param aggregatedData `data.table` with aggregated data.
-#' @inheritParams aggregatedObservedDataGroups
+#' @param aggregatedData A `data.table` with aggregated data.
+#' @inheritParams aggregateObservedDataGroups
 #'
 #' @return Updated aggregatedData `data.table`.
 #' @keywords internal
-checkLLOQ <- function(aggregatedData, lloq3Columns, lloq2Columns) {
+checkLLOQ <- function(aggregatedData, lloqCheckColumns2of3, lloqCheckColumns1of2,aggregationFlag) {
   # initialize data.table variables
   nBelowLLOQ <- numberOfPatients <- NULL
 
-  if (length(lloq3Columns) > 0) {
-    lLOQ3Filter <- aggregatedData[, (nBelowLLOQ / numberOfPatients) > (1 / 3)]
-    aggregatedData[, (lloq3Columns) := lapply(.SD, function(x) {
-      ifelse(lLOQ3Filter, NA, x)
+  if (aggregationFlag != 'Custom' &
+      (!is.null(lloqCheckColumns2of3) | !is.null(lloqCheckColumns1of2))){
+    warning(paste('input variable lloqCheckColumns2of3 and lloqCheckColumns1of2 are not used for aggregationFlag',aggregationFlag))
+    lloqCheckColumns2of3 = NULL
+    lloqCheckColumns1of2 = NULL
+  }
+
+  if (aggregationFlag %in% ospsuite::DataErrorType){
+    lloqCheckColumns2of3 = c('yValues','yErrorValues')
+  } else if (aggregationFlag %in% "Percentiles"){
+    lloqCheckColumns1of2 = c('yValues','yMin','yMax')
+  } else {
+    if (is.null(lloqCheckColumns2of3) & is.null(lloqCheckColumns1of2)){
+      stop('For custom aggregation please provide lloqCheckColumns2of3 or lloqCheckColumns1of2')
+    }
+  }
+
+  if (length(lloqCheckColumns2of3) > 0) {
+    aggregatedData[, (lloqCheckColumns2of3) := lapply(.SD, function(x) {
+      ifelse((nBelowLLOQ / numberOfIndividuals) > (2 / 3), NA, x)
     }),
-    .SDcols = lloq3Columns, by = .I
+    .SDcols = lloqCheckColumns2of3, by = .I
     ]
   }
 
-  if (length(lloq2Columns) > 0) {
-    lLOQ2Filter <- aggregatedData[, (nBelowLLOQ / numberOfPatients) >= (1 / 2)]
-    aggregatedData[, (lloq2Columns) := lapply(.SD, function(x) {
-      ifelse(lLOQ2Filter, NA, x)
+  if (length(lloqCheckColumns1of2) > 0) {
+    aggregatedData[, (lloqCheckColumns1of2) := lapply(.SD, function(x) {
+      ifelse((nBelowLLOQ / numberOfIndividuals) > (1 / 2), NA, x)
     }),
-    .SDcols = lloq2Columns, by = .I
+    .SDcols = lloqCheckColumns1of2, by = .I
     ]
   }
 
@@ -951,7 +981,7 @@ checkLLOQ <- function(aggregatedData, lloq3Columns, lloq2Columns) {
 #' @param dataObserved The observed data.
 #' @param aggregatedData The aggregated data.
 #'
-#' @return The updated aggregated data.
+#' @return The updated aggregated data as a `data.table`.
 #' @keywords internal
 addUniqueColumns <- function(dataObserved, aggregatedData) {
   identifier <- c("group", "outputPathId")
@@ -981,11 +1011,11 @@ addUniqueColumns <- function(dataObserved, aggregatedData) {
 
 #' Sets columnType attribute according to dictionary
 #'
-#' @param dataDT `data.table` with observed data.
+#' @param dataDT A `data.table` with observed data.
 #' @param dict Named list with columnNames and columnTypes; if NULL,
 #'  list is produced by template saved in package installation.
 #'
-#' @return `data.table` with attributes.
+#' @return A `data.table` with attributes.
 #' @keywords internal
 setDataTypeAttributes <- function(dataDT, dict = NULL) {
   if (is.null(dict)) {
@@ -1032,10 +1062,10 @@ setDataTypeAttributes <- function(dataDT, dict = NULL) {
 
 #' Select all columns where the attribute `columnType` matches the requirement
 #'
-#' @param dt `data.table` with attributes (e.g., imported by `readObservedDataByDictionary`).
-#' @param columnTypes Vector with required types.
+#' @param dt A `data.table` with attributes (e.g., imported by `readObservedDataByDictionary`).
+#' @param columnTypes A vector with required types.
 #'
-#' @return Vector with column names.
+#' @return A vector with column names.
 #' @export
 getColumnsForColumnType <- function(dt, columnTypes) {
   columnsWithAttributes <- unlist(lapply(dt, attr, "columnType"))
@@ -1047,12 +1077,12 @@ getColumnsForColumnType <- function(dt, columnTypes) {
 
 #' Update identifier columns in a data.table
 #'
-#' This function updates the specified identifier columns in a data.table by replacing commas with underscores.
+#' This function updates the specified identifier columns in a `data.table` by replacing commas with underscores.
 #' It also checks for the presence of commas in the columns and generates a warning message if found.
 #'
-#' @param dt The input data.table.
+#' @param dt The input `data.table`.
 #' @param identifierCols A character vector specifying the columns to be updated.
-#' @return The updated data.table.
+#' @return The updated `data.table`.
 #' @keywords internal
 convertIdentifierColumns <- function(dt, identifierCols) {
   for (col in identifierCols) {
@@ -1066,13 +1096,14 @@ convertIdentifierColumns <- function(dt, identifierCols) {
 }
 
 
-#' filters observed data for individual groups which are suited for
+#' Filters observed data for individual groups which are suited for
 #' aggregation or "Virtual Twin population" creation
 #'
-#' @inheritParams aggregatedObservedDataGroups
-#' @param minN  minimal number needed for group
+#' @inheritParams aggregateObservedDataGroups
+#' @param minN The minimal number needed for a group.
 #'
-#' @return vector with suitable group Ids
+#' @return A vector with suitable group Ids.
+#' @keywords internal
 getIndividualDataGroups <- function(dataObserved, groups, minN = 2) {
   # avoid warnings for global variables
   individualId <- dataClass <- dataType <- N <- NULL # nolint object_name_linter

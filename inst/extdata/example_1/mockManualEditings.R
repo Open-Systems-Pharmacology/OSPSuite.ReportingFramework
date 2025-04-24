@@ -336,11 +336,11 @@ mockManualEditings.DataGroups <- function(projectConfiguration, dataObserved, tu
 
     # add properties for concentration
     dtOutputs[outputPathId == "Concentration", outputPath := "Organism|PeripheralVenousBlood|DrugX|Plasma (Peripheral Venous Blood)"]
-    dtOutputs[outputPathId == "Concentration", displayNameOutputs := "DrugX Plasma"]
+    dtOutputs[outputPathId == "Concentration", displayNameOutput := "DrugX Plasma"]
     dtOutputs[outputPathId == "Concentration", displayUnit := "µg/L"]
     # add properties for fraction
     dtOutputs[outputPathId == "Fraction", outputPath := "Organism|Kidney|Urine|DrugX|Fraction excreted to urine"]
-    dtOutputs[outputPathId == "Fraction", displayNameOutputs := "Fraction excreted to urine"]
+    dtOutputs[outputPathId == "Fraction", displayNameOutput := "Fraction excreted to urine"]
 
     dtOutputs[, displayName := outputPathId]
 
@@ -525,7 +525,7 @@ mockManualEditings.TimePlot <- function(projectConfiguration, dataObserved, tuto
   } else if (tutorialstep == 5) {
     # add use case for different time ranges
     # add timerange columns with newly created timeranges
-    Plots[, timeRange_h0_6 := as.character(NA)]
+    dtPlots[, timeRange_h0_6 := as.character(NA)]
     dtPlots[, timeRange_h0_6 := NA]
     dtPlots[, timeRange_h6_24 := as.character(NA)]
     dtPlots[, timeRange_h6_24 := NA]

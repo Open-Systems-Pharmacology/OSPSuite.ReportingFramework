@@ -14,7 +14,7 @@ convertBiometrics(data, dict, dictionaryName)
 \item{dictionaryName}{The name of the dictionary.}
 }
 \value{
-`data.table` with converted columns.
+A `data.table` with converted columns.
 }
 \description{
 Converts biometric columns to default unit

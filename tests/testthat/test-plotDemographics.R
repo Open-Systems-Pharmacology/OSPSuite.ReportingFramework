@@ -40,8 +40,8 @@ test_that("PK histograms plots", {
     plotNames = 'pkparameter2',
     inputs = list(scenarioList = scenarioList,
                   pkParameterDT = pkParameterDT,
-                  colorVector = c( 'IV application' = 'red',
-                                   'PO application' = 'green'),
+                  colorVector = c( 'PO application' = 'red',
+                                   'IV application' = 'green'),
                   plotAsFrequency = TRUE)
   )
 
@@ -100,7 +100,7 @@ test_that("demographic range plots", {
   expect_equal(nrow(plotList[['demographics_weight']]),19)
 
   vdiffr::expect_doppelganger(
-    title = "weight_linear",
+    title = "demographics_weight_linear",
     fig = plotList$demographics_weight_linear
   )
 })
@@ -128,7 +128,7 @@ test_that("PK range plots", {
   expect_equal(nrow(plotList$pkparameter2_F_tEnd_A),21)
 
   vdiffr::expect_doppelganger(
-    title = "F_tEnd_log",
+    title = "pkparameter2_F_tEnd_log",
     fig = plotList$pkparameter2_F_tEnd_log
   )
 })

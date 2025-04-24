@@ -12,7 +12,7 @@ addUniqueColumns(dataObserved, aggregatedData)
 \item{aggregatedData}{The aggregated data.}
 }
 \value{
-The updated aggregated data.
+The updated aggregated data as a `data.table`.
 }
 \description{
 Add all columns of `dataObserved` which are unique for a group

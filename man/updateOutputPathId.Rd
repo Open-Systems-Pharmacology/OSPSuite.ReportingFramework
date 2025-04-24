@@ -7,10 +7,9 @@
 updateOutputPathId(projectConfiguration, dataDT)
 }
 \arguments{
-\item{projectConfiguration}{An object of class `ProjectConfiguration` containing configuration details, including:
-- `plotsFile`: A string representing the file path to the Excel workbook containing the Outputs sheet.}
+\item{projectConfiguration}{An object of class `ProjectConfiguration` containing configuration details.}
 
-\item{dataDT}{A data.table containing new output path IDs to be added to the Outputs sheet.
+\item{dataDT}{A `data.table` containing new output path IDs to be added to the Outputs sheet.
 It must include a column named "outputPathId".}
 }
 \value{

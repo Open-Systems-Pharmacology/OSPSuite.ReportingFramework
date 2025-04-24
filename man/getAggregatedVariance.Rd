@@ -13,18 +13,21 @@ getAggregatedVariance(
 )
 }
 \arguments{
-\item{dt}{A data.table containing the data to aggregate.}
+\item{dt}{A data.table containing the data to aggregate.
+It must include the column specified in `valueColumn`.}
 
-\item{aggregationFun}{A function to aggregate the data.}
+\item{aggregationFun}{A function to aggregate the data.
+This function should accept a numeric vector and return a list with aggregated values.}
 
 \item{valueColumn}{A string indicating the column name containing the values to aggregate.}
 
 \item{identifier}{A character vector specifying the columns to group by.}
 
-\item{direction}{A character string specifying the direction of aggregation, either 'y' or 'x'.}
+\item{direction}{A character string specifying the direction of aggregation,
+either 'y' or 'x'.}
 }
 \value{
-A data.table containing the aggregated variance results.
+A data.table containing the aggregated variance results, including the aggregated values and error types.
 }
 \description{
 This function calculates the aggregated variance based on the specified aggregation function and identifier.

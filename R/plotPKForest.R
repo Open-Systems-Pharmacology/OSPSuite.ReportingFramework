@@ -876,7 +876,7 @@ addDescriptions <- function(plotData, onePlotConfig, pkParameterDT) {
 
   #' Add Output Path Details to Plot Data
   plotData <- merge(plotData,
-    configEnv$outputPaths[, c("outputPathId", "displayNameOutputs", "displayUnit")] %>%
+    configEnv$outputPaths[, c("outputPathId", "displayNameOutput", "displayUnit")] %>%
       unique(),
     by = "outputPathId"
   )
@@ -1090,7 +1090,7 @@ getCaptionForForestPlot <- function(plotData,
 
   dtCaption <-
     plotData[, c(
-      "displayNameOutputs",
+      "displayNameOutput",
       "plotTag"
     )] %>% unique()
 
@@ -1105,7 +1105,7 @@ getCaptionForForestPlot <- function(plotData,
     ifelse("observed" %in% unique(plotData$type), " and observed ", ""),
     pktext,
     " of ",
-    pasteFigureTags(dtCaption, captionColumn = "displayNameOutputs"),
+    pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"),
     " on a ", ifelse(xScale == "linear", "linear", "logarithmic"),
     " x-scale."
   )

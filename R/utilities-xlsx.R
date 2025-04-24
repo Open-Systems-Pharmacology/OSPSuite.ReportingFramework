@@ -155,10 +155,20 @@ xlsxReadData <- function(wb, sheetName,
     dt[, (numericCols) := lapply(.SD, as.numeric), .SDcols = numericCols]
   }
 
-  # Trim whitespace for character columns
   characterCols <- setdiff(names(dt), numericCols)
   if (length(characterCols) > 0) {
+    # Trim whitespace for character columns
     dt[, (characterCols) := lapply(.SD, trimws), .SDcols = characterCols]
+    # Replace curly quotes with straight quotes
+    dt[, (characterCols) := lapply(.SD, function(x) {
+      if (is.character(x)) {
+        x <- gsub("“", "\"", x)  # Replace left double quote
+        x <- gsub("”", "\"", x)  # Replace right double quote
+        x <- gsub("‘", "'", x)   # Replace left single quote
+        x <- gsub("’", "'", x)   # Replace right single quote
+      }
+      return(x)
+    }), .SDcols = characterCols]
   }
 
   # Keeps NA and empty string consistent within one table
