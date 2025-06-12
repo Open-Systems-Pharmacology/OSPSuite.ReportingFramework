@@ -23,34 +23,32 @@ options are set for a valid run; if FALSE, options are set for an invalid run.}
        - 'onlyEPackage': Only generate ePackage without exporting figures.}
 }
 \description{
-Typically a workflow is applied in two different cases.
-1. As valid run, the result of a workflow is intended as a package,
-   which can be used to generate final reports, in this case figures
-   should not have watermarks, functions which manipulate inputs are not allowed,
-   and the workflow stops if an error occurs during.
-2. For exploratory analysis or preparation of a valid run.
+Sets options for a reporting frame work workflow.
 }
 \details{
-A workflow can also produce a ePackage (see vignette XXX)
-This function configures several options that affect the behavior of the
-reporting frame work workflow. It allows for the enabling or disabling of watermarks,
-controls the handling of failing plots, manages the execution of helper functions,
-and specifies ePackage generation and plot export options.
+This function configures options for a reporting framework workflow, which is typically applied in two distinct phases:
 
-Relevant options include:
+1. Exploratory Analysis: This phase involves preparation of outputs that are not yet qualified. In this case:
+   - Watermarks are not applied.
+   - Helper functions for building configuration tables are allowed.
 
-- `ospsuite.plots.watermark_enabled`: Set to TRUE when `isValidRun` is FALSE
-  to display watermarks on figures, and FALSE when `isValidRun` is TRUE.
+2. Production of Final Output: This phase involves generating the "final" output (a valid run). In this case:
+   - Figures should not have watermarks.
+   - Functions that manipulate inputs are not allowed.
+   - The workflow will stop if an error occurs during execution.
 
-- `OSPSuite.RF.skipFailingPlots`: Set to TRUE when `isValidRun` is FALSE
-  to skip plots that fail to generate, and FALSE when `isValidRun` is TRUE.
+Additionally, a workflow can produce an ePackage (see vignette XXX). This function allows you to enable or disable watermarks,
+control the handling of failing plots, manage the execution of helper functions, and specify options for ePackage generation and plot export.
 
-- `OSPSuite.RF.stopHelperFunction`: Set to TRUE when `isValidRun` is TRUE
-  to stop the execution of helper functions during valid runs.
+Relevant Options:
 
-- `OSPSuite.RF.withEPackage`: Set to TRUE if `ePackageGeneration` is either
-  'withEpackage' or 'onlyEpackage', indicating that EPackage generation should occur.
+- `ospsuite.plots.watermark_enabled`: Set to TRUE when `isValidRun` is FALSE to display watermarks on figures, and FALSE when `isValidRun` is TRUE.
 
-- `OSPSuite.RF.withPlotExport`: Set to TRUE if `ePackageGeneration` is either
-  'None' or 'withEpackage', indicating that plot export should occur.
+- `OSPSuite.RF.skipFailingPlots`: Set to TRUE when `isValidRun` is FALSE to skip plots that fail to generate, and FALSE when `isValidRun` is TRUE.
+
+- `OSPSuite.RF.stopHelperFunction`: Set to TRUE when `isValidRun` is TRUE to stop the execution of helper functions during valid runs.
+
+- `OSPSuite.RF.withEPackage`: Set to TRUE if `ePackageGeneration` is either 'withEpackage' or 'onlyEpackage', indicating that ePackage generation should occur.
+
+- `OSPSuite.RF.withPlotExport`: Set to TRUE if `ePackageGeneration` is either 'None' or 'withEpackage', indicating that plot export should occur.
 }

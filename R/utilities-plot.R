@@ -525,12 +525,12 @@ getColorVectorForLegend <- function(colorLegend, colorVector) {
 #'
 #' @return A character string representing the formatted caption text, which includes the captions and associated plot tags.
 #'
-pasteFigureTags <- function(dtCaption, captionColumn, endWithDot = FALSE) {
+pasteFigureTags <- function(dtCaption, captionColumn, endWithDot = FALSE,startWithBlank = FALSE) {
   # avoid warning for global variable
   plotTag <- NULL
 
   if (dplyr::n_distinct(dtCaption[[captionColumn]]) == 1) {
-    captionText <- unique(dtCaption[[captionColumn]])
+    captionText <- as.character(unique(dtCaption[[captionColumn]]))
   } else {
     captionTextVector <- dtCaption[, .(tags = paste0(
       get(captionColumn),
@@ -544,10 +544,12 @@ pasteFigureTags <- function(dtCaption, captionColumn, endWithDot = FALSE) {
     captionTextVector <- gsub(allTags, "", captionTextVector)
 
     captionText <- concatWithAnd(captionTextVector)
-
-    if (endWithDot & length(trimws(captionText)) > 0) {
-      captionText <- paste0(captionText, ".")
-    }
+  }
+  if (endWithDot && trimws(captionText) !="" && !grepl("\\.$", captionText)) {
+    captionText <- paste0(captionText, ".")
+  }
+  if (startWithBlank & trimws(captionText) !=""){
+    captionText <- paste0(' ',trimws(captionText))
   }
 
   return(captionText)

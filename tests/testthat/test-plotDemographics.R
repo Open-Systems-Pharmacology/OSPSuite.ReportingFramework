@@ -99,6 +99,7 @@ test_that("demographic range plots", {
   expect_equal(length(plotList),6)
   expect_equal(nrow(plotList[['demographics_weight']]),19)
 
+  set.seed(123)
   vdiffr::expect_doppelganger(
     title = "demographics_weight_linear",
     fig = plotList$demographics_weight_linear
@@ -127,6 +128,7 @@ test_that("PK range plots", {
 
   expect_equal(nrow(plotList$pkparameter2_F_tEnd_A),21)
 
+  set.seed(123)
   vdiffr::expect_doppelganger(
     title = "pkparameter2_F_tEnd_log",
     fig = plotList$pkparameter2_F_tEnd_log

@@ -1,3 +1,11 @@
+# ospsuite.reportingframework 0.4.2
+
+Update Tutorial
+
+# ospsuite.reportingframework 0.4.1
+
+Update Tests
+
 # ospsuite.reportingframework 0.4.0
 
 * Development Version

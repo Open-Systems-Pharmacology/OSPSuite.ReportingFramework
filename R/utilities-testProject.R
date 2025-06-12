@@ -1,46 +1,9 @@
-#' Run Example 1 of the Reporting Framework
+#' Prepare Test Project
 #'
-#' This function sets up the environment for running Example 1 of the
-#' Reporting Framework, following the workflow outlined in the tutorial 'Tutorial-timeprofiles'.
+#' This function sets up the environment for running the test project of the
+#' Reporting Framework.
 #' It creates a directory structure if it does not exist, and sources
 #' the necessary R scripts to execute the workflow.
-#'
-#' @param rootDirectory A character string specifying the root directory
-#'                      where the example files will be created. If NULL,
-#'                      a temporary directory will be used.
-#'
-#' @return A character string indicating the path to the root directory
-#'         where the example files were created.
-#' @export
-runExample1 <- function(rootDirectory = NULL) {
-  library(data.table)
-  library(tidyr)
-
-  if (is.null(rootDirectory)) {
-    rootDirectory <- tempdir()
-  }
-  message(rootDirectory)
-  if (!dir.exists(file.path(rootDirectory, "Scripts", "ReportingFramework"))) {
-    dir.create(file.path(rootDirectory, "Scripts", "ReportingFramework"), recursive = TRUE)
-  }
-
-  setwd(file.path(rootDirectory, "Scripts", "ReportingFramework"))
-
-  source(system.file(
-    "extdata", "example_1", "workflow.R",
-    package = "ospsuite.reportingframework",
-    mustWork = TRUE
-  ))
-
-  return(rootDirectory)
-}
-#' Run Example 2 of the Reporting Framework
-#'
-
-#' Build Test Project Directory
-#'
-#' This function creates a test project directory for users to experiment with examples
-#' in the `ospsuite.reportingframework` package.
 #'
 #' @param rootDirectory A character string specifying the root directory for the test project.
 #'
@@ -53,13 +16,12 @@ runExample1 <- function(rootDirectory = NULL) {
 #' \dontrun{
 #' prepareTestProject("path/to/my/testDirectory")
 #' }
-
 #' @export
 prepareTestProject <- function(rootDirectory) {
 
   checkmate::assertDirectory(rootDirectory)
 
-  buildTestData(rootDirectory, verbose, writeTestData = FALSE)
+  buildTestData(rootDirectory, verbose = FALSE, writeTestData = FALSE)
 }
 #' Build Test Project Directory
 #'
@@ -120,7 +82,10 @@ buildTestData  <- function(rootDirectory = NULL,
 
   projectConfiguration <- iniTestProject(rootDirectory = rootDirectory,
                                          verbose = verbose,
-                                         modelFiles = modelFiles)
+                                         modelFiles = modelFiles,
+                                         instDirectory = instDirectory)
+
+  updateConfigTablesForTestProject(projectConfiguration,modelFiles)
 
   setupPopulationsForTest(projectConfiguration = projectConfiguration,
                                     instDirectory = instDirectory,
@@ -148,15 +113,23 @@ buildTestData  <- function(rootDirectory = NULL,
                                      modelFiles = modelFiles)
 
 
+  # Run scenarios and calculate PK
+  scenarioResultsInd <- setupSimulationsForTest(projectConfiguration = projectConfiguration,
+                                             scenarioList = scenarioListInd,
+                                             instDirectory = instDirectory,
+                                             writeTestData = writeTestData)
+
+
   setUpSensitivity(projectConfiguration = projectConfiguration,
                    scenarioListInd = scenarioListInd,
                    instDirectory = instDirectory,
                    writeTestData = writeTestData)
 
-  return(list(projectConfiguration = projectConfiguration,
+  return(invisible(list(projectConfiguration = projectConfiguration,
               scenarioList = scenarioList,
               scenarioResults = scenarioResults,
-              scenarioListInd = scenarioListInd))
+              scenarioListInd = scenarioListInd,
+              scenarioResultsInd = scenarioResultsInd)))
 }
 
 ## auxiliaries --------
@@ -164,7 +137,12 @@ buildTestData  <- function(rootDirectory = NULL,
 
 iniTestProject <- function(rootDirectory,
                            verbose,
-                           modelFiles){
+                           modelFiles,
+                           instDirectory = system.file(
+                             package = "ospsuite.reportingframework",
+                             "extdata",
+                             mustWork = TRUE)
+){
 
   if (is.null(rootDirectory)){
     rootDirectory <- file.path(tempdir(),'testProject')
@@ -186,6 +164,30 @@ iniTestProject <- function(rootDirectory,
 
   initLogfunction(projectConfiguration = projectConfiguration,verbose = verbose)
 
+  synchronizeDirectories(fromDir = file.path(instDirectory,'Models'),
+                         toDir = file.path(projectConfiguration$modelFolder))
+
+  return(projectConfiguration)
+}
+#' Update Tables for Test Projects
+#'
+#' This function updates the configuration tables for test projects in the
+#' Reporting Framework. It performs necessary modifications to the project
+#' configuration, including clearing existing data, setting up scenarios,
+#' and adding pharmacokinetic (PK) parameters.
+#'
+#' The function is designed to ensure that the project configuration is
+#' correctly set up for running simulations and analyses within the
+#' `ospsuite.reportingframework` package.
+#'
+#' @param projectConfiguration A ProjectConfiguration object containing the
+#'   details of the project configuration that needs to be updated.
+#' @param modelFiles A named character vector containing paths to the model
+#'   files used in the project.
+#'
+#' @return invisible(NULL)
+#' @keywords internal
+updateConfigTablesForTestProject <- function(projectConfiguration,modelFiles){
   # Perform mock manual editings on the project configuration tables
   # Clear existing data from relevant Excel sheets
   mockManualEditingsCleanup(projectConfiguration)
@@ -200,15 +202,12 @@ iniTestProject <- function(rootDirectory,
   # prepare displaynames for plotting
   mockManualEditingsdisplayNames(projectConfiguration)
 
-  return(projectConfiguration)
+  return(invisible())
 }
 
 setupPopulationsForTest <- function(projectConfiguration,instDirectory,writeTestData){
 
   # Copy files needed for example to the correct folders
-  synchronizeDirectories(fromDir = file.path(instDirectory,'Models'),
-                         toDir = file.path(projectConfiguration$modelFolder))
-
   # Recreate results
   synchronizeDirectories(fromDir = file.path(instDirectory,'Populations'),
                          toDir = file.path(projectConfiguration$populationsFolder))
@@ -217,7 +216,7 @@ setupPopulationsForTest <- function(projectConfiguration,instDirectory,writeTest
   # Exports all populations defined in the population.xlsx sheet "Demographics"
   suppressMessages(exportRandomPopulations(projectConfiguration = projectConfiguration,
                                            populationNames = NULL,
-                                           overwrite = TRUE))
+                                           overwrite = FALSE))
 
   if (writeTestData){
     if (!dir.exists(file.path(instDirectory,'Populations')))
@@ -245,6 +244,8 @@ setupSimulationsForTest <- function(projectConfiguration,scenarioList,instDirect
                                          ),
                                          withResimulation = FALSE)
 
+
+
   if (writeTestData){
     if (!dir.exists(file.path(instDirectory,EXPORTDIR$simulationResult)))
       dir.create(file.path(instDirectory,EXPORTDIR$simulationResult))
@@ -262,6 +263,7 @@ setupSimulationsForTest <- function(projectConfiguration,scenarioList,instDirect
 
   return(scenarioResults)
 }
+
 
 setupRandomDataForTest <- function(projectConfiguration,scenarioList,scenarioResults){
   pkParameterDT <- loadPKParameter(projectConfiguration = projectConfiguration,
@@ -287,7 +289,9 @@ setupVirtualTwinScenariosForTest <- function(projectConfiguration,modelFiles){
 
   newScenarios <- mockManualEditingsIndividuals(projectConfiguration,modelFiles)
 
-  exportVirtualTwinPopulations(projectConfiguration = projectConfiguration,modelFile = modelFiles['po'])
+  exportVirtualTwinPopulations(projectConfiguration = projectConfiguration,
+                               modelFile = modelFiles["po"],
+                               overwrite = TRUE)
 
   scenarioListInd <- createScenarios.wrapped(projectConfiguration = projectConfiguration,
                                           scenarioNames = newScenarios,
@@ -691,8 +695,10 @@ mockManualEditingsPKParameter <- function(projectConfiguration){
 #' This function updates the data dictionary for the project configuration with new data files.
 #'
 #' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
+#' @param withPK boolean, if TRUE configuration for pkparameter  are added
 #' @return NULL
-mockManualEditingsDataDictionary <- function(projectConfiguration){
+mockManualEditingsDataDictionary <- function(projectConfiguration,
+                                             withPK = TRUE){
 
   # add all data files which are used in the project
   wb <- openxlsx::loadWorkbook(projectConfiguration$dataImporterConfigurationFile)
@@ -702,29 +708,33 @@ mockManualEditingsDataDictionary <- function(projectConfiguration){
 
 
   dtDataFiles <- rbind(dtDataFiles,
-
-                       data.table(dataFile = file.path('..','..','Data','timeprofiles_adults_iv.csv'),
-                                  dictionary = 'tpDictionary_adults',
+                       data.table(fileIdentifier = 'tp_iv',
+                                  dataFile = file.path('..','..','Data','timeprofiles_adults_iv.csv'),
+                                  dictionary = 'tpDictionary',
                                   dataFilter = '',
                                   dataClass = DATACLASS$tpIndividual
                        ),
-                       data.table(dataFile = file.path('..','..','Data','timeprofiles_adults_po.csv'),
-                                  dictionary = 'tpDictionary_adults',
+                       data.table(fileIdentifier = 'tp_po',
+                                  dataFile = file.path('..','..','Data','timeprofiles_adults_po.csv'),
+                                  dictionary = 'tpDictionary',
                                   dataFilter = '',
                                   dataClass = DATACLASS$tpIndividual
-                       ),
-                       data.table(dataFile = file.path('..','..','Data','PK_absolute_values.csv'),
+                       ))
+  if (withPK == TRUE){
+    dtDataFiles <- rbind(dtDataFiles,
+                         data.table(fileIdentifier = 'pk_abs',
+                                    dataFile = file.path('..','..','Data','PK_absolute_values.csv'),
                                   dictionary = 'pkDictionary_absValues',
                                   dataFilter = '',
                                   dataClass = DATACLASS$pkAggregated
                        ),
-                       data.table(dataFile = file.path('..','..','Data','PK_po_iv_ratios.csv'),
+                       data.table(fileIdentifier = 'pk_ratios',
+                                  dataFile = file.path('..','..','Data','PK_po_iv_ratios.csv'),
                                   dictionary = 'pkDictionary_ratios',
                                   dataFilter = '',
                                   dataClass = DATACLASS$pkAggregated
-                       )
-
-  )
+                       ))
+  }
 
   xlsxWriteData(wb = wb, sheetName  = 'DataFiles', dt = dtDataFiles)
 
@@ -745,58 +755,57 @@ mockManualEditingsDataDictionary <- function(projectConfiguration){
     filter = NA,
     filterValue = NA)]
 
-  xlsxCloneAndSet(wb = wb,
-                  clonedSheet = "tpDictionary",
-                  sheetName = "tpDictionary_adults",
-                  dt = rbind(tpDictionaryH,tpDictionary))
+  xlsxWriteData(wb = wb,sheetName = "tpDictionary",dt = rbind(tpDictionaryH,tpDictionary))
 
   # - pkDictionary absolute
-  pkDictionary <- xlsxReadData(wb = wb,sheetName = 'pkDictionary',skipDescriptionRow = FALSE)
-  pkDictionaryH <- pkDictionary[1]
-  pkDictionary <- pkDictionary[targetColumn %in% c(
-    "studyId","group","outputPathId","pkParameter",
-    "values","unit","errorType","errorValues","numberOfIndividuals")]
+  if (withPK == TRUE){
+    pkDictionary <- xlsxReadData(wb = wb,sheetName = 'pkDictionary',skipDescriptionRow = FALSE)
+    pkDictionaryH <- pkDictionary[1]
+    pkDictionary <- pkDictionary[targetColumn %in% c(
+      "studyId","group","outputPathId","pkParameter",
+      "values","unit","errorType","errorValues","numberOfIndividuals")]
 
-  pkDictionary[targetColumn == 'group']$filterValue <- "paste(STUD,population,route,sep = '_')"
-  pkDictionary[ targetColumn == 'outputPathId']$sourceColumn = "outputPathId"
-  pkDictionary[ targetColumn == 'pkParameter']$sourceColumn = "pkParameter"
-  pkDictionary[ targetColumn == 'values']$sourceColumn = "geomean"
-  pkDictionary[ targetColumn == 'errorValues']$sourceColumn = "geosd"
-  pkDictionary[ targetColumn == 'unit']$sourceColumn = "unit"
-  pkDictionary[ targetColumn == 'numberOfIndividuals']$sourceColumn = "N"
-  pkDictionary[!is.na(sourceColumn),`:=`(
-    filter = NA,
-    filterValue = NA)]
+    pkDictionary[targetColumn == 'group']$filterValue <- "paste(STUD,population,route,sep = '_')"
+    pkDictionary[ targetColumn == 'outputPathId']$sourceColumn = "outputPathId"
+    pkDictionary[ targetColumn == 'pkParameter']$sourceColumn = "pkParameter"
+    pkDictionary[ targetColumn == 'values']$sourceColumn = "geomean"
+    pkDictionary[ targetColumn == 'errorValues']$sourceColumn = "geosd"
+    pkDictionary[ targetColumn == 'unit']$sourceColumn = "unit"
+    pkDictionary[ targetColumn == 'numberOfIndividuals']$sourceColumn = "N"
+    pkDictionary[!is.na(sourceColumn),`:=`(
+      filter = NA,
+      filterValue = NA)]
 
-  xlsxCloneAndSet(wb = wb,
-                  clonedSheet = "pkDictionary",
-                  sheetName = "pkDictionary_absValues",
-                  dt = rbind(pkDictionaryH,pkDictionary))
+    xlsxCloneAndSet(wb = wb,
+                    clonedSheet = "pkDictionary",
+                    sheetName = "pkDictionary_absValues",
+                    dt = rbind(pkDictionaryH,pkDictionary))
 
-  # - pkDictionary ratio
-  pkDictionary <- xlsxReadData(wb = wb,sheetName = 'pkDictionary',skipDescriptionRow = FALSE)
-  pkDictionaryH <- pkDictionary[1]
-  pkDictionary <- pkDictionary[targetColumn %in% c(
-    "studyId", "group", "outputPathId", "pkParameter",
-    "values", "unit", "errorType", "minValue", "maxValue", "numberOfIndividuals"
-  )]
-  pkDictionary[targetColumn == 'group']$filterValue <- "paste(STUD,population,'ratio',sep = '_')"
-  pkDictionary[ targetColumn == 'outputPathId']$sourceColumn = "outputPathId"
-  pkDictionary[ targetColumn == 'pkParameter']$sourceColumn = "pkParameter"
-  pkDictionary[ targetColumn == 'values']$sourceColumn = "geomean"
-  pkDictionary[ targetColumn == 'minValue']$sourceColumn = "CI_lower"
-  pkDictionary[ targetColumn == 'maxValue']$sourceColumn = "CI_upper"
-  pkDictionary[ targetColumn == 'errorType']$filterValue = '"geometric mean|90% CI lower|90% CI upper"'
-  pkDictionary[ targetColumn == 'unit']$sourceColumn = "unit"
-  pkDictionary[ targetColumn == 'numberOfIndividuals']$sourceColumn = "N"
-  pkDictionary[!is.na(sourceColumn),`:=`(
-    filter = NA,
-    filterValue = NA)]
+    # - pkDictionary ratio
+    pkDictionary <- xlsxReadData(wb = wb,sheetName = 'pkDictionary',skipDescriptionRow = FALSE)
+    pkDictionaryH <- pkDictionary[1]
+    pkDictionary <- pkDictionary[targetColumn %in% c(
+      "studyId", "group", "outputPathId", "pkParameter",
+      "values", "unit", "errorType", "minValue", "maxValue", "numberOfIndividuals"
+    )]
+    pkDictionary[targetColumn == 'group']$filterValue <- "paste(STUD,population,'ratio',sep = '_')"
+    pkDictionary[ targetColumn == 'outputPathId']$sourceColumn = "outputPathId"
+    pkDictionary[ targetColumn == 'pkParameter']$sourceColumn = "pkParameter"
+    pkDictionary[ targetColumn == 'values']$sourceColumn = "geomean"
+    pkDictionary[ targetColumn == 'minValue']$sourceColumn = "CI_lower"
+    pkDictionary[ targetColumn == 'maxValue']$sourceColumn = "CI_upper"
+    pkDictionary[ targetColumn == 'errorType']$filterValue = '"geometric mean|90% CI lower|90% CI upper"'
+    pkDictionary[ targetColumn == 'unit']$sourceColumn = "unit"
+    pkDictionary[ targetColumn == 'numberOfIndividuals']$sourceColumn = "N"
+    pkDictionary[!is.na(sourceColumn),`:=`(
+      filter = NA,
+      filterValue = NA)]
 
-  xlsxCloneAndSet(wb = wb,
-                  clonedSheet = "pkDictionary",
-                  sheetName = "pkDictionary_ratios",
-                  dt = rbind(pkDictionaryH,pkDictionary))
+    xlsxCloneAndSet(wb = wb,
+                    clonedSheet = "pkDictionary",
+                    sheetName = "pkDictionary_ratios",
+                    dt = rbind(pkDictionaryH,pkDictionary))
+  }
 
   openxlsx::saveWorkbook(wb, projectConfiguration$dataImporterConfigurationFile, overwrite = TRUE)
 }

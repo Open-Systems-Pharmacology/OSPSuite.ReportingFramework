@@ -1,12 +1,4 @@
 # testProject was set up by setup.R
-
-scenarioResultsInd <- runAndSaveScenarios(projectConfiguration = projectConfiguration,
-                                       scenarioList = scenarioListInd,
-                                       simulationRunOptions = SimulationRunOptions$new(
-                                         showProgress = FALSE
-                                       ),
-                                       withResimulation = FALSE)
-
 dataObserved <- readObservedDataByDictionary(projectConfiguration)
 dataObserved <- rbind(dataObserved,
                       aggregateObservedDataGroups(dataObserved = dataObserved,
@@ -51,6 +43,7 @@ test_that("Time profiles of individual scenarios", {
   expect_equal(length(plotList),2)
 
   for (pName in names(plotList)){
+    set.seed(123)
     vdiffr::expect_doppelganger(
       title = pName,
       fig = plotList[[pName]]
@@ -75,6 +68,7 @@ test_that("Predicted vs observed of individual scenarios", {
     )
 
   for (pName in names(plotList)){
+    set.seed(123)
     vdiffr::expect_doppelganger(
       title = pName,
       fig = plotList[[pName]]
@@ -106,6 +100,7 @@ test_that("Time profiles of virtual twin scenarios", {
   expect_equal(length(plotList),4)
 
   for (pName in names(plotList)){
+    set.seed(123)
     vdiffr::expect_doppelganger(
       title = pName,
       fig = plotList[[pName]]
@@ -146,6 +141,7 @@ test_that("Predicted vs observed of virtual twin scenarios", {
     )
 
   for (pName in names(plotList)){
+    set.seed(123)
     vdiffr::expect_doppelganger(
       title = pName,
       fig = plotList[[pName]]

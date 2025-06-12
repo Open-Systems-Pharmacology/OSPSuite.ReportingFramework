@@ -61,6 +61,8 @@ referenceScaleVector = list(
 )
 # default is list()}
 
+\item{...}{argumnets passed to ospsuite.plots::plotTimeprofile}
+
 \item{configTableSheet}{The name of the sheet in the Excel plot configuration file that defines
 the plot settings.}
 

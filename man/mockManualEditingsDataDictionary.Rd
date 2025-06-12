@@ -4,10 +4,12 @@
 \alias{mockManualEditingsDataDictionary}
 \title{Mock Manual Editings for Data Dictionary}
 \usage{
-mockManualEditingsDataDictionary(projectConfiguration)
+mockManualEditingsDataDictionary(projectConfiguration, withPK = TRUE)
 }
 \arguments{
 \item{projectConfiguration}{A ProjectConfiguration object containing project configuration details.}
+
+\item{withPK}{boolean, if TRUE configuration for pkparameter  are added}
 }
 \description{
 This function updates the data dictionary for the project configuration with new data files.

@@ -4,7 +4,7 @@
 \alias{validateDistributionVsDemographicsConfig}
 \title{Validate Distribution vs Demographics Configuration}
 \usage{
-validateDistributionVsDemographicsConfig(configTable, ...)
+validateDistributionVsDemographicsConfig(configTable, scenarioList, ...)
 }
 \arguments{
 \item{configTable}{A data.table containing the configuration table.}

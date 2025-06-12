@@ -307,7 +307,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     #' @param filterName character with name of time range filter
     getTimeLabelForTimeRange = function(filterName) {
       if (filterName == "allTimeRanges") {
-        timeLabel <- utils::tail(private$.timeTags$TimeLabel, 1)
+        timeLabel <- utils::tail(private$.timeTags$timeLabel, 1)
       } else {
         timeLabel <- private$.timeTags[eval(parse(text = paste0('tag == "', filterName, '"')))]$timeLabel
       }

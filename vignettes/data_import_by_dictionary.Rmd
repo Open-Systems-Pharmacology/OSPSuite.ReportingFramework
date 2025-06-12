@@ -192,6 +192,7 @@ The first line of the sheet contains descriptions for the columns, the informati
 dataFilesSheet <- rbind(
   dataFilesSheet[FALSE, ],
   data.table(
+    FileIdentifier = c('data1','data2','data3'),
     DataFile = c(
       "relative/path/to/data1.csv",
       "relative/path/to/data2.csv",

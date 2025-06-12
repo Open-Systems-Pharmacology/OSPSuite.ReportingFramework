@@ -62,6 +62,8 @@
 #' )
 #' # default is list()
 #'
+#' @param ... argumnets passed to ospsuite.plots::plotTimeprofile
+#'
 #' @return Generates time profile plots and saves them to the specified output directory.
 #' The function does not return any value.
 #'
@@ -713,6 +715,14 @@ getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotC
     QQ = "Residuals as quantile-quantile plot"
   )
 
+  scaleName <- ''
+  if (plotType %in% c('TP','PvO')){
+    scaleName <- paste(" on a",
+                       ifelse(yScale == "linear", "linear", "logarithmic"),
+                       ifelse(plotType == "TP", "y-scale.", "x and y-scale."))
+
+  }
+
   if ("individualId" %in% names(dtCaption)) {
     individualtext <- pasteFigureTags(dtCaption, captionColumn = "individualId")
     if (individualtext != "") {
@@ -731,9 +741,8 @@ getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotC
     " for ",
     pasteFigureTags(dtCaption, captionColumn = "scenarioLongName"),
     individualtext,
-    " on a ", ifelse(yScale == "linear", "linear", "logarithmic"),
-    " y-scale.",
-    pasteFigureTags(dtCaption, captionColumn = "timeRangeCaption", endWithDot = TRUE)
+    scaleName,
+    pasteFigureTags(dtCaption, captionColumn = "timeRangeCaption", endWithDot = TRUE,startWithBlank = TRUE)
   )
   captiontext <- addCaptionTextAddon(captiontext, plotData$configTable$plotCaptionAddon[1])
 
@@ -1178,6 +1187,10 @@ addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
     dtNewHeader <- xlsxReadData(wb, sheetName = sheetName, skipDescriptionRow = TRUE)
     scenarios <- scenarios[!(scenarioName %in% unique(dtNewHeader$scenario))]
   } else {
+    dtNewHeader <- data.table()
+  }
+
+  if (nrow(dtNewHeader)==0){
     dtNewHeader <- data.table(
       level = 1,
       header = "Concentration time profiles"

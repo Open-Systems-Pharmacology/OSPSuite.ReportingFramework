@@ -33,13 +33,3 @@ and copying configuration files from a source Excel file. It reads the directory
 structure and files specified in the provided Excel template and sets up the project
 environment accordingly.
 }
-\examples{
-\dontrun{
-# Initialize a project in the current directory
-initProject()
-
-# Initialize a project in a specified directory and allow overwriting
-initProject(configurationDirectory = "my_project", overwrite = TRUE)
-}
-
-}

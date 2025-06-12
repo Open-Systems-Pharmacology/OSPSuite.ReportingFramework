@@ -11,7 +11,7 @@
 #' @return The modified project configuration object.
 #' @export
 addSensitivityTable <- function(projectConfiguration, scenarioList = NULL, scenarioName, sheetName = scenarioName) {
-  invisible(projectConfiguration$addAddOnfileToConfiguration(
+  invisible(projectConfiguration$addAddOnFileToConfiguration(
     property = "sensitivityFile",
     value = "SensitivityParameter.xlsx",
     description = "Configuration file for Sensitivity",

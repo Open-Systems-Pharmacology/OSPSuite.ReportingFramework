@@ -7,7 +7,8 @@
 readObservedDataByDictionary(
   projectConfiguration,
   spreadData = TRUE,
-  dataClassType = c("timeprofile", "pkParameter")
+  dataClassType = c("timeprofile", "pkParameter"),
+  fileIds = NULL
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ readObservedDataByDictionary(
 \item{spreadData}{If TRUE, information derived from observed data, such as identifiers and biometrics, is spread to other tables.}
 
 \item{dataClassType}{A character string indicating the type of data class to process. Options are "timeprofile" or "pkParameter".}
+
+\item{fileIds}{A character vector with file identifiers to be selected, if NULL (default) all are selected.}
 }
 \value{
 A `data.table` containing the processed data based on the dictionary. The structure includes relevant columns defined in the data dictionary.

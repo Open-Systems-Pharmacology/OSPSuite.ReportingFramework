@@ -4,7 +4,7 @@
 #' @format NULL
 #' @export
 ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
-  "ProjectConfiguration",
+  "ProjectConfigurationRF",
   inherit = esqlabsR::ProjectConfiguration,
   cloneable = TRUE,
   active = list(
@@ -30,27 +30,30 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
     #' @description Initializes the ProjectConfiguration object with a specified configuration file path.
     .addOnFile = function(property, value) {
       if (!missing(value)) {
-        private$.projectConfigurationDataAddOns[[property]]$value <- value
+        private$.projectConfigurationDataAddOns[[property]] <- value
       }
     },
     #' @description Adds new line to configuration xlsx
-    .writeToConfigXlsx = function(property, value, description) {
-      if (!(property %in% names(private$.projectConfigurationDataAddOns))) {
-        wb <- openxlsx::loadWorkbook(self$projectConfigurationFilePath)
-        dtConfiguration <- xlsxReadData(wb = wb, sheetName = wb$sheet_names[1])
-        if (!(property %in% dtConfiguration$propety)) {
-          dtConfiguration <- rbind(
-            dtConfiguration,
-            data.table(
-              property = property,
-              value = value,
-              description = description
-            )
+    .writeToConfigXlsx = function(propertyToSet, value, description) {
+      wb <- openxlsx::loadWorkbook(self$projectConfigurationFilePath)
+      dtConfiguration <- xlsxReadData(wb = wb, sheetName = wb$sheet_names[1])
+      if (!(propertyToSet %in% dtConfiguration$property)) {
+        dtConfiguration <- rbind(
+          dtConfiguration,
+          data.table(
+            property = propertyToSet,
+            value = value,
+            description = description
           )
-          xlsxWriteData(wb = wb, sheetName = wb$sheet_names[1], dt = dtConfiguration)
-          openxlsx::saveWorkbook(wb, self$projectConfigurationFilePath, overwrite = TRUE)
-        }
+        )
+      } else {
+        dtConfiguration[property == propertyToSet, `:=`
+                        (value = value,
+                          description = description
+                        )]
       }
+      xlsxWriteData(wb = wb, sheetName = wb$sheet_names[1], dt = dtConfiguration)
+        openxlsx::saveWorkbook(wb, self$projectConfigurationFilePath, overwrite = TRUE)
     },
     #' @description Read configuration from file
     .read_config = function(file_path) {#nolint
@@ -88,18 +91,22 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
     #' @description print prints a summary of the Project Configuration.
     print = function() {
       super$print()
+
+      ospsuite.utils::ospPrintItems(x = private$.projectConfigurationDataAddOns,
+                                    title = "AddOns (non esqlabR)")
+
       for (property in names(private$.projectConfigurationDataAddOns)) {
-        private$printLine(property, fs::path_rel(as.character(private$.projectConfigurationDataAddOns[[property]]$value)))
+        print(paste(property, fs::path_rel(as.character(private$.projectConfigurationDataAddOns[[property]]))))
       }
       invisible(self)
     },
     #' @description Adds an add-on file to the project configuration.
     #'
     #' @param property A string representing the name of the property to add.
-    #' @param value A string representing the path of the value to add.
+    #' @param value A string representing the basename of the file to add.
     #' @param description A string providing a description of the property.
-    #' @param templatePath A string representing the path of the template file.
-    addAddOnfileToConfiguration = function(property, value, description, templatePath) {
+    #' @param templatePath A string representing the path of the file to add.
+    addAddOnFileToConfiguration = function(property, value, description, templatePath) {
       checkmate::assertString(property)
       checkmate::assertString(value)
       checkmate::assertString(description)
@@ -132,8 +139,11 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
       checkmate::assertString(value)
       checkmate::assertString(description)
 
-      if (!dir.exists(value)) {
-        dir.create(value, recursive = TRUE)
+      value <- as.character(fs::path_rel(value, start = self$configurationsFolder))
+
+      dirPath <- fs::path_abs(value, start = self$configurationsFolder)
+      if (!dir.exists(dirPath)) {
+        dir.create(dirPath, recursive = TRUE)
       }
 
       private$.writeToConfigXlsx(property, value, description)

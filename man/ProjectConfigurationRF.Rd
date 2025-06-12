@@ -7,8 +7,8 @@
 \description{
 An object storing configuration used project-wide
 }
-\section{Super classes}{
-\code{\link[ospsuite.utils:Printable]{ospsuite.utils::Printable}} -> \code{\link[esqlabsR:ProjectConfiguration]{esqlabsR::ProjectConfiguration}} -> \code{ProjectConfiguration}
+\section{Super class}{
+\code{\link[esqlabsR:ProjectConfiguration]{esqlabsR::ProjectConfiguration}} -> \code{ProjectConfigurationRF}
 }
 \section{Active bindings}{
 \if{html}{\out{<div class="r6-active-bindings">}}
@@ -20,11 +20,11 @@ An object storing configuration used project-wide
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-ProjectConfiguration-new}{\code{ProjectConfigurationRF$new()}}
-\item \href{#method-ProjectConfiguration-print}{\code{ProjectConfigurationRF$print()}}
-\item \href{#method-ProjectConfiguration-addAddOnfileToConfiguration}{\code{ProjectConfigurationRF$addAddOnfileToConfiguration()}}
-\item \href{#method-ProjectConfiguration-addAddOnFolderToConfiguration}{\code{ProjectConfigurationRF$addAddOnFolderToConfiguration()}}
-\item \href{#method-ProjectConfiguration-clone}{\code{ProjectConfigurationRF$clone()}}
+\item \href{#method-ProjectConfigurationRF-new}{\code{ProjectConfigurationRF$new()}}
+\item \href{#method-ProjectConfigurationRF-print}{\code{ProjectConfigurationRF$print()}}
+\item \href{#method-ProjectConfigurationRF-addAddOnFileToConfiguration}{\code{ProjectConfigurationRF$addAddOnFileToConfiguration()}}
+\item \href{#method-ProjectConfigurationRF-addAddOnFolderToConfiguration}{\code{ProjectConfigurationRF$addAddOnFolderToConfiguration()}}
+\item \href{#method-ProjectConfigurationRF-clone}{\code{ProjectConfigurationRF$clone()}}
 }
 }
 \if{html}{\out{
@@ -35,8 +35,8 @@ An object storing configuration used project-wide
 </details>
 }}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ProjectConfiguration-new"></a>}}
-\if{latex}{\out{\hypertarget{method-ProjectConfiguration-new}{}}}
+\if{html}{\out{<a id="method-ProjectConfigurationRF-new"></a>}}
+\if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-new}{}}}
 \subsection{Method \code{new()}}{
 Initializes the ProjectConfiguration object with a specified configuration file path.
 
@@ -61,8 +61,8 @@ Print}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ProjectConfiguration-print"></a>}}
-\if{latex}{\out{\hypertarget{method-ProjectConfiguration-print}{}}}
+\if{html}{\out{<a id="method-ProjectConfigurationRF-print"></a>}}
+\if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-print}{}}}
 \subsection{Method \code{print()}}{
 print prints a summary of the Project Configuration.
 \subsection{Usage}{
@@ -71,12 +71,12 @@ print prints a summary of the Project Configuration.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ProjectConfiguration-addAddOnfileToConfiguration"></a>}}
-\if{latex}{\out{\hypertarget{method-ProjectConfiguration-addAddOnfileToConfiguration}{}}}
-\subsection{Method \code{addAddOnfileToConfiguration()}}{
+\if{html}{\out{<a id="method-ProjectConfigurationRF-addAddOnFileToConfiguration"></a>}}
+\if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-addAddOnFileToConfiguration}{}}}
+\subsection{Method \code{addAddOnFileToConfiguration()}}{
 Adds an add-on file to the project configuration.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ProjectConfigurationRF$addAddOnfileToConfiguration(
+\if{html}{\out{<div class="r">}}\preformatted{ProjectConfigurationRF$addAddOnFileToConfiguration(
   property,
   value,
   description,
@@ -89,18 +89,18 @@ Adds an add-on file to the project configuration.
 \describe{
 \item{\code{property}}{A string representing the name of the property to add.}
 
-\item{\code{value}}{A string representing the path of the value to add.}
+\item{\code{value}}{A string representing the basename of the file to add.}
 
 \item{\code{description}}{A string providing a description of the property.}
 
-\item{\code{templatePath}}{A string representing the path of the template file.}
+\item{\code{templatePath}}{A string representing the path of the file to add.}
 }
 \if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ProjectConfiguration-addAddOnFolderToConfiguration"></a>}}
-\if{latex}{\out{\hypertarget{method-ProjectConfiguration-addAddOnFolderToConfiguration}{}}}
+\if{html}{\out{<a id="method-ProjectConfigurationRF-addAddOnFolderToConfiguration"></a>}}
+\if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-addAddOnFolderToConfiguration}{}}}
 \subsection{Method \code{addAddOnFolderToConfiguration()}}{
 Adds an add-on file to the project configuration.
 \subsection{Usage}{
@@ -126,8 +126,8 @@ Adds an add-on file to the project configuration.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ProjectConfiguration-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-ProjectConfiguration-clone}{}}}
+\if{html}{\out{<a id="method-ProjectConfigurationRF-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

@@ -55,16 +55,6 @@ scenarios, allowing for comparison of absolute values and ratios.
 \details{
 The function supports customization options such as specifying the angle of the
 x-axis text, color schemes, and facet aspect ratios.
-
-
-When calculating ratios, the function distinguishes between two cases:
-
-- **Case 1**: If the scenarios being compared are based on the **same populations**,
-  (same `PopulationId` in scenario configuration) the plots will show summary statistics of individual ratios.
-
-- **Case 2**: If the scenarios are based on **different populations**, the plots
-  will display the ratio of summary statistics, using either bootstrapping methods
-  or analytical solutions for "geo mean","geo standard deviation","geo CV".
 }
 \examples{
 # Example usage of plotPKBoxwhisker

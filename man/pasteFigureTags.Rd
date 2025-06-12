@@ -4,7 +4,12 @@
 \alias{pasteFigureTags}
 \title{Paste Figure Tags for Captions}
 \usage{
-pasteFigureTags(dtCaption, captionColumn, endWithDot = FALSE)
+pasteFigureTags(
+  dtCaption,
+  captionColumn,
+  endWithDot = FALSE,
+  startWithBlank = FALSE
+)
 }
 \arguments{
 \item{dtCaption}{A data.table containing the captions and plot tags. It must have at least the following columns:

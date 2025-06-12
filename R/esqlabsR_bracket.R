@@ -18,14 +18,6 @@
 #' @return This function returns an invisible NULL. It is used for its side effects of
 #' creating directories and copying files rather than producing a value.
 #'
-#' @examples
-#' \dontrun{
-#' # Initialize a project in the current directory
-#' initProject()
-#'
-#' # Initialize a project in a specified directory and allow overwriting
-#' initProject(configurationDirectory = "my_project", overwrite = TRUE)
-#' }
 #'
 #' @export
 initProject <- function(configurationDirectory = ".",
@@ -215,6 +207,9 @@ runAndSaveScenarios <- function(projectConfiguration,
         scenarios = scenarioList[sc],
         simulationRunOptions = simulationRunOptions
       )
+
+      # set scenarioname as simulation name
+      scenarioResults[[sc]]$simulation$set('Name',sc)
 
       esqlabsR::saveScenarioResults(
         simulatedScenariosResults = scenarioResults[sc],

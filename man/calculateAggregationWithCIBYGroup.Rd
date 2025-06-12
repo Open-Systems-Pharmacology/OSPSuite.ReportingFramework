@@ -22,7 +22,7 @@ calculateAggregationWithCIBYGroup(
 This function should accept a numeric vector and return a single numeric value.}
 
 \item{confLevel}{A numeric value representing the confidence level for the confidence interval.
-The default value is 0.9, corresponding to a 90% confidence interval. Must be between 0 and 1.}
+The default value is 0.9, corresponding to a 90percent confidence interval. Must be between 0 and 1.}
 
 \item{identifier}{A character vector of column names in the data.table to group by.
 The function will calculate the aggregation and confidence interval for each unique combination
@@ -50,26 +50,4 @@ The function allows for flexible definitions of the aggregation function and can
 different value columns and output formats based on the specified direction.
 A unique seed for bootstrapping is generated for each group of identifiers to ensure
 reproducibility of the bootstrap samples.
-}
-\examples{
-\dontrun{
-# Example usage
-pkParameterDT <- data.table(
-  pkParameter = c("A", "A", "B", "B"),
-  outputPathId = c(1, 1, 2, 2),
-  scenario = c("S1", "S2", "S1", "S2"),
-  value = c(10, 20, 15, 25)
-)
-
-result <- calculateAggregationWithCIBYGroup(
-  dt = pkParameterDT,
-  aggregationFun = function(y) exp(mean(log(y[y > 0]))),
-  confLevel = 0.9,
-  identifier = c("pkParameter", "outputPathId", "scenario"),
-  nBootstrap = 100,
-  valueColumn = "value",
-  direction = "y"
-)
-}
-
 }

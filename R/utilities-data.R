@@ -7,14 +7,14 @@
 #' @param projectConfiguration An object containing project configuration details, including the path to the data importer configuration file.
 #' @param spreadData If TRUE, information derived from observed data, such as identifiers and biometrics, is spread to other tables.
 #' @param dataClassType A character string indicating the type of data class to process. Options are "timeprofile" or "pkParameter".
-#' @param filePathFilter A character vector with dataFiles to be selected, if NULL (default) all are selected.
+#' @param fileIds A character vector with file identifiers to be selected, if NULL (default) all are selected.
 #'
 #' @return A `data.table` containing the processed data based on the dictionary. The structure includes relevant columns defined in the data dictionary.
 #' @export
 readObservedDataByDictionary <- function(projectConfiguration,
                                          spreadData = TRUE,
                                          dataClassType = c("timeprofile", "pkParameter"),
-                                         filePathFilter = NULL) {
+                                         fileIds = NULL) {
   # avoid warning for global variable
   individualId <- outputPathId <- dataType <- NULL
 
@@ -34,9 +34,9 @@ readObservedDataByDictionary <- function(projectConfiguration,
   )
   if (nrow(dataList) == 0) stop(paste("no datafiles defined for", dataClassType))
 
-  if (!is.null(filePathFilter)) {
-    checkmate::assertNames(filePathFilter,subset.of = dataList$dataFile)
-    dataList <- dataList[dataFile %in% filePathFilter]
+  if (!is.null(fileIds)) {
+    checkmate::assertNames(fileIds,subset.of = dataList$fileIdentifier)
+    dataList <- dataList[fileIdentifier %in% filePathFilter]
   }
 
   checkmate::assertFileExists(fs::path_abs(
