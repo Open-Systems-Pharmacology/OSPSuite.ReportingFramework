@@ -16,7 +16,7 @@ initLogfunction(
 )
 }
 \arguments{
-\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and file names}
 
 \item{warningsNotDisplayed}{A list of warnings that should not be logged.}
 

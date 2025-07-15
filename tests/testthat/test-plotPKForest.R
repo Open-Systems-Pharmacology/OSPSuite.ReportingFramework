@@ -1,18 +1,24 @@
 # testProject was set up by setup.R
-pkParameterDT <- loadPKParameter(projectConfiguration = projectConfiguration,
-                                 scenarioList = scenarioList)
-dataObservedPK <- suppressMessages(suppressWarnings(readObservedDataByDictionary(projectConfiguration = projectConfiguration,
-                                               dataClassType = 'pkParameter')))
+pkParameterDT <- loadPKParameter(
+  projectConfiguration = projectConfiguration,
+  scenarioList = scenarioList
+)
+dataObservedPK <- suppressMessages(suppressWarnings(readObservedDataByDictionary(
+  projectConfiguration = projectConfiguration,
+  dataClassType = "pkParameter"
+)))
 
 test_that("Default Config For PKForestPlots", {
-  addDefaultConfigForPKForestPlots(projectConfiguration = projectConfiguration,
-                                 pkParameterDT = pkParameterDT,
-                                 sheetName = "PKParameter_ForestTest",
-                                 overwrite = TRUE)
+  addDefaultConfigForPKForestPlots(
+    projectConfiguration = projectConfiguration,
+    pkParameterDT = pkParameterDT,
+    sheetName = "PKParameter_ForestTest",
+    overwrite = TRUE
+  )
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
-  expect_contains(wb$sheet_names,'PKParameter_ForestTest')
+  expect_contains(wb$sheet_names, "PKParameter_ForestTest")
 })
 
 # adjust configtables in project directory
@@ -28,7 +34,7 @@ test_that("AbsoluteValues pediatric", {
       projectConfiguration = projectConfiguration,
       configTableSheet = "PKParameter_ForestTest",
       suppressExport = TRUE,
-      plotNames = 'pediatric',
+      plotNames = "pediatric",
       inputs = list(
         pkParameterDT = pkParameterDT
       )
@@ -38,12 +44,12 @@ test_that("AbsoluteValues pediatric", {
 
   vdiffr::expect_doppelganger(
     title = "abs_pediatric_AUC_inf_linear",
-    fig = plotList[['pediatric-AUC_inf-linear']]
+    fig = plotList[["pediatric-AUC_inf-linear"]]
   )
 
   vdiffr::expect_doppelganger(
     title = "abs_pediatric_F_tEnd_log",
-    fig = plotList[['pediatric-F_tEnd-log']]
+    fig = plotList[["pediatric-F_tEnd-log"]]
   )
 })
 
@@ -57,7 +63,7 @@ test_that("AbsoluteValues pediatric with data", {
       projectConfiguration = projectConfiguration,
       configTableSheet = "PKParameter_ForestTest",
       suppressExport = TRUE,
-      plotNames = 'pediatric_data',
+      plotNames = "pediatric_data",
       inputs = list(
         pkParameterDT = pkParameterDT,
         pkParameterObserved = dataObservedPK
@@ -68,12 +74,12 @@ test_that("AbsoluteValues pediatric with data", {
 
   vdiffr::expect_doppelganger(
     title = "abs_data_pediatric_AUC_inf_linear",
-    fig = plotList[['pediatric-AUC_inf-linear']]
+    fig = plotList[["pediatric-AUC_inf-linear"]]
   )
 
   vdiffr::expect_doppelganger(
     title = "abs_data_pediatric_F_tEnd_log",
-    fig = plotList[['pediatric-F_tEnd-log']]
+    fig = plotList[["pediatric-F_tEnd-log"]]
   )
 })
 
@@ -87,7 +93,7 @@ test_that("AbsoluteValues pediatric PE", {
       projectConfiguration = projectConfiguration,
       configTableSheet = "PKParameter_ForestTest",
       suppressExport = TRUE,
-      plotNames = 'pediatric',
+      plotNames = "pediatric",
       inputs = list(
         pkParameterDT = pkParameterDT
       )
@@ -97,12 +103,12 @@ test_that("AbsoluteValues pediatric PE", {
 
   vdiffr::expect_doppelganger(
     title = "PE_pediatric_AUC_inf_linear",
-    fig = plotList[['pediatric-AUC_inf-linear']]
+    fig = plotList[["pediatric-AUC_inf-linear"]]
   )
 
   vdiffr::expect_doppelganger(
     title = "PE_pediatric_F_tEnd_log",
-    fig = plotList[['pediatric-F_tEnd-log']]
+    fig = plotList[["pediatric-F_tEnd-log"]]
   )
 })
 
@@ -117,7 +123,7 @@ test_that("Ratios pediatric PE", {
       projectConfiguration = projectConfiguration,
       configTableSheet = "PKParameter_ForestTest",
       suppressExport = TRUE,
-      plotNames = 'pediatric',
+      plotNames = "pediatric",
       inputs = list(
         pkParameterDT = pkParameterDT
       )
@@ -127,12 +133,12 @@ test_that("Ratios pediatric PE", {
 
   vdiffr::expect_doppelganger(
     title = "PE_Ratio_pediatric_AUC_inf_linear",
-    fig = plotList[['pediatric-AUC_inf-linear']]
+    fig = plotList[["pediatric-AUC_inf-linear"]]
   )
 
   vdiffr::expect_doppelganger(
     title = "PE_Ratio_pediatric_F_tEnd_log",
-    fig = plotList[['pediatric-F_tEnd-log']]
+    fig = plotList[["pediatric-F_tEnd-log"]]
   )
 })
 
@@ -146,7 +152,7 @@ test_that("Ratios crossover PE", {
       projectConfiguration = projectConfiguration,
       configTableSheet = "PKParameter_ForestTest",
       suppressExport = TRUE,
-      plotNames = 'crossover',
+      plotNames = "crossover",
       inputs = list(
         pkParameterDT = pkParameterDT
       )
@@ -156,12 +162,12 @@ test_that("Ratios crossover PE", {
 
   vdiffr::expect_doppelganger(
     title = "PE_Ratio_crossover_AUC_inf_linear",
-    fig = plotList[['crossover-AUC_inf-linear']]
+    fig = plotList[["crossover-AUC_inf-linear"]]
   )
 
   vdiffr::expect_doppelganger(
     title = "PE_Ratio_crossover_F_tEnd_log",
-    fig = plotList[['pediatric-F_tEnd-log']]
+    fig = plotList[["pediatric-F_tEnd-log"]]
   )
 })
 
@@ -175,7 +181,7 @@ test_that("Ratios crossover PE with data", {
       projectConfiguration = projectConfiguration,
       configTableSheet = "PKParameter_ForestTest",
       suppressExport = TRUE,
-      plotNames = 'crossover_data',
+      plotNames = "crossover_data",
       inputs = list(
         pkParameterDT = pkParameterDT,
         pkParameterObserved = dataObservedPK
@@ -186,11 +192,11 @@ test_that("Ratios crossover PE with data", {
 
   vdiffr::expect_doppelganger(
     title = "PE_Ratio_crossover_data_AUC_inf_linear",
-    fig = plotList[['crossover-AUC_inf-linear']]
+    fig = plotList[["crossover-AUC_inf-linear"]]
   )
 
   vdiffr::expect_doppelganger(
     title = "PE_Ratio_crossover_data_F_tEnd_log",
-    fig = plotList[['pediatric-F_tEnd-log']]
+    fig = plotList[["pediatric-F_tEnd-log"]]
   )
 })

@@ -400,7 +400,7 @@ startRmd <- function(title = "Report") {
 #' @param newName new Name of .Rmd
 #' @param title Title of new Rmd
 #' @param sourceRmds list of .rmds to include
-#' @template projectConfig
+#' @param projectConfiguration Object of class `ProjectConfiguration` containing information on paths and file names
 #'
 #' @export
 mergeRmds <- function(

@@ -48,15 +48,16 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
         )
       } else {
         dtConfiguration[property == propertyToSet, `:=`
-                        (value = value,
-                          description = description
-                        )]
+        (
+          value = value,
+          description = description
+        )]
       }
       xlsxWriteData(wb = wb, sheetName = wb$sheet_names[1], dt = dtConfiguration)
-        openxlsx::saveWorkbook(wb, self$projectConfigurationFilePath, overwrite = TRUE)
+      openxlsx::saveWorkbook(wb, self$projectConfigurationFilePath, overwrite = TRUE)
     },
     #' @description Read configuration from file
-    .read_config = function(file_path) {#nolint
+    .read_config = function(file_path) { # nolint
       path <- private$.clean_path(file_path)
       # Update private values
       private$.projectConfigurationFilePath <- path
@@ -92,8 +93,10 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
     print = function() {
       super$print()
 
-      ospsuite.utils::ospPrintItems(x = private$.projectConfigurationDataAddOns,
-                                    title = "AddOns (non esqlabR)")
+      ospsuite.utils::ospPrintItems(
+        x = private$.projectConfigurationDataAddOns,
+        title = "AddOns (non esqlabR)"
+      )
 
       for (property in names(private$.projectConfigurationDataAddOns)) {
         print(paste(property, fs::path_rel(as.character(private$.projectConfigurationDataAddOns[[property]]))))

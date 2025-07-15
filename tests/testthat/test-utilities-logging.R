@@ -7,8 +7,6 @@ test_that("initLogfunction creates default log file folder when logFileFolder is
 
 #  tests for `writeToLog`
 test_that("writeToLog appends log message to file", {
-  suppressMessages(initLogfunction(projectConfiguration))
-
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
 
   filename <- "test.log"
@@ -82,3 +80,26 @@ test_that("writeTableToLog function works as expected", {
   expect_true(length(logContent) > 0, "Log file was created")
 })
 
+test_that("logCatch executes finallyExpression", {
+  # Initialize a variable to track if the finallyExpression was executed
+  finallyExecuted <- FALSE
+
+  # Call logCatch with an expression that generates an error
+  expect_error(logCatch(expr = stop("This is an error"), finallyExpression = finallyExecuted <<- TRUE))
+
+  # Check if the finally expression was executed
+  expect_true(finallyExecuted, "The finallyExpression should be executed even after an error")
+
+  # Reset for a successful case
+  finallyExecuted <- FALSE
+
+  # Call logCatch with a successful expression
+  logCatch(expr = {
+    a <- 1
+  }, finallyExpression = {
+    finallyExecuted <<- TRUE
+  })
+
+  # Check if the finally expression was executed
+  expect_true(finallyExecuted, "The finallyExpression should be executed after a successful expression")
+})

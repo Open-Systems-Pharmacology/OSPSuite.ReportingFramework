@@ -4,20 +4,13 @@
 \alias{createScenarios.wrapped}
 \title{Create Scenario objects from `ScenarioConfiguration` objects}
 \usage{
-createScenarios.wrapped(
-  projectConfiguration,
-  scenarioNames = NULL,
-  doCheckScenarioNameValidity = TRUE
-)
+createScenarios.wrapped(projectConfiguration, scenarioNames = NULL)
 }
 \arguments{
-\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and file names}
 
 \item{scenarioNames}{Names of the scenarios that are defined in the excel file.
 If NULL (default), all scenarios specified in the excel file will be created.}
-
-\item{doCheckScenarioNameValidity}{`boolean` If TRUE scenario names will be check if they
-can be used as file names in an electronic package}
 }
 \value{
 Named list of Scenario objects.

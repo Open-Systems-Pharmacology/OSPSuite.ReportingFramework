@@ -7,7 +7,7 @@
 addBiometricsToConfig(projectConfiguration, dataDT, overwrite = FALSE)
 }
 \arguments{
-\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and file names}
 
 \item{dataDT}{A `data.table` with observed data.}
 

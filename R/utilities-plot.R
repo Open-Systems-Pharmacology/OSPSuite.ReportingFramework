@@ -124,8 +124,7 @@ runPlot <- function(projectConfiguration,
         for (onePlotConfig in split(configTable[seq(iRow, iEnd)], by = "plotName")) {
           tryCatch(
             {
-
-                            plotListiRow <- do.call(
+              plotListiRow <- do.call(
                 what = rmdPlotManager$plotFunction,
                 args = c(
                   list(
@@ -160,11 +159,6 @@ runPlot <- function(projectConfiguration,
   if (getOption("OSPSuite.RF.withEPackage") &
     !suppressExport &
     (!is.null(rmdPlotManager$configTable))) {
-    addScenariosToEPackage(
-      projectConfiguration = projectConfiguration,
-      configTable = rmdPlotManager$configTable, subfolder = rmdName
-    )
-
     if (nrow(rmdPlotManager$dataObserved) > 0 & exists(x = "dataObserved")) {
       exportTimeProfileDataForEPackage(
         projectConfiguration = projectConfiguration,
@@ -213,8 +207,8 @@ readConfigTableForPlot <- function(sheetName, validateConfigTableFunction, input
     configTable <- configTable[plotName %in% plotNames]
   }
   # add scenario names
-  if ("scenarios" %in% names(configTable)){
-   configTable <- separateAndTrim(data = configTable,columnName = 'scenarios')
+  if ("scenarios" %in% names(configTable)) {
+    configTable <- separateAndTrim(data = configTable, columnName = "scenarios")
   }
   if ("scenario" %in% names(configTable)) {
     configTable <-
@@ -310,7 +304,6 @@ setExportAttributes <- function(object,
                                 caption = NULL,
                                 footNoteLines = NULL,
                                 exportArguments = NULL) {
-
   # Replace multiple spaces with a single space in the caption
   if (!is.null(caption)) {
     caption <- gsub(" +", " ", caption)
@@ -493,8 +486,7 @@ generateColorScaleVectors <- function(dt,
 #'         provided color legend.
 #' @keywords internal
 getColorVectorForLegend <- function(colorLegend, colorVector) {
-
-  checkmate::assertCharacter(colorLegend,any.missing = FALSE,len = 1)
+  checkmate::assertCharacter(colorLegend, any.missing = FALSE, len = 1)
   validateColorVector(colorVector)
 
   colorLegendList <- trimws(strsplit(as.character(colorLegend), "\\|")[[1]])
@@ -525,7 +517,7 @@ getColorVectorForLegend <- function(colorLegend, colorVector) {
 #'
 #' @return A character string representing the formatted caption text, which includes the captions and associated plot tags.
 #'
-pasteFigureTags <- function(dtCaption, captionColumn, endWithDot = FALSE,startWithBlank = FALSE) {
+pasteFigureTags <- function(dtCaption, captionColumn, endWithDot = FALSE, startWithBlank = FALSE) {
   # avoid warning for global variable
   plotTag <- NULL
 
@@ -545,11 +537,11 @@ pasteFigureTags <- function(dtCaption, captionColumn, endWithDot = FALSE,startWi
 
     captionText <- concatWithAnd(captionTextVector)
   }
-  if (endWithDot && trimws(captionText) !="" && !grepl("\\.$", captionText)) {
+  if (endWithDot && trimws(captionText) != "" && !grepl("\\.$", captionText)) {
     captionText <- paste0(captionText, ".")
   }
-  if (startWithBlank & trimws(captionText) !=""){
-    captionText <- paste0(' ',trimws(captionText))
+  if (startWithBlank & trimws(captionText) != "") {
+    captionText <- paste0(" ", trimws(captionText))
   }
 
   return(captionText)
@@ -682,9 +674,9 @@ getXorYlimits <- function(onePlotConfig, xOryScale, direction = c("y", "x"), ...
   }
 
   # Construct the column name
-  columnName <- paste0(direction, "limit_",tolower(xOryScale))
+  columnName <- paste0(direction, "limit_", tolower(xOryScale))
   if (!(columnName %in% names(onePlotConfig))) {
-    columnName <- paste0("limit_",tolower(xOryScale))
+    columnName <- paste0("limit_", tolower(xOryScale))
   }
   scaleTxt <- onePlotConfig[[columnName]][1]
 
@@ -753,7 +745,7 @@ validateHeaders <- function(configTable) {
 
 #' validate types of plot configuration tables
 #'
-#' @template configTablePlots
+#' @param configTablePlots `data.table` ConfigurationTable without header lines
 #' @param charactersWithoutMissing vector with character columns, where no missing value is allowed
 #' @param charactersWithMissing  vector with character column, where values may missing
 #' @param numericColumns  vector with numeric columns
@@ -794,7 +786,7 @@ validateConfigTablePlots <- function(configTablePlots,
   validateSubsetList(subsetList, configTablePlots)
 
   if (!is.null(numericRangeColumns)) {
-    validateNumericVectorColumns(numericRangeColumns, configTablePlots,len=2)
+    validateNumericVectorColumns(numericRangeColumns, configTablePlots, len = 2)
   }
 
   return(invisible())
@@ -869,21 +861,25 @@ validateSubsetList <- function(subsetList, data) {
 #' @param columns A vector of column names to validate.
 #' @param data A data frame containing the columns to validate.
 #' @param .. additionally parameters parsed to checkmate::assertNumeric
-validateNumericVectorColumns <- function(columns, data,...) {
+validateNumericVectorColumns <- function(columns, data, ...) {
   for (col in columns) {
     if (any(!is.na(data[[col]]))) {
       xList <- data[!is.na(get(col)), ][[col]]
-      for (xcharacter in xList)
+      for (xcharacter in xList) {
         tryCatch(
-          {x <- eval(parse(text = xcharacter))},
+          {
+            x <- eval(parse(text = xcharacter))
+          },
           error = function(e) {
             stop(paste("Invalid inputs in plot configuration column", col))
-          })
-      checkmate::assertNumeric(x = x,.var.name = paste("Plot configuration column", col),...)
+          }
+        )
+      }
+      checkmate::assertNumeric(x = x, .var.name = paste("Plot configuration column", col), ...)
       # do.call(what = checkmate::assertNumeric,
       #         args = c(list(x = x,.var.name = paste("Plot configuration column", col)),
       #                  list(...))
-      #)
+      # )
     }
   }
 }
@@ -928,7 +924,7 @@ validateGroupConsistency <- function(
 
 #' check if at least one of the following columns is selected
 #'
-#' @template configTablePlots
+#' @param configTablePlots `data.table` ConfigurationTable without header lines
 #' @param columnVector vector of columns to check
 #'
 validateAtleastOneEntry <- function(configTablePlots, columnVector) {

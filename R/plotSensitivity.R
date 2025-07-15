@@ -20,8 +20,8 @@ plotSensitivity <- function(projectConfiguration,
 
   plotObject <- ggplot(plotData) +
     geom_col(aes(x = parameterName, y = sens),
-             fill = "grey",
-             position = "dodge"
+      fill = "grey",
+      position = "dodge"
     ) +
     labs(
       y = "Sensitivity",
@@ -38,15 +38,15 @@ plotSensitivity <- function(projectConfiguration,
     layerWatermark()
 
   plotObject <- addFacets(plotObject,
-                          "fixed",
-                          facetAspectRatio = length(levels(plotData$parameterName)) / length(levels(plotData$plotTag)) / 5,
-                          nFacetColumns = length(levels(plotData$plotTag))
+    "fixed",
+    facetAspectRatio = length(levels(plotData$parameterName)) / length(levels(plotData$plotTag)) / 5,
+    nFacetColumns = length(levels(plotData$plotTag))
   )
 
   # Prepare for export
   plotObject <- setExportAttributes(
     object = plotObject,
-    caption =  getCaptionForSensitivityPlot(
+    caption = getCaptionForSensitivityPlot(
       plotData = plotData,
       projectConfiguration = projectConfiguration,
       plotCaptionAddon = onePlotConfig$plotCaptionAddon[1]
@@ -54,8 +54,8 @@ plotSensitivity <- function(projectConfiguration,
     exportArguments = list(width = 20)
   )
 
-  plotList = list(plotObject)
-  names(plotList) = onePlotConfig$plotName[1]
+  plotList <- list(plotObject)
+  names(plotList) <- onePlotConfig$plotName[1]
 
 
   # Export table
@@ -64,10 +64,12 @@ plotSensitivity <- function(projectConfiguration,
 
 
     plotDataTag <- setExportAttributes(
-      object = plotDataTag[,c('parameterName','sens')] %>%
-        setnames(old = c('parameterName','sens'),
-                 new = c('Parameter','Sensitivity')),
-      caption =  getCaptionForSensitivityPlot(
+      object = plotDataTag[, c("parameterName", "sens")] %>%
+        setnames(
+          old = c("parameterName", "sens"),
+          new = c("Parameter", "Sensitivity")
+        ),
+      caption = getCaptionForSensitivityPlot(
         plotData = plotDataTag,
         projectConfiguration = projectConfiguration,
         plotCaptionAddon = onePlotConfig$plotCaptionAddon[1]
@@ -106,15 +108,14 @@ prepareSensitivityPlotData <- function(onePlotConfig,
     separateAndTrim("pKParameters") %>%
     separateAndTrim("outputPathIds") %>%
     merge(
-      pkDefinitions ,
-      by = c( "pKParameter")
+      pkDefinitions,
+      by = c("pKParameter")
     ) %>%
     merge(configEnv$outputPaths, by = "outputPathId")
 
   plotData <- data.table()
 
   for (configLine in split(onePlotConfig, by = "scenario")) {
-
     sensitivityResults <- ospsuite::importSensitivityAnalysisResultsFromCSV(
       simulation = scenarioList[[configLine$scenario[1]]]$simulation,
       filePaths = file.path(
@@ -156,29 +157,37 @@ prepareSensitivityPlotData <- function(onePlotConfig,
           projectConfiguration$outputFolder,
           EXPORTDIR$sensitivityResults,
           sensitivityAnalyisName(configLine$scenario[1], configLine$sensitivityParameterSheet[1])
-        ))[,c("ParameterPath","Parameter")] %>%
+        ))[, c("ParameterPath", "Parameter")] %>%
           unique() %>%
-          setnames(old = c("ParameterPath","Parameter"),
-                   new = c("parameterPath","parameter")),
-        xlsxReadData(wb = file.path(projectConfiguration$addOns$sensitivityFile),
-                     sheetName = configLine$sensitivityParameterSheet[1]),
+          setnames(
+            old = c("ParameterPath", "Parameter"),
+            new = c("parameterPath", "parameter")
+          ),
+        xlsxReadData(
+          wb = file.path(projectConfiguration$addOns$sensitivityFile),
+          sheetName = configLine$sensitivityParameterSheet[1]
+        ),
         by = "parameterPath",
-        suffixes = c('Internal','Name')) %>%
-      .[,parameterPath := NULL]
+        suffixes = c("Internal", "Name")
+      ) %>%
+      .[, parameterPath := NULL]
 
     plotDataLine <-
       merge(rbindlist(plotDataLine),
-            nameDictionary,
-            by = 'parameterInternal')
+        nameDictionary,
+        by = "parameterInternal"
+      )
 
-    plotData <- rbind(plotData,
-                      plotDataLine)
+    plotData <- rbind(
+      plotData,
+      plotDataLine
+    )
   }
 
   plotData$outputPathId <- factor(plotData$outputPathId, levels = unique(plotData$outputPathId), ordered = TRUE)
   plotData$pKParameter <- factor(plotData$pKParameter, levels = rev(unique(plotData$pKParameter)), ordered = TRUE)
   plotData[, plotTag := generatePlotTag((as.numeric(outputPathId) - 1) * length(levels(plotData$pKParameter)) +
-                                          as.numeric(pKParameter))]
+    as.numeric(pKParameter))]
   plotData$plotTag <- factor(plotData$plotTag, ordered = TRUE, levels = sort(unique(plotData$plotTag)))
 
   plotData <- plotData[order(-abs(sens))]
@@ -203,7 +212,7 @@ getCaptionForSensitivityPlot <- function(plotData, projectConfiguration, plotCap
     dplyr::select(c("plotTag", "outputPathId", "pKParameter", "scenarioLongName")) %>%
     unique() %>%
     merge(configEnv$outputPaths[, c("outputPathId", "displayNameOutput")],
-          by = "outputPathId"
+      by = "outputPathId"
     )
 
 
@@ -247,9 +256,11 @@ getPKParameterOverview <- function(projectConfiguration) {
     rbindlist(idcol = "pKParameter") %>%
     .[, descriptions := NULL] %>%
     .[, pKParameter := NULL] %>%
-    setnames(old = c("name","displayName","displayUnit"),
-             new = c("pKParameter","displayNamePKParameter","displayUnitPKParameter")) %>%
-    separateAndTrim(columnName = 'outputPathIds')
+    setnames(
+      old = c("name", "displayName", "displayUnit"),
+      new = c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")
+    ) %>%
+    separateAndTrim(columnName = "outputPathIds")
 
   return(pkSheets)
 }
@@ -263,7 +274,6 @@ getPKParameterOverview <- function(projectConfiguration) {
 #' @return A validated data frame containing the configuration table for sensitivity plots.
 #' @keywords internal
 validateSensitivityConfig <- function(configTable, ...) {
-
   configTablePlots <- validateHeaders(configTable)
 
   validateOutputIdsForPlot()

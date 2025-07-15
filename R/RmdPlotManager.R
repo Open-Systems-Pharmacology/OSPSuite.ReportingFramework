@@ -17,7 +17,11 @@ RmdPlotManager <- R6::R6Class( # nolint
     #' @param digitsOfSignificance Number of significant digits to display in tables.
     #'     #'
     #' @return An instance of the RmdPlotManager object.
-    initialize = function(rmdfolder, rmdName, nameOfplotFunction, suppressExport = FALSE, digitsOfSignificance = 3) {
+    initialize = function(rmdfolder,
+                          rmdName,
+                          nameOfplotFunction,
+                          suppressExport = FALSE,
+                          digitsOfSignificance = 3) {
       private$.rmdfolder <- rmdfolder
       self$suppressExport <- suppressExport
       self$validateConfigTableFunction <- validateConfigTableForPlots

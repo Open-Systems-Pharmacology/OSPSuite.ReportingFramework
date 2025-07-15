@@ -18,7 +18,7 @@ mergeRmds(
 
 \item{sourceRmds}{list of .rmds to include}
 
-\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and file names}
 }
 \description{
 Creates Rmd file which include specified  .Rmd s

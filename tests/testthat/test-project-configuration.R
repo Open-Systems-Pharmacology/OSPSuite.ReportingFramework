@@ -11,12 +11,11 @@ test_that("Print function outputs correctly", {
 })
 
 test_that("Add-on file is added correctly", {
-
   # Define parameters for the add-on file
   property <- "testAdd on file"
   value <- "testfile.txt"
   description <- "A new add-on file"
-  templatePath <- file.path(projectConfiguration$configurationsFolder,'..','..',"template.txt")
+  templatePath <- file.path(projectConfiguration$configurationsFolder, "..", "..", "template.txt")
 
   # Create a template file for testing
   writeLines("This is a template", templatePath)
@@ -35,7 +34,6 @@ test_that("Add-on file is added correctly", {
 })
 
 test_that("Add-on folder is added correctly", {
-
   # Define parameters for the add-on folder with absolute path
   property <- "test folder"
   value <- file.path(projectConfiguration$outputFolder, "testfolder")
@@ -53,8 +51,10 @@ test_that("Add-on folder is added correctly", {
 
   # Define parameters for the add-on folder with relative path
   property <- "test folder 2"
-  value <- fs::path_rel(file.path(projectConfiguration$outputFolder, "testfolder"),
-                        getwd())
+  value <- fs::path_rel(
+    file.path(projectConfiguration$outputFolder, "testfolder"),
+    getwd()
+  )
   description <- "test folder 2"
 
   # Call the function to add an add-on folder
@@ -65,6 +65,4 @@ test_that("Add-on folder is added correctly", {
 
   # Check if the property was added to the private data
   expect_true(property %in% names(projectConfiguration$addOns))
-
 })
-

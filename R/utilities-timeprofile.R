@@ -4,7 +4,7 @@
 #'
 #' @param simulatedResults A list containing simulation results for each scenario.
 #' @param outputPathsPerScenario A named list of output paths for each scenario.
-#' @template projectConfig
+#' @param projectConfiguration Object of class `ProjectConfiguration` containing information on paths and file names
 #' @param aggregationFun A function to aggregate simulation data.
 #'
 #' @return A data.table containing the aggregated simulated time profiles for all scenarios.
@@ -14,7 +14,7 @@ loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, out
   for (scenarioName in names(outputPathsPerScenario)) {
     individualMatch <- NULL
     if ("Population" %in% class(simulatedResults[[scenarioName]]$population) &&
-        "ObservedIndividualId" %in% simulatedResults[[scenarioName]]$population$allCovariateNames) {
+      "ObservedIndividualId" %in% simulatedResults[[scenarioName]]$population$allCovariateNames) {
       individualMatch <-
         data.table(
           individualId = simulatedResults[[scenarioName]]$population$allIndividualIds,
@@ -30,7 +30,7 @@ loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, out
         individualMatch = individualMatch
       ) %>%
         dplyr::mutate(scenario = scenarioName),
-      fill  = TRUE
+      fill = TRUE
     )
   }
   return(dtSimulated)
@@ -254,8 +254,8 @@ filterIndividualID <- function(timeprofile, individualList) {
   individualId <- NULL
 
   if (!is.na(individualList) &&
-      "individualId" %in% names(timeprofile) &&
-      any(!is.na(timeprofile$individualId))) {
+    "individualId" %in% names(timeprofile) &&
+    any(!is.na(timeprofile$individualId))) {
     individualIds <- gsub("[()]", "", splitInputs(individualList))
     if (any(individualIds != "*")) {
       timeprofile <- timeprofile[individualId %in% individualIds, ]

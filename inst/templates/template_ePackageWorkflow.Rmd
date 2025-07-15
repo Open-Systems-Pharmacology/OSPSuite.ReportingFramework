@@ -1,0 +1,199 @@
+---
+title: "Workflow for Report generation"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+# Title
+
+This template is intended to guide the user in developing a workflow for report generation with an electronic package. If you render this workflow in your daily work environment, the report will be generated as desired. If the file is used as input for the `exportEPackageWorkflow` function, the .Rmd file is converted to a workflow R-script, and all necessary inputs are transferred to the ePackage folder. (see also vignette electronic-Package)
+
+!!! As this workflow is interpreted by a script, there are certain criteria for the file content and structure:
+
+All chunk names have a suffix which indicates how the export script will handle the chunk
+
+ "-copy" : The code  is copied to the final workflow script with all changes.
+ "-eval": The code  is evaluated,the result is used by the script for the export.
+ "-replace": The code is ignored and replaced by default code.
+ "-QC": These chunks are a place holder dor user defined checks, the code is ignored by the script.
+
+Do not delete a chunk (except -QCs), or the `exportEPackageWorkflow` script will crash.
+
+The script uses only the predefined template chunks. You can add other chunks, e.g., for debugging or QC reasons, but be aware that these chunks will not be part of the exported workflow script.
+
+Each chunk has its special conversion function, so please read the description on top thoroughly.
+
+
+# Report Generation Workflow
+
+## Initialisation
+
+### Libraries
+
+This chunk is copied as is by `exportEPackageWorkflow`; please list any additional libraries here:
+
+```{r libraries-copy}
+library(ospsuite.reportingframework)
+
+```
+
+### Customfunctions 
+
+If you want to source any custom functions, add the filename (including the relative path) to the variable pathsCustomfunctions in the first chunk. The `exportEPackageWorkflow` function will evaluate the chunk, copy the function files to the electronic package and add the lines to source the files to the final workflow script. 
+The original code of the chunks are not included in the final workflow script.
+
+```{r pathsCustomfunctions-eval}
+pathsCustomfunctions <- c()
+```
+
+```{r customfunctions-replace}
+if (length(pathsCustomfunctions) > 0)
+  lapply(pathsCustomfunctions,source)
+```
+
+
+### Workflow options
+
+Workflow options are set via the environment variable `QCpassed` Default is `FALSE`. Do not edit. Changes in the chunk will be ignored by the `exportEPackageWorkflow` function
+
+```{r workflowOptions-replace}
+setWorkflowOptions(isValidRun = getQCpassedEnvironmentVariable())
+```
+
+### Setup projectstructure
+
+This chunk will be replaced with code which generates the `projectConfiguration` via the `importWorkflow` function.
+This function builds a new project directory using the input files saved in the electronic package.
+Changes in the chunk will be ignored by the `exportEPackageWorkflow` function.
+
+```{r projectConfiguration-replace}
+projectConfiguration <-
+  ospsuite.reportingframework::createProjectConfiguration(
+    path =  file.path("ProjectConfiguration.xlsx"))
+
+initLogfunction(projectConfiguration)
+```
+
+
+##  load observedData 
+
+The `workflowExport` script will execute the chunks `observedTimeprofiles` and `observedPKParameter`.
+If the resulting variable `dataObserved` (rsp `dataObservedPK`) is NULL, the chunks will be ignored. Please use `dataObserved <- NULL` (rsp `dataObservedPK <- NULL`) if you do not have any data.
+
+If it is not null, `dataObserved` (rsp `dataObservedPK`) as it is after chunk evaluation is exported as .csv files to the electronic package and the configuration tables for the data import are exported accordingly. 
+The original code of all codes is not included in the final workflow script, which enables you to add your own code, e.g., additional filtering. The final workflow script will import the necessary data with the function `readObservedDataByDictionary`.
+
+Please ensure the resulting `dataObserved` and `dataObservedPK` contains only the data needed for the workflow in the appropriate format. You can use the function `validateObservedData` to check the format. Some check are suggested in the chunks ending with "-QC". These chunks are ignored by the export script. See also the chunk "check-usedData-QC" in the section "Create output plots".
+
+```{r dataObserved-eval}
+# use this line if you have no observed time profile data
+dataObserved <- NULL
+
+# use code below if you have observed time profile data
+dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,
+                                             dataClassType = 'timeprofile',
+                                             fileIds = NULL)
+
+# here you can add your own code to manipulate and clean the data if necessary
+
+```
+
+
+```{r observedTimeprofiles-QC}
+# check the format
+validateObservedData(dataObserved,dataClassType = 'timeprofile')
+
+#  add quality checks to ensure data contains only data which is needed.
+print(names(dataObserved))
+
+```
+
+
+```{r dataObservedPK-eval}
+# use this line if you have no observed pk-Parameter data
+dataObservedPK <- NULL
+
+# use code below you have observed pk-Parameter data
+dataObservedPK <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,
+                                             dataClassType = 'pkParameter',
+                                             fileIds = NULL)
+# here you can add your own code to manipulate and clean the data if necessary
+```
+
+
+```{r observedPKParameter-QC}
+# check the format
+validateObservedData(dataObserved,dataClassType = 'pkParameter')
+
+#  add quality checks to ensure data contains only data which is needed.
+print(names(dataObservedPK))
+
+```
+
+## load simulation results
+
+These code chunks are copied as is to the final workflow script.  
+The first chunk is evaluated, to get the list of scenarios within the variable `scenarioNames`. The configuration tables are  exported accordingly. Therefore, it is essential that the variable `scenarioNames` is filled with all scenarios needed in the workflow.
+
+```{r scenarioNames-eval}
+scenarioNames = c()
+```
+
+```{r loadResults-copy}
+
+# initialze scenario list
+scenarioList <-
+  createScenarios.wrapped(projectConfiguration = projectConfiguration,
+                          scenarioNames = scenarioNames)
+
+# It is assumed that all required scenarios were simulated in previous workflow started in same project directory.
+scenarioResults <- loadScenarioResults(projectConfiguration = projectConfiguration,
+                                       scenarioList = scenarioList)
+
+pkParameterDT <- loadPKParameter(projectConfiguration = projectConfiguration,
+                                 scenarioList = scenarioList)
+```
+
+##  Create output plots 
+
+This chunk is copied as is to the final workflow script. Please adjust the codes to you needs.
+The script will search in the chunk text for expressions configTableSheet = "?" and adjust the Plot configuration table accordingly. So please make sure to add all needed configuration tables in this way.
+
+```{r runPlot-copy}
+# set graphic
+ospsuite.plots::setDefaults()
+theme_update(legend.position = 'top')
+options(knitr.kable.NA = '')
+
+# timeprofiles
+runPlot(
+  nameOfplotFunction = "plotTimeProfiles",
+  projectConfiguration = projectConfiguration,
+  inputs = list(
+    configTableSheet = "TimeProfiles",
+    dataObserved = dataObserved,
+    scenarioResults = scenarioResults
+  )
+)
+
+```
+
+
+```{r checkusedData-QC}
+
+```
+
+## Finalize workflow
+
+Each workflow ends with the code of the chunk below. Changes will be ignored.
+
+```{r finalize-replace}
+addMessageToLog("finalize workflow")
+
+# save Session Infos including the loaded packages and R version, into a log file
+saveSessionInfo()
+```

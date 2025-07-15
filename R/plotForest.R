@@ -22,33 +22,33 @@ plotForest <- function(plotData,
                        mapping = aes(
                          y = y,
                          x = x,
-                         groupby = dataType),
+                         groupby = dataType
+                       ),
                        xLabel,
                        yFacetColumns = NULL,
                        xFacetColumn = NULL,
-                       xscale = c('linear','log'),
+                       xscale = c("linear", "log"),
                        xscale.args = list(),
-                       groupAesthetics = c('color','fill','shape'),
-                       tableColumns = c('yValues', 'yErrorValues'),
-                       tableLabels = c('M', 'Variance'),
+                       groupAesthetics = c("color", "fill", "shape"),
+                       tableColumns = c("yValues", "yErrorValues"),
+                       tableLabels = c("M", "Variance"),
                        labelWrapWidth = 10,
                        digitsToRound = 2,
                        digitsToShow = 2,
                        withTable = is.null(xFacetColumn),
                        geomPointAttributes = getDefaultGeomAttributes("Point"),
                        geomErrorbarAttributes = getDefaultGeomAttributes("Errorbar"),
-                       facetScales = c('free_y','free')
-) {
-
+                       facetScales = c("free_y", "free")) {
   # Input checks
   checkmate::assertDataTable(plotData)
   xscale <- match.arg(xscale)
-    checkmate::assertCharacter(xFacetColumn, null.ok = TRUE, len = 1)
+  checkmate::assertCharacter(xFacetColumn, null.ok = TRUE, len = 1)
   checkmate::assertCharacter(yFacetColumns, null.ok = TRUE, max.len = 2)
   checkmate::assertCharacter(tableColumns)
   checkmate::assertCharacter(tableLabels, len = length(tableColumns))
   checkmate::assertNames(names(plotData),
-                         must.include = c(yFacetColumns, xFacetColumn, tableColumns))
+    must.include = c(yFacetColumns, xFacetColumn, tableColumns)
+  )
   checkmate::assertIntegerish(digitsToRound, lower = 0, len = 1)
   checkmate::assertIntegerish(digitsToShow, lower = 0, len = 1)
   checkmate::assertString(xLabel)
@@ -57,35 +57,40 @@ plotForest <- function(plotData,
   facetScales <- match.arg(facetScales)
 
   plotObject <-
-    createPlotObject(plotData = plotData,
-                     mapping = mapping,
-                     groupAesthetics = groupAesthetics,
-                     xscale = xscale,
-                     xscale.args = xscale.args,
-                     xLabel = xLabel,
-                     yFacetColumns = yFacetColumns,
-                     xFacetColumn = xFacetColumn,
-                     labelWrapWidth = labelWrapWidth,
-                     geomPointAttributes = geomPointAttributes,
-                     geomErrorbarAttributes = geomErrorbarAttributes,
-                     facetScales = facetScales
+    createPlotObject(
+      plotData = plotData,
+      mapping = mapping,
+      groupAesthetics = groupAesthetics,
+      xscale = xscale,
+      xscale.args = xscale.args,
+      xLabel = xLabel,
+      yFacetColumns = yFacetColumns,
+      xFacetColumn = xFacetColumn,
+      labelWrapWidth = labelWrapWidth,
+      geomPointAttributes = geomPointAttributes,
+      geomErrorbarAttributes = geomErrorbarAttributes,
+      facetScales = facetScales
     )
 
   combinedPlot <- CombinedPlot$new(plotObject = plotObject)
 
   # Create table data and object only if xFacetColumn is NULL
   if (is.null(xFacetColumn) & withTable) {
-    tableData <- createTableData(plotData = plotData,
-                                 tableColumns = tableColumns,
-                                 tableLabels = tableLabels)
-    combinedPlot$tableObject <- createTableObject(tableData = tableData,
-                                     mapping = mapping,
-                                     digitsToRound = digitsToShow,
-                                     digitsToShow = digitsToRound,
-                                     yFacetColumns = yFacetColumns)
+    tableData <- createTableData(
+      plotData = plotData,
+      tableColumns = tableColumns,
+      tableLabels = tableLabels
+    )
+    combinedPlot$tableObject <- createTableObject(
+      tableData = tableData,
+      mapping = mapping,
+      digitsToRound = digitsToShow,
+      digitsToShow = digitsToRound,
+      yFacetColumns = yFacetColumns
+    )
   } else {
     if (!is.null(xFacetColumn) & withTable) {
-      warning('Tables will be only added if there is now faceting vs x (xFacetColumn is NULL)')
+      warning("Tables will be only added if there is now faceting vs x (xFacetColumn is NULL)")
     }
   }
 
@@ -118,10 +123,10 @@ createPlotObject <- function(plotData,
                              labelWrapWidth,
                              geomPointAttributes,
                              geomErrorbarAttributes,
-                             facetScales = 'free_y') {
+                             facetScales = "free_y") {
   # Generate the facet formula if yFacetColumns are provided
   facetFormula <- if (!is.null(yFacetColumns) && length(yFacetColumns) > 0) {
-    if (!is.null(xFacetColumn) && length(xFacetColumn) > 0){
+    if (!is.null(xFacetColumn) && length(xFacetColumn) > 0) {
       as.formula(paste(paste(yFacetColumns, collapse = " + "), "~", xFacetColumn))
     } else {
       as.formula(paste(paste(yFacetColumns, collapse = " + "), "~."))
@@ -130,11 +135,11 @@ createPlotObject <- function(plotData,
     NULL
   }
 
-  mappedData = ospsuite.plots::MappedData$new(
+  mappedData <- ospsuite.plots::MappedData$new(
     data = plotData,
     mapping = mapping,
-    direction = 'x',
-    yscale = 'linear',
+    direction = "x",
+    yscale = "linear",
     xscale = xscale,
     groupAesthetics = groupAesthetics
   )
@@ -143,45 +148,54 @@ createPlotObject <- function(plotData,
   plotObject <- ospsuite.plots:::addLayer(
     mappedData = mappedData,
     geom = "point",
-    geomAttributes = utils::modifyList(list(position = position_dodge(width = 1)),
-                                       geomPointAttributes),
+    geomAttributes = utils::modifyList(
+      list(position = position_dodge(width = 1)),
+      geomPointAttributes
+    ),
     plotObject = plotObject,
     layerToCall = geom_point
   )
   # Bar
-  if ('xmin' %in% names(mappedData$mapping) & 'xmax' %in% names(mappedData$mapping)){
+  if ("xmin" %in% names(mappedData$mapping) & "xmax" %in% names(mappedData$mapping)) {
     plotObject <- ospsuite.plots:::addLayer(
       mappedData = mappedData,
       geom = "errorbar",
-      geomAttributes = utils::modifyList(list(position = position_dodge(width = 1)),
-                                         geomErrorbarAttributes),
+      geomAttributes = utils::modifyList(
+        list(position = position_dodge(width = 1)),
+        geomErrorbarAttributes
+      ),
       plotObject = plotObject,
       layerToCall = geom_errorbar
     )
   }
-  plotObject <-  plotObject +
+  plotObject <- plotObject +
     (if (!is.null(facetFormula)) {
       ggh4x::facet_nested(facetFormula,
-                   switch = 'y',
-                   scales = facetScales,
-                   space = 'free_y',
-                   labeller = label_wrap_gen(width = labelWrapWidth),
-                   nest_line = element_line(color = 'black'),
-                   resect = unit(1, units = 'lines'))
+        switch = "y",
+        scales = facetScales,
+        space = "free_y",
+        labeller = label_wrap_gen(width = labelWrapWidth),
+        nest_line = element_line(color = "black"),
+        resect = unit(1, units = "lines")
+      )
     }) +
-    labs(y = '', x = xLabel) +
-    theme(panel.spacing = unit(0, "lines"),
-          panel.border = element_rect(colour = 'grey'),
-          axis.line = element_line(color = 'black'),
-          strip.text.y.left = element_text(angle = 0, hjust = 0.5, vjust = 0.5),
-          strip.background.y = element_rect(fill = NA, color = NA),
-          strip.text.x = element_text(hjust = 0, vjust = 1, angle = 0),
-          strip.background.x = element_rect(fill = NA, color = NA),
-          strip.placement = "outside")
+    labs(y = "", x = xLabel) +
+    theme(
+      panel.spacing = unit(0, "lines"),
+      panel.border = element_rect(colour = "grey"),
+      axis.line = element_line(color = "black"),
+      strip.text.y.left = element_text(angle = 0, hjust = 0.5, vjust = 0.5),
+      strip.background.y = element_rect(fill = NA, color = NA),
+      strip.text.x = element_text(hjust = 0, vjust = 1, angle = 0),
+      strip.background.x = element_rect(fill = NA, color = NA),
+      strip.placement = "outside"
+    )
 
-  plotObject <- ospsuite.plots::addXscale(plotObject = plotObject,
-                                          xscale = xscale,
-                                          xscale.args = xscale.args)
+  plotObject <- ospsuite.plots::addXscale(
+    plotObject = plotObject,
+    xscale = xscale,
+    xscale.args = xscale.args
+  )
 
   return(plotObject)
 }
@@ -198,15 +212,17 @@ createPlotObject <- function(plotData,
 #' @keywords internal
 createTableData <- function(plotData, tableColumns, tableLabels) {
   tableData <- melt(plotData,
-                    measure.vars = tableColumns,
-                    variable.name = ".valueType",
-                    value.name = ".value")
+    measure.vars = tableColumns,
+    variable.name = ".valueType",
+    value.name = ".value"
+  )
   tableData <- tableData[!is.na(.value)]
 
   tableData$.valueType <- factor(tableData$.valueType,
-                                 levels = tableColumns,
-                                 labels = tableLabels,
-                                 ordered = TRUE)
+    levels = tableColumns,
+    labels = tableLabels,
+    ordered = TRUE
+  )
 
   return(tableData)
 }
@@ -223,53 +239,62 @@ createTableData <- function(plotData, tableColumns, tableLabels) {
 #' @return A ggplot object representing the table.
 #' @keywords internal
 createTableObject <- function(tableData, mapping, digitsToRound, digitsToShow, yFacetColumns) {
-
   nTypes <- tryCatch(
-    {  length(unique(rlang::eval_tidy(
-      expr = rlang::get_expr(mapping$groupby),
-      data = tableData,
-      env = rlang::get_env(mapping$groupby))))
+    {
+      length(unique(rlang::eval_tidy(
+        expr = rlang::get_expr(mapping$groupby),
+        data = tableData,
+        env = rlang::get_env(mapping$groupby)
+      )))
     },
     error = function(cond) {
       1
-    })
+    }
+  )
 
   facetFormula <- if (nTypes > 1) {
-    as.formula(paste(paste(yFacetColumns, collapse = " + "), "~",rlang::get_expr(mapping$groupby)))
+    as.formula(paste(paste(yFacetColumns, collapse = " + "), "~", rlang::get_expr(mapping$groupby)))
   } else {
     as.formula(paste(paste(yFacetColumns, collapse = " + "), "~."))
   }
 
-  mapping <- utils::modifyList(mapping['y'],
-                               aes(x = .valueType,
-                                   label = formattable::formattable(
-                                     round(.value, digitsToRound),
-                                     digits = digitsToShow, format = "f")))
+  mapping <- utils::modifyList(
+    mapping["y"],
+    aes(
+      x = .valueType,
+      label = formattable::formattable(
+        round(.value, digitsToRound),
+        digits = digitsToShow, format = "f"
+      )
+    )
+  )
 
 
-  mappedData = ospsuite.plots::MappedData$new(
+  mappedData <- ospsuite.plots::MappedData$new(
     data = tableData,
     mapping = mapping,
-    yscale = 'linear',
-    xscale = 'linear',
+    yscale = "linear",
+    xscale = "linear",
     groupAesthetics = c()
   )
   tableObject <- ospsuite.plots::initializePlot(mappedData) +
     geom_text(size = 3) +
     (if (!is.null(facetFormula)) {
-      facet_grid(facetFormula, scales = 'free', space = 'free',switch = 'x',drop = TRUE)
+      facet_grid(facetFormula, scales = "free", space = "free", switch = "x", drop = TRUE)
     }) +
-    scale_x_discrete(position = 'top') +
-    labs(y = '', x = '') +
-    theme(panel.spacing = unit(0, "lines"),
-          panel.border = element_rect(colour = 'grey'),
-          panel.grid = element_blank(),
-          axis.text.x = element_text(),
-          axis.text.y = element_blank(),
-          axis.title.y = element_blank(),
-          axis.ticks.y = element_blank(),
-          strip.text.y = element_blank(),
-          strip.placement = "outside")
+    scale_x_discrete(position = "top") +
+    labs(y = "", x = "") +
+    theme(
+      panel.spacing = unit(0, "lines"),
+      panel.border = element_rect(colour = "grey"),
+      panel.grid = element_blank(),
+      axis.text.x = element_text(),
+      axis.text.y = element_blank(),
+      axis.title.y = element_blank(),
+      axis.ticks.y = element_blank(),
+      strip.text.y = element_blank(),
+      strip.placement = "outside"
+    )
 
   return(tableObject)
 }
@@ -285,7 +310,6 @@ createTableObject <- function(tableData, mapping, digitsToRound, digitsToShow, y
 #' @return A combined ggplot object containing both the plot and the table.
 #' @keywords internal
 combinePlots <- function(plotObject, tableObject, relWidths) {
-
   # Check the current legend position
   if (theme_get()$legend.position == "right") {
     # Change legend position to top if table is included
@@ -297,7 +321,7 @@ combinePlots <- function(plotObject, tableObject, relWidths) {
     tableObject,
     nrow = 1,
     axis = "tb",
-    align = 'h',
+    align = "h",
     rel_widths = relWidths
   )
 }

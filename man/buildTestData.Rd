@@ -54,4 +54,3 @@ scenarioList <- testSetup$scenarioList
 }
 
 }
-\keyword{internal}

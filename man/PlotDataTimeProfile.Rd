@@ -80,7 +80,7 @@ Initialize a new instance of the class
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{projectConfiguration}}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+\item{\code{projectConfiguration}}{Object of class `ProjectConfiguration` containing information on paths and file names}
 
 \item{\code{onePlotConfig}}{plot configuration for one plot}
 

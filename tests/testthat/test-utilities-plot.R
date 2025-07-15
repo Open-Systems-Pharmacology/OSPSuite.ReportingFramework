@@ -206,14 +206,16 @@ test_that("getColorVectorForLegend handles missing colors gracefully", {
 
 
 test_that("validateNumericVectorColumns handles nuemric vactor validation", {
-  dt = data.table(myValidCol = c('c(1,2,3)','c(4,5,6)'),
-                myRangeCol = c('c(1,2)','c(NA,5)'),
-                myInvalidCol1 = c('c(1,2,3)','c(4,5,6'),
-                myInvalidCol2 = c('c(1,2,3)','c(4,5,6s)'))
+  dt <- data.table(
+    myValidCol = c("c(1,2,3)", "c(4,5,6)"),
+    myRangeCol = c("c(1,2)", "c(NA,5)"),
+    myInvalidCol1 = c("c(1,2,3)", "c(4,5,6"),
+    myInvalidCol2 = c("c(1,2,3)", "c(4,5,6s)")
+  )
 
   expect_no_error(validateNumericVectorColumns("myValidCol", dt))
-  expect_no_error(validateNumericVectorColumns("myRangeCol", dt,len=2))
-  expect_error(validateNumericVectorColumns("myValidCol", dt,len=2))
+  expect_no_error(validateNumericVectorColumns("myRangeCol", dt, len = 2))
+  expect_error(validateNumericVectorColumns("myValidCol", dt, len = 2))
   expect_error(validateNumericVectorColumns("myInvalidCol1", dt))
   expect_error(validateNumericVectorColumns("myInvalidCol2", dt))
 })

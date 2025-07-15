@@ -29,8 +29,10 @@ calculatePKParameter <- function(projectConfiguration,
 
   # Load or calculate PK analyses
 
-  writeToLog(type = 'Info',
-             msg = paste("Calculate  PK analysis result of", scenarioName))
+  writeToLog(
+    type = "Info",
+    msg = paste("Calculate  PK analysis result of", scenarioName)
+  )
 
   pkAnalyses <- ospsuite::calculatePKAnalyses(results = scenarioResult$results)
 
@@ -147,9 +149,9 @@ loadPKParameter <- function(projectConfiguration,
     )
   })
   pkParameterDT <- merge(data.table::rbindlist(pkAnalysesList),
-                         dtScenarios[, c("scenarioName", "populationId")],
-                         by.x = "scenario",
-                         by.y = "scenarioName"
+    dtScenarios[, c("scenarioName", "populationId")],
+    by.x = "scenario",
+    by.y = "scenarioName"
   )
 
   return(pkParameterDT)
@@ -215,8 +217,8 @@ loadPKAnalysisPerScenario <- function(scenarioName, scenario,
             "displayUnit"
           ) %>%
           setnames(
-            old = c("parameter","displayName", "displayUnit"),
-            new = c("pkParameter","displayNamePKParameter", "displayUnitPKParameter")
+            old = c("parameter", "displayName", "displayUnit"),
+            new = c("pkParameter", "displayNamePKParameter", "displayUnitPKParameter")
           )
       )
     )
@@ -243,8 +245,10 @@ loadPkAnalysisRawData <- function(projectConfiguration, scenarioName, scenario) 
   fileName <- file.path(outputFolder, paste0(scenarioName, ".csv"))
   if (!file.exists(fileName)) stop(paste("PK Parameter for", scenarioName, "calculated!"))
 
-  writeToLog(type = 'Info',
-             msg = paste("Load PK analysis result of", scenarioName))
+  writeToLog(
+    type = "Info",
+    msg = paste("Load PK analysis result of", scenarioName)
+  )
 
   pkAnalyses <- ospsuite::importPKAnalysesFromCSV(
     filePath = fileName,
@@ -307,11 +311,11 @@ addUnitFactorsToPKDefinition <- function(scenario,
   # Split outputPathIds into a list and merge with dtO to create a comprehensive parameter definition
   dtPkParameterDefinition <-
     dtPkParameterDefinition[, .(outputPathId = splitInputs(outputPathIds)),
-                            by = c("name", "displayName", "displayUnit")
+      by = c("name", "displayName", "displayUnit")
     ] %>%
     merge(dtO,
-          by.x = c("name", "outputPathId"),
-          by.y = c("parameter", "outputPathId")
+      by.x = c("name", "outputPathId"),
+      by.y = c("parameter", "outputPathId")
     )
 
   # Check if the resulting dtPkParameterDefinition is empty; if so, stop execution with an error message
@@ -332,33 +336,36 @@ addUnitFactorsToPKDefinition <- function(scenario,
   # Return the modified dtPkParameterDefinition with unit factors included
   return(dtPkParameterDefinition)
 }
-#plot Support --------
+# plot Support --------
 mergePKParameterWithConfigTable <- function(onePlotConfig,
                                             pkParameterDT,
                                             colorVector = NULL,
                                             asRatio = FALSE) {
-
   # initialize to avoid linter messages
   displayNameOutput <- plotTag <- isReference <- isReference <- colorIndex <- referenceScenario <- NULL
 
   onePlotConfig <- data.table::copy(onePlotConfig)
-  for (col in intersect(names(onePlotConfig),
-                        c("scenarios","pkParameters","outputPathIds"))){
+  for (col in intersect(
+    names(onePlotConfig),
+    c("scenarios", "pkParameters", "outputPathIds")
+  )) {
     onePlotConfig <- separateAndTrim(onePlotConfig, col)
   }
   mergedData <- onePlotConfig %>%
-    dplyr::select(dplyr::any_of(c("plotName","scenario","referenceScenario", "pkParameter", "outputPathId",
-                                   "scenarioShortName","scenarioLongName"))) %>%
+    dplyr::select(dplyr::any_of(c(
+      "plotName", "scenario", "referenceScenario", "pkParameter", "outputPathId",
+      "scenarioShortName", "scenarioLongName"
+    ))) %>%
     merge(
       pkParameterDT %>%
         unique(),
       by = c("scenario", "pkParameter", "outputPathId")
     ) %>%
     merge(configEnv$outputPaths[, c("outputPathId", "displayNameOutput")],
-          by = "outputPathId"
+      by = "outputPathId"
     )
 
-  if (nrow(mergedData) == 0) stop(paste('no PK-Parameter available for',onePlotConfig$plotName[1]))
+  if (nrow(mergedData) == 0) stop(paste("no PK-Parameter available for", onePlotConfig$plotName[1]))
 
 
   if (asRatio) {
@@ -371,20 +378,22 @@ mergePKParameterWithConfigTable <- function(onePlotConfig,
 
   # Ensure order by creating factors
   mergedData$displayNameOutput <- factor(mergedData$displayNameOutput,
-                                         levels = unique(mergedData$displayNameOutput),
-                                         ordered = TRUE
+    levels = unique(mergedData$displayNameOutput),
+    ordered = TRUE
   )
 
-  mergedData$scenarioShortName <- factor(mergedData$
-                                           scenarioShortName,
-                                         levels = unique(onePlotConfig$scenarioShortName),
-                                         ordered = TRUE
+  mergedData$scenarioShortName <- factor(
+    mergedData$
+      scenarioShortName,
+    levels = unique(onePlotConfig$scenarioShortName),
+    ordered = TRUE
   )
 
-  mergedData$scenarioLongName <- factor(mergedData$
-                                           scenarioLongName,
-                                         levels = unique(onePlotConfig$scenarioLongName),
-                                         ordered = TRUE
+  mergedData$scenarioLongName <- factor(
+    mergedData$
+      scenarioLongName,
+    levels = unique(onePlotConfig$scenarioLongName),
+    ordered = TRUE
   )
 
   return(mergedData)
@@ -407,15 +416,14 @@ mergePKParameterWithConfigTable <- function(onePlotConfig,
 #'
 #' @keywords internal
 setValueToRatio <- function(mergedData, pkParameterDT) {
-
   mergedData <- merge(mergedData,
-                      pkParameterDT[, c("scenario", "pkParameter", "individualId", "outputPathId", "value", "populationId")] %>%
-                        setnames(
-                          old = c("scenario"),
-                          new = c("referenceScenario")
-                        ),
-                      by = c("referenceScenario", "pkParameter", "individualId", "outputPathId"),
-                      suffixes = c(".base", ".reference")
+    pkParameterDT[, c("scenario", "pkParameter", "individualId", "outputPathId", "value", "populationId")] %>%
+      setnames(
+        old = c("scenario"),
+        new = c("referenceScenario")
+      ),
+    by = c("referenceScenario", "pkParameter", "individualId", "outputPathId"),
+    suffixes = c(".base", ".reference")
   )
   mergedData[, value := value.base / value.reference]
 

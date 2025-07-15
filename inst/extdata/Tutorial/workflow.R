@@ -81,8 +81,7 @@ exportRandomPopulations(
 scenarioList <-
   createScenarios.wrapped(
     projectConfiguration = projectConfiguration,
-    scenarioNames = NULL,
-    doCheckScenarioNameValidity = TRUE
+    scenarioNames = NULL
   )
 
 scenarioResults <- runAndSaveScenarios(

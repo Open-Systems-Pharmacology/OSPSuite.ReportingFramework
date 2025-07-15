@@ -9,7 +9,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
   public = list(
     #' @description
     #' Initialize a new instance of the class
-    #' @template projectConfig
+    #' @param projectConfiguration Object of class `ProjectConfiguration` containing information on paths and file names
     #' @param onePlotConfig plot configuration for one plot
     #' @param dataObserved `data.table` with observed data
     #' @param aggregationFun function to aggregate simulated data
@@ -71,7 +71,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
           configTable = self$configTable
         )
       # Set labels
-      if (any(unique(dtSimulated$dataClass)  %in% DATACLASS$tpAggregated)) {
+      if (any(unique(dtSimulated$dataClass) %in% DATACLASS$tpAggregated)) {
         errorLabels <- getErrorLabels(dtSimulated$yErrorType[1])
         private$.tpLabelSimulatedMean <- errorLabels[1]
         private$.tpLabelSimulatedRange <- errorLabels[2]
@@ -163,7 +163,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     #' @param nMaxFacetRows maximal number of facet rows
     splitDataToPanels = function(nMaxFacetRows) {
       nFacetColumns <- self$configTable$nFacetColumns[1]
-      splitPlotsPerTimeRange = as.logical(self$configTable$splitPlotsPerTimeRange[1])
+      splitPlotsPerTimeRange <- as.logical(self$configTable$splitPlotsPerTimeRange[1])
 
       configTable <- data.table::copy(self$configTable) %>%
         dplyr::select("scenarioIndex", "outputPathIds", "scenarioLongName", "dataGroupIds", "individualIds")
@@ -183,7 +183,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         splitPlotsPerTimeRange = as.logical(self$configTable$splitPlotsPerTimeRange[1])
       )
       private$.nFacetColumns <-
-        min(self$configTable$nFacetColumns[1],max(dtCaption[['plotId']]))
+        min(self$configTable$nFacetColumns[1], max(dtCaption[["plotId"]]))
 
       private$.dtCaption <- finalizeCaptionTable(
         dtCaption = dtCaption,
@@ -206,7 +206,6 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
       for (fieldName in c(".dataObserved", ".dataSimulated")) {
         if (nrow(private[[fieldName]]) > 0) {
-
           identifier <- intersect(
             c("scenarioIndex", "outputPathId", "timeRangeTag", "individualId"),
             names(self$dtCaption)
@@ -217,18 +216,18 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
           tmp <- merge(private[[fieldName]], dtCaptionSelected, by = identifier)
 
           # Check conditions for reference data
-          if (private[[fieldName]]$dataType[1] == 'simulated' &&
-              "individualId" %in% identifier &&
-              any("referenceScenario" %in% private[[fieldName]]$scenarioType)) {
+          if (private[[fieldName]]$dataType[1] == "simulated" &&
+            "individualId" %in% identifier &&
+            any("referenceScenario" %in% private[[fieldName]]$scenarioType)) {
+            identifier <- setdiff(identifier, "individualId")
 
-            identifier <- setdiff(identifier, 'individualId')
-
-            referenceData <- private[[fieldName]][scenarioType == 'referenceScenario']
+            referenceData <- private[[fieldName]][scenarioType == "referenceScenario"]
             referenceData <- merge(referenceData, dtCaptionSelected,
-                                   by = identifier,
-                                   allow.cartesian = TRUE)
+              by = identifier,
+              allow.cartesian = TRUE
+            )
 
-            tmp <- rbind(tmp, referenceData,fill = TRUE)
+            tmp <- rbind(tmp, referenceData, fill = TRUE)
           }
 
           private[[fieldName]] <- tmp
@@ -336,7 +335,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
       if (isNeeded) {
         identifier <- intersect(
-          c("plotTag", "outputPathId", "timeRangeTag", "individualId","scenarioIndex"),
+          c("plotTag", "outputPathId", "timeRangeTag", "individualId", "scenarioIndex"),
           names(private$.dataSimulated)
         )
 
@@ -563,9 +562,11 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         for (ScenarioField in c("scenario", "referenceScenario")) {
           if (!is.na(configList[[ScenarioField]])) {
             timeprofile <- dtSimulated[scenario == configList[[ScenarioField]]] %>%
-              dplyr::mutate(scenarioIndex = scenarioIndex,
-                            scenario = NULL,
-                            scenarioType = ScenarioField)
+              dplyr::mutate(
+                scenarioIndex = scenarioIndex,
+                scenario = NULL,
+                scenarioType = ScenarioField
+              )
 
             timeprofile <- filterIndividualID(
               timeprofile = timeprofile,
@@ -590,7 +591,6 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
             simulatedData <- rbind(simulatedData, timeprofile)
           }
         }
-
       }
 
       return(simulatedData)
@@ -650,13 +650,17 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     # color is defined by reference
     addColorIndexByScenarioType = function(referenceScaleVector) {
       legendLabels <- self$configTable$colorLegend[1]
-      checkmate::assertCharacter(legendLabels,.var.name = 'column "colorLegend" configTable')
+      checkmate::assertCharacter(legendLabels, .var.name = 'column "colorLegend" configTable')
       namesVector <- trimws(strsplit(as.character(legendLabels), "\\|")[[1]])
-      checkmate::assertCharacter(namesVector,len = 2,.var.name = 'column "colorLegend" configTable')
+      checkmate::assertCharacter(namesVector, len = 2, .var.name = 'column "colorLegend" configTable')
 
-      referenceScaleVector <- utils::modifyList(stats::setNames(object = list(c(NA, NA),c(NA, NA)),
-                                      nm = namesVector),
-                                      referenceScaleVector)
+      referenceScaleVector <- utils::modifyList(
+        stats::setNames(
+          object = list(c(NA, NA), c(NA, NA)),
+          nm = namesVector
+        ),
+        referenceScaleVector
+      )
 
       referenceColorScaleVector <-
         setNames(
@@ -1045,8 +1049,8 @@ addTimeRangeTagsToData <- function(timeRangeColumns, dataOld, configTable, appli
       }
 
       dataNew <- dataOld[xValues >= tRange[1] &
-                           xValues <= tRange[2] &
-                           scenarioIndex == scI]
+        xValues <= tRange[2] &
+        scenarioIndex == scI]
       dataNew[, timeRangeTag := tag]
 
       timeshift <- as.double(timeTags[tag == gsub("^timeRange_", "", col)]$timeShift)
@@ -1077,7 +1081,7 @@ finalizeCaptionTable <- function(dtCaption, timeTags, dtOutputPaths, nFacetColum
   # Initialize variables used for data.tables
   counter <- plotId <- plotTag <- individualId <- NULL
 
-  maxPlotId <-  nFacetColumns * nMaxFacetRows
+  maxPlotId <- nFacetColumns * nMaxFacetRows
 
   # Update the counter based on the condition
   dtCaption[, counter := ceiling(plotId / maxPlotId)]
@@ -1108,9 +1112,11 @@ finalizeCaptionTable <- function(dtCaption, timeTags, dtOutputPaths, nFacetColum
     )))
 
   # delete columns without information (e.g. individualId for population scenarios)
-  dtCaption <- dtCaption[, lapply(.SD, function(x){
-    if (!all(is.na(x))) x else NULL}),
-    .SDcols = names(dtCaption)]
+  dtCaption <- dtCaption[, lapply(.SD, function(x) {
+    if (!all(is.na(x))) x else NULL
+  }),
+  .SDcols = names(dtCaption)
+  ]
 
   data.table::setorderv(dtCaption, c("counter", "plotTag"))
 

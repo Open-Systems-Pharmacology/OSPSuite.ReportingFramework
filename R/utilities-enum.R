@@ -1,4 +1,3 @@
-
 #' @title enumeration keys for Timerange shortcut
 #' @export
 TIMERANGE <- ospsuite.utils::enum(c( # nolint
@@ -22,6 +21,13 @@ DATACLASS <- ospsuite.utils::enum(c( # nolint
 EXPORTDIR <- ospsuite.utils::enum(c( # nolint
   simulationResult = "SimulationResults",
   sensitivityResults = "SensitivityResults",
-  pKAnalysisResults = "PKAnalysisResults",
-  analysisProgram = "AnalysisProgram"
+  pKAnalysisResults = "PKAnalysisResults"
+))
+
+
+#' @title enumeration biomrtric units
+BIOMETRICUNITS <- ospsuite.utils::enum(c( # nolint
+  age = "year(s)",
+  weight = "kg",
+  height = "cm"
 ))

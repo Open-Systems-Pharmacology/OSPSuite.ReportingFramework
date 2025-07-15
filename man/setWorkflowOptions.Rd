@@ -4,23 +4,11 @@
 \alias{setWorkflowOptions}
 \title{Sets options for a reporting frame work workflow.}
 \usage{
-setWorkflowOptions(
-  isValidRun,
-  ePackageGeneration = c("None", "withEPackage", "onlyEPackage")
-)
+setWorkflowOptions(isValidRun = NULL)
 }
 \arguments{
 \item{isValidRun}{A logical value indicating if the run is valid. If TRUE,
 options are set for a valid run; if FALSE, options are set for an invalid run.}
-
-\item{ePackageGeneration}{A character string indicating the type of ePackage generation.
-       Options include:
-
-       - 'None': No ePackage generation.
-
-       - 'withEPackage': Generate ePackage alongside the run.
-
-       - 'onlyEPackage': Only generate ePackage without exporting figures.}
 }
 \description{
 Sets options for a reporting frame work workflow.
@@ -37,9 +25,6 @@ This function configures options for a reporting framework workflow, which is ty
    - Functions that manipulate inputs are not allowed.
    - The workflow will stop if an error occurs during execution.
 
-Additionally, a workflow can produce an ePackage (see vignette XXX). This function allows you to enable or disable watermarks,
-control the handling of failing plots, manage the execution of helper functions, and specify options for ePackage generation and plot export.
-
 Relevant Options:
 
 - `ospsuite.plots.watermark_enabled`: Set to TRUE when `isValidRun` is FALSE to display watermarks on figures, and FALSE when `isValidRun` is TRUE.
@@ -47,8 +32,4 @@ Relevant Options:
 - `OSPSuite.RF.skipFailingPlots`: Set to TRUE when `isValidRun` is FALSE to skip plots that fail to generate, and FALSE when `isValidRun` is TRUE.
 
 - `OSPSuite.RF.stopHelperFunction`: Set to TRUE when `isValidRun` is TRUE to stop the execution of helper functions during valid runs.
-
-- `OSPSuite.RF.withEPackage`: Set to TRUE if `ePackageGeneration` is either 'withEpackage' or 'onlyEpackage', indicating that ePackage generation should occur.
-
-- `OSPSuite.RF.withPlotExport`: Set to TRUE if `ePackageGeneration` is either 'None' or 'withEpackage', indicating that plot export should occur.
 }

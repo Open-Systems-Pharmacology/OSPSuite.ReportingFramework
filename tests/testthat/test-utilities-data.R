@@ -4,7 +4,6 @@ dataObserved <- readObservedDataByDictionary(projectConfiguration)
 
 
 test_that("It should read and process data based on the provided project configuration", {
-
   expect_true(data.table::is.data.table(dataObserved), "Processed data should be a data table")
   expect_equal(nrow(dataObserved), expected = 396, label = "Processed data should have the expected number of rows")
 
@@ -17,7 +16,6 @@ test_that("It should read and process data based on the provided project configu
 
   dtOutputPaths <- getOutputPathIds(projectConfiguration$plotsFile)
   expect_contains(dtOutputPaths$outputPathId, c("Plasma", "CYP3A4total", "CYP3A4Liver"))
-
 })
 
 
@@ -42,7 +40,7 @@ test_that("It should check the validity of the observed dataset", {
   data.table::setattr(observedData[["lloq"]], "columnType", "timeprofile")
 
   # Add your assertions here to test the validation result
-  expect_invisible(validateObservedData(observedData,dataClassType = 'timeprofile'))
+  expect_invisible(validateObservedData(observedData, dataClassType = "timeprofile"))
 
   # Test for uniqueness of `individualId`, group, `outputPathId`, and time columns
   expect_error(validateObservedData(
@@ -53,8 +51,7 @@ test_that("It should check the validity of the observed dataset", {
   observedDataChanged <- data.table::copy(observedData)
   observedDataChanged[1, yValues := NA]
 
-  expect_warning(validateObservedData(dataDT = observedDataChanged, dataClassType = 'timeprofile'
-  ))
+  expect_warning(validateObservedData(dataDT = observedDataChanged, dataClassType = "timeprofile"))
 
   # Test for uniqueness of yUnit within each outputPathId
   observedDataChanged <- data.table::copy(observedData)
@@ -63,14 +60,13 @@ test_that("It should check the validity of the observed dataset", {
 
   expect_warning(validateObservedData(
     dataDT  = observedDataChanged,
-    dataClassType = 'timeprofile'
+    dataClassType = "timeprofile"
   ))
 })
 
 
 # Unit tests for groupDataByIdentifier function
 test_that("groupDataByIdentifier function test", {
-
   groupedData <- groupDataByIdentifier(dataObserved)
 
   # Add assertions based on the expected output of the function
@@ -86,7 +82,6 @@ test_that("groupDataByIdentifier function test", {
 
 # Unit tests for getColumnsForColumnType function
 test_that("getColumnsForColumnType function test", {
-
   columnTypes <- c("identifier")
   columnNames <- getColumnsForColumnType(dataObserved, columnTypes)
 
@@ -97,8 +92,7 @@ test_that("getColumnsForColumnType function test", {
 
 # Unit tests for createDataSets function
 test_that("createDataSets function test", {
-
-  tmpData <- dataObserved[outputPathId == 'Plasma' & yValues < lloq]
+  tmpData <- dataObserved[outputPathId == "Plasma" & yValues < lloq]
 
   groupedData <- groupDataByIdentifier(tmpData)
 
@@ -113,7 +107,7 @@ test_that("createDataSets function test", {
   expect_error(createDataSets(groupedData[[1]]))
 
   # Warning for different LLOQ
-  tmpData <- dataObserved[outputPathId == 'Plasma']
+  tmpData <- dataObserved[outputPathId == "Plasma"]
   tmpData$lloq[1] <- 2
   groupedData <- groupDataByIdentifier(tmpData)
   expect_warning(dataSet <- createDataSets(groupedData[[1]]))
@@ -121,7 +115,7 @@ test_that("createDataSets function test", {
 
 # Unit tests for addMetaDataToDataSet function
 test_that("addMetaDataToDataSet function test", {
-  tmpData <- dataObserved[outputPathId == 'Plasma']
+  tmpData <- dataObserved[outputPathId == "Plasma"]
   groupedData <- groupDataByIdentifier(tmpData)
 
   dataSet <- createDataSets(groupData = groupedData[[1]])
@@ -142,7 +136,7 @@ test_that("addMetaDataToDataSet function test", {
 
 # Unit tests for convertDataTableToDataCombined function
 test_that("convertDataTableToDataCombined function test", {
-  tmpData <- dataObserved[outputPathId == 'Plasma']
+  tmpData <- dataObserved[outputPathId == "Plasma"]
 
   dataCombined <- convertDataTableToDataCombined(tmpData)
 
@@ -168,7 +162,7 @@ test_that("convertIdentifierColumns function works as expected", {
 # Test for aggregateObservedDataGroups
 
 mockData <- copy(dataObserved)
-mockData[outputPathId != 'Plasma',lloq := 0.6]
+mockData[outputPathId != "Plasma", lloq := 0.6]
 
 # Test for Aggregartion with LLOQ check
 test_that("Aggregation with LLOQ check works", {
@@ -180,9 +174,9 @@ test_that("Aggregation with LLOQ check works", {
 
   expect_s3_class(result, "data.table")
   expect_true("group" %in% names(result))
-  expect_contains(names(result),expected = c("yValues","yErrorValues","yErrorType","numberOfIndividuals","nBelowLLOQ"))
+  expect_contains(names(result), expected = c("yValues", "yErrorValues", "yErrorType", "numberOfIndividuals", "nBelowLLOQ"))
   expect_equal(unique(result$yErrorType), ospsuite::DataErrorType$GeometricStdDev)
-  expect_true(all(is.na(result[numberOfIndividuals*2/3 < nBelowLLOQ]$yValues)))
+  expect_true(all(is.na(result[numberOfIndividuals * 2 / 3 < nBelowLLOQ]$yValues)))
 
   # Test with Custom Function
   customFunc <- function(y) {
@@ -195,25 +189,25 @@ test_that("Aggregation with LLOQ check works", {
   }
 
   expect_error(result <- aggregateObservedDataGroups(dataObserved,
-                                        groups = grep('iv',unique(dataObserved$group),value = TRUE),
-                                        aggregationFlag = "Custom",
-                                        customFunction = customFunc))
+    groups = grep("iv", unique(dataObserved$group), value = TRUE),
+    aggregationFlag = "Custom",
+    customFunction = customFunc
+  ))
 
   result <- aggregateObservedDataGroups(dataObserved,
-                                        groups = grep('iv',unique(dataObserved$group),value = TRUE),
-                                        aggregationFlag = "Custom",
-                                        customFunction = customFunc,
-                                        lloqCheckColumns1of2 = c('yMin','yMax'),
-                                        lloqCheckColumns2of3 = c('yValues'))
+    groups = grep("iv", unique(dataObserved$group), value = TRUE),
+    aggregationFlag = "Custom",
+    customFunction = customFunc,
+    lloqCheckColumns1of2 = c("yMin", "yMax"),
+    lloqCheckColumns2of3 = c("yValues")
+  )
 
   expect_s3_class(result, "data.table")
-  expect_contains(names(result),expected = c("yValues","yMin","yMax","yErrorType","numberOfIndividuals","nBelowLLOQ"))
+  expect_contains(names(result), expected = c("yValues", "yMin", "yMax", "yErrorType", "numberOfIndividuals", "nBelowLLOQ"))
   expect_equal(unique(result$yErrorType), "Mean | range")
-  expect_true(all(is.na(result[numberOfIndividuals*1/2 < nBelowLLOQ]$yMin)))
-  expect_true(all(is.na(result[numberOfIndividuals*2/3 < nBelowLLOQ]$yValues)))
-  expect_false(all(is.na(result[numberOfIndividuals*1/2 < nBelowLLOQ]$yValues)))
-
-
+  expect_true(all(is.na(result[numberOfIndividuals * 1 / 2 < nBelowLLOQ]$yMin)))
+  expect_true(all(is.na(result[numberOfIndividuals * 2 / 3 < nBelowLLOQ]$yValues)))
+  expect_false(all(is.na(result[numberOfIndividuals * 1 / 2 < nBelowLLOQ]$yValues)))
 })
 
 

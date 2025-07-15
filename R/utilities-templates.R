@@ -13,7 +13,20 @@ openWorkflowTemplate <- function() {
 #'
 #' @export
 openFigureTemplate <- function() {
-  rstudioapi::callFun("sendToConsole", "ospsuite.reportingframework::createDocumentFromTemplate(template = 'template_plot')")
+  rstudioapi::callFun(
+    "sendToConsole",
+    "ospsuite.reportingframework::createDocumentFromTemplate(template = 'template_plot.R')"
+  )
+}
+
+#' Opens the  template for figure creation as new document
+#'
+#' @export
+openEPackageTemplate <- function() {
+  rstudioapi::callFun(
+    "sendToConsole",
+    "ospsuite.reportingframework::createDocumentFromTemplate(template = 'template_ePackageWorkflow.Rmd')"
+  )
 }
 
 
@@ -22,7 +35,7 @@ openFigureTemplate <- function() {
 #' @export
 createWorkflowTemplate <- function() {
   ospsuite.reportingframework::createDocumentFromTemplate(
-    template = "template_workflow",
+    template = "template_workflow.R",
     templatePath = getOption(
       "OSPSuite.RF.PathForWorkflowTemplate",
       default = system.file("templates", package = "ospsuite.reportingframework")
@@ -41,11 +54,18 @@ createDocumentFromTemplate <- function(template = "template_workflow",
                                        templatePath = system.file("templates", package = "ospsuite.reportingframework")) {
   templateFile <- file.path(
     templatePath,
-    paste0(template, ".R")
+    template
+  )
+  type <- switch(fs::path_ext(template),
+    "R" = "r",
+    "Rmd" = "rmarkdown"
   )
   templateContent <-
     readLines(templateFile) # Read the content of the template file
   templateText <-
-    paste(templateContent, collapse = "\n") # Concatenate the lines into a single string
-  invisible(rstudioapi::documentNew(text = templateText)) # Create a new document in RStudio using the template content
+    paste(templateContent, collapse = "\n")
+  invisible(rstudioapi::documentNew(
+    text = templateText,
+    type = type
+  ))
 }

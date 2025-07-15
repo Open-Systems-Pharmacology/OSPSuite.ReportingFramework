@@ -1,18 +1,22 @@
 # testProject was set up by setup.R
-pkParameterDT <- loadPKParameter(projectConfiguration = projectConfiguration,
-                                 scenarioList = scenarioList)
+pkParameterDT <- loadPKParameter(
+  projectConfiguration = projectConfiguration,
+  scenarioList = scenarioList
+)
 
 
 test_that("Default Config For Boxplots", {
-  addDefaultConfigForPKBoxwhsikerPlots(projectConfiguration = projectConfiguration,
-                                       pkParameterDT = pkParameterDT,
-                                       sheetName = "PKParameter_BoxplotTest",
-                                       overwrite = TRUE)
+  addDefaultConfigForPKBoxwhsikerPlots(
+    projectConfiguration = projectConfiguration,
+    pkParameterDT = pkParameterDT,
+    sheetName = "PKParameter_BoxplotTest",
+    overwrite = TRUE
+  )
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
-  expect_contains(wb$sheet_names,'PKParameter_BoxplotTest')
-  dt <- xlsxReadData(wb = wb,sheetName = 'PKParameter_BoxplotTest',skipDescriptionRow = TRUE)
+  expect_contains(wb$sheet_names, "PKParameter_BoxplotTest")
+  dt <- xlsxReadData(wb = wb, sheetName = "PKParameter_BoxplotTest", skipDescriptionRow = TRUE)
 })
 
 # prepare configtable
@@ -26,22 +30,22 @@ test_that("Boxwhsiker crossover ", {
     runPlot(
       nameOfplotFunction = "plotPKBoxwhisker",
       suppressExport = TRUE,
-      plotNames = 'crossover',
+      plotNames = "crossover",
       projectConfiguration = projectConfiguration,
       configTableSheet = "PKParameter_BoxplotTest",
       inputs = list(
         pkParameterDT = pkParameterDT,
-        percentiles = c(0.025,0.25,0.5,0.75,0.975)
+        percentiles = c(0.025, 0.25, 0.5, 0.75, 0.975)
       )
     )
 
-  expect_equal(length(plotList),4)
+  expect_equal(length(plotList), 4)
 
-  expect_contains(names(plotList$`crossover_AUC_inf-ratio`),expected = "2.5th percentile")
+  expect_contains(names(plotList$`crossover_AUC_inf-ratio`), expected = "2.5th percentile")
 
   vdiffr::expect_doppelganger(
     title = "crossover_AUC_inf",
-    fig = plotList[['crossover_AUC_inf-log-ratio']]
+    fig = plotList[["crossover_AUC_inf-log-ratio"]]
   )
 })
 
@@ -54,24 +58,24 @@ test_that("Boxwhsiker pediatrics ", {
     runPlot(
       nameOfplotFunction = "plotPKBoxwhisker",
       suppressExport = TRUE,
-      plotNames = 'pediatric',
+      plotNames = "pediatric",
       projectConfiguration = projectConfiguration,
       configTableSheet = "PKParameter_BoxplotTest",
       inputs = list(
         pkParameterDT = pkParameterDT,
         xAxisTextAngle = 30,
-        colorVector = c(pediatric = 'green', adult = 'grey'),
+        colorVector = c(pediatric = "green", adult = "grey"),
         facetAspectRatio = 0.3
       )
     )
 
-  expect_equal(length(plotList),4)
+  expect_equal(length(plotList), 4)
 
-  expect_equal( nrow(plotList[['pediatric-abs-A']]),5)
-  expect_equal( ncol(plotList[['pediatric-abs-A']]),14)
+  expect_equal(nrow(plotList[["pediatric-abs-A"]]), 5)
+  expect_equal(ncol(plotList[["pediatric-abs-A"]]), 14)
 
   vdiffr::expect_doppelganger(
     title = "pediatric-linear-abs",
-    fig = plotList[['pediatric-linear-abs']]
+    fig = plotList[["pediatric-linear-abs"]]
   )
 })

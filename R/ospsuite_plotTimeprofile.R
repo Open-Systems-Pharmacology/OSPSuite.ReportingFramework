@@ -437,7 +437,7 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
 
   for (iRow in seq_len(nrow(dtObserved))) {
     dtSimulatedGroup <- dtSimulated %>%
-      merge(dtObserved[iRow, ..identifier], by = identifier) #nolint
+      merge(dtObserved[iRow, ..identifier], by = identifier) # nolint
 
     if (nrow(dtSimulatedGroup) > 2) {
       # Calculate differences
@@ -622,11 +622,11 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
       stop("Please do not mix different error Types in one plot")
     }
 
-    if (any(plotData[["yErrorType"]] == ospsuite::DataErrorType$ArithmeticStdDev,na.rm = TRUE)) {
+    if (any(plotData[["yErrorType"]] == ospsuite::DataErrorType$ArithmeticStdDev, na.rm = TRUE)) {
       mapping <- structure(c(mapping, ggplot2::aes(error = yErrorValues)), class = "uneval")
     }
 
-    if (any(plotData[["yErrorType"]] == ospsuite::DataErrorType$GeometricStdDev,na.rm = TRUE)) {
+    if (any(plotData[["yErrorType"]] == ospsuite::DataErrorType$GeometricStdDev, na.rm = TRUE)) {
       mapping <- structure(c(mapping, ggplot2::aes(error_relative = yErrorValues)), class = "uneval")
     }
   } else if (any(c("yMin", "yMax") %in% names(plotData))) {

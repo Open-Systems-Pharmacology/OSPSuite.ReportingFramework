@@ -1,9 +1,11 @@
 # testProject was set up by setup.R
 
 test_that("Rendering", {
-  rmdPlotManager <- RmdPlotManager$new(rmdName = 'test',
-                                       rmdfolder = projectConfiguration$outputFolder,
-                                       nameOfplotFunction = "plotTimeProfiles")
+  rmdPlotManager <- RmdPlotManager$new(
+    rmdName = "test",
+    rmdfolder = projectConfiguration$outputFolder,
+    nameOfplotFunction = "plotTimeProfiles"
+  )
 
   rmdPlotManager$addHeader("Section 1")
 
@@ -36,4 +38,3 @@ test_that("Rendering", {
   renderWord(testPath, quiet = TRUE)
   expect_true(file.exists(file.path(projectConfiguration$outputFolder, "Test.docx")))
 })
-

@@ -75,23 +75,6 @@ initProject <- function(configurationDirectory = ".",
 createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xlsx")) {
   projectConfiguration <- ProjectConfigurationRF$new(projectConfigurationFilePath = path)
 
-
-  if (getOption("OSPSuite.RF.withEPackage", default = FALSE)) {
-    if (!("electronicPackageFolder" %in% names(projectConfiguration$addOns))) {
-      projectConfiguration$addAddOnFolderToConfiguration(
-        value = file.path(gsub(
-          "/ReportingFramework$",
-          "",
-          fs::path_rel(
-            projectConfiguration$outputFolder,
-            start = projectConfiguration$projectConfigurationDirPath
-          )
-        ), "ePackage"),
-        property = "electronicPackageFolder",
-        description = "Folder for electronicPackage"
-      )
-    }
-  }
   return(projectConfiguration)
 }
 
@@ -101,17 +84,14 @@ createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xl
 #'
 #' wrap of `esqlabsR::createDefaultProjectConfiguration()` with `esqlabsR::createScenarios()` as input
 #'
-#' @template projectConfig
+#' @param projectConfiguration Object of class `ProjectConfiguration` containing information on paths and file names
 #' @param scenarioNames Names of the scenarios that are defined in the excel file.
 #' If NULL (default), all scenarios specified in the excel file will be created.
-#' @param doCheckScenarioNameValidity `boolean` If TRUE scenario names will be check if they
-#'  can be used as file names in an electronic package
 #'
 #' @return  Named list of Scenario objects.
 #' @export
 createScenarios.wrapped <- function(projectConfiguration, # nolint
-                                    scenarioNames = NULL,
-                                    doCheckScenarioNameValidity = TRUE) {
+                                    scenarioNames = NULL) {
   scenarioList <-
     esqlabsR::createScenarios(
       scenarioConfigurations =
@@ -123,13 +103,6 @@ createScenarios.wrapped <- function(projectConfiguration, # nolint
 
   synchronizeScenariosWithPlots(projectConfiguration)
   synchronizeScenariosOutputsWithPlots(projectConfiguration)
-
-  if (doCheckScenarioNameValidity) {
-    invisible(lapply(paste0(names(scenarioList), ".xml"), function(fileName) {
-      checkFileNameValidity(fileName = fileName)
-    }))
-  }
-
 
   return(scenarioList)
 }
@@ -185,7 +158,7 @@ runAndSaveScenarios <- function(projectConfiguration,
   for (sc in names(scenarioList)) {
     if (file.exists(file.path(outputFolder, paste0(sc, ".csv"))) &
       !withResimulation) {
-      writeToLog(type = 'Info',msg = paste("Load simulation result of", sc))
+      writeToLog(type = "Info", msg = paste("Load simulation result of", sc))
 
       scenarioResults[sc] <- esqlabsR::loadScenarioResults(
         scenarioNames = sc,
@@ -198,7 +171,7 @@ runAndSaveScenarios <- function(projectConfiguration,
         scenarioResults[[sc]][["population"]] <- ospsuite::loadPopulation(popFile)
       }
     } else {
-      writeToLog(type = 'Info',msg = paste("Start simulation of", sc))
+      writeToLog(type = "Info", msg = paste("Start simulation of", sc))
 
       # make sure custom params are not again overwritten by population
       scenarioList[[sc]] <- setCustomParamsToPopulation(scenarioList[[sc]])
@@ -209,7 +182,7 @@ runAndSaveScenarios <- function(projectConfiguration,
       )
 
       # set scenarioname as simulation name
-      scenarioResults[[sc]]$simulation$set('Name',sc)
+      scenarioResults[[sc]]$simulation$set("Name", sc)
 
       esqlabsR::saveScenarioResults(
         simulatedScenariosResults = scenarioResults[sc],

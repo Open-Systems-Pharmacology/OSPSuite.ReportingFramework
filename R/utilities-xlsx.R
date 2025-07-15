@@ -47,9 +47,9 @@ xlsxWriteData <- function(wb, sheetName, dt) {
   # Check if existingData has more rows than dt
   if (nrow(existingData) > nrow(dt)) {
     # Add a data.table with NA values
-    na_rows <- data.table(matrix(NA, nrow = nrow(existingData) - nrow(dt), ncol = ncol(dt)))
-    data.table::setnames(na_rows, names(dt)) # Set the column names to match dt
-    dt <- rbind(dt, na_rows)
+    naRows <- data.table(matrix(NA, nrow = nrow(existingData) - nrow(dt), ncol = ncol(dt)))
+    data.table::setnames(naRows, names(dt)) # Set the column names to match dt
+    dt <- rbind(dt, naRows)
   }
 
   # Convert data.table column names to match correct upper an lower case
@@ -132,7 +132,7 @@ xlsxReadData <- function(wb, sheetName,
 
   if (as.logical(skipDescriptionRow)) {
     dt <- dt[-seq_len(as.integer(skipDescriptionRow))]
-    dt <- dt %>% dplyr::select(!any_of("Comment"))
+    dt <- dt %>% dplyr::select(!dplyr::any_of("Comment"))
   }
   # Capture all columns matching the patterns in alwaysCharacter
   idColumns <- unlist(lapply(alwaysCharacter, function(pattern) {
@@ -162,10 +162,10 @@ xlsxReadData <- function(wb, sheetName,
     # Replace curly quotes with straight quotes
     dt[, (characterCols) := lapply(.SD, function(x) {
       if (is.character(x)) {
-        x <- gsub("“", "\"", x)  # Replace left double quote
-        x <- gsub("”", "\"", x)  # Replace right double quote
-        x <- gsub("‘", "'", x)   # Replace left single quote
-        x <- gsub("’", "'", x)   # Replace right single quote
+        x <- gsub("“", "\"", x) # Replace left double quote
+        x <- gsub("”", "\"", x) # Replace right double quote
+        x <- gsub("‘", "'", x) # Replace left single quote
+        x <- gsub("’", "'", x) # Replace right single quote
       }
       return(x)
     }), .SDcols = characterCols]
@@ -356,6 +356,9 @@ synchronizeScenariosWithPlots <- function(projectConfiguration) {
 #' @return Returns invisibly.
 #' @keywords internal
 synchronizeScenariosOutputsWithPlots <- function(projectConfiguration) {
+  #initialize variable to avoid messages
+  outputPath <- outputPath.pl <- outputPath.sc <- NULL
+
   # Load the workbooks for scenarios and plots
   wbSc <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
   wbPl <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)

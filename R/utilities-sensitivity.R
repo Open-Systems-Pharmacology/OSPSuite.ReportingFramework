@@ -76,10 +76,8 @@ runSensitivityAnalysisForScenarios <-
     sensitivityParameterDt <- xlsxReadData(projectConfiguration$addOns$sensitivityFile, sheetName = sensitivitysheet)
 
     for (scenarioName in scenarioNames) {
-
       if (!file.exists(file.path(outputFolder, sensitivityAnalyisName(scenarioName, sensitivitysheet))) |
-          overwrite){
-
+        overwrite) {
         pkParameterSheets <- dtScenarios[scenarioName == scenarioName & !is.na(pKParameter)]$pKParameter
         if (length(pkParameterSheets) > 0) {
           initializeParametersOfSheets(projectConfiguration, pkParameterSheets)
@@ -112,5 +110,5 @@ runSensitivityAnalysisForScenarios <-
 #'
 #' @return A string representing the generated file name for the sensitivity analysis results.
 sensitivityAnalyisName <- function(scenarioName, sensitivitysheet) {
-  paste0(scenarioName,'_',sensitivitysheet,'.csv')
+  paste0(scenarioName, "_", sensitivitysheet, ".csv")
 }

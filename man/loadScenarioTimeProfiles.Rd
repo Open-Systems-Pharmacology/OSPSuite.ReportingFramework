@@ -12,7 +12,7 @@ loadScenarioTimeProfiles(
 )
 }
 \arguments{
-\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and filenames}
+\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and file names}
 
 \item{simulatedResults}{A list containing simulation results for each scenario.}
 

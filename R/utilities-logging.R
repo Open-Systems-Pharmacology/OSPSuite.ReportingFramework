@@ -3,7 +3,7 @@
 #' This function initialize the logging during a workflow. It is called at the start of the workflow script.
 #' It is used to configure options for the log file folder, warnings which should not logged and messages which should not logged.
 #'
-#' @template projectConfig
+#' @param projectConfiguration Object of class `ProjectConfiguration` containing information on paths and file names
 #' @param warningsNotDisplayed A list of warnings that should not be logged.
 #' @param messagesNotDisplayed A list of messages that should not be logged.
 #' @param verbose boolean, if true log message will be shown on the console
@@ -110,16 +110,13 @@ addMessageToLog <- function(messageText) {
   )
 }
 
-
-
-
 #' function that catches messages, warnings, and errors.
 #' This function has to be initialized by  `initLogfunction` function
 #'
 #' @param expr The expression to evaluate.
 #'
 #' @export
-logCatch <- function(expr) {
+logCatch <- function(expr, finallyExpression = invisible()) {
   warningsNotDisplayed <- getOption("OSPSuite.RF.warningsNotDisplayed", default = c())
   messagesNotDisplayed <- getOption("OSPSuite.RF.messagesNotDisplayed", default = c())
   verbose <- getOption("OSPSuite.RF.verbose", default = TRUE)
@@ -167,7 +164,8 @@ logCatch <- function(expr) {
     error = function(e) {
       stop(e$message, call. = FALSE)
       stop(e)
-    }
+    },
+    finally = finallyExpression
   )
 
   return(invisible())

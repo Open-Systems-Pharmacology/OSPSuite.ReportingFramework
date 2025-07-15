@@ -13,9 +13,6 @@
 #'    - Functions that manipulate inputs are not allowed.
 #'    - The workflow will stop if an error occurs during execution.
 #'
-#' Additionally, a workflow can produce an ePackage (see vignette XXX). This function allows you to enable or disable watermarks,
-#' control the handling of failing plots, manage the execution of helper functions, and specify options for ePackage generation and plot export.
-#'
 #' Relevant Options:
 #'
 #' - `ospsuite.plots.watermark_enabled`: Set to TRUE when `isValidRun` is FALSE to display watermarks on figures, and FALSE when `isValidRun` is TRUE.
@@ -24,25 +21,12 @@
 #'
 #' - `OSPSuite.RF.stopHelperFunction`: Set to TRUE when `isValidRun` is TRUE to stop the execution of helper functions during valid runs.
 #'
-#' - `OSPSuite.RF.withEPackage`: Set to TRUE if `ePackageGeneration` is either 'withEpackage' or 'onlyEpackage', indicating that ePackage generation should occur.
-#'
-#' - `OSPSuite.RF.withPlotExport`: Set to TRUE if `ePackageGeneration` is either 'None' or 'withEpackage', indicating that plot export should occur.
-#'
-#'
 #' @param isValidRun A logical value indicating if the run is valid. If TRUE,
 #'        options are set for a valid run; if FALSE, options are set for an invalid run.
-#' @param ePackageGeneration A character string indicating the type of ePackage generation.
-#'        Options include:
-#'
-#'        - 'None': No ePackage generation.
-#'
-#'        - 'withEPackage': Generate ePackage alongside the run.
-#'
-#'        - 'onlyEPackage': Only generate ePackage without exporting figures.
 #'
 #' @export
-setWorkflowOptions <- function(isValidRun, ePackageGeneration = c("None", "withEPackage", "onlyEPackage")) {
-  ePackageGeneration <- match.arg(ePackageGeneration, several.ok = FALSE)
+setWorkflowOptions <- function(isValidRun = NULL) {
+  checkmate::assertLogical(isValidRun)
 
   # set options to enable watermarks
   options(ospsuite.plots.watermark_enabled = !isValidRun)
@@ -53,16 +37,42 @@ setWorkflowOptions <- function(isValidRun, ePackageGeneration = c("None", "withE
   # stop helper functions
   options(OSPSuite.RF.stopHelperFunction = isValidRun)
 
-  # generateEpackages
-  options(OSPSuite.RF.withEPackage = ePackageGeneration %in% c("withEPackage", "onlyEPackage"))
-
-  # plotAndTableExport
-  options(OSPSuite.RF.withPlotExport = ePackageGeneration %in% c("None", "withEPackage"))
-
 
   return(invisible())
 }
+#' Get QC Passed Environment Variable
+#'
+#' This function retrieves the value of the environment variable `QCpassed`.
+#' It attempts to convert the value to a logical type. If the environment variable
+#' is not set, is empty, or is non-logical, a warning is issued and the function
+#' defaults the value to `FALSE`.
+#'
+#' @return A logical value indicating whether the QC passed (`TRUE` or `FALSE`).
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Set the environment variable for testing
+#' Sys.setenv(QCpassed = "TRUE")
+#' getQCpassedEnvironmentVariable() # Should return TRUE
+#'
+#' # Unset the environment variable for testing
+#' Sys.unsetenv("QCpassed")
+#' getQCpassedEnvironmentVariable() # Should return FALSE and issue a warning
+#' }
+getQCpassedEnvironmentVariable <- function() {
+  qCpassed <- suppressWarnings(as.logical(as.double(Sys.getenv(x = "QCpassed"))))
+  # check if QCpassed was set as TRUE or FALSE
+  if (is.na(qCpassed)) qCpassed <- as.logical(Sys.getenv(x = "QCpassed"))
+  # add warning message for unset or corrupt variable, set to default to avoid further messages
+  if (is.na(qCpassed)) {
+    warning("Environment Variable 'QCpassed' not found, empty or a non logical, set 'QCpassed' to FALSE")
+    Sys.setenv(QCpassed = 0)
+    qCpassed <- FALSE
+  }
 
+  return(qCpassed)
+}
 
 #' Stop Helper Function
 #'

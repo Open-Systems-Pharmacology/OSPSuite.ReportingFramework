@@ -1,27 +1,33 @@
 # testProject was set up by setup.R
-pkParameterDT <- loadPKParameter(projectConfiguration = projectConfiguration,
-                                 scenarioList = scenarioList)
+pkParameterDT <- loadPKParameter(
+  projectConfiguration = projectConfiguration,
+  scenarioList = scenarioList
+)
 
 test_that("Default Config For Histograms", {
-  addDefaultConfigForHistograms(projectConfiguration = projectConfiguration,
-                                sheetName = "HistogramTest",
-                                pkParameterDT = pkParameterDT,
-                                overwrite = TRUE)
+  addDefaultConfigForHistograms(
+    projectConfiguration = projectConfiguration,
+    sheetName = "HistogramTest",
+    pkParameterDT = pkParameterDT,
+    overwrite = TRUE
+  )
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
-  expect_contains(wb$sheet_names,'HistogramTest')
+  expect_contains(wb$sheet_names, "HistogramTest")
 })
 
 test_that("Default Config For Histograms", {
-  addDefaultConfigForDistributionsVsDemographics(projectConfiguration = projectConfiguration,
-                                sheetName = "RangePlotTest",
-                                pkParameterDT = pkParameterDT,
-                                overwrite = TRUE)
+  addDefaultConfigForDistributionsVsDemographics(
+    projectConfiguration = projectConfiguration,
+    sheetName = "RangePlotTest",
+    pkParameterDT = pkParameterDT,
+    overwrite = TRUE
+  )
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
-  expect_contains(wb$sheet_names,'RangePlotTest')
+  expect_contains(wb$sheet_names, "RangePlotTest")
 })
 
 # prepare configtable
@@ -37,15 +43,19 @@ test_that("PK histograms plots", {
     projectConfiguration = projectConfiguration,
     configTableSheet = "HistogramTest",
     suppressExport = TRUE,
-    plotNames = 'pkparameter2',
-    inputs = list(scenarioList = scenarioList,
-                  pkParameterDT = pkParameterDT,
-                  colorVector = c( 'PO application' = 'red',
-                                   'IV application' = 'green'),
-                  plotAsFrequency = TRUE)
+    plotNames = "pkparameter2",
+    inputs = list(
+      scenarioList = scenarioList,
+      pkParameterDT = pkParameterDT,
+      colorVector = c(
+        "PO application" = "red",
+        "IV application" = "green"
+      ),
+      plotAsFrequency = TRUE
+    )
   )
 
-  expect_equal(length(plotList),2)
+  expect_equal(length(plotList), 2)
 
   vdiffr::expect_doppelganger(
     title = "pkhistograms_F_tEnd_linear",
@@ -64,13 +74,15 @@ test_that("demographic histograms plots", {
     projectConfiguration = projectConfiguration,
     configTableSheet = "HistogramTest",
     suppressExport = TRUE,
-    plotNames = 'demographics',
-    inputs = list(scenarioList = scenarioList,
-                  pkParameterDT = pkParameterDT,
-                  colorVector = c(adults = 'grey'))
+    plotNames = "demographics",
+    inputs = list(
+      scenarioList = scenarioList,
+      pkParameterDT = pkParameterDT,
+      colorVector = c(adults = "grey")
+    )
   )
 
-  expect_equal(length(plotList),2)
+  expect_equal(length(plotList), 2)
 
   vdiffr::expect_doppelganger(
     title = "dmhistograms_gender_linear",
@@ -88,16 +100,20 @@ test_that("demographic range plots", {
     projectConfiguration = projectConfiguration,
     configTableSheet = "RangePlotTest",
     suppressExport = TRUE,
-    plotNames = 'demographics',
-    inputs = list(scenarioList = scenarioList,
-                  asStepPlot = FALSE,
-                  facetAspectRatio = 0.3,
-                  colorVector = c(pediatrics = ospsuite.plots::colorMaps[[1]][[1]],
-                                  adults = 'grey'))
+    plotNames = "demographics",
+    inputs = list(
+      scenarioList = scenarioList,
+      asStepPlot = FALSE,
+      facetAspectRatio = 0.3,
+      colorVector = c(
+        pediatrics = ospsuite.plots::colorMaps[[1]][[1]],
+        adults = "grey"
+      )
+    )
   )
 
-  expect_equal(length(plotList),6)
-  expect_equal(nrow(plotList[['demographics_weight']]),19)
+  expect_equal(length(plotList), 6)
+  expect_equal(nrow(plotList[["demographics_weight"]]), 19)
 
   set.seed(123)
   vdiffr::expect_doppelganger(
@@ -115,18 +131,22 @@ test_that("PK range plots", {
     projectConfiguration = projectConfiguration,
     configTableSheet = "RangePlotTest",
     suppressExport = TRUE,
-    plotNames = 'pkparameter2',
-    inputs = list(scenarioList = scenarioList,
-                  pkParameterDT = pkParameterDT,
-                  asStepPlot = TRUE,
-                  aggregationFlag = "GeometricStdDev",
-                  colorVector = c(pediatrics = ospsuite.plots::colorMaps[[1]][[1]],
-                                  adults = 'grey'))
+    plotNames = "pkparameter2",
+    inputs = list(
+      scenarioList = scenarioList,
+      pkParameterDT = pkParameterDT,
+      asStepPlot = TRUE,
+      aggregationFlag = "GeometricStdDev",
+      colorVector = c(
+        pediatrics = ospsuite.plots::colorMaps[[1]][[1]],
+        adults = "grey"
+      )
+    )
   )
 
-  expect_equal(length(plotList),4)
+  expect_equal(length(plotList), 4)
 
-  expect_equal(nrow(plotList$pkparameter2_F_tEnd_A),21)
+  expect_equal(nrow(plotList$pkparameter2_F_tEnd_A), 21)
 
   set.seed(123)
   vdiffr::expect_doppelganger(
@@ -134,11 +154,3 @@ test_that("PK range plots", {
     fig = plotList$pkparameter2_F_tEnd_log
   )
 })
-
-
-
-
-
-
-
-

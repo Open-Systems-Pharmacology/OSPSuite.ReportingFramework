@@ -12,4 +12,4 @@ mockManualEditingsPopulation(projectConfiguration)
 \description{
 This function adds biometric ranges for virtual pediatric and one adult populations to the configuration files
 }
-\keyword{intenal}
+\keyword{internal}

@@ -181,8 +181,9 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
     # Export table
     for (plotDataSummaryTag in split(plotDataSummary, by = "plotTag")) {
       tableKey <- paste(plotNameLoop, ifelse(asRatio, "ratio", "abs"), sep = "-")
-      if (uniqueN(plotDataSummary$plotTag) > 1)
+      if (uniqueN(plotDataSummary$plotTag) > 1) {
         tableKey <- paste(tableKey, plotDataSummaryTag$plotTag[1], sep = "-")
+      }
 
       plotList[[tableKey]] <- prepareTableForExport(
         dtExport = plotDataSummaryTag,
@@ -206,14 +207,15 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
 #' @return A data.table prepared for plotting.
 #' @keywords internal
 prepareDataForPKBoxplot <- function(onePlotConfig, pkParameterDT, colorVector, asRatio) {
-
   # initialize to avoid linter messages
   displayNameOutput <- plotTag <- NULL
 
-  plotData <- mergePKParameterWithConfigTable(onePlotConfig = onePlotConfig,
-                                              pkParameterDT = pkParameterDT,
-                                              colorVector = colorVector,
-                                              asRatio = asRatio)
+  plotData <- mergePKParameterWithConfigTable(
+    onePlotConfig = onePlotConfig,
+    pkParameterDT = pkParameterDT,
+    colorVector = colorVector,
+    asRatio = asRatio
+  )
 
   if (dplyr::n_distinct(plotData$pkParameter) > 1) {
     plotData[, plotName := paste(plotName, pkParameter, sep = "_")]
@@ -245,7 +247,7 @@ getSummaryTable <- function(plotDataPk, asRatio, onePlotConfig, percentiles) {
   statFun <- function(y) {
     y <- y[!is.na(y)]
     rQuantiles <- stats::quantile(y, probs = percentiles, names = FALSE, na.rm = TRUE)
-    names(rQuantiles) <- formatPercentiles(percentiles,suffix = ' percentile')
+    names(rQuantiles) <- formatPercentiles(percentiles, suffix = " percentile")
 
     r <- c(
       N = length(y),
@@ -428,7 +430,7 @@ createBaseBoxWhisker <- function(plotDataPk, yScale, asRatio, colorVector, onePl
 #' @keywords internal
 validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   # initialize to avoid linter messages
-  plot_Ratio <- plot_Absolute <- referenceScenario <- value.reference <- value.base <- value <- NULL #nolint
+  plot_Ratio <- plot_Absolute <- referenceScenario <- value.reference <- value.base <- value <- NULL # nolint
 
   configTablePlots <- validateHeaders(configTable)
   validateOutputIdsForPlot()
@@ -619,7 +621,7 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(projectConfiguration,
 
   # Create a new data.table with all combinations of pkParameters and scenario names
   dtNewConfig <- dt[, .(
-    plotName = paste(splitInputs(pkParameters),collapse = '_'),
+    plotName = paste(splitInputs(pkParameters), collapse = "_"),
     scenario = scenarios$scenarioName,
     yScale = "linear, log",
     facetScale = "fixed",

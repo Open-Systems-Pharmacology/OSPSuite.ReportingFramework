@@ -35,7 +35,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
   if (nrow(dataList) == 0) stop(paste("no datafiles defined for", dataClassType))
 
   if (!is.null(fileIds)) {
-    checkmate::assertNames(fileIds,subset.of = dataList$fileIdentifier)
+    checkmate::assertNames(fileIds, subset.of = dataList$fileIdentifier)
     dataList <- dataList[fileIdentifier %in% filePathFilter]
   }
 
@@ -130,7 +130,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
   }
 
   # Logging
-  writeToLog(type = 'Info',"Observed Data:")
+  writeToLog(type = "Info", "Observed Data:")
   writeTableToLog(dataDT[, .(
     "No of data points" = .N,
     "No of individuals" = dplyr::n_distinct(individualId),
@@ -226,17 +226,23 @@ validateObservedData <- function(dataDT, dataClassType) {
 
     if (nrow(ambiguousUnits) > 0) {
       unitSummary <- dataDT[,
-                            .(units = paste('units:',gsub("NA", "emptyString",
-                                           paste(unique(get(colUnit)),
-                                                 collapse = ", ")))),
-                            by = colIdentifier]
+        .(units = paste("units:", gsub(
+          "NA", "emptyString",
+          paste(unique(get(colUnit)),
+            collapse = ", "
+          )
+        ))),
+        by = colIdentifier
+      ]
       tmp <- merge(ambiguousUnits, unitSummary, by = colIdentifier)
 
-      summaryString <- paste(apply(tmp[,!'N',with = FALSE], 1, function(x) {
-        paste(x,collapse =' ')
+      summaryString <- paste(apply(tmp[, !"N", with = FALSE], 1, function(x) {
+        paste(x, collapse = " ")
       }), collapse = " | ")
-      warning(paste("Ambiguous units:", summaryString,
-                    "\nPlease check if this acceptable, e.g. pkParameter as ratio and absolute values."))
+      warning(paste(
+        "Ambiguous units:", summaryString,
+        "\nPlease check if this acceptable, e.g. pkParameter as ratio and absolute values."
+      ))
     }
   }
 
@@ -446,17 +452,11 @@ convertBiometrics <- function(data, dict, dictionaryName) {
   # Initialize variables used for data.tables
   targetColumn <- gender <- NULL
 
-  biometricUnits <- list(
-    age = "year(s)",
-    weight = "kg",
-    height = "cm"
-  )
-
-  for (col in intersect(names(biometricUnits), dict$targetColumn)) {
+  for (col in intersect(names(BIOMETRICUNITS), dict$targetColumn)) {
     unitFactor <- ospsuite::toUnit(
-      quantityOrDimension = ospsuite::getDimensionForUnit(biometricUnits[[col]]),
+      quantityOrDimension = ospsuite::getDimensionForUnit(BIOMETRICUNITS[[col]]),
       values = 1,
-      targetUnit = biometricUnits[[col]],
+      targetUnit = BIOMETRICUNITS[[col]],
       sourceUnit = dict[targetColumn == col]$sourceUnit[1]
     )
 
@@ -582,7 +582,7 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
 
 #' Add biometrics information to config
 #'
-#' @template projectConfig
+#' @param projectConfiguration Object of class `ProjectConfiguration` containing information on paths and file names
 #' @param dataDT A `data.table` with observed data.
 #' @param overwrite If TRUE, existing rows will be overwritten.
 #' @export
@@ -622,15 +622,15 @@ addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALS
   # Merge old and new tables
   dtIndividualBiometrics <-
     rbind(dtIndividualBiometrics,
-          biometrics, # nolint indentation_linter
-          fill = TRUE
+      biometrics, # nolint indentation_linter
+      fill = TRUE
     )
 
   # If overwrite FALSE take original located at the top, otherwise take new rows located at the bottom
   dtIndividualBiometrics <-
     dtIndividualBiometrics[!duplicated(dtIndividualBiometrics,
-                                       by = "individualId",
-                                       fromLast = overwrite
+      by = "individualId",
+      fromLast = overwrite
     )]
   xlsxWriteData(wb = wb, sheetName = "IndividualBiometrics", dt = dtIndividualBiometrics)
 
@@ -650,7 +650,7 @@ addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALS
 #' @return An object of class `DataCombined`.
 #' @export
 convertDataTableToDataCombined <- function(dataDT) {
-  validateObservedData(dataDT = dataDT,dataClassType = 'timeprofile')
+  validateObservedData(dataDT = dataDT, dataClassType = "timeprofile")
 
   groupedData <- groupDataByIdentifier(dataDT = dataDT)
 
@@ -847,14 +847,14 @@ convertDataCombinedToDataTable <- function(datacombined) {
 #' @return A `data.table` containing aggregated observed data.
 #' @export
 aggregateObservedDataGroups <- function(dataObserved,
-                                         groups = NULL,
-                                         aggregationFlag = c(
-                                           "GeometricStdDev",
-                                           "ArithmeticStdDev",
-                                           "Percentiles",
-                                           "Custom"
-                                         ),
-                                        percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1,3,5)],
+                                        groups = NULL,
+                                        aggregationFlag = c(
+                                          "GeometricStdDev",
+                                          "ArithmeticStdDev",
+                                          "Percentiles",
+                                          "Custom"
+                                        ),
+                                        percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1, 3, 5)],
                                         groupSuffix = "aggregated",
                                         customFunction = NULL,
                                         lloqCheckColumns2of3 = NULL,
@@ -877,10 +877,12 @@ aggregateObservedDataGroups <- function(dataObserved,
     aggrCriteria = c("group", "outputPathId", "xValues")
   )
 
-  aggregatedData <- checkLLOQ(aggregatedData = aggregatedData,
-                              lloqCheckColumns2of3 = lloqCheckColumns2of3,
-                              lloqCheckColumns1of2 = lloqCheckColumns1of2,
-                              aggregationFlag = aggregationFlag)
+  aggregatedData <- checkLLOQ(
+    aggregatedData = aggregatedData,
+    lloqCheckColumns2of3 = lloqCheckColumns2of3,
+    lloqCheckColumns1of2 = lloqCheckColumns1of2,
+    aggregationFlag = aggregationFlag
+  )
 
   aggregatedData <- addUniqueColumns(dataToAggregate, aggregatedData)
   aggregatedData$dataClass <- DATACLASS$tpAggregated
@@ -906,9 +908,12 @@ prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
 
   checkmate::assertDataTable(dataObserved, min.rows = 1)
   checkmate::assertNames(names(dataObserved),
-                         must.include = c("xValues", "yValues", "lloq",
-                                          "individualId", "outputPathId", "group",
-                                          "dataType", "dataClass"))
+    must.include = c(
+      "xValues", "yValues", "lloq",
+      "individualId", "outputPathId", "group",
+      "dataType", "dataClass"
+    )
+  )
   checkmate::assertChoice(unique(dataObserved$dataClass), choices = DATACLASS$tpIndividual)
 
   groups <- getIndividualDataGroups(dataObserved, groups)
@@ -936,24 +941,24 @@ prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
 #'
 #' @return Updated aggregatedData `data.table`.
 #' @keywords internal
-checkLLOQ <- function(aggregatedData, lloqCheckColumns2of3, lloqCheckColumns1of2,aggregationFlag) {
+checkLLOQ <- function(aggregatedData, lloqCheckColumns2of3, lloqCheckColumns1of2, aggregationFlag) {
   # initialize data.table variables
   nBelowLLOQ <- numberOfPatients <- NULL
 
-  if (aggregationFlag != 'Custom' &
-      (!is.null(lloqCheckColumns2of3) | !is.null(lloqCheckColumns1of2))){
-    warning(paste('input variable lloqCheckColumns2of3 and lloqCheckColumns1of2 are not used for aggregationFlag',aggregationFlag))
-    lloqCheckColumns2of3 = NULL
-    lloqCheckColumns1of2 = NULL
+  if (aggregationFlag != "Custom" &
+    (!is.null(lloqCheckColumns2of3) | !is.null(lloqCheckColumns1of2))) {
+    warning(paste("input variable lloqCheckColumns2of3 and lloqCheckColumns1of2 are not used for aggregationFlag", aggregationFlag))
+    lloqCheckColumns2of3 <- NULL
+    lloqCheckColumns1of2 <- NULL
   }
 
-  if (aggregationFlag %in% ospsuite::DataErrorType){
-    lloqCheckColumns2of3 = c('yValues','yErrorValues')
-  } else if (aggregationFlag %in% "Percentiles"){
-    lloqCheckColumns1of2 = c('yValues','yMin','yMax')
+  if (aggregationFlag %in% ospsuite::DataErrorType) {
+    lloqCheckColumns2of3 <- c("yValues", "yErrorValues")
+  } else if (aggregationFlag %in% "Percentiles") {
+    lloqCheckColumns1of2 <- c("yValues", "yMin", "yMax")
   } else {
-    if (is.null(lloqCheckColumns2of3) & is.null(lloqCheckColumns1of2)){
-      stop('For custom aggregation please provide lloqCheckColumns2of3 or lloqCheckColumns1of2')
+    if (is.null(lloqCheckColumns2of3) & is.null(lloqCheckColumns1of2)) {
+      stop("For custom aggregation please provide lloqCheckColumns2of3 or lloqCheckColumns1of2")
     }
   }
 

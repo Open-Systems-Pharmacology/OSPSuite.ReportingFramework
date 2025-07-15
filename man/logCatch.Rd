@@ -5,7 +5,7 @@
 \title{function that catches messages, warnings, and errors.
 This function has to be initialized by  `initLogfunction` function}
 \usage{
-logCatch(expr)
+logCatch(expr, finallyExpression = invisible())
 }
 \arguments{
 \item{expr}{The expression to evaluate.}

@@ -105,7 +105,7 @@ getTimeRangeTags <- function(wbPlots) {
 #'
 #' @return A `data.table` with model parameter definitions.
 #' @export
-getModelParameterDefinitions <- function(wbPlots){
+getModelParameterDefinitions <- function(wbPlots) {
   dtParameter <- xlsxReadData(
     wb = wbPlots,
     sheetName = "ModelParameter",
@@ -117,12 +117,11 @@ getModelParameterDefinitions <- function(wbPlots){
   dtParameter[is.na(displayUnit), displayUnit := ""]
 
   dtParameter$parameterId <- factor(dtParameter$parameterId,
-                                       levels = unique(dtParameter$parameterId),
-                                       ordered = TRUE
+    levels = unique(dtParameter$parameterId),
+    ordered = TRUE
   )
 
   return(dtParameter)
-
 }
 #' Load the Scenario Definitions
 #'

@@ -3,8 +3,13 @@ Description: Open a template script for the default workflow
 Binding: openWorkflowTemplate
 Interactive: false
 
+Name: Open Template ePackage Workflow RMD
+Description: Open a template rmarkdown for a workflow developing for the ePackage
+Binding: openEPackageTemplate
+Interactive: false
+
 Name: Open Template Plotfunction
-Description: Open a template function for a userdeifned plotfunction
+Description: Open a template function for a user-defined plotfunction
 Binding: openFigureTemplate
 Interactive: false
 

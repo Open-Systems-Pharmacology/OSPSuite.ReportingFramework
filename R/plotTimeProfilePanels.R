@@ -131,12 +131,12 @@ plotTimeProfiles <- function(projectConfiguration,
                                "Percentiles",
                                "Custom"
                              ),
-                             percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1,3,5)],
+                             percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1, 3, 5)],
                              customFunction = NULL,
                              referenceScaleVector = list(),
                              ...) {
   # initialize data.table variables
-  dataType <- .Id <- NULL #nolint
+  dataType <- .Id <- NULL # nolint
 
   checkmate::assertIntegerish(nMaxFacetRows, lower = 1, len = 1)
   checkmate::assertDouble(facetAspectRatio, lower = 0, len = 1)
@@ -146,7 +146,7 @@ plotTimeProfiles <- function(projectConfiguration,
     dataObserved <- convertDataCombinedToDataTable(dataObserved)
   }
 
-  # add identifier column to pick entries used in this rmdtask
+  # add identifier column to pick entries used in this function evaluation
   dataObserved[, .Id := .I]
   data.table::setattr(dataObserved[[".Id"]], "columnType", "identifier")
 
@@ -157,7 +157,7 @@ plotTimeProfiles <- function(projectConfiguration,
   checkmate::assertDataTable(onePlotConfig)
   if (dplyr::n_distinct(onePlotConfig$plotName) > 1) stop("onePlotConfig conatinas more than one plotName")
 
-  writeToLog(type = 'Info',paste("Create Plot", onePlotConfig$plotName[1]))
+  writeToLog(type = "Info", paste("Create Plot", onePlotConfig$plotName[1]))
   plotData <- PlotDataTimeProfile$new(
     projectConfiguration = projectConfiguration,
     onePlotConfig = onePlotConfig
@@ -174,10 +174,12 @@ plotTimeProfiles <- function(projectConfiguration,
   )
 
   if (any(plotData$data$dataClass == DATACLASS$tpAggregated) &&
-          plotData$data[dataClass ==DATACLASS$tpAggregated,uniqueN(yErrorType)] > 1){
-    tmp <- unique(plotData$data[,c('dataType','yErrorType')])
-    stop(paste( 'Aggregation methods are not consistent! ',
-                paste(paste(tmp$dataType, tmp$yErrorType,sep = ': '),collapse = ', ')))
+    plotData$data[dataClass == DATACLASS$tpAggregated, uniqueN(yErrorType)] > 1) {
+    tmp <- unique(plotData$data[, c("dataType", "yErrorType")])
+    stop(paste(
+      "Aggregation methods are not consistent! ",
+      paste(paste(tmp$dataType, tmp$yErrorType, sep = ": "), collapse = ", ")
+    ))
   }
 
   # replicate and filter data for each Time Range Tag
@@ -565,29 +567,29 @@ getGroupAesthetics <- function(plotData) {
 #'
 #' @return Updated ggplot object with guides.
 #' @keywords internal
-updateGuides <- function(plotData, plotObject, plotType) {#nolint
+updateGuides <- function(plotData, plotObject, plotType) { # nolint
   # Initialize legend titles
   legendTitleObservedData <- "Observed data"
   legendTitleColor <- ""
 
-    # Determine the color legend title based on conditions
-    if (plotData$useColorIndex()) {
-      if (plotType == "TP") {
-        if (plotData$hasSimulatedPop()) {
-          legendTitleColor <- paste0(
-            "Simulated data\n",
-            plotData$tpLabelSimulatedMean,
-            " with ", plotData$tpLabelSimulatedRange
-          )
-        } else {
-          legendTitleColor <- paste("Simulated", plotData$tpLabelSimulatedMean)
-        }
+  # Determine the color legend title based on conditions
+  if (plotData$useColorIndex()) {
+    if (plotType == "TP") {
+      if (plotData$hasSimulatedPop()) {
+        legendTitleColor <- paste0(
+          "Simulated data\n",
+          plotData$tpLabelSimulatedMean,
+          " with ", plotData$tpLabelSimulatedRange
+        )
       } else {
-        legendTitleColor <- legendTitleObservedData
+        legendTitleColor <- paste("Simulated", plotData$tpLabelSimulatedMean)
       }
-    } else if (plotData$useShapeIndex() && plotType != "TP") {
+    } else {
       legendTitleColor <- legendTitleObservedData
     }
+  } else if (plotData$useShapeIndex() && plotType != "TP") {
+    legendTitleColor <- legendTitleObservedData
+  }
 
   # Override aesthetics for shape if plotType is "TP"
   overrideAes <- if (plotType == "TP") list(shape = NA) else list()
@@ -715,12 +717,13 @@ getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotC
     QQ = "Residuals as quantile-quantile plot"
   )
 
-  scaleName <- ''
-  if (plotType %in% c('TP','PvO')){
-    scaleName <- paste(" on a",
-                       ifelse(yScale == "linear", "linear", "logarithmic"),
-                       ifelse(plotType == "TP", "y-scale.", "x and y-scale."))
-
+  scaleName <- ""
+  if (plotType %in% c("TP", "PvO")) {
+    scaleName <- paste(
+      " on a",
+      ifelse(yScale == "linear", "linear", "logarithmic"),
+      ifelse(plotType == "TP", "y-scale.", "x and y-scale.")
+    )
   }
 
   if ("individualId" %in% names(dtCaption)) {
@@ -742,7 +745,7 @@ getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotC
     pasteFigureTags(dtCaption, captionColumn = "scenarioLongName"),
     individualtext,
     scaleName,
-    pasteFigureTags(dtCaption, captionColumn = "timeRangeCaption", endWithDot = TRUE,startWithBlank = TRUE)
+    pasteFigureTags(dtCaption, captionColumn = "timeRangeCaption", endWithDot = TRUE, startWithBlank = TRUE)
   )
   captiontext <- addCaptionTextAddon(captiontext, plotData$configTable$plotCaptionAddon[1])
 
@@ -836,12 +839,11 @@ getGeomLLOQAttributesForTP <- function(plotData) {
 
 #' Validation of config table for time profiles plots
 #'
-#' @template projectConfig
+#' @inheritParams plotTimeProfiles
 #' @param configTable Plot configuration table.
-#' @template observedDataDT
 #' @export
 validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
-                                       scenarioResults,...) {
+                                       scenarioResults, ...) {
   # avoid warning for global variable
   individualId <- NULL
 
@@ -850,7 +852,7 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
   validateDataGroupIdsForPlot()
 
   checkmate::assertCharacter(configTablePlots$scenarioLongName, any.missing = FALSE, .var.name = "longName for relevant scenarios")
-  checkmate::assertList(scenarioList, any.missing = FALSE, null.ok = FALSE,min.len = 1)
+  checkmate::assertList(scenarioList, any.missing = FALSE, null.ok = FALSE, min.len = 1)
   validateConfigTablePlots(
     configTablePlots = configTablePlots,
     charactersWithoutMissing = c(
@@ -950,19 +952,23 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
     scenarioResults = scenarioResults
   )
 
-  configTablePlots[, invalid:=!is.na(referenceScenario) & (length(grep('\\(',outputPathIds))>0),by  = .I]
+  configTablePlots[, invalid := !is.na(referenceScenario) & (length(grep("\\(", outputPathIds)) > 0), by = .I]
   tmp <- configTablePlots[invalid == TRUE]
-  if (nrow(tmp) > 0){
-    stop(paste0('Do not combine outputs in one panel with brackets () ',
-               'if you want to display reference scenarios.
-               Please check "',paste0(unique(tmp$plotName),collapse = '", "','"')))
+  if (nrow(tmp) > 0) {
+    stop(paste0(
+      "Do not combine outputs in one panel with brackets () ",
+      'if you want to display reference scenarios.
+               Please check "', paste0(unique(tmp$plotName), collapse = '", "', '"')
+    ))
   }
 
-  configTablePlots[, invalid:=!is.na(referenceScenario) & is.na(colorLegend),by  = .I]
+  configTablePlots[, invalid := !is.na(referenceScenario) & is.na(colorLegend), by = .I]
   tmp <- configTablePlots[invalid == TRUE]
-  if (nrow(tmp) > 0){
-    stop(paste0('Plot configurations with reference scenarios need to have a color legend ',
-               'Please check "',paste0(unique(tmp$plotName),collapse = '", "','"')))
+  if (nrow(tmp) > 0) {
+    stop(paste0(
+      "Plot configurations with reference scenarios need to have a color legend ",
+      'Please check "', paste0(unique(tmp$plotName), collapse = '", "', '"')
+    ))
   }
 
   return(invisible())
@@ -972,7 +978,7 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
 
 #' Check if panel columns are filled consistently
 #'
-#' @template configTablePlots
+#' @param configTablePlots `data.table` ConfigurationTable without header lines
 #' @param panelColumns Vector of columns which should be consistent.
 #' @keywords internal
 validateUnitConsistency <- function(
@@ -999,7 +1005,7 @@ validateUnitConsistency <- function(
 #' 'total','firstApplication','lastApplication'
 #' or a string which evaluates in R to a numeric vector length 2  (e.g. 'c(2,3)' or 'c(2,NA)'
 #'
-#' @template configTablePlots
+#' @param configTablePlots `data.table` ConfigurationTable without header lines
 #' @keywords internal
 validateTimeRangeColumns <- function(configTablePlots) {
   timeRangeColumns <-
@@ -1040,7 +1046,7 @@ validateTimeRangeColumns <- function(configTablePlots) {
 
 #' Validates output path ID format
 #'
-#' @template configTablePlots
+#' @param configTablePlots `data.table` ConfigurationTable without header lines
 #' @keywords internal
 validateOutputPathIdFormat <- function(configTablePlots, column = "outputPathIds") {
   # avoid warning for global variable
@@ -1072,11 +1078,13 @@ validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
   # avoid warning for global variable
   scenarioResult <- dataGroupIds <- plot_TimeProfiles <- individualIds <- NULL
 
-  popScenarios <- scenarioResults[unlist(lapply(scenarioResults,
-                                                function(scenarioResult) {
-    (!is.null(scenarioResult$population) &&
-       "Population" %in% class(scenarioResult$population))
-  }))]
+  popScenarios <- scenarioResults[unlist(lapply(
+    scenarioResults,
+    function(scenarioResult) {
+      (!is.null(scenarioResult$population) &&
+        "Population" %in% class(scenarioResult$population))
+    }
+  ))]
 
 
   indScenariosNames <- names(popScenarios[unlist(lapply(popScenarios, function(scenario) {
@@ -1103,8 +1111,8 @@ validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
   }
 
   tmp <- configTablePlots[!(scenario %in% indScenariosNames) &
-                            !is.na(individualIds)
-                          & is.na(dataGroupIds)]
+    !is.na(individualIds) &
+    is.na(dataGroupIds)]
   if (nrow(tmp) > 0) {
     warning(paste(
       'Column "individualIds" is filled but no data group is selected and
@@ -1113,15 +1121,15 @@ validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
     ))
   }
 
-  popScenariosNames <- setdiff(names(popScenarios),indScenariosNames)
+  popScenariosNames <- setdiff(names(popScenarios), indScenariosNames)
   tmp <- configTablePlots[!is.na(referenceScenario) &
-                            ((!(scenario %in% popScenariosNames) &
-                               (referenceScenario %in% popScenariosNames))
-                          | ((scenario %in% popScenariosNames) &
-                               !(referenceScenario %in% popScenariosNames)))]
+    ((!(scenario %in% popScenariosNames) &
+      (referenceScenario %in% popScenariosNames)) |
+      ((scenario %in% popScenariosNames) &
+        !(referenceScenario %in% popScenariosNames)))]
   if (nrow(tmp) > 0) {
     stop(paste(
-      'scenario and referenceScenario must be both populations or both indviduals',
+      "scenario and referenceScenario must be both populations or both indviduals",
       "Check Plots:", paste(tmp$plotName, collapse = ", ")
     ))
   }
@@ -1190,7 +1198,7 @@ addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
     dtNewHeader <- data.table()
   }
 
-  if (nrow(dtNewHeader)==0){
+  if (nrow(dtNewHeader) == 0) {
     dtNewHeader <- data.table(
       level = 1,
       header = "Concentration time profiles"

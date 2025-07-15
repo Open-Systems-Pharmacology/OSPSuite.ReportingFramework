@@ -22,12 +22,12 @@ test_that("getAggregationFunction works correctly", {
 test_that("getErrorTypeForPercentiles works correctly", {
   # Test with median and valid percentiles
   percentiles <- c(0.25, 0.5, 0.75)
-  result <- getErrorTypeForPercentiles(percentiles,legendsize = 2)
+  result <- getErrorTypeForPercentiles(percentiles, legendsize = 2)
   expect_equal(result, "median | 25th - 75th percentile")
 
   # Test with only min and max percentiles
   percentiles <- c(0, 0.5, 1)
-  result <- getErrorTypeForPercentiles(percentiles,legendsize = 2)
+  result <- getErrorTypeForPercentiles(percentiles, legendsize = 2)
   expect_equal(result, "median | min - max")
 
   # Test with percentiles including median
@@ -44,7 +44,6 @@ test_that("getErrorTypeForPercentiles works correctly", {
   percentiles <- c(0.2, 0.4, 0.6)
   result <- getErrorTypeForPercentiles(percentiles, legendsize = 2)
   expect_equal(result, "40th percentile | 20th - 60th percentile")
-
 })
 
 # Test for getAggregationFunction
@@ -53,9 +52,9 @@ test_that("getAggregationFunction handles invalid inputs correctly", {
   expect_error(getAggregationFunction("InvalidFlag", percentiles = NULL, customFunction = NULL))
 
   # Test invalid percentiles for Percentiles aggregation
-  expect_error(getAggregationFunction("Percentiles", percentiles = c(0.25, 0.5), customFunction = NULL))  # Not length 3
-  expect_error(getAggregationFunction("Percentiles", percentiles = c(1.1, 0.5, 0.75), customFunction = NULL))  # Out of range
-  expect_error(getAggregationFunction("Percentiles", percentiles = c(0.5, 0.25, 0.75), customFunction = NULL))  # Not sorted
+  expect_error(getAggregationFunction("Percentiles", percentiles = c(0.25, 0.5), customFunction = NULL)) # Not length 3
+  expect_error(getAggregationFunction("Percentiles", percentiles = c(1.1, 0.5, 0.75), customFunction = NULL)) # Out of range
+  expect_error(getAggregationFunction("Percentiles", percentiles = c(0.5, 0.25, 0.75), customFunction = NULL)) # Not sorted
 
   # Test invalid legendsize
   expect_error(getAggregationFunction("Percentiles", percentiles = c(0.25, 0.5, 0.75), customFunction = NULL, legendsize = 4))
@@ -74,4 +73,3 @@ test_that("getErrorTypeForPercentiles handles invalid legendsize correctly", {
   expect_error(getErrorTypeForPercentiles(c(0.25, 0.5, 0.75), legendsize = 4))
   expect_error(getErrorTypeForPercentiles(c(0.25, 0.5, 0.75), legendsize = 0))
 })
-

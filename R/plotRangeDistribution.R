@@ -1,9 +1,9 @@
 #' @title enumeration keys for mode of Binning
 #' @export
 BINNINGMODE <- ospsuite.utils::enum(c( # nolint
-  number = 'Equal Frequency Binning',
-  interval = 'Equal Width Binning',
-  breaks = 'Custom Binning'
+  number = "Equal Frequency Binning",
+  interval = "Equal Width Binning",
+  breaks = "Custom Binning"
 ))
 
 #' @title Plot Range Plot
@@ -31,23 +31,22 @@ BINNINGMODE <- ospsuite.utils::enum(c( # nolint
 #' @param identifier columnName of individual identifiers, default "IndividualId"
 #' @return A ggplot object representing the range plot. The returned object can be further customized or rendered using `print()` or similar functions.
 #' @export
-plotRangeDistribution <-function(data,
-                         mapping,
-                         metaData = NULL,
-                         modeOfBinning = BINNINGMODE$number,
-                         numberOfBins = 20,
-                         breaks = NA,
-                         asStepPlot = FALSE,
-                         statFun = NULL,
-                         percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1,3,5)],
-                         yscale = "linear",
-                         yscale.args = list(),
-                         xscale = "linear",
-                         xscale.args = list(),
-                         geomRibbonAttributes = getDefaultGeomAttributes("Ribbon"),
-                         geomLineAttributes = getDefaultGeomAttributes("Line"),
-                         identifier = 'IndividualId'
-){
+plotRangeDistribution <- function(data,
+                                  mapping,
+                                  metaData = NULL,
+                                  modeOfBinning = BINNINGMODE$number,
+                                  numberOfBins = 20,
+                                  breaks = NA,
+                                  asStepPlot = FALSE,
+                                  statFun = NULL,
+                                  percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1, 3, 5)],
+                                  yscale = "linear",
+                                  yscale.args = list(),
+                                  xscale = "linear",
+                                  xscale.args = list(),
+                                  geomRibbonAttributes = getDefaultGeomAttributes("Ribbon"),
+                                  geomLineAttributes = getDefaultGeomAttributes("Line"),
+                                  identifier = "IndividualId") {
   ## Validation -----------
   checkmate::assertChoice(xscale, choices = c("linear", "log"), null.ok = FALSE)
   checkmate::assertList(xscale.args, null.ok = FALSE, min.len = 0)
@@ -74,7 +73,7 @@ plotRangeDistribution <-function(data,
     mapping = mapping,
     xscale = xscale,
     yscale = yscale,
-    groupAesthetics = c("fill","color"),
+    groupAesthetics = c("fill", "color"),
     modeOfBinning = modeOfBinning,
     numberOfBins = numberOfBins,
     breaks = breaks
@@ -95,7 +94,7 @@ plotRangeDistribution <-function(data,
   #-  create default plot ------
   plotObject <- initializePlot(mappedData)
 
-# add x and y scale
+  # add x and y scale
   plotObject <- addXYScale(
     plotObject = plotObject,
     xscale = mappedData$xscale,

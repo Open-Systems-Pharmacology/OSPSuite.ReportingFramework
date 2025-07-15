@@ -52,7 +52,7 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
 
   # Check if any groups are available for virtual twin population creation
   if (length(groups) == 0) {
-    writeToLog(type = 'Info',msg = "No groups available for virtual twin population creation")
+    writeToLog(type = "Info", msg = "No groups available for virtual twin population creation")
     return(NULL)
   }
 
@@ -62,7 +62,7 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
     .[, .(dataGroups = paste(group, collapse = ", ")), by = "individualId"] %>%
     .[, populationName := gsub(", ", "_", dataGroups)]
 
-  writeToLog(type = 'Info',msg = "add virtual twin population configuration in Population configuration file:")
+  writeToLog(type = "Info", msg = "add virtual twin population configuration in Population configuration file:")
   writeTableToLog(dtTwinPopsNew[, .N, by = "populationName"])
 
   # Combine the existing and new virtual twin population data
@@ -117,7 +117,7 @@ exportVirtualTwinPopulations <- function(projectConfiguration, modelFile, overwr
   }
   # If no populations left to generate, return with a message
   if (nrow(dtTwinPops) == 0) {
-    writeToLog(type = 'Info',msg = "No new virtual twin populations to generate; all files already exist.")
+    writeToLog(type = "Info", msg = "No new virtual twin populations to generate; all files already exist.")
     return(invisible())
   }
 
@@ -237,16 +237,20 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
   }
   # If no populations left to generate, return with a message
   if (nrow(dtPops) == 0) {
-    writeToLog(type = 'Info',
-               msg = ("No new virtual populations to generate; all files already exist."))
+    writeToLog(
+      type = "Info",
+      msg = ("No new virtual populations to generate; all files already exist.")
+    )
     return(invisible())
   }
 
-  tmp <- dtPops[proportionOfFemales > 0 & proportionOfFemales <=1]
-  if (nrow(tmp)>1){
-    warning(paste('You have very small values for Proportion of female in the population configurations.
-    Unit is percent not fraction. Are you sure?\n',
-                  paste(paste(tmp$populationName, tmp$proportionOfFemales,sep = ': '),collapse = '; ')))
+  tmp <- dtPops[proportionOfFemales > 0 & proportionOfFemales <= 1]
+  if (nrow(tmp) > 1) {
+    warning(paste(
+      "You have very small values for Proportion of female in the population configurations.
+    Unit is percent not fraction. Are you sure?\n",
+      paste(paste(tmp$populationName, tmp$proportionOfFemales, sep = ": "), collapse = "; ")
+    ))
   }
 
 

@@ -162,7 +162,8 @@ plotPKForest <- function(projectConfiguration,
     mapping <-
       getMappingForForestPlots(
         plotData = plotDataGroup[[groupName]],
-        columnList = columnList)
+        columnList = columnList
+      )
 
     for (xScale in splitInputs(onePlotConfig$xScale[1])) {
       combinedObject <-
@@ -672,12 +673,14 @@ adjustForestDataPerGroup <- function(dataGroup, onePlotConfig) {
   )]
   if (any(tmp$N > 1)) {
     stop("Scenarios are not unique regarding scenarioShortName and scenarioGroup.
-           Check configuration for: ", onePlotConfig$plotName[1],)
+           Check configuration for: ", onePlotConfig$plotName[1], )
   }
-  if (uniqueN(dataGroup[['xErrorType']]) > 1) {
-    stop("Scenarios are not unique regarding aggregation for observed and simulated data.
+  if (uniqueN(dataGroup[["xErrorType"]]) > 1) {
+    stop(
+      "Scenarios are not unique regarding aggregation for observed and simulated data.
            Check errorType column for data relevant for plot: ", onePlotConfig$plotName[1],
-         "errorTypes are: ",paste(unique(dataGroup[['xErrorType']]),collapse = ', '))
+      "errorTypes are: ", paste(unique(dataGroup[["xErrorType"]]), collapse = ", ")
+    )
   }
 
   dataGroup$outputPathId <- factor(
@@ -927,23 +930,29 @@ getTableLabelsForPKForest <- function(plotData) {
 #' @return A mapping object created using `aes` from ggplot2, which can be used
 #'   in a ggplot call to create forest plots.
 #'   @keywords internal
-getMappingForForestPlots <- function(plotData,columnList){
-  mapping <- aes(x = xValues,y = get(columnList$yColumn),groupby = dataType)
+getMappingForForestPlots <- function(plotData, columnList) {
+  mapping <- aes(x = xValues, y = get(columnList$yColumn), groupby = dataType)
 
   mapping <- utils::modifyList(
     mapping,
-    eval(parse(text = paste0("aes(y = ",columnList$yColumn,")")))
+    eval(parse(text = paste0("aes(y = ", columnList$yColumn, ")")))
+  )
+  if ("xMin" %in% names(plotData) & "xMax" %in% names(plotData)) {
+    mapping <- utils::modifyList(
+      mapping,
+      aes(xmin = xMin, xmax = xMax)
     )
-  if ('xMin' %in% names(plotData) & 'xMax' %in% names(plotData)){
-    mapping <- utils::modifyList(mapping,
-                                 aes(xmin = xMin, xmax = xMax))
-  } else if( 'xErrorValues' %in% names(plotData)){
-    if (plotData$xErrorType[1] == ospsuite::DataErrorType$ArithmeticStdDev){
-      mapping <- utils::modifyList(mapping,
-                                   aes(error = xErrorValues))
-    } else if (plotData$xErrorType[1] == ospsuite::DataErrorType$GeometricStdDev){
-      mapping <- utils::modifyList(mapping,
-                                   aes(error_relative = xErrorValues))
+  } else if ("xErrorValues" %in% names(plotData)) {
+    if (plotData$xErrorType[1] == ospsuite::DataErrorType$ArithmeticStdDev) {
+      mapping <- utils::modifyList(
+        mapping,
+        aes(error = xErrorValues)
+      )
+    } else if (plotData$xErrorType[1] == ospsuite::DataErrorType$GeometricStdDev) {
+      mapping <- utils::modifyList(
+        mapping,
+        aes(error_relative = xErrorValues)
+      )
     }
   }
 
@@ -1030,12 +1039,12 @@ adjustPkForestPlotObject <- function(combinedObject, scaleVectors, vlineIntercep
 
   combinedObject$tableObject <-
     combinedObject$tableObject +
-    if (length(tableLabels) == 1){
+    if (length(tableLabels) == 1) {
       theme(axis.text.x = element_text(
         angle = 0,
         vjust = 0.5,
         hjust = 0.5
-    ))
+      ))
     } else {
       theme(axis.text.x = element_text(
         angle = -30,
@@ -1331,10 +1340,9 @@ validatePKForestConfigTable <- function(configTable, pkParameterDT, ...) {
       ),
       facetScale = list(
         cols = c("facetScale"),
-        allowedValues = c('free','free_y'),
+        allowedValues = c("free", "free_y"),
         splitAllowed = FALSE
       )
-
     )
   )
 

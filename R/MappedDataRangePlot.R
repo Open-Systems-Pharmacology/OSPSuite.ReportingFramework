@@ -32,8 +32,8 @@ MappedDataRangeDistribution <- R6::R6Class( # nolint
                           isObserved = TRUE,
                           xlimits = NULL,
                           ylimits = NULL,
-                          xscale = 'linear',
-                          yscale = 'linear',
+                          xscale = "linear",
+                          yscale = "linear",
                           residualScale = NULL,
                           residualAesthetic = "y",
                           modeOfBinning = NA,
@@ -63,10 +63,10 @@ MappedDataRangeDistribution <- R6::R6Class( # nolint
         checkmate::assertIntegerish(numberOfBins, lower = 2, any.missing = FALSE, len = 1)
       }
 
-      private$modeOfBinning = modeOfBinning
-      private$numberOfBins = numberOfBins
-      private$breaks = breaks
-      self$xscale = xscale
+      private$modeOfBinning <- modeOfBinning
+      private$numberOfBins <- numberOfBins
+      private$breaks <- breaks
+      self$xscale <- xscale
     },
 
     #' Set binning columns
@@ -74,26 +74,34 @@ MappedDataRangeDistribution <- R6::R6Class( # nolint
     #' @return The object itself (invisible)
     setBins = function() {
       if (private$modeOfBinning == BINNINGMODE$number) {
-        functionName <- 'cut_number'
+        functionName <- "cut_number"
         functionArgs <- list(n = private$numberOfBins)
       } else if (private$modeOfBinning == BINNINGMODE$interval) {
-        if (self$xscale == 'log') {
-          cut_interval_log <- function(x, ...) { cut_interval(log(x), ...) }
-          functionName <- 'cut_interval_log'
+        if (self$xscale == "log") {
+          cut_interval_log <- function(x, ...) {
+            cut_interval(log(x), ...)
+          }
+          functionName <- "cut_interval_log"
         } else {
-          functionName <- 'cut_interval'
+          functionName <- "cut_interval"
         }
         functionArgs <- list(n = private$numberOfBins)
       } else if (private$modeOfBinning == BINNINGMODE$breaks) {
-        functionName <- 'cut'
+        functionName <- "cut"
         functionArgs <- list(breaks = private$breaks, include.lowest = TRUE)
       }
       self$data <- self$data %>%
-        dplyr::mutate(.bin = do.call(what = functionName,
-                                     args = c(list(x = !!self$mapping[['x']],
-                                                   right = FALSE,
-                                                   ordered_result = TRUE),
-                                              functionArgs)))
+        dplyr::mutate(.bin = do.call(
+          what = functionName,
+          args = c(
+            list(
+              x = !!self$mapping[["x"]],
+              right = FALSE,
+              ordered_result = TRUE
+            ),
+            functionArgs
+          )
+        ))
 
       return(invisible(self))
     },
@@ -101,24 +109,27 @@ MappedDataRangeDistribution <- R6::R6Class( # nolint
     #' Create a data table with bin border information
     #' @param identifier Identifier for the data table (default is 'IndividualId')
     #' @description This method sets up a data table containing border information for the bins.
-    setBorderDataTable = function(identifier = 'IndividualId') {
-      checkmate::assertNames(c('.bin', identifier), subset.of = names(self$data))
+    setBorderDataTable = function(identifier = "IndividualId") {
+      checkmate::assertNames(c(".bin", identifier), subset.of = names(self$data))
 
       # get datatable with unique x values
       tmp <- copy(self$data) %>%
-        dplyr::select(dplyr::all_of(c('.bin', identifier)))
-      tmp$.x = private$getDataForAesthetic(aesthetic = 'x')
+        dplyr::select(dplyr::all_of(c(".bin", identifier)))
+      tmp$.x <- private$getDataForAesthetic(aesthetic = "x")
       tmp <- tmp %>%
         unique() %>%
         setDT()
 
-      borders <- tmp[!is.na(.bin), .(N = .N,
-                                     minValue = min(.x),
-                                     medianX = median(.x),
-                                     maxValue = max(.x)),
-                     by = '.bin']
+      borders <- tmp[!is.na(.bin), .(
+        N = .N,
+        minValue = min(.x),
+        medianX = median(.x),
+        maxValue = max(.x)
+      ),
+      by = ".bin"
+      ]
 
-      setorderv(borders, 'minValue')
+      setorderv(borders, "minValue")
 
       # duplicate last row to determine right border of table/plot
       borders <- rbind(borders, borders[nrow(borders)])
@@ -127,7 +138,7 @@ MappedDataRangeDistribution <- R6::R6Class( # nolint
 
       # set breaks
       if (private$modeOfBinning == BINNINGMODE$breaks) {
-        borders$breaks = private$breaks
+        borders$breaks <- private$breaks
       } else {
         # duplicate first row to support calculation of minimal break
         borders <- rbind(borders[1], borders)
@@ -155,35 +166,41 @@ MappedDataRangeDistribution <- R6::R6Class( # nolint
       private$asStepPlot <- asStepPlot
       if (asStepPlot) {
         tmp <- setDT(copy(self$border))
-        if (self$xscale == 'linear') {
+        if (self$xscale == "linear") {
           tmp[, breaksRight := shift(breaks, type = "lead") - 0.001 * (maxValue - minValue)]
         } else {
           tmp[, breaksRight := exp(log(shift(breaks, type = "lead")) - 0.001 * (log(maxValue) - log(minValue)))]
         }
         tmp <- tmp[!is.na(breaksRight)]
 
-        self$data <- rbind(self$data %>%
-                             merge(tmp[, c('.bin', 'breaks')],
-                                   by = '.bin'),
-                           self$data %>%
-                             merge(tmp[, c('.bin', 'breaksRight')],
-                                   by = '.bin') %>%
-                             setnames(old = 'breaksRight', new = 'breaks'),
-                           setDT(self$data)[is.na(.bin)] %>%
-                             dplyr::mutate(breaks = min(self$border$breaks, na.rm = TRUE)),
-                           setDT(self$data)[is.na(.bin)] %>%
-                             dplyr::mutate(breaks = max(self$border$breaks, na.rm = TRUE)))
+        self$data <- rbind(
+          self$data %>%
+            merge(tmp[, c(".bin", "breaks")],
+              by = ".bin"
+            ),
+          self$data %>%
+            merge(tmp[, c(".bin", "breaksRight")],
+              by = ".bin"
+            ) %>%
+            setnames(old = "breaksRight", new = "breaks"),
+          setDT(self$data)[is.na(.bin)] %>%
+            dplyr::mutate(breaks = min(self$border$breaks, na.rm = TRUE)),
+          setDT(self$data)[is.na(.bin)] %>%
+            dplyr::mutate(breaks = max(self$border$breaks, na.rm = TRUE))
+        )
 
         private$addOverwriteAes(aes(x = breaks))
-
       } else {
-        self$data <- rbind(self$data %>%
-                             merge(self$border[, c('.bin', 'medianX')],
-                                   by = '.bin'),
-                           setDT(self$data)[is.na(.bin)] %>%
-                             dplyr::mutate(medianX = min(self$border$medianX, na.rm = TRUE)),
-                           setDT(self$data)[is.na(.bin)] %>%
-                             dplyr::mutate(medianX = max(self$border$medianX, na.rm = TRUE)))
+        self$data <- rbind(
+          self$data %>%
+            merge(self$border[, c(".bin", "medianX")],
+              by = ".bin"
+            ),
+          setDT(self$data)[is.na(.bin)] %>%
+            dplyr::mutate(medianX = min(self$border$medianX, na.rm = TRUE)),
+          setDT(self$data)[is.na(.bin)] %>%
+            dplyr::mutate(medianX = max(self$border$medianX, na.rm = TRUE))
+        )
 
         private$addOverwriteAes(aes(x = medianX))
       }
