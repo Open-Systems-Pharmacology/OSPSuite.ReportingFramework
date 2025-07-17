@@ -19,7 +19,10 @@ library(ospsuite.reportingframework)
 ```
 
 
- package recognizes two kinds of populations:
+
+![Populations within the reporting framework](images/Population.png)
+
+The package recognizes two kinds of populations:
 
 ### Random Population
 
@@ -48,6 +51,10 @@ If you do not use `readObservedDataByDictionary` for data import, add the sheet 
 
 With this sheet, you define which individuals belong to which virtual population. The configuration of the individuals is saved in the tables 'Individual.xlsx', 'ModelParameters.xlsx', and 'ApplicationProtocol.xlsx'.
 
-The function *exportVirtualTwinPopulations* is called to export this population to a CSV table in <rootdirectory>/Models/Populations. It includes an additional column, 'ObservedIndividualId', which contains the individual identifier.
+The function `exportVirtualTwinPopulations` is called to export this population to a CSV table in <rootdirectory>/Models/Populations. It includes an additional column, 'ObservedIndividualId', which contains the individual identifier.
 
 The scenario setup is the same as for the 'Random Population': use the `PopulationName` as 'PopulationId' and set the column 'ReadPopulationFromCSV' to TRUE. Note that `ReadPopulationFromCSV = FALSE` is not possible for this type of population.
+
+If the same parameters are adressed by the Poulation and the Scenario setup (e.g. by referencing different ModelParameter sheets) the scenario setup overwrites the setup of the population. 
+
+
