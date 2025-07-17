@@ -21,14 +21,30 @@ library(data.table)
 library(tidyr)
 ```
 
-# Introduction
+# Overview
 
 This vignette aims to provide a comprehensive understanding of the data import process within the package. 
 
-TODO Data which is needed for plot configuration, such as identifiers for datagroups and outputs, biometrics of virtual populations are transferred during the data import to the corresponding configuration tables.
-ADD GRAPHIC
+- Data import works for observed time profiles and pk-parameter, both can be aggregated or individual
+
+- source files are expected to be filed as csv tables
+
+- The import function is readObservedDataByDictionary
+
+- Configuration is done via "DataImportConfiguration.xlsx"
+     one sheet "DataFiles" with a list of all files which should be imported
+     and dictionary sheets with define how the import is done
+     
+- result is one data.table 'dataObserved' for time profiles and one data.table 'dataObservedPK' for PK Parameter
 
 
+- the import function transfers also available data to other configuration sheets
+  - if fills the sheet "IndividualBiometrics" ins "Individuals.xlsx" with all avialable data
+  - it adds a new sheet "VirtualTwinPopulation" to "Individuals.xlsx"with Individual data appropriate for the generation of a virtual Twim Population (see vignette Population)
+  - it adds the output identifier and datagroup identifier with all available data to the corresponding sheets in "Plot.xlsx" and "Scenario.xlsx"
+  
+
+![Overview on data import](images/DataImport.png)
 
 
 # Using readObservedDataByDictionary Function
@@ -41,12 +57,6 @@ The readObservedDataByDictionary function plays a pivotal role in the data impor
 
 3. Invoke the Function: Call the readObservedDataByDictionary function, passing the project configuration as an argument. The function will read the data files and process the observed data based on the provided dictionary and configuration. It will return the observed data as a data.table, ready for further analysis.
 
-Data Updates in Other Configuration Files: The function also updates data used in other configuration files:
-
-- Sheet "DataGroups" (Plot Configuration File): Missing rows for the group identifier are added. Here, you can add properties like the display name for the report.
-- Sheet "OutputPaths" (Plot Configuration File): Missing rows for the outputPathIds identifier are added. Here, you can add output paths and display names for the report.
- -Sheet "IndividualBiometrics" (Individual Parameter File): All individual biometrics contained in the data are added.
-  
 
 ```{r readObservedDataByDictionary, eval = FALSE, echo = TRUE}
 # Call the readObservedDataByDictionary function
@@ -56,27 +66,84 @@ observedData <- readObservedDataByDictionary(projectConfiguration)
 
 # Filling the Excel Table
 
+```{r load-template, eval=TRUE, echo=FALSE}
+templateFilePath <- system.file("templates", "DataImportConfiguration.xlsx",
+  package = "ospsuite.reportingframework", mustWork = TRUE
+)
+
+dataFilesSheet <-
+  xlsxReadData(
+    wb = templateFilePath,
+    sheetName = "DataFiles",
+    skipDescriptionRow = TRUE,
+    emptyAsNA = FALSE,
+    convertHeaders = FALSE
+  )
+tpDictionary <-
+  xlsxReadData(
+    wb = templateFilePath,
+    sheetName = "tpDictionary",
+    skipDescriptionRow = TRUE,
+    emptyAsNA = FALSE,
+    convertHeaders = FALSE
+  )
+```
+
 To effectively fill the Excel table for use with the `readObservedDataByDictionary` function, follow these guidelines:
 
 ## "DataFiles" Sheet: 
 
 In the "DataFiles" sheet of the Excel template, provide the following information:
 
+-**FileIdentifier**: Identifier which can be used for filtering the file.
 - **DataFile**: Path of the CSV file relative to the configuration XLSX.
 - **Dictionary**: Sheet name for the data dictionary.
 - **DataFilter**: An R executable expression that filters relevant data for the study. If empty, no filter is applied.
-- **DataClass**: Differentiate between aggregated and individual data.
+- **DataClass**: Differentiate between time profiles and pkParameter and aggregated and individual data.
+
+### Example
+
+In the example below we want to read data from 3 source files. 
+"data1" and "data2" have the same format and use the same dictionary for the import, for data3 the dictionary "tpDictionaryAggregated" is used. All used dictionaries have to be part of the "dataImportConfiguration.xlsx."
+
+For Data1 we need all rows, for the other two we have filter defined. In Data2 we want to exclude all flagged wit a `PKFLAG > 0` and In Data3 we want to exclude data from study 1234
+
+
+```{r echo=FALSE,eval=TRUE}
+dataFilesSheet <- rbind(
+  dataFilesSheet[FALSE, ],
+  data.table(
+    FileIdentifier = c("data1", "data2", "data3"),
+    DataFile = c(
+      "relative/path/to/data1.csv",
+      "relative/path/to/data2.csv",
+      "relative/path/to/data3.csv"
+    ),
+    Dictionary = c(
+      "tpDictionary",
+      "tpDictionary",
+      "tpDictionaryAggregated"
+    ),
+    DataFilter = c("", "PKValue == 1", "STUD != 1234"),
+    DataClass = c(DATACLASS$tpIndividual, DATACLASS$tpIndividual, DATACLASS$tpAggregated)
+  )
+)
+
+knitr::kable(dataFilesSheet)
+```
+
+The first line of the sheet is not shown above It contains descriptions for the columns. The information for the data import starts at line 2.
+
 
 ## "tpDictionary" Sheet: 
 
-In the "tpDictionary" sheet, define the data dictionary with the following columns:
+The configuration sheet provides two templates for dictionaries "tpDictionary" and "pkDictionary". They have the following columns:
 
   - **targetColumn**: Internal column name of the package.  
   - **type**: Type of parameter used by the package. 
       following types exist: 
       
-      - **identifier** all identifiers are mandatory:  
-      
+      - **identifier**:  
          - studyId: id of study
          - studyArm: study arm
          - subjectId: id of subject with the study (not needed for aggregated data)
@@ -84,9 +151,9 @@ In the "tpDictionary" sheet, define the data dictionary with the following colum
          - group: identifier for data group, is unique over all studies and data classes
          - outputPathId: identifier for the output.
          
-      - **timeprofile** columns used to process time profiles.
+      - **timeprofile** (columns used to process time profiles)
          The columns 'xValues','yValues','yUnit','lloq' are always mandatory, 
-         for aggregated data the columns 'yErrorValues', 'yErrorType', 'yMin', 'yMax', 'numberOfIndividuals' and 'nBelowLLOQ' are also available:
+         for aggregated data the columns 'yErrorValues', 'yErrorType', 'yMin', 'yMax', 'numberOfIndividuals' and 'nBelowLLOQ' are also available.
       
         - time: time values, unit is specified in dictionary
         - yValues: data value
@@ -107,6 +174,18 @@ In the "tpDictionary" sheet, define the data dictionary with the following colum
         - yMax: upper range of aggregation range
         - nBelowLLOQ: number of values below lloq
         - numberOfIndividuals: number of values
+        
+      - **pkParameter** (columns used to process time profiles)
+         The columns 'values', 'Unit' are always mandatory, 
+         for aggregated data the columns 'errorValues', 'errorType', 'minValue', 'maxValue', 'numberOfIndividuals'  are also available.
+        
+        - values: data value
+        - unit: unit of data value, (is also valid for all corresponding columns errorValues)
+        - errorType: type of aggregation range . The same defaults exists as for `yErrorType` of timeprofiles
+        - errorValues: value of aggregation range, 
+        - minValue: lower range of aggregation range,
+        - maxValue: upper range of aggregation range
+        - nBelowLLOQ: number of values below lloq
 
       - **biometrics** columns used to create individuals, can be used also for covariate analysis 
       All columns are optional, The values are transferred to the 'Individual.xlsx' for further use. 
@@ -135,65 +214,19 @@ By filling out the Excel table with the required information, you can ensure tha
 **!!! ATTENTION, Do not use single quotes ' to capture strings. At the beginning of an excel cell single quotes will be ignored. Use double quotes ".**
 
 
-# Example Sheets
+### Example
 
-```{r load-template, eval=TRUE, echo=FALSE}
-templateFilePath <- system.file("templates", "DataImportConfiguration.xlsx",
-  package = "ospsuite.reportingframework", mustWork = TRUE
-)
+This sheet is used for individual data.   
 
-dataFilesSheet <-
-  xlsxReadData(
-    wb = templateFilePath,
-    sheetName = "DataFiles",
-    skipDescriptionRow = TRUE,
-    emptyAsNA = FALSE,
-    convertHeaders = FALSE
-  )
-tpDictionary <-
-  xlsxReadData(
-    wb = templateFilePath,
-    sheetName = "tpDictionary",
-    skipDescriptionRow = TRUE,
-    emptyAsNA = FALSE,
-    convertHeaders = FALSE
-  )
-```
+The `individualId` was constructed as concatenation of study Id and Individual id. 
+As we want to do this for all rows filter was set to `TRUE` and the r expression, which does the concatenation was placed in the column `filterValue`.
 
+The dictionary contains two rows for the target column population. For the first entry all data rows where the source column `RACENAME` is "White" are set to "European_ICRP_2002", with the second entries Asians are set to "Asian_Tanaka_1996". 
 
-## `DataFiles` Sheet
+Values defined by filters are set sequential in the order of the dictionary, so if a datarow is selected by different filter condition, the filter value at the bottom will define the final value.
 
-The first line of the sheet contains descriptions for the columns, the information for the data import starts at line 2:
-
-```{r echo=FALSE,eval=TRUE}
-dataFilesSheet <- rbind(
-  dataFilesSheet[FALSE, ],
-  data.table(
-    FileIdentifier = c("data1", "data2", "data3"),
-    DataFile = c(
-      "relative/path/to/data1.csv",
-      "relative/path/to/data2.csv",
-      "relative/path/to/data3.csv"
-    ),
-    Dictionary = c(
-      "tpDictionary",
-      "tpDictionary",
-      "tpDictionaryAggregated"
-    ),
-    DataFilter = c("", "PKValue == 1", "STUD != 1234"),
-    DataClass = c(DATACLASS$tpIndividual, DATACLASS$tpIndividual, DATACLASS$tpAggregated)
-  )
-)
-
-knitr::kable(dataFilesSheet)
-```
-
-In the example above we want to read data from 3 source files. 
-"data1" and "data2" have the same format and use the same dictionary for the import, for data3 the dictionary "tpDictionaryAggregated" is used. All used dictionaries have to be part of the "dataImportConfiguration.xlsx."
-
-For Data1 we need all rows, for the other two we have filter defined. In Data2 we want to exclude all flagged wit a `PKFLAG > 0` and In Data3 we want to exclude data from study 1234
-
-## `tpDictionary` Sheet
+The data contains the covariate country in the column "COUNTRY"
+Also the metadata dose is available.
 
 ```{r, echo=FALSE}
 tpDictionaryInd <- tpDictionary %>%
@@ -206,40 +239,17 @@ tpDictionaryInd[TargetColumn == "dose"]$Filter <- NA
 knitr::kable(tpDictionaryInd)
 ```
 
-This sheet is used for individual data.   
 
-The `individualId` was constructed as concatenation of study Id and Individual id. 
-As we want to do this for all rows filter was set to `TRUE` and the r expression, which does the concatenation was placed in the column `filterValue`.
+# Other Data Formats
 
-The dictionary contains two rows for the target column population. With the first row all data rows where the source column `RACENAME` is "White" are set to "European_ICRP_2002", with the second row Asians are set to "Asian_Tanaka_1996".
+The plot functions in the package workflow for time profile plost accept observed data in two formats: the `data.table` format generated by the `readObservedDataByDictionary` function and the `DataCombined` class format from the `ospsuite-R` package. 
 
-The data contains the covariate country in the column "COUNTRY"
-Also the metadata dose is available.
-
-
-# Data Formats for Plot Functions
-
-All plot functions in the package workflow accept observed data in two formats: the `data.table` format generated by the `readObservedDataByDictionary` function and the `DataCombined` class format from the `ospsuite-R` package. Understanding how to work with these formats is essential for effective data visualization and analysis.
-
-1. Data.table Format
-
-The `data.table` format is a highly efficient data structure used for storing and manipulating large datasets in R. When using the `readObservedDataByDictionary` function, the observed data is returned as a `data.table`. This format is particularly useful for performing operations such as filtering, aggregating, and merging datasets.
-
-2. DataCombined Class Format
-The DataCombined class is a specific format used by the ospsuite-R package to represent combined datasets, typically used for pharmacokinetic analyses. This format allows for more structured data management.
-
-## Converting DataCombined to Data.table
-If you have a DataCombined object and need to convert it back to a data.table, you can use the convertDataCombinedToDataTable function. This allows for flexibility in data handling, enabling users to switch between formats as needed.
+the package provides also two function to convert the data.table format to DataCombined and vice versa:
 
 ```{r,echo=TRUE,eval=FALSE}
 # Convert DataCombined back to data.table format
 dataDT <- convertDataCombinedToDataTable(dataCombined)
-```
 
-## Converting Data.table to DataCombined
-To convert a data.table to a DataCombined object, you can use the convertDataTableToDataCombined function. This function validates the observed data and organizes it into a structure suitable for pharmacokinetic analysis.
-
-```{r echo=TRUE,eval=FALSE}
 # Convert data.table to DataCombined format
 dataCombined <- convertDataTableToDataCombined(observedData)
 ```
