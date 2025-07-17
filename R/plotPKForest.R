@@ -263,7 +263,7 @@ plotPKForestAggregatedAbsoluteValues <- function(projectConfiguration,
                                                  withTable = TRUE,
                                                  relWidths = NULL,
                                                  digitsToRound = 2,
-                                                 digitsToShow = 2) {
+                                                 digitsToShow = 2,...) {
   validateCommonInputs(
     pkParameterDT = pkParameterDT,
     pkParameterObserved = pkParameterObserved,
@@ -307,7 +307,7 @@ plotPKForestPointEstimateOfAbsoluteValues <- function(projectConfiguration,
                                                       withTable = TRUE,
                                                       relWidths = NULL,
                                                       digitsToRound = 2,
-                                                      digitsToShow = 2) {
+                                                      digitsToShow = 2,...) {
   ratioMode <- "none"
 
   validateCommonInputs(
@@ -364,7 +364,7 @@ plotPKForestAggregatedRatios <- function(projectConfiguration,
                                          withTable = TRUE,
                                          relWidths = NULL,
                                          digitsToRound = 2,
-                                         digitsToShow = 2) {
+                                         digitsToShow = 2,...) {
   validateCommonInputs(
     pkParameterDT = pkParameterDT,
     pkParameterObserved = pkParameterObserved,
@@ -864,7 +864,7 @@ addObservedData <- function(plotData, pkParameterObserved, onePlotConfig) {
 #' @keywords internal
 addDescriptions <- function(plotData, onePlotConfig, pkParameterDT) {
   # initialize to avoid linter messages
-  pkParameter <- outputPathId <- NULL
+  pkParameter <- NULL
 
   plotData <- merge(plotData,
     onePlotConfig[, c("scenario", "scenarioShortName", "scenarioGroup")] %>% unique(),
@@ -931,6 +931,9 @@ getTableLabelsForPKForest <- function(plotData) {
 #'   in a ggplot call to create forest plots.
 #'   @keywords internal
 getMappingForForestPlots <- function(plotData, columnList) {
+  #initialize variable to avoid messages
+  xErrorValues <- xMax <- xMin <- dataType <- xValues <- NULL
+
   mapping <- aes(x = xValues, y = get(columnList$yColumn), groupby = dataType)
 
   mapping <- utils::modifyList(
@@ -1196,12 +1199,12 @@ getRatioMode <- function(onePlotConfig, pkParameterDT, asRatio) {
     merge(pkParameterDTScenarios,
       by.x = "referenceScenario",
       by.y = "scenario",
-      suffixes = c("", ".reference")
+      suffixes = c("", "Reference")
     )
 
   if (all(dtPop$populationId == dtPop$populationId.reference)) {
     ratioMode <- "individualRatios"
-  } else if (all(dtPop$populationId != dtPop$populationId.reference)) {
+  } else if (all(dtPop$populationId != dtPop$populationIdReference)) {
     ratioMode <- "ratioOfPopulation"
   } else {
     print(dtPop)

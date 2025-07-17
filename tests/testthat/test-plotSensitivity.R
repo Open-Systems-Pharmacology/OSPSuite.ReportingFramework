@@ -26,4 +26,6 @@ test_that("sensitivity plots", {
     title = "sensitivity_90",
     fig = plotList$sensitivity_90
   )
+
+  rm(plotList)
 })

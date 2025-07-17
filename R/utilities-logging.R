@@ -87,10 +87,6 @@ initLogfunction <- function(projectConfiguration,
     "OSPSuite.RF.stopHelperFunction:", ifelse(getOption("OSPSuite.RF.stopHelperFunction", default = FALSE),
       "Stops in helper functions",
       "Workflow executes helper functions"
-    ), "\n",
-    "OSPSuite.RF.withEPackage:", ifelse(getOption("OSPSuite.RF.withEPackage", default = FALSE),
-      "Workflow generates ePackage",
-      "ePackage is not generated"
     ), "\n"
   )
   addMessageToLog(optionstxt)

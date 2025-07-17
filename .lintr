@@ -14,7 +14,6 @@ linters: linters = linters_with_defaults(
 exclusions: list(
   "inst/templates",
   "inst/doc",
-  "inst/extdata/example_1",
-  "inst/extdata/example_2"
+  "inst/extdata/Tutorial"
   )
 encoding: "UTF-8"

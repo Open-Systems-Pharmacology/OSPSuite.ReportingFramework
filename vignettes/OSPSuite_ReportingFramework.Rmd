@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup, warning=FALSE,error=FALSE,message=FALSE}
+```{r setup, warning=FALSE,error=FALSE,message=FALSE, echo = FALSE}
 library(ospsuite.reportingframework)
 library(DiagrammeR)
 ```
@@ -28,9 +28,9 @@ This vignette provides an overview of the workflow for data analysis and reporti
 It is based on `{esqlabsR}` which facilitates modeling and simulation workflows with OSPS relying on a well defined project structure based on Excel files.
 This package is the base for other packages such as Bayesian MultiLevel Model Optimization package `{OSPSuite.BMLM}`
 
-# Workflow of the  `{ospsuite.reportingframework}` 
+# Typical package workflow
 
-In the sections below it is described how to set up a workflow file and the different sections of the workflow  of `{ospsuite.reportingframework}` are decribed. 
+In the sections below it is described how to set up a workflow file and the different sections of the workflow  of `{ospsuite.reportingframework}` are described. 
 
 
 ## Accessing the Workflow Template
@@ -68,27 +68,25 @@ You can save this option in your ".Rprofile" file. (file.path(Sys.getenv("HOME")
 
 ## Project initilization:
 
-As first step the project is initialized, tha includes 
+As first step the project is initialized, that includes 
 
 - adding of  libraryies
-- settting of the  workflow options
+- setting of the  workflow options
 - set up of the project directory and configuration files using the project structure of `{`{esqlabsR}`}`
 - initialisation of the logfile
 
 ## Data import
 
-The first step after the initialisation should always be the data import.
-Data which is needed in the configuration tables, such as identifiers for datagroups and outputs, biometrics of virtual populations are then transferred to the confoguration tables.
+The first step after the initialization should always be the data import.
 
 The input format for input data are csv files. Files can then be imported with a dictionary.
 Imported data types a individual and aggregated timeprofile data and individual and aggregated pk-parameter data.
 
 For more information see the **Data Import by Dictionary** vignette (vignette("Data_import_by_dictionary"))
 
-
 ## Setting up and run simulations including PK Parameter calculation
 
-Simulations are set up and run via `{`{esqlabsR}`}`.
+Simulations are set up and run using the`{`{esqlabsR}`}` package.
 For more information and detailed documentation, users can visit the [esqlabsR Documentation](https://esqlabs.github.io/esqlabsR/).
 
 The `{ospsuite.reportingframework}`  package provides additional functionality to 
@@ -104,7 +102,7 @@ It includes various plotting functions that generate visualizations based on the
 
 Each plot function is designed to create an R Markdown (`.Rmd`) file, which contains the code and output for the respective plot. This allows for easy documentation and sharing of the results.
 
-The package provides a collection of plotfunctions, but it provides also interfaces to adjust plots and the usage of customized plot function
+The package provides a collection of plot functions, but it provides also interfaces to adjust plots and the usage of customized plot function
 
 For more information see the **Plot Creation** vignette (vignette("Plot-Creation"))
 
@@ -112,159 +110,9 @@ For more information see the **Plot Creation** vignette (vignette("Plot-Creation
 
 The package provides also a tutorial to create **Timeprofile reports** (vignette("Tutorial-timeprofiles"))
 
+The package provides 
 
-# Diagram of package structure
 
-Below is a visual representation of the package structure. Displayed are the relations of the identifier
-Grey are the configuration tables, blue the observed data, red the simulation results
 
-```{r}
-# Create a diagram
-grViz("
-digraph package_structure {
-
-  // Set layout direction
-  graph [rankdir=LR];
-
-  // Node definitions with color coding
-  node [fontname = Helvetica, shape = rectangle, style = filled]
-
-  // Observed Data Subcluster
-  subgraph cluster_observed {
-    label = 'Observed Data'
-    style = filled;
-    fillcolor = lightblue
-
-    IndividualId_obs [label = 'IndividualId' , fillcolor = lightblue]
-    Group_obs [label = 'Group' , fillcolor = lightblue]
-    OutputPathId_obs [label = 'OutputPathId' , fillcolor = lightblue]
-  }
-
-  // Simulation Results Subcluster
-  subgraph cluster_random_population {
-    label = 'Random Population'
-    style = filled;
-    fillcolor = lightcoral;
-
-    ScenarioName_random [label = 'ScenarioName' , fillcolor = lightcoral]
-    Paths_random [label = 'Paths' , fillcolor = lightcoral]
-  }
-
-  subgraph cluster_virtual_twin_population {
-    label = 'Virtual-Twin Population'
-    style = filled;
-    fillcolor = lightcoral;
-
-    ScenarioName_virtual [label = 'ScenarioName' , fillcolor = lightcoral]
-    Paths_virtual [label = 'Paths' , fillcolor = lightcoral]
-    ObservedIndividualId_virtual [label = 'ObservedIndividualId' , fillcolor = lightcoral]
-  }
-
-  subgraph cluster_individual_res {
-    label = 'Individual'
-    style = filled;
-    fillcolor = lightcoral;
-
-    ScenarioName_ind [label = 'ScenarioName' , fillcolor = lightcoral]
-    Paths_ind [label = 'Paths' , fillcolor = lightcoral]
-  }
-
-  // Configuration Tables Subcluster
-  subgraph cluster_scenario {
-    label = 'Scenario.xlsx Scenarios'
-    style = filled;
-    fillcolor = lightgrey;
-
-    Scenario_Name_sc [label = 'Scenario_Name' , fillcolor = lightgrey]
-    IndividualId_sc [label = 'IndividualId' , fillcolor = lightgrey]
-    PopulationName_sc [label = 'PopulationName' , fillcolor = lightgrey]
-  }
-
-  subgraph cluster_individual {
-    label = 'Individual.xlsx IndividualBiometrics'
-    style = filled;
-    fillcolor = lightgrey;
-
-    IndividualId_ind [label = 'IndividualId' , fillcolor = lightgrey]
-  }
-
-  subgraph cluster_demographics {
-    label = 'Population.xlsx Demographics'
-    style = filled;
-    fillcolor = lightgrey;
-
-    PopulationId_rPop [label = 'PopulationId' , fillcolor = lightgrey]
-  }
-
-  subgraph cluster_VirtualTwinPopulation {
-    label = 'Population.xlsx VirtualTwinPopulation'
-    style = filled;
-    fillcolor = lightgrey;
-
-    IndividualId_pop [label = 'IndividualId' , fillcolor = lightgrey]
-    PopulationId_vPop [label = 'PopulationId' , fillcolor = lightgrey]
-  }
-
-  subgraph cluster_plots_o {
-    label = 'Plots.xlsx DataGroup'
-    style = filled;
-    fillcolor = lightgrey;
-
-    outputPathId_p [label = 'outputPathId' , fillcolor = lightgrey]
-    outputPath_p [label = 'outputPath' , fillcolor = lightgrey]
-  }
-
-  subgraph cluster_plots_d {
-    label = 'Plots.xlsx Output'
-    style = filled;
-    fillcolor = lightgrey;
-
-    groups_d [label = 'DataGroups' , fillcolor = lightgrey]
-    defaultScenario [label = 'defaultScenario' , fillcolor = lightgrey]
-  }
-
-  subgraph cluster_plots {
-    label = 'Plots.xlsx anyPlot'
-    style = filled;
-    fillcolor = lightgrey;
-
-    outputPathId_pl [label = 'outputPathIds' , fillcolor = lightgrey]
-    DataGroupIds_pl [label = 'DataGroupIds' , fillcolor = lightgrey]
-    ScenarioName_pl [label = 'ScenarioName' , fillcolor = lightgrey]
-  }
-
-  // Population CSV
-  population_csv [label = 'Population CSV' , fillcolor = lightyellow]
-
-  // Relationships
-  Scenario_Name_sc -> ScenarioName_random
-  Scenario_Name_sc -> ScenarioName_virtual
-  Scenario_Name_sc -> ScenarioName_ind
-
-  IndividualId_sc -> IndividualId_ind
-  IndividualId_obs -> IndividualId_ind
-  IndividualId_pop -> IndividualId_ind
-  ObservedIndividualId_virtual -> IndividualId_ind
-
-  PopulationName_sc -> PopulationId_rPop
-  PopulationName_sc -> PopulationId_vPop
-  PopulationId_rPop -> population_csv
-  PopulationId_vPop -> population_csv
-
-  OutputPathId_obs -> outputPathId_p  -> outputPathId_pl
-  Paths_random -> outputPath_p
-  Paths_ind -> outputPath_p
-  Paths_virtual -> outputPath_p
-
-  Group_obs -> groups_d -> DataGroupIds_pl
-  Scenario_Name_sc ->  defaultScenario -> ScenarioName_pl
-
-  groups_d -> defaultScenario
-
-  // Edge styling
-  edge [color = grey]
-}
-")
-```
 
 

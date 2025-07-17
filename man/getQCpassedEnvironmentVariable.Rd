@@ -19,10 +19,10 @@ defaults the value to `FALSE`.
 \dontrun{
 # Set the environment variable for testing
 Sys.setenv(QCpassed = "TRUE")
-getQCpassedEnvironmentVariable()  # Should return TRUE
+getQCpassedEnvironmentVariable() # Should return TRUE
 
 # Unset the environment variable for testing
 Sys.unsetenv("QCpassed")
-getQCpassedEnvironmentVariable()  # Should return FALSE and issue a warning
+getQCpassedEnvironmentVariable() # Should return FALSE and issue a warning
 }
 }

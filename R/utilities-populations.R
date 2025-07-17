@@ -156,7 +156,7 @@ getIndividualMatchForScenario <- function(projectConfiguration,
                                           scenario,
                                           dtScenarios) {
   # avoid warnings for global variables
-  scenarioName <- observedIndividualId <- NULL # nolint object_name_linter
+  scenarioName <- ObservedIndividualId <- NULL # nolint object_name_linter
 
   dtScenarioRow <- dtScenarios[scenarioName == scenario]
 
@@ -207,6 +207,9 @@ getIndividualMatchForScenario <- function(projectConfiguration,
 #' }
 #' @export
 exportRandomPopulations <- function(projectConfiguration, populationNames = NULL, customParameters = NULL, overwrite = FALSE) {
+  #initialize variable to avoid messages
+  proportionOfFemales <- NULL #nolint
+
   # Check for valid customParameter if provided
   if (!is.null(customParameters)) {
     # Validate that customParameter is a list
@@ -444,6 +447,9 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @keywords internal
 .generatePopulationFiles <- function(dtTwinPops, params, dtIndividualBiometrics, projectConfiguration, sim) {
+  #initialize variable to avoid messages
+  individualId <- IndividualId <- NULL #nolint
+
   # Use foreach for parallel processing
   resultsList <- lapply(dtIndividualBiometrics$individualId, function(indId) {
     biomForInd <- dtIndividualBiometrics[individualId == indId, ]
@@ -619,7 +625,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #' @keywords internal
 .getAllParameterForSheets <- function(projectConfiguration, sheets, paramsXLSpath, sim) {
   # avoid warnings for global variables during check
-  paths <- dimension <- values <- NULL
+  paths <- dimension <- values <- sheet <- NULL
 
   wb <- openxlsx::loadWorkbook(paramsXLSpath)
   sheets <- intersect(openxlsx::sheets(wb), sheets)

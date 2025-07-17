@@ -81,25 +81,16 @@ test_that("writeTableToLog function works as expected", {
 })
 
 test_that("logCatch executes finallyExpression", {
-  # Initialize a variable to track if the finallyExpression was executed
-  finallyExecuted <- FALSE
 
   # Call logCatch with an expression that generates an error
-  expect_error(logCatch(expr = stop("This is an error"), finallyExpression = finallyExecuted <<- TRUE))
+  expect_warning(expect_error(logCatch(expr = stop("This is an error"), finallyExpression = warning('finallyExecuted'))))
 
-  # Check if the finally expression was executed
-  expect_true(finallyExecuted, "The finallyExpression should be executed even after an error")
-
-  # Reset for a successful case
-  finallyExecuted <- FALSE
 
   # Call logCatch with a successful expression
-  logCatch(expr = {
+  expect_warning(logCatch(expr = {
     a <- 1
   }, finallyExpression = {
-    finallyExecuted <<- TRUE
-  })
+    warning('finallyExecuted')
+  }))
 
-  # Check if the finally expression was executed
-  expect_true(finallyExecuted, "The finallyExpression should be executed after a successful expression")
 })

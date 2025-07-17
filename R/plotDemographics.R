@@ -41,7 +41,7 @@ plotDistributionVsDemographics <- function(projectConfiguration,
                                            colorVector = c(scenario = NA, referenceScenario = NA),
                                            ...) {
   # initialize data.table variables
-  dataType <- .Id <- value <- categoricValue <- NULL
+  value <- categoricValue <- NULL
 
   checkmate::assertFlag(asStepPlot)
   checkmate::assertNumeric(facetAspectRatio, lower = 0, finite = TRUE, len = 1)
@@ -851,7 +851,7 @@ getNFacetsForDemographics <- function(idData, isRangePlot, nMaxFacetRows = 2) {
 #' @export
 validateDistributionVsDemographicsConfig <- function(configTable, scenarioList, ...) {
   # initialize to avoid linter messages
-  modeOfBinning <- NULL
+  modeOfBinning <- referenceScenario <- NULL
 
   configTablePlots <- validateHeaders(configTable)
 
@@ -941,6 +941,9 @@ validateDistributionVsDemographicsConfig <- function(configTable, scenarioList, 
 #' @return NULL (invisible).
 #' @export
 validateHistogramsConfig <- function(configTable, ...) {
+  #initialize variable to avoid messages
+  referenceScenario <- NULL
+
   configTablePlots <- validateHeaders(configTable)
 
   dotarg <- list(...)
@@ -954,7 +957,7 @@ validateHistogramsConfig <- function(configTable, ...) {
         }
       ))])
   } else if ("pkParameterDT" %in% names(dotarg)) {
-    popScenarios <- unique(pkParameterDT$scenario)
+    popScenarios <- unique(dotarg$pkParameterDT$scenario)
   } else {
     stop("Inputs are missing, please provide scenarioList and/or pkParameterDT")
   }
@@ -1120,7 +1123,9 @@ addDefaultDemographicPlots <- function(projectConfiguration,
                                        asRangePlot,
                                        templateSheet) {
   # initialize to avoid linter messages
-  scenarioName <- outputPathIds <- outputPathId <- plotName <- parameterIds <- pkParameter <- populationId <- NULL
+  scenarioName <- outputPathIds <- outputPathId <- parameterIds <- NULL
+  xScale <- pkParameter <- populationId <- NULL
+  ID <- NULL #nolint
 
   # this function stops in valid runs
   stopHelperFunction()

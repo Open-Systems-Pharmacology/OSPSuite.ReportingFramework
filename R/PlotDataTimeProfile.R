@@ -233,32 +233,6 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
           private[[fieldName]] <- tmp
         }
       }
-      # for (fieldName in c(".dataObserved", ".dataSimulated")) {
-      #   if (nrow(private[[fieldName]]) > 0) {
-      #     identifier <- intersect(
-      #       c("scenarioIndex", "outputPathId", "timeRangeTag", "individualId"),
-      #       names(self$dtCaption)
-      #     )
-      #     tmp <- private[[fieldName]] %>%
-      #       merge(self$dtCaption %>% dplyr::select(all_of(c("plotTag", "counter", identifier))),
-      #         by = identifier
-      #       )
-      #     # for comparison of virtual pop  add reference data without individualId
-      #     if (private[[fieldName]]$dataType[1] == 'simulated' &&
-      #         "individualId" %in% identifier &&
-      #         any("referenceScenario" %in% private[[fieldName]]$scenarioType)){
-      #       identifier <- setdiff(identifier,'individualId')
-      #       tmp <- rbind(tmp,
-      #                    private[[fieldName]][scenarioType == 'referenceScenario'] %>%
-      #                    merge(self$dtCaption %>%
-      #                            dplyr::select(all_of(c("plotTag", "counter", identifier))),
-      #                          by = identifier
-      #                    ))
-      #
-      #     }
-      #     private[[fieldName]] <- tmp
-      #   }
-      # }
 
       # clean up individual (*) for legend this has to be done after the merge with the data
       private$.dtCaption <- updateDtCaption(
@@ -1023,7 +997,7 @@ getObservedUnitConversionDT <- function(dataObserved, dtUnit) {
 #' @keywords internal
 addTimeRangeTagsToData <- function(timeRangeColumns, dataOld, configTable, applicationTimes, timeTags) {
   # avoid warnings for global variables
-  xValues <- timeRangeTag <- NULL
+  xValues <- timeRangeTag <- scenarioIndex <- NULL
 
   dt <- data.table()
   for (col in timeRangeColumns) {
@@ -1079,7 +1053,7 @@ addTimeRangeTagsToData <- function(timeRangeColumns, dataOld, configTable, appli
 #' @keywords internal
 finalizeCaptionTable <- function(dtCaption, timeTags, dtOutputPaths, nFacetColumns, nMaxFacetRows) {
   # Initialize variables used for data.tables
-  counter <- plotId <- plotTag <- individualId <- NULL
+  counter <- plotId <- plotTag <- NULL
 
   maxPlotId <- nFacetColumns * nMaxFacetRows
 

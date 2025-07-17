@@ -49,8 +49,8 @@ scenarioList <- testSetup$scenarioList
 
 # Example usage in vignettes
 \dontrun{
-  vignetteSetup <- buildTestProjectory(verbose = TRUE)
-  # Use vignetteSetup$projectConfiguration and vignetteSetup$scenarioList as needed
+vignetteSetup <- buildTestProjectory(verbose = TRUE)
+# Use vignetteSetup$projectConfiguration and vignetteSetup$scenarioList as needed
 }
 
 }

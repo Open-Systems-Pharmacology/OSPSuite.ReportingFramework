@@ -47,6 +47,8 @@ test_that("Boxwhsiker crossover ", {
     title = "crossover_AUC_inf",
     fig = plotList[["crossover_AUC_inf-log-ratio"]]
   )
+
+  rm(plotList)
 })
 
 
@@ -78,4 +80,6 @@ test_that("Boxwhsiker pediatrics ", {
     title = "pediatric-linear-abs",
     fig = plotList[["pediatric-linear-abs"]]
   )
+
+  rm(plotList)
 })

@@ -73,15 +73,17 @@ runPlot <- function(projectConfiguration,
                     suppressExport = FALSE,
                     digitsOfSignificanceCSVDisplay = 3,
                     inputs = list()) {
+
   loadConfigTableEnvironment(projectConfiguration)
 
-  suppressExport <- suppressExport | !is.null(plotNames)
+  suppressExport <- suppressExport ||
+    !is.null(plotNames) ||
+    inputs$checkForUnusedData
 
   # Initialize PlotManager for RMD generation
   rmdPlotManager <- RmdPlotManager$new(
     rmdfolder = file.path(projectConfiguration$outputFolder),
-    suppressExport = !getOption("OSPSuite.RF.withPlotExport", default = TRUE) |
-      suppressExport,
+    suppressExport = suppressExport,
     rmdName = rmdName,
     nameOfplotFunction = nameOfplotFunction,
     digitsOfSignificance = digitsOfSignificanceCSVDisplay
@@ -89,11 +91,11 @@ runPlot <- function(projectConfiguration,
   # read configuration table
   configTable <-
     readConfigTableForPlot(
+      projectConfiguration = projectConfiguration,
       sheetName = configTableSheet,
       validateConfigTableFunction = rmdPlotManager$validateConfigTableFunction,
       plotNames = plotNames,
-      inputs = inputs
-    )
+      inputs = inputs)
 
   if (is.null(configTable)) {
     plotList <- do.call(
@@ -134,13 +136,20 @@ runPlot <- function(projectConfiguration,
                   inputs
                 )
               )
-              # save data for ePackage if available
-              rmdPlotManager$dataObserved <- plotListiRow[["dataObservedIndices"]]
-              plotListiRow[["dataObservedIndices"]] <- NULL
-
-              rmdPlotManager$exportPlotList(plotListiRow)
-
-              if (rmdPlotManager$suppressExport) plotList <- c(plotList, plotListiRow)
+              if (suppressExport){
+                if ('unusedDataRows' %in% names(plotList) &&
+                    !is.null(plotListiRow[['unusedDataRows']])){
+                  plotList[['unusedDataRows']] <-
+                    rbind(plotList[['unusedDataRows']],
+                          plotListiRow[['unusedDataRows']],
+                          fill = TRUE) %>%
+                    unique()
+                  plotListiRow[['unusedDataRows']] <- NULL
+                }
+                plotList <- c(plotList, plotListiRow)
+              } else {
+                rmdPlotManager$exportPlotList(plotListiRow)
+              }
             },
             error = function(err) {
               if (!getOption("OSPSuite.RF.skipFailingPlots", default = FALSE)) {
@@ -156,17 +165,6 @@ runPlot <- function(projectConfiguration,
     }
   }
 
-  if (getOption("OSPSuite.RF.withEPackage") &
-    !suppressExport &
-    (!is.null(rmdPlotManager$configTable))) {
-    if (nrow(rmdPlotManager$dataObserved) > 0 & exists(x = "dataObserved")) {
-      exportTimeProfileDataForEPackage(
-        projectConfiguration = projectConfiguration,
-        dataToExport = merge(rmdPlotManager$dataObserved, dataObserved, by = ".Id")
-      )
-    }
-  }
-
   # create rmd
   rmdPlotManager$writeRmd()
 
@@ -178,6 +176,7 @@ runPlot <- function(projectConfiguration,
 #' and merges scenario information. It also validates the resulting configuration table using a provided
 #' validation function.
 #'
+#' @param projectConfiguration A ProjectConfiguration object
 #' @param sheetName A character string specifying the name of the sheet to read from the Excel file.
 #'                  If NULL, the function returns NULL.
 #' @param validateConfigTableFunction A function that validates the configuration table.
@@ -187,8 +186,12 @@ runPlot <- function(projectConfiguration,
 #' @return A data.table containing the filtered and validated configuration table, or NULL if sheetName is NULL.
 #'
 #' @keywords internal
-readConfigTableForPlot <- function(sheetName, validateConfigTableFunction, inputs, plotNames) {
-  plotName <- scenarioName <- NULL
+readConfigTableForPlot <- function(projectConfiguration,
+                                   sheetName,
+                                   validateConfigTableFunction,
+                                   inputs,
+                                   plotNames) {
+  plotName <- scenarioName <- scenarioLongName <- NULL
 
   if (is.null(sheetName)) {
     return(NULL)
@@ -668,9 +671,9 @@ getXorYlimits <- function(onePlotConfig, xOryScale, direction = c("y", "x"), ...
 
   dotargs <- list(...)
   if (paste0(direction, "scale.args") %in% dotargs) {
-    xOrYscale.args <- dotargs[[paste0(direction, "scale.args")]]
+    xOrYscaleArgs <- dotargs[[paste0(direction, "scale.args")]]
   } else {
-    xOrYscale.args <- list()
+    xOrYscaleArgs <- list()
   }
 
   # Construct the column name
@@ -681,13 +684,13 @@ getXorYlimits <- function(onePlotConfig, xOryScale, direction = c("y", "x"), ...
   scaleTxt <- onePlotConfig[[columnName]][1]
 
   if (!is.null(scaleTxt) && !is.na(scaleTxt)) {
-    xOrYscale.args <- modifyList(
-      xOrYscale.args,
+    xOrYscaleArgs <- modifyList(
+      xOrYscaleArgs,
       list(limits = eval(parse(text = scaleTxt)))
     )
   }
 
-  return(xOrYscale.args)
+  return(xOrYscaleArgs)
 }
 
 
@@ -701,7 +704,7 @@ getXorYlimits <- function(onePlotConfig, xOryScale, direction = c("y", "x"), ...
 #' @return NULL. The function will throw an error if the validation fails.
 #' @keywords internal
 validateConfigTableForPlots <- function(configTable, ...) {
-  configTablePlots <- validateHeaders(configTable)
+  invisible(validateHeaders(configTable))
   validateOutputIdsForPlot()
   validateDataGroupIdsForPlot()
 
@@ -999,7 +1002,7 @@ validateOutputIdsForPlot <- function() {
 #' @param projectConfiguration ProjectConfiguration object
 validateDataGroupIdsForPlot <- function() {
   # avoid warning for global variable
-  outputPathId <- NULL
+  dtOutputPaths <- NULL
 
   checkmate::assertFactor(
     configEnv$dataGroupIds$group,
@@ -1035,6 +1038,9 @@ validateDataGroupIdsForPlot <- function() {
 #'
 #' @keywords internal
 validateColorLegend <- function(dt) {
+  #initialize variable to avoid messages
+  colorLegend <- NULL
+
   dt <- dt[!grep("\\|", colorLegend)]
 
   if (nrow(dt) > 0) {

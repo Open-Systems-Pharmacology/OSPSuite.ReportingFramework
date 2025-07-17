@@ -16,7 +16,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
                                          dataClassType = c("timeprofile", "pkParameter"),
                                          fileIds = NULL) {
   # avoid warning for global variable
-  individualId <- outputPathId <- dataType <- NULL
+  individualId <- outputPathId <- dataType <- filePathFilter <- fileIdentifier <- dataClass <- NULL
 
   dataClassType <- match.arg(dataClassType)
 
@@ -174,8 +174,6 @@ readObservedDataByDictionary <- function(projectConfiguration,
 #'
 #' @export
 validateObservedData <- function(dataDT, dataClassType) {
-  # Initialize variables used for data.tables
-  yUnit <- NULL
   # Check column Identifier
   columnsWithAttributes <- lapply(dataDT, attr, "columnType")
   columnsWithAttributes <-
@@ -219,10 +217,12 @@ validateObservedData <- function(dataDT, dataClassType) {
     }
   }
 
-
   validateDataUnit <- function(colIdentifier, colUnit) {
-    unitCounts <- dataDT[, .(N = uniqueN(get(colUnit))), by = colIdentifier]
-    ambiguousUnits <- unitCounts[N > 1]
+    #initialize variable to avoid messages
+    nUnit <- NULL
+
+    unitCounts <- dataDT[, .(nUnit = uniqueN(get(colUnit))), by = colIdentifier]
+    ambiguousUnits <- unitCounts[nUnit > 1]
 
     if (nrow(ambiguousUnits) > 0) {
       unitSummary <- dataDT[,
@@ -236,7 +236,7 @@ validateObservedData <- function(dataDT, dataClassType) {
       ]
       tmp <- merge(ambiguousUnits, unitSummary, by = colIdentifier)
 
-      summaryString <- paste(apply(tmp[, !"N", with = FALSE], 1, function(x) {
+      summaryString <- paste(apply(tmp[, !"nUnit", with = FALSE], 1, function(x) {
         paste(x, collapse = " ")
       }), collapse = " | ")
       warning(paste(
@@ -943,7 +943,7 @@ prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
 #' @keywords internal
 checkLLOQ <- function(aggregatedData, lloqCheckColumns2of3, lloqCheckColumns1of2, aggregationFlag) {
   # initialize data.table variables
-  nBelowLLOQ <- numberOfPatients <- NULL
+  nBelowLLOQ <- numberOfIndividuals <- NULL
 
   if (aggregationFlag != "Custom" &
     (!is.null(lloqCheckColumns2of3) | !is.null(lloqCheckColumns1of2))) {

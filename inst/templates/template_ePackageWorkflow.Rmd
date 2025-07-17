@@ -1,5 +1,5 @@
 ---
-title: "Workflow for Report generation"
+title: "Template for TLF Workflow"
 output: html_document
 ---
 
@@ -8,20 +8,20 @@ knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(cache = TRUE)
 ```
 
-# Title
+# Introdcution
 
-This template is intended to guide the user in developing a workflow for report generation with an electronic package. If you render this workflow in your daily work environment, the report will be generated as desired. If the file is used as input for the `exportEPackageWorkflow` function, the .Rmd file is converted to a workflow R-script, and all necessary inputs are transferred to the ePackage folder. (see also vignette electronic-Package)
+This template is intended to guide the user in developing a workflow for report generation with an electronic package. If you render this workflow in your daily work environment, the report will be generated as desired. If the file is used as input for the `exportTLFWorkflowToEPackage` function, the .Rmd file is converted to a workflow R-script, and all necessary inputs are transferred to the ePackage folder. (see also vignette electronic-Package)
 
 !!! As this workflow is interpreted by a script, there are certain criteria for the file content and structure:
 
 All chunk names have a suffix which indicates how the export script will handle the chunk
 
- "-copy" : The code  is copied to the final workflow script with all changes.
+ "-copy" : The code  is copied to the final workflow script as it is.
  "-eval": The code  is evaluated,the result is used by the script for the export.
  "-replace": The code is ignored and replaced by default code.
- "-QC": These chunks are a place holder dor user defined checks, the code is ignored by the script.
+ "-QC": These chunks are a place holder for user defined checks, the code is ignored by the script.
 
-Do not delete a chunk (except -QCs), or the `exportEPackageWorkflow` script will crash.
+Do not delete a chunk (except -QCs), or the `exportTLFWorkflowToEPackage` script will crash.
 
 The script uses only the predefined template chunks. You can add other chunks, e.g., for debugging or QC reasons, but be aware that these chunks will not be part of the exported workflow script.
 
@@ -34,7 +34,7 @@ Each chunk has its special conversion function, so please read the description o
 
 ### Libraries
 
-This chunk is copied as is by `exportEPackageWorkflow`; please list any additional libraries here:
+This chunk is copied as is by `exportTLFWorkflowToEPackage`; please list any additional libraries here:
 
 ```{r libraries-copy}
 library(ospsuite.reportingframework)
@@ -43,7 +43,7 @@ library(ospsuite.reportingframework)
 
 ### Customfunctions 
 
-If you want to source any custom functions, add the filename (including the relative path) to the variable pathsCustomfunctions in the first chunk. The `exportEPackageWorkflow` function will evaluate the chunk, copy the function files to the electronic package and add the lines to source the files to the final workflow script. 
+If you want to source any custom functions, add the file name (including the relative path) to the variable `pathsCustomfunctions` in the `pathsCustomfunctions-eval` chunk. The `exportTLFWorkflowToEPackage` function will evaluate the chunk, copy the function files to the electronic package and add the lines to source the files to the final workflow script. 
 The original code of the chunks are not included in the final workflow script.
 
 ```{r pathsCustomfunctions-eval}
@@ -58,7 +58,7 @@ if (length(pathsCustomfunctions) > 0)
 
 ### Workflow options
 
-Workflow options are set via the environment variable `QCpassed` Default is `FALSE`. Do not edit. Changes in the chunk will be ignored by the `exportEPackageWorkflow` function
+Workflow options are set via the environment variable `QCpassed` Default is `FALSE`. Do not edit. Changes in the chunk will be ignored by the `exportTLFWorkflowToEPackage` function
 
 ```{r workflowOptions-replace}
 setWorkflowOptions(isValidRun = getQCpassedEnvironmentVariable())
@@ -68,7 +68,7 @@ setWorkflowOptions(isValidRun = getQCpassedEnvironmentVariable())
 
 This chunk will be replaced with code which generates the `projectConfiguration` via the `importWorkflow` function.
 This function builds a new project directory using the input files saved in the electronic package.
-Changes in the chunk will be ignored by the `exportEPackageWorkflow` function.
+Changes in the chunk below will be ignored by the `exportTLFWorkflowToEPackage` function.
 
 ```{r projectConfiguration-replace}
 projectConfiguration <-
@@ -84,10 +84,10 @@ initLogfunction(projectConfiguration)
 The `workflowExport` script will execute the chunks `observedTimeprofiles` and `observedPKParameter`.
 If the resulting variable `dataObserved` (rsp `dataObservedPK`) is NULL, the chunks will be ignored. Please use `dataObserved <- NULL` (rsp `dataObservedPK <- NULL`) if you do not have any data.
 
-If it is not null, `dataObserved` (rsp `dataObservedPK`) as it is after chunk evaluation is exported as .csv files to the electronic package and the configuration tables for the data import are exported accordingly. 
-The original code of all codes is not included in the final workflow script, which enables you to add your own code, e.g., additional filtering. The final workflow script will import the necessary data with the function `readObservedDataByDictionary`.
+If it is not null, the data.table `dataObserved` (rsp `dataObservedPK`) as it is after chunk evaluation is exported as .csv files to the electronic package and the configuration tables for the data import are exported accordingly. 
+The original code of the chunks is not included in the final workflow script, which enables you to add your own code, e.g., additional filtering. The final workflow script will import the necessary data with the function `readObservedDataByDictionary` without furtehr adjustment.
 
-Please ensure the resulting `dataObserved` and `dataObservedPK` contains only the data needed for the workflow in the appropriate format. You can use the function `validateObservedData` to check the format. Some check are suggested in the chunks ending with "-QC". These chunks are ignored by the export script. See also the chunk "check-usedData-QC" in the section "Create output plots".
+Please ensure the resulting `dataObserved` and `dataObservedPK` contains only the data needed for the workflow in the appropriate format. You can use the function `validateObservedData` to check the format. Some checks are suggested in the chunks ending with "-QC". These chunks are ignored by the export script. See also the chunk "check-usedData-QC" in the section "Create output plots".
 
 ```{r dataObserved-eval}
 # use this line if you have no observed time profile data
@@ -109,6 +109,13 @@ validateObservedData(dataObserved,dataClassType = 'timeprofile')
 
 #  add quality checks to ensure data contains only data which is needed.
 print(names(dataObserved))
+
+print(dataObserved[,.(N = .N,
+                      xmin = min(xValues),
+                      xmax = max(xValues),
+                      ymin = min(yValues),
+                      ymax = max(yValues)),
+                   by = c('group','outputPathId')])
 
 ```
 
@@ -183,7 +190,25 @@ runPlot(
 ```
 
 
-```{r checkusedData-QC}
+The function `plotTimeProfiles` works with the input Variable `checkForUnusedData`. This switchs the mode to suppressExport and returns a list element `unusedDataRows`.
+To check that the observedData contains only data, which is used in plots, adapt the code below and check `plotList$unusedDataRows`
+
+```{r check-usedData-QC}
+
+plotList <-
+    runPlot(
+      nameOfplotFunction = "plotTimeProfiles",
+      configTableSheet = "plotTimeProfiles",
+      projectConfiguration = projectConfiguration,
+      checkForUnusedData = TRUE,
+      inputs = list(
+        scenarioResults = scenarioResults,
+        dataObserved = dataObserved
+      )
+    )
+
+  expect_equal(nrow(plotList$unusedDataRows), expected = 0)
+
 
 ```
 

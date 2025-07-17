@@ -112,7 +112,7 @@ mockManualEditingsPlotBoxwhsikerTest <- function(projectConfiguration) {
 
 mockManualEditingsPlotDemographicsTest <- function(projectConfiguration) {
   #initialize variable to avoid messages
-  colorLegend <- referenceScenario <- scenarios <- scenario <- NULL
+  colorLegend <- referenceScenario <- scenarios <- scenario <- plotName <- NULL
 
   # prepare configtable
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
@@ -222,7 +222,8 @@ mockManualEditingsPlotSensitivityTest <- function(projectConfiguration,
 }
 mockManualEditingsPlotTimeProfileTest <- function(projectConfiguration) {
   #initialize variable to avoid messages
-  plotName <- scenario <- individualIds <- timeRange_h0_6 <- timeRange_h6_24 <- NULL
+  plotName <- scenario <- individualIds <- NULL
+  timeRange_h0_6 <- timeRange_h6_24 <- NULL #nolint used with tags
 
   sheetName <- "TimeProfileTest"
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)

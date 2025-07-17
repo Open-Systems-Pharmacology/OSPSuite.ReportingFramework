@@ -374,7 +374,7 @@ setupRandomDataForTest <- function(projectConfiguration, scenarioList, scenarioR
 #' @return A list of scenario names initialized for the virtual twin scenarios.
 #' @keywords internal
 setupVirtualTwinScenariosForTest <- function(projectConfiguration, modelFiles) {
-  dataObserved <- readObservedDataByDictionary(projectConfiguration)
+  invisible(readObservedDataByDictionary(projectConfiguration))
 
   newScenarios <- mockManualEditingsIndividuals(projectConfiguration, modelFiles)
 
@@ -484,6 +484,11 @@ synchronizeDirectories <- function(fromDir, toDir, pattern = NULL) {
 #' @return Invisible NULL.
 #' @keywords internal
 addRandomPKDataToTestProject <- function(projectConfiguration, pkParameterDT) {
+  #initialize variable to avoid messages
+  ratio <- iv <- po <- displayUnitPKParameter <- outputPathId <- route <- value <- NULL
+  pkParameter <- population <- shiftedValue <- scenario <- individualId <- NULL
+  STUD  <- NULL #nolint
+
   dataFolder <- file.path(projectConfiguration$configurationsFolder, "..", "..", "Data")
   if (!dir.exists(dataFolder)) dir.create(dataFolder)
 
@@ -518,14 +523,14 @@ addRandomPKDataToTestProject <- function(projectConfiguration, pkParameterDT) {
   )
   ratiosDT[, ratio := po / iv]
 
-  geomeanCI <- function(x, conf.level = 0.9) {
+  geomeanCI <- function(x, confLevel = 0.9) {
     n <- length(x)
     if (n == 0) {
       return(c(NA, NA))
     }
     gm <- exp(mean(log(x), na.rm = TRUE))
     se <- sd(log(x), na.rm = TRUE) / sqrt(n)
-    cimultiplier <- qnorm((1 + conf.level) / 2)
+    cimultiplier <- qnorm((1 + confLevel) / 2)
     cilower <- exp(log(gm) - cimultiplier * se)
     ciupper <- exp(log(gm) + cimultiplier * se)
     return(c(gm, cilower, ciupper))
@@ -559,6 +564,10 @@ addRandomPKDataToTestProject <- function(projectConfiguration, pkParameterDT) {
 #' @return Invisible NULL.
 #' @keywords internal
 addRandomTPDataToTestProject <- function(projectConfiguration, scenarioResult, csvfile, ids) {
+  #initialize variable to avoid messages
+  Time <- STUD <- IndividualId <- Height <- Age <- Weight <- IndividualId <- LLOQ <- NULL #nolint
+  shiftedValue <- outputPathId <- dimension <- simulationValues <- dtV <- route <- NULL
+
   dataFolder <- file.path(projectConfiguration$configurationsFolder, "..", "..", "Data")
   if (!dir.exists(dataFolder)) dir.create(dataFolder)
 

@@ -160,14 +160,15 @@ print(system.file(
 
 ### Step 1: Save Template Workflow
 
-- Set up your project directory (`<rootDirectory>`) which should be empty.
-- Create a subfolder `Scripts/ReportingFramework` (`<configurationDirectory>`).
+- Select your project directory (`<rootDirectory>`). In this directory the reporting framework 
+folder structure will be established (if not already existing).
+- Check if the subfolder `<rootDirectory>/Scripts/ReportingFramework` exist, and if not create it. (`<configurationDirectory>`).
 - Open RStudio and navigate to the Addins menu.
 - Select "Open Template Workflow" to create a new workflow file. Save the template in the `<configurationDirectory>` as `workflow.R`. At the top of the workflow file, you can add a description of the purpose of your workflow.
 
 ### Step 2: Initialize Project Structure
 
-Execute the first lines of your workflow, skipping the `logCatch` loop. This will:
+Execute the first lines (listed below) of your workflow. This will:
 
 Change the working directory to the workflow file location.
 - Set some graphic defaults.

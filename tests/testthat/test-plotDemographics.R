@@ -61,6 +61,7 @@ test_that("PK histograms plots", {
     title = "pkhistograms_F_tEnd_linear",
     fig = plotList$pkparameter2_F_tEnd_linear
   )
+  rm(plotList)
 })
 
 
@@ -88,6 +89,7 @@ test_that("demographic histograms plots", {
     title = "dmhistograms_gender_linear",
     fig = plotList$demographics_gender_linear
   )
+  rm(plotList)
 })
 
 test_that("demographic range plots", {
@@ -120,6 +122,7 @@ test_that("demographic range plots", {
     title = "demographics_weight_linear",
     fig = plotList$demographics_weight_linear
   )
+  rm(plotList)
 })
 
 test_that("PK range plots", {
@@ -153,4 +156,5 @@ test_that("PK range plots", {
     title = "pkparameter2_F_tEnd_log",
     fig = plotList$pkparameter2_F_tEnd_log
   )
+  rm(plotList)
 })

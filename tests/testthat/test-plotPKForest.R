@@ -51,6 +51,8 @@ test_that("AbsoluteValues pediatric", {
     title = "abs_pediatric_F_tEnd_log",
     fig = plotList[["pediatric-F_tEnd-log"]]
   )
+
+  rm(plotList)
 })
 
 test_that("AbsoluteValues pediatric with data", {
@@ -81,6 +83,8 @@ test_that("AbsoluteValues pediatric with data", {
     title = "abs_data_pediatric_F_tEnd_log",
     fig = plotList[["pediatric-F_tEnd-log"]]
   )
+
+  rm(plotList)
 })
 
 test_that("AbsoluteValues pediatric PE", {
@@ -110,6 +114,8 @@ test_that("AbsoluteValues pediatric PE", {
     title = "PE_pediatric_F_tEnd_log",
     fig = plotList[["pediatric-F_tEnd-log"]]
   )
+
+  rm(plotList)
 })
 
 
@@ -140,6 +146,8 @@ test_that("Ratios pediatric PE", {
     title = "PE_Ratio_pediatric_F_tEnd_log",
     fig = plotList[["pediatric-F_tEnd-log"]]
   )
+
+  rm(plotList)
 })
 
 test_that("Ratios crossover PE", {
@@ -169,6 +177,8 @@ test_that("Ratios crossover PE", {
     title = "PE_Ratio_crossover_F_tEnd_log",
     fig = plotList[["pediatric-F_tEnd-log"]]
   )
+
+  rm(plotList)
 })
 
 test_that("Ratios crossover PE with data", {
@@ -199,4 +209,6 @@ test_that("Ratios crossover PE with data", {
     title = "PE_Ratio_crossover_data_F_tEnd_log",
     fig = plotList[["pediatric-F_tEnd-log"]]
   )
+
+  rm(plotList)
 })

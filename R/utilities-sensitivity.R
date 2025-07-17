@@ -62,6 +62,9 @@ runSensitivityAnalysisForScenarios <-
            sensitivitysheet,
            sensitivityAnalysisRunOptions = SensitivityAnalysisRunOptions$new(showProgress = TRUE),
            overwrite = TRUE) {
+    #initialize variable to avoid messages
+    pKParameter <- NULL
+
     if (!("sensitivityFile" %in% names(projectConfiguration$addOns))) {
       stop(
         "SensitivityParameter xlsx is not added to the projectConfiguration Please call 'addSensitivityTable(projectConfiguration)'"

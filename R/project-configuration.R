@@ -47,8 +47,7 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
           )
         )
       } else {
-        dtConfiguration[property == propertyToSet, `:=`
-        (
+        dtConfiguration[property == propertyToSet, `:=`(
           value = value,
           description = description
         )]

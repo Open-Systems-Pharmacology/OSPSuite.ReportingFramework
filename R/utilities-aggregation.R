@@ -193,9 +193,6 @@ getAggregatedVariance <- function(dt,
                                   valueColumn,
                                   identifier,
                                   direction = c("y", "x")) {
-  # initialize to avoid linter messages
-  yMin <- yValues <- NULL
-
   direction <- match.arg(direction)
 
   dtAggregated <- dt[, as.list(c(
@@ -203,16 +200,6 @@ getAggregatedVariance <- function(dt,
     aggregationFun(get(valueColumn))
   )), by = identifier]
 
-  # if (!is.null(dtAggregated$yErrorValues)) {
-  #   if (dtAggregated$yErrorType[1] == ospsuite::DataErrorType$ArithmeticStdDev) {
-  #     dtAggregated[, yMin := yValues - yErrorValues]
-  #     dtAggregated[, yMax := yValues + yErrorValues]
-  #   }
-  #   if (dtAggregated$yErrorType[1] == ospsuite::DataErrorType$GeometricStdDev) {
-  #     dtAggregated[, yMin := yValues / yErrorValues]
-  #     dtAggregated[, yMax := yValues * yErrorValues]
-  #   }
-  # }
 
   if (direction == "x") {
     data.table::setnames(dtAggregated,
@@ -266,6 +253,9 @@ calculateAggregationWithCIBYGroup <- function(dt,
                                               nBootstrap = 100,
                                               valueColumn = "value",
                                               direction = "y") {
+  #initialize variable to avoid messages
+  yErrorType <- NULL
+
   # Check if the identifiers are present in the data.table
   checkmate::assertNames(c(identifier, valueColumn), subset.of = names(dt))
 

@@ -279,18 +279,6 @@ RmdPlotManager <- R6::R6Class( # nolint
       }
       private$.configTable <- value
     },
-    #' @field dataObserved Observed data used for this Rmd.
-    dataObserved = function(value) {
-      if (missing(value)) {
-        value <- private$.dataObserved
-      } else {
-        value <- unique(rbind(
-          private$.dataObserved,
-          value
-        ))
-      }
-      private$.dataObserved <- value
-    },
     #' @field plotFunction Function to create plot list.
     plotFunction = function(value) {
       if (missing(value)) {

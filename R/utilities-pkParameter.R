@@ -53,23 +53,12 @@ calculatePKParameter <- function(projectConfiguration,
 #' @param pkParameterSheets A vector of sheet names to update.
 #' @return NULL (updates are made in-place).
 initializeParametersOfSheets <- function(projectConfiguration, pkParameterSheets) {
-  dtScenarios <- getScenarioDefinitions(projectConfiguration$scenariosFile)
 
   ospsuite::removeAllUserDefinedPKParameters()
 
   # Read user-defined PK parameters and clean the names
-  dtUserdefPKParameter <- xlsxReadData(
-    wb = projectConfiguration$addOns$pKParameterFile,
-    sheetName = "Userdef PK Parameter",
-    skipDescriptionRow = TRUE
-  ) %>%
-    stats::setNames(gsub(" \\[.*\\]", "", names(.)))
+  dtUserdefPKParameter <- readUserDefinedPKParameters(projectConfiguration$addOns$pKParameterFile)
 
-  checkmate::assertCharacter(dtUserdefPKParameter$name, any.missing = FALSE, unique = TRUE)
-  if (any(is.na(dtUserdefPKParameter[["display Unit"]]))) {
-    stop("empty string is not possible as displayUnit in the sheet 'Userdef PK Parameter',
-    workaround: use % and set displayUnit in sheet derived from template-sheet to empty string")
-  }
 
   # Loop through each PK parameter sheet
   for (pkParameterSheet in splitInputs(pkParameterSheets)) {
@@ -80,29 +69,7 @@ initializeParametersOfSheets <- function(projectConfiguration, pkParameterSheets
     )
 
     userdefinedParameters <- setdiff(dtPkParameterDefinition$name, ospsuite::allPKParameterNames())
-
-    for (userPar in userdefinedParameters) {
-      iRow <- which(dtUserdefPKParameter$name == userPar)
-
-      if (length(iRow) == 0) {
-        stop(paste("pkParameter", userPar, 'is not defined in "Userdef PK Parameter" sheet.'))
-      }
-      if (length(iRow) > 1) {
-        stop(paste("pkParameter", userPar, 'is not unique in "Userdef PK Parameter" sheet.'))
-      }
-
-      myPK <- ospsuite::addUserDefinedPKParameter(
-        name = dtUserdefPKParameter$name[iRow],
-        standardPKParameter = StandardPKParameter[[dtUserdefPKParameter$`standard PK parameter`[iRow]]],
-        displayUnit = dtUserdefPKParameter$`display Unit`[iRow]
-      )
-
-      for (col in setdiff(intersect(names(myPK), names(dtUserdefPKParameter)), c("name", "dimension"))) {
-        if (!is.na(dtUserdefPKParameter[[col]][iRow])) {
-          myPK[[col]] <- dtUserdefPKParameter[[col]][iRow]
-        }
-      }
-    }
+    addUserDefinedParameters(userdefinedParameters, dtUserdefPKParameter)
   }
 
   # Update PK parameters in the specified sheets
@@ -116,6 +83,67 @@ initializeParametersOfSheets <- function(projectConfiguration, pkParameterSheets
 
   return(invisible())
 }
+#' Read User Defined PK Parameters
+#'
+#' Reads user-defined pharmacokinetic (PK) parameters from an Excel file.
+#'
+#' @param file The path to the Excel file containing the user-defined PK parameters.
+#' @return A data frame of user-defined PK parameters.
+#' @throws Error if validation fails.
+#' @keywords internal
+readUserDefinedPKParameters <- function(file) {
+  dtUserdefPKParameter <- xlsxReadData(
+    wb = file,
+    sheetName = "Userdef PK Parameter",
+    skipDescriptionRow = TRUE
+  ) %>%
+    stats::setNames(gsub(" \\[.*\\]", "", names(.)))
+
+  checkmate::assertCharacter(dtUserdefPKParameter$name, any.missing = FALSE, unique = TRUE)
+  if (any(is.na(dtUserdefPKParameter[["display Unit"]]))) {
+    stop("empty string is not possible as displayUnit in the sheet 'Userdef PK Parameter',
+    workaround: use % and set displayUnit in sheet derived from template-sheet to empty string")
+  }
+
+  return(dtUserdefPKParameter)
+}
+
+#' Add User Defined Parameters
+#'
+#' Adds user-defined PK parameters to the OSPSuite based on the provided definitions.
+#'
+#' @param userdefinedParameters A vector of user-defined PK parameter names.
+#' @param dtUserdefPKParameter A data frame of user-defined PK parameters.
+#' @return NULL (invisible).
+#' @throws Error if user-defined parameters are not defined or are not unique.
+#' @export
+addUserDefinedParameters <- function(userdefinedParameters, dtUserdefPKParameter) {
+  for (userPar in userdefinedParameters) {
+    iRow <- which(dtUserdefPKParameter$name == userPar)
+
+    if (length(iRow) == 0) {
+      stop(paste("pkParameter", userPar, 'is not defined in "Userdef PK Parameter" sheet.'))
+    }
+    if (length(iRow) > 1) {
+      stop(paste("pkParameter", userPar, 'is not unique in "Userdef PK Parameter" sheet.'))
+    }
+
+    myPK <- ospsuite::addUserDefinedPKParameter(
+      name = dtUserdefPKParameter$name[iRow],
+      standardPKParameter = StandardPKParameter[[dtUserdefPKParameter$`standard PK parameter`[iRow]]],
+      displayUnit = dtUserdefPKParameter$`display Unit`[iRow]
+    )
+
+    for (col in setdiff(intersect(names(myPK), names(dtUserdefPKParameter)), c("name", "dimension"))) {
+      if (!is.na(dtUserdefPKParameter[[col]][iRow])) {
+        myPK[[col]] <- dtUserdefPKParameter[[col]][iRow]
+      }
+    }
+  }
+
+  return(invisible())
+}
+
 
 # load ----------
 #' Load PK Parameter
@@ -129,6 +157,9 @@ initializeParametersOfSheets <- function(projectConfiguration, pkParameterSheets
 #' @export
 loadPKParameter <- function(projectConfiguration,
                             scenarioList) {
+  #initialize variable to avoid messages
+  pKParameter <- scenarioName <- NULL
+
   checkmate::assertList(scenarioList, types = "Scenario", any.missing = FALSE, names = "named", null.ok = TRUE)
   checkmate::assertClass(projectConfiguration, classes = "ProjectConfiguration")
 
@@ -172,6 +203,9 @@ loadPKParameter <- function(projectConfiguration,
 #' @keywords internal
 loadPKAnalysisPerScenario <- function(scenarioName, scenario,
                                       pkParameterSheets, projectConfiguration) {
+  #initialize variable to avoid messages
+  unitFactor <- value <- NULL
+
   dtPkAnalyses <- loadPkAnalysisRawData(
     projectConfiguration = projectConfiguration,
     scenarioName = scenarioName,
@@ -280,7 +314,7 @@ addUnitFactorsToPKDefinition <- function(scenario,
                                          dtPkAnalyses,
                                          dtPkParameterDefinition) {
   # Initialize variables to avoid linter messages
-  outputPathIds <- unitFactor <- dimension <- NULL
+  outputPathIds <- molweight <- outputPath <- NULL
 
   # Select relevant columns from dtOutputPaths and merge with dtPkAnalyses
   # This creates a dataset (dtO) that contains output path IDs and their associated parameters
@@ -303,7 +337,7 @@ addUnitFactorsToPKDefinition <- function(scenario,
 
   # Remove descriptions from dtPkParameterDefinition and handle NA outputPathIds
   dtPkParameterDefinition <- dtPkParameterDefinition %>%
-    dplyr::select(!any_of(c("descriptions")))
+    dplyr::select(!dplyr::any_of(c("descriptions")))
 
   # If outputPathIds are NA, concatenate unique outputPathIds from dtO
   dtPkParameterDefinition[is.na(outputPathIds), outputPathIds := paste(unique(dtO$outputPathId), collapse = ", ")]
@@ -342,7 +376,7 @@ mergePKParameterWithConfigTable <- function(onePlotConfig,
                                             colorVector = NULL,
                                             asRatio = FALSE) {
   # initialize to avoid linter messages
-  displayNameOutput <- plotTag <- isReference <- isReference <- colorIndex <- referenceScenario <- NULL
+  isReference <- isReference <- colorIndex <- referenceScenario <- scenario <- NULL
 
   onePlotConfig <- data.table::copy(onePlotConfig)
   for (col in intersect(
@@ -416,6 +450,9 @@ mergePKParameterWithConfigTable <- function(onePlotConfig,
 #'
 #' @keywords internal
 setValueToRatio <- function(mergedData, pkParameterDT) {
+  #initialize variable to avoid messages
+  valueBase <- valueReference <- value <- NULL
+
   mergedData <- merge(mergedData,
     pkParameterDT[, c("scenario", "pkParameter", "individualId", "outputPathId", "value", "populationId")] %>%
       setnames(
@@ -423,9 +460,9 @@ setValueToRatio <- function(mergedData, pkParameterDT) {
         new = c("referenceScenario")
       ),
     by = c("referenceScenario", "pkParameter", "individualId", "outputPathId"),
-    suffixes = c(".base", ".reference")
+    suffixes = c("Base", "Reference")
   )
-  mergedData[, value := value.base / value.reference]
+  mergedData[, value := valueBase / valueReference]
 
 
   return(mergedData)

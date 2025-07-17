@@ -62,7 +62,9 @@
 #' )
 #' # default is list()
 #'
-#' @param ... argumnets passed to ospsuite.plots::plotTimeprofile
+#' @param checkForUnusedData A boolean, This variable is used to QC the data usage. If TRUE plotList contains an additional entry unusedData.
+#'
+#' @param ... arguments passed to ospsuite.plots::plotTimeprofile
 #'
 #' @return Generates time profile plots and saves them to the specified output directory.
 #' The function does not return any value.
@@ -133,10 +135,12 @@ plotTimeProfiles <- function(projectConfiguration,
                              ),
                              percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1, 3, 5)],
                              customFunction = NULL,
+                             checkForUnusedData = FALSE,
                              referenceScaleVector = list(),
                              ...) {
   # initialize data.table variables
-  dataType <- .Id <- NULL # nolint
+  dataType <- yErrorType <- dataClass <- NULL
+  .Id <- NULL # nolint
 
   checkmate::assertIntegerish(nMaxFacetRows, lower = 1, len = 1)
   checkmate::assertDouble(facetAspectRatio, lower = 0, len = 1)
@@ -211,15 +215,15 @@ plotTimeProfiles <- function(projectConfiguration,
       )
     )
   }
-  if (getOption("OSPSuite.RF.withEPackage")) {
+
+  if (checkForUnusedData) {
+    # this is a QC functionality which should not done in a valid Run
+    stopHelperFunction()
+
     if (plotData$hasObservedData()) {
-      plotList[["dataObservedIndices"]] <-
-        plotData$data[dataType == "observed", c(".Id", "scenarioIndex")] %>%
-        unique() %>%
-        merge(plotData$configTable[, c("scenario", "scenarioIndex")],
-          by = "scenarioIndex"
-        ) %>%
-        .[, c(".Id", "scenario")]
+      plotList[["unusedDataRows"]] <-
+        dataObserved[!(.Id %in%
+        plotData$data[dataType == "observed"][[".Id"]])]
     }
   }
 
@@ -845,14 +849,14 @@ getGeomLLOQAttributesForTP <- function(plotData) {
 validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
                                        scenarioResults, ...) {
   # avoid warning for global variable
-  individualId <- NULL
+  individualId <- invalid <- colorLegend <- outputPathIds <- referenceScenario <- NULL
 
   configTablePlots <- validateHeaders(configTable)
   validateOutputIdsForPlot()
   validateDataGroupIdsForPlot()
 
   checkmate::assertCharacter(configTablePlots$scenarioLongName, any.missing = FALSE, .var.name = "longName for relevant scenarios")
-  checkmate::assertList(scenarioList, any.missing = FALSE, null.ok = FALSE, min.len = 1)
+  checkmate::assertList(scenarioResults, any.missing = FALSE, null.ok = FALSE, min.len = 1)
   validateConfigTablePlots(
     configTablePlots = configTablePlots,
     charactersWithoutMissing = c(
@@ -1076,7 +1080,8 @@ validateOutputPathIdFormat <- function(configTablePlots, column = "outputPathIds
 #' @keywords internal
 validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
   # avoid warning for global variable
-  scenarioResult <- dataGroupIds <- plot_TimeProfiles <- individualIds <- NULL
+  dataGroupIds <- individualIds <- scenario <- referenceScenario <- NULL
+  plot_TimeProfiles <- NULL #nolint
 
   popScenarios <- scenarioResults[unlist(lapply(
     scenarioResults,

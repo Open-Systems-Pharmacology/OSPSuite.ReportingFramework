@@ -56,6 +56,8 @@ test_that("Time profiles of individual scenarios", {
       fig = plotList[[pName]]
     )
   }
+
+  rm(plotList)
 })
 
 test_that("Predicted vs observed of individual scenarios", {
@@ -82,6 +84,8 @@ test_that("Predicted vs observed of individual scenarios", {
       fig = plotList[[pName]]
     )
   }
+
+  rm(plotList)
 })
 
 
@@ -134,6 +138,8 @@ test_that("Time profiles of virtual twin scenarios", {
       )
     )
   )
+
+  rm(plotList)
 })
 
 test_that("Predicted vs observed of virtual twin scenarios", {
@@ -160,6 +166,7 @@ test_that("Predicted vs observed of virtual twin scenarios", {
       fig = plotList[[pName]]
     )
   }
+  rm(plotList)
 })
 
 test_that("Time profiles with populations", {
@@ -215,6 +222,8 @@ test_that("Time profiles with populations", {
       dataObserved = dataObserved
     )
   ))
+
+  rm(plotList)
 })
 
 
@@ -241,6 +250,7 @@ test_that("Predicted vs observed of populations", {
       fig = plotList[[pName]]
     )
   }
+  rm(plotList)
 })
 
 test_that("Time profiles vs time range", {
@@ -263,6 +273,7 @@ test_that("Time profiles vs time range", {
       fig = plotList[[pName]]
     )
   }
+  rm(plotList)
 })
 
 test_that("Predicted vs observed vs time range", {
@@ -288,4 +299,62 @@ test_that("Predicted vs observed vs time range", {
       fig = plotList[[pName]]
     )
   }
+  rm(plotList)
+})
+
+test_that("QC functionality", {
+  skip_if_not_installed("vdiffr")
+  skip_if(getRversion() < "4.1")
+
+  # case 1 returns unused individuals
+  plotList <-
+    runPlot(
+      nameOfplotFunction = "plotTimeProfiles",
+      configTableSheet = "TimeProfileTest",
+      projectConfiguration = projectConfiguration,
+      plotNames = c("Individuals_withData"),
+      inputs = list(
+        scenarioResults = scenarioResultsInd,
+        dataObserved = dataObserved[group == '1234_adults_iv'],
+        checkForUnusedData = TRUE
+      )
+    )
+
+  unusedSubjects <- plotList$unusedDataRows$subjectId %>%  unique()
+  expect_length(unusedSubjects, n = 3)
+  expect_contains(unusedSubjects, expected = "50")
+
+  # case 2 returns nothing
+  plotList <-
+    runPlot(
+      nameOfplotFunction = "plotTimeProfiles",
+      configTableSheet = "TimeProfileTest",
+      projectConfiguration = projectConfiguration,
+      plotNames = c("Individuals_withData"),
+      inputs = list(
+        scenarioResults = scenarioResultsInd,
+        dataObserved = dataObserved[group == '1234_adults_iv' &
+                                      subjectId %in% c("13","30","41")],
+        checkForUnusedData = TRUE
+      )
+    )
+
+  unusedSubjects <- plotList$unusedDataRows$subjectId %>%  unique()
+  expect_equal(nrow(plotList$unusedDataRows), expected = 0)
+
+  plotList <-
+    runPlot(
+      nameOfplotFunction = "plotTimeProfiles",
+      configTableSheet = "TimeProfileTest",
+      projectConfiguration = projectConfiguration,
+      plotNames = c("Individuals_withData"),
+      inputs = list(
+        scenarioResults = scenarioResultsInd,
+        dataObserved = dataObserved[group == '1234_adults_iv' &
+                                      subjectId %in% c("13","30","41")],
+        checkForUnusedData = TRUE
+      )
+    )
+
+  rm(plotList)
 })

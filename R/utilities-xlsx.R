@@ -357,7 +357,7 @@ synchronizeScenariosWithPlots <- function(projectConfiguration) {
 #' @keywords internal
 synchronizeScenariosOutputsWithPlots <- function(projectConfiguration) {
   #initialize variable to avoid messages
-  outputPath <- outputPath.pl <- outputPath.sc <- NULL
+  outputPath <- outputPathPl <- outputPathSc <- NULL
 
   # Load the workbooks for scenarios and plots
   wbSc <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
@@ -368,23 +368,26 @@ synchronizeScenariosOutputsWithPlots <- function(projectConfiguration) {
   outputsPl <- xlsxReadData(wbPl, sheetName = "Outputs")
 
   # Merge the outputs based on the outputPathId
-  opMerged <- merge(outputsSc, outputsPl[-1], by = "outputPathId", all = TRUE, suffixes = c(".sc", ".pl"), sort = FALSE)
+  opMerged <- merge(outputsSc, outputsPl[-1],
+                    by = "outputPathId",
+                    all = TRUE,
+                    suffixes = c("Sc", "Pl"), sort = FALSE)
 
   # Initialize the outputPath column
   opMerged[, outputPath := ""]
 
   # Check for inconsistencies between scenario and plot output paths
-  if (nrow(opMerged[!is.na(outputPath.sc) & !is.na(outputPath.pl) & outputPath.sc != outputPath.pl]) > 0) {
+  if (nrow(opMerged[!is.na(outputPathSc) & !is.na(outputPathPl) & outputPathSc != outputPathPl]) > 0) {
     warning("Output definition in Scenario.xlsx and Plot.xlsx is inconsistent. Please synchronize manually")
   }
 
   # Synchronize output paths based on availability
-  opMerged[!is.na(outputPath.sc) & !is.na(outputPath.pl) & outputPath.sc == outputPath.pl, outputPath := outputPath.pl]
-  opMerged[!is.na(outputPath.sc) & is.na(outputPath.pl), outputPath := outputPath.sc]
-  opMerged[is.na(outputPath.sc) & !is.na(outputPath.pl), outputPath := outputPath.pl]
+  opMerged[!is.na(outputPathSc) & !is.na(outputPathPl) & outputPathSc == outputPathPl, outputPath := outputPathPl]
+  opMerged[!is.na(outputPathSc) & is.na(outputPathPl), outputPath := outputPathSc]
+  opMerged[is.na(outputPathSc) & !is.na(outputPathPl), outputPath := outputPathPl]
 
-  opMerged[, outputPath.sc := NULL]
-  opMerged[, outputPath.pl := NULL]
+  opMerged[, outputPathSc := NULL]
+  opMerged[, outputPathPl := NULL]
 
 
   # Set column order for better readability

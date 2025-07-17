@@ -12,6 +12,19 @@
 plotSensitivity <- function(projectConfiguration,
                             onePlotConfig,
                             scenarioList) {
+  #initialize variable to avoid messages
+  sens <- parameterName <- NULL
+
+  checkmate::assertFileExists(
+    x = file.path(
+      projectConfiguration$outputFolder, EXPORTDIR$sensitivityResults,
+      unique(sensitivityAnalyisName(onePlotConfig$scenario,
+                                    onePlotConfig$sensitivityParameterSheet))
+    ),
+    .var.name = "sensitivityResult file"
+  )
+
+
   plotData <- prepareSensitivityPlotData(
     onePlotConfig,
     projectConfiguration,
@@ -101,6 +114,9 @@ plotSensitivity <- function(projectConfiguration,
 prepareSensitivityPlotData <- function(onePlotConfig,
                                        projectConfiguration,
                                        scenarioList) {
+  #initialize variable to avoid messages
+  sens <- pKParameter <- outputPathId <- plotTag <- parameterPath <- NULL
+
   pkDefinitions <- getPKParameterOverview(projectConfiguration) %>%
     .[, c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")]
 
@@ -242,6 +258,9 @@ getCaptionForSensitivityPlot <- function(plotData, projectConfiguration, plotCap
 #' @return A `data.table` containing the merged PK parameter data along with associated scenario names.
 #' @export
 getPKParameterOverview <- function(projectConfiguration) {
+  #initialize variable to avoid messages
+  pKParameter <- descriptions <- NULL
+
   pkParameterSheets <- unique(splitInputs(configEnv$scenarios$pKParameter))
   pkSheets <- stats::setNames(
     lapply(pkParameterSheets, function(sheet) {
@@ -264,12 +283,13 @@ getPKParameterOverview <- function(projectConfiguration) {
 
   return(pkSheets)
 }
-#' Read Sensitivity Configuration Table
+#' Validate Sensitivity Configuration Table
 #'
-#' Reads the sensitivity configuration table from the specified sheet and validates its contents.
+#' This function checks the headers of the configuration table, validates output IDs and data group IDs for plotting,
+#' and ensures the configuration adheres to specified criteria. It also checks for file existence in the output folder.
 #'
-#' @param sheetName A string indicating the name of the sheet to read from the project configuration file.
-#' @param projectConfiguration A list containing project configuration settings, including file paths and parameters.
+#' @param configTable A data.table containing the configuration for sensitivity analysis.
+#' @param ... Additional arguments passed to other functions.
 #'
 #' @return A validated data frame containing the configuration table for sensitivity plots.
 #' @keywords internal
@@ -314,14 +334,6 @@ validateSensitivityConfig <- function(configTable, ...) {
       "sensitivityParameterSheet",
       "threshold"
     )
-  )
-
-  checkmate::assertFileExists(
-    x = file.path(
-      projectConfiguration$outputFolder, EXPORTDIR$sensitivityResults,
-      unique(sensitivityAnalyisName(configTablePlots$scenario, configTablePlots$sensitivityParameterSheet))
-    ),
-    .var.name = "sensitivityResult file"
   )
 
   return(configTable)

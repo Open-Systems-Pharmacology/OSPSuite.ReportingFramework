@@ -482,8 +482,8 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
       inputFiles[, fileName := basename(source)]
       # replace filename
       if (length(self$fileNameReplacements) > 0) {
-        inputFiles[fileName %in% self$fileNameReplacements[seq(1, length(fileNameReplacements), 2)],
-          fileName := self$fileNameReplacements[which(fileName == fileNameReplacements) + 1],
+        inputFiles[fileName %in% self$fileNameReplacements[seq(1, length(self$fileNameReplacements), 2)],
+          fileName := self$fileNameReplacements[which(fileName == self$fileNameReplacements) + 1],
           by = .I
         ]
       }

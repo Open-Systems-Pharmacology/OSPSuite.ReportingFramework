@@ -78,10 +78,10 @@ MappedDataRangeDistribution <- R6::R6Class( # nolint
         functionArgs <- list(n = private$numberOfBins)
       } else if (private$modeOfBinning == BINNINGMODE$interval) {
         if (self$xscale == "log") {
-          cut_interval_log <- function(x, ...) {
+          cutIntervalLog <- function(x, ...) {
             cut_interval(log(x), ...)
           }
-          functionName <- "cut_interval_log"
+          functionName <- "cutIntervalLog"
         } else {
           functionName <- "cut_interval"
         }

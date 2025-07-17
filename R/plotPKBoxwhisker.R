@@ -6,7 +6,8 @@
 #' scenarios, allowing for comparison of absolute values and ratios.
 #'
 #' The function supports customization options such as specifying the angle of the
-#' x-axis text, color schemes, and facet aspect ratios.
+#' x-axis text, color schemes, and facet aspect ratios. The expected structure of
+#' the `pkParameterDT` data.table should include relevant PK parameter columns.
 #'
 #' @param projectConfiguration A ProjectConfiguration object that contains
 #'   settings and paths relevant to the project.
@@ -25,8 +26,8 @@
 #'   number of facets and plot dimensions.
 #' @param ... Additional arguments passed to plotting functions for further
 #'   customization.
-#' @return A list of generated plots. Each plot is an object that can be rendered
-#'   using ggplot2 or similar plotting systems. The list may include both absolute
+#' @return A list of ggplot objects representing the generated plots. Each plot
+#'   can be rendered using ggplot2 or similar plotting systems. The list may include both absolute
 #'   and ratio plots depending on the configuration.
 #'
 #' @examples
@@ -82,6 +83,7 @@ plotPKBoxwhisker <- function(projectConfiguration,
 #' Generate Box-and-Whisker Plot for a Specific Plot Type
 #'
 #' Creates box-and-whisker plots for either absolute values or ratios of PK parameters.
+#' This function prepares data and generates the plots based on the provided configuration.
 #'
 #' @param onePlotConfig Configuration for a single plot.
 #' @param pkParameterDT A data.table containing PK parameter data.
@@ -91,7 +93,7 @@ plotPKBoxwhisker <- function(projectConfiguration,
 #' @param facetAspectRatio Aspect ratio for facets.
 #' @param asRatio Logical indicating if the plot is for ratios.
 #' @param ... Additional arguments passed to plotting functions.
-#' @return A list of generated plots for the specified plot type.
+#' @return A list of ggplot objects generated for the specified plot type.
 #' @keywords internal
 generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
                                               pkParameterDT,
@@ -102,7 +104,7 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
                                               asRatio,
                                               ...) {
   # initialize to avoid linter messages
-  plotName <- plotDataPkTag <- NULL
+  plotName <- NULL
 
   # Prepare data for plotting
   plotData <- prepareDataForPKBoxplot(
@@ -208,7 +210,7 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
 #' @keywords internal
 prepareDataForPKBoxplot <- function(onePlotConfig, pkParameterDT, colorVector, asRatio) {
   # initialize to avoid linter messages
-  displayNameOutput <- plotTag <- NULL
+  displayNameOutput <- plotTag <- pkParameter <- plotName <- NULL
 
   plotData <- mergePKParameterWithConfigTable(
     onePlotConfig = onePlotConfig,
@@ -270,10 +272,21 @@ getSummaryTable <- function(plotDataPk, asRatio, onePlotConfig, percentiles) {
 
   return(dtExport)
 }
-
+#' Prepare Data for PK Boxplot
+#'
+#' Prepares and cleans data for box-and-whisker plotting by merging the PK parameter data
+#' with the configuration settings. This function ensures that the data is structured
+#' correctly for plotting.
+#'
+#' @param onePlotConfig Configuration for a single plot.
+#' @param pkParameterDT A data.table containing PK parameter data.
+#' @param colorVector A named vector for colors.
+#' @param asRatio Logical indicating if the plot is for ratios.
+#' @return A data.table prepared for plotting, including merged configuration and parameter data.
+#' @keywords internal
 prepareTableForExport <- function(dtExport, asRatio, plotCaptionAddon, plotDataPk) {
   # initialize to avoid linter messages
-  colorIndex <- value <- scenarioShortName <- scenario <- NULL
+  colorIndex <- scenarioShortName <- scenario <- NULL
 
   # reorder
   setorderv(dtExport, "scenarioShortName")
@@ -430,7 +443,8 @@ createBaseBoxWhisker <- function(plotDataPk, yScale, asRatio, colorVector, onePl
 #' @keywords internal
 validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   # initialize to avoid linter messages
-  plot_Ratio <- plot_Absolute <- referenceScenario <- value.reference <- value.base <- value <- NULL # nolint
+  plot_Ratio <- plot_Absolute <-NULL # nolint
+  referenceScenario <- NULL
 
   configTablePlots <- validateHeaders(configTable)
   validateOutputIdsForPlot()
@@ -526,6 +540,9 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
 #'         execution if the validation fails.
 #' @keywords internals
 validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
+  # initialize to avoid linter messages
+  populationId <- populationIdReference <- NULL
+
   configTablePlots <- configTablePlots %>%
     merge(
       pkParameterDT[, c("scenario", "populationId")] %>%
@@ -537,10 +554,10 @@ validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
         unique(),
       by.x = "referenceScenario",
       by.y = "scenario",
-      suffixes = c("", ".reference")
+      suffixes = c("", "Reference")
     )
 
-  configTablePlots <- configTablePlots[populationId != populationId.reference]
+  configTablePlots <- configTablePlots[populationId != populationIdReference]
   if (nrow(configTablePlots) > 0) {
     print(configTablePlots)
     stop("Ratio plots are only available if scenario and referenceScenario is based on the same population")
@@ -563,7 +580,7 @@ validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
 #' @keywords internal
 validateExistenceOfReferenceForRatio <- function(configTablePlots, pkParameterDT) {
   # initialize to avoid linter messages
-  isValid <- plotName <- referenceScenario <- populationId.reference <- populationId <- NULL
+  isValid <- plotName <- referenceScenario <- NULL
 
   if (nrow(configTablePlots) == 0) {
     return(invisible())
@@ -597,7 +614,7 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(projectConfiguration,
                                                  sheetName = "PKParameter_Boxplot",
                                                  overwrite = FALSE) {
   # initialize to avoid linter messages
-  pkParameters <- outputPathIds <- outputPathId <- parameter <- scenarioName <- NULL
+  pkParameter <- pkParameters <- outputPathIds <- outputPathId <- scenarioName <- NULL
 
   # this function stops in valid runs
   stopHelperFunction()

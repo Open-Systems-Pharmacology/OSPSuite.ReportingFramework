@@ -33,7 +33,8 @@ Imports:
     rlang,
     openxlsx,
     dplyr,
-    stats
+    stats,
+    foreach
 Depends:
     esqlabsR,
     ospsuite.plots,

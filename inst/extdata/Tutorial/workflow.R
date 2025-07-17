@@ -33,7 +33,6 @@ setWorkflowOptions(isValidRun = FALSE)
 # this workflow file should be saved in Scripts/ReportingFramework,
 initProject()
 
-
 # get paths of all relevant project files
 projectConfiguration <-
   ospsuite.reportingframework::createProjectConfiguration(
