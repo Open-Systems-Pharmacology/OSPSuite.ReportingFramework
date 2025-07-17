@@ -28,6 +28,9 @@ library(data.table)
 
 This vignette provides an overview of how to calculate and visualize pharmacokinetic (PK) parameters for different scenarios using the functions available in the `ospsuite.reportingframework` package.
 
+
+
+
 ## Import Observed Data
 
 Before running the analysis, you need to import the observed PK data. This can be done using a data.table containing the relevant observed parameters, which can then be compared against simulated data.

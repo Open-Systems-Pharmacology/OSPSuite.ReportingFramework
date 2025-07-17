@@ -16,8 +16,10 @@ logCatch(expr = {
   setWorkflowOptions(isValidRun = getQCpassedEnvironmentVariable())
 
   # build structure needed for workflow and import input files for workflow
-  projectConfiguration <-importWorkflow(projectDirectory = projectDirectory,
-                                        wfIdentifier = XXwfIdentifierXX)
+  projectConfiguration <- importWorkflow(projectDirectory = projectDirectory,
+                                        wfIdentifier = XXwfIdentifierXX,
+                                        ePackageFolder = '.',
+                                        configurationsFolder = XXconfigurationsFolderXX)
 XXCHUNKstart-pathsCustomfunctionsXXX
 XXCHUNKend-pathsCustomfunctionsXXX
 XXCHUNKstart-dataObservedXXX
