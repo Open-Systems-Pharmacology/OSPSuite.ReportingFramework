@@ -14,6 +14,7 @@ plotTimeProfiles(
   aggregationFlag = c("GeometricStdDev", "ArithmeticStdDev", "Percentiles", "Custom"),
   percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1, 3, 5)],
   customFunction = NULL,
+  checkForUnusedData = FALSE,
   referenceScaleVector = list(),
   ...
 )
@@ -51,6 +52,8 @@ A custom function should take a numeric vector `y` as input and return a list co
 it is used in plot legends and captions. It must be a concatenation of the descriptor of yValues and the descriptor of yMin - yMax range
 separated by "|" (e.g., "mean | standard deviation" or "median | 5th - 95th percentile").}
 
+\item{checkForUnusedData}{A boolean, This variable is used to QC the data usage. If TRUE plotList contains an additional entry unusedData.}
+
 \item{referenceScaleVector}{A named list that configures colors for the display of
 reference scenarios. The names msut be consistent with the labes defined in the config table column
 colorLegend. First entry corresponds to aesthetic 'color', second entry to aesthetic 'fill',
@@ -61,7 +64,7 @@ referenceScaleVector = list(
 )
 # default is list()}
 
-\item{...}{argumnets passed to ospsuite.plots::plotTimeprofile}
+\item{...}{arguments passed to ospsuite.plots::plotTimeprofile}
 
 \item{configTableSheet}{The name of the sheet in the Excel plot configuration file that defines
 the plot settings.}

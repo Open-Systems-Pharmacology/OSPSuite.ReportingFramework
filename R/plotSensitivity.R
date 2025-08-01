@@ -12,14 +12,16 @@
 plotSensitivity <- function(projectConfiguration,
                             onePlotConfig,
                             scenarioList) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   sens <- parameterName <- NULL
 
   checkmate::assertFileExists(
     x = file.path(
       projectConfiguration$outputFolder, EXPORTDIR$sensitivityResults,
-      unique(sensitivityAnalyisName(onePlotConfig$scenario,
-                                    onePlotConfig$sensitivityParameterSheet))
+      unique(sensitivityAnalyisName(
+        onePlotConfig$scenario,
+        onePlotConfig$sensitivityParameterSheet
+      ))
     ),
     .var.name = "sensitivityResult file"
   )
@@ -114,7 +116,7 @@ plotSensitivity <- function(projectConfiguration,
 prepareSensitivityPlotData <- function(onePlotConfig,
                                        projectConfiguration,
                                        scenarioList) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   sens <- pKParameter <- outputPathId <- plotTag <- parameterPath <- NULL
 
   pkDefinitions <- getPKParameterOverview(projectConfiguration) %>%
@@ -258,7 +260,7 @@ getCaptionForSensitivityPlot <- function(plotData, projectConfiguration, plotCap
 #' @return A `data.table` containing the merged PK parameter data along with associated scenario names.
 #' @export
 getPKParameterOverview <- function(projectConfiguration) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   pKParameter <- descriptions <- NULL
 
   pkParameterSheets <- unique(splitInputs(configEnv$scenarios$pKParameter))

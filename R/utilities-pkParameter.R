@@ -1,66 +1,80 @@
 # calculate ----------
-#' Calculate and load PK Parameters
+#' Calculate and Load Pharmacokinetic (PK) Parameters
 #'
-#' This function calculates pharmacokinetic (PK) parameters for given scenarios based on project configuration and results.
+#' This function calculates pharmacokinetic (PK) parameters for specified scenarios
+#' based on project configuration and simulation results. It generates output files
+#' for each scenario in the designated output folder.
 #'
-#' @param projectConfiguration A list containing project configuration, including output folder and PK parameter file.
-#' @param scenarioResults A list of scenario results containing simulation data.
-#' @param pkParameterSheets A vector with name of the sheets in the PK parameter file to read.
+#' @param projectConfiguration A list containing project configuration settings,
+#' including the output folder path and the PK parameter file.
+#' @param scenarioResults A named list of scenario results, each containing
+#' simulation data for PK analysis.
 #'
-#' @return A data.table containing combined PK analyses for all scenarios.
+#' @return This function is called for its side effects and does not return a value.
 #'
 #' @export
-calculatePKParameter <- function(projectConfiguration,
-                                 scenarioResult,
-                                 pkParameterSheets,
-                                 scenarioName) {
-  checkmate::assertClass(projectConfiguration, classes = "ProjectConfiguration")
-  checkmate::assertList(scenarioResult, any.missing = FALSE, names = "named")
-  checkmate::assertString(scenarioName)
+calculatePKParameterForScenarios <- function(projectConfiguration,
+                                             scenarioResults) {
+  # initialize parameter to avoid linter message
+  pKParameter <- scenarioName <- NULL
 
-  initializeParametersOfSheets(projectConfiguration, pkParameterSheets)
+  checkmate::assertClass(projectConfiguration, classes = "ProjectConfiguration")
+  checkmate::assertList(scenarioResults, any.missing = FALSE, names = "named")
 
   outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$pKAnalysisResults)
   if (!dir.exists(outputFolder)) dir.create(outputFolder)
 
+  dtScenarios <- getScenarioDefinitions(wbScenarios = projectConfiguration$scenariosFile)
   dtOutputPaths <- getOutputPathIds(projectConfiguration$plotsFile)
   if (nrow(dtOutputPaths) == 0) stop("Please define ouputPaths in plot configuration xlsx")
 
+  for (sc in names(scenarioResults)) {
+    pkParameterSheets <- dtScenarios[scenarioName == sc & !is.na(pKParameter)]$pKParameter
+    initializeParametersOfSheets(projectConfiguration, pkParameterSheets)
 
-  # Load or calculate PK analyses
+    if (length(pkParameterSheets) > 0) {
+      # Load or calculate PK analyses
+      writeToLog(
+        type = "Info",
+        msg = paste("Calculate  PK analysis result of", sc)
+      )
 
-  writeToLog(
-    type = "Info",
-    msg = paste("Calculate  PK analysis result of", scenarioName)
-  )
+      pkAnalyses <- ospsuite::calculatePKAnalyses(results = scenarioResults[[sc]]$results)
 
-  pkAnalyses <- ospsuite::calculatePKAnalyses(results = scenarioResult$results)
-
-  ospsuite::exportPKAnalysesToCSV(
-    pkAnalyses = pkAnalyses,
-    filePath = file.path(outputFolder, paste0(scenarioName, ".csv"))
-  )
+      ospsuite::exportPKAnalysesToCSV(
+        pkAnalyses = pkAnalyses,
+        filePath = file.path(outputFolder, paste0(sc, ".csv"))
+      )
+    }
+  }
 
   return(invisible())
 }
-
-
-#' Initialize Parameters of defined in given Sheets
+#' Initialize PK Parameters in Specified Sheets
 #'
-#' This function initialize pharmacokinetic (PK) parameters in specified sheets based on user-defined parameters.
+#' This function initializes pharmacokinetic (PK) parameters in the specified
+#' sheets based on user-defined settings. It updates the parameters in-place
+#' within the provided PK parameter configuration sheet.
 #'
-#' @param projectConfiguration A list containing project configuration, including the PK parameter file.
-#' @param pkParameterSheets A vector of sheet names to update.
-#' @return NULL (updates are made in-place).
+#' @param projectConfiguration A list containing project configuration settings,
+#' including the path to the PK parameter configuration sheet
+#' @param pkParameterSheets A vector of sheet names that contain the PK parameters
+#' to be initialized.
+#'
+#' @return NULL. The function updates parameters in-place and does not return a value.
+#' @keywords internal
 initializeParametersOfSheets <- function(projectConfiguration, pkParameterSheets) {
+  if (is.null(pkParameterSheets) || length(pkParameterSheets) == 0) {
+    return(invisible())
+  }
 
   ospsuite::removeAllUserDefinedPKParameters()
 
   # Read user-defined PK parameters and clean the names
   dtUserdefPKParameter <- readUserDefinedPKParameters(projectConfiguration$addOns$pKParameterFile)
 
-
   # Loop through each PK parameter sheet
+  dtPkParameterDefinition <- data.table()
   for (pkParameterSheet in splitInputs(pkParameterSheets)) {
     dtPkParameterDefinition <- xlsxReadData(
       wb = projectConfiguration$addOns$pKParameterFile,
@@ -83,13 +97,15 @@ initializeParametersOfSheets <- function(projectConfiguration, pkParameterSheets
 
   return(invisible())
 }
-#' Read User Defined PK Parameters
+#' Read User-Defined Pharmacokinetic (PK) Parameters
 #'
-#' Reads user-defined pharmacokinetic (PK) parameters from an Excel file.
+#' This function reads user-defined pharmacokinetic (PK) parameters from an Excel
+#' file and validates their structure and content.
 #'
-#' @param file The path to the Excel file containing the user-defined PK parameters.
-#' @return A data frame of user-defined PK parameters.
-#' @throws Error if validation fails.
+#' @param file The path to the Excel file containing user-defined PK parameters.
+#'
+#' @return A data frame of validated user-defined PK parameters.
+#' throws Error if validation fails or if required fields are missing.
 #' @keywords internal
 readUserDefinedPKParameters <- function(file) {
   dtUserdefPKParameter <- xlsxReadData(
@@ -107,15 +123,17 @@ readUserDefinedPKParameters <- function(file) {
 
   return(dtUserdefPKParameter)
 }
-
-#' Add User Defined Parameters
+#' Add User-Defined PK Parameters to OSP-Suite
 #'
-#' Adds user-defined PK parameters to the OSPSuite based on the provided definitions.
+#' This function adds user-defined pharmacokinetic (PK) parameters to OSP-Suite
+#' based on the provided definitions. It checks for uniqueness and existence
+#' of parameters before adding them.
 #'
-#' @param userdefinedParameters A vector of user-defined PK parameter names.
-#' @param dtUserdefPKParameter A data frame of user-defined PK parameters.
-#' @return NULL (invisible).
-#' @throws Error if user-defined parameters are not defined or are not unique.
+#' @param userdefinedParameters A vector of user-defined PK parameter names to be added.
+#' @param dtUserdefPKParameter A data frame containing definitions for user-defined PK parameters.
+#'
+#' @return NULL. The function updates the OSPSuite environment and does not return a value.
+#' throws Error if user-defined parameters are not defined or are not unique.
 #' @export
 addUserDefinedParameters <- function(userdefinedParameters, dtUserdefPKParameter) {
   for (userPar in userdefinedParameters) {
@@ -146,35 +164,43 @@ addUserDefinedParameters <- function(userdefinedParameters, dtUserdefPKParameter
 
 
 # load ----------
-#' Load PK Parameter
+#' Load Pharmacokinetic (PK) Parameters for Specified Scenarios
 #'
-#' This function loads PK parameters for specified scenarios based on project configuration and scenario list.
+#' This function loads pharmacokinetic (PK) parameters for specified scenarios
+#' based on project configuration and a list of scenarios. It processes each
+#' scenario and returns the results as a data.table.
 #'
-#' @param projectConfiguration A list containing project configuration, including the PK parameter file.
-#' @param scenarioList A list of scenarios for which PK parameters are to be loaded.
+#' @param projectConfiguration A list containing project configuration settings,
+#' including the PK parameter file.
+#' @param scenarioListOrResult A named list of scenarios for which PK parameters
+#' are to be loaded.The list should be named and each element must contain
+#' an entry simulation, list entries could be e.g. objects of class ScenarioResult or Scenario
+#'
+#' @return A data.table containing the processed PK analyses for all specified scenarios.
+#' @export
+#' @param scenarioListOrResult A named list of scenarios for which PK parameters are to be loaded.
 #' @return A data.table containing the processed PK analyses.
 #'
 #' @export
 loadPKParameter <- function(projectConfiguration,
-                            scenarioList) {
-  #initialize variable to avoid messages
+                            scenarioListOrResult) {
+  # initialize variable to avoid messages
   pKParameter <- scenarioName <- NULL
 
-  checkmate::assertList(scenarioList, types = "Scenario", any.missing = FALSE, names = "named", null.ok = TRUE)
+  checkmate::assertList(scenarioListOrResult, any.missing = FALSE, names = "named", null.ok = TRUE)
   checkmate::assertClass(projectConfiguration, classes = "ProjectConfiguration")
 
   dtScenarios <- getScenarioDefinitions(projectConfiguration$scenariosFile)
 
   dtOutputPaths <- getOutputPathIds(projectConfiguration$plotsFile)
   if (nrow(dtOutputPaths) == 0) stop("Please define ouputPaths in plot configuration xlsx")
-
   # Load or calculate PK analyses for all scenarios
-  pkAnalysesList <- lapply(names(scenarioList), function(sc) {
+  pkAnalysesList <- lapply(names(scenarioListOrResult), function(sc) {
     pkParameterSheets <- dtScenarios[scenarioName == sc & !is.na(pKParameter)]$pKParameter
 
     loadPKAnalysisPerScenario(
       scenarioName = sc,
-      scenario = scenarioList[[sc]],
+      scenarioSimulation = scenarioListOrResult[[sc]]$simulation,
       pkParameterSheet = pkParameterSheets,
       projectConfiguration = projectConfiguration
     )
@@ -187,29 +213,27 @@ loadPKParameter <- function(projectConfiguration,
 
   return(pkParameterDT)
 }
-
-
-#' Load or Calculate PK Analysis for a Scenario
+#' Load or Calculate PK Analysis for a Given Scenario
 #'
-#' This function loads PK analysis results from a CSV file .
-#' It also processes each specified PK parameter sheet for the scenario.
+#' This function loads PK analysis results from a CSV file for a specific scenario.
 #'
-#' @param scenarioName The name of the scenario to process.
-#' @param scenarioResult A list containing the results of the scenario.
-#' @param pkParameterSheets A vector with names of the sheets in the PK parameter file to read.
-#' @param projectConfiguration A list containing project configuration, including the PK parameter file.
-#' @return A data.table containing the processed PK analyses.
+#' @param scenarioName The name of the scenario to be processed.
+#' @param scenarioSimulation A simulation object corresponding to the scenario.
+#' @param pkParameterSheets A vector of sheet names from the PK parameter file to read.
+#' @param projectConfiguration A list containing project configuration settings,
+#' including the PK parameter file.
 #'
+#' @return A data.table containing the processed PK analyses for the specified scenario.
 #' @keywords internal
-loadPKAnalysisPerScenario <- function(scenarioName, scenario,
+loadPKAnalysisPerScenario <- function(scenarioName, scenarioSimulation,
                                       pkParameterSheets, projectConfiguration) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   unitFactor <- value <- NULL
 
   dtPkAnalyses <- loadPkAnalysisRawData(
     projectConfiguration = projectConfiguration,
     scenarioName = scenarioName,
-    scenario = scenario
+    scenarioSimulation = scenarioSimulation
   ) %>%
     dplyr::mutate(scenario = scenarioName)
 
@@ -225,7 +249,7 @@ loadPKAnalysisPerScenario <- function(scenarioName, scenario,
     )
 
     dtPkParameterDefinition <- addUnitFactorsToPKDefinition(
-      scenario = scenario,
+      scenarioSimulation = scenarioSimulation,
       dtOutputPaths = dtOutputPaths,
       dtPkAnalyses = dtPkAnalyses,
       dtPkParameterDefinition = dtPkParameterDefinition
@@ -260,24 +284,29 @@ loadPKAnalysisPerScenario <- function(scenarioName, scenario,
 
   return(data.table::rbindlist(resultsList))
 }
-
-
-#' Load PK Analysis from CSV
+#' Load PK Analysis Results from CSV
 #'
-#' This function loads PK analysis results from a CSV file or recalculates them if specified.
+#' This function loads PK analysis results from a CSV file or recalculates them
+#' if the file is not found. It returns the loaded data as a data.table.
 #'
-#' @param projectConfiguration A list containing project configuration, including output folder and PK parameter file.
-#' @param scenarioName name of scenario
+#' @param projectConfiguration A list containing project configuration settings,
+#' including the output folder path and the PK parameter file.
+#' @param scenarioName The name of the scenario for which PK analysis is to be loaded.
+#' @param scenarioSimulation A simulation object corresponding to the scenario.
 #'
-#' @return A data.table containing the PK analyses.
-#'
-#' @export
-loadPkAnalysisRawData <- function(projectConfiguration, scenarioName, scenario) {
+#' @return A data.table containing the PK analyses loaded from the CSV file.
+#' @keywords internal
+loadPkAnalysisRawData <- function(projectConfiguration, scenarioName, scenarioSimulation) {
   outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$pKAnalysisResults)
   if (!dir.exists(outputFolder)) dir.create(outputFolder)
 
   fileName <- file.path(outputFolder, paste0(scenarioName, ".csv"))
-  if (!file.exists(fileName)) stop(paste("PK Parameter for", scenarioName, "calculated!"))
+  if (!file.exists(fileName)) {
+    stop(paste(
+      "PK Parameter for", scenarioName, "is not calculated!",
+      "Use function calculatePKParameterForCalculation to generate the result"
+    ))
+  }
 
   writeToLog(
     type = "Info",
@@ -286,7 +315,7 @@ loadPkAnalysisRawData <- function(projectConfiguration, scenarioName, scenario) 
 
   pkAnalyses <- ospsuite::importPKAnalysesFromCSV(
     filePath = fileName,
-    simulation = scenario$simulation
+    simulation = scenarioSimulation
   )
 
   dtPkAnalyses <- ospsuite::pkAnalysesToDataFrame(pkAnalyses = pkAnalyses) %>%
@@ -298,18 +327,20 @@ loadPkAnalysisRawData <- function(projectConfiguration, scenarioName, scenario) 
 
   return(dtPkAnalyses)
 }
-
-#' Process PK Parameter Definitions
+#' Process PK Parameter Definitions for a Scenario
 #'
-#' This function processes the PK parameter definitions for a specific scenario, including unit conversions and output filters.
+#' This function processes the PK parameter definitions for a specific scenario,
+#' including unit conversions and output filters. It ensures that the definitions
+#' are aligned with the scenario outputs.
 #'
-#' @param scenarioResult A list containing the results of the scenario.
-#' @param dtOutputPaths A data.table containing output paths.
-#' @param dtPkAnalyses A data.table containing PK analyses.
-#' @param dtPkParameterDefinition A data.table containing PK parameter definitions.
+#' @param scenarioSimulation A simulation object corresponding to the scenario.
+#' @param dtOutputPaths A data.table containing output paths relevant to the scenario.
+#' @param dtPkAnalyses A data.table containing PK analyses to be processed.
+#' @param dtPkParameterDefinition A data.table containing definitions of PK parameters.
+#'
 #' @return A data.table containing processed PK parameter definitions for the scenario.
-#' @export
-addUnitFactorsToPKDefinition <- function(scenario,
+#' @keywords internal
+addUnitFactorsToPKDefinition <- function(scenarioSimulation,
                                          dtOutputPaths,
                                          dtPkAnalyses,
                                          dtPkParameterDefinition) {
@@ -332,7 +363,7 @@ addUnitFactorsToPKDefinition <- function(scenario,
   dtO[, molweight := NA_real_]
 
   for (pt in unique(dtO$outputPath)) {
-    dtO[outputPath == pt, molweight := scenario$simulation$molWeightFor(pt)]
+    dtO[outputPath == pt, molweight := scenarioSimulation$molWeightFor(pt)]
   }
 
   # Remove descriptions from dtPkParameterDefinition and handle NA outputPathIds
@@ -352,8 +383,9 @@ addUnitFactorsToPKDefinition <- function(scenario,
       by.y = c("parameter", "outputPathId")
     )
 
-  # Check if the resulting dtPkParameterDefinition is empty; if so, stop execution with an error message
-  if (nrow(dtPkParameterDefinition) == 0) stop("PK Parameter definitions does not match with scenario outputs")
+  if (nrow(dtPkParameterDefinition) == 0) {
+    return(dtPkParameterDefinition)
+  }
 
   # Calculate unit factors for each row in dtPkParameterDefinition
   for (iRow in seq_len(nrow(dtPkParameterDefinition))) {
@@ -371,6 +403,27 @@ addUnitFactorsToPKDefinition <- function(scenario,
   return(dtPkParameterDefinition)
 }
 # plot Support --------
+#' Merge PK Parameters with Configuration Table
+#'
+#' This function merges pharmacokinetic (PK) parameters with a given plot configuration
+#' table. It processes the configuration data to ensure compatibility with the PK parameter
+#' data and prepares the data for visualization or further analysis.
+#'
+#' @param onePlotConfig A data.table containing plot configuration settings, including
+#'                      scenario names, PK parameters, and output path IDs.
+#' @param pkParameterDT A data.table containing pharmacokinetic parameters, including
+#'                      scenario names, parameters, individual IDs, values, and
+#'                      output path IDs.
+#' @param colorVector An optional vector specifying colors for different scenarios.
+#'                    If provided, it will be used to differentiate between reference
+#'                    and non-reference scenarios in the merged data.
+#' @param asRatio A logical value indicating whether to convert values to ratios
+#'                 between reference and base scenarios. Defaults to FALSE.
+#'
+#' @return A data.table containing the merged data with PK parameters and configuration
+#'         settings, including any calculated ratios if `asRatio` is TRUE.
+#'
+#' @keywords internal
 mergePKParameterWithConfigTable <- function(onePlotConfig,
                                             pkParameterDT,
                                             colorVector = NULL,
@@ -432,25 +485,24 @@ mergePKParameterWithConfigTable <- function(onePlotConfig,
 
   return(mergedData)
 }
-#' Set Value to Ratio
+#' Compute the Ratio of Values Between Base and Reference Scenarios
 #'
-#' This function computes the ratio of values between base and reference scenarios
+#' This function calculates the ratio of values between base and reference scenarios
 #' for specified pharmacokinetic parameters. It merges the configuration data with
-#' pharmacokinetic parameter data and calculates the ratio based on the provided
-#' individual IDs and output path IDs.
+#' pharmacokinetic parameter data and computes the ratio based on individual IDs
+#' and output path IDs.
 #'
 #' @param mergedData A data.table containing configuration data with columns for
-#'               referenceScenario, pkParameter, individualId, and outputPathId.
+#'                   referenceScenario, pkParameter, individualId, and outputPathId.
 #' @param pkParameterDT A data.table containing pharmacokinetic parameter data
 #'                      including scenario names, parameters, individual IDs,
 #'                      output path IDs, values, and population IDs.
 #'
-#' @return A data.table containing the merged data with column `value`
+#' @return A data.table containing the merged data with a new column `value`
 #'         representing the ratio of base to reference values.
-#'
 #' @keywords internal
 setValueToRatio <- function(mergedData, pkParameterDT) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   valueBase <- valueReference <- value <- NULL
 
   mergedData <- merge(mergedData,
@@ -467,24 +519,21 @@ setValueToRatio <- function(mergedData, pkParameterDT) {
 
   return(mergedData)
 }
-
-#' Validate Pharmacokinetic Parameter Data Table
+#' Validate Structure and Content of PK Parameter Data Table
 #'
 #' This function validates the structure and content of the provided
 #' pharmacokinetic parameter data table (`pkParameterDT`). It checks
-#' whether the data table has the required columns and ensures that the
-#' combination of `outputPathId` and `parameter` is unique with consistent
+#' for the presence of required columns and ensures that the combination
+#' of `outputPathId` and `parameter` is unique with consistent
 #' `displayUnitPKParameter`.
 #'
 #' @param pkParameterDT A data.table containing pharmacokinetic parameters
-#'                      with the following required columns:
-#'                      scenario, pkParameter, individualId, value,
-#'                      outputPathId, displayNamePKParameter,
+#'                      with the required columns: scenario, pkParameter,
+#'                      individualId, value, outputPathId, displayNamePKParameter,
 #'                      and displayUnitPKParameter.
 #'
-#' @return None. The function will stop execution if validation fails,
+#' @return NULL. The function will stop execution if validation fails,
 #'         otherwise returns invisibly.
-#'
 #' @keywords internal
 validatePKParameterDT <- function(pkParameterDT) {
   checkmate::assertDataTable(pkParameterDT)

@@ -33,9 +33,10 @@ generateBoxwhiskerPlotForPlotType(
 \item{...}{Additional arguments passed to plotting functions.}
 }
 \value{
-A list of generated plots for the specified plot type.
+A list of ggplot objects generated for the specified plot type.
 }
 \description{
 Creates box-and-whisker plots for either absolute values or ratios of PK parameters.
+This function prepares data and generates the plots based on the provided configuration.
 }
 \keyword{internal}

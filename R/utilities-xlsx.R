@@ -355,9 +355,12 @@ synchronizeScenariosWithPlots <- function(projectConfiguration) {
 #'
 #' @return Returns invisibly.
 #' @keywords internal
-synchronizeScenariosOutputsWithPlots <- function(projectConfiguration) {
-  #initialize variable to avoid messages
+synchronizeScenariosOutputsWithPlots <- function(projectConfiguration,
+                                                 direction = c("bothways", "scenarioToPlot", "plotToScenario")) {
+  # initialize variable to avoid messages
   outputPath <- outputPathPl <- outputPathSc <- NULL
+
+  direction <- match.arg(direction)
 
   # Load the workbooks for scenarios and plots
   wbSc <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
@@ -369,9 +372,12 @@ synchronizeScenariosOutputsWithPlots <- function(projectConfiguration) {
 
   # Merge the outputs based on the outputPathId
   opMerged <- merge(outputsSc, outputsPl[-1],
-                    by = "outputPathId",
-                    all = TRUE,
-                    suffixes = c("Sc", "Pl"), sort = FALSE)
+    by = "outputPathId",
+    all.x = direction %in% c("bothways", "scenarioToPlot"),
+    all.y = direction %in% c("bothways", "plotToScenario"),
+    suffixes = c("Sc", "Pl"),
+    sort = FALSE
+  )
 
   # Initialize the outputPath column
   opMerged[, outputPath := ""]
@@ -395,13 +401,15 @@ synchronizeScenariosOutputsWithPlots <- function(projectConfiguration) {
 
   # Write back to Scenario workbook if changes are detected
   if (any(!(opMerged$outputPathId %in% outputsSc$outputPathId)) |
-    any(!(opMerged[!is.na(outputPath)]$outputPath %in% outputsSc[!is.na(outputPath)]$outputPath))) {
+    any(!(opMerged[!is.na(outputPath)]$outputPath %in% outputsSc[!is.na(outputPath)]$outputPath)) |
+    nrow(outputsSc) != nrow(opMerged)) {
     xlsxWriteData(wbSc, sheetName = "OutputPaths", opMerged[, c("outputPathId", "outputPath")])
     openxlsx::saveWorkbook(wb = wbSc, file = projectConfiguration$scenariosFile, overwrite = TRUE)
   }
   # Write back to Plot workbook if changes are detected
   if (any(!(opMerged$outputPathId %in% outputsPl$outputPathId)) |
-    any(!(opMerged[!is.na(outputPath)]$outputPath %in% outputsPl[!is.na(outputPath)]$outputPath))) {
+    any(!(opMerged[!is.na(outputPath)]$outputPath %in% outputsPl[!is.na(outputPath)]$outputPath)) |
+    nrow(outputsPl) != (nrow(opMerged) + 1)) {
     xlsxWriteData(wbPl, sheetName = "Outputs", rbind(outputsPl[1], opMerged))
     openxlsx::saveWorkbook(wb = wbPl, file = projectConfiguration$plotsFile, overwrite = TRUE)
   }

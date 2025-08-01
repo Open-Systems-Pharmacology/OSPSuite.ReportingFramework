@@ -62,7 +62,7 @@ runSensitivityAnalysisForScenarios <-
            sensitivitysheet,
            sensitivityAnalysisRunOptions = SensitivityAnalysisRunOptions$new(showProgress = TRUE),
            overwrite = TRUE) {
-    #initialize variable to avoid messages
+    # initialize variable to avoid messages
     pKParameter <- NULL
 
     if (!("sensitivityFile" %in% names(projectConfiguration$addOns))) {

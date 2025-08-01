@@ -207,8 +207,8 @@ getIndividualMatchForScenario <- function(projectConfiguration,
 #' }
 #' @export
 exportRandomPopulations <- function(projectConfiguration, populationNames = NULL, customParameters = NULL, overwrite = FALSE) {
-  #initialize variable to avoid messages
-  proportionOfFemales <- NULL #nolint
+  # initialize variable to avoid messages
+  proportionOfFemales <- NULL # nolint
 
   # Check for valid customParameter if provided
   if (!is.null(customParameters)) {
@@ -447,8 +447,8 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @keywords internal
 .generatePopulationFiles <- function(dtTwinPops, params, dtIndividualBiometrics, projectConfiguration, sim) {
-  #initialize variable to avoid messages
-  individualId <- IndividualId <- NULL #nolint
+  # initialize variable to avoid messages
+  individualId <- IndividualId <- NULL # nolint
 
   # Use foreach for parallel processing
   resultsList <- lapply(dtIndividualBiometrics$individualId, function(indId) {

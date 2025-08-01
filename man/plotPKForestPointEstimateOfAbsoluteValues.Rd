@@ -18,7 +18,8 @@ plotPKForestPointEstimateOfAbsoluteValues(
   withTable = TRUE,
   relWidths = NULL,
   digitsToRound = 2,
-  digitsToShow = 2
+  digitsToShow = 2,
+  ...
 )
 }
 \arguments{

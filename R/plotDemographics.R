@@ -941,7 +941,7 @@ validateDistributionVsDemographicsConfig <- function(configTable, scenarioList, 
 #' @return NULL (invisible).
 #' @export
 validateHistogramsConfig <- function(configTable, ...) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   referenceScenario <- NULL
 
   configTablePlots <- validateHeaders(configTable)
@@ -1125,7 +1125,7 @@ addDefaultDemographicPlots <- function(projectConfiguration,
   # initialize to avoid linter messages
   scenarioName <- outputPathIds <- outputPathId <- parameterIds <- NULL
   xScale <- pkParameter <- populationId <- NULL
-  ID <- NULL #nolint
+  ID <- NULL # nolint
 
   # this function stops in valid runs
   stopHelperFunction()

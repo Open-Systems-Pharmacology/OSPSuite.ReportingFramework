@@ -18,7 +18,7 @@ validateTimeProfilesConfig(
 
 \item{scenarioResults}{A list with simulated scenario results.}
 
-\item{...}{argumnets passed to ospsuite.plots::plotTimeprofile}
+\item{...}{arguments passed to ospsuite.plots::plotTimeprofile}
 }
 \description{
 Validation of config table for time profiles plots

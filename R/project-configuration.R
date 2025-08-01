@@ -57,7 +57,6 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
     },
     #' @description Read configuration from file
     .read_config = function(file_path) { # nolint
-      #path <- private$.clean_path(file_path)
       path <- fs::path_abs(file_path)
       # Update private values
       private$.projectConfigurationFilePath <- path

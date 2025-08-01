@@ -253,7 +253,7 @@ calculateAggregationWithCIBYGroup <- function(dt,
                                               nBootstrap = 100,
                                               valueColumn = "value",
                                               direction = "y") {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   yErrorType <- NULL
 
   # Check if the identifiers are present in the data.table

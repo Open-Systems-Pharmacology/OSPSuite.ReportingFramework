@@ -293,16 +293,13 @@ setupSimulationsForTest <- function(projectConfiguration, scenarioList, instDire
   )
 
   # Run initialized scenarios and Calculate PK Parameters
-  scenarioResults <- runAndSaveScenarios(
+  scenarioResults <- runOrLoadScenarios(
     projectConfiguration = projectConfiguration,
     scenarioList = scenarioList,
     simulationRunOptions = SimulationRunOptions$new(
       showProgress = TRUE
-    ),
-    withResimulation = FALSE
+    )
   )
-
-
 
   if (writeTestData) {
     if (!dir.exists(file.path(instDirectory, EXPORTDIR$simulationResult))) {
@@ -342,7 +339,7 @@ setupSimulationsForTest <- function(projectConfiguration, scenarioList, instDire
 setupRandomDataForTest <- function(projectConfiguration, scenarioList, scenarioResults) {
   pkParameterDT <- loadPKParameter(
     projectConfiguration = projectConfiguration,
-    scenarioList = scenarioList
+    scenarioListOrResult = scenarioList
   )
 
   ids <- addRandomPKDataToTestProject(projectConfiguration, pkParameterDT)
@@ -484,10 +481,10 @@ synchronizeDirectories <- function(fromDir, toDir, pattern = NULL) {
 #' @return Invisible NULL.
 #' @keywords internal
 addRandomPKDataToTestProject <- function(projectConfiguration, pkParameterDT) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   ratio <- iv <- po <- displayUnitPKParameter <- outputPathId <- route <- value <- NULL
   pkParameter <- population <- shiftedValue <- scenario <- individualId <- NULL
-  STUD  <- NULL #nolint
+  STUD <- NULL # nolint
 
   dataFolder <- file.path(projectConfiguration$configurationsFolder, "..", "..", "Data")
   if (!dir.exists(dataFolder)) dir.create(dataFolder)
@@ -564,8 +561,8 @@ addRandomPKDataToTestProject <- function(projectConfiguration, pkParameterDT) {
 #' @return Invisible NULL.
 #' @keywords internal
 addRandomTPDataToTestProject <- function(projectConfiguration, scenarioResult, csvfile, ids) {
-  #initialize variable to avoid messages
-  Time <- STUD <- IndividualId <- Height <- Age <- Weight <- IndividualId <- LLOQ <- NULL #nolint
+  # initialize variable to avoid messages
+  Time <- STUD <- IndividualId <- Height <- Age <- Weight <- IndividualId <- LLOQ <- NULL # nolint
   shiftedValue <- outputPathId <- dimension <- simulationValues <- dtV <- route <- NULL
 
   dataFolder <- file.path(projectConfiguration$configurationsFolder, "..", "..", "Data")
@@ -776,7 +773,7 @@ mockManualEditingsScenario <- function(projectConfiguration, modelFiles) {
 #' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
 #' @return NULL
 mockManualEditingsdisplayNames <- function(projectConfiguration) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   outputPathId <- scenario <- longName <- shortName <- NULL
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
@@ -818,7 +815,7 @@ mockManualEditingsdisplayNames <- function(projectConfiguration) {
 #' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
 #' @return NULL
 mockManualEditingsPKParameter <- function(projectConfiguration) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   displayName <- name <- outputPathIds <- NULL
 
   # add all data files which are used in the project
@@ -851,7 +848,7 @@ mockManualEditingsPKParameter <- function(projectConfiguration) {
 #' @return NULL
 mockManualEditingsDataDictionary <- function(projectConfiguration,
                                              withPK = TRUE) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   sourceColumn <- targetColumn <- NULL
 
   # add all data files which are used in the project
@@ -983,8 +980,8 @@ mockManualEditingsDataDictionary <- function(projectConfiguration,
 }
 
 mockManualEditingsIndividuals <- function(projectConfiguration, modelFiles) {
-  #initialize variable to avoid messages
-  scenario_name <- populationName <- NULL #nolint
+  # initialize variable to avoid messages
+  scenario_name <- populationName <- NULL # nolint
 
   # add all data files which are used in the project
   wb <- openxlsx::loadWorkbook(projectConfiguration$individualsFile)
@@ -1062,7 +1059,7 @@ mockManualEditingsIndividuals <- function(projectConfiguration, modelFiles) {
 #' @return NULL
 #' @keywords internal
 mockManualEditingsSensitivity <- function(projectConfiguration, sheetName) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   parameter <- NULL
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$sensitivityFile)

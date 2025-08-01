@@ -77,9 +77,6 @@ createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xl
 
   return(projectConfiguration)
 }
-
-
-
 #' Create Scenario objects from `ScenarioConfiguration` objects
 #'
 #' wrap of `esqlabsR::createDefaultProjectConfiguration()` with `esqlabsR::createScenarios()` as input
@@ -106,108 +103,135 @@ createScenarios.wrapped <- function(projectConfiguration, # nolint
 
   return(scenarioList)
 }
-
-#' Run a set of scenarios.
+#' Load existing scenario results
 #'
-#' This function uses `esqlabsR::runScenarios` to execute simulations for a list of scenarios
-#' and `esqlabsR::saveScenarioResults` to save the results. If simulation results already exist,
-#' it loads them instead of re-running the simulations.
+#' This function loads the results of specified scenarios. If the results do not exist,
+#' it returns an error.
+#'
+#' @param projectConfiguration Configuration for the project, containing paths and settings necessary
+#' to load the results.
+#' @param scenarioNames Character vector of the names of the scenarios whose results are to be loaded.
+#'
+#' @return A list containing the loaded scenario results, including population data if available.
+#' throws Error if the scenario results do not exist.
+#'
+#' @export
+loadScenarioResultsToFramework <- function(projectConfiguration, scenarioNames) {
+  outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult)
+  resultFiles <- file.path(outputFolder, paste0(scenarioNames, ".csv"))
+
+  if (!all(file.exists(resultFiles))) {
+    stop(paste(
+      "Error: Simulation results for scenario(s)",
+      paste(scenarioNames[!file.exists(resultFiles)], collapse = ", "),
+      "do not exist."
+    ))
+  }
+
+  scenarioResults <- list()
+
+  for (sc in scenarioNames) {
+    writeToLog(type = "Info", msg = paste("Load simulation result of", sc))
+
+    scenarioResult <- esqlabsR::loadScenarioResults(
+      scenarioNames = sc,
+      resultsFolder = outputFolder
+    )[[1]]
+
+    # Load population if it exists
+    popFile <- file.path(outputFolder, paste0(sc, "_population.csv"))
+    if (file.exists(popFile)) {
+      scenarioResult[["population"]] <- ospsuite::loadPopulation(popFile)
+    }
+
+    scenarioResults[[sc]] <- scenarioResult
+  }
+
+  return(scenarioResults)
+}
+#' Run and save scenarios
+#'
+#' This function simulates a list of scenarios and saves the results.
+#' If results already exist for a scenario, it will overwrite them based on the provided options.
 #'
 #' @param projectConfiguration Configuration for the project, containing paths and settings necessary
 #' to run the simulations and save the results.
-#'
 #' @param scenarioList Named list of Scenario objects to be simulated.
-#'
 #' @param simulationRunOptions Object of type SimulationRunOptions that will be passed to simulation runs.
 #' If `NULL`, default options are used.
+#' @param ... Additional arguments passed to `esqlabsR::saveScenarioResults`.
 #'
-#' @param withResimulation A logical value indicating whether to re-run simulations for scenarios
-#' even if results already exist. If `TRUE`, existing results will be overwritten.
-#' If `FALSE` and simulation results already exist for a scenario,
-#' the function will load those results instead of running the simulation.
-#'
-#' @param... Additional arguments passed to `esqlabsR::saveScenarioResults`.
-#'
-#' @return A list containing the simulation results for each scenario that was run or reloaded.
+#' @return A list containing the simulation results for each scenario that was run.
 #'
 #' @examples
 #' \dontrun{
 #' runAndSaveScenarios(
 #'   projectConfiguration = myProjectConfig,
 #'   scenarioList = myScenarioList,
-#'   simulationRunOptions = myRunOptions,
-#'   withResimulation = FALSE
+#'   simulationRunOptions = myRunOptions
 #' )
 #' }
 #'
 #' @export
-runAndSaveScenarios <- function(projectConfiguration,
-                                scenarioList,
-                                simulationRunOptions = NULL,
-                                withResimulation = TRUE,
-                                ...) { # nolint
-  # initialize to avoid linter messages
-  scenarioName <- pKParameter <- NULL
-
+runAndSaveScenarios <- function(projectConfiguration, scenarioList, simulationRunOptions = NULL, ...) {
   outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult)
-  outputFolderPK <- file.path(projectConfiguration$outputFolder, EXPORTDIR$pKAnalysisResults)
 
   scenarioResults <- list()
-  dtScenarios <- getScenarioDefinitions(wbScenarios = projectConfiguration$scenariosFile)
 
   for (sc in names(scenarioList)) {
-    if (file.exists(file.path(outputFolder, paste0(sc, ".csv"))) &
-      !withResimulation) {
-      writeToLog(type = "Info", msg = paste("Load simulation result of", sc))
+    writeToLog(type = "Info", msg = paste("Start simulation of", sc))
 
-      scenarioResults[sc] <- esqlabsR::loadScenarioResults(
-        scenarioNames = sc,
-        resultsFolder = file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult)
-      )
+    # Make sure custom params are not again overwritten by population
+    scenarioList[[sc]] <- setCustomParamsToPopulation(scenarioList[[sc]])
 
-      # add population
-      popFile <- file.path(outputFolder, paste0(sc, "_population.csv"))
-      if (file.exists(popFile)) {
-        scenarioResults[[sc]][["population"]] <- ospsuite::loadPopulation(popFile)
-      }
+    scenarioResults[sc] <- esqlabsR::runScenarios(
+      scenarios = scenarioList[sc],
+      simulationRunOptions = simulationRunOptions
+    )
+
+    # Set scenario name as simulation name
+    scenarioResults[[sc]]$simulation$set("Name", sc)
+
+    esqlabsR::saveScenarioResults(
+      simulatedScenariosResults = scenarioResults[sc],
+      projectConfiguration = projectConfiguration,
+      outputFolder = outputFolder,
+      ...
+    )
+  }
+  calculatePKParameterForScenarios(projectConfiguration, scenarioResults)
+
+  return(invisible(scenarioResults))
+}
+
+#' Run or load scenarios
+#'
+#' This function checks if the simulation results for scenarios already exist.
+#' If they do, it loads them; otherwise, it runs the scenarios and saves the results.
+#'
+#' @param projectConfiguration Configuration for the project, containing paths and settings necessary
+#' to run the simulations and load the results.
+#' @param scenarioList Named list of Scenario objects to be managed.
+#' @param simulationRunOptions Object of type SimulationRunOptions that will be passed to simulation runs.
+#' If `NULL`, default options are used.
+#' @param ... Additional arguments passed to `runAndSaveScenarios`.
+#'
+#' @return A list containing the simulation results for each scenario that was loaded or run.
+#'
+#' @export
+runOrLoadScenarios <- function(projectConfiguration, scenarioList, simulationRunOptions = NULL, ...) {
+  scenarioResults <- list()
+
+  for (sc in names(scenarioList)) {
+    if (file.exists(file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult, paste0(sc, ".csv")))) {
+      scenarioResults[sc] <- loadScenarioResultsToFramework(projectConfiguration, sc)
     } else {
-      writeToLog(type = "Info", msg = paste("Start simulation of", sc))
-
-      # make sure custom params are not again overwritten by population
-      scenarioList[[sc]] <- setCustomParamsToPopulation(scenarioList[[sc]])
-
-      scenarioResults[sc] <- esqlabsR::runScenarios(
-        scenarios = scenarioList[sc],
-        simulationRunOptions = simulationRunOptions
-      )
-
-      # set scenarioname as simulation name
-      scenarioResults[[sc]]$simulation$set("Name", sc)
-
-      esqlabsR::saveScenarioResults(
-        simulatedScenariosResults = scenarioResults[sc],
-        projectConfiguration = projectConfiguration,
-        outputFolder = outputFolder,
-        ...
-      )
-    }
-
-    if (!file.exists(file.path(outputFolderPK, paste0(sc, ".csv"))) |
-      withResimulation) {
-      pkParameterSheets <- dtScenarios[scenarioName == sc & !is.na(pKParameter)]$pKParameter
-      if (length(pkParameterSheets) > 0) {
-        calculatePKParameter(projectConfiguration,
-          scenarioResult = scenarioResults[[sc]],
-          pkParameterSheets = pkParameterSheets,
-          scenarioName = sc
-        )
-      }
+      scenarioResults[sc] <- runAndSaveScenarios(projectConfiguration, scenarioList[sc], simulationRunOptions, ...)
     }
   }
 
   return(invisible(scenarioResults))
 }
-
 #' Add user defined variability on parameters to a population from an excel file.
 #'
 #' @param population Object of type `Population`

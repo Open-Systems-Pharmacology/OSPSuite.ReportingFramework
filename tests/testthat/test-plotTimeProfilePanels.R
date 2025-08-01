@@ -315,12 +315,12 @@ test_that("QC functionality", {
       plotNames = c("Individuals_withData"),
       inputs = list(
         scenarioResults = scenarioResultsInd,
-        dataObserved = dataObserved[group == '1234_adults_iv'],
+        dataObserved = dataObserved[group == "1234_adults_iv"],
         checkForUnusedData = TRUE
       )
     )
 
-  unusedSubjects <- plotList$unusedDataRows$subjectId %>%  unique()
+  unusedSubjects <- plotList$unusedDataRows$subjectId %>% unique()
   expect_length(unusedSubjects, n = 3)
   expect_contains(unusedSubjects, expected = "50")
 
@@ -333,13 +333,13 @@ test_that("QC functionality", {
       plotNames = c("Individuals_withData"),
       inputs = list(
         scenarioResults = scenarioResultsInd,
-        dataObserved = dataObserved[group == '1234_adults_iv' &
-                                      subjectId %in% c("13","30","41")],
+        dataObserved = dataObserved[group == "1234_adults_iv" &
+          subjectId %in% c("13", "30", "41")],
         checkForUnusedData = TRUE
       )
     )
 
-  unusedSubjects <- plotList$unusedDataRows$subjectId %>%  unique()
+  unusedSubjects <- plotList$unusedDataRows$subjectId %>% unique()
   expect_equal(nrow(plotList$unusedDataRows), expected = 0)
 
   plotList <-
@@ -350,8 +350,8 @@ test_that("QC functionality", {
       plotNames = c("Individuals_withData"),
       inputs = list(
         scenarioResults = scenarioResultsInd,
-        dataObserved = dataObserved[group == '1234_adults_iv' &
-                                      subjectId %in% c("13","30","41")],
+        dataObserved = dataObserved[group == "1234_adults_iv" &
+          subjectId %in% c("13", "30", "41")],
         checkForUnusedData = TRUE
       )
     )

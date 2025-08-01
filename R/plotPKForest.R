@@ -263,7 +263,7 @@ plotPKForestAggregatedAbsoluteValues <- function(projectConfiguration,
                                                  withTable = TRUE,
                                                  relWidths = NULL,
                                                  digitsToRound = 2,
-                                                 digitsToShow = 2,...) {
+                                                 digitsToShow = 2, ...) {
   validateCommonInputs(
     pkParameterDT = pkParameterDT,
     pkParameterObserved = pkParameterObserved,
@@ -307,7 +307,7 @@ plotPKForestPointEstimateOfAbsoluteValues <- function(projectConfiguration,
                                                       withTable = TRUE,
                                                       relWidths = NULL,
                                                       digitsToRound = 2,
-                                                      digitsToShow = 2,...) {
+                                                      digitsToShow = 2, ...) {
   ratioMode <- "none"
 
   validateCommonInputs(
@@ -364,7 +364,7 @@ plotPKForestAggregatedRatios <- function(projectConfiguration,
                                          withTable = TRUE,
                                          relWidths = NULL,
                                          digitsToRound = 2,
-                                         digitsToShow = 2,...) {
+                                         digitsToShow = 2, ...) {
   validateCommonInputs(
     pkParameterDT = pkParameterDT,
     pkParameterObserved = pkParameterObserved,
@@ -931,7 +931,7 @@ getTableLabelsForPKForest <- function(plotData) {
 #'   in a ggplot call to create forest plots.
 #'   @keywords internal
 getMappingForForestPlots <- function(plotData, columnList) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   xErrorValues <- xMax <- xMin <- dataType <- xValues <- NULL
 
   mapping <- aes(x = xValues, y = get(columnList$yColumn), groupby = dataType)

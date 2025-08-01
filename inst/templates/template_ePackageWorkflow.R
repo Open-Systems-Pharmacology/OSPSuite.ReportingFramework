@@ -18,8 +18,7 @@ logCatch(expr = {
   # build structure needed for workflow and import input files for workflow
   projectConfiguration <- importWorkflow(projectDirectory = projectDirectory,
                                         wfIdentifier = XXwfIdentifierXX,
-                                        ePackageFolder = '.',
-                                        configurationsFolder = XXconfigurationsFolderXX)
+                                        ePackageFolder = '.')
 XXCHUNKstart-pathsCustomfunctionsXXX
 XXCHUNKend-pathsCustomfunctionsXXX
 XXCHUNKstart-dataObservedXXX
@@ -54,8 +53,8 @@ XXCHUNKend-runPlotXXX
     # Cleanup all temporary files
     for (folder in c(projectConfiguration$populationsFolder,
                      projectConfiguration$modelFolder,
-                     projectConfiguration$dataFolder,
-                     projectConfiguration$configurationsFolder)){
+                     projectConfiguration$configurationsFolder,
+                     projectConfiguration$addOns$dataFileFolder)){
       if (dir.exists(folder))
         unlink(folder, recursive = TRUE)
     }

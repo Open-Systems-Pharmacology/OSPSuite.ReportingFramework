@@ -81,16 +81,14 @@ test_that("writeTableToLog function works as expected", {
 })
 
 test_that("logCatch executes finallyExpression", {
-
   # Call logCatch with an expression that generates an error
-  expect_warning(expect_error(logCatch(expr = stop("This is an error"), finallyExpression = warning('finallyExecuted'))))
+  expect_warning(expect_error(logCatch(expr = stop("This is an error"), finallyExpression = warning("finallyExecuted"))))
 
 
   # Call logCatch with a successful expression
   expect_warning(logCatch(expr = {
     a <- 1
   }, finallyExpression = {
-    warning('finallyExecuted')
+    warning("finallyExecuted")
   }))
-
 })

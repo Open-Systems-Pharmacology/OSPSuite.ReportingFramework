@@ -72,14 +72,15 @@ scenarioList <-
   createScenarios.wrapped(projectConfiguration = projectConfiguration,
                           scenarioNames = NULL)
 
-scenarioResults <- runAndSaveScenarios(projectConfiguration = projectConfiguration,
+# Run or load initialized scenarios and Calculate PK Parameters
+scenarioResults <- runOrLoadScenarios(projectConfiguration = projectConfiguration,
                                        scenarioList = scenarioList,
                                        simulationRunOptions = SimulationRunOptions$new(
                                          numberOfCores = NULL,
                                          checkForNegativeValues = NULL,
                                          showProgress = TRUE
-                                       ),
-                                       withResimulation = FALSE)
+                                       )
+)
 
 # 4) SensitivityAnalysis -----------------------------------------------------
 #  (see vignette xxx)

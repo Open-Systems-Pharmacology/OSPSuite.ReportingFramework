@@ -17,8 +17,6 @@ Manages the creation and writing of .Rmd files for plots.
 
 \item{\code{configTable}}{Configuration table.}
 
-\item{\code{dataObserved}}{Observed data used for this Rmd.}
-
 \item{\code{plotFunction}}{Function to create plot list.}
 
 \item{\code{validateConfigTableFunction}}{Function to read config table.}

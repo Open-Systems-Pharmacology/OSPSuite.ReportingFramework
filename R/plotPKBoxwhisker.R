@@ -443,7 +443,7 @@ createBaseBoxWhisker <- function(plotDataPk, yScale, asRatio, colorVector, onePl
 #' @keywords internal
 validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   # initialize to avoid linter messages
-  plot_Ratio <- plot_Absolute <-NULL # nolint
+  plot_Ratio <- plot_Absolute <- NULL # nolint
   referenceScenario <- NULL
 
   configTablePlots <- validateHeaders(configTable)

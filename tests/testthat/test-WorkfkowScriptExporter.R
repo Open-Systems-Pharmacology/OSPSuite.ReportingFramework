@@ -1,6 +1,9 @@
 # testProject was set up by setup.R
 # that provides projectConfiguration,scenarioList
 
+currentDir <- getwd()
+configurationsFolderOld <- projectConfiguration$configurationsFolder
+
 # Unit tests
 test_that("WorkflowScriptExporter initializes correctly", {
   exporter <- WorkflowScriptExporter$new(
@@ -178,15 +181,37 @@ test_that("addEPackageConfigurationForScenarioNames populates configurationSheet
   exporter <- WorkflowScriptExporter$new(
     projectConfiguration = projectConfiguration,
     wfIdentifier = 1,
-    scenarioNames = names(scenarioList)[seq(1)],
-    workflowRmd = NULL
+    scenarioNames = c(
+      names(scenarioListInd)[c(1, 2)],
+      names(scenarioList)[1]
+    ),
+    workflowRmd = NULL,
+    fileNameReplacements = c("1234_adults.csv", "study1234_adults.csv")
   )
 
   # Call the function to populate configuration sheets
   exporter$addEPackageConfigurationForScenarioNames(projectConfiguration)
 
   # Check that configuration sheets are populated
-  expect_true("PKParameter" %in% names(exporter$configurationSheets))
+  expect_contains(
+    names(exporter$configurationSheets),
+    c("ProjectConfiguration", "Scenarios", "Individuals", "ModelParameters", "Applications")
+  )
+
+  expect_contains(
+    names(exporter$configurationSheets$Scenarios),
+    c("Scenarios", "OutputPaths", "PKParameter")
+  )
+
+  expect_length(exporter$configurationSheets$Scenarios$Scenarios$rows, 3)
+  expect_length(exporter$configurationSheets$Scenarios$OutputPaths$rows, 3)
+
+  expect_contains(
+    names(exporter$configurationSheets$Individuals),
+    c("IndividualBiometrics")
+  )
+
+  expect_length(exporter$configurationSheets$Individuals$IndividualBiometrics$rows, 1)
 
   cleanupElectronicPackage(projectConfiguration)
 })
@@ -262,7 +287,7 @@ test_that("Full workflow test for WorkflowScriptExporter simulation export", {
 
   cleanupElectronicPackage(projectConfiguration)
 })
-test_that("extractCodeChunks extracts default code chunks correctly", {
+test_that("extracts default code chunks correctly", {
   # Step 1: Initialize the WorkflowScriptExporter with a valid workflowRmd
   workflowRmdPath <- system.file("templates", "template_ePackageWorkflow.Rmd",
     package = "ospsuite.reportingframework"
@@ -313,7 +338,7 @@ test_that("evaluates default chuncs correctly", {
   cleanupElectronicPackage(projectConfiguration)
 })
 
-test_that("evaluates custom functions correctly", {
+test_that("evaluates chunk for custom functions correctly", {
   workflowRmdPath <- file.path(
     projectConfiguration$configurationsFolder,
     "myWorkflow.Rmd"
@@ -369,7 +394,7 @@ test_that("evaluates custom functions correctly", {
   cleanupElectronicPackage(projectConfiguration)
 })
 
-test_that("throw error for invalidcustom functions", {
+test_that("throw error for invalid custom functions", {
   # create mock rmd
   workflowRmdPath <- file.path(
     projectConfiguration$configurationsFolder,
@@ -437,7 +462,7 @@ test_that("throw error for invalidcustom functions", {
   cleanupElectronicPackage(projectConfiguration)
 })
 
-test_that("evaluates scenarioNames chunk correctly", {
+test_that("evaluates chunk for scenarioNames chunk correctly", {
   workflowRmdPath <- file.path(
     projectConfiguration$configurationsFolder,
     "myWorkflow.Rmd"
@@ -525,7 +550,7 @@ test_that("throw error for invalid or missing scenarioNames chunk", {
   cleanupElectronicPackage(projectConfiguration)
 })
 
-test_that("evaluates dataImport chunk correctly", {
+test_that("evaluates chunk for dataImport chunk correctly", {
   workflowRmdPath <- file.path(
     projectConfiguration$configurationsFolder,
     "myWorkflow.Rmd"
@@ -560,7 +585,11 @@ test_that("evaluates dataImport chunk correctly", {
 
   suppressWarnings(exporter$evalCodeChunks())
 
-  expect_length(exporter$configurationSheets$DataImportConfiguration, n = 4)
+  expect_contains(
+    names(exporter$configurationSheets$DataImportConfiguration),
+    c("DataFiles", "tpIndividualDictionary", "tpAggregatedDictionary", "pkAggregatedDictionary")
+  )
+  expect_length(exporter$configurationSheets$DataImportConfiguration$DataFiles$rows, n = 4)
 
   expect_length(list.files(file.path(projectConfiguration$addOns$electronicPackageFolder),
     pattern = "data*"
@@ -612,6 +641,55 @@ test_that("throws error for invalid dataImport", {
 
   expect_error(exporter$evalCodeChunks())
 
+
+  cleanupElectronicPackage(projectConfiguration)
+})
+
+test_that("extract sheetNames for plotting correctly", {
+  workflowRmdPath <- file.path(
+    projectConfiguration$configurationsFolder,
+    "myWorkflow.Rmd"
+  )
+
+  generateMockRmd(projectConfiguration,
+    codeChunkList = list(
+      "runPlot-copy" = c(
+        "runPlot(",
+        'nameOfplotFunction = "plotTimeProfiles",',
+        'configTableSheet = "TimeProfiles",',
+        'configTableSheet="PKParameter_Boxplot",',
+        "configTableSheet='PKParameter_Forest',",
+        'someTextBeforeconfigTableSheet = "Histograms"someTextBehind,',
+        'configTableSheet = "DistributionVsRange"configTableSheet = "SensitivityPlots",',
+        "projectConfiguration = projectConfiguration,",
+        'plotNames = c("Individuals_withData", "Individuals_withoutData"),',
+        "inputs = list(",
+        "scenarioResults = scenarioResultsInd,",
+        "dataObserved = dataObserved",
+        ")"
+      )
+    ),
+    filename = workflowRmdPath
+  )
+
+  exporter <- WorkflowScriptExporter$new(
+    projectConfiguration = projectConfiguration,
+    wfIdentifier = 1,
+    workflowRmd = workflowRmdPath
+  )
+
+  exporter$extractCodeChunks()
+
+  exporter$addEPackageConfigurationForPlotting(projectConfiguration = projectConfiguration)
+
+  expect_contains(names(exporter$configurationSheets), "Plots")
+  expect_equal(
+    names(exporter$configurationSheets$Plots),
+    c(
+      "TimeProfiles", "PKParameter_Boxplot", "PKParameter_Forest", "Histograms",
+      "DistributionVsRange", "SensitivityPlots", "TimeRange"
+    )
+  )
 
   cleanupElectronicPackage(projectConfiguration)
 })
@@ -698,15 +776,14 @@ test_that("Full workflow test for WorkflowScriptExporter TLF export", {
   cleanupElectronicPackage(projectConfiguration)
 })
 
-test_that("Import workflow generated by WorkflowScriptExporter Simulation export", {
-
-  wfIdentifier = 3
+test_that("Import workflow generated by WorkflowScriptExporter Simulation export in new directory", {
+  wfIdentifier <- 3
 
   expect_warning(exportSimulationWorkflowToEPackage(
     projectConfiguration = projectConfiguration,
     wfIdentifier = wfIdentifier,
     scenarioNames = names(scenarioListInd)[seq(1, 2)],
-    fileNameReplacements = c('1234_adults.csv','study1234_adults.csv')
+    fileNameReplacements = c("1234_adults.csv", "study1234_adults.csv")
   ))
 
   projectDirectory <-
@@ -716,20 +793,179 @@ test_that("Import workflow generated by WorkflowScriptExporter Simulation export
           projectConfiguration$configurationsFolder,
           projectConfiguration$outputFolder
         )),
-        '..','testproject2'
+        "..", "testproject2"
       )
     )
 
-  configurationDirectory <- getConfigDirectoryForWorkflow(projectDirectory,wfIdentifier)
+  dir.create(projectDirectory)
 
   projectConfigurationNew <-
-    importWorkflow(projectDirectory = projectDirectory,
-                   wfIdentifier = wfIdentifier,
-                   ePackageFolder = projectConfiguration$addOns$electronicPackageFolder,
-                   configurationDirectory = configurationDirectory
-                    )
+    suppressMessages(importWorkflow(
+      projectDirectory = projectDirectory,
+      wfIdentifier = wfIdentifier,
+      ePackageFolder = projectConfiguration$addOns$electronicPackageFolder
+    ))
+
+  expect_true(dir.exists(projectConfigurationNew$configurationsFolder))
+  expect_true(dir.exists(projectConfigurationNew$modelFolder))
 
   cleanupElectronicPackage(projectConfiguration)
-
 })
 
+test_that("Run workflow generated by WorkflowScriptExporter Simulation export", {
+  wfIdentifier <- 4
+  projectConfiguration$outputFolder <- file.path("..", "..", paste0("outputs_w", wfIdentifier))
+
+  expect_warning(exportSimulationWorkflowToEPackage(
+    projectConfiguration = projectConfiguration,
+    wfIdentifier = wfIdentifier,
+    scenarioNames = names(scenarioListInd)[seq(1, 2)],
+    fileNameReplacements = c("1234_adults.csv", "study1234_adults.csv")
+  ))
+
+  wfFile <- file.path(
+    projectConfiguration$addOns$electronicPackageFolder,
+    paste0("w", wfIdentifier, "_workflow_r.txt")
+  )
+
+  expect_true(file.exists(wfFile))
+
+  currentDir <- getwd()
+  configurationsFolderOld <- projectConfiguration$configurationsFolder
+  setwd(projectConfiguration$addOns$electronicPackageFolder)
+
+  source(wfFile)
+
+  # results are there
+  suppressWarnings(
+    expect_length(list.files(file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult)), 5)
+  )
+
+
+  projectConfiguration <-
+    ospsuite.reportingframework::createProjectConfiguration(
+      path = fs::path_rel(file.path(configurationsFolderOld, "ProjectConfiguration.xlsx"))
+    )
+  setwd(currentDir)
+  cleanupElectronicPackage(projectConfiguration)
+})
+
+test_that("Run workflow generated by WorkflowScriptExporter TLF export", {
+
+  # make sure to start with correct projectConfiguration
+  projectConfiguration <-
+    ospsuite.reportingframework::createProjectConfiguration(
+      path = fs::path_rel(file.path(configurationsFolderOld, "ProjectConfiguration.xlsx"))
+    )
+  setwd(currentDir)
+
+
+  wfIdentifier <- 5
+  scenarioNames <- names(scenarioList)[seq(1, 2)]
+  testSheetName <- "TimeProfilesTestWorkflow"
+
+  # build plottingsheet
+  dataObserved <- readObservedDataByDictionary(
+    projectConfiguration = projectConfiguration,
+    dataClassType = "timeprofile",
+    fileIds = NULL
+  )
+
+  addDefaultConfigForTimeProfilePlots(
+    projectConfiguration = projectConfiguration,
+    sheetName = testSheetName,
+    dataObserved = dataObserved,
+    overwrite = TRUE
+  )
+
+  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+  dtPlot <- xlsxReadData(wb = wb, sheetName = testSheetName, skipDescriptionRow = FALSE)
+  dtPlot <- dtPlot[c(1, which(dtPlot$scenario %in% scenarioNames))]
+  dtPlot[scenario %in% scenarioNames, `:=`(
+    outputPathIds = "(CYP3A4total, CYP3A4Liver)",
+    timeRange_firstApplication = NA,
+    timeRange_lastApplication = NA,
+    dataGroupIds = "1234_adults_iv"
+  )]
+  xlsxWriteData(wb = wb, sheetName = testSheetName, dt = dtPlot)
+  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+
+  # build mock RMD
+  workflowRmdPath <- file.path(
+    projectConfiguration$configurationsFolder,
+    "myWorkflow.Rmd"
+  )
+
+  generateMockRmd(projectConfiguration,
+    codeChunkList = list(
+      "scenarioNames-eval" = c(
+        paste0(
+          "scenarioNames = c('",
+          paste(scenarioNames, collapse = "', '"),
+          "')"
+        )
+      ),
+      "dataObserved-eval" = c(
+        "dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,",
+        "                                            dataClassType = 'timeprofile',",
+        "                                            fileIds = NULL)"
+      ),
+      "runPlot-copy" = c(
+        "runPlot(",
+        '  nameOfplotFunction = "plotTimeProfiles",',
+        paste0('  configTableSheet = "', testSheetName, '",'),
+        "  projectConfiguration = projectConfiguration,",
+        "  inputs = list(",
+        "    scenarioResults = scenarioResults,",
+        "    dataObserved = dataObserved",
+        "))"
+      )
+    ),
+    filename = workflowRmdPath
+  )
+
+  # export workflow
+  suppressWarnings(exportTLFWorkflowToEPackage(
+    projectConfiguration = projectConfiguration,
+    wfIdentifier = wfIdentifier,
+    workflowRmd = workflowRmdPath,
+    fileNameReplacements = c("1234_adults.csv", "study1234_adults.csv")
+  ))
+
+  wfFile <- file.path(
+    projectConfiguration$addOns$electronicPackageFolder,
+    paste0("w", wfIdentifier, "_workflow_r.txt")
+  )
+
+  lines <- readLines(wfFile)
+  lines <- gsub("cleanUp <- TRUE", "cleanUp <- FALSE", lines)
+  writeLines(lines, wfFile)
+
+  currentDir <- getwd()
+  configurationsFolderOld <- projectConfiguration$configurationsFolder
+  setwd(projectConfiguration$addOns$electronicPackageFolder)
+
+  source(wfFile)
+
+  # results are there
+  suppressWarnings(
+    expect_length(list.files(
+      path = file.path(projectConfiguration$outputFolder, testSheetName),
+      pattern = ".png$"
+    ), 4)
+  )
+  suppressWarnings(
+    expect_true(file.exists(path = file.path(
+      projectConfiguration$outputFolder,
+      paste0(testSheetName, ".Rmd")
+    )))
+  )
+
+  projectConfiguration <-
+    ospsuite.reportingframework::createProjectConfiguration(
+      path = fs::path_rel(file.path(configurationsFolderOld, "ProjectConfiguration.xlsx"))
+    )
+  setwd(currentDir)
+  cleanupElectronicPackage(projectConfiguration)
+})
+#

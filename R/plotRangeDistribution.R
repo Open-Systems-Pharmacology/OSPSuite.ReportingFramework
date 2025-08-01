@@ -41,9 +41,9 @@ plotRangeDistribution <- function(data,
                                   statFun = NULL,
                                   percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1, 3, 5)],
                                   yscale = "linear",
-                                  yscale.args = list(), #nolint
+                                  yscale.args = list(), # nolint
                                   xscale = "linear",
-                                  xscale.args = list(), #nolint
+                                  xscale.args = list(), # nolint
                                   geomRibbonAttributes = getDefaultGeomAttributes("Ribbon"),
                                   geomLineAttributes = getDefaultGeomAttributes("Line"),
                                   identifier = "IndividualId") {

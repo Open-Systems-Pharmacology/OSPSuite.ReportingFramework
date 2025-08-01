@@ -73,102 +73,178 @@ runPlot <- function(projectConfiguration,
                     suppressExport = FALSE,
                     digitsOfSignificanceCSVDisplay = 3,
                     inputs = list()) {
-
   loadConfigTableEnvironment(projectConfiguration)
 
-  suppressExport <- suppressExport ||
-    !is.null(plotNames) ||
-    inputs$checkForUnusedData
+  suppressExport <- shouldSuppressExport(suppressExport, plotNames, inputs)
 
-  # Initialize PlotManager for RMD generation
-  rmdPlotManager <- RmdPlotManager$new(
+  rmdPlotManager <- initializePlotManager(
+    projectConfiguration = projectConfiguration,
+    rmdName = rmdName,
+    nameOfplotFunction = nameOfplotFunction,
+    digitsOfSignificanceCSVDisplay = digitsOfSignificanceCSVDisplay,
+    suppressExport = suppressExport
+  )
+
+  configTable <- readConfigTableForPlot(
+    projectConfiguration = projectConfiguration,
+    sheetName = configTableSheet,
+    validateConfigTableFunction = rmdPlotManager$validateConfigTableFunction,
+    plotNames = plotNames,
+    inputs = inputs
+  )
+
+  if (is.null(configTable)) {
+    plotList <- handleNoConfigTable(
+      rmdPlotManager = rmdPlotManager,
+      projectConfiguration = projectConfiguration,
+      inputs = inputs
+    )
+  } else {
+    plotList <- handleConfigTable(
+      rmdPlotManager = rmdPlotManager,
+      configTable = configTable,
+      projectConfiguration = projectConfiguration,
+      inputs = inputs,
+      suppressExport = suppressExport
+    )
+  }
+
+  rmdPlotManager$writeRmd()
+  return(invisible(plotList))
+}
+#' Determine if Export Should be Suppressed
+#'
+#' This helper function checks whether the export of the Rmd file should be suppressed based on user-defined conditions.
+#'
+#' @param suppressExport A logical value indicating the current state of export suppression.
+#' @param plotNames A character vector of plot names to filter which plots should be generated. Default is NULL.
+#' @param inputs A list of additional inputs that may contain parameters influencing the export behavior.
+#'
+#' @return A logical value indicating whether the export should be suppressed (TRUE) or not (FALSE).
+#'
+#' @keywords internal
+shouldSuppressExport <- function(suppressExport, plotNames, inputs) {
+  return(suppressExport || !is.null(plotNames) || (!is.null(inputs$checkForUnusedData) && inputs$checkForUnusedData))
+}
+#' Initialize the Plot Manager
+#'
+#' This helper function creates an instance of the RmdPlotManager for managing Rmd file generation and plot exports.
+#'
+#' @param projectConfiguration A ProjectConfiguration object containing the project configuration settings.
+#' @param rmdName A character string specifying the name of the resulting Rmd and the subfolder where results will be saved.
+#' @param nameOfplotFunction The name of the plot function as character, indicating which plotting function to use.
+#' @param digitsOfSignificanceCSVDisplay digits Of significance used for the display in the .Rmd for tables, which are exported as .csv
+#' @param suppressExport A logical value indicating whether to suppress the export of the Rmd file.
+#'
+#' @return An RmdPlotManager object initialized with the specified parameters.
+#'
+#' @details
+#' The `initializePlotManager` function sets up the RmdPlotManager, which is responsible for generating the Rmd files
+#' and managing the export of plots. It takes various parameters to configure the manager according to user needs.
+#'
+#' @keywords internal
+initializePlotManager <- function(projectConfiguration, rmdName, nameOfplotFunction, digitsOfSignificanceCSVDisplay, suppressExport) {
+  return(RmdPlotManager$new(
     rmdfolder = file.path(projectConfiguration$outputFolder),
     suppressExport = suppressExport,
     rmdName = rmdName,
     nameOfplotFunction = nameOfplotFunction,
     digitsOfSignificance = digitsOfSignificanceCSVDisplay
+  ))
+}
+#' Handle Case with No Configuration Table
+#'
+#' This helper function processes the plotfunctions where no configuration table is provided,
+#' generating plots based on default settings and exporting them.
+#'
+#' @param rmdPlotManager An RmdPlotManager object responsible for managing Rmd file generation and plot exports.
+#' @param projectConfiguration A ProjectConfiguration object containing the project configuration settings.
+#' @param inputs A list of additional inputs for the plot function.
+#' @param suppressExport A logical value indicating whether to suppress the export of the Rmd file.
+#'
+#' @return NULL
+#'
+#' @keywords internal
+handleNoConfigTable <- function(rmdPlotManager, projectConfiguration, inputs, suppressExport) {
+  plotList <- do.call(
+    what = rmdPlotManager$plotFunction,
+    args = c(list(projectConfiguration = projectConfiguration, configTable = NULL), inputs)
   )
-  # read configuration table
-  configTable <-
-    readConfigTableForPlot(
-      projectConfiguration = projectConfiguration,
-      sheetName = configTableSheet,
-      validateConfigTableFunction = rmdPlotManager$validateConfigTableFunction,
-      plotNames = plotNames,
-      inputs = inputs)
-
-  if (is.null(configTable)) {
-    plotList <- do.call(
-      what = rmdPlotManager$plotFunction,
-      args = c(
-        list(
-          projectConfiguration = projectConfiguration,
-          configTable = NULL
-        ),
-        inputs
-      )
-    )
+  if (!suppressExport) {
     rmdPlotManager$exportPlotList(plotList)
-  } else {
-    plotList <- list()
-    iRow <- 1
-    levelLines <- which(!is.na(configTable$level))
-    while (iRow <= nrow(configTable)) {
-      if (!is.na(configTable$level[iRow])) {
-        # Add section headers
-        rmdPlotManager$addHeader(configTable$header[iRow], level = configTable$level[iRow])
-        iRow <- iRow + 1
-      } else {
-        # Execute plot section
-        iEndX <- utils::head(which(levelLines > iRow), 1)
-        iEnd <- if (length(iEndX) == 0) nrow(configTable) else levelLines[iEndX] - 1
+    return(list())
+  }
+  return(plotList)
+}
+#' Handle Configuration Table Processing
+#'
+#' This helper function processes the configuration table, generating plots according to the specified configurations.
+#'
+#' @param rmdPlotManager An RmdPlotManager object responsible for managing Rmd file generation and plot exports.
+#' @param configTable A data frame containing the configuration settings for the plots.
+#' @param projectConfiguration A ProjectConfiguration object containing the project configuration settings.
+#' @param inputs A list of additional inputs for the plot function.
+#' @param suppressExport A logical value indicating whether to suppress the export of the Rmd file.
+#'
+#' @return NULL
+#'
+#' @keywords internal
+handleConfigTable <- function(rmdPlotManager, configTable, projectConfiguration, inputs, suppressExport) {
+  plotList <- list()
+  iRow <- 1
+  levelLines <- which(!is.na(configTable$level))
+  while (iRow <= nrow(configTable)) {
+    if (!is.na(configTable$level[iRow])) {
+      # Add section headers
+      rmdPlotManager$addHeader(configTable$header[iRow], level = configTable$level[iRow])
+      iRow <- iRow + 1
+    } else {
+      # Execute plot section
+      iEndX <- utils::head(which(levelLines > iRow), 1)
+      iEnd <- if (length(iEndX) == 0) nrow(configTable) else levelLines[iEndX] - 1
 
-        for (onePlotConfig in split(configTable[seq(iRow, iEnd)], by = "plotName")) {
-          tryCatch(
-            {
-              plotListiRow <- do.call(
-                what = rmdPlotManager$plotFunction,
-                args = c(
-                  list(
-                    projectConfiguration = projectConfiguration,
-                    onePlotConfig = onePlotConfig
-                  ),
-                  inputs
-                )
+      for (onePlotConfig in split(configTable[seq(iRow, iEnd)], by = "plotName")) {
+        tryCatch(
+          {
+            plotListiRow <- do.call(
+              what = rmdPlotManager$plotFunction,
+              args = c(
+                list(
+                  projectConfiguration = projectConfiguration,
+                  onePlotConfig = onePlotConfig
+                ),
+                inputs
               )
-              if (suppressExport){
-                if ('unusedDataRows' %in% names(plotList) &&
-                    !is.null(plotListiRow[['unusedDataRows']])){
-                  plotList[['unusedDataRows']] <-
-                    rbind(plotList[['unusedDataRows']],
-                          plotListiRow[['unusedDataRows']],
-                          fill = TRUE) %>%
-                    unique()
-                  plotListiRow[['unusedDataRows']] <- NULL
-                }
-                plotList <- c(plotList, plotListiRow)
-              } else {
-                rmdPlotManager$exportPlotList(plotListiRow)
+            )
+            if (suppressExport) {
+              if ("unusedDataRows" %in% names(plotList) &&
+                !is.null(plotListiRow[["unusedDataRows"]])) {
+                plotList[["unusedDataRows"]] <-
+                  rbind(plotList[["unusedDataRows"]],
+                    plotListiRow[["unusedDataRows"]],
+                    fill = TRUE
+                  ) %>%
+                  unique()
+                plotListiRow[["unusedDataRows"]] <- NULL
               }
-            },
-            error = function(err) {
-              if (!getOption("OSPSuite.RF.skipFailingPlots", default = FALSE)) {
-                stop(err)
-              } else {
-                warning(paste0("Error during creation of plot: '", onePlotConfig$plotName[1], "':\n ", conditionMessage(err)))
-              }
+              plotList <- c(plotList, plotListiRow)
+            } else {
+              rmdPlotManager$exportPlotList(plotListiRow)
             }
-          )
-        }
-        iRow <- iEnd + 1
+          },
+          error = function(err) {
+            if (!getOption("OSPSuite.RF.skipFailingPlots", default = FALSE)) {
+              stop(err)
+            } else {
+              warning(paste0("Error during creation of plot: '", onePlotConfig$plotName[1], "':\n ", conditionMessage(err)))
+            }
+          }
+        )
       }
+      iRow <- iEnd + 1
     }
   }
-
-  # create rmd
-  rmdPlotManager$writeRmd()
-
-  return(invisible(plotList))
+  return(plotList)
 }
 #' Read Configuration Table for Plot
 #'
@@ -1038,7 +1114,7 @@ validateDataGroupIdsForPlot <- function() {
 #'
 #' @keywords internal
 validateColorLegend <- function(dt) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   colorLegend <- NULL
 
   dt <- dt[!grep("\\|", colorLegend)]

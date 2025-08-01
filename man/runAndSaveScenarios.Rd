@@ -2,13 +2,12 @@
 % Please edit documentation in R/esqlabsR_bracket.R
 \name{runAndSaveScenarios}
 \alias{runAndSaveScenarios}
-\title{Run a set of scenarios.}
+\title{Run and save scenarios}
 \usage{
 runAndSaveScenarios(
   projectConfiguration,
   scenarioList,
   simulationRunOptions = NULL,
-  withResimulation = TRUE,
   ...
 )
 }
@@ -21,28 +20,21 @@ to run the simulations and save the results.}
 \item{simulationRunOptions}{Object of type SimulationRunOptions that will be passed to simulation runs.
 If `NULL`, default options are used.}
 
-\item{withResimulation}{A logical value indicating whether to re-run simulations for scenarios
-even if results already exist. If `TRUE`, existing results will be overwritten.
-If `FALSE` and simulation results already exist for a scenario,
-the function will load those results instead of running the simulation.}
-
 \item{...}{Additional arguments passed to `esqlabsR::saveScenarioResults`.}
 }
 \value{
-A list containing the simulation results for each scenario that was run or reloaded.
+A list containing the simulation results for each scenario that was run.
 }
 \description{
-This function uses `esqlabsR::runScenarios` to execute simulations for a list of scenarios
-and `esqlabsR::saveScenarioResults` to save the results. If simulation results already exist,
-it loads them instead of re-running the simulations.
+This function simulates a list of scenarios and saves the results.
+If results already exist for a scenario, it will overwrite them based on the provided options.
 }
 \examples{
 \dontrun{
 runAndSaveScenarios(
   projectConfiguration = myProjectConfig,
   scenarioList = myScenarioList,
-  simulationRunOptions = myRunOptions,
-  withResimulation = FALSE
+  simulationRunOptions = myRunOptions
 )
 }
 

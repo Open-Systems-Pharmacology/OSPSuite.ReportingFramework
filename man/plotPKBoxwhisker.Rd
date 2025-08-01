@@ -42,8 +42,8 @@ number of facets and plot dimensions.}
 customization.}
 }
 \value{
-A list of generated plots. Each plot is an object that can be rendered
-  using ggplot2 or similar plotting systems. The list may include both absolute
+A list of ggplot objects representing the generated plots. Each plot
+  can be rendered using ggplot2 or similar plotting systems. The list may include both absolute
   and ratio plots depending on the configuration.
 }
 \description{
@@ -54,7 +54,8 @@ scenarios, allowing for comparison of absolute values and ratios.
 }
 \details{
 The function supports customization options such as specifying the angle of the
-x-axis text, color schemes, and facet aspect ratios.
+x-axis text, color schemes, and facet aspect ratios. The expected structure of
+the `pkParameterDT` data.table should include relevant PK parameter columns.
 }
 \examples{
 # Example usage of plotPKBoxwhisker

@@ -85,7 +85,7 @@ The `workflowExport` script will execute the chunks `observedTimeprofiles` and `
 If the resulting variable `dataObserved` (rsp `dataObservedPK`) is NULL, the chunks will be ignored. Please use `dataObserved <- NULL` (rsp `dataObservedPK <- NULL`) if you do not have any data.
 
 If it is not null, the data.table `dataObserved` (rsp `dataObservedPK`) as it is after chunk evaluation is exported as .csv files to the electronic package and the configuration tables for the data import are exported accordingly. 
-The original code of the chunks is not included in the final workflow script, which enables you to add your own code, e.g., additional filtering. The final workflow script will import the necessary data with the function `readObservedDataByDictionary` without furtehr adjustment.
+The original code of the chunks is not included in the final workflow script, which enables you to add your own code, e.g., additional filtering. The final workflow script will import the necessary data with the function `readObservedDataByDictionary` without further adjustment. `spreadData is set to FALSE` so configuration tables are not touched.
 
 Please ensure the resulting `dataObserved` and `dataObservedPK` contains only the data needed for the workflow in the appropriate format. You can use the function `validateObservedData` to check the format. Some checks are suggested in the chunks ending with "-QC". These chunks are ignored by the export script. See also the chunk "check-usedData-QC" in the section "Create output plots".
 
@@ -96,7 +96,8 @@ dataObserved <- NULL
 # use code below if you have observed time profile data
 dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,
                                              dataClassType = 'timeprofile',
-                                             fileIds = NULL)
+                                             fileIds = NULL,
+                                             spreadData = FALSE)
 
 # here you can add your own code to manipulate and clean the data if necessary
 
@@ -127,7 +128,8 @@ dataObservedPK <- NULL
 # use code below you have observed pk-Parameter data
 dataObservedPK <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,
                                              dataClassType = 'pkParameter',
-                                             fileIds = NULL)
+                                             fileIds = NULL,
+                                             spreadData = FALSE)
 # here you can add your own code to manipulate and clean the data if necessary
 ```
 
@@ -152,17 +154,12 @@ scenarioNames = c()
 
 ```{r loadResults-copy}
 
-# initialze scenario list
-scenarioList <-
-  createScenarios.wrapped(projectConfiguration = projectConfiguration,
+# It is assumed that all required scenarios were simulated in previous workflow started in same project directory.
+scenarioResults <- loadScenarioResultsToFramework(projectConfiguration = projectConfiguration,
                           scenarioNames = scenarioNames)
 
-# It is assumed that all required scenarios were simulated in previous workflow started in same project directory.
-scenarioResults <- loadScenarioResults(projectConfiguration = projectConfiguration,
-                                       scenarioList = scenarioList)
-
 pkParameterDT <- loadPKParameter(projectConfiguration = projectConfiguration,
-                                 scenarioList = scenarioList)
+                                 scenarioListOrResult = scenarioResults)
 ```
 
 ##  Create output plots 

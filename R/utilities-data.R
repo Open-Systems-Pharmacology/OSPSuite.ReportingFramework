@@ -218,7 +218,7 @@ validateObservedData <- function(dataDT, dataClassType) {
   }
 
   validateDataUnit <- function(colIdentifier, colUnit) {
-    #initialize variable to avoid messages
+    # initialize variable to avoid messages
     nUnit <- NULL
 
     unitCounts <- dataDT[, .(nUnit = uniqueN(get(colUnit))), by = colIdentifier]

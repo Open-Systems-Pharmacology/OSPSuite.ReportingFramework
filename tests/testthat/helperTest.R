@@ -16,7 +16,7 @@ setupTestDirectoryForTests <- function() {
 }
 
 mockManualEditingsPlotPkForestTest <- function(projectConfiguration) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   plotName <- scenario <- NULL
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
@@ -72,7 +72,7 @@ mockManualEditingsPlotPkForestTest <- function(projectConfiguration) {
 
 # adjust configtables in project directory
 mockManualEditingsPlotBoxwhsikerTest <- function(projectConfiguration) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   plotName <- referenceScenario <- scenario <- NULL
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
@@ -111,7 +111,7 @@ mockManualEditingsPlotBoxwhsikerTest <- function(projectConfiguration) {
 
 
 mockManualEditingsPlotDemographicsTest <- function(projectConfiguration) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   colorLegend <- referenceScenario <- scenarios <- scenario <- plotName <- NULL
 
   # prepare configtable
@@ -184,7 +184,7 @@ mockManualEditingsPlotDemographicsTest <- function(projectConfiguration) {
 mockManualEditingsPlotSensitivityTest <- function(projectConfiguration,
                                                   sensitivityScenario,
                                                   sensitivitySheet) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   plotName <- NULL
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
@@ -221,9 +221,9 @@ mockManualEditingsPlotSensitivityTest <- function(projectConfiguration,
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
 }
 mockManualEditingsPlotTimeProfileTest <- function(projectConfiguration) {
-  #initialize variable to avoid messages
+  # initialize variable to avoid messages
   plotName <- scenario <- individualIds <- NULL
-  timeRange_h0_6 <- timeRange_h6_24 <- NULL #nolint used with tags
+  timeRange_h0_6 <- timeRange_h6_24 <- NULL # nolint used with tags
 
   sheetName <- "TimeProfileTest"
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)

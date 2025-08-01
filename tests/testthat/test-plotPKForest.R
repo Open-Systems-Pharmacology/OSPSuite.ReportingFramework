@@ -1,7 +1,7 @@
 # testProject was set up by setup.R
 pkParameterDT <- loadPKParameter(
   projectConfiguration = projectConfiguration,
-  scenarioList = scenarioList
+  scenarioListOrResult = scenarioList
 )
 dataObservedPK <- suppressMessages(suppressWarnings(readObservedDataByDictionary(
   projectConfiguration = projectConfiguration,

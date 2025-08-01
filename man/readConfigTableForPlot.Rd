@@ -5,6 +5,7 @@
 \title{Read Configuration Table for Plot}
 \usage{
 readConfigTableForPlot(
+  projectConfiguration,
   sheetName,
   validateConfigTableFunction,
   inputs,
@@ -12,6 +13,8 @@ readConfigTableForPlot(
 )
 }
 \arguments{
+\item{projectConfiguration}{A ProjectConfiguration object}
+
 \item{sheetName}{A character string specifying the name of the sheet to read from the Excel file.
 If NULL, the function returns NULL.}
 

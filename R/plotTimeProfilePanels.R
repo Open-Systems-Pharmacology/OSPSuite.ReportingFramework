@@ -223,7 +223,7 @@ plotTimeProfiles <- function(projectConfiguration,
     if (plotData$hasObservedData()) {
       plotList[["unusedDataRows"]] <-
         dataObserved[!(.Id %in%
-        plotData$data[dataType == "observed"][[".Id"]])]
+          plotData$data[dataType == "observed"][[".Id"]])]
     }
   }
 
@@ -1081,7 +1081,7 @@ validateOutputPathIdFormat <- function(configTablePlots, column = "outputPathIds
 validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
   # avoid warning for global variable
   dataGroupIds <- individualIds <- scenario <- referenceScenario <- NULL
-  plot_TimeProfiles <- NULL #nolint
+  plot_TimeProfiles <- NULL # nolint
 
   popScenarios <- scenarioResults[unlist(lapply(
     scenarioResults,

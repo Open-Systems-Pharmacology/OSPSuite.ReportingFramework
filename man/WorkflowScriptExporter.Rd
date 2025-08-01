@@ -37,6 +37,7 @@ Manages the export of an ePackage workflow.
 \item \href{#method-WorkflowScriptExporter-new}{\code{WorkflowScriptExporter$new()}}
 \item \href{#method-WorkflowScriptExporter-extractCodeChunks}{\code{WorkflowScriptExporter$extractCodeChunks()}}
 \item \href{#method-WorkflowScriptExporter-evalCodeChunks}{\code{WorkflowScriptExporter$evalCodeChunks()}}
+\item \href{#method-WorkflowScriptExporter-addEPackageConfigurationForPlotting}{\code{WorkflowScriptExporter$addEPackageConfigurationForPlotting()}}
 \item \href{#method-WorkflowScriptExporter-exportWorkflowText}{\code{WorkflowScriptExporter$exportWorkflowText()}}
 \item \href{#method-WorkflowScriptExporter-addEPackageInputfilesForScenarioNames}{\code{WorkflowScriptExporter$addEPackageInputfilesForScenarioNames()}}
 \item \href{#method-WorkflowScriptExporter-addEPackageConfigurationForScenarioNames}{\code{WorkflowScriptExporter$addEPackageConfigurationForScenarioNames()}}
@@ -115,6 +116,28 @@ scenario names, and data import.
 Invisible NULL. The function does not return any value but performs evaluations that update the
         internal state of the `WorkflowScriptExporter` object. If successful, the function will complete
         without errors; otherwise, it will raise an informative error if any evaluation fails.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-WorkflowScriptExporter-addEPackageConfigurationForPlotting"></a>}}
+\if{latex}{\out{\hypertarget{method-WorkflowScriptExporter-addEPackageConfigurationForPlotting}{}}}
+\subsection{Method \code{addEPackageConfigurationForPlotting()}}{
+Add referenced plotting sheets to Configuration
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{WorkflowScriptExporter$addEPackageConfigurationForPlotting(
+  projectConfiguration
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{projectConfiguration}}{An object of class projectConfiguration containing information like paths.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+Invisible NULL.
 }
 }
 \if{html}{\out{<hr>}}

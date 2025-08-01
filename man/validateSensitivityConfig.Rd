@@ -2,19 +2,20 @@
 % Please edit documentation in R/plotSensitivity.R
 \name{validateSensitivityConfig}
 \alias{validateSensitivityConfig}
-\title{Read Sensitivity Configuration Table}
+\title{Validate Sensitivity Configuration Table}
 \usage{
 validateSensitivityConfig(configTable, ...)
 }
 \arguments{
-\item{sheetName}{A string indicating the name of the sheet to read from the project configuration file.}
+\item{configTable}{A data.table containing the configuration for sensitivity analysis.}
 
-\item{projectConfiguration}{A list containing project configuration settings, including file paths and parameters.}
+\item{...}{Additional arguments passed to other functions.}
 }
 \value{
 A validated data frame containing the configuration table for sensitivity plots.
 }
 \description{
-Reads the sensitivity configuration table from the specified sheet and validates its contents.
+This function checks the headers of the configuration table, validates output IDs and data group IDs for plotting,
+and ensures the configuration adheres to specified criteria. It also checks for file existence in the output folder.
 }
 \keyword{internal}

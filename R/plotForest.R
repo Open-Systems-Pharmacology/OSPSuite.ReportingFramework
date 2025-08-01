@@ -20,15 +20,15 @@
 #' @export
 plotForest <- function(plotData,
                        mapping = aes(
-                         y = y, #nolint
-                         x = x, #nolint
-                         groupby = dataType #nolint
+                         y = y, # nolint
+                         x = x, # nolint
+                         groupby = dataType # nolint
                        ),
                        xLabel,
                        yFacetColumns = NULL,
                        xFacetColumn = NULL,
                        xscale = c("linear", "log"),
-                       xscale.args = list(), #nolint
+                       xscale.args = list(), # nolint
                        groupAesthetics = c("color", "fill", "shape"),
                        tableColumns = c("yValues", "yErrorValues"),
                        tableLabels = c("M", "Variance"),
@@ -115,7 +115,7 @@ plotForest <- function(plotData,
 createPlotObject <- function(plotData,
                              mapping,
                              xscale,
-                             xscale.args, #nolint
+                             xscale.args, # nolint
                              xLabel,
                              groupAesthetics,
                              yFacetColumns,
@@ -211,8 +211,8 @@ createPlotObject <- function(plotData,
 #' @return A combined ggplot object containing both the plot and the table.
 #' @keywords internal
 createTableData <- function(plotData, tableColumns, tableLabels) {
-  #initialize variable to avoid messages
-  .value <- .valueType <- NULL #nolint
+  # initialize variable to avoid messages
+  .value <- .valueType <- NULL # nolint
 
   tableData <- melt(plotData,
     measure.vars = tableColumns,
@@ -242,8 +242,8 @@ createTableData <- function(plotData, tableColumns, tableLabels) {
 #' @return A ggplot object representing the table.
 #' @keywords internal
 createTableObject <- function(tableData, mapping, digitsToRound, digitsToShow, yFacetColumns) {
-  #initialize variable to avoid messages
-  .value <- .valueType <- NULL #nolint
+  # initialize variable to avoid messages
+  .value <- .valueType <- NULL # nolint
 
   nTypes <- tryCatch(
     {
