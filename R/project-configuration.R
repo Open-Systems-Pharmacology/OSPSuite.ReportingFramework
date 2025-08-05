@@ -89,8 +89,8 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
     },
     #' Print
     #' @description print prints a summary of the Project Configuration.
-    print = function() {
-      super$print()
+    print = function(className = TRUE) {
+      super$print(className = className)
 
       ospsuite.utils::ospPrintItems(
         x = private$.projectConfigurationDataAddOns,
