@@ -75,11 +75,17 @@ displayed values.}
 A list containing the generated plot objects.
 }
 \description{
-This is one of a group of functions which generates PK forest plots for pharmacokinetic (PK) parameters, providing visualizations
+This is one of a group of functions which generates PK forest plots for
+pharmacokinetic (PK) parameters or population parameter, providing visualizations
 that can include absolute values or ratios, along with options for displaying variance
 or point estimates. These functions allow for the comparison of simulated and observed
 PK parameter data across different scenarios, aiding in the interpretation of variability
 and uncertainty in the estimates.
+
+The aggregation of data can be customized using the `aggregationFlag` parameter, which
+allows for options such as "GeometricStdDev", "ArithmeticStdDev", "Percentiles", and
+"Custom" functions for calculating summary statistics.
+
 
 Available functions are:
 
@@ -91,22 +97,34 @@ Available functions are:
 }
 }
 \details{
-For the ratio calculation, the function distinguishes between two cases:
-
+The function distinguishes between two cases for ratio calculations:
 
 \describe{
   \item{Case 1:}{If the scenarios being compared are based on the \strong{same populations}
   (same `PopulationId` in scenario configuration), the plots will show summary statistics of
   individual ratios.}
   \item{Case 2:}{If the scenarios are based on \strong{different populations}, the plots
-  will display the ratio of summary statistics. This ratio is only available for \code{plotPKForestPointEstimateOfRatios}}
+  will display the ratio of summary statistics. This ratio is only available for
+  \code{plotPKForestPointEstimateOfRatios}}
 }
 
-To support the creation of the configuration table a support function \code{addDefaultConfigForPKForestPlots} is available
+The uncertainty in estimates is calculated using a bootstrapping approach. A unique seed
+is set for each combination of scenario, reference scenario (if available), output path ID,
+and PK parameter identifier to ensure reproducibility. The number of bootstrap samples is
+defined by the `nBootstrap` parameter, and the confidence intervals are determined using
+the `confLevel` parameter (e.g., 0.9 for 90% confidence).
 
 For the bootstrapping process, a unique seed is set for each combination of scenario, referenceScenario (if available),
 outputPathId, and PKParameter identifier. This ensures that results are consistent when a specific
 combination is used in different plots and that they are reproducible.
+
+A precision check is implemented to ensure that the calculated values meet a specified
+threshold. If the precision is sufficient, point estimates are displayed without  confidence interval bounds,
+otherwise a message is logged to indicate that the required precision was not achieved and figures are provided with a watermark
+
+
+To support the creation of the configuration table a support function
+\code{addDefaultConfigForPKForestPlots} is available
 }
 \seealso{
 \code{\link{plotPKForestAggregatedAbsoluteValues}}, \code{\link{plotPKForestPointEstimateOfAbsoluteValues}},

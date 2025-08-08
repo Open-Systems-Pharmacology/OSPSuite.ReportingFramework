@@ -2,19 +2,21 @@
 % Please edit documentation in R/utilities-pkParameter.R
 \name{addUserDefinedParameters}
 \alias{addUserDefinedParameters}
-\title{Add User Defined Parameters}
+\title{Add User-Defined PK Parameters to OSP-Suite}
 \usage{
 addUserDefinedParameters(userdefinedParameters, dtUserdefPKParameter)
 }
 \arguments{
-\item{userdefinedParameters}{A vector of user-defined PK parameter names.}
+\item{userdefinedParameters}{A vector of user-defined PK parameter names to be added.}
 
-\item{dtUserdefPKParameter}{A data frame of user-defined PK parameters.}
+\item{dtUserdefPKParameter}{A data frame containing definitions for user-defined PK parameters.}
 }
 \value{
-NULL (invisible).
+NULL. The function updates the OSPSuite environment and does not return a value.
 throws Error if user-defined parameters are not defined or are not unique.
 }
 \description{
-Adds user-defined PK parameters to the OSPSuite based on the provided definitions.
+This function adds user-defined pharmacokinetic (PK) parameters to OSP-Suite
+based on the provided definitions. It checks for uniqueness and existence
+of parameters before adding them.
 }

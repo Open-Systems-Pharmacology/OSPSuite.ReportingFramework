@@ -20,20 +20,20 @@ plotTimeProfiles(
 )
 }
 \arguments{
-\item{projectConfiguration}{An object of class ProjectConfiguration containing the project settings,
+\item{projectConfiguration}{An object of class `ProjectConfiguration` containing project settings,
 including file paths and scenario definitions. This is essential for the function to access the necessary data.}
 
-\item{dataObserved}{A data.table or DataCombined object containing the observed data to be plotted.}
+\item{dataObserved}{A `data.table` (formatted as produced by `readObservedDataByDictionary`)
+or `DataCombined` object containing the observed data to be plotted.}
 
-\item{scenarioResults}{A list with simulated scenario results.}
+\item{scenarioResults}{A list containing simulated scenario results.}
 
-\item{nMaxFacetRows}{An integer specifying the maximum number of facet rows (default is 4)
-used for all facet types.}
+\item{nMaxFacetRows}{An integer specifying the maximum number of facet rows (default is 4).}
 
 \item{facetAspectRatio}{A numeric value specifying the aspect ratio for the facets (default is 0.5).}
 
 \item{aggregationFlag}{A character vector indicating the type of aggregation function to use
-for simulated data. Options include "GeometricStdDev" (Default), "ArithmeticStdDev", "Percentiles",
+for simulated data. Options include "GeometricStdDev" (default), "ArithmeticStdDev", "Percentiles",
 and "Custom".}
 
 \item{percentiles}{A numeric vector of percentiles to consider if the aggregation method is set
@@ -43,58 +43,54 @@ to "Percentiles" (default is c(5, 50, 95)).}
 A custom function should take a numeric vector `y` as input and return a list containing:
 
 - `yValues`: The aggregated value (e.g., mean).
-
-- `yMin`: The lower value of the aggregated data, (e.g. mean - sd).
-
-- `yMax`: The upper value of the aggregated data, (e.g. mean + sd).
-
+- `yMin`: The lower value of the aggregated data (e.g., mean - sd).
+- `yMax`: The upper value of the aggregated data (e.g., mean + sd).
 - `yErrorType`: A string indicating the type of error associated with the aggregation,
-it is used in plot legends and captions. It must be a concatenation of the descriptor of yValues and the descriptor of yMin - yMax range
-separated by "|" (e.g., "mean | standard deviation" or "median | 5th - 95th percentile").}
+it is used in plot legends and captions. It must be a concatenation of the descriptor of `yValues`
+and the descriptor of `yMin - yMax` range separated by "|" (e.g., "mean | standard deviation"
+or "median | 5th - 95th percentile").}
 
-\item{checkForUnusedData}{A boolean, This variable is used to QC the data usage. If TRUE plotList contains an additional entry unusedData.}
+\item{checkForUnusedData}{A boolean indicating whether to perform quality control on data usage.
+If TRUE, `plotList` contains an additional entry `unusedData`.}
 
 \item{referenceScaleVector}{A named list that configures colors for the display of
-reference scenarios. The names msut be consistent with the labes defined in the config table column
-colorLegend. First entry corresponds to aesthetic 'color', second entry to aesthetic 'fill',
+reference scenarios. The names must be consistent with the labels defined in the config table column
+`colorLegend`. The first entry corresponds to aesthetic 'color', and the second entry to aesthetic 'fill'.
 
+Example:
 referenceScaleVector = list(
   Simulation = c('blue', 'lightblue'),
   Reference = c('darkred', 'red')
 )
-# default is list()}
+# Default is list()}
 
-\item{...}{arguments passed to ospsuite.plots::plotTimeprofile}
+\item{...}{Additional arguments passed to `ospsuite.plots::plotTimeprofile`.}
 
-\item{configTableSheet}{The name of the sheet in the Excel plot configuration file that defines
-the plot settings.}
-
-\item{subfolder}{A character string specifying the subfolder within the output directory where
-the plots will be saved. Default is name of configTableSheet}
-
-\item{nFacetColumns}{An integer specifying the maximum number of facet columns (default is 2)
-used for the facet type "by Order".}
+\item{nFacetColumns}{An integer specifying the maximum number of facet columns (default is 2).}
 }
 \value{
-Generates time profile plots and saves them to the specified output directory.
-The function does not return any value.
+A list of generated time profile plots
 }
 \description{
-The `plotTimeProfilePanels` function creates a series of time profile plots as facet panels
-from the provided observed data. This function is designed to visualize complex time-dependent
+The `plotTimeProfiles` function creates a series of time profile plots as facet panels
+from the provided simulated and observed data. This function is designed to visualize complex time-dependent
 data by allowing for multiple plots organized in a user-defined layout.
 }
 \details{
-This function is particularly useful for researchers who need to visualize
-concentration-time profiles of various scenarios, compare predicted versus observed data,
-and analyze residuals cohesively. For more detailed information, please refer to the
-accompanying vignettes:
-- **TimeProfilePlots**
-- **Time Profile Plotting Tutorial**
-
 The function primarily focuses on simulated scenarios, with each panel displaying the
-result of one scenario. Plots containing more than one scenario or only observed data are not
-supported.
+result of one scenario, or one scenario versus a reference scenario.
+Plots containing more than one scenario or only observed data are not supported.
+
+The function is intended to be used in combination with the `runPlot` function.
+See the vignette `Plot and Report Generation` for more details.
+
+There exists a helper function `addDefaultConfigForTimeProfilePlots` which is a helpful utility designed to
+streamline the process of setting up your Excel configuration sheet for time profile plots.
+This function automatically populates a new sheet with default values that you can
+customize according to your needs.
+
+There is a tutorial for this function with many examples
+in the accompanying vignette: `Time Profile Plotting Tutorial`.
 }
 \examples{
 \dontrun{
@@ -116,30 +112,42 @@ referenceScaleVector <- list(
   "Adult population" = c(NA, NA)
 )
 
-# The scenario would be labeled as 'Pediatric population', with aesthetic color as dark blue ("#3182BDFF") and
-# aesthetic fill as light blue ("#6BAED6FF").
-# The reference scenario would be labeled 'Adult population', with both aesthetic color and fill as 'grey'.
+# The scenario would be labeled as 'Pediatric population', using the default colors with aesthetic
+# color dark blue ("#3182BDFF") and aesthetic fill as light blue ("#6BAED6FF").
+# The reference scenario would be labeled 'Adult population', with both aesthetic color and fill
+# as 'grey'.
 
 # Example of using the aggregationFlag parameter "Custom"
-plotTimeProfilePanels(
-  projectConfiguration = myProjectConfig,
-  configTableSheet = "PlotSettings",
-  dataObserved = myObservedData,
-  scenarioResults = myScenarioResults,
-  aggregationFlag = c("Custom"),
-  customFunction = function(y) {
-    list(yValues = mean(y), yMin = mean(y) - sd(y), yMax = mean(y) + sd(y), yErrorType = "mean | standard deviation")
-  }
+plotList <- runPlot(
+  nameOfplotFunction = "plotTimeProfiles",
+  configTableSheet = "myTimeProfile",
+  projectConfiguration = projectConfiguration,
+  suppressExport = TRUE,
+  inputs = list(
+    scenarioResults = scenarioResults,
+    dataObserved = dataObserved,
+    aggregationFlag = c("Custom"),
+    customFunction = function(y) {
+      list(yValues = mean(y),
+           yMin = mean(y) - sd(y),
+           yMax = mean(y) + sd(y),
+           yErrorType = "mean | standard deviation")
+    }
+  )
 )
 
 # Example of using the aggregationFlag parameter "Percentiles"
-plotTimeProfilePanels(
-  projectConfiguration = myProjectConfig,
-  configTableSheet = "PlotSettings",
-  dataObserved = myObservedData,
-  scenarioResults = myScenarioResults,
-  aggregationFlag = c("Percentiles"),
-  percentiles = c(0.025, 0.5, 0.975)
+plotList <- runPlot(
+  nameOfplotFunction = "plotTimeProfiles",
+  configTableSheet = "myTimeProfile",
+  projectConfiguration = projectConfiguration,
+  suppressExport = TRUE,
+  inputs = list(
+    scenarioResults = scenarioResults,
+    dataObserved = observedData,
+    aggregationFlag = c("Percentiles"),
+    percentiles = c(0.025, 0.5, 0.975)
+  )
 )
 }
 

@@ -510,7 +510,7 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
     identifierCols,
     setdiff(
       getColumnsForColumnType(dt = dataDT, columnTypes = "metadata"),
-      c("compartmnt", "molecule", "organ")
+      c("compartment", "molecule", "organ")
     )
   ))
 

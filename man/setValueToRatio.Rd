@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-pkParameter.R
 \name{setValueToRatio}
 \alias{setValueToRatio}
-\title{Set Value to Ratio}
+\title{Compute the Ratio of Values Between Base and Reference Scenarios}
 \usage{
 setValueToRatio(mergedData, pkParameterDT)
 }
@@ -15,13 +15,13 @@ including scenario names, parameters, individual IDs,
 output path IDs, values, and population IDs.}
 }
 \value{
-A data.table containing the merged data with column `value`
+A data.table containing the merged data with a new column `value`
         representing the ratio of base to reference values.
 }
 \description{
-This function computes the ratio of values between base and reference scenarios
+This function calculates the ratio of values between base and reference scenarios
 for specified pharmacokinetic parameters. It merges the configuration data with
-pharmacokinetic parameter data and calculates the ratio based on the provided
-individual IDs and output path IDs.
+pharmacokinetic parameter data and computes the ratio based on individual IDs
+and output path IDs.
 }
 \keyword{internal}

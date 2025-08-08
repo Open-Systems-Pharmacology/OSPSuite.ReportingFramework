@@ -1,13 +1,9 @@
 #' Plot PK Box-and-Whisker
 #'
-#' Generates box-and-whisker plots for pharmacokinetic (PK) parameters based on
-#' a provided project configuration and plot configuration. This function creates
+#' Generates box-and-whisker plots for pharmacokinetic (PK) parameters
+#' based on a provided project configuration and plot configuration. This function creates
 #' visual representations of the distribution of PK parameters across different
 #' scenarios, allowing for comparison of absolute values and ratios.
-#'
-#' The function supports customization options such as specifying the angle of the
-#' x-axis text, color schemes, and facet aspect ratios. The expected structure of
-#' the `pkParameterDT` data.table should include relevant PK parameter columns.
 #'
 #' @param projectConfiguration A ProjectConfiguration object that contains
 #'   settings and paths relevant to the project.
@@ -29,6 +25,16 @@
 #' @return A list of ggplot objects representing the generated plots. Each plot
 #'   can be rendered using ggplot2 or similar plotting systems. The list may include both absolute
 #'   and ratio plots depending on the configuration.
+#'
+#' @details
+#' The function is intended to be used in combination with the `runPlot` function.
+#' See the vignette `Plot and Report Generation` for more details.
+#'
+#' There exists a helper function `addDefaultConfigForPKBoxwhsikerPlots` which is a helpful utility designed to
+#' streamline the process of setting up your Excel configuration sheet for box whisker plots.
+#' This function automatically populates a new sheet with default values that you can
+#' customize according to your needs.
+#'
 #'
 #' @examples
 #' # Example usage of plotPKBoxwhisker
@@ -599,16 +605,36 @@ validateExistenceOfReferenceForRatio <- function(configTablePlots, pkParameterDT
 }
 
 # support usability --------------------
-#' Add Default Configuration for PK Box-and-Whisker Plots
+#' Add Default Configuration for Box-and-Whisker Plots
 #'
-#' Adds default configurations for box-and-whisker plots to the `Plots.xlsx` configuration file.
+#' This function adds a default configuration sheet for box-and-whisker plots to the plot configuration table.
+#' It can either create a new sheet or overwrite an existing one based on the specified parameters.
 #'
-#' @param projectConfiguration A ProjectConfiguration object.
+#' @param projectConfiguration A ProjectConfiguration class object containing configuration details, including:
+#'   - `plotsFile`: A string representing the file path to the Excel workbook containing the plot configurations.
+#'
 #' @param pkParameterDT A data.table containing PK parameter data.
-#' @param sheetName Name of the sheet to create.
-#' @param overwrite Logical indicating if existing data should be overwritten.
-#' @return NULL (invisible).
+#'
+#' @param sheetName A character string specifying the name of the sheet in the plot configuration table.
+#'   Default is "PKParameter_Boxplot".
+#'
+#' @param overwrite A boolean indicating whether existing configurations should be overwritten.
+#'   Default is FALSE.
+#'
+#' @details
+#' The function retrieves scenario definitions, output path IDs, and data groups from the project configuration.
+#' It checks if the specified sheet already exists and whether to overwrite it. If not, it creates a new header
+#' and fills in the default configuration values for the time profile plots.
+#'
+#' Additionally, the function performs a validity check to ensure that it is not executed during a context
+#' where helper functions are prohibited (validRun). If such a context is detected, an error is raised to prevent execution.
+#'
+#'
+#' @return NULL This function updates the Excel workbook in place and does not return a value.
+#' It is called for its side effects.
+#'
 #' @export
+#'
 addDefaultConfigForPKBoxwhsikerPlots <- function(projectConfiguration,
                                                  pkParameterDT,
                                                  sheetName = "PKParameter_Boxplot",

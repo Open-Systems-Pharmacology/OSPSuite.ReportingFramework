@@ -4,7 +4,10 @@
 \alias{synchronizeScenariosOutputsWithPlots}
 \title{Synchronize Scenario Outputs with Plot Outputs}
 \usage{
-synchronizeScenariosOutputsWithPlots(projectConfiguration)
+synchronizeScenariosOutputsWithPlots(
+  projectConfiguration,
+  direction = c("bothways", "scenarioToPlot", "plotToScenario")
+)
 }
 \arguments{
 \item{projectConfiguration}{An object of class ProjectConfiguration containing the file paths for scenariosFile and plotsFile.}

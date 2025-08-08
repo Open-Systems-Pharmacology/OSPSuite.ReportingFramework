@@ -2,18 +2,23 @@
 % Please edit documentation in R/utilities-pkParameter.R
 \name{loadPKParameter}
 \alias{loadPKParameter}
-\title{Load PK Parameter}
+\title{Load Pharmacokinetic (PK) Parameters for Specified Scenarios}
 \usage{
-loadPKParameter(projectConfiguration, scenarioList)
+loadPKParameter(projectConfiguration, scenarioListOrResult)
 }
 \arguments{
-\item{projectConfiguration}{A list containing project configuration, including the PK parameter file.}
+\item{projectConfiguration}{A list containing project configuration settings,
+including the PK parameter file.}
 
-\item{scenarioList}{A list of scenarios for which PK parameters are to be loaded.}
+\item{scenarioListOrResult}{A named list of scenarios for which PK parameters are to be loaded.}
 }
 \value{
+A data.table containing the processed PK analyses for all specified scenarios.
+
 A data.table containing the processed PK analyses.
 }
 \description{
-This function loads PK parameters for specified scenarios based on project configuration and scenario list.
+This function loads pharmacokinetic (PK) parameters for specified scenarios
+based on project configuration and a list of scenarios. It processes each
+scenario and returns the results as a data.table.
 }

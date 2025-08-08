@@ -47,15 +47,19 @@ A list of ggplot objects representing the generated plots. Each plot
   and ratio plots depending on the configuration.
 }
 \description{
-Generates box-and-whisker plots for pharmacokinetic (PK) parameters based on
-a provided project configuration and plot configuration. This function creates
+Generates box-and-whisker plots for pharmacokinetic (PK) parameters
+based on a provided project configuration and plot configuration. This function creates
 visual representations of the distribution of PK parameters across different
 scenarios, allowing for comparison of absolute values and ratios.
 }
 \details{
-The function supports customization options such as specifying the angle of the
-x-axis text, color schemes, and facet aspect ratios. The expected structure of
-the `pkParameterDT` data.table should include relevant PK parameter columns.
+The function is intended to be used in combination with the `runPlot` function.
+See the vignette `Plot and Report Generation` for more details.
+
+There exists a helper function `addDefaultConfigForPKBoxwhsikerPlots` which is a helpful utility designed to
+streamline the process of setting up your Excel configuration sheet for box whisker plots.
+This function automatically populates a new sheet with default values that you can
+customize according to your needs.
 }
 \examples{
 # Example usage of plotPKBoxwhisker

@@ -1,28 +1,49 @@
 #' Plot Distribution vs Demographics
 #'
-#' This function generates plots comparing distributions against demographic data based on the provided configuration and data.
+#' Generates plots comparing distributions against demographic data based on the provided configuration and data.
 #'
-#' @param projectConfiguration A configuration object for the project.
-#' @param onePlotConfig A configuration for the specific plot.
-#' @param pkParameterDT A data.table containing PK parameter data (optional).
-#' @param scenarioList A list of scenarios to consider (optional).
-#' @param asStepPlot Logical indicating if the plot should be a step plot (default is TRUE).
-#' @param aggregationFlag A character vector indicating the type of aggregation function to use
-#' for simulated data. Options include "GeometricStdDev" (Default), "ArithmeticStdDev", "Percentiles",
-#' and "Custom".
-#' @param customFunction An optional custom function for aggregation. A custom function should take a numeric vector `y` as input and return a list containing:
-#' - `yValues`: The aggregated value (e.g., mean).
-#' - `yMin`: The lower value of the aggregated data (e.g., mean - sd).
-#' - `yMax`: The upper value of the aggregated data (e.g., mean + sd).
-#' - `yErrorType`: A string indicating the type of error associated with the aggregation,
-#' it is used in plot legends and captions. It must be a concatenation of the descriptor of yValues and the descriptor of yMin and yMax
-#' separated by "|" (e.g.,  "median | 5th percentile | 95th percentile").
-#' @param percentiles A numeric vector of percentiles to consider if the aggregation method is set
-#' to "Percentiles" (default is c(5, 50, 95)).
+#' @param projectConfiguration A configuration object for the project, containing necessary settings.
+#' @param onePlotConfig A configuration table for the specific plot, detailing plot parameters.
+#' @param pkParameterDT A data.table containing pharmacokinetic (PK) parameter data (optional).
+#' @param scenarioList A list of scenarios to consider for the plot (optional).
+#' @param asStepPlot Logical indicating if the plot should be rendered as a step plot (default is TRUE).
+#' @param aggregationFlag A character vector specifying the aggregation function for simulated data.
+#' Options include "GeometricStdDev" (default), "ArithmeticStdDev", "Percentiles", and "Custom".
+#' @param customFunction Optional. A custom aggregation function that accepts a numeric vector and returns a list with:
+#'   - `yValues`: The aggregated value (e.g., mean).
+#'   - `yMin`: The lower bound of the aggregated data (e.g., mean - sd).
+#'   - `yMax`: The upper bound of the aggregated data (e.g., mean + sd).
+#'   - `yErrorType`: A string indicating the error type for the aggregation, used for plot legends.
+#' @param percentiles A numeric vector of percentiles to consider if the aggregation method is set to "Percentiles" (default is c(5, 50, 95)).
 #' @param facetAspectRatio A numeric value for the aspect ratio of the facets (default is 0.5).
 #' @param colorVector A named vector for colors corresponding to scenarios (default is c(scenario = NA, referenceScenario = NA)).
-#' @param ... Additional arguments passed to plotting function ospsuite.plots::plotHistogram or for rangePlots plotRangeDistribution.
+#' @param ... Additional arguments passed to the plotting functions `ospsuite.plots::plotHistogram` or `plotRangeDistribution`.
+#'
 #' @return A list of plot objects generated based on the input configuration.
+#'
+#' @details
+#' This function is intended to be used in combination with the `runPlot` function.
+#' Refer to the vignette `Plot and Report Generation` for more details.
+#' It can be configured to plot PK parameters or population parameters, with the X-axis always displaying the population parameter.
+#'
+#' A helper function, `addDefaultConfigForDistributionsVsDemographics`, is available to streamline the setup of your Excel configuration sheet for histograms.
+#' This function automatically populates a new sheet with default values that can be customized as needed.
+#'
+#' @examples
+#' \dontrun{
+#' Example for plotting a histogram of PK-parameters of a scenario compared to a reference scenario:
+#' runPlot(
+#'   nameOfplotFunction = "plotDistributionVsDemographics",
+#'   projectConfiguration = projectConfiguration,
+#'   configTableSheet = "DistributionVsRange",
+#'   inputs = list(
+#'     scenarioList = scenarioList,
+#'     pkParameterDT = pkParameterDT,
+#'     aggregationFlag = "GeometricStdDev"
+#'   )
+#' )
+#' }
+#'
 #' @export
 plotDistributionVsDemographics <- function(projectConfiguration,
                                            onePlotConfig,
@@ -89,17 +110,44 @@ plotDistributionVsDemographics <- function(projectConfiguration,
 }
 #' Plot Histograms
 #'
-#' This function generates histogram plots based on the provided configuration and data.
+#' Generates histogram plots based on the provided configuration and data.
 #'
-#' @param projectConfiguration A configuration object for the project.
-#' @param onePlotConfig A configuration for the specific plot.
-#' @param pkParameterDT A data.table containing PK parameter data (optional).
-#' @param scenarioList A list of scenarios to consider (optional).
+#' @param projectConfiguration A configuration object for the project, containing necessary settings.
+#' @param onePlotConfig A configuration table for the specific plot, detailing plot parameters.
+#' @param pkParameterDT A data.table containing pharmacokinetic (PK) parameter data (optional).
+#' @param scenarioList A list of scenarios to consider for the plot (optional).
 #' @param facetAspectRatio A numeric value for the aspect ratio of the facets (default is 0.5).
 #' @param colorVector A named vector for colors corresponding to scenarios (default is c(scenario = NA, referenceScenario = NA)).
 #' @param nMaxFacetRows Maximum number of facet rows (default is 2).
 #' @param ... Additional arguments passed to the histogram plotting function.
 #' @return A list of histogram plot objects generated based on the input configuration.
+#'
+#' @details
+#' This function is intended to be used in combination with the `runPlot` function.
+#' Refer to the vignette `Plot and Report Generation` for more details.
+#' It can be configured to plot PK parameters or model parameters.
+#'
+#' A helper function, `addDefaultConfigForHistograms`, is available to streamline the setup of your Excel configuration sheet for histograms.
+#' This function automatically populates a new sheet with default values that can be customized as needed.
+#'
+#' @examples
+#' \dontrun{
+#' Example for plotting a histogram of PK-parameters of a scenario compared to a reference scenario:
+#' runPlot(
+#'   nameOfplotFunction = "plotHistograms",
+#'   projectConfiguration = projectConfiguration,
+#'   configTableSheet = "HistogramTest",
+#'   inputs = list(
+#'     scenarioList = scenarioList,
+#'     pkParameterDT = pkParameterDT,
+#'     colorVector = c(
+#'       "PO application" = "red",
+#'       "IV application" = "green"
+#'     )
+#'   )
+#' )
+#' }
+#'
 #' @export
 plotHistograms <- function(projectConfiguration,
                            onePlotConfig,
@@ -1062,13 +1110,32 @@ validateParameterID <- function(configTablePlots, ...) {
 # support usability --------------------
 #' Add Default Configuration for Histograms
 #'
-#' Adds default configurations for histogram plots to the `Plots.xlsx` configuration file.
+#' This function adds a default configuration sheet for histograms to the plot configuration table.
+#' It can either create a new sheet or overwrite an existing one based on the specified parameters.
 #'
-#' @param projectConfiguration A ProjectConfiguration object.
-#' @param pkParameterDT A data.table containing PK parameter data (optional).
-#' @param sheetName Name of the sheet to create (default is "Histograms").
-#' @param overwrite Logical indicating if existing data should be overwritten (default is FALSE).
-#' @return NULL (invisible).
+#' @param projectConfiguration A ProjectConfiguration class object containing configuration details, including:
+#'   - `plotsFile`: A string representing the file path to the Excel workbook containing the plot configurations.
+#'
+#' @param pkParameterDT Optional. A data object containing pkParameter.
+#'
+#' @param sheetName A character string specifying the name of the sheet in the plot configuration table.
+#'   Default is "Histograms".
+#'
+#' @param overwrite A boolean indicating whether existing configurations should be overwritten.
+#'   Default is FALSE.
+#'
+#' @details
+#' The function retrieves scenario definitions, output path IDs, and data groups from the project configuration.
+#' It checks if the specified sheet already exists and whether to overwrite it. If not, it creates a new header
+#' and fills in the default configuration values for the histograms.
+#'
+#' Additionally, the function performs a validity check to ensure that it is not executed during a context
+#' where helper functions are prohibited (validRun). If such a context is detected, an error is raised to prevent execution.
+#'
+#'
+#' @return NULL This function updates the Excel workbook in place and does not return a value.
+#' It is called for its side effects.
+#' Add Default Configuration for Histograms
 #' @export
 addDefaultConfigForHistograms <- function(projectConfiguration,
                                           pkParameterDT = NULL,
@@ -1083,19 +1150,35 @@ addDefaultConfigForHistograms <- function(projectConfiguration,
     templateSheet = "Histograms"
   )
 }
-#' Add Default Configuration for Distribution vs Demographics
+#' Add Default Configuration for for distribution vs demographics plots
 #'
-#' Adds default configurations for distribution vs demographics plots to the `Plots.xlsx` configuration file.
+#' This function adds a default configuration sheet for distribution vs demographics plots to the plot configuration table.
+#' It can either create a new sheet or overwrite an existing one based on the specified parameters.
 #'
-#' @param projectConfiguration A ProjectConfiguration object.
-#' @param pkParameterDT A data.table containing PK parameter data (optional).
-#' @param sheetName Name of the sheet to create (default is "RangePlots").
-#' @param overwrite Logical indicating if existing data should be overwritten (default is FALSE).
-#' @return NULL (invisible).
+#' @param projectConfiguration A ProjectConfiguration class object containing configuration details, including:
+#'   - `plotsFile`: A string representing the file path to the Excel workbook containing the plot configurations.
+#'
+#' @param pkParameterDT Optional. A data object containing pkParameter.
+#'
+#' @param sheetName A character string specifying the name of the sheet in the plot configuration table.
+#'   Default is "DistributionVsRange".
+#'
+#' @param overwrite A boolean indicating whether existing configurations should be overwritten.
+#'   Default is FALSE.
+#'
+#' @details
+#' The function retrieves scenario definitions, output path IDs, and data groups from the project configuration.
+#' It checks if the specified sheet already exists and whether to overwrite it. If not, it creates a new header
+#' and fills in the default configuration values for the histograms.
+#'
+#' Additionally, the function performs a validity check to ensure that it is not executed during a context
+#' where helper functions are prohibited (validRun). If such a context is detected, an error is raised to prevent execution.
+#'
+#' @return NULL This function updates the Excel workbook in place and does not return a value.
 #' @export
 addDefaultConfigForDistributionsVsDemographics <- function(projectConfiguration,
                                                            pkParameterDT = NULL,
-                                                           sheetName = "RangePlots",
+                                                           sheetName = "DistributionVsRange",
                                                            overwrite = FALSE) {
   addDefaultDemographicPlots(
     projectConfiguration = projectConfiguration,

@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
+```{r setup,echo=FALSE}
 library(ospsuite.reportingframework)
 ```
 
@@ -138,6 +138,12 @@ See the function help `? exportTLFWorkflowToEPackage` for more information.
 2. **Running TLF Workflows**
 
 Running a TLF workflow is very similar to running a simulation workflow; however, in Step 2, it will produce figures instead of simulating scenarios.
+
+### Step 4: Report Generation
+
+While the ePackage functionality ensures that all figures and tables can be reproduced consistently, the process of generating a comprehensive report that combines these elements into a Word document is not included within the workflows included in the ePackage. 
+
+To create a cohesive report, you can use the report generation functionality of this package, which will use the markdown documents produced by the ePackage. See vignette 'Plot and Report Generation' for more information
 
 
 ## Conclusion

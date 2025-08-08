@@ -2,18 +2,22 @@
 % Please edit documentation in R/utilities-pkParameter.R
 \name{calculatePKParameterForScenarios}
 \alias{calculatePKParameterForScenarios}
-\title{Calculate and load PK Parameters}
+\title{Calculate and Load Pharmacokinetic (PK) Parameters}
 \usage{
 calculatePKParameterForScenarios(projectConfiguration, scenarioResults)
 }
 \arguments{
-\item{projectConfiguration}{A list containing project configuration, including output folder and PK parameter file.}
+\item{projectConfiguration}{A list containing project configuration settings,
+including the output folder path and the PK parameter file.}
 
-\item{scenarioResults}{A list of scenario results containing simulation data.}
+\item{scenarioResults}{A named list of scenario results, each containing
+simulation data for PK analysis.}
 }
 \value{
-A data.table containing combined PK analyses for all scenarios.
+This function is called for its side effects and does not return a value.
 }
 \description{
-This function calculates pharmacokinetic (PK) parameters for given scenarios based on project configuration and results.
+This function calculates pharmacokinetic (PK) parameters for specified scenarios
+based on project configuration and simulation results. It generates output files
+for each scenario in the designated output folder.
 }

@@ -105,14 +105,14 @@ To generate these plots use plotfunction `plotPKForestAggregatedAbsoluteValues` 
 
 #### Forest plots of estimators {#forestestimator}
 
-Forest plots of estimators provide a means to compare point estimators (e.g., DDI Ratios) across different scenarios. These plots can include observed data, allowing for a direct comparison between simulated and actual outcomes. The estimators are displayed as points, with confidence intervals represented as ranges. This visualization aids in understanding the variability and reliability of the estimators.
+Forest plots of estimators provide a means to compare point estimators (e.g., DDI Ratios) across different scenarios. These plots can include observed data, allowing for a direct comparison between simulated and actual outcomes. The estimators are displayed as points, with confidence intervals represented as ranges. The confidence interval reflect the uncertainty based on the number of the simulated individuals. It reflects not the model uncertainty. 
 
 In addition to the point estimates and their confidence intervals, the precision watermark is an important feature of these plots. The precision watermark indicates whether the precision requirements for the displayed estimates have been met. 
 
 **Mechanism Behind the Precision Watermark:**
 - The precision is calculated based on the relationship between the estimated values (xValues) and their corresponding minimum (xMin) and maximum (xMax) confidence interval bounds.
 - If the calculated precision falls below a predefined threshold (e.g., 0.01), the watermark is activated, displaying a warning label such as "Outside precision requirement" on the plot. The threshold is set by the option "OSPSuite.RF.RequiredPrecisison"
-- This alert serves to inform users that the estimates may not be reliable due to insufficient sample sizes or high variability in the data, prompting them to consider re-evaluating the simulations or increasing the sample size for improved precision.
+- This alert serves to inform users that the estimates may not be reliable due to insufficient sample sizes or high variability in the data, prompting them to consider increasing the sample size for improved precision.
 
 By including the precision watermark, users are better equipped to assess the reliability of the point estimates and make informed decisions based on the visualized data.
 
@@ -123,11 +123,15 @@ as input for the `runPlot` function.
 
 Histograms display the distribution of PK parameters for different scenarios. By visualizing the frequency of parameter values, histograms provide insights into the underlying distribution shapes, such as normality or skewness, which are critical for statistical analysis and interpretation.
 
+To generate these plots use plotfunction `plotHistograms` as input for the `runPlot` function.
+
 #### Range plots {#rangeplots}
 
 Range plots illustrate the dependence of PK parameters on population parameters, such as age. Aggregated distributions are displayed per bin of population parameters, allowing for the identification of trends and patterns. Exported are the aggregated values per bin, which can be useful for further statistical analysis and reporting. Data types include both absolute values and ratios of crossover studies, providing a comprehensive view of the relationships between parameters.
 
-#### Ratio Calculation
+To generate these plots use plotfunction `plotDistributionVsDemographics` as input for the `runPlot` function.
 
-The ratio calculation distinguishes between scenarios with the same populations and those with different populations. If the scenarios being compared are based on the same populations, the plots will show summary statistics of individual ratios. In contrast, for scenarios based on different populations, the ratios are calculated using summary statistics derived from bootstrapping methods, providing a more robust estimate of variability.
+
+
+
 

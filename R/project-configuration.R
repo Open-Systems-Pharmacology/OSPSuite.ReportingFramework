@@ -89,6 +89,7 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
     },
     #' Print
     #' @description print prints a summary of the Project Configuration.
+    #' @param className Whether to print the name of the class at the beginning. default to TRUE.
     print = function(className = TRUE) {
       super$print(className = className)
 

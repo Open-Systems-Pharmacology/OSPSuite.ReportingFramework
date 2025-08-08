@@ -2,18 +2,19 @@
 % Please edit documentation in R/utilities-pkParameter.R
 \name{readUserDefinedPKParameters}
 \alias{readUserDefinedPKParameters}
-\title{Read User Defined PK Parameters}
+\title{Read User-Defined Pharmacokinetic (PK) Parameters}
 \usage{
 readUserDefinedPKParameters(file)
 }
 \arguments{
-\item{file}{The path to the Excel file containing the user-defined PK parameters.}
+\item{file}{The path to the Excel file containing user-defined PK parameters.}
 }
 \value{
-A data frame of user-defined PK parameters.
-throws Error if validation fails.
+A data frame of validated user-defined PK parameters.
+throws Error if validation fails or if required fields are missing.
 }
 \description{
-Reads user-defined pharmacokinetic (PK) parameters from an Excel file.
+This function reads user-defined pharmacokinetic (PK) parameters from an Excel
+file and validates their structure and content.
 }
 \keyword{internal}

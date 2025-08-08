@@ -2,27 +2,30 @@
 % Please edit documentation in R/utilities-pkParameter.R
 \name{addUnitFactorsToPKDefinition}
 \alias{addUnitFactorsToPKDefinition}
-\title{Process PK Parameter Definitions}
+\title{Process PK Parameter Definitions for a Scenario}
 \usage{
 addUnitFactorsToPKDefinition(
-  scenario,
+  scenarioSimulation,
   dtOutputPaths,
   dtPkAnalyses,
   dtPkParameterDefinition
 )
 }
 \arguments{
-\item{dtOutputPaths}{A data.table containing output paths.}
+\item{scenarioSimulation}{A simulation object corresponding to the scenario.}
 
-\item{dtPkAnalyses}{A data.table containing PK analyses.}
+\item{dtOutputPaths}{A data.table containing output paths relevant to the scenario.}
 
-\item{dtPkParameterDefinition}{A data.table containing PK parameter definitions.}
+\item{dtPkAnalyses}{A data.table containing PK analyses to be processed.}
 
-\item{scenarioResult}{A list containing the results of the scenario.}
+\item{dtPkParameterDefinition}{A data.table containing definitions of PK parameters.}
 }
 \value{
 A data.table containing processed PK parameter definitions for the scenario.
 }
 \description{
-This function processes the PK parameter definitions for a specific scenario, including unit conversions and output filters.
+This function processes the PK parameter definitions for a specific scenario,
+including unit conversions and output filters. It ensures that the definitions
+are aligned with the scenario outputs.
 }
+\keyword{internal}

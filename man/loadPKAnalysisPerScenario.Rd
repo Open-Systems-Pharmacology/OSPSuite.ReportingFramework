@@ -2,29 +2,29 @@
 % Please edit documentation in R/utilities-pkParameter.R
 \name{loadPKAnalysisPerScenario}
 \alias{loadPKAnalysisPerScenario}
-\title{Load or Calculate PK Analysis for a Scenario}
+\title{Load or Calculate PK Analysis for a Given Scenario}
 \usage{
 loadPKAnalysisPerScenario(
   scenarioName,
-  scenario,
+  scenarioSimulation,
   pkParameterSheets,
   projectConfiguration
 )
 }
 \arguments{
-\item{scenarioName}{The name of the scenario to process.}
+\item{scenarioName}{The name of the scenario to be processed.}
 
-\item{pkParameterSheets}{A vector with names of the sheets in the PK parameter file to read.}
+\item{scenarioSimulation}{A simulation object corresponding to the scenario.}
 
-\item{projectConfiguration}{A list containing project configuration, including the PK parameter file.}
+\item{pkParameterSheets}{A vector of sheet names from the PK parameter file to read.}
 
-\item{scenarioResult}{A list containing the results of the scenario.}
+\item{projectConfiguration}{A list containing project configuration settings,
+including the PK parameter file.}
 }
 \value{
-A data.table containing the processed PK analyses.
+A data.table containing the processed PK analyses for the specified scenario.
 }
 \description{
-This function loads PK analysis results from a CSV file .
-It also processes each specified PK parameter sheet for the scenario.
+This function loads PK analysis results from a CSV file for a specific scenario.
 }
 \keyword{internal}

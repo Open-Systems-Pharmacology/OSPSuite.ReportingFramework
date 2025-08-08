@@ -2,26 +2,25 @@
 % Please edit documentation in R/utilities-pkParameter.R
 \name{validatePKParameterDT}
 \alias{validatePKParameterDT}
-\title{Validate Pharmacokinetic Parameter Data Table}
+\title{Validate Structure and Content of PK Parameter Data Table}
 \usage{
 validatePKParameterDT(pkParameterDT)
 }
 \arguments{
 \item{pkParameterDT}{A data.table containing pharmacokinetic parameters
-with the following required columns:
-scenario, pkParameter, individualId, value,
-outputPathId, displayNamePKParameter,
+with the required columns: scenario, pkParameter,
+individualId, value, outputPathId, displayNamePKParameter,
 and displayUnitPKParameter.}
 }
 \value{
-None. The function will stop execution if validation fails,
+NULL. The function will stop execution if validation fails,
         otherwise returns invisibly.
 }
 \description{
 This function validates the structure and content of the provided
 pharmacokinetic parameter data table (`pkParameterDT`). It checks
-whether the data table has the required columns and ensures that the
-combination of `outputPathId` and `parameter` is unique with consistent
+for the presence of required columns and ensures that the combination
+of `outputPathId` and `parameter` is unique with consistent
 `displayUnitPKParameter`.
 }
 \keyword{internal}
