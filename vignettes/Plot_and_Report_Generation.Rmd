@@ -34,6 +34,23 @@ This vignette will guide you through the key functionalities of the package, inc
 
 ## Content
 
+This vignette covers the following key topics:
+
+1. **Configuration Table**: An overview of the structure and purpose of the configuration table used for plot generation. This section explains the various sheets involved, their roles, and how to properly set them up for the `runPlot` function.
+
+2. **Plot Generation with `runPlot` for Reporting**: A detailed explanation of how to use the `runPlot` function, including its parameters, the steps it performs, and an illustrative example. This section aims to provide users with a clear understanding of how to generate plots efficiently within their reporting workflows.
+
+3. **Suppressing Export of Plots**: This section describes the optional feature of suppressing output during the plot generation process, allowing users to quickly visualize plots without writing them to the file system. It also covers how to filter plots of interest for quicker development.
+
+4. **Available Plot Functions**: An overview of the various plot functions provided by the package, including their names and descriptions. This section serves as a reference for users to understand the capabilities of the package and to identify which functions to use for their specific needs.
+
+5. **Creating Custom Plot Functions**: Guidance on how to create custom plot functions tailored to specific analytical requirements. This section discusses the use of templates and the integration of custom functions within the existing reporting framework.
+
+6. **Report Generation**: Instructions on how to compile generated plots into a comprehensive report using the `mergeRmds` function to combine multiple `.Rmd` files into a single document. This section also details how to convert R Markdown files into Word documents using the `renderWord` function, highlighting key parameters and providing examples for both functions.
+
+
+
+
 ## Configuration Table
 
 The configuration for plot generation is managed through the `projectConfiguration$plotsFile`, which consists of several sheets for general configurations that should not be renamed:

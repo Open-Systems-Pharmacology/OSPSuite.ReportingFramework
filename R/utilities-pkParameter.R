@@ -1,5 +1,5 @@
 # calculate ----------
-#' Calculate and Load Pharmacokinetic (PK) Parameters
+#' Calculate  Pharmacokinetic (PK) Parameters
 #'
 #' This function calculates pharmacokinetic (PK) parameters for specified scenarios
 #' based on project configuration and simulation results. It generates output files
