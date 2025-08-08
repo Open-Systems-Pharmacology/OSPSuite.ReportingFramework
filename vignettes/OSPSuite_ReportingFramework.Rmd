@@ -70,7 +70,7 @@ You can save this option in your ".Rprofile" file. (file.path(Sys.getenv("HOME")
 
 As first step the project is initialized, that includes 
 
-- adding of  libraryies
+- adding of  libraries
 - setting of the  workflow options
 - set up of the project directory and configuration files using the project structure of `{`{esqlabsR}`}`
 - initialisation of the logfile
@@ -110,7 +110,6 @@ For more information see the **Plot Creation** vignette (vignette("Plot-Creation
 
 The package provides also a tutorial to create **Timeprofile reports** (vignette("Tutorial-timeprofiles"))
 
-The package provides 
 
 
 

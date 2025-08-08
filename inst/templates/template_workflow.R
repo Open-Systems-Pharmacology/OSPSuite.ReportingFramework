@@ -1,63 +1,58 @@
-# Purpose: Add the Purpose of the workflow
-#
+# Purpose: This script serves as a user guide for the ospsuite.reportingframework package,
+# providing examples of the various tasks that can be performed.
+# It outlines the recommended order of execution for function calls,
+# enabling users to effectively process pharmacokinetic data, export populations,
+# run simulations, conduct sensitivity analysis, and generate output plots and reports.
 
-# Typically This file is saved in <Rootdirectory>\Scripts\ReportingFramework
+
+# Typically, this file is saved in <Rootdirectory>/Scripts/ReportingFramework
 
 # Initialization  ----------------------------------------------------------
-# load libraries and source project specific code
+# Load necessary libraries and source project-specific code
 library(ospsuite.reportingframework)
 
-# set graphic
-# (see vignette(package = 'ospsuite.plots',topic = 'ospsuite_plots'))
+# Set graphic defaults
+# (see vignette(package = 'ospsuite.plots', topic = 'ospsuite_plots'))
 ospsuite.plots::setDefaults()
 theme_update(legend.position = 'top')
 options(knitr.kable.NA = '')
 
 # Set this to TRUE if you want to execute the workflow as a final valid run.
-# It then won't set watermarks to figures and does not skip failing plot generations
-# (see vignette OSPSuite_ReportingFramework)
+# (see ?setWorkflowOptions)
 setWorkflowOptions(isValidRun = FALSE)
 
 # Setup project structure -------------------------------------------------
-# creates project directory
-# (see help initProject and https://esqlabs.github.io/esqlabsR/articles/esqlabsR.html)
-# if you go with the default structure
-# this workflow file should be saved in <Rootdirectory>/Scripts/ReportingFramework,
+# Create project directory and initialize the structure
+# (see ?initProject and https://esqlabs.github.io/esqlabsR/articles/esqlabsR.html)
 initProject()
 
+# Get paths of all relevant project files and folders
+projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
+  path = file.path("ProjectConfiguration.xlsx")
+)
 
-# get paths of all relevant project files
-projectConfiguration <-
-  ospsuite.reportingframework::createProjectConfiguration(
-    path =  file.path("ProjectConfiguration.xlsx"))
-
-# start log Catch loop which catches all errors, warnins and messages in a logfile
-# (see vignette OSPSuite_ReportingFramework)
-
-# initialize log file for logCatch, has to be first call in logCatch loop
+# Initialize log file
 initLogfunction(projectConfiguration)
 
+# 1) Read Observed Data -------------------------------------------------------
+# Read observed data as data.table
+# (see vignette(package = 'ospsuite.reportingframework', topic = 'Data_import_by_dictionary'))
+dataObserved <- readObservedDataByDictionary(
+  projectConfiguration = projectConfiguration,
+  dataClassType = 'timeprofile',
+  fileIds = NULL
+)
 
-# 1) Read observedData -------------------------------------------------------
-# (see vignette(package = 'ospsuite.reportingframework',topic = 'Data_import_by_dictionary'))
-
-# read data as data.table
-dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,
-                                             dataClassType = 'timeprofile',
-                                             fileIds = NULL)
-
-# 2) Export populations -------------------------------------------------------
-# (see vignette Simulation_setup)
-
-# to export random populations de-comment lines below
+# 2) Export Populations -------------------------------------------------------
+# (see vignette(package = 'ospsuite.reportingframework', topic = 'Population'))
+# To export random populations, uncomment the lines below
 # exportRandomPopulations(
 #   projectConfiguration = projectConfiguration,
 #   populationNames = NULL,
 #   overwrite = FALSE
 # )
-#
 
-# to export virtual twin populations de-comment lines below and adjsut name of modelfile
+# To export virtual twin populations, uncomment the lines below and adjust the name of the model file
 # exportVirtualTwinPopulations(
 #   projectConfiguration = projectConfiguration,
 #   populationNames = NULL,
@@ -65,47 +60,41 @@ dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfi
 #   overwrite = FALSE
 # )
 
-
 # 3) Simulations ------------------------------------------------------
-# (see  vignette Simulation_setup)
-scenarioList <-
-  createScenarios.wrapped(projectConfiguration = projectConfiguration,
-                          scenarioNames = NULL)
-
-# Run or load initialized scenarios and Calculate PK Parameters
-scenarioResults <- runOrLoadScenarios(projectConfiguration = projectConfiguration,
-                                       scenarioList = scenarioList,
-                                       simulationRunOptions = SimulationRunOptions$new(
-                                         numberOfCores = NULL,
-                                         checkForNegativeValues = NULL,
-                                         showProgress = TRUE
-                                       )
+# Set up the scenario list
+scenarioList <- createScenarios.wrapped(
+  projectConfiguration = projectConfiguration,
+  scenarioNames = NULL
 )
 
-# 4) SensitivityAnalysis -----------------------------------------------------
-#  (see vignette xxx)
-# TODO
+# Run or load initialized scenarios and calculate PK Parameters
+scenarioResults <- runOrLoadScenarios(
+  projectConfiguration = projectConfiguration,
+  scenarioList = scenarioList,
+  simulationRunOptions = SimulationRunOptions$new(
+    numberOfCores = NULL,
+    checkForNegativeValues = NULL,
+    showProgress = TRUE
+  )
+)
+
+# Load PK Parameters
+# (see vignette(package = 'ospsuite.reportingframework', topic = 'PK-Parameter'))
+pkParameterDT <- loadPKParameter(
+  projectConfiguration = projectConfiguration,
+  scenarioListOrResult = scenarioResults
+)
+
+# 4) Sensitivity Analysis -----------------------------------------------------
+# To run a sensitivity analysis, uncomment the following lines and adjust the input variables
 # runSensitivityAnalysis(
 #   scenario = "MyScenario",
 #   configTable = projectConfiguration$SensitivityParameter
 # )
 
-
 # 5) Create Output Plots -----------------------------------------------------
-# (see vignette OSPSuite_ReportingFramework.Rmd  section  Plot Functionality)
-
-# Timeprofile Plots
-#' The `plotTimeProfiles` function creates a series of time profile plots as facet panels
-#' from the provided observed data. This function is designed to visualize complex time-dependent
-#' data by allowing for multiple plots organized in a user-defined layout.
-#'
-#' This function is particularly useful for researchers and analysts who need to visualize
-#' concentration-time profiles of various scenarios, compare predicted versus observed data,
-#' and analyze residuals cohesively. For more detailed information, please refer to the
-#' accompanying vignettes:
-#' - **TimeProfilePlots**
-#' - **Time Profile Plotting Tutorial**
-
+# (see vignette(package = 'ospsuite.reportingframework', topic = 'Plot_and_Report_Generation'))
+# Add your different plot functions below; the following is an exemplary call for the time profile plot function
 runPlot(
   nameOfplotFunction = "plotTimeProfiles",
   projectConfiguration = projectConfiguration,
@@ -116,18 +105,21 @@ runPlot(
   )
 )
 
-# 6) Create Report document --------------------------------------------------
-mergeRmds(projectConfiguration = projectConfiguration,
-          newName = "appendix",
-          title = "Appendix",
-          sourceRmds = c("Demographics", "TimeProfile", "PKParameter", "DDIRatio", "myFigures")
+# 6) Create Report Document --------------------------------------------------
+# (see vignette(package = 'ospsuite.reportingframework', topic = 'Plot_and_Report_Generation'))
+# Adjust the input variables as necessary
+mergeRmds(
+  projectConfiguration = projectConfiguration,
+  newName = "appendix",
+  title = "Appendix",
+  sourceRmds = c("Demographics", "TimeProfile", "PKParameter", "DDIRatio", "myFigures")
 )
 
-renderWord(fileName = file.path(projectConfiguration$outputFolder,"appendix.Rmd"))
+# Render the report to Word format
+renderWord(fileName = file.path(projectConfiguration$outputFolder, "appendix.Rmd"))
 
-# finalize workflow---------------------
-addMessageToLog("finalize workflow")
+# Finalize Workflow -----------------------------------------------------
+addMessageToLog("Finalizing workflow")
 
-
-# save Session Infos including the loaded packages and R version, into a log file
+# Save session information including loaded packages and R version into a log file
 saveSessionInfo()
