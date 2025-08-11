@@ -1,4 +1,4 @@
-#' @title enumeration keys for Timerange shortcut
+#' @title enumeration keys for Time range shortcut
 #' @export
 TIMERANGE <- ospsuite.utils::enum(c( # nolint
   total = "total",
@@ -6,7 +6,7 @@ TIMERANGE <- ospsuite.utils::enum(c( # nolint
   lastApplication = "lastApplication"
 ))
 
-#' @title enumeration keys for DataClass
+#' @title enumeration keys for `DataClass`
 #' @export
 DATACLASS <- ospsuite.utils::enum(c( # nolint
   tpIndividual = "tp Individual",
@@ -25,7 +25,7 @@ EXPORTDIR <- ospsuite.utils::enum(c( # nolint
 ))
 
 
-#' @title enumeration biomrtric units
+#' @title enumeration biomertric units
 BIOMETRICUNITS <- ospsuite.utils::enum(c( # nolint
   age = "year(s)",
   weight = "kg",

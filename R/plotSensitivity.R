@@ -1,13 +1,12 @@
 #' Plot Sensitivity Function
 #'
-#' This function generates sensitivity plots based on the provided project configuration and scenario list.
+#' Generates sensitivity plots based on the provided project configuration and scenario list.
 #'
 #' @param projectConfiguration A list containing project configuration settings, including file paths and parameters.
-#' @param subfolder A string specifying the subfolder where the plots will be saved.
-#' @param configTableSheet A string indicating the name of the configuration table sheet to be read.
+#' @param onePlotConfig A data frame containing the configuration for a single plot.
 #' @param scenarioList A list of scenarios for which the sensitivity analysis will be performed.
 #'
-#' @return An RmdPlotManager object containing the generated sensitivity plots.
+#' @return A list of plots and tables, where each entry corresponds to a generated sensitivity plot or its data.
 #' @export
 plotSensitivity <- function(projectConfiguration,
                             onePlotConfig,

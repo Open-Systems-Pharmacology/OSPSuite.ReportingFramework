@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotTimeProfilePanels.R
 \name{getGeomLLOQAttributesForTP}
 \alias{getGeomLLOQAttributesForTP}
-\title{get additional inputs for TP plotType to enable lines in shape legend}
+\title{get additional inputs for `TP` plotType to enable lines in shape legend}
 \usage{
 getGeomLLOQAttributesForTP(plotData)
 }
@@ -13,6 +13,6 @@ getGeomLLOQAttributesForTP(plotData)
 list with additional attributes for lloq line
 }
 \description{
-get additional inputs for TP plotType to enable lines in shape legend
+get additional inputs for `TP` plotType to enable lines in shape legend
 }
 \keyword{internal}

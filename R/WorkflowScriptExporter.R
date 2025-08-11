@@ -1221,7 +1221,7 @@ validateAndAdjustFilenames <- function(fileName, fileType) {
 }
 #' Convert Excel file to list structure for JSON serialization
 #'
-#' @param dat of an Excelsheet
+#' @param df content of an Excel sheet
 #' @return List structure ready for JSON serialization
 #' @keywords internal
 excelToListStructure <- function(df) {

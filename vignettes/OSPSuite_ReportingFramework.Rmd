@@ -1,5 +1,5 @@
 ---
-title: "OSPSuite_ReportingFramework"
+title: "Introduction to OSPSuite Reporting Framework"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{OSPSuite_ReportingFramework}
@@ -10,108 +10,41 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  warning = FALSE,
-  error = FALSE,
-  message = FALSE,
   comment = "#>"
 )
-```
-
-```{r setup, warning=FALSE,error=FALSE,message=FALSE, echo = FALSE}
-library(ospsuite.reportingframework)
-library(DiagrammeR)
+options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
 # Introduction
 
-This vignette provides an overview of the workflow for data analysis and reporting using the `{ospsuite.reportingframework}` package. The workflow streamlines the process of conducting analyses, generating plots, and creating reports.
-It is based on `{esqlabsR}` which facilitates modeling and simulation workflows with OSPS relying on a well defined project structure based on Excel files.
-This package is the base for other packages such as Bayesian MultiLevel Model Optimization package `{OSPSuite.BMLM}`
+The **OSPSuite Reporting Framework** is a powerful R package designed to streamline the process of data analysis, visualization, and reporting in pharmacokinetic and clinical research contexts. This package offers a comprehensive set of tools that facilitate the import of data, simulation of scenarios, calculation of pharmacokinetic parameters, and generation of insightful visualizations and reports.
+The package based on `{esqlabsR}` which facilitates modeling and simulation workflows with the OSPSuite relying on a well defined project structure based on Excel files.
+This package is the base for other packages such as Bayesian Multi-Level Model Optimization package `{OSPSuite.BMLM}`
 
-# Typical package workflow
+## Key Features
 
-In the sections below it is described how to set up a workflow file and the different sections of the workflow  of `{ospsuite.reportingframework}` are described. 
+- **Data Import**: Import observed data and pharmacokinetic parameters with ease.
+- **Simulation Management**: Set up and run simulations, including the calculation of PK parameters.
+- **Plotting Capabilities**: Generate a variety of plots to visualize data and results effectively.
+- **Report Generation**: Compile results into well-structured reports for regulatory submissions.
 
+## Available Vignettes
 
-## Accessing the Workflow Template
+To help you get started and make the most of the OSPSuite Reporting Framework, we provide several vignettes that cover different aspects of the package. Below is a list of available vignettes along with a brief description of each:
 
-To access the default workflow template provided by the package, you can use the following function:
+1. **[Workflow Setup and Execution](Workflow.html)**: Understand the typical workflow setup and the various components involved in using the framework.
 
-```{r,echo=TRUE,eval=FALSE}
-openWorkflowTemplate()
-```
+2. **[Data Import by Dictionary](Data_import_by_dictionary.html)**: Learn how to import observed data and PK parameters using a configuration dictionary.
 
- This function will open the workflow template as a new document in your RStudio environment.
- Please use the help functionality for more information what every function called by the workflow does.
+3. **[Population](Population)**: Explore the concepts of random and virtual twin populations within the framework.
 
-### Access via RStudio Addins
+4. **[PK Parameters](PK-Parameter)**: Get insights into calculating and visualizing pharmacokinetic parameters across various scenarios.
 
-You can also access the workflow template through an RStudio addin. 
-To use the Addins, simply navigate to the Addins menu in RStudio, and select "Open Template Workflow". This will execute the `openWorkflowTemplate()` function and open the template in a new document.
+5. **[Plot and Report Generation](Plot_and_Report_Generation.html)**: Discover how to generate plots and compile them into comprehensive reports.
 
-### Customizing the Workflow Template
+6. **[Tutorial: Time Profile Plotting](Tutorial-timeprofiles.html)**: Follow a step-by-step guide to generating time profile plots using the package.
 
-By default, the workflow template is loaded from the package's internal templates. If you wish to customize this template, follow these steps:
+7. **[Electronic Package](Electronic-Package.html)**: Understand how to create a structured electronic package for regulatory submissions.
 
-1. Create your own workflow template script and save it with the name `template_workflow.R`.
-2. Place this file in your designated template directory.
-3. Set the path to your custom template by using the following option:
-
-```{r,echo=TRUE,eval=FALSE}
-options(OSPSuite.RF.PathForWorkflowTemplate = "myTemplateDirectory")
-```
-
-After setting this option, calling `openWorkflowTemplate()` or using the Addins will open your customized template instead of the default one.
-
-You can save this option in your ".Rprofile" file. (file.path(Sys.getenv("HOME"), ".Rprofile"). Then it will be set automatically.
-
-
-## Project initilization:
-
-As first step the project is initialized, that includes 
-
-- adding of  libraries
-- setting of the  workflow options
-- set up of the project directory and configuration files using the project structure of `{`{esqlabsR}`}`
-- initialisation of the logfile
-
-## Data import
-
-The first step after the initialization should always be the data import.
-
-The input format for input data are csv files. Files can then be imported with a dictionary.
-Imported data types a individual and aggregated timeprofile data and individual and aggregated pk-parameter data.
-
-For more information see the **Data Import by Dictionary** vignette (vignette("Data_import_by_dictionary"))
-
-## Setting up and run simulations including PK Parameter calculation
-
-Simulations are set up and run using the`{`{esqlabsR}`}` package.
-For more information and detailed documentation, users can visit the [esqlabsR Documentation](https://esqlabs.github.io/esqlabsR/).
-
-The `{ospsuite.reportingframework}`  package provides additional functionality to 
-
-- export random and virtual twin populations(see the **Population** vignette vignette("Population"))
-- calculates PK Parameter (see the **PK Parameter** vignette vignette("PK-Parameter"))
- 
-
-## Plot and Report Generation
-
-The core of this package is the plot and report creation.
-It includes various plotting functions that generate visualizations based on the analysis performed. 
-
-Each plot function is designed to create an R Markdown (`.Rmd`) file, which contains the code and output for the respective plot. This allows for easy documentation and sharing of the results.
-
-The package provides a collection of plot functions, but it provides also interfaces to adjust plots and the usage of customized plot function
-
-For more information see the **Plot Creation** vignette (vignette("Plot-Creation"))
-
-# See also
-
-The package provides also a tutorial to create **Timeprofile reports** (vignette("Tutorial-timeprofiles"))
-
-
-
-
-
-
+Explore the vignettes to familiarize yourself with the package functionalities and start your journey with the reporting framework!
+If you have any feedback or suggestions for improvement, please feel free to reach out!

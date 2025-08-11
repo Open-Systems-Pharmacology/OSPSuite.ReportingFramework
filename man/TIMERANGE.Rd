@@ -3,7 +3,7 @@
 \docType{data}
 \name{TIMERANGE}
 \alias{TIMERANGE}
-\title{enumeration keys for Timerange shortcut}
+\title{enumeration keys for Time range shortcut}
 \format{
 An object of class \code{list} of length 3.
 }
@@ -11,6 +11,6 @@ An object of class \code{list} of length 3.
 TIMERANGE
 }
 \description{
-enumeration keys for Timerange shortcut
+enumeration keys for Time range shortcut
 }
 \keyword{datasets}

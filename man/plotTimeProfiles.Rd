@@ -23,6 +23,8 @@ plotTimeProfiles(
 \item{projectConfiguration}{An object of class `ProjectConfiguration` containing project settings,
 including file paths and scenario definitions. This is essential for the function to access the necessary data.}
 
+\item{onePlotConfig}{A configuration table for the specific plot, detailing plot parameters.}
+
 \item{dataObserved}{A `data.table` (formatted as produced by `readObservedDataByDictionary`)
 or `DataCombined` object containing the observed data to be plotted.}
 
@@ -65,8 +67,6 @@ referenceScaleVector = list(
 # Default is list()}
 
 \item{...}{Additional arguments passed to `ospsuite.plots::plotTimeprofile`.}
-
-\item{nFacetColumns}{An integer specifying the maximum number of facet columns (default is 2).}
 }
 \value{
 A list of generated time profile plots
@@ -99,10 +99,10 @@ referenceScaleVector <- list(
   DDI = c("#843C39FF", "#AD494AFF"),
   Control = c("#3182BDFF", "#6BAED6FF")
 )
-
 # The scenario would be labeled as 'DDI', with aesthetic color as dark red ("#843C39FF") and
 # aesthetic fill as light red ("#AD494AFF").
-# The reference scenario would be labeled 'Control', with aesthetic color as dark blue ("#3182BDFF") and
+# The reference scenario would be labeled 'Control',
+# with aesthetic color as dark blue ("#3182BDFF") and
 # aesthetic fill as light blue ("#6BAED6FF").
 
 # Example of using the referenceScaleVector parameter for a comparison between a pediatric

@@ -2,12 +2,14 @@
 % Please edit documentation in R/utilities-testProject.R
 \name{mockManualEditingsScenario}
 \alias{mockManualEditingsScenario}
-\title{Mock Manual Editings for Scenarios}
+\title{Mock Manual editing for Scenarios}
 \usage{
 mockManualEditingsScenario(projectConfiguration, modelFiles)
 }
 \arguments{
 \item{projectConfiguration}{A ProjectConfiguration object containing project configuration details.}
+
+\item{modelFiles}{list of model files}
 }
 \description{
 This function sets up scenarios based on the defined populations and adds PK Parameters

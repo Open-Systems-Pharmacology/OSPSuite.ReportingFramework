@@ -12,8 +12,6 @@ generatePlotForPlotType(plotData, facetAspectRatio, plotType, ...)
 \item{facetAspectRatio}{Aspect ratio for the facets.}
 
 \item{plotType}{Type of the plot to generate.}
-
-\item{rmdPlotManager}{Object of class `RmdPlotManager`.}
 }
 \value{
 Updated `rmdPlotManager` with the generated plot.

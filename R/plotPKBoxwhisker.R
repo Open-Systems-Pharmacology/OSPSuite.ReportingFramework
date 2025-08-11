@@ -211,7 +211,7 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
 #' @param onePlotConfig Configuration for a single plot.
 #' @param pkParameterDT A data.table containing PK parameter data.
 #' @param colorVector A named vector for colors.
-#' @param ratioMode Mode indicating if the plot is for ratios.
+#' @param asRatio boolean indicating if the plot is for ratios.
 #' @return A data.table prepared for plotting.
 #' @keywords internal
 prepareDataForPKBoxplot <- function(onePlotConfig, pkParameterDT, colorVector, asRatio) {
@@ -241,8 +241,7 @@ prepareDataForPKBoxplot <- function(onePlotConfig, pkParameterDT, colorVector, a
 #' Generates a summary table from the box-and-whisker plot data.
 #'
 #' @param plotDataPk A data.table containing plot data.
-#' @param plotObject The plot object to extract statistics from.
-#' @param ratioMode Mode indicating if the plot is for ratios.
+#' @param asRatio boolean indicating if the plot is for ratios.
 #' @param onePlotConfig Configuration for a single plot.
 #' @param percentiles A vector of percentiles to calculate.
 #' @return A data.table summarizing the plot data.
@@ -261,11 +260,11 @@ getSummaryTable <- function(plotDataPk, asRatio, onePlotConfig, percentiles) {
       N = length(y),
       rQuantiles,
       "arith mean" = mean(y),
-      "arith standard deviation" = sd(y),
-      "arith CV" = sd(y) / mean(y),
+      "arith standard deviation" = stats::sd(y),
+      "arith CV" = stats::sd(y) / mean(y),
       "geo mean" = exp(mean(log(y))),
-      "geo standard deviation" = exp(sd(log(y))),
-      "geo CV" = sqrt(exp((log(sd(y)))^2) - 1)
+      "geo standard deviation" = exp(stats::sd(log(y))),
+      "geo CV" = sqrt(exp((log(stats::sd(y)))^2) - 1)
     )
 
     return(r)
@@ -284,12 +283,12 @@ getSummaryTable <- function(plotDataPk, asRatio, onePlotConfig, percentiles) {
 #' with the configuration settings. This function ensures that the data is structured
 #' correctly for plotting.
 #'
-#' @param onePlotConfig Configuration for a single plot.
-#' @param pkParameterDT A data.table containing PK parameter data.
-#' @param colorVector A named vector for colors.
-#' @param asRatio Logical indicating if the plot is for ratios.
+#' @param dtExport A data.table containing the data to be exported for plotting.
+#' @param asRatio A logical indicating if the plot is for ratios.
+#' @param plotCaptionAddon An optional string to be added to the plot caption.
+#' @param plotDataPk A data.table containing PK parameter data for generating the plot caption.
+#'
 #' @return A data.table prepared for plotting, including merged configuration and parameter data.
-#' @keywords internal
 prepareTableForExport <- function(dtExport, asRatio, plotCaptionAddon, plotDataPk) {
   # initialize to avoid linter messages
   colorIndex <- scenarioShortName <- scenario <- NULL
@@ -337,7 +336,7 @@ prepareTableForExport <- function(dtExport, asRatio, plotCaptionAddon, plotDataP
 #' @param yScale Scale type (linear or log).
 #' @param plotCaptionAddon Additional text for the caption.
 #' @param isPlotCaption Logical indicating if the caption is for the plot.
-#' @param ratioMode Mode indicating if the plot is for ratios.
+#' @param asRatio boolean indicating if the plot is for ratios.
 #' @return A character string containing the caption.
 #' @keywords interal
 getCaptionForBoxwhiskerPlot <- function(plotDataPk,
@@ -384,8 +383,7 @@ getCaptionForBoxwhiskerPlot <- function(plotDataPk,
 #'
 #' @param plotDataPk A data frame containing the plot data for a specific PK parameter.
 #' @param yScale A character string indicating the scale for the y-axis (e.g., "linear", "log").
-#' @param ratioMode A character string indicating the mode of ratio to be used for plotting
-#'                  (e.g., "individualRatios", "ratioOfPopulation", "none").
+#' @param asRatio boolean indicating if values shoud be evaluated as ratio or absolute values.
 #' @param colorVector A vector of colors to be used for filling the plot.
 #' @param onePlotConfig A list containing configuration settings for the plot.
 #' @param ... Additional arguments to be passed to the plotting functions.
@@ -627,7 +625,7 @@ validateExistenceOfReferenceForRatio <- function(configTablePlots, pkParameterDT
 #' and fills in the default configuration values for the time profile plots.
 #'
 #' Additionally, the function performs a validity check to ensure that it is not executed during a context
-#' where helper functions are prohibited (validRun). If such a context is detected, an error is raised to prevent execution.
+#' where helper functions are prohibited (`validRun`). If such a context is detected, an error is raised to prevent execution.
 #'
 #'
 #' @return NULL This function updates the Excel workbook in place and does not return a value.

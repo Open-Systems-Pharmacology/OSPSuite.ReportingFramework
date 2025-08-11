@@ -16,13 +16,13 @@ plotHistograms(
 )
 }
 \arguments{
-\item{projectConfiguration}{A configuration object for the project.}
+\item{projectConfiguration}{A configuration object for the project, containing necessary settings.}
 
-\item{onePlotConfig}{A configuration for the specific plot.}
+\item{onePlotConfig}{A configuration table for the specific plot, detailing plot parameters.}
 
-\item{pkParameterDT}{A data.table containing PK parameter data (optional).}
+\item{pkParameterDT}{A data.table containing pharmacokinetic (PK) parameter data (optional).}
 
-\item{scenarioList}{A list of scenarios to consider (optional).}
+\item{scenarioList}{A list of scenarios to consider for the plot (optional).}
 
 \item{facetAspectRatio}{A numeric value for the aspect ratio of the facets (default is 0.5).}
 
@@ -36,5 +36,32 @@ plotHistograms(
 A list of histogram plot objects generated based on the input configuration.
 }
 \description{
-This function generates histogram plots based on the provided configuration and data.
+Generates histogram plots based on the provided configuration and data.
+}
+\details{
+This function is intended to be used in combination with the `runPlot` function.
+Refer to the vignette `Plot and Report Generation` for more details.
+It can be configured to plot PK parameters or model parameters.
+
+A helper function, `addDefaultConfigForHistograms`, is available to streamline the setup of your Excel configuration sheet for histograms.
+This function automatically populates a new sheet with default values that can be customized as needed.
+}
+\examples{
+\dontrun{
+Example for plotting a histogram of PK-parameters of a scenario compared to a reference scenario:
+runPlot(
+  nameOfplotFunction = "plotHistograms",
+  projectConfiguration = projectConfiguration,
+  configTableSheet = "HistogramTest",
+  inputs = list(
+    scenarioList = scenarioList,
+    pkParameterDT = pkParameterDT,
+    colorVector = c(
+      "PO application" = "red",
+      "IV application" = "green"
+    )
+  )
+)
+}
+
 }

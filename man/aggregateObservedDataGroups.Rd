@@ -24,20 +24,20 @@ If NULL, all available groups are used.}
 \item{aggregationFlag}{A character string indicating the aggregation method.
 Options include "GeometricStdDev", "ArithmeticStdDev", "Percentiles", or "Custom".}
 
-\item{percentiles}{A numeric vector of percentiles to calculate if aggregationFlag is "Percentiles".
+\item{percentiles}{A numeric vector of percentiles to calculate if `aggregationFlag` is "Percentiles".
 Default is c(5, 50, 95).}
 
 \item{groupSuffix}{A character string to append to group names in the aggregated output.
 Default is 'aggregated'.}
 
-\item{customFunction}{A custom function for aggregation if aggregationFlag is "Custom".
+\item{customFunction}{A custom function for aggregation if `aggregationFlag` is "Custom".
 Default is NULL.}
 
 \item{lloqCheckColumns2of3}{A character vector specifying columns to check for LLOQ (Lower Limit of Quantification) for 1/3 data points.
-Default is NULL, is used only for aggregationFlag "Custom".}
+Default is NULL, is used only for `aggregationFlag` "Custom".}
 
 \item{lloqCheckColumns1of2}{A character vector specifying columns to check for LLOQ for 2/3 data points.
-Default is NULL, is used only for aggregationFlag "Custom".}
+Default is NULL, is used only for `aggregationFlag` "Custom".}
 }
 \value{
 A `data.table` containing aggregated observed data.

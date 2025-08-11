@@ -3,13 +3,13 @@
 \docType{class}
 \name{PlotDataTimeProfile}
 \alias{PlotDataTimeProfile}
-\title{plotData for Timeprofile plotData}
+\title{plotData for Time profile plot Data}
 \value{
 RmdPlotManager object
 Load simulated results for the specified project configuration
 }
 \description{
-An object to collect plotData and other information to create a time profile plot
+An object to collect plot Data and other information to create a time profile plot
 }
 \section{Super class}{
 \code{\link[ospsuite.utils:Printable]{ospsuite.utils::Printable}} -> \code{RmdPlotManager}

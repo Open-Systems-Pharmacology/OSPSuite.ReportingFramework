@@ -42,18 +42,18 @@
 #' defined by the `nBootstrap` parameter, and the confidence intervals are determined using
 #' the `confLevel` parameter (e.g., 0.9 for 90% confidence).
 #'
-#' For the bootstrapping process, a unique seed is set for each combination of scenario, referenceScenario (if available),
-#' outputPathId, and PKParameter identifier. This ensures that results are consistent when a specific
+#' For the bootstrapping process, a unique seed is set for each combination of scenario, `referenceScenario` (if available),
+#' `outputPathId`, and `PKParameter` identifier. This ensures that results are consistent when a specific
 #' combination is used in different plots and that they are reproducible.
 #'
 #' In addition to the point estimates and their confidence intervals, the precision watermark is
 #' an important feature of these plots. The precision watermark indicates whether the precision requirements
 #' for the displayed estimates have been met.
-#' The precision is calculated based on the relationship between the estimated values (xValues)
-#' and their corresponding minimum (xMin) and maximum (xMax) confidence interval bounds.
+#' The precision is calculated based on the relationship between the estimated values (`xValues`)
+#' and their corresponding minimum (`xMin`) and maximum (`xMax`) confidence interval bounds.
 #' If the calculated precision falls below a predefined threshold (e.g., 0.01),
 #' the watermark is activated, displaying a warning label such as "Outside precision requirement"
-#' on the plot. The threshold is set by the option "OSPSuite.RF.RequiredPrecisison"
+#' on the plot. The threshold is set by the option `OSPSuite.RF.RequiredPrecisison`
 #' This alert serves to inform users that the estimates may not be reliable due to
 #' insufficient sample sizes or high variability in the data, prompting them to consider
 #' increasing the sample size for improved precision.
@@ -83,12 +83,6 @@
 #' @param percentiles A numeric vector specifying which percentiles to calculate
 #'   and display in the plot, only relevant if `aggregationFlag = "Percentiles"`
 #'   (for `plotPKForestAggregatedAbsoluteValues` and `plotPKForestAggregatedRatios`):
-#' @param statFun A named list of functions used for statistical aggregation, typically
-#'   including the geometric mean function for bootstrapping.
-#'   This must be a function accepting as input a numeric vector and returning a numeric value.
-#'   The input is formatted as a named list, the name is used in plot legends and captions
-#'    c('geometric mean' = function(y) exp(mean(log(y[y>0]))))
-#'  (for `plotPKForestPointEstimateOfAbsoluteValues` and `plotPKForestPointEstimateOfRatios`)
 #' @param confLevel A numeric value between 0 and 1 indicating the desired confidence
 #'   level for the intervals (e.g., 0.9 for 90% confidence).
 #'  (for `plotPKForestPointEstimateOfAbsoluteValues` and `plotPKForestPointEstimateOfRatios`)
@@ -103,7 +97,7 @@
 #'   labels in the plot to enhance readability.
 #' @param vlineIntercept Optional numeric value indicating where to draw a vertical
 #'   line on the plot, often used to denote a reference value.
-#' @param withTable logical, if TRUE (default) values are displaye as table beside the plot
+#' @param withTable logical, if TRUE (default) values are displayed as table beside the plot
 #' @param relWidths Optional numeric vector specifying relative widths for the plot and table.
 #' @param digitsToRound An integer specifying the number of digits to round in the
 #'   displayed values.
@@ -280,6 +274,17 @@ plotPKForest <- function(projectConfiguration,
 }
 
 #' @inherit plotPKForest
+#' @param customFunction An optional custom function for aggregation.
+#' A custom function should take a numeric vector `y` as input and return a list containing:
+#'
+#' - `yValues`: The aggregated value (e.g., mean).
+#' - `yMin`: The lower value of the aggregated data (e.g., mean - sd).
+#' - `yMax`: The upper value of the aggregated data (e.g., mean + sd).
+#' - `yErrorType`: A string indicating the type of error associated with the aggregation,
+#' it is used in plot legends and captions. It must be a concatenation of the descriptor of `yValues`
+#' and the descriptor of `yMin - yMax` range separated by "|" (e.g., "mean | standard deviation"
+#' or "median | 5th - 95th percentile").
+#'
 #' @export
 plotPKForestAggregatedAbsoluteValues <- function(projectConfiguration,
                                                  onePlotConfig,
@@ -294,7 +299,7 @@ plotPKForestAggregatedAbsoluteValues <- function(projectConfiguration,
                                                  withTable = TRUE,
                                                  relWidths = NULL,
                                                  digitsToRound = 2,
-                                                 digitsToShow = 2, ...) {
+                                                 digitsToShow = 2) {
   validateCommonInputs(
     pkParameterDT = pkParameterDT,
     pkParameterObserved = pkParameterObserved,
@@ -324,6 +329,13 @@ plotPKForestAggregatedAbsoluteValues <- function(projectConfiguration,
 }
 
 #' @inherit plotPKForest
+#' @param statFun A named list of functions used for statistical aggregation, typically
+#'   including the geometric mean function for bootstrapping.
+#'   This must be a function accepting as input a numeric vector and returning a numeric value.
+#'   The input is formatted as a named list, the name is used in plot legends and captions
+#'    c('geometric mean' = function(y) exp(mean(log(y[y>0]))))
+#'  (for `plotPKForestPointEstimateOfAbsoluteValues` and `plotPKForestPointEstimateOfRatios`)
+#'
 #' @export
 plotPKForestPointEstimateOfAbsoluteValues <- function(projectConfiguration,
                                                       onePlotConfig,
@@ -338,7 +350,7 @@ plotPKForestPointEstimateOfAbsoluteValues <- function(projectConfiguration,
                                                       withTable = TRUE,
                                                       relWidths = NULL,
                                                       digitsToRound = 2,
-                                                      digitsToShow = 2, ...) {
+                                                      digitsToShow = 2) {
   ratioMode <- "none"
 
   validateCommonInputs(
@@ -381,6 +393,17 @@ plotPKForestPointEstimateOfAbsoluteValues <- function(projectConfiguration,
 }
 
 #' @inherit plotPKForest
+#' @param customFunction An optional custom function for aggregation.
+#' A custom function should take a numeric vector `y` as input and return a list containing:
+#'
+#' - `yValues`: The aggregated value (e.g., mean).
+#' - `yMin`: The lower value of the aggregated data (e.g., mean - sd).
+#' - `yMax`: The upper value of the aggregated data (e.g., mean + sd).
+#' - `yErrorType`: A string indicating the type of error associated with the aggregation,
+#' it is used in plot legends and captions. It must be a concatenation of the descriptor of `yValues`
+#' and the descriptor of `yMin - yMax` range separated by "|" (e.g., "mean | standard deviation"
+#' or "median | 5th - 95th percentile").
+#'
 #' @export
 plotPKForestAggregatedRatios <- function(projectConfiguration,
                                          onePlotConfig,
@@ -395,7 +418,7 @@ plotPKForestAggregatedRatios <- function(projectConfiguration,
                                          withTable = TRUE,
                                          relWidths = NULL,
                                          digitsToRound = 2,
-                                         digitsToShow = 2, ...) {
+                                         digitsToShow = 2) {
   validateCommonInputs(
     pkParameterDT = pkParameterDT,
     pkParameterObserved = pkParameterObserved,
@@ -434,6 +457,13 @@ plotPKForestAggregatedRatios <- function(projectConfiguration,
 }
 
 #' @inherit plotPKForest
+#' @param statFun A named list of functions used for statistical aggregation, typically
+#'   including the geometric mean function for bootstrapping.
+#'   This must be a function accepting as input a numeric vector and returning a numeric value.
+#'   The input is formatted as a named list, the name is used in plot legends and captions
+#'    c('geometric mean' = function(y) exp(mean(log(y[y>0]))))
+#'  (for `plotPKForestPointEstimateOfAbsoluteValues` and `plotPKForestPointEstimateOfRatios`)
+#'
 #' @export
 plotPKForestPointEstimateOfRatios <- function(projectConfiguration,
                                               onePlotConfig,
@@ -609,17 +639,18 @@ filterParameterSimulated <- function(projectConfiguration, pkParameterDT, onePlo
 }
 #' Prepare Data for PK Forest
 #'
-#' Prepares data for generating a PK forest plot.
+#' Prepares data for generating a pharmacokinetic (PK) forest plot.
 #'
-#' @param onePlotConfig Configuration for the plot.
-#' @param pkParameterDT Data table containing PK parameter data.
-#' @param pkParameterObserved Optional data table for observed PK parameters.
-#' @param ratioMode Mode for ratio calculations.
-#' @param asPointeEstimate Logical indicating if confidence intervals should be calculated.
-#' @param aggregationFun Function used for aggregation.
-#' @param aggregationFlag Optional aggregation method.
-#' @param nBootstrap Number of bootstrap samples.
-#' @param confLevel Confidence level for intervals.
+#' @param onePlotConfig A configuration list for the plot.
+#' @param pkParameterFiltered A data table containing filtered PK parameter data.
+#' @param pkParameterObserved An optional data table for observed PK parameters.
+#' @param ratioMode A string indicating the mode for ratio calculations.
+#' @param asPointeEstimate A logical indicating if point estimates should be calculated.
+#' @param nBootstrap An integer specifying the number of bootstrap samples.
+#' @param confLevel A numeric value representing the confidence level for intervals.
+#' @param aggregationFun A function used for data aggregation.
+#' @param aggregationFlag An optional string indicating the aggregation method.
+#'
 #' @return A list of prepared data for the PK forest plot.
 #' @keywords internal
 prepareDataForPKForest <- function(
@@ -1018,7 +1049,7 @@ getColumnSelectionForPKForest <- function(plotData, ratioMode) {
 
   if (uniqueN(plotData[[columnList$yColumn]]) == 1) {
     columnList$xLabel <- paste(plotData[[columnList$yColumn]][1], columnList$xLabel)
-    columnList$yColumn <- tail(columnList$yFacetColumns, 1)
+    columnList$yColumn <- utils::tail(columnList$yFacetColumns, 1)
     columnList$yFacetColumns <- setdiff(columnList$yFacetColumns, columnList$yColumn)
   }
 
@@ -1120,8 +1151,6 @@ addPrecisisonWatermark <- function(combinedObject, asPointeEstimate, plotData) {
 #' @param xScale Scale of the x-axis.
 #' @param plotCaptionAddon Additional caption text.
 #' @param ratioMode Mode for ratio calculations.
-#' @param asPointeEstimate Logical indicating if confidence intervals should be calculated.
-#' @param nameOfPointestimate description of aggregation quantity
 #' @return A string containing the caption for the plot.
 #' @keywords internal
 getCaptionForForestPlot <- function(plotData,
@@ -1397,7 +1426,6 @@ validatePKForestConfigTable <- function(configTable, pkParameterDT, ...) {
 #' @param nBootstrap Number of bootstrap samples.
 #' @param confLevel Confidence level for intervals.
 #' @param statFun Statistical function for bootstrapping.
-#' @param ratioMode Mode for ratio calculations.
 #' @return NULL (invisible).
 #' @keywords internal
 validatePointEstimateInputs <- function(nBootstrap, confLevel, statFun) {
@@ -1457,7 +1485,7 @@ validateCommonInputs <- function(pkParameterDT,
 #' @param overwrite Logical indicating if existing data should be overwritten.
 #' @return NULL (invisible).
 #'
-#' #' @seealso
+#' @seealso
 #' \code{\link{plotPKForestAggregatedAbsoluteValues}}, \code{\link{plotPKForestPointEstimateOfAbsoluteValues}},
 #' \code{\link{plotPKForestAggregatedRatios}}, \code{\link{plotPKForestPointEstimateOfRatios}},
 #

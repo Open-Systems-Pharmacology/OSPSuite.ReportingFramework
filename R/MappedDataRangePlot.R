@@ -22,7 +22,7 @@ MappedDataRangeDistribution <- R6::R6Class( # nolint
     #' @param residualAesthetic aesthetic used for mapping residuals
     #' @param modeOfBinning method of binning (e.g., 'breaks', 'number', 'interval')
     #' @param numberOfBins number of bins to use for binning
-    #' @param breaks breaks for binning if modeOfBinning is 'breaks'
+    #' @param breaks breaks for binning if `modeOfBinning` is 'breaks'
     #' @description Create a new `MappedDataRangeDistribution` object
     #' @return `MappedDataRangeDistribution` class object
     initialize = function(data,

@@ -12,8 +12,6 @@ validatePointEstimateInputs(nBootstrap, confLevel, statFun)
 \item{confLevel}{Confidence level for intervals.}
 
 \item{statFun}{Statistical function for bootstrapping.}
-
-\item{ratioMode}{Mode for ratio calculations.}
 }
 \value{
 NULL (invisible).

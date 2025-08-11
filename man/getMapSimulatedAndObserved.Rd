@@ -8,8 +8,6 @@ getMapSimulatedAndObserved(plotData)
 }
 \arguments{
 \item{plotData}{Object containing the data for the plot.}
-
-\item{plotType}{Type of the plot.}
 }
 \value{
 Data table mapping simulated and observed data.

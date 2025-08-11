@@ -11,6 +11,9 @@ formatPercentiles(percentiles, suffix = "", allAsPercentiles = FALSE)
 \item{percentiles}{A numeric vector of percentiles (0, 50, 100, and other values).}
 
 \item{suffix}{A character string to append to formatted percentile values.}
+
+\item{allAsPercentiles}{boolean, if FALSE for percentiles = 0,50,100 min, median and max is returned
+otherwise 0th 50th 100th}
 }
 \value{
 A vector containing the mapped labels for specific percentiles and formatted strings for others.

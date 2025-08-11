@@ -5,7 +5,7 @@
 #' @param doAppendDocToTemplate `boolean`, if TRUE and `wordConversionTemplate` is given,
 #'   new generated document is added to the template after bookmark REPORTBLOCK
 #' @param customStyles list of custom styles usable for figure and table captions and footnotes
-#'    available list elements for styles are: "FigureCaption", "FigureFootnote", "TableCaption" and "TableFootnote"
+#'    available list elements for styles are: `FigureCaption`, `FigureFootnote`, `TableCaption` and `TableFootnote`
 #'    The selected styles should be defined in the `wordConversionTemplate`
 #' @param ... passed to render
 #'

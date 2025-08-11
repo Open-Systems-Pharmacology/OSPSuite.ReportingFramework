@@ -3,18 +3,22 @@
 #' This function generates a forest plot with optional faceting and a corresponding table.
 #'
 #' @param plotData A data.table containing the data to be plotted. Must include columns specified in `yFacetColumns`, `xFacetColumn`, `tableColumns`, and others.
-#' @param yColumn A character string specifying the name of the column to be used for the y-axis.
+#' @param mapping A ggplot2 mapping object, typically created with `ggplot2::aes()`, to specify how variables in the data are mapped to visual properties.
 #' @param xLabel A string representing the label for the x-axis.
 #' @param yFacetColumns A character vector of column names used for faceting on the y-axis. Can be NULL or of length up to 2.
 #' @param xFacetColumn A character string specifying the column name for the x-axis facet. Must be of length 1 or NULL.
 #' @param xscale A character string indicating the scale type for the x-axis. Options are "linear" or "log".
 #' @param xscale.args A list of additional arguments for customizing the x-axis scale.
+#' @param groupAesthetics A character vector specifying aesthetics for grouping (e.g., color, fill, shape).
 #' @param tableColumns A character vector of column names to be included in the table.
 #' @param tableLabels A character vector of labels corresponding to `tableColumns`.
 #' @param labelWrapWidth A numeric value specifying the width for label wrapping in facets.
 #' @param digitsToRound An integer specifying the number of digits to round in the table.
 #' @param digitsToShow An integer specifying the number of digits to display in the table.
 #' @param withTable A logical flag indicating whether to include the table in the output. Defaults to TRUE if `xFacetColumn` is not NULL.
+#' @param geomPointAttributes A list of attributes for the point geometry in the plot.
+#' @param geomErrorbarAttributes A list of attributes for the error bar geometry in the plot.
+#' @param facetScales A character string indicating the scales used for facets. Options are "free_y" or "free".
 #'
 #' @return A combined plot object containing the forest plot and the table (if applicable).
 #' @export
@@ -39,6 +43,9 @@ plotForest <- function(plotData,
                        geomPointAttributes = getDefaultGeomAttributes("Point"),
                        geomErrorbarAttributes = getDefaultGeomAttributes("Errorbar"),
                        facetScales = c("free_y", "free")) {
+  # avoid warning for global variable
+  x <- y <- dataType <- NULL
+
   # Input checks
   checkmate::assertDataTable(plotData)
   xscale <- match.arg(xscale)
@@ -96,19 +103,22 @@ plotForest <- function(plotData,
 
   return(combinedPlot)
 }
-
 #' Create the Plot Object
 #'
 #' This function generates the main plot object for the forest plot.
 #'
 #' @param plotData A data.table containing the data to be plotted.
-#' @param yColumn A character string specifying the name of the column to be used for the y-axis.
+#' @param mapping A ggplot mapping object.
 #' @param xscale A character string indicating the scale type for the x-axis.
 #' @param xscale.args A list of additional arguments for customizing the x-axis scale.
 #' @param xLabel A string representing the label for the x-axis.
 #' @param yFacetColumns A character vector of column names used for faceting on the y-axis.
 #' @param xFacetColumn A character string specifying the column name for the x-axis facet.
 #' @param labelWrapWidth A numeric value specifying the width for label wrapping in facets.
+#' @param groupAesthetics A character vector specifying aesthetics for grouping.
+#' @param geomPointAttributes A list of attributes for the point geometry.
+#' @param geomErrorbarAttributes A list of attributes for the error bar geometry.
+#' @param facetScales A character string indicating the scales used for facets. Defaults to "free_y".
 #'
 #' @return A ggplot object representing the main plot.
 #' @keywords internal
@@ -127,9 +137,9 @@ createPlotObject <- function(plotData,
   # Generate the facet formula if yFacetColumns are provided
   facetFormula <- if (!is.null(yFacetColumns) && length(yFacetColumns) > 0) {
     if (!is.null(xFacetColumn) && length(xFacetColumn) > 0) {
-      as.formula(paste(paste(yFacetColumns, collapse = " + "), "~", xFacetColumn))
+      stats::as.formula(paste(paste(yFacetColumns, collapse = " + "), "~", xFacetColumn))
     } else {
-      as.formula(paste(paste(yFacetColumns, collapse = " + "), "~."))
+      stats::as.formula(paste(paste(yFacetColumns, collapse = " + "), "~."))
     }
   } else {
     NULL
@@ -199,16 +209,16 @@ createPlotObject <- function(plotData,
 
   return(plotObject)
 }
-
-#' Combine Plot and Table
+#' Create Table Data
 #'
-#' This function combines the plot and the table into a single output.
+#' This function prepares the data for the table.
 #'
-#' @param plotObject A ggplot object representing the main plot.
-#' @param tableObject A ggplot object representing the table.
-#' @param relWidths A numeric vector of length 2 specifying the relative widths of the plot and table.
+#' @param plotData A data.table containing the data to be plotted in the table.
+#' @param tableColumns A character vector of column names to be included in the table.
+#' @param tableLabels A character vector of labels corresponding to `tableColumns`.
 #'
-#' @return A combined ggplot object containing both the plot and the table.
+#' @return A data.table containing the prepared table data.
+#'
 #' @keywords internal
 createTableData <- function(plotData, tableColumns, tableLabels) {
   # initialize variable to avoid messages
@@ -229,15 +239,15 @@ createTableData <- function(plotData, tableColumns, tableLabels) {
 
   return(tableData)
 }
-
 #' Create the Table Object
 #'
 #' This function generates the table plot object.
 #'
 #' @param tableData A data.table containing the data to be plotted in the table.
+#' @param mapping A ggplot mapping object.
 #' @param digitsToRound An integer specifying the number of digits to round in the table.
 #' @param digitsToShow An integer specifying the number of digits to display in the table.
-#' @param yFacetColumns A character string specifying the column name for the x-axis facet.
+#' @param yFacetColumns A character vector of column names used for faceting on the y-axis.
 #'
 #' @return A ggplot object representing the table.
 #' @keywords internal
@@ -259,9 +269,9 @@ createTableObject <- function(tableData, mapping, digitsToRound, digitsToShow, y
   )
 
   facetFormula <- if (nTypes > 1) {
-    as.formula(paste(paste(yFacetColumns, collapse = " + "), "~", rlang::get_expr(mapping$groupby)))
+    stats::as.formula(paste(paste(yFacetColumns, collapse = " + "), "~", rlang::get_expr(mapping$groupby)))
   } else {
-    as.formula(paste(paste(yFacetColumns, collapse = " + "), "~."))
+    stats::as.formula(paste(paste(yFacetColumns, collapse = " + "), "~."))
   }
 
   mapping <- utils::modifyList(
@@ -304,7 +314,6 @@ createTableObject <- function(tableData, mapping, digitsToRound, digitsToShow, y
 
   return(tableObject)
 }
-
 #' Combine Plot and Table
 #'
 #' This function combines the plot and the table into a single output.

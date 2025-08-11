@@ -11,7 +11,7 @@ addTimeTagsToCaption(dtCaption, timeTags, splitPlotsPerTimeRange)
 
 \item{timeTags}{A vector of time tags to be added.}
 
-\item{splitPlotsPerTimeRange}{Boolean, if TRUE for each Timerange a plot is created}
+\item{splitPlotsPerTimeRange}{Boolean, if TRUE for each Time-range a plot is created}
 }
 \value{
 A data table with added time tags.

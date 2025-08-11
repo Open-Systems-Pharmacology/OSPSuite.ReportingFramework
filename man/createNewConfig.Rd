@@ -10,8 +10,6 @@ createNewConfig(scenarios, dataObserved)
 \item{scenarios}{A data.table containing scenario definitions.}
 
 \item{dataObserved}{Optional. A data object containing observed data, if available.}
-
-\item{projectConfiguration}{A ProjectConfiguration class object.}
 }
 \value{
 A data.table containing the new configuration for time profile plots.

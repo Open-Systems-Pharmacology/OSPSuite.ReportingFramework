@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-testProject.R
 \name{mockManualEditingsPopulation}
 \alias{mockManualEditingsPopulation}
-\title{Mock Manual Editings for Population}
+\title{Mock Manual editing for Population}
 \usage{
 mockManualEditingsPopulation(projectConfiguration)
 }

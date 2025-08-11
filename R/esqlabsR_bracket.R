@@ -12,6 +12,8 @@
 #' Excel file containing the project configuration. By default, it uses the template
 #' provided by the 'ospsuite.reportingframework' package.
 #'
+#' @param templatePath path of all template files
+#'
 #' @param overwrite A logical value indicating whether to overwrite existing files in the
 #' project directory. Defaults to FALSE, meaning existing files will not be overwritten.
 #'
@@ -157,7 +159,7 @@ loadScenarioResultsToFramework <- function(projectConfiguration, scenarioNames) 
 #' @param projectConfiguration Configuration for the project, containing paths and settings necessary
 #' to run the simulations and save the results.
 #' @param scenarioList Named list of Scenario objects to be simulated.
-#' @param simulationRunOptions Object of type SimulationRunOptions that will be passed to simulation runs.
+#' @param simulationRunOptions Object of type `SimulationRunOptions` that will be passed to simulation runs.
 #' If `NULL`, default options are used.
 #' @param ... Additional arguments passed to `esqlabsR::saveScenarioResults`.
 #'
@@ -212,7 +214,7 @@ runAndSaveScenarios <- function(projectConfiguration, scenarioList, simulationRu
 #' @param projectConfiguration Configuration for the project, containing paths and settings necessary
 #' to run the simulations and load the results.
 #' @param scenarioList Named list of Scenario objects to be managed.
-#' @param simulationRunOptions Object of type SimulationRunOptions that will be passed to simulation runs.
+#' @param simulationRunOptions Object of type `SimulationRunOptions` that will be passed to simulation runs.
 #' If `NULL`, default options are used.
 #' @param ... Additional arguments passed to `runAndSaveScenarios`.
 #'
@@ -263,7 +265,8 @@ extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { # no
   data <- readExcel(path = XLSpath, sheet = sheet)
   names(data) <- gsub(" ", "\\.", names(data))
   if (!all(columnNames %in% names(data))) {
-    stop(messages$errorWrongXLSStructure(filePath = XLSpath, expectedColNames = columnNames)) # nolint
+    stop("errorWrongXLSStructure")
+    # stop(messages$errorWrongXLSStructure(filePath = XLSpath, expectedColNames = columnNames)) # nolint
   }
 
   paramPaths <- c(dim(data)[[1]])

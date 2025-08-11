@@ -15,11 +15,13 @@ createTableObject(
 \arguments{
 \item{tableData}{A data.table containing the data to be plotted in the table.}
 
+\item{mapping}{A ggplot mapping object.}
+
 \item{digitsToRound}{An integer specifying the number of digits to round in the table.}
 
 \item{digitsToShow}{An integer specifying the number of digits to display in the table.}
 
-\item{yFacetColumns}{A character string specifying the column name for the x-axis facet.}
+\item{yFacetColumns}{A character vector of column names used for faceting on the y-axis.}
 }
 \value{
 A ggplot object representing the table.

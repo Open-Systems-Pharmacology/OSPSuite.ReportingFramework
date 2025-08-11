@@ -110,6 +110,7 @@ addMessageToLog <- function(messageText) {
 #' This function has to be initialized by  `initLogfunction` function
 #'
 #' @param expr The expression to evaluate.
+#' @param finallyExpression The expression to evaluate finally
 #'
 #' @export
 logCatch <- function(expr, finallyExpression = invisible()) {

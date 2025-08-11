@@ -7,13 +7,13 @@
 prepareTableForExport(dtExport, asRatio, plotCaptionAddon, plotDataPk)
 }
 \arguments{
-\item{asRatio}{Logical indicating if the plot is for ratios.}
+\item{dtExport}{A data.table containing the data to be exported for plotting.}
 
-\item{onePlotConfig}{Configuration for a single plot.}
+\item{asRatio}{A logical indicating if the plot is for ratios.}
 
-\item{pkParameterDT}{A data.table containing PK parameter data.}
+\item{plotCaptionAddon}{An optional string to be added to the plot caption.}
 
-\item{colorVector}{A named vector for colors.}
+\item{plotDataPk}{A data.table containing PK parameter data for generating the plot caption.}
 }
 \value{
 A data.table prepared for plotting, including merged configuration and parameter data.
@@ -23,4 +23,3 @@ Prepares and cleans data for box-and-whisker plotting by merging the PK paramete
 with the configuration settings. This function ensures that the data is structured
 correctly for plotting.
 }
-\keyword{internal}

@@ -31,7 +31,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' Example for plotting a histogram of PK-parameters of a scenario compared to a reference scenario:
+#' # Example for plotting a histogram of PK-parameters of a scenario compared to a reference scenario:
 #' runPlot(
 #'   nameOfplotFunction = "plotDistributionVsDemographics",
 #'   projectConfiguration = projectConfiguration,
@@ -132,7 +132,7 @@ plotDistributionVsDemographics <- function(projectConfiguration,
 #'
 #' @examples
 #' \dontrun{
-#' Example for plotting a histogram of PK-parameters of a scenario compared to a reference scenario:
+#' # Example for plotting a histogram of PK-parameters of a scenario compared to a reference scenario:
 #' runPlot(
 #'   nameOfplotFunction = "plotHistograms",
 #'   projectConfiguration = projectConfiguration,
@@ -641,7 +641,7 @@ setPlotTag <- function(plotData, asRangePlot, usePKParameter) {
     plotTagIdentifier <- c("scenario", plotTagIdentifier)
   }
   if (length(plotTagIdentifier) > 0) {
-    dtPlotTag <- plotData[, ..plotTagIdentifier] %>% # nolint
+    dtPlotTag <- plotData[, .SD, .SDcols = plotTagIdentifier] %>% # nolint
       unique() %>%
       setorderv(plotTagIdentifier)
     dtPlotTag[, plotTag := generatePlotTag(.I)]
@@ -734,7 +734,7 @@ loadPopulationParameterForScenario <- function(scenarioName, scenarioList, onePl
     ))
   }
 
-  dtPop <- dtPop[, c("IndividualId", ..modelPaths)][ # nolint
+  dtPop <- dtPop[, .SD, .SDcols = c("IndividualId", modelPaths)][
     , scenario := scenarioName
   ] %>%
     setnames("IndividualId", "individualId")
@@ -894,6 +894,7 @@ getNFacetsForDemographics <- function(idData, isRangePlot, nMaxFacetRows = 2) {
 #' Validates the configuration table for distribution vs demographics plots.
 #'
 #' @param configTable A data.table containing the configuration table.
+#' @param scenarioList List of scenarios
 #' @param ... Additional arguments for validation.
 #' @return NULL (invisible).
 #' @export
@@ -1161,7 +1162,7 @@ addDefaultConfigForHistograms <- function(projectConfiguration,
 #' @param pkParameterDT Optional. A data object containing pkParameter.
 #'
 #' @param sheetName A character string specifying the name of the sheet in the plot configuration table.
-#'   Default is "DistributionVsRange".
+#'   Default is `DistributionVsRange`.
 #'
 #' @param overwrite A boolean indicating whether existing configurations should be overwritten.
 #'   Default is FALSE.

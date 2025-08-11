@@ -141,13 +141,12 @@ readObservedDataByDictionary <- function(projectConfiguration,
 
   return(dataDT)
 }
-
 #' Validate Observed Data
 #'
-#' This function checks the integrity and validity of observed data in a `data.table`.
-#' It verifies the presence of required attributes, checks for duplicates, and ensures that
-#' there are no missing or empty values in the relevant columns. Additionally, it checks
-#' for ambiguities in the Y unit and validates error type columns.
+#' Checks the integrity and validity of observed data in a `data.table`.
+#' This function verifies the presence of required attributes, checks for duplicates,
+#' and ensures that there are no missing or empty values in the relevant columns.
+#' Additionally, it checks for ambiguities in the Y unit and validates error type columns.
 #'
 #' @param dataDT A `data.table` containing observed data with the following relevant columns:
 #'   - `individualId`: Unique identifier for individuals.
@@ -160,6 +159,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
 #'   - `yMin`, `yMax`: Minimum and maximum Y values (optional).
 #'   - `lloq`: Lower limit of quantification (optional).
 #'   - `nBelowLLOQ`: Count of values below the lower limit of quantification (optional).
+#' @param dataClassType A string indicating the type of data class (e.g., "timeprofile" or "pkParameter").
 #'
 #' @details
 #' The function performs several checks, including:
@@ -269,6 +269,8 @@ validateObservedData <- function(dataDT, dataClassType) {
     validateDataUnit(colIdentifier = c("outputPathId", "pkParameter"), colUnit = "unit")
     validateErrorType(errorTypeCol = "errorType", errorValuesCol = "errorValues", minCol = "minValue", maxCol = "maxValue")
   }
+
+  return(invisible())
 }
 
 #' Read data dictionary
@@ -703,7 +705,7 @@ groupDataByIdentifier <- function(dataDT) {
 #'
 #' @param groupData A `data.table` unique for identifier.
 #'
-#' @return An object of class 'DataSet'.
+#' @return An object of class `DataSet`.
 #' @keywords internal
 createDataSets <- function(groupData) {
   # Initialize variables used for data.tables
@@ -833,16 +835,16 @@ convertDataCombinedToDataTable <- function(datacombined) {
 #' If NULL, all available groups are used.
 #' @param aggregationFlag A character string indicating the aggregation method.
 #' Options include "GeometricStdDev", "ArithmeticStdDev", "Percentiles", or "Custom".
-#' @param percentiles A numeric vector of percentiles to calculate if aggregationFlag is "Percentiles".
+#' @param percentiles A numeric vector of percentiles to calculate if `aggregationFlag` is "Percentiles".
 #' Default is c(5, 50, 95).
 #' @param groupSuffix A character string to append to group names in the aggregated output.
 #' Default is 'aggregated'.
-#' @param customFunction A custom function for aggregation if aggregationFlag is "Custom".
+#' @param customFunction A custom function for aggregation if `aggregationFlag` is "Custom".
 #' Default is NULL.
 #' @param lloqCheckColumns2of3 A character vector specifying columns to check for LLOQ (Lower Limit of Quantification) for 1/3 data points.
-#' Default is NULL, is used only for aggregationFlag "Custom".
+#' Default is NULL, is used only for `aggregationFlag` "Custom".
 #' @param lloqCheckColumns1of2 A character vector specifying columns to check for LLOQ for 2/3 data points.
-#' Default is NULL, is used only for aggregationFlag "Custom".
+#' Default is NULL, is used only for `aggregationFlag` "Custom".
 #'
 #' @return A `data.table` containing aggregated observed data.
 #' @export
@@ -939,7 +941,7 @@ prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
 #' @param aggregatedData A `data.table` with aggregated data.
 #' @inheritParams aggregateObservedDataGroups
 #'
-#' @return Updated aggregatedData `data.table`.
+#' @return Updated aggregated data `data.table`.
 #' @keywords internal
 checkLLOQ <- function(aggregatedData, lloqCheckColumns2of3, lloqCheckColumns1of2, aggregationFlag) {
   # initialize data.table variables

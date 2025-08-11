@@ -36,7 +36,7 @@ This guide will walk you through the process of utilizing the `PKParameter.xlsx`
 
 The PK-parameter calculation is an extension of the `esqlabR` package. A new configuration table, `PKParameter.xlsx`, can be accessed via `projectConfiguration$addOns$pKParameterFile`. 
 
-This table contains a template sheet listing all available PK parameters in the OSPSuite, along with examples of two user-defined PK parameters: "F_max" and "F_end." User-defined PK parameters can be specified in the "Userdef PK Parameter" sheet.
+This table contains a template sheet listing all available PK parameters in the OSPSuite, along with examples of two user-defined PK parameters: `F_max` and `F_end`. User-defined PK parameters can be specified in the `Userdef PK Parameter` sheet.
 
 Internally, the calculations rely heavily on the functions `ospsuite::updatePKParameter()` and `ospsuite::addUserDefinedPKParameter()`. If any aspect is unclear, please refer to the respective function documentation for detailed information.
 
@@ -48,13 +48,15 @@ To configure the PK-parameter selection for a scenario:
 
 The `projectConfiguration$scenariosFile` table, as an extension of the `esqlabR` package, includes an additional sheet called 'PKParameter'. Here, you can link each scenario to the corresponding sheet name from the `PKParameter.xlsx`.
 
-When calling `runOrLoadScenarios` or `runAndSaveScenarios`, the selected PK parameters are automatically calculated and saved in the "PKAnalysisResults" folder within the output directory. If simulation results already exist and you wish to recalculate the PK parameters without initiating a new simulation, use `calculatePKParameterForScenarios`.
+When calling `runOrLoadScenarios` or `runAndSaveScenarios`, the selected PK parameters are automatically calculated and saved in the `PKAnalysisResults` folder within the output directory. If simulation results already exist and you wish to recalculate the PK parameters without initiating a new simulation, use `calculatePKParameterForScenarios`.
 
 To load the PK parameters use:
 
 ```{r loadPKParameter}
-pkParameterDT <- loadPKParameter(projectConfiguration = projectConfiguration,
-                                 scenarioListOrResult = scenarioResults)
+pkParameterDT <- loadPKParameter(
+  projectConfiguration = projectConfiguration,
+  scenarioListOrResult = scenarioResults
+)
 ```
 
 ## Import Observed Data

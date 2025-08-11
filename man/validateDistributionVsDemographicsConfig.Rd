@@ -9,6 +9,8 @@ validateDistributionVsDemographicsConfig(configTable, scenarioList, ...)
 \arguments{
 \item{configTable}{A data.table containing the configuration table.}
 
+\item{scenarioList}{List of scenarios}
+
 \item{...}{Additional arguments for validation.}
 }
 \value{

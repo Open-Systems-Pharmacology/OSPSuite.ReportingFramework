@@ -55,11 +55,11 @@ This vignette covers the following key topics:
 
 The configuration for plot generation is managed through the `projectConfiguration$plotsFile`, which consists of several sheets for general configurations that should not be renamed:
 
-- **Scenarios**: Configures the display names of scenarios in all plot functions.
-- **Outputs**: Configures the display names and units of outputs in all plot functions.
-- **DataGroups**: Configures the display names of data groups in all plot functions and links data groups to scenarios.
-- **ModelParameter**: Defines a list of model parameters that can be used in some plots.
-- **TimeRange**: Lists possible time ranges for time profile plots.
+- **`Scenarios`**: Configures the display names of scenarios in all plot functions.
+- **`Outputs`**: Configures the display names and units of outputs in all plot functions.
+- **`DataGroups`**: Configures the display names of data groups in all plot functions and links data groups to scenarios.
+- **`ModelParameter`**: Defines a list of model parameters that can be used in some plots.
+- **`TimeRange`**: Lists possible time ranges for time profile plots.
 
 In addition to these general configuration sheets, there are templates for plot configurations that can be copied and renamed. The sheet name serves as an input to the `runPlot` function.
 
@@ -117,38 +117,58 @@ Additionally, the `plotNames` input allows you to select specific plots defined 
 The table below provides an overview of all plot functions available in this package. For further information, please refer to the respective function help and the vignettes titled `Tutorial Time Profiles` and `PKParameter_Boxplot`.
 
 ```{r function-overview, echo=FALSE, eval=TRUE}
-dt = list(TimeProfiles = 
-            data.table('Function name' = 'plotTimeProfiles',
-                       Description = 'Create time profile plots'),
-          PKParameter_Boxplot = 
-            data.table('Function name' = 'plotPKBoxwhisker',
-                       Description = 'Creates box-whisker plots of PK parameters'),
-          PKParameter_Forest = 
-            data.table('Function name' = paste(c('plotPKForestAggregatedAbsoluteValues', 
-                       'plotPKForestPointEstimateOfAbsoluteValues', 
-                       'plotPKForestAggregatedRatios', 
-                       'plotPKForestPointEstimateOfRatios'),
-                       collapse = ' '),
-                       Description = 'Creates forest plots of PK parameters'),
-          Histograms = 
-            data.table('Function name' = 'plotHistograms',
-                       Description = 'Creates histograms of PK parameters or population parameters'),
-          DistributionVsRange = 
-            data.table('Function name' = 'plotDistributionVsDemographics',
-                       Description = paste('Creates range plots of PK parameters or population parameters',
-                       'versus a population parameter')),
-          SensitivityPlots = 
-            data.table('Function name' = 'plotSensitivity',
-                       Description = 'Creates plots to display the results of the sensitivity analysis.'))
+dt <- list(
+  TimeProfiles =
+    data.table(
+      "Function name" = "plotTimeProfiles",
+      Description = "Create time profile plots"
+    ),
+  PKParameter_Boxplot =
+    data.table(
+      "Function name" = "plotPKBoxwhisker",
+      Description = "Creates box-whisker plots of PK parameters"
+    ),
+  PKParameter_Forest =
+    data.table(
+      "Function name" = paste(
+        c(
+          "plotPKForestAggregatedAbsoluteValues",
+          "plotPKForestPointEstimateOfAbsoluteValues",
+          "plotPKForestAggregatedRatios",
+          "plotPKForestPointEstimateOfRatios"
+        ),
+        collapse = " "
+      ),
+      Description = "Creates forest plots of PK parameters"
+    ),
+  Histograms =
+    data.table(
+      "Function name" = "plotHistograms",
+      Description = "Creates histograms of PK parameters or population parameters"
+    ),
+  DistributionVsRange =
+    data.table(
+      "Function name" = "plotDistributionVsDemographics",
+      Description = paste(
+        "Creates range plots of PK parameters or population parameters",
+        "versus a population parameter"
+      )
+    ),
+  SensitivityPlots =
+    data.table(
+      "Function name" = "plotSensitivity",
+      Description = "Creates plots to display the results of the sensitivity analysis."
+    )
+)
 
-dt <- rbindlist(dt, idcol = 'Template sheet')
+dt <- rbindlist(dt, idcol = "Template sheet")
 
-knitr::kable(dt, caption = 'List of available template sheets and corresponding functions')
+knitr::kable(dt, caption = "List of available template sheets and corresponding functions")
 ```
 
 ## Creating Custom Plot Functions
 
-Custom plot functions enable the generation of specific visualizations tailored to your analytical needs. To assist in creating these custom functions, you can open a template using the RStudio Addins. Simply navigate to the Addins menu in RStudio and select "Open Template Plot Function." Alternatively, you can use the following function to open the template directly `r openFigureTemplate()`.
+Custom plot functions enable the generation of specific visualizations tailored to your analytical needs. To assist in creating these custom functions, you can open a template using the RStudio Addins. Simply navigate to the Addins menu in RStudio and select "Open Template Plot Function." Alternatively, you can use the following function to open the template directly `openFigureTemplate()`.
 
 This will provide you with a pre-structured and well documented template to help you get started with your custom plot function.
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-testProject.R
 \name{mockManualEditingsdisplayNames}
 \alias{mockManualEditingsdisplayNames}
-\title{Mock Manual Editings for Display Names}
+\title{Mock Manual editing for Display Names}
 \usage{
 mockManualEditingsdisplayNames(projectConfiguration)
 }

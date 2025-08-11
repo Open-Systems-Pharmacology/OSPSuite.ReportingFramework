@@ -32,7 +32,7 @@ This vignette provides a detailed guide to the data import process within the OS
 - **Import Function**: The primary function used for data import is `readObservedDataByDictionary`.
 
 - **Configuration File**: Data import configuration is managed through the "DataImportConfiguration.xlsx" file, which consists of:
-  - A "DataFiles" sheet listing all files to be imported.
+  - A `DataFiles` sheet listing all files to be imported.
   - Dictionary sheets that outline the import specifications and rules.
 
 - **Output**: The import process generates two data.tables:
@@ -40,9 +40,9 @@ This vignette provides a detailed guide to the data import process within the OS
   - `dataObservedPK`: Contains PK parameter data.
 
 - **Data Transfer**: The import function also facilitates the transfer of additional data to other configuration sheets:
-  - It populates the "IndividualBiometrics" sheet in "Individuals.xlsx" with all available data.
-  - It creates a new sheet, "VirtualTwinPopulation," in "Individuals.xlsx" that includes individual data suitable for generating a virtual twin population (refer to the Population vignette for more details).
-  - It appends the output identifier and data group identifier, along with all available data, to the corresponding sheets in "Plot.xlsx" and "Scenario.xlsx."
+  - It populates the `IndividualBiometrics` sheet in `Individuals.xlsx` with all available data.
+  - It creates a new sheet, `VirtualTwinPopulation`, in `Individuals.xlsx` that includes individual data suitable for generating a virtual twin population (refer to the Population vignette for more details).
+  - It appends the output identifier and data group identifier, along with all available data, to the corresponding sheets in `Plot.xlsx` and `Scenario.xlsx`.
 
 
 ![Overview of Data Import](images/DataImport.png)
@@ -89,15 +89,15 @@ tpDictionary <-
 
 To effectively fill the Excel table for use with the `readObservedDataByDictionary` function, follow these guidelines:
 
-## "DataFiles" Sheet: 
+## `DataFiles` Sheet: 
 
 In the "DataFiles" sheet of the Excel template, provide the following information:
 
-- **FileIdentifier**: An identifier that can be used for filtering the file.
-- **DataFile**: The path of the CSV file relative to the configuration XLSX.
-- **Dictionary**: The sheet name for the data dictionary.
-- **DataFilter**: An R executable expression that filters relevant data for the study. If empty, no filter is applied.
-- **DataClass**: Differentiate between time profiles and PK parameters, as well as aggregated and individual data.
+- **`FileIdentifier` **: An identifier that can be used for filtering the file.
+- **`DataFile`**: The path of the CSV file relative to the configuration Excel.
+- **`Dictionary`**: The sheet name for the data dictionary.
+- **`DataFilter`**: An R executable expression that filters relevant data for the study. If empty, no filter is applied.
+- **`DataClass`**: Differentiate between time profiles and PK parameters, as well as aggregated and individual data.
 
 ### Example
 
@@ -185,7 +185,7 @@ The configuration sheet provides two templates for dictionaries: "tpDictionary" 
     - `population`: Population. Ensure to translate to one of the available PK-Sim populations (see `ospsuite::HumanPopulation`).
 
   - **covariate**: Columns used for covariate analysis. This is the only column type where the name of the target column can be freely assigned by the user. Covariates are optional rows.
-  - **metadata**: Columns used to add information in the DataGroup sheet in the plot configuration table. The information is used to generate the data import for PK-Sim.
+  - **metadata**: Columns used to add information in the `DataGroup` sheet in the plot configuration table. The information is used to generate the data import for PK-Sim.
 
 - **sourceColumn**: Name of the column in the source CSV.  
 - **sourceUnit**: Unit of the column in the source CSV.  

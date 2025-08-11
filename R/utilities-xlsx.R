@@ -162,10 +162,10 @@ xlsxReadData <- function(wb, sheetName,
     # Replace curly quotes with straight quotes
     dt[, (characterCols) := lapply(.SD, function(x) {
       if (is.character(x)) {
-        x <- gsub("“", "\"", x) # Replace left double quote
-        x <- gsub("”", "\"", x) # Replace right double quote
-        x <- gsub("‘", "'", x) # Replace left single quote
-        x <- gsub("’", "'", x) # Replace right single quote
+        x <- gsub("\u201C", "\"", x) # Replace left double quote
+        x <- gsub("\u201D", "\"", x) # Replace right double quote
+        x <- gsub("\u2018", "'", x) # Replace left single quote
+        x <- gsub("\u2019", "'", x) # Replace right single quote
       }
       return(x)
     }), .SDcols = characterCols]

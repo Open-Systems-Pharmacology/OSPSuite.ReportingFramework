@@ -96,7 +96,7 @@ Create a new `MappedDataRangeDistribution` object
 
 \item{\code{numberOfBins}}{number of bins to use for binning}
 
-\item{\code{breaks}}{breaks for binning if modeOfBinning is 'breaks'}
+\item{\code{breaks}}{breaks for binning if `modeOfBinning` is 'breaks'}
 }
 \if{html}{\out{</div>}}
 }

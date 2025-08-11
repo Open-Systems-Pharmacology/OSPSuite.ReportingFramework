@@ -20,6 +20,8 @@ directory to be initialized. Defaults to the current working directory ('.').}
 Excel file containing the project configuration. By default, it uses the template
 provided by the 'ospsuite.reportingframework' package.}
 
+\item{templatePath}{path of all template files}
+
 \item{overwrite}{A logical value indicating whether to overwrite existing files in the
 project directory. Defaults to FALSE, meaning existing files will not be overwritten.}
 }

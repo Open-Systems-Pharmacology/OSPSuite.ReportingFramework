@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotTimeProfilePanels.R
 \name{getFoldDistanceForPvO}
 \alias{getFoldDistanceForPvO}
-\title{Get fold distance for plotType PvO}
+\title{Get fold distance for plotType `PvO`}
 \usage{
 getFoldDistanceForPvO(plotData)
 }
@@ -13,6 +13,6 @@ getFoldDistanceForPvO(plotData)
 List which can be used as input for comparisonLineVector.
 }
 \description{
-Get fold distance for plotType PvO
+Get fold distance for plotType `PvO`
 }
 \keyword{internal}

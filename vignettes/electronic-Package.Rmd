@@ -24,20 +24,20 @@ library(ospsuite.reportingframework)
 
 ## Introduction
 
-In the realm of regulatory submissions, the ability to produce transparent and reproducible reports is paramount. The ePackage functionality within the OSPSuite.ReportingFramework addresses this need by allowing users to seamlessly export workflows that generate Good Clinical Practice (GCP) relevant documents into a structured electronic package. 
+In the realm of regulatory submissions, the ability to produce transparent and reproducible reports is paramount. The `ePackage` functionality within the `OSPSuite.ReportingFramework` addresses this need by allowing users to seamlessly export workflows that generate Good Clinical Practice (GCP) relevant documents into a structured electronic package. 
 
 This functionality is designed to extract essential components from the project structure, including models, data, and configuration files, ensuring that all critical elements are systematically organized. By automating this extraction process, users can focus on their analyses without worrying about manual file management, which can lead to errors and inconsistencies.
 
 The outputs for reports are generated through well-defined scripts included in the package. These scripts are integral to the workflow, allowing for consistent execution of analyses and ensuring that results can be easily reproduced. This not only enhances the reliability of the findings but also fosters confidence among regulatory agencies, as every output is traceable back to a standardized process.
 
-By providing a comprehensive electronic package that consolidates all relevant files in accepted formats, such as CSV, XML, and TXT, the OSPSuite.ReportingFramework simplifies the submission process. Users can easily share this organized package with regulatory bodies, complete with README files that outline its contents and provide clear instructions for use. This approach not only streamlines the workflow but also upholds the highest standards of transparency and reproducibility in clinical research.
+By providing a comprehensive electronic package that consolidates all relevant files in accepted formats, such as CSV, XML, and TXT, the `OSPSuite.ReportingFramework` simplifies the submission process. Users can easily share this organized package with regulatory bodies, complete with README files that outline its contents and provide clear instructions for use. This approach not only streamlines the workflow but also upholds the highest standards of transparency and reproducibility in clinical research.
 
 
 ## Typical Workflows of an Activity
 
 The following table outlines typical workflows associated with activities in the OSPSuite context, highlighting their relevance to the electronic package:
 
-| Identifier   | Description                          | ePackage Relevance   | Inputs (green italic: already QCed)                                                                                                | Outputs                                     | Comments                                                                                                          |
+| Identifier   | Description                          | ePackage Relevance   | Inputs (green italic: already `QCed`)                                                                                                | Outputs                                     | Comments                                                                                                          |
 |--------------|--------------------------------------|----------------------|------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
 | P1           | Preparatory scripts or action        | Internal             | Workflow script configuration tables                                                                                               | Inputs for other workflows e.g., populations |                                                                                                                   |
 | We1          | Export of simulation workflow        | Internal             | Workflow script for export configuration tables, pkmls, populations                                                                 | ePackage files                              | Typically time-consuming. Customization is uncommon. Re-runs are only necessary if changes occur in the model. |
@@ -54,9 +54,9 @@ The folder for the electronic package is part of the project configuration. You 
 
 ```{r}
 projectConfiguration$addAddOnFolderToConfiguration(
-      property = 'electronicPackageFolder',
-      value = 'my/new/path',
-      description = 'my custom folder for ePackage'
+  property = "electronicPackageFolder",
+  value = "my/new/path",
+  description = "my custom folder for ePackage"
 )
 ```
 
@@ -84,11 +84,12 @@ Before exporting your workflow, ensure that you have completed the necessary ste
 Here’s how to use it:
 
 ```{r exportSimulationWorkflowToEPackage}
-   # Export the simulation workflow to an electronic package
-   exportSimulationWorkflowToEPackage(projectConfiguration = projectConfiguration,
-                                       wfIdentifier = 1,
-                                       scenarioNames = c('scenario1', 'scenario2')
-   )
+# Export the simulation workflow to an electronic package
+exportSimulationWorkflowToEPackage(
+  projectConfiguration = projectConfiguration,
+  wfIdentifier = 1,
+  scenarioNames = c("scenario1", "scenario2")
+)
 ```
 
 You just need to provide the workflow with an identifier and specify the scenarios you want to use. See the function help `? exportSimulationWorkflowToEPackage` for more information.
@@ -126,11 +127,12 @@ The package provides a template for the `workflow.Rmd`. You can open a template 
 Below is the export call using the 'workflow.Rmd' as input:
 
 ```{r exportTLFWorkflowToEPackage}
-   # Export the TLF workflow to an electronic package
-   exportTLFWorkflowToEPackage(projectConfiguration = projectConfiguration,
-                               wfIdentifier = 2,
-                               workflowRmd = 'path/to/myWorkflow.Rmd'
-   )
+# Export the TLF workflow to an electronic package
+exportTLFWorkflowToEPackage(
+  projectConfiguration = projectConfiguration,
+  wfIdentifier = 2,
+  workflowRmd = "path/to/myWorkflow.Rmd"
+)
 ```
 
 See the function help `? exportTLFWorkflowToEPackage` for more information.
@@ -141,18 +143,18 @@ Running a TLF workflow is very similar to running a simulation workflow; however
 
 ### Step 4: Report Generation
 
-While the ePackage functionality ensures that all figures and tables can be reproduced consistently, the process of generating a comprehensive report that combines these elements into a Word document is not included within the workflows included in the ePackage. 
+While the `ePackage` functionality ensures that all figures and tables can be reproduced consistently, the process of generating a comprehensive report that combines these elements into a Word document is not included within the workflows included in the `ePackage`. 
 
-To create a cohesive report, you can use the report generation functionality of this package, which will use the markdown documents produced by the ePackage. See vignette 'Plot and Report Generation' for more information
+To create a cohesive report, you can use the report generation functionality of this package, which will use the markdown documents produced by the `ePackage`. See vignette 'Plot and Report Generation' for more information
 
 
 ## Conclusion
 
-In summary, the ePackage functionality of the OSPSuite.ReportingFramework is a powerful tool designed to enhance the efficiency and reliability of regulatory submissions. By automating the extraction and organization of essential components from project structures, this feature significantly reduces the risk of error and ensures that all necessary files are readily available in a standardized format.
+In summary, the `ePackage` functionality of the `OSPSuite.ReportingFramework` is a powerful tool designed to enhance the efficiency and reliability of regulatory submissions. By automating the extraction and organization of essential components from project structures, this feature significantly reduces the risk of error and ensures that all necessary files are readily available in a standardized format.
 
 The ability to generate reproducible reports through well-defined scripts not only streamlines the workflow but also fosters confidence among stakeholders by providing transparency in the analysis process. With the inclusion of comprehensive README files and the option to customize the electronic package, users can tailor their submissions to meet specific regulatory requirements.
 
-As you explore the capabilities of the OSPSuite.ReportingFramework, we encourage you to leverage the ePackage functionality to enhance your reporting processes. By embracing these tools, you can ensure that your clinical research is presented with the highest standards of integrity and clarity, ultimately contributing to the advancement of scientific knowledge and regulatory compliance.
+As you explore the capabilities of the `OSPSuite.ReportingFramework`, we encourage you to leverage the `ePackage` functionality to enhance your reporting processes. By embracing these tools, you can ensure that your clinical research is presented with the highest standards of integrity and clarity, ultimately contributing to the advancement of scientific knowledge and regulatory compliance.
 
-For further assistance or to share your experiences with the ePackage functionality, please feel free to reach out to the community or consult the official documentation.
+For further assistance or to share your experiences with the `ePackage` functionality, please feel free to reach out to the community or consult the official documentation.
 

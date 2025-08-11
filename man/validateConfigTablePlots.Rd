@@ -15,7 +15,7 @@ validateConfigTablePlots(
 )
 }
 \arguments{
-\item{configTablePlots}{`data.table` ConfigurationTable without header lines}
+\item{configTablePlots}{`data.table` configuration table without header lines}
 
 \item{charactersWithoutMissing}{vector with character columns, where no missing value is allowed}
 

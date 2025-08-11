@@ -22,11 +22,15 @@ createPlotObject(
 \arguments{
 \item{plotData}{A data.table containing the data to be plotted.}
 
+\item{mapping}{A ggplot mapping object.}
+
 \item{xscale}{A character string indicating the scale type for the x-axis.}
 
 \item{xscale.args}{A list of additional arguments for customizing the x-axis scale.}
 
 \item{xLabel}{A string representing the label for the x-axis.}
+
+\item{groupAesthetics}{A character vector specifying aesthetics for grouping.}
 
 \item{yFacetColumns}{A character vector of column names used for faceting on the y-axis.}
 
@@ -34,7 +38,11 @@ createPlotObject(
 
 \item{labelWrapWidth}{A numeric value specifying the width for label wrapping in facets.}
 
-\item{yColumn}{A character string specifying the name of the column to be used for the y-axis.}
+\item{geomPointAttributes}{A list of attributes for the point geometry.}
+
+\item{geomErrorbarAttributes}{A list of attributes for the error bar geometry.}
+
+\item{facetScales}{A character string indicating the scales used for facets. Defaults to "free_y".}
 }
 \value{
 A ggplot object representing the main plot.

@@ -3,7 +3,7 @@
 \docType{data}
 \name{DATACLASS}
 \alias{DATACLASS}
-\title{enumeration keys for DataClass}
+\title{enumeration keys for `DataClass`}
 \format{
 An object of class \code{list} of length 5.
 }
@@ -11,6 +11,6 @@ An object of class \code{list} of length 5.
 DATACLASS
 }
 \description{
-enumeration keys for DataClass
+enumeration keys for `DataClass`
 }
 \keyword{datasets}

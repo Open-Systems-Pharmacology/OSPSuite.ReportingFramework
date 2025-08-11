@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-testProject.R
 \name{mockManualEditingsSensitivity}
 \alias{mockManualEditingsSensitivity}
-\title{Mock Manual Editings for Sensitivity}
+\title{Mock Manual editing for Sensitivity}
 \usage{
 mockManualEditingsSensitivity(projectConfiguration, sheetName)
 }

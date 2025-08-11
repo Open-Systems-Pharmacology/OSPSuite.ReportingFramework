@@ -36,7 +36,7 @@ XXCHUNKstart-loadResultsXXX
   # run simulations and calculate PK Parameter
   scenarioResults <- runAndSaveScenarios(projectConfiguration = projectConfiguration,
                                          scenarioList = scenarioList,
-                                         simulationRunOptions = SimulationRunOptions$new(
+                                         simulationRunOptions = ospsuite::SimulationRunOptions$new(
                                            showProgress = TRUE
                                          ))
 XXCHUNKend-loadResultsXXX

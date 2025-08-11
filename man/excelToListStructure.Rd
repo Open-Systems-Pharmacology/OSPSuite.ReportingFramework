@@ -7,7 +7,7 @@
 excelToListStructure(df)
 }
 \arguments{
-\item{dat}{of an Excelsheet}
+\item{df}{content of an Excel sheet}
 }
 \value{
 List structure ready for JSON serialization

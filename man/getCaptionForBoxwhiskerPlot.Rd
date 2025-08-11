@@ -24,7 +24,7 @@ getCaptionForBoxwhiskerPlot(
 
 \item{isPlotCaption}{Logical indicating if the caption is for the plot.}
 
-\item{ratioMode}{Mode indicating if the plot is for ratios.}
+\item{asRatio}{boolean indicating if the plot is for ratios.}
 }
 \value{
 A character string containing the caption.

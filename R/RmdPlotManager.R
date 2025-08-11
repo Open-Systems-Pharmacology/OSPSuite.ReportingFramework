@@ -13,7 +13,7 @@ RmdPlotManager <- R6::R6Class( # nolint
     #' @param rmdfolder Folder where the .Rmd file should be saved.
     #' @param rmdName A character string for the name of the .Rmd file (without extension).
     #' @param suppressExport A logical value indicating whether to suppress export. Default is FALSE.
-    #' @param nameOfplotFunction The name of the plotfunction as character.
+    #' @param nameOfplotFunction The name of the plot-function as character.
     #' @param digitsOfSignificance Number of significant digits to display in tables.
     #'     #'
     #' @return An instance of the RmdPlotManager object.
@@ -323,7 +323,7 @@ RmdPlotManager <- R6::R6Class( # nolint
     .listOfKeys = c(),
     # boolean to tell, if last entry was a Key
     .listOfALLKeys = c(),
-    # ConfigurationTable use to build Object
+    # configuration table use to build Object
     .configTable = NULL,
     # Identifier observed data use to build Object
     .dataObserved = c(),

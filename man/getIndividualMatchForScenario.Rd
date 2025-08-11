@@ -16,13 +16,13 @@ the individual match data is to be retrieved.}
 \item{dtScenarios}{A data table containing scenario details.}
 }
 \value{
-A data.table containing the 'IndividualId' and 'ObservedIndividualId'
+A data.table containing the `IndividualId` and `ObservedIndividualId`
 if the population scenario is a virtual twin population; otherwise, returns NULL.
 }
 \description{
 This function retrieves the individual match data for a specified scenario
 from a project configuration. It checks if the scenario is a population
-scenario with a static population file containing the column ObservedIndividualId
-and reads the IndividualId of the simulated results and the ObservedIndividualId
+scenario with a static population file containing the column `ObservedIndividualId`
+and reads the `IndividualId` of the simulated results and the `ObservedIndividualId`
 of the observed data.
 }

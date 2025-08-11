@@ -18,6 +18,10 @@ It is essential that the units are consistent; if not, use `convertUnits(myDataC
 
 \item{metaData}{A list containing metadata for the plot. If NULL, a default list is constructed from the data.}
 
+\item{mapping}{additional mappings specified by user}
+
+\item{observedMapping}{Aesthetic mappings for the observed data, typically created with `ggplot2::aes()`.}
+
 \item{...}{Additional arguments passed to `ospsuite.plots::plotTimeProfile`.}
 }
 \value{

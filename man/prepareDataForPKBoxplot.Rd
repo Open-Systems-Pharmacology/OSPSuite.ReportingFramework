@@ -13,7 +13,7 @@ prepareDataForPKBoxplot(onePlotConfig, pkParameterDT, colorVector, asRatio)
 
 \item{colorVector}{A named vector for colors.}
 
-\item{ratioMode}{Mode indicating if the plot is for ratios.}
+\item{asRatio}{boolean indicating if the plot is for ratios.}
 }
 \value{
 A data.table prepared for plotting.

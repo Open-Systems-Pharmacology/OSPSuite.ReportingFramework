@@ -7,7 +7,7 @@
 validateOutputPathIdFormat(configTablePlots, column = "outputPathIds")
 }
 \arguments{
-\item{configTablePlots}{`data.table` ConfigurationTable without header lines}
+\item{configTablePlots}{`data.table` configuration table without header lines}
 }
 \description{
 Validates output path ID format

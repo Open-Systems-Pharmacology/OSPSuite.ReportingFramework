@@ -17,7 +17,7 @@ to run the simulations and save the results.}
 
 \item{scenarioList}{Named list of Scenario objects to be simulated.}
 
-\item{simulationRunOptions}{Object of type SimulationRunOptions that will be passed to simulation runs.
+\item{simulationRunOptions}{Object of type `SimulationRunOptions` that will be passed to simulation runs.
 If `NULL`, default options are used.}
 
 \item{...}{Additional arguments passed to `esqlabsR::saveScenarioResults`.}

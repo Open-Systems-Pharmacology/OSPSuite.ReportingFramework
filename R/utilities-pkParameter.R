@@ -148,7 +148,7 @@ addUserDefinedParameters <- function(userdefinedParameters, dtUserdefPKParameter
 
     myPK <- ospsuite::addUserDefinedPKParameter(
       name = dtUserdefPKParameter$name[iRow],
-      standardPKParameter = StandardPKParameter[[dtUserdefPKParameter$`standard PK parameter`[iRow]]],
+      standardPKParameter = ospsuite::StandardPKParameter[[dtUserdefPKParameter$`standard PK parameter`[iRow]]],
       displayUnit = dtUserdefPKParameter$`display Unit`[iRow]
     )
 
@@ -201,7 +201,7 @@ loadPKParameter <- function(projectConfiguration,
     loadPKAnalysisPerScenario(
       scenarioName = sc,
       scenarioSimulation = scenarioListOrResult[[sc]]$simulation,
-      pkParameterSheet = pkParameterSheets,
+      pkParameterSheets = pkParameterSheets,
       projectConfiguration = projectConfiguration
     )
   })
@@ -297,6 +297,9 @@ loadPKAnalysisPerScenario <- function(scenarioName, scenarioSimulation,
 #' @return A data.table containing the PK analyses loaded from the CSV file.
 #' @keywords internal
 loadPkAnalysisRawData <- function(projectConfiguration, scenarioName, scenarioSimulation) {
+  # initialize variables to avoid messages
+  unit <- NULL
+
   outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$pKAnalysisResults)
   if (!dir.exists(outputFolder)) dir.create(outputFolder)
 

@@ -37,6 +37,7 @@ The function performs the following steps:
    to the development directory.
 }
 \examples{
+\dontrun{
 # Example usage in package development
 if (writeTestData) {
   testProject <- buildTestProjectory(verbose = TRUE, writeTestData = TRUE)
@@ -48,7 +49,6 @@ projectdirectory <- testSetup$projectConfiguration
 scenarioList <- testSetup$scenarioList
 
 # Example usage in vignettes
-\dontrun{
 vignetteSetup <- buildTestProjectory(verbose = TRUE)
 # Use vignetteSetup$projectConfiguration and vignetteSetup$scenarioList as needed
 }

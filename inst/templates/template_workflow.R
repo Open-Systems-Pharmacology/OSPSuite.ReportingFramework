@@ -71,7 +71,7 @@ scenarioList <- createScenarios.wrapped(
 scenarioResults <- runOrLoadScenarios(
   projectConfiguration = projectConfiguration,
   scenarioList = scenarioList,
-  simulationRunOptions = SimulationRunOptions$new(
+  simulationRunOptions = ospsuite::SimulationRunOptions$new(
     numberOfCores = NULL,
     checkForNegativeValues = NULL,
     showProgress = TRUE

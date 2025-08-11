@@ -1,6 +1,6 @@
-#' @title plotData for Timeprofile plotData
+#' @title plotData for Time profile plot Data
 #' @docType class
-#' @description An object to collect plotData and other information to create a time profile plot
+#' @description An object to collect plot Data and other information to create a time profile plot
 #' @export
 PlotDataTimeProfile <- R6::R6Class( # nolint
   "RmdPlotManager",
@@ -833,7 +833,7 @@ splitCaptionByIndividuals <- function(configTable, individualIdVector, dtCaption
 #'
 #' @param dtCaption A data table containing the caption data.
 #' @param timeTags A vector of time tags to be added.
-#' @param splitPlotsPerTimeRange Boolean, if TRUE for each Timerange a plot is created
+#' @param splitPlotsPerTimeRange Boolean, if TRUE for each Time-range a plot is created
 #' @return A data table with added time tags.
 #' @keywords internal
 addTimeTagsToCaption <- function(dtCaption, timeTags, splitPlotsPerTimeRange) {
@@ -867,7 +867,7 @@ addTimeTagsToCaption <- function(dtCaption, timeTags, splitPlotsPerTimeRange) {
 #'
 #' This function sets the time range filter based on the facet type and time tags.
 #'
-#' @param splitPlotsPerTimeRange Boolean, if TRUE for each Timerange a plot is created
+#' @param splitPlotsPerTimeRange Boolean, if TRUE for each time-range a plot is created
 #' @param timeTags A vector of time tags.
 #' @return A list of time range filters.
 #' @keywords internal

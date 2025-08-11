@@ -8,6 +8,7 @@
 #' @import esqlabsR
 #' @import ospsuite.plots
 #' @import data.table
+#' @import ggplot2
 #' @importFrom data.table .BY
 #' @importFrom data.table .EACHI
 #' @importFrom data.table .GRP

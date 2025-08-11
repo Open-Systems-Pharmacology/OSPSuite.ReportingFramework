@@ -9,7 +9,7 @@ validateVirtualTwinPop(configTablePlots, scenarioResults)
 \arguments{
 \item{configTablePlots}{A data table containing the plot configuration, including scenario names and individual IDs.}
 
-\item{projectConfiguration}{A configuration object containing project-specific settings.}
+\item{scenarioResults}{A list with scenario results.}
 }
 \description{
 This function validates the virtual twin population specified in the plot configuration table.

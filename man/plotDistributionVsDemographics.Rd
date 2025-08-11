@@ -20,40 +20,60 @@ plotDistributionVsDemographics(
 )
 }
 \arguments{
-\item{projectConfiguration}{A configuration object for the project.}
+\item{projectConfiguration}{A configuration object for the project, containing necessary settings.}
 
-\item{onePlotConfig}{A configuration for the specific plot.}
+\item{onePlotConfig}{A configuration table for the specific plot, detailing plot parameters.}
 
-\item{pkParameterDT}{A data.table containing PK parameter data (optional).}
+\item{pkParameterDT}{A data.table containing pharmacokinetic (PK) parameter data (optional).}
 
-\item{scenarioList}{A list of scenarios to consider (optional).}
+\item{scenarioList}{A list of scenarios to consider for the plot (optional).}
 
-\item{asStepPlot}{Logical indicating if the plot should be a step plot (default is TRUE).}
+\item{asStepPlot}{Logical indicating if the plot should be rendered as a step plot (default is TRUE).}
 
-\item{aggregationFlag}{A character vector indicating the type of aggregation function to use
-for simulated data. Options include "GeometricStdDev" (Default), "ArithmeticStdDev", "Percentiles",
-and "Custom".}
+\item{aggregationFlag}{A character vector specifying the aggregation function for simulated data.
+Options include "GeometricStdDev" (default), "ArithmeticStdDev", "Percentiles", and "Custom".}
 
-\item{customFunction}{An optional custom function for aggregation. A custom function should take a numeric vector `y` as input and return a list containing:
+\item{customFunction}{Optional. A custom aggregation function that accepts a numeric vector and returns a list with:
 - `yValues`: The aggregated value (e.g., mean).
-- `yMin`: The lower value of the aggregated data (e.g., mean - sd).
-- `yMax`: The upper value of the aggregated data (e.g., mean + sd).
-- `yErrorType`: A string indicating the type of error associated with the aggregation,
-it is used in plot legends and captions. It must be a concatenation of the descriptor of yValues and the descriptor of yMin and yMax
-separated by "|" (e.g.,  "median | 5th percentile | 95th percentile").}
+- `yMin`: The lower bound of the aggregated data (e.g., mean - sd).
+- `yMax`: The upper bound of the aggregated data (e.g., mean + sd).
+- `yErrorType`: A string indicating the error type for the aggregation, used for plot legends.}
 
-\item{percentiles}{A numeric vector of percentiles to consider if the aggregation method is set
-to "Percentiles" (default is c(5, 50, 95)).}
+\item{percentiles}{A numeric vector of percentiles to consider if the aggregation method is set to "Percentiles" (default is c(5, 50, 95)).}
 
 \item{facetAspectRatio}{A numeric value for the aspect ratio of the facets (default is 0.5).}
 
 \item{colorVector}{A named vector for colors corresponding to scenarios (default is c(scenario = NA, referenceScenario = NA)).}
 
-\item{...}{Additional arguments passed to plotting function ospsuite.plots::plotHistogram or for rangePlots plotRangeDistribution.}
+\item{...}{Additional arguments passed to the plotting functions `ospsuite.plots::plotHistogram` or `plotRangeDistribution`.}
 }
 \value{
 A list of plot objects generated based on the input configuration.
 }
 \description{
-This function generates plots comparing distributions against demographic data based on the provided configuration and data.
+Generates plots comparing distributions against demographic data based on the provided configuration and data.
+}
+\details{
+This function is intended to be used in combination with the `runPlot` function.
+Refer to the vignette `Plot and Report Generation` for more details.
+It can be configured to plot PK parameters or population parameters, with the X-axis always displaying the population parameter.
+
+A helper function, `addDefaultConfigForDistributionsVsDemographics`, is available to streamline the setup of your Excel configuration sheet for histograms.
+This function automatically populates a new sheet with default values that can be customized as needed.
+}
+\examples{
+\dontrun{
+Example for plotting a histogram of PK-parameters of a scenario compared to a reference scenario:
+runPlot(
+  nameOfplotFunction = "plotDistributionVsDemographics",
+  projectConfiguration = projectConfiguration,
+  configTableSheet = "DistributionVsRange",
+  inputs = list(
+    scenarioList = scenarioList,
+    pkParameterDT = pkParameterDT,
+    aggregationFlag = "GeometricStdDev"
+  )
+)
+}
+
 }

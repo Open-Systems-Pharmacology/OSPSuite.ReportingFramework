@@ -9,15 +9,13 @@ plotSensitivity(projectConfiguration, onePlotConfig, scenarioList)
 \arguments{
 \item{projectConfiguration}{A list containing project configuration settings, including file paths and parameters.}
 
+\item{onePlotConfig}{A data frame containing the configuration for a single plot.}
+
 \item{scenarioList}{A list of scenarios for which the sensitivity analysis will be performed.}
-
-\item{subfolder}{A string specifying the subfolder where the plots will be saved.}
-
-\item{configTableSheet}{A string indicating the name of the configuration table sheet to be read.}
 }
 \value{
-An RmdPlotManager object containing the generated sensitivity plots.
+A list of plots and tables, where each entry corresponds to a generated sensitivity plot or its data.
 }
 \description{
-This function generates sensitivity plots based on the provided project configuration and scenario list.
+Generates sensitivity plots based on the provided project configuration and scenario list.
 }

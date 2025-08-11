@@ -37,5 +37,5 @@ It checks if the specified sheet already exists and whether to overwrite it. If 
 and fills in the default configuration values for the time profile plots.
 
 Additionally, the function performs a validity check to ensure that it is not executed during a context
-where helper functions are prohibited (validRun). If such a context is detected, an error is raised to prevent execution.
+where helper functions are prohibited (`validRun`). If such a context is detected, an error is raised to prevent execution.
 }

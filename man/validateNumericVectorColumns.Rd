@@ -11,7 +11,7 @@ validateNumericVectorColumns(columns, data, ...)
 
 \item{data}{A data frame containing the columns to validate.}
 
-\item{..}{additionally parameters parsed to checkmate::assertNumeric}
+\item{...}{additionally parameters parsed to checkmate::assertNumeric}
 }
 \description{
 Validates numeric range columns in the provided data frame.

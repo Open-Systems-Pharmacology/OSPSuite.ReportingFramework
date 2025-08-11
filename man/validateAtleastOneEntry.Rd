@@ -7,7 +7,7 @@
 validateAtleastOneEntry(configTablePlots, columnVector)
 }
 \arguments{
-\item{configTablePlots}{`data.table` ConfigurationTable without header lines}
+\item{configTablePlots}{`data.table` Configuration table without header lines}
 
 \item{columnVector}{vector of columns to check}
 }

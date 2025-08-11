@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-pkParameter.R
 \name{calculatePKParameterForScenarios}
 \alias{calculatePKParameterForScenarios}
-\title{Calculate and Load Pharmacokinetic (PK) Parameters}
+\title{Calculate  Pharmacokinetic (PK) Parameters}
 \usage{
 calculatePKParameterForScenarios(projectConfiguration, scenarioResults)
 }

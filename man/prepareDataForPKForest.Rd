@@ -17,28 +17,28 @@ prepareDataForPKForest(
 )
 }
 \arguments{
-\item{onePlotConfig}{Configuration for the plot.}
+\item{onePlotConfig}{A configuration list for the plot.}
 
-\item{pkParameterObserved}{Optional data table for observed PK parameters.}
+\item{pkParameterFiltered}{A data table containing filtered PK parameter data.}
 
-\item{ratioMode}{Mode for ratio calculations.}
+\item{pkParameterObserved}{An optional data table for observed PK parameters.}
 
-\item{asPointeEstimate}{Logical indicating if confidence intervals should be calculated.}
+\item{ratioMode}{A string indicating the mode for ratio calculations.}
 
-\item{nBootstrap}{Number of bootstrap samples.}
+\item{asPointeEstimate}{A logical indicating if point estimates should be calculated.}
 
-\item{confLevel}{Confidence level for intervals.}
+\item{nBootstrap}{An integer specifying the number of bootstrap samples.}
 
-\item{aggregationFun}{Function used for aggregation.}
+\item{confLevel}{A numeric value representing the confidence level for intervals.}
 
-\item{aggregationFlag}{Optional aggregation method.}
+\item{aggregationFun}{A function used for data aggregation.}
 
-\item{pkParameterDT}{Data table containing PK parameter data.}
+\item{aggregationFlag}{An optional string indicating the aggregation method.}
 }
 \value{
 A list of prepared data for the PK forest plot.
 }
 \description{
-Prepares data for generating a PK forest plot.
+Prepares data for generating a pharmacokinetic (PK) forest plot.
 }
 \keyword{internal}

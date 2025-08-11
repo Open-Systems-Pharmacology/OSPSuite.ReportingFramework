@@ -17,7 +17,7 @@
 #' - `yMax`: The upper value of the aggregated data, (e.g. mean + sd).
 #' - `yErrorType`: A string indicating the type of error associated with the aggregation,
 #' it is used in plot legends and captions.
-#' It must be a concatenation of the descriptor of yValues and the descriptor of yMin - yMax range
+#' It must be a concatenation of the descriptor of `yValues` and the descriptor of `yMin` - `yMax` range
 #' separated by "|" (e.g., "mean | standard deviation" or "median | 5th - 95th percentile").
 #' If legendsize 3 is needed should contain 3 elements, e.g. "median | 5th percentile | 95th percentile"
 #'

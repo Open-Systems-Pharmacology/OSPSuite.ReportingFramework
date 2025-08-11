@@ -2,17 +2,17 @@
 % Please edit documentation in R/plotTimeProfilePanels.R
 \name{getGeomLineAttributesForTP}
 \alias{getGeomLineAttributesForTP}
-\title{get additional inputs for TP plotType to enable lines in shape legend}
+\title{get additional inputs for `TP` plotType to enable lines in shape legend}
 \usage{
 getGeomLineAttributesForTP(plotData)
 }
 \arguments{
-\item{plotData}{object of class PlotData}
+\item{plotData}{`data.table` with plot data}
 }
 \value{
 list with additional attributes for geom_line
 }
 \description{
-get additional inputs for TP plotType to enable lines in shape legend
+get additional inputs for `TP` plotType to enable lines in shape legend
 }
 \keyword{internal}

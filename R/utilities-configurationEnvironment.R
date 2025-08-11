@@ -67,7 +67,6 @@ getOutputPathIds <- function(wbPlots) {
   ) %>%
     setnames(old = "displayName", new = "displayNameOutput")
 
-  dtOutputPaths[, displayUnit := gsub("Âµ", "\u00B5", as.character(displayUnit))]
   dtOutputPaths[is.na(displayUnit), displayUnit := ""]
 
   dtOutputPaths$outputPathId <- factor(dtOutputPaths$outputPathId,
@@ -119,7 +118,6 @@ getModelParameterDefinitions <- function(wbPlots) {
   ) %>%
     setnames(old = "displayName", new = "displayNameModelParameter")
 
-  dtParameter[, displayUnit := gsub("Âµ", "\u00B5", as.character(displayUnit))]
   dtParameter[is.na(displayUnit), displayUnit := ""]
 
   dtParameter$parameterId <- factor(dtParameter$parameterId,
@@ -139,6 +137,9 @@ getModelParameterDefinitions <- function(wbPlots) {
 #' @return A `data.table` with scenario definitions.
 #' @export
 getScenarioDefinitions <- function(wbScenarios, wbPlots = NULL) {
+  # initialize global parameter to avoid message
+  pKParameter <- NULL
+
   scenariosSc <- xlsxReadData(
     wb = wbScenarios,
     sheetName = "Scenarios",

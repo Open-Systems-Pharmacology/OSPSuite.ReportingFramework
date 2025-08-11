@@ -50,6 +50,7 @@ prepareTestProject <- function(rootDirectory) {
 #'    to the development directory.
 #'
 #' @examples
+#' \dontrun{
 #' # Example usage in package development
 #' if (writeTestData) {
 #'   testProject <- buildTestProjectory(verbose = TRUE, writeTestData = TRUE)
@@ -61,7 +62,6 @@ prepareTestProject <- function(rootDirectory) {
 #' scenarioList <- testSetup$scenarioList
 #'
 #' # Example usage in vignettes
-#' \dontrun{
 #' vignetteSetup <- buildTestProjectory(verbose = TRUE)
 #' # Use vignetteSetup$projectConfiguration and vignetteSetup$scenarioList as needed
 #' }
@@ -215,15 +215,15 @@ iniTestProject <- function(rootDirectory,
 #' @return invisible(NULL)
 #' @keywords internal
 updateConfigTablesForTestProject <- function(projectConfiguration, modelFiles) {
-  # Perform mock manual editings on the project configuration tables
+  # Perform mock manual editing on the project configuration tables
   # Clear existing data from relevant Excel sheets
   mockManualEditingsCleanup(projectConfiguration)
   # Define virtual populations within biometric ranges
   mockManualEditingsPopulation(projectConfiguration)
   # Set up scenarios based on the defined populations, add PK Parameter and output paths
   mockManualEditingsScenario(projectConfiguration, modelFiles = modelFiles)
-  ospsuite.reportingframework:::synchronizeScenariosOutputsWithPlots(projectConfiguration) # Sync outputs with plots
-  ospsuite.reportingframework:::synchronizeScenariosWithPlots(projectConfiguration) # Sync scenarios with plots
+  synchronizeScenariosOutputsWithPlots(projectConfiguration) # Sync outputs with plots
+  synchronizeScenariosWithPlots(projectConfiguration) # Sync scenarios with plots
   # Add PK parameters to the project configuration
   mockManualEditingsPKParameter(projectConfiguration)
   # prepare displaynames for plotting
@@ -296,7 +296,7 @@ setupSimulationsForTest <- function(projectConfiguration, scenarioList, instDire
   scenarioResults <- runOrLoadScenarios(
     projectConfiguration = projectConfiguration,
     scenarioList = scenarioList,
-    simulationRunOptions = SimulationRunOptions$new(
+    simulationRunOptions = ospsuite::SimulationRunOptions$new(
       showProgress = TRUE
     )
   )
@@ -327,7 +327,7 @@ setupSimulationsForTest <- function(projectConfiguration, scenarioList, instDire
 
 #' Setup Random Data for Test
 #'
-#' This function adds random pharmacokinetic (PK and ttme profile) data to the test project,
+#' This function adds random pharmacokinetic (PK and time profile) data to the test project,
 #' including shifting values  for selected individuals.
 #'
 #' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
@@ -483,7 +483,7 @@ synchronizeDirectories <- function(fromDir, toDir, pattern = NULL) {
 addRandomPKDataToTestProject <- function(projectConfiguration, pkParameterDT) {
   # initialize variable to avoid messages
   ratio <- iv <- po <- displayUnitPKParameter <- outputPathId <- route <- value <- NULL
-  pkParameter <- population <- shiftedValue <- scenario <- individualId <- NULL
+  pkParameter <- population <- shiftedValue <- scenario <- individualId <- unit <- NULL
   STUD <- NULL # nolint
 
   dataFolder <- file.path(projectConfiguration$configurationsFolder, "..", "..", "Data")
@@ -493,17 +493,17 @@ addRandomPKDataToTestProject <- function(projectConfiguration, pkParameterDT) {
   ids <- sample(unique(pkParameterDT$individualId), 6, replace = FALSE)
   randomIndividuals <- pkParameterDT[individualId %in% ids]
 
-  randomIndividuals[, shiftedValue := value * rnorm(.N, mean = 1, sd = 0.05)]
+  randomIndividuals[, shiftedValue := value * stats::rnorm(.N, mean = 1, sd = 0.05)]
   randomIndividuals[, population := gsub("_iv", "", (gsub("_po", "", scenario))), by = .I]
   randomIndividuals[, route := gsub("_", "", (gsub(population, "", scenario))), by = .I]
 
   dt <- randomIndividuals[, .(
     N = .N,
     geomean = exp(mean(log(shiftedValue))),
-    geosd = exp(sd(log(shiftedValue))),
-    median = median(shiftedValue),
-    percentile_5 = quantile(shiftedValue, 0.05),
-    percentile_95 = quantile(shiftedValue, 0.95)
+    geosd = exp(stats::sd(log(shiftedValue))),
+    median = stats::median(shiftedValue),
+    percentile_5 = stats::quantile(shiftedValue, 0.05),
+    percentile_95 = stats::quantile(shiftedValue, 0.95)
   ), by = .(population, route, pkParameter, outputPathId, displayUnitPKParameter)]
 
   dt[, STUD := 1234]
@@ -526,8 +526,8 @@ addRandomPKDataToTestProject <- function(projectConfiguration, pkParameterDT) {
       return(c(NA, NA))
     }
     gm <- exp(mean(log(x), na.rm = TRUE))
-    se <- sd(log(x), na.rm = TRUE) / sqrt(n)
-    cimultiplier <- qnorm((1 + confLevel) / 2)
+    se <- stats::sd(log(x), na.rm = TRUE) / sqrt(n)
+    cimultiplier <- stats::qnorm((1 + confLevel) / 2)
     cilower <- exp(log(gm) - cimultiplier * se)
     ciupper <- exp(log(gm) + cimultiplier * se)
     return(c(gm, cilower, ciupper))
@@ -587,7 +587,7 @@ addRandomTPDataToTestProject <- function(projectConfiguration, scenarioResult, c
   randomIndividuals[, shiftedValue := ifelse(dimension == "Fraction",
     cumsum(dtV),
     simulationValues
-  ) * rnorm(.N, mean = 1, sd = 0.05),
+  ) * stats::rnorm(.N, mean = 1, sd = 0.05),
   by = c("outputPathId", "IndividualId")
   ]
   randomIndividuals[dimension == "Fraction", shiftedValue := min(shiftedValue, 1), by = .I]
@@ -640,10 +640,10 @@ addRandomTPDataToTestProject <- function(projectConfiguration, scenarioResult, c
   return(invisible())
 }
 
-## mockmanualEditing -------------
-#' Cleanup Mock Manual Editings
+## mock manual Editing -------------
+#' Cleanup Mock Manual editing
 #'
-#' This function cleans upthe project configuration files
+#' This function cleans up the project configuration files
 #' by clearing existing data from relevant Excel sheets.
 #'
 #' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
@@ -670,7 +670,7 @@ mockManualEditingsCleanup <- function(projectConfiguration) {
     openxlsx::saveWorkbook(wb, xlsfile, overwrite = TRUE)
   }
 }
-#' Mock Manual Editings for Population
+#' Mock Manual editing for Population
 #'
 #' This function adds biometric ranges for virtual pediatric and one adult populations to the configuration files
 #'
@@ -693,7 +693,7 @@ mockManualEditingsPopulation <- function(projectConfiguration) {
       ageMax = c(40, 2, 6, 12, 18),
       weightUnit = "kg",
       heightUnit = "cm",
-      bMIUnit = "kg/m²",
+      bMIUnit = "kg/m\u00B2",
       protein = "CYP3A4,UGT1A4",
       ontogeny = "CYP3A4,UGT1A4"
     ),
@@ -703,12 +703,13 @@ mockManualEditingsPopulation <- function(projectConfiguration) {
 
   openxlsx::saveWorkbook(wb, projectConfiguration$populationsFile, overwrite = TRUE)
 }
-#' Mock Manual Editings for Scenarios
+#' Mock Manual editing for Scenarios
 #'
 #' This function sets up scenarios based on the defined populations and adds PK Parameters
 #' and output paths to the project configuration.
 #'
 #' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
+#' @param modelFiles list of model files
 #' @return NULL
 mockManualEditingsScenario <- function(projectConfiguration, modelFiles) {
   wb <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
@@ -766,7 +767,7 @@ mockManualEditingsScenario <- function(projectConfiguration, modelFiles) {
   # save all sheets
   openxlsx::saveWorkbook(wb, projectConfiguration$scenariosFile, overwrite = TRUE)
 }
-#' Mock Manual Editings for Display Names
+#' Mock Manual editing for Display Names
 #'
 #' This function updates the display names for scenarios and output paths in the project configuration.
 #'
@@ -799,7 +800,7 @@ mockManualEditingsdisplayNames <- function(projectConfiguration) {
   dtOutputs <- xlsxReadData(wb = wb, sheetName = "Outputs")
 
   dtOutputs[outputPathId == "Plasma"]$displayName <- "drugX plasma concentration"
-  dtOutputs[outputPathId == "Plasma"]$displayUnit <- "µg/L"
+  dtOutputs[outputPathId == "Plasma"]$displayUnit <- "\u00B5g/L"
   dtOutputs[outputPathId == "CYP3A4total"]$displayName <- "drugX metabolized by CYP3A4"
   dtOutputs[outputPathId == "CYP3A4Liver"]$displayName <- "drugX metabolized by CYP3A4 in liver"
 
@@ -808,7 +809,7 @@ mockManualEditingsdisplayNames <- function(projectConfiguration) {
   # save all sheets
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
 }
-#' Mock Manual Editings for PK Parameters
+#' Mock Manual editing for PK Parameters
 #'
 #' This function adds PK parameters to the project configuration based on templates.
 #'
@@ -839,7 +840,7 @@ mockManualEditingsPKParameter <- function(projectConfiguration) {
 
   openxlsx::saveWorkbook(wb, projectConfiguration$addOns$pKParameterFile, overwrite = TRUE)
 }
-#' Mock Manual Editings for Data Dictionary
+#' Mock Manual editing for Data Dictionary
 #'
 #' This function updates the data dictionary for the project configuration with new data files.
 #'
@@ -1044,12 +1045,12 @@ mockManualEditingsIndividuals <- function(projectConfiguration, modelFiles) {
 
   openxlsx::saveWorkbook(wb, projectConfiguration$scenariosFile, overwrite = TRUE)
 
-  ospsuite.reportingframework:::synchronizeScenariosWithPlots(projectConfiguration) # Sync scenarios with plots
+  synchronizeScenariosWithPlots(projectConfiguration) # Sync scenarios with plots
   mockManualEditingsdisplayNames(projectConfiguration)
 
   return(dtNew$scenario_name)
 }
-#' Mock Manual Editings for Sensitivity
+#' Mock Manual editing for Sensitivity
 #'
 #' This function updates the sensitivity analysis configuration in the project.
 #'

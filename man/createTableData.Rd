@@ -2,21 +2,21 @@
 % Please edit documentation in R/plotForest.R
 \name{createTableData}
 \alias{createTableData}
-\title{Combine Plot and Table}
+\title{Create Table Data}
 \usage{
 createTableData(plotData, tableColumns, tableLabels)
 }
 \arguments{
-\item{plotObject}{A ggplot object representing the main plot.}
+\item{plotData}{A data.table containing the data to be plotted in the table.}
 
-\item{tableObject}{A ggplot object representing the table.}
+\item{tableColumns}{A character vector of column names to be included in the table.}
 
-\item{relWidths}{A numeric vector of length 2 specifying the relative widths of the plot and table.}
+\item{tableLabels}{A character vector of labels corresponding to `tableColumns`.}
 }
 \value{
-A combined ggplot object containing both the plot and the table.
+A data.table containing the prepared table data.
 }
 \description{
-This function combines the plot and the table into a single output.
+This function prepares the data for the table.
 }
 \keyword{internal}

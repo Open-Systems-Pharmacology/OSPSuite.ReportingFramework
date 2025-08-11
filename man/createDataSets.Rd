@@ -10,7 +10,7 @@ createDataSets(groupData)
 \item{groupData}{A `data.table` unique for identifier.}
 }
 \value{
-An object of class 'DataSet'.
+An object of class `DataSet`.
 }
 \description{
 Function to create data sets from grouped data

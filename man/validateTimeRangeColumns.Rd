@@ -7,7 +7,7 @@
 validateTimeRangeColumns(configTablePlots)
 }
 \arguments{
-\item{configTablePlots}{`data.table` ConfigurationTable without header lines}
+\item{configTablePlots}{`data.table` configuration table without header lines}
 }
 \description{
 Time range columns must be character and must contain NA

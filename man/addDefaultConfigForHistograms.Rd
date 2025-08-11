@@ -12,17 +12,31 @@ addDefaultConfigForHistograms(
 )
 }
 \arguments{
-\item{projectConfiguration}{A ProjectConfiguration object.}
+\item{projectConfiguration}{A ProjectConfiguration class object containing configuration details, including:
+- `plotsFile`: A string representing the file path to the Excel workbook containing the plot configurations.}
 
-\item{pkParameterDT}{A data.table containing PK parameter data (optional).}
+\item{pkParameterDT}{Optional. A data object containing pkParameter.}
 
-\item{sheetName}{Name of the sheet to create (default is "Histograms").}
+\item{sheetName}{A character string specifying the name of the sheet in the plot configuration table.
+Default is "Histograms".}
 
-\item{overwrite}{Logical indicating if existing data should be overwritten (default is FALSE).}
+\item{overwrite}{A boolean indicating whether existing configurations should be overwritten.
+Default is FALSE.}
 }
 \value{
-NULL (invisible).
+NULL This function updates the Excel workbook in place and does not return a value.
+It is called for its side effects.
+Add Default Configuration for Histograms
 }
 \description{
-Adds default configurations for histogram plots to the `Plots.xlsx` configuration file.
+This function adds a default configuration sheet for histograms to the plot configuration table.
+It can either create a new sheet or overwrite an existing one based on the specified parameters.
+}
+\details{
+The function retrieves scenario definitions, output path IDs, and data groups from the project configuration.
+It checks if the specified sheet already exists and whether to overwrite it. If not, it creates a new header
+and fills in the default configuration values for the histograms.
+
+Additionally, the function performs a validity check to ensure that it is not executed during a context
+where helper functions are prohibited (validRun). If such a context is detected, an error is raised to prevent execution.
 }

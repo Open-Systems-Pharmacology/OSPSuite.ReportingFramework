@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-testProject.R
 \name{mockManualEditingsDataDictionary}
 \alias{mockManualEditingsDataDictionary}
-\title{Mock Manual Editings for Data Dictionary}
+\title{Mock Manual editing for Data Dictionary}
 \usage{
 mockManualEditingsDataDictionary(projectConfiguration, withPK = TRUE)
 }

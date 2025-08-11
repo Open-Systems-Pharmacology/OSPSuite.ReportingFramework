@@ -9,13 +9,11 @@ getSummaryTable(plotDataPk, asRatio, onePlotConfig, percentiles)
 \arguments{
 \item{plotDataPk}{A data.table containing plot data.}
 
+\item{asRatio}{boolean indicating if the plot is for ratios.}
+
 \item{onePlotConfig}{Configuration for a single plot.}
 
 \item{percentiles}{A vector of percentiles to calculate.}
-
-\item{plotObject}{The plot object to extract statistics from.}
-
-\item{ratioMode}{Mode indicating if the plot is for ratios.}
 }
 \value{
 A data.table summarizing the plot data.

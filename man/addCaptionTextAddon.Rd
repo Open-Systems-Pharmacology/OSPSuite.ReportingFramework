@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-plot.R
 \name{addCaptionTextAddon}
 \alias{addCaptionTextAddon}
-\title{Add Caption Text Addon}
+\title{Add Text to caption text}
 \usage{
 addCaptionTextAddon(captiontext, plotCaptionAddon)
 }

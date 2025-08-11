@@ -1,3 +1,7 @@
+# ospsuite.reportingframework 0.5
+
+Redesign Electronic Package
+
 # ospsuite.reportingframework 0.4.2
 
 Update Tutorial

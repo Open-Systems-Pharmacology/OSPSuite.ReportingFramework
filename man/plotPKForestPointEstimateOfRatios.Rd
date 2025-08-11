@@ -61,7 +61,7 @@ labels in the plot to enhance readability.}
 \item{vlineIntercept}{Optional numeric value indicating where to draw a vertical
 line on the plot, often used to denote a reference value.}
 
-\item{withTable}{logical, if TRUE (default) values are displaye as table beside the plot}
+\item{withTable}{logical, if TRUE (default) values are displayed as table beside the plot}
 
 \item{relWidths}{Optional numeric vector specifying relative widths for the plot and table.}
 
@@ -114,13 +114,25 @@ and PK parameter identifier to ensure reproducibility. The number of bootstrap s
 defined by the `nBootstrap` parameter, and the confidence intervals are determined using
 the `confLevel` parameter (e.g., 0.9 for 90% confidence).
 
-For the bootstrapping process, a unique seed is set for each combination of scenario, referenceScenario (if available),
-outputPathId, and PKParameter identifier. This ensures that results are consistent when a specific
+For the bootstrapping process, a unique seed is set for each combination of scenario, `referenceScenario` (if available),
+`outputPathId`, and `PKParameter` identifier. This ensures that results are consistent when a specific
 combination is used in different plots and that they are reproducible.
 
-A precision check is implemented to ensure that the calculated values meet a specified
-threshold. If the precision is sufficient, point estimates are displayed without  confidence interval bounds,
-otherwise a message is logged to indicate that the required precision was not achieved and figures are provided with a watermark
+In addition to the point estimates and their confidence intervals, the precision watermark is
+an important feature of these plots. The precision watermark indicates whether the precision requirements
+for the displayed estimates have been met.
+The precision is calculated based on the relationship between the estimated values (`xValues`)
+and their corresponding minimum (`xMin`) and maximum (`xMax`) confidence interval bounds.
+If the calculated precision falls below a predefined threshold (e.g., 0.01),
+the watermark is activated, displaying a warning label such as "Outside precision requirement"
+on the plot. The threshold is set by the option `OSPSuite.RF.RequiredPrecisison`
+This alert serves to inform users that the estimates may not be reliable due to
+insufficient sample sizes or high variability in the data, prompting them to consider
+increasing the sample size for improved precision.
+If the precision is sufficient, point estimates are displayed without  confidence interval bounds.
+
+By including the precision watermark, users are better equipped to assess the reliability
+of the point estimates and make informed decisions based on the visualized data.
 
 
 To support the creation of the configuration table a support function

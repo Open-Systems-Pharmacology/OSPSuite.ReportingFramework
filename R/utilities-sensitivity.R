@@ -50,7 +50,7 @@ addSensitivityTable <- function(projectConfiguration, scenarioList = NULL, scena
 #' @param scenarioNames A vector of scenario names to run the analysis on. Defaults to NULL.
 #' @param sensitivitysheet The name of the sheet in the sensitivity Excel file to use for analysis.
 #' @param sensitivityAnalysisRunOptions Options for running the sensitivity analysis.
-#' Defaults to an instance of SensitivityAnalysisRunOptions with showProgress set to TRUE.
+#' Defaults to an instance of `SensitivityAnalysisRunOptions` with `showProgress` set to TRUE.
 #' @param overwrite A logical indicating whether to overwrite existing results. Defaults to TRUE.
 #'
 #' @return NULL
@@ -60,7 +60,7 @@ runSensitivityAnalysisForScenarios <-
            scenarioList,
            scenarioNames = NULL,
            sensitivitysheet,
-           sensitivityAnalysisRunOptions = SensitivityAnalysisRunOptions$new(showProgress = TRUE),
+           sensitivityAnalysisRunOptions = ospsuite::SensitivityAnalysisRunOptions$new(showProgress = TRUE),
            overwrite = TRUE) {
     # initialize variable to avoid messages
     pKParameter <- NULL
@@ -85,7 +85,7 @@ runSensitivityAnalysisForScenarios <-
         if (length(pkParameterSheets) > 0) {
           initializeParametersOfSheets(projectConfiguration, pkParameterSheets)
 
-          sensitivityAnalysis <- SensitivityAnalysis$new(
+          sensitivityAnalysis <- ospsuite::SensitivityAnalysis$new(
             simulation = scenarioList[[scenarioName]]$simulation,
             parameterPaths = sensitivityParameterDt$parameterPath
           )
@@ -96,7 +96,7 @@ runSensitivityAnalysisForScenarios <-
               sensitivityAnalysisRunOptions = sensitivityAnalysisRunOptions
             )
 
-          exportSensitivityAnalysisResultsToCSV(
+          ospsuite::exportSensitivityAnalysisResultsToCSV(
             results = sensitivityResults,
             filePath = file.path(outputFolder, sensitivityAnalyisName(scenarioName, sensitivitysheet))
           )

@@ -6,9 +6,7 @@
 \usage{
 validateDataGroupIdsForPlot()
 }
-\arguments{
-\item{projectConfiguration}{ProjectConfiguration object}
-}
 \description{
 Validation of data.table with outputPath Ids
 }
+\keyword{internal}

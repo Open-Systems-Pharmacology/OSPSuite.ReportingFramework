@@ -61,7 +61,7 @@ Initialize a new instance of the class.
 
 \item{\code{rmdName}}{A character string for the name of the .Rmd file (without extension).}
 
-\item{\code{nameOfplotFunction}}{The name of the plotfunction as character.}
+\item{\code{nameOfplotFunction}}{The name of the plot-function as character.}
 
 \item{\code{suppressExport}}{A logical value indicating whether to suppress export. Default is FALSE.}
 

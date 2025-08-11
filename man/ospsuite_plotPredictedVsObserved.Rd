@@ -17,6 +17,8 @@ Units should be consistent; if not, use `convertUnits(myDataCombined)` to standa
 
 \item{metaData}{A list containing metadata for the plot. If NULL, a default list is constructed from the data.}
 
+\item{mapping}{additional mappings specified by user}
+
 \item{...}{Additional arguments passed to `ospsuite.plots::plotPredVsObs`.}
 }
 \value{

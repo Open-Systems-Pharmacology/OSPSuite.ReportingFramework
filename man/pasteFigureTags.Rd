@@ -19,6 +19,8 @@ pasteFigureTags(
 \item{captionColumn}{A string specifying the name of the column in `dtCaption` that contains the captions.}
 
 \item{endWithDot}{A logical value indicating whether to append a period at the end of the caption text. Default is FALSE.}
+
+\item{startWithBlank}{boolean if TRUE adds as prefix a blank}
 }
 \value{
 A character string representing the formatted caption text, which includes the captions and associated plot tags.
@@ -28,3 +30,4 @@ This function generates a formatted caption text by combining unique captions wi
 If all captions are the same, it returns that caption. Otherwise, it creates a string that includes
 the unique captions and their corresponding tags.
 }
+\keyword{internal}

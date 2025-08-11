@@ -19,8 +19,8 @@ runPlot(
 \item{projectConfiguration}{A ProjectConfiguration object containing the project configuration settings.
 This should include paths to input files and output directories.}
 
-\item{nameOfplotFunction}{The name of the plotfunction as character. The package provide a set of functions which can be addressed,
-but is also possible to generate a customized function ( see detials). Available are
+\item{nameOfplotFunction}{The name of the plot-function as character. The package provide a set of functions which can be addressed,
+but is also possible to generate a customized function ( see details). Available are
 - plotTimeProfiles
 - plotPKBoxwhisker
 - plotPKForestAggregatedAbsoluteValues
@@ -29,14 +29,14 @@ but is also possible to generate a customized function ( see detials). Available
 - plotPKForestPointEstimateOfRatios
 for more details check the help of these functions}
 
-\item{configTableSheet}{A character string representing the name of the sheet in the "Plots" configuration table
-from which to read plot configurations. It should have at least the columns "Header","Levels" and "PlotName"}
+\item{configTableSheet}{A character string representing the name of the sheet in the `Plots` configuration table
+from which to read plot configurations. It should have at least the columns `Header`,`Levels` and `PlotName`}
 
-\item{rmdName}{A character string specifying the name of the resulting rmd and the subfolder where results will be saved.
+\item{rmdName}{A character string specifying the name of the resulting rmd and the sub-folder where results will be saved.
 The default value will be the sheet name of the plot configuration.}
 
 \item{plotNames}{A character vector of plot names to filter which plots should be generated. Default is NULL.
-If provided, suppressExport is set to TRUE, all plots specified in the configuration will be processed and provided as list, but not exported to the Rmd file.}
+If provided, `suppressExport` is set to TRUE, all plots specified in the configuration will be processed and provided as list, but not exported to the Rmd file.}
 
 \item{suppressExport}{A logical value indicating whether to suppress the export of the Rmd file.
 If TRUE, the function will return the generated plots as a list without creating the Rmd file}

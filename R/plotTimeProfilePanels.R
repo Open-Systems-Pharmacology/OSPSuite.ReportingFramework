@@ -7,12 +7,12 @@
 #' @param projectConfiguration An object of class `ProjectConfiguration` containing project settings,
 #' including file paths and scenario definitions. This is essential for the function to access the necessary data.
 #'
+#' @param onePlotConfig A configuration table for the specific plot, detailing plot parameters.
+#'
 #' @param dataObserved A `data.table` (formatted as produced by `readObservedDataByDictionary`)
 #' or `DataCombined` object containing the observed data to be plotted.
 #'
 #' @param scenarioResults A list containing simulated scenario results.
-#'
-#' @param nFacetColumns An integer specifying the maximum number of facet columns (default is 2).
 #'
 #' @param nMaxFacetRows An integer specifying the maximum number of facet rows (default is 4).
 #'
@@ -76,10 +76,10 @@
 #'   DDI = c("#843C39FF", "#AD494AFF"),
 #'   Control = c("#3182BDFF", "#6BAED6FF")
 #' )
-#'
 #' # The scenario would be labeled as 'DDI', with aesthetic color as dark red ("#843C39FF") and
 #' # aesthetic fill as light red ("#AD494AFF").
-#' # The reference scenario would be labeled 'Control', with aesthetic color as dark blue ("#3182BDFF") and
+#' # The reference scenario would be labeled 'Control',
+#' # with aesthetic color as dark blue ("#3182BDFF") and
 #' # aesthetic fill as light blue ("#6BAED6FF").
 #'
 #' # Example of using the referenceScaleVector parameter for a comparison between a pediatric
@@ -105,10 +105,12 @@
 #'     dataObserved = dataObserved,
 #'     aggregationFlag = c("Custom"),
 #'     customFunction = function(y) {
-#'       list(yValues = mean(y),
-#'            yMin = mean(y) - sd(y),
-#'            yMax = mean(y) + sd(y),
-#'            yErrorType = "mean | standard deviation")
+#'       list(
+#'         yValues = mean(y),
+#'         yMin = mean(y) - sd(y),
+#'         yMax = mean(y) + sd(y),
+#'         yErrorType = "mean | standard deviation"
+#'       )
 #'     }
 #'   )
 #' )
@@ -241,7 +243,6 @@ plotTimeProfiles <- function(projectConfiguration,
 #' Generate plots for a specific plot type
 #'
 #' @param plotData Object containing the data for the plot.
-#' @param rmdPlotManager Object of class `RmdPlotManager`.
 #' @param facetAspectRatio Aspect ratio for the facets.
 #' @param plotType Type of the plot to generate.
 #'
@@ -415,7 +416,6 @@ isPlotTypeNeededAndPossible <- function(plotType, plotData) {
 
 #' Get mapping for simulated and observed data
 #'
-#' @param plotType Type of the plot.
 #' @param plotData Object containing the data for the plot.
 #'
 #' @return Data table mapping simulated and observed data.
@@ -804,7 +804,7 @@ getFootNoteLines <- function(dataObserved, dtDataReference) {
   }
   return(footnoteLines)
 }
-#' Get fold distance for plotType PvO
+#' Get fold distance for plotType `PvO`
 #'
 #' @param plotData Object containing the data for the plot.
 #'
@@ -818,10 +818,9 @@ getFoldDistanceForPvO <- function(plotData) {
 
   return(ospsuite.plots::getFoldDistanceList(foldDistance))
 }
-
-#' get additional inputs for TP plotType to enable lines in shape legend
+#' get additional inputs for `TP` plotType to enable lines in shape legend
 #'
-#' @param plotData object of class PlotData
+#' @param plotData `data.table` with plot data
 #'
 #' @return list with additional attributes for geom_line
 #' @keywords internal
@@ -833,7 +832,7 @@ getGeomLineAttributesForTP <- function(plotData) {
   }
 }
 
-#' get additional inputs for TP plotType to enable lines in shape legend
+#' get additional inputs for `TP` plotType to enable lines in shape legend
 #'
 #' @param plotData
 #'
@@ -990,8 +989,8 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
 
 #' Check if panel columns are filled consistently
 #'
-#' @param configTablePlots `data.table` ConfigurationTable without header lines
-#' @param panelColumns Vector of columns which should be consistent.
+#' @param configTablePlots `data.table` configuration table without header lines
+#'
 #' @keywords internal
 validateUnitConsistency <- function(
     configTablePlots) {
@@ -1017,7 +1016,7 @@ validateUnitConsistency <- function(
 #' 'total','firstApplication','lastApplication'
 #' or a string which evaluates in R to a numeric vector length 2  (e.g. 'c(2,3)' or 'c(2,NA)'
 #'
-#' @param configTablePlots `data.table` ConfigurationTable without header lines
+#' @param configTablePlots `data.table` configuration table without header lines
 #' @keywords internal
 validateTimeRangeColumns <- function(configTablePlots) {
   timeRangeColumns <-
@@ -1058,7 +1057,7 @@ validateTimeRangeColumns <- function(configTablePlots) {
 
 #' Validates output path ID format
 #'
-#' @param configTablePlots `data.table` ConfigurationTable without header lines
+#' @param configTablePlots `data.table` configuration table without header lines
 #' @keywords internal
 validateOutputPathIdFormat <- function(configTablePlots, column = "outputPathIds") {
   # avoid warning for global variable
@@ -1084,7 +1083,7 @@ validateOutputPathIdFormat <- function(configTablePlots, column = "outputPathIds
 #' if `individualIds` is filled without a corresponding data group.
 #'
 #' @param configTablePlots A data table containing the plot configuration, including scenario names and individual IDs.
-#' @param projectConfiguration A configuration object containing project-specific settings.
+#' @param scenarioResults A list with scenario results.
 #' @keywords internal
 validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
   # avoid warning for global variable
@@ -1157,13 +1156,13 @@ validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
 #' This function adds a default configuration sheet for time profile plots to the plot configuration table.
 #' It can either create a new sheet or overwrite an existing one based on the specified parameters.
 #'
-#' @param projectConfiguration A ProjectConfiguration class object containing configuration details, including:
+#' @param projectConfiguration A `ProjectConfiguration` class object containing configuration details, including:
 #'   - `plotsFile`: A string representing the file path to the Excel workbook containing the plot configurations.
 #'
 #' @param dataObserved Optional. A data object containing observed data, if available.
 #'
 #' @param sheetName A character string specifying the name of the sheet in the plot configuration table.
-#'   Default is "TimeProfiles".
+#'   Default is `TimeProfiles`.
 #'
 #' @param overwrite A boolean indicating whether existing configurations should be overwritten.
 #'   Default is FALSE.
@@ -1174,7 +1173,7 @@ validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
 #' and fills in the default configuration values for the time profile plots.
 #'
 #' Additionally, the function performs a validity check to ensure that it is not executed during a context
-#' where helper functions are prohibited (validRun). If such a context is detected, an error is raised to prevent execution.
+#' where helper functions are prohibited (`validRun`). If such a context is detected, an error is raised to prevent execution.
 #'
 #'
 #' @return NULL This function updates the Excel workbook in place and does not return a value.
@@ -1239,7 +1238,6 @@ addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
 #' This internal function generates a new configuration data table for time profile plots based on the provided scenarios and project configuration.
 #'
 #' @param scenarios A data.table containing scenario definitions.
-#' @param projectConfiguration A ProjectConfiguration class object.
 #' @param dataObserved Optional. A data object containing observed data, if available.
 #'
 #' @return A data.table containing the new configuration for time profile plots.

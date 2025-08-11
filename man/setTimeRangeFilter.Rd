@@ -7,7 +7,7 @@
 setTimeRangeFilter(splitPlotsPerTimeRange, timeTags)
 }
 \arguments{
-\item{splitPlotsPerTimeRange}{Boolean, if TRUE for each Timerange a plot is created}
+\item{splitPlotsPerTimeRange}{Boolean, if TRUE for each time-range a plot is created}
 
 \item{timeTags}{A vector of time tags.}
 }

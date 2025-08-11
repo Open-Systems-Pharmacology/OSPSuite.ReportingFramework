@@ -9,6 +9,8 @@ logCatch(expr, finallyExpression = invisible())
 }
 \arguments{
 \item{expr}{The expression to evaluate.}
+
+\item{finallyExpression}{The expression to evaluate finally}
 }
 \description{
 function that catches messages, warnings, and errors.

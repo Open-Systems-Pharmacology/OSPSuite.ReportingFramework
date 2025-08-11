@@ -9,7 +9,8 @@ runSensitivityAnalysisForScenarios(
   scenarioList,
   scenarioNames = NULL,
   sensitivitysheet,
-  sensitivityAnalysisRunOptions = SensitivityAnalysisRunOptions$new(showProgress = TRUE),
+  sensitivityAnalysisRunOptions =
+    ospsuite::SensitivityAnalysisRunOptions$new(showProgress = TRUE),
   overwrite = TRUE
 )
 }
@@ -23,7 +24,7 @@ runSensitivityAnalysisForScenarios(
 \item{sensitivitysheet}{The name of the sheet in the sensitivity Excel file to use for analysis.}
 
 \item{sensitivityAnalysisRunOptions}{Options for running the sensitivity analysis.
-Defaults to an instance of SensitivityAnalysisRunOptions with showProgress set to TRUE.}
+Defaults to an instance of `SensitivityAnalysisRunOptions` with `showProgress` set to TRUE.}
 
 \item{overwrite}{A logical indicating whether to overwrite existing results. Defaults to TRUE.}
 }

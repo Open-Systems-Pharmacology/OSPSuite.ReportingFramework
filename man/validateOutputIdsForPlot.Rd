@@ -6,9 +6,7 @@
 \usage{
 validateOutputIdsForPlot()
 }
-\arguments{
-\item{dtOutputPaths}{data.table with outputPath Ids}
-}
 \description{
 Validation of data.table with outputPath Ids
 }
+\keyword{internal}

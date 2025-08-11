@@ -3,7 +3,7 @@
 \docType{data}
 \name{BIOMETRICUNITS}
 \alias{BIOMETRICUNITS}
-\title{enumeration biomrtric units}
+\title{enumeration biomertric units}
 \format{
 An object of class \code{list} of length 3.
 }
@@ -11,6 +11,6 @@ An object of class \code{list} of length 3.
 BIOMETRICUNITS
 }
 \description{
-enumeration biomrtric units
+enumeration biomertric units
 }
 \keyword{datasets}

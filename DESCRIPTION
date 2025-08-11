@@ -1,7 +1,7 @@
 Package: ospsuite.reportingframework
 Type: Package
 Title: Provides a framework for report generation with the ospsuite
-Version: 0.4.2
+Version: 0.5.0
 Authors@R: 
     c(person(given = "Open-Systems-Pharmacology Community",
              role = "cph"),
@@ -27,6 +27,7 @@ Imports:
     fs,
     ospsuite,
     ospsuite.utils,
+    ggplot2,
     ggsci,
     scales,
     tidyr,
@@ -34,7 +35,12 @@ Imports:
     openxlsx,
     dplyr,
     stats,
-    foreach
+    foreach,
+    boot,
+    doParallel,
+    formattable,
+    ggh4x,
+    jsonlite
 Depends:
     esqlabsR,
     ospsuite.plots,
@@ -42,10 +48,10 @@ Depends:
 Suggests: 
     rstudioapi,
     officer,
-    ggplot2,
     cowplot,
     spelling,
-    DiagrammeR,
+    vdiffr,
+    withr,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr

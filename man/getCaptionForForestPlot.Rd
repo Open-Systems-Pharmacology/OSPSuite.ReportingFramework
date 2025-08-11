@@ -14,10 +14,6 @@ getCaptionForForestPlot(plotData, xScale, plotCaptionAddon, ratioMode)
 \item{plotCaptionAddon}{Additional caption text.}
 
 \item{ratioMode}{Mode for ratio calculations.}
-
-\item{asPointeEstimate}{Logical indicating if confidence intervals should be calculated.}
-
-\item{nameOfPointestimate}{description of aggregation quantity}
 }
 \value{
 A string containing the caption for the plot.

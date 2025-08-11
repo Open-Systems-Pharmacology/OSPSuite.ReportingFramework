@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-testProject.R
 \name{mockManualEditingsCleanup}
 \alias{mockManualEditingsCleanup}
-\title{Cleanup Mock Manual Editings}
+\title{Cleanup Mock Manual editing}
 \usage{
 mockManualEditingsCleanup(projectConfiguration)
 }
@@ -10,7 +10,7 @@ mockManualEditingsCleanup(projectConfiguration)
 \item{projectConfiguration}{A ProjectConfiguration object containing project configuration details.}
 }
 \description{
-This function cleans upthe project configuration files
+This function cleans up the project configuration files
 by clearing existing data from relevant Excel sheets.
 }
 \keyword{internal}

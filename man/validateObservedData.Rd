@@ -18,16 +18,18 @@ validateObservedData(dataDT, dataClassType)
 - `yMin`, `yMax`: Minimum and maximum Y values (optional).
 - `lloq`: Lower limit of quantification (optional).
 - `nBelowLLOQ`: Count of values below the lower limit of quantification (optional).}
+
+\item{dataClassType}{A string indicating the type of data class (e.g., "timeprofile" or "pkParameter").}
 }
 \value{
 NULL This function performs checks and stops execution if any validation fails.
 It does not return a value.
 }
 \description{
-This function checks the integrity and validity of observed data in a `data.table`.
-It verifies the presence of required attributes, checks for duplicates, and ensures that
-there are no missing or empty values in the relevant columns. Additionally, it checks
-for ambiguities in the Y unit and validates error type columns.
+Checks the integrity and validity of observed data in a `data.table`.
+This function verifies the presence of required attributes, checks for duplicates,
+and ensures that there are no missing or empty values in the relevant columns.
+Additionally, it checks for ambiguities in the Y unit and validates error type columns.
 }
 \details{
 The function performs several checks, including:

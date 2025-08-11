@@ -27,6 +27,8 @@ plotForest(
 \arguments{
 \item{plotData}{A data.table containing the data to be plotted. Must include columns specified in `yFacetColumns`, `xFacetColumn`, `tableColumns`, and others.}
 
+\item{mapping}{A ggplot2 mapping object, typically created with `ggplot2::aes()`, to specify how variables in the data are mapped to visual properties.}
+
 \item{xLabel}{A string representing the label for the x-axis.}
 
 \item{yFacetColumns}{A character vector of column names used for faceting on the y-axis. Can be NULL or of length up to 2.}
@@ -36,6 +38,8 @@ plotForest(
 \item{xscale}{A character string indicating the scale type for the x-axis. Options are "linear" or "log".}
 
 \item{xscale.args}{A list of additional arguments for customizing the x-axis scale.}
+
+\item{groupAesthetics}{A character vector specifying aesthetics for grouping (e.g., color, fill, shape).}
 
 \item{tableColumns}{A character vector of column names to be included in the table.}
 
@@ -49,7 +53,11 @@ plotForest(
 
 \item{withTable}{A logical flag indicating whether to include the table in the output. Defaults to TRUE if `xFacetColumn` is not NULL.}
 
-\item{yColumn}{A character string specifying the name of the column to be used for the y-axis.}
+\item{geomPointAttributes}{A list of attributes for the point geometry in the plot.}
+
+\item{geomErrorbarAttributes}{A list of attributes for the error bar geometry in the plot.}
+
+\item{facetScales}{A character string indicating the scales used for facets. Options are "free_y" or "free".}
 }
 \value{
 A combined plot object containing the forest plot and the table (if applicable).

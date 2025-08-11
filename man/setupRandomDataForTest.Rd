@@ -17,7 +17,7 @@ setupRandomDataForTest(projectConfiguration, scenarioList, scenarioResults)
 Invisible NULL.
 }
 \description{
-This function adds random pharmacokinetic (PK and ttme profile) data to the test project,
+This function adds random pharmacokinetic (PK and time profile) data to the test project,
 including shifting values  for selected individuals.
 }
 \keyword{internal}

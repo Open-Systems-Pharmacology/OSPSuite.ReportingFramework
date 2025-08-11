@@ -12,13 +12,13 @@ addDefaultConfigForTimeProfilePlots(
 )
 }
 \arguments{
-\item{projectConfiguration}{A ProjectConfiguration class object containing configuration details, including:
+\item{projectConfiguration}{A `ProjectConfiguration` class object containing configuration details, including:
 - `plotsFile`: A string representing the file path to the Excel workbook containing the plot configurations.}
 
 \item{dataObserved}{Optional. A data object containing observed data, if available.}
 
 \item{sheetName}{A character string specifying the name of the sheet in the plot configuration table.
-Default is "TimeProfiles".}
+Default is `TimeProfiles`.}
 
 \item{overwrite}{A boolean indicating whether existing configurations should be overwritten.
 Default is FALSE.}
@@ -37,5 +37,5 @@ It checks if the specified sheet already exists and whether to overwrite it. If 
 and fills in the default configuration values for the time profile plots.
 
 Additionally, the function performs a validity check to ensure that it is not executed during a context
-where helper functions are prohibited (validRun). If such a context is detected, an error is raised to prevent execution.
+where helper functions are prohibited (`validRun`). If such a context is detected, an error is raised to prevent execution.
 }

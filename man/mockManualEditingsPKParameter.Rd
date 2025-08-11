@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-testProject.R
 \name{mockManualEditingsPKParameter}
 \alias{mockManualEditingsPKParameter}
-\title{Mock Manual Editings for PK Parameters}
+\title{Mock Manual editing for PK Parameters}
 \usage{
 mockManualEditingsPKParameter(projectConfiguration)
 }

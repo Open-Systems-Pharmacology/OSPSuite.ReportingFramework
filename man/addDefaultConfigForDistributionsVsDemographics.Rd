@@ -2,27 +2,39 @@
 % Please edit documentation in R/plotDemographics.R
 \name{addDefaultConfigForDistributionsVsDemographics}
 \alias{addDefaultConfigForDistributionsVsDemographics}
-\title{Add Default Configuration for Distribution vs Demographics}
+\title{Add Default Configuration for for distribution vs demographics plots}
 \usage{
 addDefaultConfigForDistributionsVsDemographics(
   projectConfiguration,
   pkParameterDT = NULL,
-  sheetName = "RangePlots",
+  sheetName = "DistributionVsRange",
   overwrite = FALSE
 )
 }
 \arguments{
-\item{projectConfiguration}{A ProjectConfiguration object.}
+\item{projectConfiguration}{A ProjectConfiguration class object containing configuration details, including:
+- `plotsFile`: A string representing the file path to the Excel workbook containing the plot configurations.}
 
-\item{pkParameterDT}{A data.table containing PK parameter data (optional).}
+\item{pkParameterDT}{Optional. A data object containing pkParameter.}
 
-\item{sheetName}{Name of the sheet to create (default is "RangePlots").}
+\item{sheetName}{A character string specifying the name of the sheet in the plot configuration table.
+Default is `DistributionVsRange`.}
 
-\item{overwrite}{Logical indicating if existing data should be overwritten (default is FALSE).}
+\item{overwrite}{A boolean indicating whether existing configurations should be overwritten.
+Default is FALSE.}
 }
 \value{
-NULL (invisible).
+NULL This function updates the Excel workbook in place and does not return a value.
 }
 \description{
-Adds default configurations for distribution vs demographics plots to the `Plots.xlsx` configuration file.
+This function adds a default configuration sheet for distribution vs demographics plots to the plot configuration table.
+It can either create a new sheet or overwrite an existing one based on the specified parameters.
+}
+\details{
+The function retrieves scenario definitions, output path IDs, and data groups from the project configuration.
+It checks if the specified sheet already exists and whether to overwrite it. If not, it creates a new header
+and fills in the default configuration values for the histograms.
+
+Additionally, the function performs a validity check to ensure that it is not executed during a context
+where helper functions are prohibited (validRun). If such a context is detected, an error is raised to prevent execution.
 }

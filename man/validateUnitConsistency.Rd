@@ -7,9 +7,7 @@
 validateUnitConsistency(configTablePlots)
 }
 \arguments{
-\item{configTablePlots}{`data.table` ConfigurationTable without header lines}
-
-\item{panelColumns}{Vector of columns which should be consistent.}
+\item{configTablePlots}{`data.table` configuration table without header lines}
 }
 \description{
 Check if panel columns are filled consistently
