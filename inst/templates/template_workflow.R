@@ -94,12 +94,13 @@ pkParameterDT <- loadPKParameter(
 
 # 5) Create Output Plots -----------------------------------------------------
 # (see vignette(package = 'ospsuite.reportingframework', topic = 'Plot_and_Report_Generation'))
-# Add your different plot functions below; the following is an exemplary call for the time profile plot function
+# Add your different plot functions below; the following is an exemplary call for the time profile plot function.
+# YOu can use addDefaultConfigForTimeProfilePlots to start the configuration table
 runPlot(
   nameOfplotFunction = "plotTimeProfiles",
   projectConfiguration = projectConfiguration,
+  configTableSheet = "TimeProfiles",
   inputs = list(
-    configTableSheet = "TimeProfiles",
     dataObserved = dataObserved,
     scenarioResults = scenarioResults
   )

@@ -230,6 +230,7 @@ mockManualEditingsPlotTimeProfileTest <- function(projectConfiguration) {
 
   # create new timerange tags
   dtTimeRange <- xlsxReadData(wb, sheetName = "TimeRange")
+  dtTimeRange
   dtTimeRange <- rbind(
     dtTimeRange,
     data.table(
@@ -253,10 +254,10 @@ mockManualEditingsPlotTimeProfileTest <- function(projectConfiguration) {
   dt <- xlsxReadData(wb = wb, sheetName = sheetName)
 
   # add custom time ranges
-  dt[, timeRange_h0_6 := as.character(NA)]
-  dt[, timeRange_h0_6 := NA]
-  dt[, timeRange_h6_24 := as.character(NA)]
-  dt[, timeRange_h6_24 := NA]
+  dt[, timeRange_h0_6 := as.character(timeRange_h0_6)]
+  dt[, timeRange_h0_6 := NA_character_]
+  dt[, timeRange_h6_24 := as.character(timeRange_h6_24)]
+  dt[, timeRange_h6_24 := NA_character_]
 
 
   # individual data

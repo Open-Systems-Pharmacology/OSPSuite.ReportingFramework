@@ -35,17 +35,27 @@ test_that("Time profiles of individual scenarios", {
   skip_if(getRversion() < "4.1")
 
   plotList <-
+    c(runPlot(
+      nameOfplotFunction = "plotTimeProfiles",
+      configTableSheet = "TimeProfileTest",
+      projectConfiguration = projectConfiguration,
+      suppressExport = TRUE,
+      plotNames = c("Individuals_withData"),
+      inputs = list(
+        scenarioResults = scenarioResultsInd,
+        dataObserved = dataObserved
+      )
+    ),
     runPlot(
       nameOfplotFunction = "plotTimeProfiles",
       configTableSheet = "TimeProfileTest",
       projectConfiguration = projectConfiguration,
       suppressExport = TRUE,
-      plotNames = c("Individuals_withData", "Individuals_withoutData"),
+      plotNames = c( "Individuals_withoutData"),
       inputs = list(
-        scenarioResults = scenarioResultsInd,
-        dataObserved = dataObserved
+        scenarioResults = scenarioResultsInd
       )
-    )
+    ))
 
   expect_equal(length(plotList), 2)
 
@@ -59,6 +69,7 @@ test_that("Time profiles of individual scenarios", {
 
   rm(plotList)
 })
+
 
 test_that("Predicted vs observed of individual scenarios", {
   skip_if_not_installed("vdiffr")

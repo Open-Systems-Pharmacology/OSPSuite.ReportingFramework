@@ -133,7 +133,7 @@
 #' @export
 plotTimeProfiles <- function(projectConfiguration,
                              onePlotConfig,
-                             dataObserved,
+                             dataObserved = NULL,
                              scenarioResults,
                              nMaxFacetRows = 4,
                              facetAspectRatio = 0.5,
@@ -156,13 +156,15 @@ plotTimeProfiles <- function(projectConfiguration,
   checkmate::assertDouble(facetAspectRatio, lower = 0, len = 1)
 
   # use data.table format for dataObserved
-  if ("DataCombined" %in% class(dataObserved)) {
-    dataObserved <- convertDataCombinedToDataTable(dataObserved)
-  }
+  if (!is.null(dataObserved)){
+    if ("DataCombined" %in% class(dataObserved)) {
+      dataObserved <- convertDataCombinedToDataTable(dataObserved)
+    }
 
-  # add identifier column to pick entries used in this function evaluation
-  dataObserved[, .Id := .I]
-  data.table::setattr(dataObserved[[".Id"]], "columnType", "identifier")
+    # add identifier column to pick entries used in this function evaluation
+    dataObserved[, .Id := .I]
+    data.table::setattr(dataObserved[[".Id"]], "columnType", "identifier")
+  }
 
   # read aggregation function for simulated populations
   aggregationFlag <- match.arg(aggregationFlag)

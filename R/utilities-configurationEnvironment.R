@@ -67,6 +67,7 @@ getOutputPathIds <- function(wbPlots) {
   ) %>%
     setnames(old = "displayName", new = "displayNameOutput")
 
+  dtOutputPaths[,displayUnit := as.character(displayUnit)]
   dtOutputPaths[is.na(displayUnit), displayUnit := ""]
 
   dtOutputPaths$outputPathId <- factor(dtOutputPaths$outputPathId,
