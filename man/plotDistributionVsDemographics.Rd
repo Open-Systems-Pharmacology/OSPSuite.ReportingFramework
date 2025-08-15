@@ -63,7 +63,7 @@ This function automatically populates a new sheet with default values that can b
 }
 \examples{
 \dontrun{
-Example for plotting a histogram of PK-parameters of a scenario compared to a reference scenario:
+# Example for plotting a histogram of PK-parameters of a scenario compared to a reference scenario:
 runPlot(
   nameOfplotFunction = "plotDistributionVsDemographics",
   projectConfiguration = projectConfiguration,

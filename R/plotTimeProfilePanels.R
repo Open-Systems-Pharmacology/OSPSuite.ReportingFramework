@@ -156,7 +156,7 @@ plotTimeProfiles <- function(projectConfiguration,
   checkmate::assertDouble(facetAspectRatio, lower = 0, len = 1)
 
   # use data.table format for dataObserved
-  if (!is.null(dataObserved)){
+  if (!is.null(dataObserved)) {
     if ("DataCombined" %in% class(dataObserved)) {
       dataObserved <- convertDataCombinedToDataTable(dataObserved)
     }

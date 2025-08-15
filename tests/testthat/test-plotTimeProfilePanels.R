@@ -35,27 +35,29 @@ test_that("Time profiles of individual scenarios", {
   skip_if(getRversion() < "4.1")
 
   plotList <-
-    c(runPlot(
-      nameOfplotFunction = "plotTimeProfiles",
-      configTableSheet = "TimeProfileTest",
-      projectConfiguration = projectConfiguration,
-      suppressExport = TRUE,
-      plotNames = c("Individuals_withData"),
-      inputs = list(
-        scenarioResults = scenarioResultsInd,
-        dataObserved = dataObserved
+    c(
+      runPlot(
+        nameOfplotFunction = "plotTimeProfiles",
+        configTableSheet = "TimeProfileTest",
+        projectConfiguration = projectConfiguration,
+        suppressExport = TRUE,
+        plotNames = c("Individuals_withData"),
+        inputs = list(
+          scenarioResults = scenarioResultsInd,
+          dataObserved = dataObserved
+        )
+      ),
+      runPlot(
+        nameOfplotFunction = "plotTimeProfiles",
+        configTableSheet = "TimeProfileTest",
+        projectConfiguration = projectConfiguration,
+        suppressExport = TRUE,
+        plotNames = c("Individuals_withoutData"),
+        inputs = list(
+          scenarioResults = scenarioResultsInd
+        )
       )
-    ),
-    runPlot(
-      nameOfplotFunction = "plotTimeProfiles",
-      configTableSheet = "TimeProfileTest",
-      projectConfiguration = projectConfiguration,
-      suppressExport = TRUE,
-      plotNames = c( "Individuals_withoutData"),
-      inputs = list(
-        scenarioResults = scenarioResultsInd
-      )
-    ))
+    )
 
   expect_equal(length(plotList), 2)
 

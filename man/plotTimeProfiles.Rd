@@ -7,7 +7,7 @@
 plotTimeProfiles(
   projectConfiguration,
   onePlotConfig,
-  dataObserved,
+  dataObserved = NULL,
   scenarioResults,
   nMaxFacetRows = 4,
   facetAspectRatio = 0.5,
@@ -128,10 +128,12 @@ plotList <- runPlot(
     dataObserved = dataObserved,
     aggregationFlag = c("Custom"),
     customFunction = function(y) {
-      list(yValues = mean(y),
-           yMin = mean(y) - sd(y),
-           yMax = mean(y) + sd(y),
-           yErrorType = "mean | standard deviation")
+      list(
+        yValues = mean(y),
+        yMin = mean(y) - sd(y),
+        yMax = mean(y) + sd(y),
+        yErrorType = "mean | standard deviation"
+      )
     }
   )
 )

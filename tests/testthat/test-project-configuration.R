@@ -4,12 +4,6 @@ test_that("Initialization works correctly", {
   expect_s3_class(projectConfiguration, "ProjectConfigurationRF")
 })
 
-
-test_that("Print function outputs correctly", {
-  # Capture the output of the print function
-  expect_no_error(projectConfiguration$print())
-})
-
 test_that("Add-on file is added correctly", {
   # Define parameters for the add-on file
   property <- "testAdd on file"

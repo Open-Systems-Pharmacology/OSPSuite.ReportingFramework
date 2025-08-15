@@ -34,7 +34,7 @@ To help you get started and make the most of the OSPSuite Reporting Framework, w
 
 1. **[Workflow Setup and Execution](Workflow.html)**: Understand the typical workflow setup and the various components involved in using the framework.
 
-2. **[Data Import by Dictionary](Data_import_by_dictionary.html)**: Learn how to import observed data and PK parameters using a configuration dictionary.
+2. **[Data Import by Dictionary](Data_import_by_dictionary.html)**: Learn how to import observed time profile data and PK parameters using a configuration dictionary.
 
 3. **[Population](Population)**: Explore the concepts of random and virtual twin populations within the framework.
 

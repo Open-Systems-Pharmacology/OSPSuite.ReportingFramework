@@ -4,9 +4,16 @@
 \alias{setupRandomDataForTest}
 \title{Setup Random Data for Test}
 \usage{
-setupRandomDataForTest(projectConfiguration, scenarioList, scenarioResults)
+setupRandomDataForTest(
+  pBuilder,
+  projectConfiguration,
+  scenarioList,
+  scenarioResults
+)
 }
 \arguments{
+\item{pBuilder}{An TestProjectBuilder object, which provides function to build the test project}
+
 \item{projectConfiguration}{A ProjectConfiguration object containing project configuration details.}
 
 \item{scenarioList}{A list of scenarios initialized for the project.}
@@ -18,6 +25,6 @@ Invisible NULL.
 }
 \description{
 This function adds random pharmacokinetic (PK and time profile) data to the test project,
-including shifting values  for selected individuals.
+including shifting values for selected individuals.
 }
 \keyword{internal}

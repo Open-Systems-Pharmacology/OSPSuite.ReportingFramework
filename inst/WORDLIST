@@ -56,8 +56,10 @@ TP
 TableCaption
 TableFootnote
 Tanaka
+TestProjectBuilder
 TimeProfiles
 UGT
+VirtualTwinPopulation
 WorkflowScriptExporter
 addDefaultConfigForDistributionsVsDemographics
 addDefaultConfigForHistograms
@@ -166,7 +168,6 @@ pkParameter
 pkParameterDT
 pkml
 pkmls
-pkparameter
 plotData
 plotHistogram
 plotId

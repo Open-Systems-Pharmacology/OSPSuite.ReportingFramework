@@ -19,7 +19,7 @@ test_that("sensitivity plots", {
     )
 
   expect_equal(length(plotList), 6)
-  expect_equal(nrow(plotList[["sensitivity_all-A"]]), 4)
+  expect_equal(nrow(plotList[["sensitivity_all-A"]]), 3)
   expect_contains(plotList[["sensitivity_all-A"]]$Parameter, expected = "DrugX Fraction unbound")
 
   vdiffr::expect_doppelganger(

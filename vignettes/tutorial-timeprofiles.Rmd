@@ -26,26 +26,24 @@ library(ospsuite.reportingframework)
 library(tidyr)
 library(data.table)
 
+
+setDefaults()
+theme_update(legend.position = "top")
+
+# Initialize class to build test project
+pBuilder <- TestProjectBuilder$new()
+
+# get projectConfiguration
+projectConfiguration <- pBuilder$iniTestProject(rootDirectory = NULL)
+options(OSPSuite.RF.verbose = FALSE)
+
+rootDirectory <- fs::path_abs(file.path("..", ".."), start = projectConfiguration$configurationsFolder)
+
 instDirectory <- system.file(
   package = "ospsuite.reportingframework",
   "extdata",
   mustWork = TRUE
 )
-
-setDefaults()
-theme_update(legend.position = "top")
-
-modelFiles <- list.files(file.path(instDirectory, "Models"))
-names(modelFiles) <- substr(modelFiles, 1, 2)
-
-projectConfiguration <- ospsuite.reportingframework:::iniTestProject(
-  rootDirectory = NULL,
-  verbose = FALSE,
-  modelFiles = modelFiles
-)
-
-rootDirectory <- fs::path_abs(file.path("..", ".."), start = projectConfiguration$configurationsFolder)
-
 
 configFiles <- list.files(file.path(instDirectory, "Tutorial"), pattern = ".xlsx", full.names = TRUE)
 invisible(lapply(configFiles, function(f) {
@@ -116,19 +114,18 @@ The package contains the following materials used for the tutorial:
 - The final workflow: `workflow.R`
 - The final Word document containing all plots generated during this tutorial: `TutorialPlots.docx`
 
-This material is available here:
+You can access the folder containing this material using the command below:
 
-```{r tutorial-path}
+```{r tutorial-path, eval = FALSE}
 print(system.file(
   "extdata", "Tutorial",
   package = "ospsuite.reportingframework",
   mustWork = TRUE
 ))
 ```
+You can access the folder containing the models used in the tutorial ("iv 1 mg 5 min.pkml" and "po 3 mg solution.pkml") using the command below:
 
-The models used in the tutorial ("iv 1 mg 5 min.pkml" and "po 3 mg solution.pkml") is available here:
-
-```{r model-path}
+```{r model-path, eval = TRUE}
 print(system.file(
   "extdata", "Models",
   package = "ospsuite.reportingframework",

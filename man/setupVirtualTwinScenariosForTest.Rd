@@ -4,12 +4,10 @@
 \alias{setupVirtualTwinScenariosForTest}
 \title{Setup Virtual Twin Scenarios for Test}
 \usage{
-setupVirtualTwinScenariosForTest(projectConfiguration, modelFiles)
+setupVirtualTwinScenariosForTest(pBuilder, projectConfiguration)
 }
 \arguments{
 \item{projectConfiguration}{A ProjectConfiguration object containing project configuration details.}
-
-\item{modelFiles}{A named character vector containing paths to the model files used in the project.}
 }
 \value{
 A list of scenario names initialized for the virtual twin scenarios.

@@ -86,7 +86,7 @@ The `runPlot` function executes several steps to generate the plots:
 
 Refer to the function help for additional details on `runPlot`.
 
-![Illustration of the Process within the runPlot function](images/runPlot.png){width=70%}
+![Illustration of the Process within the runPlot function](images/runPlot.png)
 
 ### Example Call
 
@@ -174,7 +174,7 @@ This will provide you with a pre-structured and well documented template to help
 
 The `runPlot` function will generate the inputs `projectConfiguration`, `onePlotConfig`, and all inputs defined in the `inputList`. With this input, you can generate your own code, either by calling an available plot function and adapting the resulting plot list or by starting from scratch. Each plot function must return a list of plots, ensuring seamless integration with the existing reporting framework.
 
-![Illustration of the Process within the runPlot function for Custom Functions](images/runPlotCustomFunction.png){width=35%}
+![Illustration of the Process within the runPlot function for Custom Functions](images/runPlotCustomFunction.png)
 
 # Report Generation
 

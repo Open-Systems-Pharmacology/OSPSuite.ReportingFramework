@@ -4,16 +4,16 @@
 \alias{buildTestData}
 \title{Build Test Project Directory}
 \usage{
-buildTestData(rootDirectory = NULL, verbose = FALSE, writeTestData)
+buildTestData(rootDirectory = NULL, writeTestData = FALSE)
 }
 \arguments{
 \item{rootDirectory}{A character string specifying the root directory for the test project.
 If NULL (default), a temporary directory will be created.}
 
+\item{writeTestData}{A logical value indicating whether newly created testdata should be filed to the inst directory of the package.}
+
 \item{verbose}{A logical value indicating whether to print messages about the process.
 Defaults to FALSE.}
-
-\item{writeTestData}{A logical value indicating whether newly created testdata should be filed to the inst directory of the package.}
 }
 \value{
 A list containing:

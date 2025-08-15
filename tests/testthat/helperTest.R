@@ -1,20 +1,10 @@
-#' Setup Test Directory for Testing
+#' Mock Manual Editings for PK Forest Test Plots
 #'
-#' This function sets up a test directory specifically for use in unit tests with
-#' the `testthat` framework.
+#' This function modifies the PKParameter_ForestTest sheet in the provided Excel workbook
+#' according to specific rules for pediatric and crossover data.
 #'
-#'
-#' @return A list containing:
-#'   - `projectConfiguration`: The configuration of the initialized project.
-#'   - `scenarioList`: A list of scenarios initialized for the project.
-#'   - `scenarioResults`: The results from running the scenarios.
-#'
-#' @export
-setupTestDirectoryForTests <- function() {
-  message("load test project")
-  buildTestData(rootDirectory = NULL, verbose = FALSE, writeTestData = FALSE)
-}
-
+#' @param projectConfiguration A list containing configuration settings for the project.
+#' @return Returns invisible NULL.
 mockManualEditingsPlotPkForestTest <- function(projectConfiguration) {
   # initialize variable to avoid messages
   plotName <- scenario <- NULL
@@ -69,8 +59,13 @@ mockManualEditingsPlotPkForestTest <- function(projectConfiguration) {
 
   return(invisible())
 }
-
-# adjust configtables in project directory
+#' Mock Manual Editings for Boxplot Test
+#'
+#' This function modifies the PKParameter_BoxplotTest sheet in the provided Excel workbook
+#' according to specific rules for crossover and pediatric data.
+#'
+#' @param projectConfiguration A list containing configuration settings for the project.
+#' @return Returns invisible NULL.
 mockManualEditingsPlotBoxwhsikerTest <- function(projectConfiguration) {
   # initialize variable to avoid messages
   plotName <- referenceScenario <- scenario <- NULL
@@ -108,8 +103,13 @@ mockManualEditingsPlotBoxwhsikerTest <- function(projectConfiguration) {
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
   return(invisible())
 }
-
-
+#' Mock Manual Editings for Demographics Test
+#'
+#' This function modifies the HistogramTest and RangePlotTest sheets in the provided Excel workbook
+#' according to specific rules for demographics and PK parameters.
+#'
+#' @param projectConfiguration A list containing configuration settings for the project.
+#' @return Returns invisible NULL.
 mockManualEditingsPlotDemographicsTest <- function(projectConfiguration) {
   # initialize variable to avoid messages
   colorLegend <- referenceScenario <- scenarios <- scenario <- plotName <- NULL
@@ -181,6 +181,15 @@ mockManualEditingsPlotDemographicsTest <- function(projectConfiguration) {
 
   return(invisible())
 }
+#' Mock Manual Editings for Sensitivity Test
+#'
+#' This function modifies the SensitivityPlots sheet in the provided Excel workbook
+#' according to specific rules for sensitivity analysis.
+#'
+#' @param projectConfiguration A list containing configuration settings for the project.
+#' @param sensitivityScenario A string representing the sensitivity scenario.
+#' @param sensitivitySheet A string representing the sensitivity sheet.
+#' @return Returns invisible NULL.
 mockManualEditingsPlotSensitivityTest <- function(projectConfiguration,
                                                   sensitivityScenario,
                                                   sensitivitySheet) {
@@ -220,6 +229,13 @@ mockManualEditingsPlotSensitivityTest <- function(projectConfiguration,
 
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
 }
+#' Mock Manual Editings for Time Profile Test
+#'
+#' This function modifies the TimeProfileTest sheet in the provided Excel workbook
+#' and adds new time range tags.
+#'
+#' @param projectConfiguration A list containing configuration settings for the project.
+#' @return Returns invisible NULL.
 mockManualEditingsPlotTimeProfileTest <- function(projectConfiguration) {
   # initialize variable to avoid messages
   plotName <- scenario <- individualIds <- NULL
@@ -459,14 +475,26 @@ mockManualEditingsPlotTimeProfileTest <- function(projectConfiguration) {
 
   openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
 }
-# Cleanup function to remove the electronic package folder
+#' Cleanup Electronic Package Folder
+#'
+#' This function removes the electronic package folder specified in the project configuration.
+#'
+#' @param projectConfiguration A list containing configuration settings for the project.
+#' @return Returns invisible NULL.
 cleanupElectronicPackage <- function(projectConfiguration) {
   packageFolder <- suppressWarnings(projectConfiguration$addOns$electronicPackageFolder)
   if (dir.exists(packageFolder)) {
     unlink(packageFolder, recursive = TRUE) # Remove the folder and its contents
   }
 }
-# function to create workflowRmds to test TLF workflow export
+#' Generate Mock R Markdown File
+#'
+#' This function creates an R Markdown file for testing the TLF workflow export.
+#'
+#' @param projectConfiguration A list containing configuration settings for the project.
+#' @param codeChunkList A list of code chunks to include in the R Markdown file.
+#' @param filename A string representing the name of the output R Markdown file.
+#' @return Returns invisible NULL.
 generateMockRmd <- function(projectConfiguration, codeChunkList, filename) {
   codeChunkList <- utils::modifyList(
     list(

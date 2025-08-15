@@ -1,27 +1,3 @@
-#' Prepare Test Project
-#'
-#' This function sets up the environment for running the test project of the
-#' Reporting Framework.
-#' It creates a directory structure if it does not exist, and sources
-#' the necessary R scripts to execute the workflow.
-#'
-#' @param rootDirectory A character string specifying the root directory for the test project.
-#'
-#' @return A list containing:
-#'   - `projectConfiguration`: The configuration of the initialized project.
-#'   - `scenarioList`: A list of scenarios initialized for the project.
-#'   - `scenarioResults`: The results from running the scenarios.
-#'
-#' @examples
-#' \dontrun{
-#' prepareTestProject("path/to/my/testDirectory")
-#' }
-#' @export
-prepareTestProject <- function(rootDirectory) {
-  checkmate::assertDirectory(rootDirectory)
-
-  buildTestData(rootDirectory, verbose = FALSE, writeTestData = FALSE)
-}
 #' Build Test Project Directory
 #'
 #' This function sets up a test project directory for the `ospsuite.reportingframework` package.
@@ -68,29 +44,47 @@ prepareTestProject <- function(rootDirectory) {
 #'
 #' @export
 buildTestData <- function(rootDirectory = NULL,
-                          verbose = FALSE,
-                          writeTestData) {
-  instDirectory <- system.file(
-    package = "ospsuite.reportingframework",
-    "extdata",
-    mustWork = TRUE
+                          writeTestData = FALSE) {
+  # Initialize class to build test project
+  pBuilder <- TestProjectBuilder$new()
+
+  # get projectConfiguration
+  projectConfiguration <- pBuilder$iniTestProject(rootDirectory = rootDirectory)
+
+  # Clear existing data from relevant Excel sheets
+  pBuilder$mockManualEditingsCleanup(projectConfiguration)
+
+  # Define virtual populations within biometric ranges
+  randomPops <- data.table(
+    populationName = c("adults", "toddler", "children", "school-children", "adolescents"),
+    species = "Human",
+    population = "European_ICRP_2002",
+    numberOfIndividuals = 100,
+    proportionOfFemales = 50,
+    ageMin = c(20, 0.5, 2, 6, 12),
+    ageMax = c(40, 2, 6, 12, 18),
+    weightUnit = "kg",
+    heightUnit = "cm",
+    bMIUnit = "kg/m\u00B2",
+    protein = "CYP3A4,UGT1A4",
+    ontogeny = "CYP3A4,UGT1A4"
+  )
+  pBuilder$mockManualEditingsPopulation(projectConfiguration,
+    randomPops = randomPops
   )
 
-  modelFiles <- list.files(file.path(instDirectory, "Models"))
-  names(modelFiles) <- substr(modelFiles, 1, 2)
-
-  projectConfiguration <- iniTestProject(
-    rootDirectory = rootDirectory,
-    verbose = verbose,
-    modelFiles = modelFiles,
-    instDirectory = instDirectory
+  # Set up scenarios based on the defined populations, add PK Parameter and output paths
+  pBuilder$mockManualEditingsScenario(projectConfiguration,
+    dtTestScenarios = getTestScenarios(projectConfiguration),
+    pKParameter = "PK_Plasma, PK_Fraction"
   )
 
-  updateConfigTablesForTestProject(projectConfiguration, modelFiles)
+  # Add PK parameters to the project configuration
+  pBuilder$mockManualEditingsPKParameter(projectConfiguration)
 
-  setupPopulationsForTest(
+  pBuilder$setupRandomPopulations(
     projectConfiguration = projectConfiguration,
-    instDirectory = instDirectory,
+    populationNames = unique(randomPops$populationName),
     writeTestData = writeTestData
   )
 
@@ -101,41 +95,45 @@ buildTestData <- function(rootDirectory = NULL,
   )
 
   # Run scenarios and calculate PK
-  scenarioResults <- setupSimulationsForTest(
+  scenarioResults <- pBuilder$setupSimulations(
     projectConfiguration = projectConfiguration,
     scenarioList = scenarioList,
-    instDirectory = instDirectory,
     writeTestData = writeTestData
   )
 
   # generate Random data
   setupRandomDataForTest(
+    pBuilder = pBuilder,
     projectConfiguration = projectConfiguration,
     scenarioList = scenarioList,
     scenarioResults = scenarioResults
   )
 
-  # generate virtual twin poulations
+  # generate virtual twin populations
   scenarioListInd <-
     setupVirtualTwinScenariosForTest(
-      projectConfiguration = projectConfiguration,
-      modelFiles = modelFiles
+      pBuilder = pBuilder,
+      projectConfiguration = projectConfiguration
     )
 
-
   # Run scenarios and calculate PK
-  scenarioResultsInd <- setupSimulationsForTest(
+  scenarioResultsInd <- pBuilder$setupSimulations(
     projectConfiguration = projectConfiguration,
     scenarioList = scenarioListInd,
-    instDirectory = instDirectory,
     writeTestData = writeTestData
   )
 
-
-  setUpSensitivity(
+  # Setup sensitivity
+  projectConfiguration <- pBuilder$setUpSensitivity(
     projectConfiguration = projectConfiguration,
-    scenarioListInd = scenarioListInd,
-    instDirectory = instDirectory,
+    scenarioList = scenarioListInd,
+    scenarioName = names(scenarioListInd)[2],
+    parameterList = list(
+      "DrugX Lipophilicity" = "DrugX Lipophilicity",
+      "DrugX Fraction unbound" = "DrugX Fraction unbound",
+      "CYP3A4 Ontogeny factor" = "CYP3A4 Ontogeny factor"
+    ),
+    sensitivitySheet = "smallSelection",
     writeTestData = writeTestData
   )
 
@@ -149,575 +147,59 @@ buildTestData <- function(rootDirectory = NULL,
 }
 
 ## auxiliaries --------
-
-#' Initialize Test Project
-#'
-#' This function initializes the project structure and configuration for the test project.
-#'
-#' @param rootDirectory A character string specifying the root directory for the test project.
-#' @param verbose A logical value indicating whether to print messages about the process.
-#' @param modelFiles A named character vector containing paths to the model files used in the project.
-#' @param instDirectory A character string specifying the installation directory for the package.
-#'
-#' @return A ProjectConfiguration object containing the details of the initialized project.
-#' @keywords internal
-iniTestProject <- function(rootDirectory,
-                           verbose,
-                           modelFiles,
-                           instDirectory = system.file(
-                             package = "ospsuite.reportingframework",
-                             "extdata",
-                             mustWork = TRUE
-                           )) {
-  if (is.null(rootDirectory)) {
-    rootDirectory <- file.path(tempdir(), "testProject")
-    if (verbose) message(rootDirectory)
-  }
-  if (!dir.exists(file.path(rootDirectory, "Scripts", "ReportingFramework"))) {
-    dir.create(file.path(rootDirectory, "Scripts", "ReportingFramework"), recursive = TRUE)
-  }
-
-  setWorkflowOptions(isValidRun = FALSE)
-
-  # Setup project
-  initProject(configurationDirectory = file.path(rootDirectory, "Scripts", "ReportingFramework")) # Initialize the project structure
-
-  # Get paths of all relevant project files
-  projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
-    path = file.path(file.path(rootDirectory, "Scripts", "ReportingFramework", "ProjectConfiguration.xlsx"))
-  )
-
-  initLogfunction(projectConfiguration = projectConfiguration, verbose = verbose)
-
-  synchronizeDirectories(
-    fromDir = file.path(instDirectory, "Models"),
-    toDir = file.path(projectConfiguration$modelFolder)
-  )
-
-  return(projectConfiguration)
-}
-#' Update Tables for Test Projects
-#'
-#' This function updates the configuration tables for test projects in the
-#' Reporting Framework. It performs necessary modifications to the project
-#' configuration, including clearing existing data, setting up scenarios,
-#' and adding pharmacokinetic (PK) parameters.
-#'
-#' The function is designed to ensure that the project configuration is
-#' correctly set up for running simulations and analyses within the
-#' `ospsuite.reportingframework` package.
-#'
-#' @param projectConfiguration A ProjectConfiguration object containing the
-#'   details of the project configuration that needs to be updated.
-#' @param modelFiles A named character vector containing paths to the model
-#'   files used in the project.
-#'
-#' @return invisible(NULL)
-#' @keywords internal
-updateConfigTablesForTestProject <- function(projectConfiguration, modelFiles) {
-  # Perform mock manual editing on the project configuration tables
-  # Clear existing data from relevant Excel sheets
-  mockManualEditingsCleanup(projectConfiguration)
-  # Define virtual populations within biometric ranges
-  mockManualEditingsPopulation(projectConfiguration)
-  # Set up scenarios based on the defined populations, add PK Parameter and output paths
-  mockManualEditingsScenario(projectConfiguration, modelFiles = modelFiles)
-  synchronizeScenariosOutputsWithPlots(projectConfiguration) # Sync outputs with plots
-  synchronizeScenariosWithPlots(projectConfiguration) # Sync scenarios with plots
-  # Add PK parameters to the project configuration
-  mockManualEditingsPKParameter(projectConfiguration)
-  # prepare displaynames for plotting
-  mockManualEditingsdisplayNames(projectConfiguration)
-
-  return(invisible())
-}
-#' Setup Populations for Test
-#'
-#' This function sets up populations for the test project by copying necessary files
-#' and exporting defined populations.
-#'
-#' @param projectConfiguration A ProjectConfiguration object containing the project configuration details.
-#' @param instDirectory A character string specifying the installation directory for the package.
-#' @param writeTestData A logical value indicating whether newly created test data should be filed to the inst directory of the package.
-#'
-#' @return NULL
-#' @keywords internal
-setupPopulationsForTest <- function(projectConfiguration, instDirectory, writeTestData) {
-  # Copy files needed for example to the correct folders
-  # Recreate results
-  synchronizeDirectories(
-    fromDir = file.path(instDirectory, "Populations"),
-    toDir = file.path(projectConfiguration$populationsFolder)
-  )
-
-
-  # Exports all populations defined in the population.xlsx sheet "Demographics"
-  suppressMessages(exportRandomPopulations(
-    projectConfiguration = projectConfiguration,
-    populationNames = NULL,
-    overwrite = FALSE
-  ))
-
-  if (writeTestData) {
-    if (!dir.exists(file.path(instDirectory, "Populations"))) {
-      dir.create(file.path(instDirectory, "Populations"))
-    }
-
-    synchronizeDirectories(
-      fromDir = file.path(projectConfiguration$populationsFolder),
-      toDir = file.path(instDirectory, "Populations")
-    )
-  }
-}
-#' Setup Simulations for Test
-#'
-#' This function sets up simulations for the test project by synchronizing necessary directories
-#' and running initialized scenarios to calculate pharmacokinetic (PK) parameters.
-#'
-#' @param projectConfiguration A ProjectConfiguration object containing the project configuration details.
-#' @param scenarioList A list of scenarios initialized for the project.
-#' @param instDirectory A character string specifying the installation directory for the package.
-#' @param writeTestData A logical value indicating whether newly created test data should be filed to the inst directory of the package.
-#'
-#' @return A list containing the results from running the scenarios.
-#' @keywords internal
-setupSimulationsForTest <- function(projectConfiguration, scenarioList, instDirectory, writeTestData) {
-  synchronizeDirectories(
-    fromDir = file.path(instDirectory, EXPORTDIR$simulationResult),
-    toDir = file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult)
-  )
-
-  synchronizeDirectories(
-    fromDir = file.path(instDirectory, EXPORTDIR$pKAnalysisResults),
-    toDir = file.path(projectConfiguration$outputFolder, EXPORTDIR$pKAnalysisResults)
-  )
-
-  # Run initialized scenarios and Calculate PK Parameters
-  scenarioResults <- runOrLoadScenarios(
-    projectConfiguration = projectConfiguration,
-    scenarioList = scenarioList,
-    simulationRunOptions = ospsuite::SimulationRunOptions$new(
-      showProgress = TRUE
-    )
-  )
-
-  if (writeTestData) {
-    if (!dir.exists(file.path(instDirectory, EXPORTDIR$simulationResult))) {
-      dir.create(file.path(instDirectory, EXPORTDIR$simulationResult))
-    }
-
-    synchronizeDirectories(
-      fromDir = file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult),
-      toDir = file.path(instDirectory, EXPORTDIR$simulationResult)
-    )
-
-    if (!dir.exists(file.path(instDirectory, EXPORTDIR$pKAnalysisResults))) {
-      dir.create(file.path(instDirectory, EXPORTDIR$pKAnalysisResults))
-    }
-
-    synchronizeDirectories(
-      fromDir = file.path(projectConfiguration$outputFolder, EXPORTDIR$pKAnalysisResults),
-      toDir = file.path(instDirectory, EXPORTDIR$pKAnalysisResults),
-      pattern = ".csv"
-    )
-  }
-
-  return(scenarioResults)
-}
-
 #' Setup Random Data for Test
 #'
 #' This function adds random pharmacokinetic (PK and time profile) data to the test project,
-#' including shifting values  for selected individuals.
+#' including shifting values for selected individuals.
 #'
+#' @param pBuilder An TestProjectBuilder object, which provides function to build the test project
 #' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
 #' @param scenarioList A list of scenarios initialized for the project.
 #' @param scenarioResults A list containing results from running the scenarios.
 #'
 #' @return Invisible NULL.
 #' @keywords internal
-setupRandomDataForTest <- function(projectConfiguration, scenarioList, scenarioResults) {
+setupRandomDataForTest <- function(pBuilder, projectConfiguration, scenarioList, scenarioResults) {
   pkParameterDT <- loadPKParameter(
     projectConfiguration = projectConfiguration,
     scenarioListOrResult = scenarioList
   )
 
-  ids <- addRandomPKDataToTestProject(projectConfiguration, pkParameterDT)
-
-  addRandomTPDataToTestProject(
-    projectConfiguration = projectConfiguration,
-    scenarioResult = scenarioResults[["adults_iv"]],
-    csvfile = "timeprofiles_adults_iv.csv",
-    ids = ids
-  )
-  addRandomTPDataToTestProject(
-    projectConfiguration = projectConfiguration,
-    scenarioResult = scenarioResults[["adults_po"]],
-    csvfile = "timeprofiles_adults_po.csv",
-    ids
-  )
-  mockManualEditingsDataDictionary(projectConfiguration)
-
-  return(invisible())
-}
-#' Setup Virtual Twin Scenarios for Test
-#'
-#' This function sets up virtual twin scenarios for the test project based on the defined populations
-#' and model files.
-#'
-#' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
-#' @param modelFiles A named character vector containing paths to the model files used in the project.
-#'
-#' @return A list of scenario names initialized for the virtual twin scenarios.
-#' @keywords internal
-setupVirtualTwinScenariosForTest <- function(projectConfiguration, modelFiles) {
-  invisible(readObservedDataByDictionary(projectConfiguration))
-
-  newScenarios <- mockManualEditingsIndividuals(projectConfiguration, modelFiles)
-
-  exportVirtualTwinPopulations(
-    projectConfiguration = projectConfiguration,
-    modelFile = modelFiles["po"],
-    overwrite = TRUE
-  )
-
-  scenarioListInd <- createScenarios.wrapped(
-    projectConfiguration = projectConfiguration,
-    scenarioNames = newScenarios
-  )
-
-  return(scenarioListInd)
-}
-#' Set Up Sensitivity Analysis
-#'
-#' This function sets up sensitivity analysis for the test project based on the defined scenarios.
-#'
-#' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
-#' @param scenarioListInd A list of individual scenarios initialized for the project.
-#' @param instDirectory A character string specifying the installation directory for the package.
-#' @param writeTestData A logical value indicating whether newly created test data should be filed to the inst directory of the package.
-#'
-#' @return A ProjectConfiguration object containing the updated project configuration.
-#' @keywords internal
-setUpSensitivity <- function(projectConfiguration, scenarioListInd, instDirectory, writeTestData) {
-  sensitivityScenario <- names(scenarioListInd)[2]
-  sensitivitySheet <- "smallSelection"
-
-  projectConfiguration <- addSensitivityTable(projectConfiguration,
-    scenarioList = scenarioListInd,
-    scenarioName = sensitivityScenario,
-    sheetName = sensitivitySheet
-  )
-
-  mockManualEditingsSensitivity(projectConfiguration, sheetName = sensitivitySheet)
-
-  synchronizeDirectories(
-    fromDir = file.path(instDirectory, EXPORTDIR$sensitivityResults),
-    toDir = file.path(projectConfiguration$outputFolder, EXPORTDIR$sensitivityResults)
-  )
-
-
-  runSensitivityAnalysisForScenarios(
-    projectConfiguration = projectConfiguration,
-    scenarioList = scenarioListInd,
-    scenarioNames = sensitivityScenario,
-    sensitivitysheet = sensitivitySheet,
-    overwrite = FALSE
-  )
-
-  if (writeTestData) {
-    if (!dir.exists(file.path(instDirectory, EXPORTDIR$sensitivityResults))) {
-      dir.create(file.path(instDirectory, EXPORTDIR$sensitivityResults))
-    }
-
-    synchronizeDirectories(
-      fromDir = file.path(projectConfiguration$outputFolder, EXPORTDIR$sensitivityResults),
-      toDir = file.path(instDirectory, EXPORTDIR$sensitivityResults)
-    )
-  }
-
-
-  return(projectConfiguration)
-}
-#' Synchronize Directories
-#'
-#' This function synchronizes files from one directory to another, copying only the files that are not already present.
-#'
-#' @param fromDir A character string specifying the source directory.
-#' @param toDir A character string specifying the target directory.
-#' @param pattern A regular expression pattern to filter the files to be copied (default is NULL).
-#'
-#' @return Invisible NULL.
-#' @keywords internal
-synchronizeDirectories <- function(fromDir, toDir, pattern = NULL) {
-  if (!dir.exists(toDir)) dir.create(toDir)
-
-  filesToCopy <- setdiff(
-    list.files(path = fromDir, pattern = pattern),
-    list.files(path = toDir, pattern = pattern)
-  )
-
-  invisible(lapply(
-    filesToCopy,
-    function(f) {
-      file.copy(
-        from = file.path(fromDir, f),
-        to = file.path(toDir, f)
-      )
-    }
-  ))
-
-  return(invisible())
-}
-
-## random data ---------
-#' Add Random PK Data to Test Project
-#'
-#' This function adds random pharmacokinetic (PK) data to the test project,
-#' including shifting values and calculating statistics for selected individuals.
-#'
-#' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
-#' @param pkParameterDT A data.table containing PK parameters and values.
-#' @return Invisible NULL.
-#' @keywords internal
-addRandomPKDataToTestProject <- function(projectConfiguration, pkParameterDT) {
-  # initialize variable to avoid messages
-  ratio <- iv <- po <- displayUnitPKParameter <- outputPathId <- route <- value <- NULL
-  pkParameter <- population <- shiftedValue <- scenario <- individualId <- unit <- NULL
-  STUD <- NULL # nolint
-
-  dataFolder <- file.path(projectConfiguration$configurationsFolder, "..", "..", "Data")
-  if (!dir.exists(dataFolder)) dir.create(dataFolder)
-
   set.seed(123) # Set seed for reproducibility
   ids <- sample(unique(pkParameterDT$individualId), 6, replace = FALSE)
-  randomIndividuals <- pkParameterDT[individualId %in% ids]
 
-  randomIndividuals[, shiftedValue := value * stats::rnorm(.N, mean = 1, sd = 0.05)]
-  randomIndividuals[, population := gsub("_iv", "", (gsub("_po", "", scenario))), by = .I]
-  randomIndividuals[, route := gsub("_", "", (gsub(population, "", scenario))), by = .I]
-
-  dt <- randomIndividuals[, .(
-    N = .N,
-    geomean = exp(mean(log(shiftedValue))),
-    geosd = exp(stats::sd(log(shiftedValue))),
-    median = stats::median(shiftedValue),
-    percentile_5 = stats::quantile(shiftedValue, 0.05),
-    percentile_95 = stats::quantile(shiftedValue, 0.95)
-  ), by = .(population, route, pkParameter, outputPathId, displayUnitPKParameter)]
-
-  dt[, STUD := 1234]
-  setnames(dt, "displayUnitPKParameter", "unit")
-
-  setcolorder(dt, "STUD")
-
-  fwrite(dt, file.path(dataFolder, "PK_absolute_values.csv"))
-
-
-  # ratios
-  ratiosDT <- dcast(randomIndividuals, individualId + pkParameter + outputPathId + population ~ route,
-    value.var = "shiftedValue"
-  )
-  ratiosDT[, ratio := po / iv]
-
-  geomeanCI <- function(x, confLevel = 0.9) {
-    n <- length(x)
-    if (n == 0) {
-      return(c(NA, NA))
-    }
-    gm <- exp(mean(log(x), na.rm = TRUE))
-    se <- stats::sd(log(x), na.rm = TRUE) / sqrt(n)
-    cimultiplier <- stats::qnorm((1 + confLevel) / 2)
-    cilower <- exp(log(gm) - cimultiplier * se)
-    ciupper <- exp(log(gm) + cimultiplier * se)
-    return(c(gm, cilower, ciupper))
-  }
-
-  dt <- ratiosDT[, .(
-    N = .N,
-    geomean = geomeanCI(ratio)[1],
-    CI_lower = geomeanCI(ratio)[2],
-    CI_upper = geomeanCI(ratio)[3]
-  ), by = c("pkParameter", "outputPathId", "population")]
-
-  dt[, STUD := 1234]
-  dt[, unit := ""]
-
-  setcolorder(dt, "STUD")
-
-  fwrite(dt, file.path(dataFolder, "PK_po_iv_ratios.csv"))
-
-  return(ids)
-}
-#' Add Random Time Profile Data to Test Project
-#'
-#' This function adds random time profile data to the test project for selected individuals.
-#'
-#' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
-#' @param scenarioResult A scenario result object containing simulation results.
-#' @param csvfile A character string specifying the name of the CSV file to save the data.
-#' @param ids A vector of individual IDs to include in the random data.
-#'
-#' @return Invisible NULL.
-#' @keywords internal
-addRandomTPDataToTestProject <- function(projectConfiguration, scenarioResult, csvfile, ids) {
-  # initialize variable to avoid messages
-  Time <- STUD <- IndividualId <- Height <- Age <- Weight <- IndividualId <- LLOQ <- NULL # nolint
-  shiftedValue <- outputPathId <- dimension <- simulationValues <- dtV <- route <- NULL
-
-  dataFolder <- file.path(projectConfiguration$configurationsFolder, "..", "..", "Data")
-  if (!dir.exists(dataFolder)) dir.create(dataFolder)
-
-  allResults <- setDT(ospsuite::simulationResultsToDataFrame(scenarioResult$results))
-
-  randomIndividuals <- allResults[IndividualId %in% ids]
-  randomIndividuals <- randomIndividuals[Time %in% c(15, 30, 45, 60, 90, c(3, 6, 9, 12, 18, 24) * 60)]
-  randomIndividuals[, Time := Time / 60]
-
-  outputPaths <- getOutputPathIds(wbPlots = projectConfiguration$plotsFile)
-  randomIndividuals <- merge(randomIndividuals,
-    outputPaths,
-    by.x = "paths",
-    by.y = "outputPath"
+  pBuilder$addRandomTPData(
+    projectConfiguration = projectConfiguration,
+    scenarioResults = scenarioResults[c("adults_iv", "adults_po")],
+    ids = ids
   )
 
-  setorderv(randomIndividuals, c("outputPathId", "IndividualId", "Time"))
-  randomIndividuals[, dtV := simulationValues - shift(simulationValues, fill = 0), by = c("outputPathId", "IndividualId")]
-  set.seed(123) # Set seed for reproducibility
-  randomIndividuals[, shiftedValue := ifelse(dimension == "Fraction",
-    cumsum(dtV),
-    simulationValues
-  ) * stats::rnorm(.N, mean = 1, sd = 0.05),
-  by = c("outputPathId", "IndividualId")
-  ]
-  randomIndividuals[dimension == "Fraction", shiftedValue := min(shiftedValue, 1), by = .I]
-  for (og in split(randomIndividuals, by = "outputPathId")) {
-    unitfactor <- ospsuite::toUnit(
-      quantityOrDimension = og$dimension[1],
-      values = 1,
-      targetUnit = og$displayUnit[1],
-      sourceUnit = og$unit[1],
-      molWeight = og$molWeight[1],
-      molWeightUnit = "g/mol"
-    )
-    randomIndividuals[outputPathId == og$outputPathId[1], shiftedValue := shiftedValue * unitfactor]
-  }
-
-  randomIndividuals <- randomIndividuals[, c("IndividualId", "outputPathId", "Time", "shiftedValue", "displayUnit")]
-
-  randomIndividuals[, LLOQ := ifelse(outputPathId == "Plasma", 0.1, NA)]
-  randomIndividuals[, shiftedValue := ifelse(!is.na(LLOQ) & shiftedValue < LLOQ, LLOQ / 2, shiftedValue)]
-
-  dtPop <- setDT(ospsuite::populationToDataFrame(scenarioResult$population))
-  dtPop <- dtPop[IndividualId %in% ids, c("IndividualId", "Gender", "Organism|Weight", "Organism|Age", "Organism|Height")]
-
-  names(dtPop) <- gsub("Organism\\|", "", names(dtPop))
-  dtPop[, `:=`(
-    Weight = round(Weight, 1),
-    Age = floor(Age),
-    Height = round(Height * 10)
-  )]
-
-  randomIndividuals <- merge(randomIndividuals, dtPop, by = "IndividualId")
-  randomIndividuals[, STUD := 1234]
-  randomIndividuals[, route := sub(".*_(.*)\\..*", "\\1", csvfile)]
-  setnames(randomIndividuals,
-    old = c(
-      "IndividualId", "outputPathId", "Time", "shiftedValue", "displayUnit",
-      "Gender", "Age", "Weight", "Height"
-    ),
-    new = c(
-      "SID", "outputPathId", "TIME", "DV", "DVUNIT",
-      "SEX", "AGE", "WGHT0", "HGHT0"
-    )
+  pBuilder$addRandomPKData(
+    projectConfiguration = projectConfiguration,
+    pkParameterDT = pkParameterDT,
+    ids = ids
   )
-
-  setcolorder(randomIndividuals, "STUD")
-
-  fwrite(randomIndividuals, file.path(dataFolder, csvfile))
-
 
   return(invisible())
 }
 
-## mock manual Editing -------------
-#' Cleanup Mock Manual editing
-#'
-#' This function cleans up the project configuration files
-#' by clearing existing data from relevant Excel sheets.
-#'
-#' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
-#' @return NULL
-#' @keywords internal
-mockManualEditingsCleanup <- function(projectConfiguration) {
-  # delete examples
-  for (xlsfile in c(
-    projectConfiguration$scenariosFile,
-    projectConfiguration$applicationsFile,
-    projectConfiguration$populationsFile,
-    projectConfiguration$individualsFile,
-    projectConfiguration$modelParamsFile
-  )) {
-    # cleanup templatelines in wokbooks
-    wb <- openxlsx::loadWorkbook(xlsfile)
+getTestScenarios <- function(projectConfiguration) {
+  # initialize variable to avoid messages
+  scenario_name <- NULL #nolint
+  longName <- shortName <- outputPathsIds <- NULL
 
-    for (sheetName in wb$sheet_names) {
-      dt <- xlsxReadData(wb = wb, sheetName = sheetName)
-      dt <- dt[FALSE]
-      xlsxWriteData(wb = wb, sheetName = sheetName, dt = dt)
-    }
-    # save all sheets
-    openxlsx::saveWorkbook(wb, xlsfile, overwrite = TRUE)
-  }
-}
-#' Mock Manual editing for Population
-#'
-#' This function adds biometric ranges for virtual pediatric and one adult populations to the configuration files
-#'
-#' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
-#' @return NULL
-#' @keywords internal
-mockManualEditingsPopulation <- function(projectConfiguration) {
-  # add virtual population with in biometric ranges of observed data
-  wb <- openxlsx::loadWorkbook(projectConfiguration$populationsFile)
-
-  dtPops <- xlsxReadData(wb = wb, sheetName = "Demographics")
-  dtPops <- rbind(dtPops[0],
-    data.table(
-      populationName = c("adults", "toddler", "children", "school-children", "adolescents"),
-      species = "Human",
-      population = "European_ICRP_2002",
-      numberOfIndividuals = 100,
-      proportionOfFemales = 50,
-      ageMin = c(20, 0.5, 2, 6, 12),
-      ageMax = c(40, 2, 6, 12, 18),
-      weightUnit = "kg",
-      heightUnit = "cm",
-      bMIUnit = "kg/m\u00B2",
-      protein = "CYP3A4,UGT1A4",
-      ontogeny = "CYP3A4,UGT1A4"
-    ),
-    fill = TRUE
+  instDirectory <- system.file(
+    package = "ospsuite.reportingframework",
+    "extdata",
+    mustWork = TRUE
   )
-  xlsxWriteData(wb = wb, sheetName = "Demographics", dt = dtPops)
 
-  openxlsx::saveWorkbook(wb, projectConfiguration$populationsFile, overwrite = TRUE)
-}
-#' Mock Manual editing for Scenarios
-#'
-#' This function sets up scenarios based on the defined populations and adds PK Parameters
-#' and output paths to the project configuration.
-#'
-#' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
-#' @param modelFiles list of model files
-#' @return NULL
-mockManualEditingsScenario <- function(projectConfiguration, modelFiles) {
-  wb <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
-  # set scenarios
-  dtScenario <- xlsxReadData(wb = wb, sheetName = "Scenarios")
+  modelFiles <- list.files(file.path(instDirectory, "Models"))
+  names(modelFiles) <- substr(modelFiles, 1, 2)
+
   dtPop <- xlsxReadData(wb = projectConfiguration$populationsFile, sheetName = "Demographics")
 
-  dtScenario <- rbind(dtScenario,
+  dtScenario <- rbind(
     data.table(
       scenario_name = paste0(gsub("-", "_", dtPop$populationName), "_iv"),
       populationId = dtPop$populationName,
@@ -733,350 +215,78 @@ mockManualEditingsScenario <- function(projectConfiguration, modelFiles) {
     fill = TRUE
   )
 
-  xlsxWriteData(wb = wb, sheetName = "Scenarios", dt = dtScenario)
+  dtScenario[, outputPathsIds := "Plasma, CYP3A4total, CYP3A4Liver"]
+  dtScenario[, shortName := gsub("_", " ", gsub("_iv", "", gsub("_po", "", scenario_name)))]
+  dtScenario[, longName := gsub("_", " ", gsub("_iv", "", gsub("_po", "", scenario_name)))]
 
-  # add PK Parameter sheets
-  dtPK <- data.table(
-    scenario_name = dtScenario$scenario_name,
-    pKParameter = "PK_Plasma, PK_Fraction"
-  )
-
-  xlsxWriteData(wb = wb, sheetName = "PKParameter", dt = dtPK)
-
-  # OutputPaths
-  dtOutputs <- xlsxReadData(wb = wb, sheetName = "OutputPaths")
-
-  dtOutputs <- rbind(
-    data.table(
-      outputPathId = "Plasma",
-      outputPath = "Organism|PeripheralVenousBlood|DrugX|Plasma (Peripheral Venous Blood)"
-    ),
-    data.table(
-      outputPathId = "CYP3A4total",
-      outputPath = "Organism|DrugX-CYP3A4-Optimized Metabolite|Total fraction of dose-DrugX"
-    ),
-    data.table(
-      outputPathId = "CYP3A4Liver",
-      outputPath = "Organism|Liver|Periportal|Intracellular|DrugX-CYP3A4-Optimized Metabolite|Fraction of dose-DrugX"
-    ),
-    fill = TRUE
-  )
-
-  xlsxWriteData(wb = wb, sheetName = "OutputPaths", dt = dtOutputs)
-
-  # save all sheets
-  openxlsx::saveWorkbook(wb, projectConfiguration$scenariosFile, overwrite = TRUE)
+  return(dtScenario)
 }
-#' Mock Manual editing for Display Names
+
+
+#' Setup Virtual Twin Scenarios for Test
 #'
-#' This function updates the display names for scenarios and output paths in the project configuration.
+#' This function sets up virtual twin scenarios for the test project based on the defined populations
+#' and model files.
 #'
 #' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
-#' @return NULL
-mockManualEditingsdisplayNames <- function(projectConfiguration) {
-  # initialize variable to avoid messages
-  outputPathId <- scenario <- longName <- shortName <- NULL
-
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
-
-  # scenarios
-
-  dtScenario <- xlsxReadData(wb = wb, sheetName = "Scenarios")
-  dtScenario[, shortName := gsub(" iv", "", gsub(" po", "", shortName))]
-  dtScenario[, longName := gsub(" iv", "", gsub(" po", "", longName))]
-
-  dtScenario[grep("p_123", scenario), `:=`(
-    shortName = "study 1234",
-    longName = "study 1234 iv application"
-  )]
-  dtScenario[grep("^i123", scenario), `:=`(
-    shortName = paste("individual", gsub("i1234", "", gsub("_iv", "", scenario))),
-    longName = paste("individual", gsub("i1234", "", gsub("_iv", "", scenario)), "iv application")
-  )]
-
-  xlsxWriteData(wb = wb, sheetName = "Scenarios", dt = dtScenario)
-
-  # outputpathids
-  dtOutputs <- xlsxReadData(wb = wb, sheetName = "Outputs")
-
-  dtOutputs[outputPathId == "Plasma"]$displayName <- "drugX plasma concentration"
-  dtOutputs[outputPathId == "Plasma"]$displayUnit <- "\u00B5g/L"
-  dtOutputs[outputPathId == "CYP3A4total"]$displayName <- "drugX metabolized by CYP3A4"
-  dtOutputs[outputPathId == "CYP3A4Liver"]$displayName <- "drugX metabolized by CYP3A4 in liver"
-
-  xlsxWriteData(wb = wb, sheetName = "Outputs", dt = dtOutputs)
-
-  # save all sheets
-  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
-}
-#' Mock Manual editing for PK Parameters
 #'
-#' This function adds PK parameters to the project configuration based on templates.
-#'
-#' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
-#' @return NULL
-mockManualEditingsPKParameter <- function(projectConfiguration) {
+#' @return A list of scenario names initialized for the virtual twin scenarios.
+#' @keywords internal
+setupVirtualTwinScenariosForTest <- function(pBuilder, projectConfiguration) {
   # initialize variable to avoid messages
-  displayName <- name <- outputPathIds <- NULL
+  modelFile <- readPopulationFromCSV <- NULL
+  scenario_name <- NULL #nolint
 
-  # add all data files which are used in the project
-  wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$pKParameterFile)
+  invisible(readObservedDataByDictionary(projectConfiguration))
 
-  dtTemplate <- xlsxReadData(wb = wb, sheetName = "Template")
+  dtVirtualTwin <- pBuilder$mockManualEditingsIndividuals(projectConfiguration)
 
-  dtTemplate <- dtTemplate[c(1, which(dtTemplate$name %in% c("C_max", "AUC_inf")))]
-  dtTemplate[name %in% c("C_max", "AUC_inf"), outputPathIds := "Plasma"]
-
-  xlsxCloneAndSet(wb = wb, clonedSheet = "Template", sheetName = "PK_Plasma", dt = dtTemplate)
-
-
-  dtTemplate <- xlsxReadData(wb = wb, sheetName = "Template")
-
-  dtTemplate <- dtTemplate[c(1, which(dtTemplate$name %in% c("F_tEnd")))]
-  dtTemplate[name %in% c("F_tEnd"), outputPathIds := c("CYP3A4total, CYP3A4Liver")]
-  dtTemplate[name %in% c("F_tEnd"), displayName := "fraction metabolized"]
-
-  xlsxCloneAndSet(wb = wb, clonedSheet = "Template", sheetName = "PK_Fraction", dt = dtTemplate)
-
-  openxlsx::saveWorkbook(wb, projectConfiguration$addOns$pKParameterFile, overwrite = TRUE)
-}
-#' Mock Manual editing for Data Dictionary
-#'
-#' This function updates the data dictionary for the project configuration with new data files.
-#'
-#' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
-#' @param withPK boolean, if TRUE configuration for pkparameter  are added
-#' @return NULL
-mockManualEditingsDataDictionary <- function(projectConfiguration,
-                                             withPK = TRUE) {
-  # initialize variable to avoid messages
-  sourceColumn <- targetColumn <- NULL
-
-  # add all data files which are used in the project
-  wb <- openxlsx::loadWorkbook(projectConfiguration$dataImporterConfigurationFile)
-
-  dtDataFiles <- xlsxReadData(wb = wb, sheetName = "DataFiles")
-  dtDataFiles <- dtDataFiles[c(1)]
-
-
-  dtDataFiles <- rbind(
-    dtDataFiles,
-    data.table(
-      fileIdentifier = "tp_iv",
-      dataFile = file.path("..", "..", "Data", "timeprofiles_adults_iv.csv"),
-      dictionary = "tpDictionary",
-      dataFilter = "",
-      dataClass = DATACLASS$tpIndividual
-    ),
-    data.table(
-      fileIdentifier = "tp_po",
-      dataFile = file.path("..", "..", "Data", "timeprofiles_adults_po.csv"),
-      dictionary = "tpDictionary",
-      dataFilter = "",
-      dataClass = DATACLASS$tpIndividual
-    )
-  )
-  if (withPK == TRUE) {
-    dtDataFiles <- rbind(
-      dtDataFiles,
-      data.table(
-        fileIdentifier = "pk_abs",
-        dataFile = file.path("..", "..", "Data", "PK_absolute_values.csv"),
-        dictionary = "pkDictionary_absValues",
-        dataFilter = "",
-        dataClass = DATACLASS$pkAggregated
-      ),
-      data.table(
-        fileIdentifier = "pk_ratios",
-        dataFile = file.path("..", "..", "Data", "PK_po_iv_ratios.csv"),
-        dictionary = "pkDictionary_ratios",
-        dataFilter = "",
-        dataClass = DATACLASS$pkAggregated
-      )
-    )
-  }
-
-  xlsxWriteData(wb = wb, sheetName = "DataFiles", dt = dtDataFiles)
-
-  # tp dictionayr
-  tpDictionary <- xlsxReadData(wb = wb, sheetName = "tpDictionary", skipDescriptionRow = FALSE)
-  tpDictionaryH <- tpDictionary[1]
-  tpDictionary <- tpDictionary[targetColumn %in% c(
-    "studyId", "subjectId", "individualId",
-    "group", "outputPathId", "xValues", "yValues", "yUnit", "lloq",
-    "age", "weight", "height", "gender", "population", "species", "route"
-  )]
-  tpDictionary <- tpDictionary[!duplicated(tpDictionary$targetColumn)]
-
-  tpDictionary[targetColumn == "group"]$filterValue <- "paste(STUD,'adults',route,sep = '_')"
-  tpDictionary[targetColumn == "outputPathId"]$sourceColumn <- "outputPathId"
-  tpDictionary[targetColumn == "population"]$filter <- "TRUE"
-  tpDictionary[targetColumn == "route"]$sourceColumn <- "route"
-
-  tpDictionary[!is.na(sourceColumn), `:=`(
-    filter = NA,
-    filterValue = NA
-  )]
-
-  xlsxWriteData(wb = wb, sheetName = "tpDictionary", dt = rbind(tpDictionaryH, tpDictionary))
-
-  # - pkDictionary absolute
-  if (withPK == TRUE) {
-    pkDictionary <- xlsxReadData(wb = wb, sheetName = "pkDictionary", skipDescriptionRow = FALSE)
-    pkDictionaryH <- pkDictionary[1]
-    pkDictionary <- pkDictionary[targetColumn %in% c(
-      "studyId", "group", "outputPathId", "pkParameter",
-      "values", "unit", "errorType", "errorValues", "numberOfIndividuals"
-    )]
-
-    pkDictionary[targetColumn == "group"]$filterValue <- "paste(STUD,population,route,sep = '_')"
-    pkDictionary[targetColumn == "outputPathId"]$sourceColumn <- "outputPathId"
-    pkDictionary[targetColumn == "pkParameter"]$sourceColumn <- "pkParameter"
-    pkDictionary[targetColumn == "values"]$sourceColumn <- "geomean"
-    pkDictionary[targetColumn == "errorValues"]$sourceColumn <- "geosd"
-    pkDictionary[targetColumn == "unit"]$sourceColumn <- "unit"
-    pkDictionary[targetColumn == "numberOfIndividuals"]$sourceColumn <- "N"
-    pkDictionary[!is.na(sourceColumn), `:=`(
-      filter = NA,
-      filterValue = NA
-    )]
-
-    xlsxCloneAndSet(
-      wb = wb,
-      clonedSheet = "pkDictionary",
-      sheetName = "pkDictionary_absValues",
-      dt = rbind(pkDictionaryH, pkDictionary)
-    )
-
-    # - pkDictionary ratio
-    pkDictionary <- xlsxReadData(wb = wb, sheetName = "pkDictionary", skipDescriptionRow = FALSE)
-    pkDictionaryH <- pkDictionary[1]
-    pkDictionary <- pkDictionary[targetColumn %in% c(
-      "studyId", "group", "outputPathId", "pkParameter",
-      "values", "unit", "errorType", "minValue", "maxValue", "numberOfIndividuals"
-    )]
-    pkDictionary[targetColumn == "group"]$filterValue <- "paste(STUD,population,'ratio',sep = '_')"
-    pkDictionary[targetColumn == "outputPathId"]$sourceColumn <- "outputPathId"
-    pkDictionary[targetColumn == "pkParameter"]$sourceColumn <- "pkParameter"
-    pkDictionary[targetColumn == "values"]$sourceColumn <- "geomean"
-    pkDictionary[targetColumn == "minValue"]$sourceColumn <- "CI_lower"
-    pkDictionary[targetColumn == "maxValue"]$sourceColumn <- "CI_upper"
-    pkDictionary[targetColumn == "errorType"]$filterValue <- '"geometric mean|90% CI lower|90% CI upper"'
-    pkDictionary[targetColumn == "unit"]$sourceColumn <- "unit"
-    pkDictionary[targetColumn == "numberOfIndividuals"]$sourceColumn <- "N"
-    pkDictionary[!is.na(sourceColumn), `:=`(
-      filter = NA,
-      filterValue = NA
-    )]
-
-    xlsxCloneAndSet(
-      wb = wb,
-      clonedSheet = "pkDictionary",
-      sheetName = "pkDictionary_ratios",
-      dt = rbind(pkDictionaryH, pkDictionary)
-    )
-  }
-
-  openxlsx::saveWorkbook(wb, projectConfiguration$dataImporterConfigurationFile, overwrite = TRUE)
-}
-
-mockManualEditingsIndividuals <- function(projectConfiguration, modelFiles) {
-  # initialize variable to avoid messages
-  scenario_name <- populationName <- NULL # nolint
-
-  # add all data files which are used in the project
-  wb <- openxlsx::loadWorkbook(projectConfiguration$individualsFile)
-
-  dt <- xlsxReadData(wb = wb, sheetName = "IndividualBiometrics", skipDescriptionRow = FALSE, emptyAsNA = FALSE)
-  dt[, `:=`(
-    protein = "CYP3A4,UGT1A4",
-    ontogeny = "CYP3A4,UGT1A4"
-  )]
-
-  individualIds <- dt$individualId
-
-  # to avoid bug in eqslabsR (Issue #790) add empty individual tables
-  for (ind in setdiff(individualIds, wb$sheet_names)) {
-    openxlsx::cloneWorksheet(wb = wb, clonedSheet = "template_Ind", sheetName = ind)
-  }
-
-
-  xlsxWriteData(wb = wb, sheetName = "IndividualBiometrics", dt = dt)
-
-  dt <- xlsxReadData(wb = wb, sheetName = "VirtualTwinPopulation", skipDescriptionRow = FALSE, emptyAsNA = FALSE)
-  dt[, populationName := "1234_adults"]
-
-  populationId <- unique(dt$populationName)
-
-  xlsxWriteData(wb = wb, sheetName = "VirtualTwinPopulation", dt = dt)
-
-  openxlsx::saveWorkbook(wb, projectConfiguration$individualsFile, overwrite = TRUE)
+  individualIds <- dtVirtualTwin$individualId
 
   # add a scenarios
-
-  # set scenarios
-  wb <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
-  dtScenario <- xlsxReadData(wb = wb, sheetName = "Scenarios")
-
-  dtNew <- rbind(
+  dtTestScenarios <- rbind(
     data.table(
-      scenario_name = paste("p", populationId, "iv", sep = "_"),
-      populationId = populationId,
+      scenario_name = "p_1234_adults_iv",
+      populationId = "1234_adults",
       readPopulationFromCSV = 1,
-      modelFile = modelFiles["iv"]
+      individualId = ""
     ),
     data.table(
       scenario_name = paste(tolower(individualIds), "iv", sep = "_"),
-      individualId = individualIds,
-      modelFile = modelFiles["iv"]
-    ),
-    fill = TRUE
+      populationId = "",
+      readPopulationFromCSV = 0,
+      individualId = individualIds
+    )
   )
-
-
-  dtScenario <- rbind(dtScenario,
-    dtNew,
-    fill = TRUE
-  )
-
-  dtScenario <- dtScenario[!duplicated(scenario_name, fromLast = TRUE)]
-
-  xlsxWriteData(wb = wb, sheetName = "Scenarios", dt = dtScenario)
-
-  openxlsx::saveWorkbook(wb, projectConfiguration$scenariosFile, overwrite = TRUE)
-
-  synchronizeScenariosWithPlots(projectConfiguration) # Sync scenarios with plots
-  mockManualEditingsdisplayNames(projectConfiguration)
-
-  return(dtNew$scenario_name)
-}
-#' Mock Manual editing for Sensitivity
-#'
-#' This function updates the sensitivity analysis configuration in the project.
-#'
-#' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
-#' @param sheetName A character string specifying the name of the sensitivity sheet to update.
-#'
-#' @return NULL
-#' @keywords internal
-mockManualEditingsSensitivity <- function(projectConfiguration, sheetName) {
-  # initialize variable to avoid messages
-  parameter <- NULL
-
-  wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$sensitivityFile)
-
-  dt <- xlsxReadData(wb = wb, sheetName = sheetName, skipDescriptionRow = FALSE)
-
-  dt <- dt[c(
-    1,
-    grep("DrugX Lipophilicity", parameter),
-    grep("DrugX Fraction unbound", parameter),
-    grep("CYP3A4 Ontogeny factor", parameter)
+  dtTestScenarios[readPopulationFromCSV == 1, `:=`(
+    shortName = "study 1234",
+    longName = "study 1234 iv application"
+  )]
+  dtTestScenarios[readPopulationFromCSV == 0, `:=`(
+    shortName = paste("individual", gsub("i1234", "", gsub("_iv", "", scenario_name))),
+    longName = paste("individual", gsub("i1234", "", gsub("_iv", "", scenario_name)), "iv application")
   )]
 
-  dt[grep("DrugX Fraction unbound", parameter), parameter := "DrugX Fraction unbound"]
+  modelFiles <- list.files(projectConfiguration$modelFolder, pattern = ".pkml")
+  dtTestScenarios[grep("_iv$", scenario_name), modelFile := grep("^iv", modelFiles, value = TRUE)]
+  dtTestScenarios[grep("_po$", scenario_name), modelFile := grep("^po", modelFiles, value = TRUE)]
 
-  xlsxWriteData(wb = wb, sheetName = sheetName, dt = dt)
+  pBuilder$mockManualEditingsScenario(
+    projectConfiguration = projectConfiguration,
+    dtTestScenarios = dtTestScenarios
+  )
 
-  openxlsx::saveWorkbook(wb, projectConfiguration$addOns$sensitivityFile, overwrite = TRUE)
+  exportVirtualTwinPopulations(
+    projectConfiguration = projectConfiguration,
+    modelFile = list.files(projectConfiguration$modelFolder, pattern = ".pkml")[1],
+    overwrite = TRUE
+  )
+
+
+  scenarioListInd <- suppressWarnings(createScenarios.wrapped(
+    projectConfiguration = projectConfiguration,
+    scenarioNames = dtTestScenarios$scenario_name
+  ))
+
+  return(scenarioListInd)
 }
