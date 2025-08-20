@@ -61,13 +61,7 @@ test_that("Time profiles of individual scenarios", {
 
   expect_equal(length(plotList), 2)
 
-  for (pName in names(plotList)) {
-    set.seed(123)
-    vdiffr::expect_doppelganger(
-      title = pName,
-      fig = plotList[[pName]]
-    )
-  }
+  expectDoppelgangerLoop(plotList)
 
   rm(plotList)
 })
@@ -90,13 +84,7 @@ test_that("Predicted vs observed of individual scenarios", {
       )
     )
 
-  for (pName in names(plotList)) {
-    set.seed(123)
-    vdiffr::expect_doppelganger(
-      title = pName,
-      fig = plotList[[pName]]
-    )
-  }
+  expectDoppelgangerLoop(plotList)
 
   rm(plotList)
 })
@@ -106,6 +94,22 @@ test_that("Time profiles of virtual twin scenarios", {
   skip_if_not_installed("vdiffr")
   skip_if(getRversion() < "4.1")
 
+  expect_error(runPlot(
+      nameOfplotFunction = "plotTimeProfiles",
+      configTableSheet = "TimeProfileTest",
+      projectConfiguration = projectConfiguration,
+      suppressExport = TRUE,
+      plotNames = c(
+        "VirtualTwin_withReferencePop"
+      ),
+      inputs = list(
+        scenarioResults = c(scenarioResults,
+                            scenarioResultsInd),
+        dataObserved = dataObserved
+      )
+    ))
+
+
   plotList <-
     runPlot(
       nameOfplotFunction = "plotTimeProfiles",
@@ -113,27 +117,22 @@ test_that("Time profiles of virtual twin scenarios", {
       projectConfiguration = projectConfiguration,
       suppressExport = TRUE,
       plotNames = c(
-        "VirtualTwin",
-        "VirtualTwin_withData_all",
-        "VirtualTwin_withData_selected",
-        "VirtualTwin_withReferenceInd"
+         "VirtualTwin",
+         "VirtualTwin_withData_all",
+         "VirtualTwin_withData_selected",
+         "VirtualTwin_withReferenceInd",
+        "VirtualTwin_withReferenceTwinPop"
       ),
       inputs = list(
-        scenarioResults = scenarioResultsInd,
+        scenarioResults = c(scenarioResults,
+                            scenarioResultsInd),
         dataObserved = dataObserved
       )
     )
 
-  expect_equal(length(plotList), 4)
+  expect_equal(length(plotList), 5)
 
-  for (pName in names(plotList)) {
-    set.seed(123)
-    vdiffr::expect_doppelganger(
-      title = pName,
-      fig = plotList[[pName]]
-    )
-  }
-
+  expectDoppelgangerLoop(plotList)
 
   expect_error(
     runPlot(
@@ -172,13 +171,8 @@ test_that("Predicted vs observed of virtual twin scenarios", {
       )
     )
 
-  for (pName in names(plotList)) {
-    set.seed(123)
-    vdiffr::expect_doppelganger(
-      title = pName,
-      fig = plotList[[pName]]
-    )
-  }
+  expectDoppelgangerLoop(plotList)
+
   rm(plotList)
 })
 
@@ -204,13 +198,7 @@ test_that("Time profiles with populations", {
       )
     )
 
-
-  for (pName in names(plotList)) {
-    vdiffr::expect_doppelganger(
-      title = pName,
-      fig = plotList[[pName]]
-    )
-  }
+  expectDoppelgangerLoop(plotList)
 
   expect_error(runPlot(
     nameOfplotFunction = "plotTimeProfiles",
@@ -257,12 +245,8 @@ test_that("Predicted vs observed of populations", {
       )
     )
 
-  for (pName in names(plotList)) {
-    vdiffr::expect_doppelganger(
-      title = pName,
-      fig = plotList[[pName]]
-    )
-  }
+  expectDoppelgangerLoop(plotList)
+
   rm(plotList)
 })
 
@@ -280,12 +264,8 @@ test_that("Time profiles vs time range", {
       )
     )
 
-  for (pName in names(plotList)) {
-    vdiffr::expect_doppelganger(
-      title = pName,
-      fig = plotList[[pName]]
-    )
-  }
+  expectDoppelgangerLoop(plotList)
+
   rm(plotList)
 })
 
@@ -306,12 +286,8 @@ test_that("Predicted vs observed vs time range", {
       )
     )
 
-  for (pName in names(plotList)) {
-    vdiffr::expect_doppelganger(
-      title = pName,
-      fig = plotList[[pName]]
-    )
-  }
+  expectDoppelgangerLoop(plotList)
+
   rm(plotList)
 })
 

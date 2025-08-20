@@ -57,7 +57,7 @@ A short description...
 
 This function initializes the project structure and configuration for the test project.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{TestProjectBuilder$iniTestProject(rootDirectory)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{TestProjectBuilder$iniTestProject(rootDirectory, verbose = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -66,10 +66,6 @@ This function initializes the project structure and configuration for the test p
 \item{\code{rootDirectory}}{A character string specifying the root directory for the test project.}
 
 \item{\code{verbose}}{A logical value indicating whether to print messages about the process.}
-
-\item{\code{modelFiles}}{A named character vector containing paths to the model files used in the project.}
-
-\item{\code{instDirectory}}{A character string specifying the installation directory for the package.}
 }
 \if{html}{\out{</div>}}
 }

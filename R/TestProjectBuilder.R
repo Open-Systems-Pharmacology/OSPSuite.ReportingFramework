@@ -203,7 +203,7 @@ TestProjectBuilder <- R6::R6Class( # nolint
 
       runSensitivityAnalysisForScenarios(
         projectConfiguration = projectConfiguration,
-        scenarioList = scenarioListInd,
+        scenarioList = scenarioList,
         scenarioNames = scenarioName,
         sensitivitysheet = sensitivitySheet,
         overwrite = FALSE
@@ -656,6 +656,7 @@ TestProjectBuilder <- R6::R6Class( # nolint
       outputPaths <- getOutputPathIds(wbPlots = projectConfiguration$plotsFile)
       randomIndividuals <- merge(randomIndividuals, outputPaths, by.x = "paths", by.y = "outputPath")
       randomIndividuals <- randomIndividuals[outputPathId %in% outputPathIds]
+      randomIndividuals[,outputPathId := as.character(outputPathId)]
 
       return(randomIndividuals)
     },

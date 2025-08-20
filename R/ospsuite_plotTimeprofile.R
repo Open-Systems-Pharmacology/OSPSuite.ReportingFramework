@@ -31,7 +31,6 @@ ospsuite_plotTimeProfile <- function(plotData, # nolint
   plotData <- .validateAndConvertData(plotData = plotData, predictedIsNeeded = FALSE)
   checkmate::assertNames(names(plotData), must.include = c("xUnit"))
 
-
   # Capture additional arguments
   additionalArgs <- list(...)
 

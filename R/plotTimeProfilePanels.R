@@ -270,7 +270,7 @@ generatePlotForPlotType <- function(plotData,
         )
         plotObject <-
           switch(plotType,
-            TP = ospsuite_plotTimeProfile( # nolint indentation_linter
+            TP = ospsuite_plotTimeProfile(
               plotData = plotData$getDataForTimeRange(timeRangeFilter, plotCounter = plotCounter, yScale = yScale),
               yscale = yScale,
               mapping = getGroupbyMapping(plotData, plotType),
@@ -398,7 +398,7 @@ generatePlotForPlotType <- function(plotData,
 #' @keywords internal
 isPlotTypeNeededAndPossible <- function(plotType, plotData) {
   configColumn <- switch(plotType,
-    TP = "plot_TimeProfiles", # nolint indentation_linter
+    TP = "plot_TimeProfiles",
     PvO = "plot_PredictedVsObserved",
     ResvT = "plot_ResidualsVsTime",
     ResvO = "plot_ResidualsVsObserved",
@@ -407,7 +407,7 @@ isPlotTypeNeededAndPossible <- function(plotType, plotData) {
     stop(paste("unknown plottype:", plotType))
   )
 
-  if (plotType == "TP") { # nolint: line_length
+  if (plotType == "TP") {
     return(as.logical(plotData$configTable[[configColumn]][1]))
   } else {
     return(as.logical(plotData$configTable[[configColumn]][1]) &
@@ -614,11 +614,13 @@ updateGuides <- function(plotData, plotObject, plotType) { # nolint
       color = ggplot2::guide_legend(
         title = legendTitleColor,
         order = 1,
-        override.aes = overrideAes
+        override.aes = overrideAes,
+        reverse = plotData$reverseLegend
       ),
       fill = ggplot2::guide_legend(
         title = legendTitleColor,
-        order = 1
+        order = 1,
+        reverse = plotData$reverseLegend
       )
     )
 

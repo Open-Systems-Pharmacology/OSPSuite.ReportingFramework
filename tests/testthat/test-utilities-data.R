@@ -22,7 +22,7 @@ test_that("It should read and process data based on the provided project configu
 
 test_that("It should check the validity of the observed dataset", {
   # Create a sample observed dataset for testing
-  observedData <- data.table(
+  dataObservedTest <- data.table(
     individualId = c(1, 2, 3),
     group = c(1, 1, 2),
     outputPathId = c(101, 102, 103),
@@ -31,35 +31,35 @@ test_that("It should check the validity of the observed dataset", {
     yUnit = c("mg/L", "mg/L", "mg/L"),
     lloq = c(1.0, 1.0, 1.0)
   )
-  data.table::setattr(observedData[["individualId"]], "columnType", "identifier")
-  data.table::setattr(observedData[["group"]], "columnType", "identifier")
-  data.table::setattr(observedData[["outputPathId"]], "columnType", "identifier")
-  data.table::setattr(observedData[["xValues"]], "columnType", "timeprofile")
-  data.table::setattr(observedData[["yValues"]], "columnType", "timeprofile")
-  data.table::setattr(observedData[["yUnit"]], "columnType", "timeprofile")
-  data.table::setattr(observedData[["lloq"]], "columnType", "timeprofile")
+  data.table::setattr(dataObservedTest[["individualId"]], "columnType", "identifier")
+  data.table::setattr(dataObservedTest[["group"]], "columnType", "identifier")
+  data.table::setattr(dataObservedTest[["outputPathId"]], "columnType", "identifier")
+  data.table::setattr(dataObservedTest[["xValues"]], "columnType", "timeprofile")
+  data.table::setattr(dataObservedTest[["yValues"]], "columnType", "timeprofile")
+  data.table::setattr(dataObservedTest[["yUnit"]], "columnType", "timeprofile")
+  data.table::setattr(dataObservedTest[["lloq"]], "columnType", "timeprofile")
 
   # Add your assertions here to test the validation result
-  expect_invisible(validateObservedData(observedData, dataClassType = "timeprofile"))
+  expect_invisible(validateObservedData(dataObservedTest, dataClassType = "timeprofile"))
 
   # Test for uniqueness of `individualId`, group, `outputPathId`, and time columns
   expect_error(validateObservedData(
-    data = rbind(observedData, observedData)
+    data = rbind(dataObservedTest, dataObservedTest)
   ))
 
   # Test for NAs or empty values in columns other than lloq and yUnit
-  observedDataChanged <- data.table::copy(observedData)
-  observedDataChanged[1, yValues := NA]
+  dataObservedTestChanged <- data.table::copy(dataObservedTest)
+  dataObservedTestChanged[1, yValues := NA]
 
-  expect_warning(validateObservedData(dataDT = observedDataChanged, dataClassType = "timeprofile"))
+  expect_warning(validateObservedData(dataDT = dataObservedTestChanged, dataClassType = "timeprofile"))
 
   # Test for uniqueness of yUnit within each outputPathId
-  observedDataChanged <- data.table::copy(observedData)
-  observedDataChanged[1, yUnit := "m"]
-  observedDataChanged[2, outputPathId := 101]
+  dataObservedTestChanged <- data.table::copy(dataObservedTest)
+  dataObservedTestChanged[1, yUnit := "m"]
+  dataObservedTestChanged[2, outputPathId := 101]
 
   expect_warning(validateObservedData(
-    dataDT  = observedDataChanged,
+    dataDT  = dataObservedTestChanged,
     dataClassType = "timeprofile"
   ))
 })
@@ -92,7 +92,7 @@ test_that("getColumnsForColumnType function test", {
 
 # Unit tests for createDataSets function
 test_that("createDataSets function test", {
-  tmpData <- dataObserved[outputPathId == "Plasma" & yValues < lloq]
+  tmpData <- dataObserved[outputPathId == "Plasma"]
 
   groupedData <- groupDataByIdentifier(tmpData)
 

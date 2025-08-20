@@ -2,7 +2,7 @@
 
 mockManualEditingsPlotSensitivityTest(
   projectConfiguration = projectConfiguration,
-  sensitivityScenario = names(scenarioListInd)[2],
+  sensitivityScenario = "i123413_iv",
   sensitivitySheet = "smallSelection"
 )
 

@@ -1,3 +1,302 @@
+#' Build Test Project Directory
+#'
+#' This function sets up a test project directory for the `ospsuite.reportingframework` package.
+#' It initializes the project structure, configures scenarios, and handles necessary file
+#' synchronization for testing and development purposes. It can be used in both development
+#' mode and testing environments.
+#'
+#' @param rootDirectory A character string specifying the root directory for the test project.
+#'                     If NULL (default), a temporary directory will be created.
+#' @param verbose A logical value indicating whether to print messages about the process.
+#'                Defaults to FALSE.
+#' @param writeTestData A logical value indicating whether newly created testdata should be filed to the inst directory of the package.
+#'
+#' @return A list containing:
+#'   - `projectConfiguration`: The configuration of the initialized project.
+#'   - `scenarioList`: A list of scenarios initialized for the project.
+#'   - `scenarioResults`: The results from running the scenarios.
+#'
+#' @details
+#' The function performs the following steps:
+#' 1. Initializes the project structure.
+#' 2. Cleans up existing data and sets up mock manual edits on project configuration.
+#' 3. Synchronizes directories for models and populations.
+#' 4. Exports defined populations and runs simulations for scenarios.
+#' 5. In development mode, it synchronizes simulation results and PK analysis results back
+#'    to the development directory.
+buildTestData <- function(rootDirectory = NULL,
+                          writeTestData = FALSE) {
+  # Initialize class to build test project
+  pBuilder <- TestProjectBuilder$new()
+
+  # get projectConfiguration
+  projectConfiguration <- pBuilder$iniTestProject(rootDirectory = rootDirectory)
+
+  # Clear existing data from relevant Excel sheets
+  pBuilder$mockManualEditingsCleanup(projectConfiguration)
+
+  # Define virtual populations within biometric ranges
+  randomPops <- data.table(
+    populationName = c("adults", "toddler", "children", "school-children", "adolescents"),
+    species = "Human",
+    population = "European_ICRP_2002",
+    numberOfIndividuals = 100,
+    proportionOfFemales = 50,
+    ageMin = c(20, 0.5, 2, 6, 12),
+    ageMax = c(40, 2, 6, 12, 18),
+    weightUnit = "kg",
+    heightUnit = "cm",
+    bMIUnit = "kg/m\u00B2",
+    protein = "CYP3A4,UGT1A4",
+    ontogeny = "CYP3A4,UGT1A4"
+  )
+  pBuilder$mockManualEditingsPopulation(projectConfiguration,
+                                        randomPops = randomPops
+  )
+
+  # Set up scenarios based on the defined populations, add PK Parameter and output paths
+  pBuilder$mockManualEditingsScenario(projectConfiguration,
+                                      dtTestScenarios = getTestScenarios(projectConfiguration),
+                                      pKParameter = "PK_Plasma, PK_Fraction"
+  )
+
+  # Add PK parameters to the project configuration
+  pBuilder$mockManualEditingsPKParameter(projectConfiguration)
+
+  pBuilder$setupRandomPopulations(
+    projectConfiguration = projectConfiguration,
+    populationNames = unique(randomPops$populationName),
+    writeTestData = writeTestData
+  )
+
+  # Initialize all scenarios previously defined in scenario.xlsx
+  scenarioList <- createScenarios.wrapped(
+    projectConfiguration = projectConfiguration,
+    scenarioNames = NULL
+  )
+
+  # Run scenarios and calculate PK
+  scenarioResults <- pBuilder$setupSimulations(
+    projectConfiguration = projectConfiguration,
+    scenarioList = scenarioList,
+    writeTestData = writeTestData
+  )
+
+  # generate Random data
+  setupRandomDataForTest(
+    pBuilder = pBuilder,
+    projectConfiguration = projectConfiguration,
+    scenarioList = scenarioList,
+    scenarioResults = scenarioResults
+  )
+
+  # generate virtual twin populations
+  scenarioListInd <-
+    setupVirtualTwinScenariosForTest(
+      pBuilder = pBuilder,
+      projectConfiguration = projectConfiguration
+    )
+
+  # Run scenarios and calculate PK
+  scenarioResultsInd <- pBuilder$setupSimulations(
+    projectConfiguration = projectConfiguration,
+    scenarioList = scenarioListInd,
+    writeTestData = writeTestData
+  )
+
+  # Setup sensitivity
+  projectConfiguration <- pBuilder$setUpSensitivity(
+    projectConfiguration = projectConfiguration,
+    scenarioList = scenarioListInd,
+    scenarioName = "i123413_iv",
+    parameterList = list(
+      "DrugX Lipophilicity" = "DrugX Lipophilicity",
+      "DrugX Fraction unbound" = "DrugX Fraction unbound",
+      "CYP3A4 Ontogeny factor" = "CYP3A4 Ontogeny factor"
+    ),
+    sensitivitySheet = "smallSelection",
+    writeTestData = writeTestData
+  )
+
+  return(invisible(list(
+    projectConfiguration = projectConfiguration,
+    scenarioList = scenarioList,
+    scenarioResults = scenarioResults,
+    scenarioListInd = scenarioListInd,
+    scenarioResultsInd = scenarioResultsInd
+  )))
+}
+
+expectDoppelgangerLoop <- function(plotList){
+
+  for (pName in names(plotList)) {
+    set.seed(123)
+    vdiffr::expect_doppelganger(
+      title = pName,
+      fig = plotList[[pName]]
+    )
+  }
+}
+
+## auxiliaries --------
+#' Setup Random Data for Test
+#'
+#' This function adds random pharmacokinetic (PK and time profile) data to the test project,
+#' including shifting values for selected individuals.
+#'
+#' @param pBuilder An TestProjectBuilder object, which provides function to build the test project
+#' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
+#' @param scenarioList A list of scenarios initialized for the project.
+#' @param scenarioResults A list containing results from running the scenarios.
+#'
+#' @return Invisible NULL.
+#' @keywords internal
+setupRandomDataForTest <- function(pBuilder, projectConfiguration, scenarioList, scenarioResults) {
+  pkParameterDT <- loadPKParameter(
+    projectConfiguration = projectConfiguration,
+    scenarioListOrResult = scenarioList
+  )
+
+  set.seed(123) # Set seed for reproducibility
+  ids <- sample(unique(pkParameterDT$individualId), 6, replace = FALSE)
+
+  pBuilder$addRandomTPData(
+    projectConfiguration = projectConfiguration,
+    scenarioResults = scenarioResults[c("adults_iv", "adults_po")],
+    ids = ids
+  )
+
+  pBuilder$addRandomPKData(
+    projectConfiguration = projectConfiguration,
+    pkParameterDT = pkParameterDT,
+    ids = ids
+  )
+
+  return(invisible())
+}
+#' Get Test Scenarios
+#'
+#' This function generates test scenarios based on the provided project configuration.
+#' It reads population data from a specified Excel file and constructs a data table
+#' with scenario names, population IDs, model files, and output path IDs.
+#'
+#' @param projectConfiguration A list containing the configuration for the project,
+#'                             including the path to the populations file.
+#'
+#' @return A data.table containing the scenarios
+getTestScenarios <- function(projectConfiguration) {
+  # initialize variable to avoid messages
+  scenario_name <- NULL #nolint
+  longName <- shortName <- outputPathsIds <- NULL
+
+  instDirectory <- system.file(
+    package = "ospsuite.reportingframework",
+    "extdata",
+    mustWork = TRUE
+  )
+
+  modelFiles <- list.files(file.path(instDirectory, "Models"))
+  names(modelFiles) <- substr(modelFiles, 1, 2)
+
+  dtPop <- xlsxReadData(wb = projectConfiguration$populationsFile, sheetName = "Demographics")
+
+  dtScenario <- rbind(
+    data.table(
+      scenario_name = paste0(gsub("-", "_", dtPop$populationName), "_iv"),
+      populationId = dtPop$populationName,
+      readPopulationFromCSV = 1,
+      modelFile = modelFiles["iv"]
+    ),
+    data.table(
+      scenario_name = paste0(gsub("-", "_", dtPop$populationName), "_po"),
+      populationId = dtPop$populationName,
+      readPopulationFromCSV = 1,
+      modelFile = modelFiles["po"]
+    ),
+    fill = TRUE
+  )
+
+  dtScenario[, outputPathsIds := "Plasma, CYP3A4total, CYP3A4Liver"]
+  dtScenario[, shortName := gsub("_", " ", gsub("_iv", "", gsub("_po", "", scenario_name)))]
+  dtScenario[, longName := gsub("_", " ", gsub("_iv", "", gsub("_po", "", scenario_name)))]
+
+  return(dtScenario)
+}
+
+
+#' Setup Virtual Twin Scenarios for Test
+#'
+#' This function sets up virtual twin scenarios for the test project based on the defined populations
+#' and model files.
+#'
+#' @param projectConfiguration A ProjectConfiguration object containing project configuration details.
+#'
+#' @return A list of scenario names initialized for the virtual twin scenarios.
+#' @keywords internal
+setupVirtualTwinScenariosForTest <- function(pBuilder, projectConfiguration) {
+  # initialize variable to avoid messages
+  modelFile <- readPopulationFromCSV <- NULL
+  scenario_name <- NULL #nolint
+
+  invisible(readObservedDataByDictionary(projectConfiguration))
+
+  dtVirtualTwin <- pBuilder$mockManualEditingsIndividuals(projectConfiguration)
+
+  individualIds <- dtVirtualTwin$individualId
+
+  # add a scenarios
+  dtTestScenarios <- rbind(
+    data.table(
+      scenario_name = "p_1234_adults_iv",
+      populationId = "1234_adults",
+      readPopulationFromCSV = 1,
+      individualId = ""
+    ),
+    data.table(
+      scenario_name = "p_1234_adults_po",
+      populationId = "1234_adults",
+      readPopulationFromCSV = 1,
+      individualId = ""
+    ),
+    data.table(
+      scenario_name = paste(tolower(individualIds), "iv", sep = "_"),
+      populationId = "",
+      readPopulationFromCSV = 0,
+      individualId = individualIds
+    )
+  )
+  dtTestScenarios[readPopulationFromCSV == 1, `:=`(
+    shortName = "study 1234",
+    longName = "study 1234 iv application"
+  )]
+  dtTestScenarios[readPopulationFromCSV == 0, `:=`(
+    shortName = paste("individual", gsub("i1234", "", gsub("_iv", "", scenario_name))),
+    longName = paste("individual", gsub("i1234", "", gsub("_iv", "", scenario_name)), "iv application")
+  )]
+
+  modelFiles <- list.files(projectConfiguration$modelFolder, pattern = ".pkml")
+  dtTestScenarios[grep("_iv$", scenario_name), modelFile := grep("^iv", modelFiles, value = TRUE)]
+  dtTestScenarios[grep("_po$", scenario_name), modelFile := grep("^po", modelFiles, value = TRUE)]
+
+  pBuilder$mockManualEditingsScenario(
+    projectConfiguration = projectConfiguration,
+    dtTestScenarios = dtTestScenarios
+  )
+
+  exportVirtualTwinPopulations(
+    projectConfiguration = projectConfiguration,
+    modelFile = list.files(projectConfiguration$modelFolder, pattern = ".pkml")[1],
+    overwrite = TRUE
+  )
+
+
+  scenarioListInd <- suppressWarnings(createScenarios.wrapped(
+    projectConfiguration = projectConfiguration,
+    scenarioNames = dtTestScenarios$scenario_name
+  ))
+
+  return(scenarioListInd)
+}
 #' Mock Manual Editings for PK Forest Test Plots
 #'
 #' This function modifies the PKParameter_ForestTest sheet in the provided Excel workbook
@@ -13,6 +312,7 @@ mockManualEditingsPlotPkForestTest <- function(projectConfiguration) {
   dt <- xlsxReadData(wb = wb, sheetName = "PKParameter_ForestTest")
 
   dt <- dt[!c(grep("_iv$", scenario)), ]
+  dt <- dt[!c(grep("^p_", scenario)), ]
   dt[plotName == "PKForest", `:=`(
     plotName = "pediatric",
     scenarioGroup = "Pediatric",
@@ -76,6 +376,7 @@ mockManualEditingsPlotBoxwhsikerTest <- function(projectConfiguration) {
 
   dt <- dt[grep("C_max$", plotName), plotName := "crossover"]
   dt <- dt[!intersect(grep("_iv$", scenario), grep("crossover", plotName))]
+  dt <- dt[!c(grep("^p_", scenario)), ]
   dt[plotName == "crossover", `:=`(
     referenceScenario = gsub("_po", "_iv", scenario),
     colorLegend = "PO Administration| IV Administration",
@@ -124,9 +425,10 @@ mockManualEditingsPlotDemographicsTest <- function(projectConfiguration) {
     grep("demographics", plotName),
     c(
       grep("adults", scenario),
-      grep("i1234", scenario)
+      grep("i1234", scenario),
     )
   ))]
+  dt <- dt[!c(grep("^p_", scenario)), ]
   dt[plotName == "demographics", `:=`(
     parameterIds = "weight,gender",
     referenceScenario = "adults_iv",
@@ -363,6 +665,17 @@ mockManualEditingsPlotTimeProfileTest <- function(projectConfiguration) {
     colorLegend = "test individual | reference population"
   )]
 
+  dt <- rbind(dt, dtnew)
+
+  dtnew <- dt[plotName == "VirtualTwin_withData_selected"]
+  dtnew[, `:=`(
+    plotName = "VirtualTwin_withReferenceTwinPop",
+    referenceScenario = "p_1234_adults_po",
+    colorLegend = "iv | po"
+  )]
+
+  dt <- rbind(dt, dtnew)
+
   dtnew <- dt[plotName == "VirtualTwin_withData_selected"]
   dtnew[, `:=`(
     plotName = "VirtualTwin_withData_selected_pvo",
@@ -469,6 +782,9 @@ mockManualEditingsPlotTimeProfileTest <- function(projectConfiguration) {
     plot_PredictedVsObserved = 1
   )]
   dt <- rbind(dt, dtnew)
+
+  #keep only adjusted entries
+  dt[is.na(timeRange_firstApplication) | scenario != plotName]
 
   xlsxWriteData(wb = wb, sheetName = sheetName, dt = dt)
 

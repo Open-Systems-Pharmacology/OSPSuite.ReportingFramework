@@ -170,7 +170,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
       dtCaption <- getPlotIdForColumns(configTable = configTable, col = "outputPathIds")
 
-      if (private$.dataSimulated$dataClass[1] == DATACLASS$tpTwinPop) {
+      if (any(private$.dataSimulated$dataClass == DATACLASS$tpTwinPop)) {
         dtCaption <- splitCaptionByIndividuals(
           configTable = configTable,
           individualIdVector = sort(unique(self$data$individualId)),
@@ -215,10 +215,12 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
           tmp <- merge(private[[fieldName]], dtCaptionSelected, by = identifier)
 
-          # Check conditions for reference data
+          # Check if reference data are added or got lost by merge with individualId
+          # (e.g. single individual scenario)
           if (private[[fieldName]]$dataType[1] == "simulated" &&
             "individualId" %in% identifier &&
-            any("referenceScenario" %in% private[[fieldName]]$scenarioType)) {
+            any("referenceScenario" %in% private[[fieldName]]$scenarioType) &
+            !any("referenceScenario" %in% tmp$scenarioType)) {
             identifier <- setdiff(identifier, "individualId")
 
             referenceData <- private[[fieldName]][scenarioType == "referenceScenario"]
@@ -448,6 +450,10 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     #' @field timeRangeTagFilter List with filters for time range tags
     timeRangeTagFilter = function() {
       private$.timeRangeTagFilter
+    },
+    #' @field reverseLegend if true color legend will be reversed
+    reverseLegend = function() {
+      private$.reverseLegend
     }
   ),
 
@@ -488,7 +494,8 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     .applicationTimes = list(),
     # List with time tag filters
     .timeRangeTagFilter = NULL,
-
+    # if TRUE legend will be reversed
+    .reverseLegend = FALSE,
     # Helper function to set factors
     setFactorLevels = function(tableName, identifier, identifierData, dataToMatch) {
       # Shorten tables to the ones needed in plot
@@ -653,17 +660,19 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
 
       private$.dataSimulated[, colorIndex := scenarioType]
+      # revert order, scenario should be plotted over reference
+      private$.reverseLegend = TRUE
       private$.dataSimulated$colorIndex <-
         factor(private$.dataSimulated$colorIndex,
-          levels = c("scenario", "referenceScenario"), # nolint indentation_linter
-          labels = names(referenceColorScaleVector),
+          levels = c("referenceScenario","scenario"),
+          labels = rev(names(referenceColorScaleVector)),
           ordered = TRUE
         )
       if (nrow(private$.dataObserved) > 0) {
         private$.dataObserved[, colorIndex := names(referenceColorScaleVector)[1]]
         private$.dataObserved$colorIndex <-
           factor(private$.dataObserved$colorIndex,
-            levels = names(referenceColorScaleVector), # nolint indentation_linter
+            levels = rev(names(referenceColorScaleVector)),
             ordered = TRUE
           )
       }
@@ -677,7 +686,6 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       } else {
         private$.scaleVectors[["colour"]] <- referenceFillScaleVector
       }
-
       if (self$hasObservedData() | self$hasSimulatedPop()) {
         if (any(is.na(referenceColorScaleVector))) {
           private$.scaleVectors[["fill"]] <-
