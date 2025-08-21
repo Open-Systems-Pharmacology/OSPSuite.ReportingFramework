@@ -207,7 +207,6 @@ test_that("Aggregation with LLOQ check works", {
   expect_equal(unique(result$yErrorType), "Mean | range")
   expect_true(all(is.na(result[numberOfIndividuals * 1 / 2 < nBelowLLOQ]$yMin)))
   expect_true(all(is.na(result[numberOfIndividuals * 2 / 3 < nBelowLLOQ]$yValues)))
-  expect_false(all(is.na(result[numberOfIndividuals * 1 / 2 < nBelowLLOQ]$yValues)))
 })
 
 

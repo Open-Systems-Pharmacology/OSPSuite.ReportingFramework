@@ -425,7 +425,7 @@ mockManualEditingsPlotDemographicsTest <- function(projectConfiguration) {
     grep("demographics", plotName),
     c(
       grep("adults", scenario),
-      grep("i1234", scenario),
+      grep("i1234", scenario)
     )
   ))]
   dt <- dt[!c(grep("^p_", scenario)), ]

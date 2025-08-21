@@ -178,10 +178,7 @@ test_that("addEPackageConfigurationForScenarioNames populates configurationSheet
   exporter <- WorkflowScriptExporter$new(
     projectConfiguration = projectConfiguration,
     wfIdentifier = 1,
-    scenarioNames = c(
-      names(scenarioListInd)[c(1, 2)],
-      names(scenarioList)[1]
-    ),
+    scenarioNames = c("p_1234_adults_iv","i123413_iv", "adults_iv"),
     workflowRmd = NULL,
     fileNameReplacements = c("1234_adults.csv", "study1234_adults.csv")
   )
@@ -602,6 +599,10 @@ test_that("evaluates chunk for dataImport chunk correctly", {
 })
 
 test_that("throws error for invalid dataImport", {
+
+  # for this test dataObserved must not exist
+  if (exists('dataObserved')) rm(dataObserved)
+
   workflowRmdPath <- file.path(
     projectConfiguration$configurationsFolder,
     "myWorkflow.Rmd"

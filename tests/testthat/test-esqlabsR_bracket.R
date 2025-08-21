@@ -43,38 +43,37 @@ test_that("loadScenarioResults throws an error for missing scenarios", {
 test_that("runAndSaveScenarios runs and saves scenarios", {
   scenarioNames <- names(scenarioListInd)[c(2, 3)]
 
-  outfolderOld <- projectConfiguration$outputFolder
-  projectConfiguration$outputFolder <-
-    file.path("..", "..", "outputTestSimulation")
-  if (!dir.exists(projectConfiguration$outputFolder)) dir.create(projectConfiguration$outputFolder)
+  projectConfigurationTest <- projectConfiguration$clone()
 
-  result <- runAndSaveScenarios(projectConfiguration, scenarioListInd[scenarioNames])
+  outfolderOld <- projectConfigurationTest$outputFolder
+  projectConfigurationTest$outputFolder <-
+    file.path("..", "..", "outputTestSimulation")
+  if (!dir.exists(projectConfigurationTest$outputFolder)) dir.create(projectConfigurationTest$outputFolder)
+
+  result <- runAndSaveScenarios(projectConfigurationTest, scenarioListInd[scenarioNames])
 
   expect_type(result, "list")
   expect_true(all(scenarioNames %in% names(result)))
 
   # Verify saved results
   for (sc in scenarioNames) {
-    resultFile <- file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult, paste0(sc, ".csv"))
+    resultFile <- file.path(projectConfigurationTest$outputFolder, EXPORTDIR$simulationResult, paste0(sc, ".csv"))
     expect_true(file.exists(resultFile))
   }
 
   # simulate one additional and load the ones before
   scenarioNames <- names(scenarioListInd)[c(1, 2, 3)]
-  result <- runOrLoadScenarios(projectConfiguration, scenarioListInd[scenarioNames])
+  result <- runOrLoadScenarios(projectConfigurationTest, scenarioListInd[scenarioNames])
 
   expect_type(result, "list")
   expect_true(all(scenarioNames %in% names(result)))
 
   # Verify saved results
   for (sc in scenarioNames) {
-    resultFile <- file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult, paste0(sc, ".csv"))
+    resultFile <- file.path(projectConfigurationTest$outputFolder, EXPORTDIR$simulationResult, paste0(sc, ".csv"))
     expect_true(file.exists(resultFile))
   }
 
   # Clean up
-  projectConfiguration$outputFolder <-
-    fs::path_rel(outfolderOld,
-      start = projectConfiguration$configurationsFolder
-    )
+  rm(projectConfigurationTest)
 })
