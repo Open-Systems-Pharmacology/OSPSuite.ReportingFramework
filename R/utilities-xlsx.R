@@ -62,7 +62,7 @@ xlsxWriteData <- function(wb, sheetName, dt) {
         newName <- names(existingData)[ix]
       } else if (length(ix) > 1) {
         stop(paste(
-          "ambigiuos header names in sheet", sheetName,
+          "ambiguous header names in sheet", sheetName,
           paste(names(existingData)[ix], collapse = ",")
         ))
       } else {
