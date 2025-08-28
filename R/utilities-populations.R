@@ -277,7 +277,7 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
       if (!is.null(customParameters)) {
         for (cp in customParameters) {
           if (length(cp$values) != 1 & length(cp$values) != nrow(poptable)) {
-            stop(paste("Inconsitent number of values for", cp$path, "in", dPop$populationName))
+            stop(paste("Inconsistent number of values for", cp$path, "in", dPop$populationName))
           }
           poptable[[cp$path]] <- cp$values
         }
