@@ -1,0 +1,58 @@
+Package: ospsuite.reportingframework
+Type: Package
+Title: Provides a framework for report generation with the ospsuite
+Version: 1.0.0
+Authors@R: 
+    c(person(given = "Open-Systems-Pharmacology Community",
+             role = "cph"),
+      person(given = "Katrin",
+             family = "Coboeken",
+             role = c("aut", "cre"),
+             email = "katrin.coboeken@bayer.com"))
+Maintainer: The package maintainer <katrin.coboeken@bayer.com>
+Description: This package uses the EsqlabsR package to set up simulations and scenerios.
+    It provides functions to generate default graphics and tables.
+    This figures are included in .Rmd files which are then merged 
+    to the selected output format e.g. a "Report.docx".
+License: GPL-2 | file LICENSE
+Language: en-US
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    data.table,
+    checkmate,
+    utils,
+    knitr,
+    rmarkdown,
+    fs,
+    ospsuite,
+    ospsuite.utils,
+    ggplot2,
+    ggsci,
+    scales,
+    tidyr,
+    rlang,
+    openxlsx,
+    dplyr,
+    stats,
+    foreach,
+    boot,
+    doParallel,
+    formattable,
+    ggh4x,
+    jsonlite
+Depends:
+    esqlabsR,
+    ospsuite.plots,
+    R (>= 2.10)
+Suggests: 
+    rstudioapi,
+    officer,
+    cowplot,
+    spelling,
+    vdiffr,
+    withr,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+RoxygenNote: 7.3.1
