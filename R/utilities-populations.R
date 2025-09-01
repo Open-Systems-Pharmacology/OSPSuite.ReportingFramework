@@ -32,7 +32,7 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
       xlsxAddSheet(wb = wb, sheetName = "VirtualTwinPopulation", dt = dtTwinPops)
       openxlsx::saveWorkbook(wb = wb, file = projectConfiguration$individualsFile, overwrite = TRUE)
       openxlsx::removeWorksheet(wbPop, "VirtualTwinPopulation")
-      openxlsx::saveWorkbook(wb = wbPop, fil = projectConfiguration$populationsFile, overwrite = TRUE)
+      openxlsx::saveWorkbook(wb = wbPop, file = projectConfiguration$populationsFile, overwrite = TRUE)
 
       message("shift sheet 'VirtualTwinPopulation' from 'Indvidual.xslx' to 'Population.xlsx'")
     } else {
@@ -277,7 +277,7 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
       if (!is.null(customParameters)) {
         for (cp in customParameters) {
           if (length(cp$values) != 1 & length(cp$values) != nrow(poptable)) {
-            stop(paste("Inconsitent number of values for", cp$path, "in", dPop$populationName))
+            stop(paste("Inconsistent number of values for", cp$path, "in", dPop$populationName))
           }
           poptable[[cp$path]] <- cp$values
         }

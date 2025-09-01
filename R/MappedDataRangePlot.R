@@ -136,21 +136,31 @@ MappedDataRangeDistribution <- R6::R6Class( # nolint
       borders[nrow(borders), maxValue := maxValue * 1.001]
       borders[nrow(borders), minValue := maxValue]
 
-      # set breaks
+      # Set breaks based on the mode of binning
       if (private$modeOfBinning == BINNINGMODE$breaks) {
+        # If the mode is 'breaks', directly use the predefined breaks
         borders$breaks <- private$breaks
       } else {
-        # duplicate first row to support calculation of minimal break
+        # If not, duplicate the first row to support the calculation of the minimal break
         borders <- rbind(borders[1], borders)
         borders[1, minValue := minValue / 1.001]
         borders[1, maxValue := minValue]
 
+        # Calculate raw breaks as the average of the minValue and the previous maxValue
         borders[, breaksRaw := (minValue + shift(maxValue, type = "lag")) / 2]
+
+        # Calculate the difference between consecutive min and max values
         borders[, diff := minValue - shift(maxValue, type = "lag")]
+
+        # Calculate an adjustment factor for rounding based on the difference
         borders[, diffN := 10^ceiling(-log10(diff))]
+
+        # Round the breaks to the nearest adjusted value
         borders[, breaks := round(breaksRaw * diffN) / diffN]
 
+        # Remove the first row used for calculations
         borders <- borders[-1, ]
+        # Clean up the temporary columns used for calculations
         borders[, breaksRaw := NULL]
         borders[, diff := NULL]
         borders[, diffN := NULL]
