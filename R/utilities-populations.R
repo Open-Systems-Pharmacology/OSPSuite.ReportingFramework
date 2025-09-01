@@ -600,7 +600,7 @@ setCustomParamsToPopulation <- function(scenario) {
       )
       if (length(tmp) > 1) {
         stop(paste(
-          "population parameter mus be consistent within a virtual population. Check",
+          "population parameter must be consistent within a virtual population. Check",
           paste(tmp, collapse = ", "), "for", popRow$ObservedIndividualId
         ))
       }

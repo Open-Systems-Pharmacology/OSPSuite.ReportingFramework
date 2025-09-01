@@ -1,4 +1,4 @@
-﻿"QuantityPath","Parameter","PKParameter","Value","ParameterPath"
+"QuantityPath","Parameter","PKParameter","Value","ParameterPath"
 "Organism|PeripheralVenousBlood|DrugX|Plasma (Peripheral Venous Blood)","DrugX-Lipophilicity","C_max",-2.779278134377825,"DrugX|Lipophilicity"
 "Organism|PeripheralVenousBlood|DrugX|Plasma (Peripheral Venous Blood)","DrugX-Fraction unbound (plasma, reference value)","C_max",-0.5080513422735855,"DrugX|Fraction unbound (plasma, reference value)"
 "Organism|PeripheralVenousBlood|DrugX|Plasma (Peripheral Venous Blood)","CYP3A4-Ontogeny factor","C_max",-0.06875278998393025,"CYP3A4|Ontogeny factor"
