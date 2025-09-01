@@ -25,7 +25,8 @@ The 'Comment' column is also excluded from the resulting data table.}
 
 \item{alwaysCharacter}{A character vector with column names or regex patterns that should be returned as character (typically identifiers).}
 
-\item{emptyAsNA}{A logical value. If TRUE, empty strings are converted to NA.}
+\item{emptyAsNA}{A logical value. If TRUE, empty strings in character columns are converted to NA.
+If FALSE NA is returned as empty string. Numeric columns Return always NA}
 
 \item{convertHeaders}{A logical value. If TRUE, column names are converted to start with a lowercase letter.}
 }
@@ -34,4 +35,12 @@ A `data.table` containing the sheet data.
 }
 \description{
 This function wraps `openxlsx::read.xlsx` and returns the data as a `data.table`.
+}
+\examples{
+\dontrun{
+wb <- loadWorkbook("example.xlsx")
+data <- xlsxReadData(wb, "DataSheet", skipDescriptionRow = 1)
+print(data)
+}
+
 }

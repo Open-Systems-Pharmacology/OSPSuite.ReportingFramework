@@ -16,8 +16,16 @@ xlsxCloneAndSet(wb, clonedSheet, sheetName, dt)
 \item{dt}{A `data.table` with new content.}
 }
 \value{
-An invisible NULL value.
+An invisible NULL value. The function performs an action (cole a sheet)
 }
 \description{
 This function wraps `openxlsx::cloneWorksheet` but sets new content in the cloned sheet.
+}
+\examples{
+\dontrun{
+wb <- loadWorkbook("example.xlsx")
+data <- data.table(Name = c("Eve", "Frank"), Age = c(22, 35))
+xlsxCloneAndSet(wb, "ExistingSheet", "ClonedSheet", data)
+}
+
 }

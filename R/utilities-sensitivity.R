@@ -29,7 +29,7 @@ addSensitivityTable <- function(projectConfiguration, scenarioList = NULL, scena
       parameterPath = parameterPaths
     )
 
-    wb <- addDataAsTemplateToXlsx(
+    wb <- addDataUsingTemplate(
       wb = openxlsx::loadWorkbook(projectConfiguration$addOns$sensitivityFile),
       templateSheet = "Template",
       sheetName = sheetName,

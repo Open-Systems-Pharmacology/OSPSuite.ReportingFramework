@@ -518,7 +518,7 @@ loadDemographicParameters <- function(onePlotConfig, scenarioList) {
     "scenario", "referenceScenario", "parameterIds",
     "scenarioShortName", "scenarioLongName"
   )] %>%
-    separateAndTrim(columnName = "parameterIds") %>%
+    separateAndTrimColumn(columnName = "parameterIds") %>%
     merge(configEnv$modelParameter, by = "parameterId")
 
   # load parameter_id values
@@ -1243,7 +1243,7 @@ addDefaultDemographicPlots <- function(projectConfiguration,
       yScale = "linear"
     )]
   } else {
-    dtNewConfig <- separateAndTrim(dtNewConfig, columnName = "scenarios")
+    dtNewConfig <- separateAndTrimColumn(dtNewConfig, columnName = "scenarios")
     dtNewConfig[, xScale := "linear"]
   }
 
@@ -1274,7 +1274,7 @@ addDefaultDemographicPlots <- function(projectConfiguration,
         yScale = "linear, log"
       )]
     } else {
-      dtNewConfigPK <- separateAndTrim(dtNewConfigPK, columnName = "scenarios")
+      dtNewConfigPK <- separateAndTrimColumn(dtNewConfigPK, columnName = "scenarios")
       dtNewConfigPK[, xScale := "linear, log"]
     }
 
@@ -1284,7 +1284,7 @@ addDefaultDemographicPlots <- function(projectConfiguration,
       fill = TRUE
     )
   }
-  wb <- addDataAsTemplateToXlsx(
+  wb <- addDataUsingTemplate(
     wb = wb,
     templateSheet = templateSheet,
     sheetName = sheetName,

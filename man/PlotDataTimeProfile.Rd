@@ -40,6 +40,8 @@ An object to collect plot Data and other information to create a time profile pl
 \item{\code{nFacetColumns}}{Number of facet columns}
 
 \item{\code{timeRangeTagFilter}}{List with filters for time range tags}
+
+\item{\code{reverseLegend}}{if true color legend will be reversed}
 }
 \if{html}{\out{</div>}}
 }

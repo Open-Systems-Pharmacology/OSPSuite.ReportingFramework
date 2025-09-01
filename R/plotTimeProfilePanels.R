@@ -1223,7 +1223,7 @@ addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
 
   dtNewConfig <- createNewConfig(scenarios, dataObserved)
 
-  wb <- addDataAsTemplateToXlsx(
+  wb <- addDataUsingTemplate(
     wb = wb,
     templateSheet = "TimeProfiles",
     sheetName = sheetName,

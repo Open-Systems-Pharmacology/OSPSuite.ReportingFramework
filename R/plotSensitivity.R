@@ -122,8 +122,8 @@ prepareSensitivityPlotData <- function(onePlotConfig,
     .[, c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")]
 
   onePlotConfig <- onePlotConfig %>%
-    separateAndTrim("pKParameters") %>%
-    separateAndTrim("outputPathIds") %>%
+    separateAndTrimColumn("pKParameters") %>%
+    separateAndTrimColumn("outputPathIds") %>%
     merge(
       pkDefinitions,
       by = c("pKParameter")
@@ -280,7 +280,7 @@ getPKParameterOverview <- function(projectConfiguration) {
       old = c("name", "displayName", "displayUnit"),
       new = c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")
     ) %>%
-    separateAndTrim(columnName = "outputPathIds")
+    separateAndTrimColumn(columnName = "outputPathIds")
 
   return(pkSheets)
 }

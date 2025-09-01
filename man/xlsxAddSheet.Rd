@@ -14,9 +14,17 @@ xlsxAddSheet(wb, sheetName, dt)
 \item{dt}{A `data.table` containing the data to be written to the new sheet.}
 }
 \value{
-An invisible NULL value.
+An invisible NULL value. The function performs an action (adding a sheet)
 }
 \description{
 This function wraps `openxlsx::addWorksheet` and adds data to the newly created sheet.
 If the sheet already exists, it issues a warning and clears the existing content.
+}
+\examples{
+\dontrun{
+library(openxlsx)
+wb <- loadWorkbook("example.xlsx")
+data <- data.table(Name = c("Alice", "Bob"), Age = c(30, 25))
+xlsxAddSheet(wb, "NewSheet", data)
+}
 }

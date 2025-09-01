@@ -498,8 +498,8 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
     )
   )
 
-  tmp <- separateAndTrim(configTablePlots, "outputPathIds")
-  tmp <- separateAndTrim(tmp, "pkParameters")
+  tmp <- separateAndTrimColumn(configTablePlots, "outputPathIds")
+  tmp <- separateAndTrimColumn(tmp, "pkParameters")
   tmp <- tmp[, c("plotName", "scenario", "outputPathId", "pkParameter")]
   if (any(duplicated(tmp))) {
     tmp <- duplicated(tmp)
@@ -673,7 +673,7 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(projectConfiguration,
   ]
 
 
-  wb <- addDataAsTemplateToXlsx(
+  wb <- addDataUsingTemplate(
     wb = wb,
     templateSheet = "PKParameter_Boxplot",
     sheetName = sheetName,

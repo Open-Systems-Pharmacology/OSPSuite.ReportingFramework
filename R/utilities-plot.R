@@ -287,7 +287,7 @@ readConfigTableForPlot <- function(projectConfiguration,
   }
   # add scenario names
   if ("scenarios" %in% names(configTable)) {
-    configTable <- separateAndTrim(data = configTable, columnName = "scenarios")
+    configTable <- separateAndTrimColumn(data = configTable, columnName = "scenarios")
   }
   if ("scenario" %in% names(configTable)) {
     configTable <-

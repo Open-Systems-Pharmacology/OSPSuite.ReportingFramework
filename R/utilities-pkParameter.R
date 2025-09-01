@@ -439,7 +439,7 @@ mergePKParameterWithConfigTable <- function(onePlotConfig,
     names(onePlotConfig),
     c("scenarios", "pkParameters", "outputPathIds")
   )) {
-    onePlotConfig <- separateAndTrim(onePlotConfig, col)
+    onePlotConfig <- separateAndTrimColumn(onePlotConfig, col)
   }
   mergedData <- onePlotConfig %>%
     dplyr::select(dplyr::any_of(c(

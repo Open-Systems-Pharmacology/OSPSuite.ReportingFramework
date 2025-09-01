@@ -21,5 +21,6 @@
 #' @importFrom tidyr  %>%
 #' @importFrom foreach %dopar%
 #' @importFrom rlang %||%
+#' @importFrom rlang sym
 ## usethis namespace: end
 NULL

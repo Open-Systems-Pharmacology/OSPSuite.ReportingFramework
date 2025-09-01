@@ -136,8 +136,8 @@ plotPKForest <- function(projectConfiguration,
   scenarioGroup <- referenceScenario <- NULL
 
   # separates the comma separate inputs to rows
-  onePlotConfig <- separateAndTrim(data = onePlotConfig, columnName = "outputPathIds") %>%
-    separateAndTrim(columnName = "pkParameters")
+  onePlotConfig <- separateAndTrimColumn(data = onePlotConfig, columnName = "outputPathIds") %>%
+    separateAndTrimColumn(columnName = "pkParameters")
   # use empty string for grouping
   onePlotConfig[is.na(scenarioGroup), scenarioGroup := ""]
   # scenarios without referenceScenario  are ignored in ratio mode
@@ -1531,7 +1531,7 @@ addDefaultConfigForPKForestPlots <- function(projectConfiguration,
   ]
 
 
-  wb <- addDataAsTemplateToXlsx(
+  wb <- addDataUsingTemplate(
     wb = wb,
     templateSheet = "PKParameter_Forest",
     sheetName = sheetName,

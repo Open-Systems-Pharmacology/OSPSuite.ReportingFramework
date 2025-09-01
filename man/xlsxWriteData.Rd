@@ -14,8 +14,16 @@ xlsxWriteData(wb, sheetName, dt)
 \item{dt}{A `data.table` to write.}
 }
 \value{
-An invisible NULL value.
+An invisible NULL value. The function performs an action (adding data to a sheet)
 }
 \description{
 This function wraps `openxlsx::writeData`, but deletes all current content before writing new data.
+}
+\examples{
+\dontrun{
+wb <- loadWorkbook("example.xlsx")
+data <- data.table(Name = c("Charlie", "Dana"), Age = c(28, 32))
+xlsxWriteData(wb, "ExistingSheet", data)
+}
+
 }
