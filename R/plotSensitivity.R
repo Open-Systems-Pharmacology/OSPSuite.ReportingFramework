@@ -8,6 +8,7 @@
 #'
 #' @return A list of plots and tables, where each entry corresponds to a generated sensitivity plot or its data.
 #' @export
+#' @family plot functions
 plotSensitivity <- function(projectConfiguration,
                             onePlotConfig,
                             scenarioList) {
@@ -32,7 +33,7 @@ plotSensitivity <- function(projectConfiguration,
     scenarioList
   )
 
-  plotObject <- ggplot(plotData) +
+  plotObject <- ggplotWithWatermark(plotData) +
     geom_col(aes(x = parameterName, y = sens),
       fill = "grey",
       position = "dodge"
@@ -48,8 +49,7 @@ plotSensitivity <- function(projectConfiguration,
       legend.title = element_blank()
     ) +
     scale_fill_grey(start = 0.7, end = 0) +
-    coord_flip() +
-    layerWatermark()
+    coord_flip()
 
   plotObject <- addFacets(plotObject,
     "fixed",
@@ -257,7 +257,7 @@ getCaptionForSensitivityPlot <- function(plotData, projectConfiguration, plotCap
 #' @param projectConfiguration An object of class `ProjectConfiguration` containing paths to Excel files.
 #'
 #' @return A `data.table` containing the merged PK parameter data along with associated scenario names.
-#' @export
+#' @keywords internal
 getPKParameterOverview <- function(projectConfiguration) {
   # initialize variable to avoid messages
   pKParameter <- descriptions <- NULL
@@ -293,7 +293,9 @@ getPKParameterOverview <- function(projectConfiguration) {
 #' @param ... Additional arguments passed to other functions.
 #'
 #' @return A validated data frame containing the configuration table for sensitivity plots.
-#' @keywords internal
+#' @export
+#' @family plot configuration validation function
+#' @family functions to generate sensitivity plots
 validateSensitivityConfig <- function(configTable, ...) {
   configTablePlots <- validateHeaders(configTable)
 

@@ -7,7 +7,7 @@
 prepareDataForPKForest(
   onePlotConfig,
   pkParameterFiltered,
-  pkParameterObserved,
+  dataObservedPK,
   ratioMode,
   asPointeEstimate,
   nBootstrap,
@@ -21,7 +21,7 @@ prepareDataForPKForest(
 
 \item{pkParameterFiltered}{A data table containing filtered PK parameter data.}
 
-\item{pkParameterObserved}{An optional data table for observed PK parameters.}
+\item{dataObservedPK}{An optional data table for observed PK parameters.}
 
 \item{ratioMode}{A string indicating the mode for ratio calculations.}
 

@@ -15,3 +15,12 @@ A `data.table` with model parameter definitions.
 \description{
 This function loads the model parameter definitions from the specified workbook.
 }
+\seealso{
+Other get identifier: 
+\code{\link{getDataGroups}()},
+\code{\link{getOutputPathIds}()},
+\code{\link{getScenarioDefinitions}()},
+\code{\link{getTimeRangeTags}()},
+\code{\link{loadConfigTableEnvironment}()}
+}
+\concept{get identifier}

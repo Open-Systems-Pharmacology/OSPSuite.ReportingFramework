@@ -13,8 +13,8 @@
 }
 \value{
 A data.table with converted biometrics.
-#' @keywords internal
 }
 \description{
 This function converts biometrics data for individual statistics into a specific format.
 }
+\keyword{internal}

@@ -7,6 +7,7 @@
 \description{
 Manages the creation and writing of .Rmd files for plots.
 }
+\keyword{internal}
 \section{Super class}{
 \code{\link[ospsuite.utils:Printable]{ospsuite.utils::Printable}} -> \code{RmdPlotManager}
 }

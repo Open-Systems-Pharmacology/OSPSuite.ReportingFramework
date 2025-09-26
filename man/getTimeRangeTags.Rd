@@ -15,3 +15,12 @@ A `data.table` with time range tags.
 \description{
 This function loads the time range tags from the specified workbook.
 }
+\seealso{
+Other get identifier: 
+\code{\link{getDataGroups}()},
+\code{\link{getModelParameterDefinitions}()},
+\code{\link{getOutputPathIds}()},
+\code{\link{getScenarioDefinitions}()},
+\code{\link{loadConfigTableEnvironment}()}
+}
+\concept{get identifier}

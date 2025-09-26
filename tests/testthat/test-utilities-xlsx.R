@@ -103,7 +103,7 @@ test_that("xlsxCloneAndSet works correctly", {
                "Sheet NonExistentSheet does not exist in the workbook.")
 
   # Test case 3: Cloning an existing sheet to a sheet name that already exists
-  expect_no_error(xlsxCloneAndSet(wb, "TemplateSheet", "ClonedSheet", newData))
+  expect_no_error(xlsxCloneAndSet(wb, "ExistingSheet", "ClonedSheet", newData))
 
 })
 
@@ -138,14 +138,14 @@ test_that("xlsxAddSheet works correctly", {
 
 })
 
-# Unit tests for the addDataUsingTemplate function
-test_that("addDataUsingTemplate works correctly", {
+# Unit tests for the xlsxAddDataUsingTemplate function
+test_that("xlsxAddDataUsingTemplate works correctly", {
   # Load the workbook for testing
   wb <- openxlsx::loadWorkbook(testxlsx)
 
   # Test case 1: Adding data using an existing template sheet
   newData <- data.table(Name = c("Charlie", "Dana"), Age = c(28, 32))
-  wb <- addDataUsingTemplate(wb, "ExistingSheet", "NewDataSheet", newData)
+  wb <- xlsxAddDataUsingTemplate(wb, "ExistingSheet", "NewDataSheet", newData)
 
   # Check if the new sheet was added correctly
   result <- xlsxReadData(wb, "NewDataSheet")
@@ -153,15 +153,15 @@ test_that("addDataUsingTemplate works correctly", {
   expect_equal(result, expected)
 
   # Test case 2: Attempting to add data using a non-existent template sheet
-  expect_error(addDataUsingTemplate(wb, "NonExistentTemplate", "AnotherSheet", newData),
+  expect_error(xlsxAddDataUsingTemplate(wb, "NonExistentTemplate", "AnotherSheet", newData),
                'Cannot find sheet named "NonExistentTemplate"')
 
   # Test case 3: Attempting to add data with invalid workbook
-  expect_error(addDataUsingTemplate(NULL, "TemplateSheet", "InvalidSheet", newData),
+  expect_error(xlsxAddDataUsingTemplate(NULL, "TemplateSheet", "InvalidSheet", newData),
                "Assertion on 'wb' failed: Must inherit from class 'Workbook', but has class 'NULL'.")
 
   # Test case 4: Attempting to add data with invalid data.table
-  expect_error(addDataUsingTemplate(wb, "TemplateSheet", "AnotherSheet", NULL),
+  expect_error(xlsxAddDataUsingTemplate(wb, "TemplateSheet", "AnotherSheet", NULL),
                "Assertion on 'dtNewData' failed: Must be a data.table, not 'NULL'.")
 
 })

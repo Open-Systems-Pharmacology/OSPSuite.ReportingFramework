@@ -29,3 +29,19 @@ list of numbers and figures after loop
 \description{
 Loop on figure keys, add figure or table
 }
+\seealso{
+Other markdown helper function: 
+\code{\link{mdBullet}()},
+\code{\link{mdBullet0}()},
+\code{\link{mdCaption}()},
+\code{\link{mdFigure}()},
+\code{\link{mdFootNote}()},
+\code{\link{mdHeading}()},
+\code{\link{mdLink}()},
+\code{\link{mdNewline}()},
+\code{\link{mdNewpage}()},
+\code{\link{mdPaste}()},
+\code{\link{mdPaste0}()},
+\code{\link{mdTable}()}
+}
+\concept{markdown helper function}

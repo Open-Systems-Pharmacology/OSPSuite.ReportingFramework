@@ -375,8 +375,7 @@ TestProjectBuilder <- R6::R6Class( # nolint
                                               weightUnit = "kg",
                                               heightUnit = "cm",
                                               bMIUnit = "kg/m\u00B2",
-                                              protein = "CYP3A4,UGT1A4",
-                                              ontogeny = "CYP3A4,UGT1A4"
+                                              'protein Ontogenies' = "CYP3A4:CYP3A4, UGT1A4:UGT1A4"
                                             )) {
       # add virtual population with in bio metric ranges of observed data
       wb <- openxlsx::loadWorkbook(projectConfiguration$populationsFile)
@@ -501,9 +500,9 @@ TestProjectBuilder <- R6::R6Class( # nolint
         wb = wb, sheetName = "IndividualBiometrics",
         skipDescriptionRow = FALSE, emptyAsNA = FALSE
       )
+      dt[['protein Ontogenies']] <- NA_character_
       dt[, `:=`(
-        protein = "CYP3A4,UGT1A4",
-        ontogeny = "CYP3A4,UGT1A4"
+        'protein Ontogenies' = "CYP3A4:CYP3A4, UGT1A4:UGT1A4"
       )]
 
       individualIds <- dt$individualId

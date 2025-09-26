@@ -2,17 +2,17 @@
 % Please edit documentation in R/WorkflowScriptExporter.R
 \name{excelToListStructure}
 \alias{excelToListStructure}
-\title{Convert Excel file to list structure for JSON serialization}
+\title{Convert Excel file to List Structure}
 \usage{
 excelToListStructure(df)
 }
 \arguments{
-\item{df}{content of an Excel sheet}
+\item{df}{A data frame representing the content of an Excel sheet.}
 }
 \value{
-List structure ready for JSON serialization
+A list structure ready for JSON serialization, containing column names and rows.
 }
 \description{
-Convert Excel file to list structure for JSON serialization
+This function converts the content of an Excel sheet into a list structure suitable for JSON serialization.
 }
 \keyword{internal}

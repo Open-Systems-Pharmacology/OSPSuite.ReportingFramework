@@ -8,7 +8,7 @@ plotPKForestPointEstimateOfRatios(
   projectConfiguration,
   onePlotConfig,
   pkParameterDT,
-  pkParameterObserved = NULL,
+  dataObservedPK = NULL,
   nBootstrap = 1000,
   confLevel = 0.9,
   statFun = c(`geometric mean` = function(y) exp(mean(log(y[y > 0])))),
@@ -31,7 +31,7 @@ single plot, including plot name, x-axis scale, and other aesthetic settings.}
 \item{pkParameterDT}{A data.table containing simulated PK parameter data,
 including columns for scenario names, parameters, values, and output paths.}
 
-\item{pkParameterObserved}{Optional data.table containing observed PK parameter
+\item{dataObservedPK}{Optional data.table containing observed PK parameter
 data for comparison, which can include columns for observed values and associated
 metadata.}
 
@@ -139,7 +139,27 @@ To support the creation of the configuration table a support function
 \code{addDefaultConfigForPKForestPlots} is available
 }
 \seealso{
-\code{\link{plotPKForestAggregatedAbsoluteValues}}, \code{\link{plotPKForestPointEstimateOfAbsoluteValues}},
-\code{\link{plotPKForestAggregatedRatios}}, \code{\link{plotPKForestPointEstimateOfRatios}},
-\code{\link{addDefaultConfigForPKForestPlots}}
+Other plot functions: 
+\code{\link{addDefaultConfigForPKForestPlots}()},
+\code{\link{addDefaultConfigForTimeProfilePlots}()},
+\code{\link{plotDistributionVsDemographics}()},
+\code{\link{plotHistograms}()},
+\code{\link{plotPKBoxwhisker}()},
+\code{\link{plotPKForestAggregatedAbsoluteValues}()},
+\code{\link{plotPKForestAggregatedRatios}()},
+\code{\link{plotPKForestPointEstimateOfAbsoluteValues}()},
+\code{\link{plotSensitivity}()},
+\code{\link{plotTimeProfiles}()}
+
+Other functions to generate forest plots: 
+\code{\link{addDefaultConfigForPKForestPlots}()},
+\code{\link{plotPKForestAggregatedAbsoluteValues}()},
+\code{\link{plotPKForestAggregatedRatios}()},
+\code{\link{plotPKForestPointEstimateOfAbsoluteValues}()},
+\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
+\code{\link{validatePKForestAggregatedRatiosConfig}()},
+\code{\link{validatePKForestPointEstimateOfAbsoluteValuesConfig}()},
+\code{\link{validatePKForestPointEstimateOfRatiosConfig}()}
 }
+\concept{functions to generate forest plots}
+\concept{plot functions}

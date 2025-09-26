@@ -6,7 +6,7 @@
 \usage{
 xlsxReadData(
   wb,
-  sheetName,
+  sheetName = 1,
   skipDescriptionRow = FALSE,
   alwaysCharacter = c("Group", "Id$", "Ids$"),
   emptyAsNA = TRUE,
@@ -44,3 +44,13 @@ print(data)
 }
 
 }
+\seealso{
+Other function to read from and write to xlsx: 
+\code{\link{setHeadersToLowerCase}()},
+\code{\link{splitInputs}()},
+\code{\link{xlsxAddDataUsingTemplate}()},
+\code{\link{xlsxAddSheet}()},
+\code{\link{xlsxCloneAndSet}()},
+\code{\link{xlsxWriteData}()}
+}
+\concept{function to read from and write to xlsx}

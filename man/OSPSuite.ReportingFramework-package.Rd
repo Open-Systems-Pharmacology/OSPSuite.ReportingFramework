@@ -6,7 +6,14 @@
 \alias{ospsuite.reportingframework-package}
 \title{ospsuite.reportingframework: Provides a framework for report generation with the ospsuite}
 \description{
-This package uses the EsqlabsR package to set up simulations and scenerios. It provides functions to generate default graphics and tables. This figures are included in .Rmd files which are then merged to the selected output format e.g. a "Report.docx".
+The OSPSuite Reporting Framework, which is based on the esqlabsR package, is a robust tool designed to systematically define simulation scenarios, their inputs and outputs, and standardize data import and matching processes. These functionalities allow for easy and automatable model execution and plot generation, ultimately facilitating the generation of customizable reports for OSP physiologically-based pharmacokinetic (PBPK) models. As a result, this framework significantly enhances reporting efficiency, enabling researchers to create clear, tailored reports that effectively communicate complex modeling results.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://www.open-systems-pharmacology.org/OSPSuite.Plots/}
+}
+
 }
 \author{
 \strong{Maintainer}: Katrin Coboeken \email{katrin.coboeken@bayer.com}

@@ -1,0 +1,110 @@
+template:
+  bootstrap: 5
+
+development:
+  mode: auto
+
+authors:
+  Open-Systems-Pharmacology Community:
+    href: https://www.open-systems-pharmacology.org/
+    html: <img src='https://avatars.githubusercontent.com/u/25098323?s=33' alt="Open System Pharmacology Logo">Open Systems Pharmacology
+  Katrin Coboeken:
+    href: https://github.com/KatrinCoboeken
+
+articles:
+  - title: Overview
+    navbar: Overview
+    desc: Overview
+    contents:
+      - OSPSuite_ReportingFramework
+  - title: Suite Reports and Configuration
+    navbar: Workflow and Configuration
+    desc: Workflow and Configuration
+    contents:
+      - Workflow
+      - Data_import_by_dictionary
+      - PK-Parameter
+      - Population
+      - Electronic-Package
+      - Plot_and_Report_Generation
+  - title: Tutorials
+    navbar: Tutorials
+    desc: Tutorials
+    contents:
+      - Workflow
+      - Tutorial-timeprofiles
+
+figures:
+  dev: ragg::agg_png
+  fig.ext: png
+  dev.args: []
+  fig.width: 10
+  fig.asp: 0.618
+  fig.retina: 1
+  bg: NA
+  other.parameters: []
+
+reference:
+  - title: "Workflow support functions"
+    contents:
+      - has_concept("project initialisation")
+      - has_concept("population export")
+      - has_concept("scenario management")
+  - title: "Data import"
+    contents:
+      - has_concept('observed data processing')
+  - title: "Plot Functions"
+    desc: "Functions to be used with runPlot"
+    contents:
+      - has_concept("plot functions")
+  - title: "Plot Configuration helper"
+    desc: "Functions which support the plot configuration"
+    contents:
+      - has_concept("plot configuration helper function")
+  - title: "Plot Config validation"
+    desc: "Functions to validate the plot configuration"
+    contents:
+      - has_concept("plot configuration validation function")
+  - title: "Report generation"
+    contents:
+      - matches("mergeRmds")
+      - matches("renderWord")
+      - matches("runPlot")
+      - matches("setExportAttributes")
+  - title: "Electronic Package"
+    contents:
+      - has_concept("electronic package")
+  - title: "Reading and writing to xlsx"
+    contents:
+      - has_concept('function to read from and write to xlsx')
+  - title: "Log-file management"
+    contents:
+      - has_concept('log file management')
+  - title: "Configuration identifier"
+    desc: "Functions to retrieve configuration identifier"
+    contents:
+      - has_concept("get identifier")
+  - title: "Addin support"
+    desc: "Functions to support Addin"
+    contents:
+      - has_concept("Addins Support")
+  - title: "Miscellaneous"
+    contents:
+      - matches("runSensitivityAnalysisForScenarios")
+      - matches("addSensitivityTable")
+      - matches("TestProjectBuilder")
+      - matches("^validate")
+      - matches("formatPercentiles")
+  - title: "Constants"
+    desc: "Enumeration constants for OSPSuite.ReportingFrameworks options and scaling."
+    contents:
+      - has_concept("enumerations")
+  - title: "Markdown helpers"
+    desc: "Functions that supports writing of a murkdown document"
+    contents:
+      - has_concept("markdown helper function")
+  - title: "Temporary functions"
+    desc: "Functions that will be moved to ospsuite.utils"
+    contents:
+      - matches("^ospsuite_")
+      - matches("addPredictedValues")

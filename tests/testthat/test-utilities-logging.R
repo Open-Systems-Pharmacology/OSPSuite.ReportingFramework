@@ -20,7 +20,7 @@ test_that("writeToLog appends log message to file", {
 
 
 # Unit tests errors and warnings
-test_that("logCatch function catches only messages to display", {
+test_that("captureLog function catches only messages to display", {
   initLogfunction(
     projectConfiguration = projectConfiguration,
     verbose = FALSE
@@ -28,11 +28,11 @@ test_that("logCatch function catches only messages to display", {
 
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
 
-  logCatch(expr = warning("Warning message"))
+  captureLog(expr = warning("Warning message"))
   suppressWarnings(logFile <- readLines(file.path(logFileFolder, "run.log")))
   expect_true(length(grep("Warning message", logFile)) > 0) # The message should be logged
 
-  expect_error(logCatch(expr = stop("Error message")))
+  expect_error(captureLog(expr = stop("Error message")))
   suppressWarnings(logFile <- readLines(file.path(logFileFolder, "run.log")))
   expect_true(length(grep("Error message", logFile)) > 0) # The message should be logged
 })
@@ -54,12 +54,12 @@ test_that("saveSessionInfo writes session info to log file", {
 
 
 # Test for verbose = FALSE
-test_that("logCatch Logs messages when verbose is TRUE", {
+test_that("captureLog Logs messages when verbose is TRUE", {
   myMessage <- "Test message"
 
   initLogfunction(projectConfiguration = projectConfiguration, verbose = FALSE)
   setShowLogMessages(TRUE)
-  output <- utils::capture.output(logCatch(message(myMessage)), type = "message")
+  output <- utils::capture.output(captureLog(message(myMessage)), type = "message")
 
   expect_true(output == myMessage)
 })
@@ -80,13 +80,13 @@ test_that("writeTableToLog function works as expected", {
   expect_true(length(logContent) > 0, "Log file was created")
 })
 
-test_that("logCatch executes finallyExpression", {
-  # Call logCatch with an expression that generates an error
-  expect_warning(expect_error(logCatch(expr = stop("This is an error"), finallyExpression = warning("finallyExecuted"))))
+test_that("captureLog executes finallyExpression", {
+  # Call captureLog with an expression that generates an error
+  expect_warning(expect_error(captureLog(expr = stop("This is an error"), finallyExpression = warning("finallyExecuted"))))
 
 
-  # Call logCatch with a successful expression
-  expect_warning(logCatch(expr = {
+  # Call captureLog with a successful expression
+  expect_warning(captureLog(expr = {
     a <- 1
   }, finallyExpression = {
     warning("finallyExecuted")

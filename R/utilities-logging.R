@@ -15,6 +15,7 @@
 #' }
 #'
 #' @export
+#' @family log file management
 initLogfunction <- function(projectConfiguration,
                             warningsNotDisplayed = c(
                               "introduced infinite values",
@@ -61,7 +62,7 @@ initLogfunction <- function(projectConfiguration,
     dir.create(logFileFolder, recursive = TRUE)
   }
 
-  # set inputs to options for use in `logCatch` function and `writeToLog`
+  # set inputs to options for use in `captureLog` function and `writeToLog`
   options(list(
     OSPSuite.RF.logFileFolder = logFileFolder,
     OSPSuite.RF.warningsNotDisplayed = warningsNotDisplayed,
@@ -94,14 +95,15 @@ initLogfunction <- function(projectConfiguration,
 
 #' Used to add message to log file
 #'
-#' This function is for the usage outside a `logCatch` bracket.
+#' This function is for the usage outside a `captureLog` bracket.
 #' Inside the bracket `message("my message Text")` can be used
 #'
 #' @param messageText character with message text
 #'
 #' @export
+#' @family log file management
 addMessageToLog <- function(messageText) {
-  logCatch(
+  captureLog(
     expr = message(messageText)
   )
 }
@@ -113,7 +115,8 @@ addMessageToLog <- function(messageText) {
 #' @param finallyExpression The expression to evaluate finally
 #'
 #' @export
-logCatch <- function(expr, finallyExpression = invisible()) {
+#' @family log file management
+captureLog <- function(expr, finallyExpression = invisible()) {
   warningsNotDisplayed <- getOption("OSPSuite.RF.warningsNotDisplayed", default = c())
   messagesNotDisplayed <- getOption("OSPSuite.RF.messagesNotDisplayed", default = c())
   verbose <- getOption("OSPSuite.RF.verbose", default = TRUE)
@@ -191,14 +194,14 @@ logCatch <- function(expr, finallyExpression = invisible()) {
 #'   }
 #' )
 #'
-#' @export
+#' @keywords internal
 getErrorTrace <- function(e) {
   calls <- sys.calls()
   errorTrace <- "Error Trace:"
   for (call in calls) {
     textCall <- deparse(call, nlines = 1)
     callNotDisplayed <- any(sapply(
-      c("logCatch", "qualificationCatch", "stop", "tryCatch", "withCallingHandlers", "simpleError", "eval\\(ei, envir\\)"),
+      c("captureLog", "qualificationCatch", "stop", "tryCatch", "withCallingHandlers", "simpleError", "eval\\(ei, envir\\)"),
       FUN = function(pattern) {
         grepl(textCall, pattern = pattern, ignore.case = TRUE)
       }
@@ -231,7 +234,8 @@ getErrorTrace <- function(e) {
 #' # Write a log message
 #' writeToLog(type = "Info", msg = "This is an information message", filename = "run.log")
 #' }
-#'
+#' @export
+#' @family log file management
 writeToLog <- function(type, msg, filename = NULL) {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
   if (is.null(logFileFolder)) {
@@ -259,6 +263,7 @@ writeToLog <- function(type, msg, filename = NULL) {
 #' @param filename filename of log
 #'
 #' @export
+#' @family log file management
 writeTableToLog <- function(dt, filename = "run.log") {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
   if (is.null(logFileFolder)) {
@@ -289,6 +294,7 @@ writeTableToLog <- function(dt, filename = "run.log") {
 #' @param verbose boolean, if true log message will be shown
 #'
 #' @export
+#' @family log file management
 setShowLogMessages <- function(verbose = TRUE) {
   options(OSPSuite.RF.verbose = verbose)
 }
@@ -310,6 +316,7 @@ setShowLogMessages <- function(verbose = TRUE) {
 #' }
 #'
 #' @export
+#' @family log file management
 saveSessionInfo <- function() {
   sessionInfo <- paste(utils::capture.output(sessionInfo()), collapse = "\n")
 

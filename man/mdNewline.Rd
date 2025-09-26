@@ -12,3 +12,19 @@ mdNewline(n = 1)
 \description{
 `cat` a line end and start a new line.
 }
+\seealso{
+Other markdown helper function: 
+\code{\link{addFiguresAndTables}()},
+\code{\link{mdBullet}()},
+\code{\link{mdBullet0}()},
+\code{\link{mdCaption}()},
+\code{\link{mdFigure}()},
+\code{\link{mdFootNote}()},
+\code{\link{mdHeading}()},
+\code{\link{mdLink}()},
+\code{\link{mdNewpage}()},
+\code{\link{mdPaste}()},
+\code{\link{mdPaste0}()},
+\code{\link{mdTable}()}
+}
+\concept{markdown helper function}

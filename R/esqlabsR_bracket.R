@@ -22,6 +22,7 @@
 #'
 #'
 #' @export
+#' @family project initialisation
 initProject <- function(configurationDirectory = ".",
                         sourceConfigurationXlsx = system.file("templates", "ProjectConfiguration.xlsx", package = "ospsuite.reportingframework"),
                         templatePath = system.file("templates", package = "ospsuite.reportingframework"),
@@ -74,6 +75,7 @@ initProject <- function(configurationDirectory = ".",
 #'
 #' @return Object of type `ProjectConfigurationRF`
 #' @export
+#' @family project initialisation
 createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xlsx")) {
   projectConfiguration <- ProjectConfigurationRF$new(projectConfigurationFilePath = path)
 
@@ -89,6 +91,7 @@ createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xl
 #'
 #' @return  Named list of Scenario objects.
 #' @export
+#' @family scenario management
 createScenarios.wrapped <- function(projectConfiguration, # nolint
                                     scenarioNames = NULL) {
   scenarioList <-
@@ -118,6 +121,7 @@ createScenarios.wrapped <- function(projectConfiguration, # nolint
 #' throws Error if the scenario results do not exist.
 #'
 #' @export
+#' @family scenario management
 loadScenarioResultsToFramework <- function(projectConfiguration, scenarioNames) {
   outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult)
   resultFiles <- file.path(outputFolder, paste0(scenarioNames, ".csv"))
@@ -175,6 +179,7 @@ loadScenarioResultsToFramework <- function(projectConfiguration, scenarioNames) 
 #' }
 #'
 #' @export
+#' @family scenario management
 runAndSaveScenarios <- function(projectConfiguration, scenarioList, simulationRunOptions = NULL, ...) {
   outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult)
 
@@ -221,6 +226,7 @@ runAndSaveScenarios <- function(projectConfiguration, scenarioList, simulationRu
 #' @return A list containing the simulation results for each scenario that was loaded or run.
 #'
 #' @export
+#' @family scenario management
 runOrLoadScenarios <- function(projectConfiguration, scenarioList, simulationRunOptions = NULL, ...) {
   scenarioResults <- list()
 
@@ -248,7 +254,7 @@ runOrLoadScenarios <- function(projectConfiguration, scenarioList, simulationRun
 #'   and calls `extendPopulationByUserDefinedParams`
 #'   copy of esqlabsR::extendPopulationFromXLS but columnNames always withdot
 #'
-#' @export
+#' @keywords internal
 extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { # nolint
   ospsuite.utils::validateIsOfType(population, "Population")
   ospsuite.utils::validateIsString(XLSpath)
@@ -305,7 +311,7 @@ extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { # no
 #' @param distributions Type of distribution from which the random values will
 #'   be sampled. Must have the same length as `parameterPaths`.
 #' A list of supported distributions is defined in `Distributions`. Default is `"Normal"`.
-#' @export
+#' @keywords internal
 extendPopulationByUserDefinedParams_RF <- function(population, # nolint
                                                    parameterPaths,
                                                    meanValues,

@@ -10,6 +10,16 @@ addMessageToLog(messageText)
 \item{messageText}{character with message text}
 }
 \description{
-This function is for the usage outside a `logCatch` bracket.
+This function is for the usage outside a `captureLog` bracket.
 Inside the bracket `message("my message Text")` can be used
 }
+\seealso{
+Other log file management: 
+\code{\link{captureLog}()},
+\code{\link{initLogfunction}()},
+\code{\link{saveSessionInfo}()},
+\code{\link{setShowLogMessages}()},
+\code{\link{writeTableToLog}()},
+\code{\link{writeToLog}()}
+}
+\concept{log file management}

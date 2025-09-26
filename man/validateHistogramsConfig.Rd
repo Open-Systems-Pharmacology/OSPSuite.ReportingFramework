@@ -17,3 +17,20 @@ NULL (invisible).
 \description{
 Validates the configuration table for histogram plots.
 }
+\seealso{
+Other plot configuration validation function: 
+\code{\link{validateDistributionVsDemographicsConfig}()},
+\code{\link{validatePKBoxwhiskerConfig}()},
+\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
+\code{\link{validatePKForestAggregatedRatiosConfig}()},
+\code{\link{validatePKForestPointEstimateOfAbsoluteValuesConfig}()},
+\code{\link{validatePKForestPointEstimateOfRatiosConfig}()},
+\code{\link{validateSensitivityConfig}()},
+\code{\link{validateTimeProfilesConfig}()}
+
+Other functions to generate histograms: 
+\code{\link{addDefaultConfigForDistributionsVsDemographics}()},
+\code{\link{plotHistograms}()}
+}
+\concept{functions to generate histograms}
+\concept{plot configuration validation function}

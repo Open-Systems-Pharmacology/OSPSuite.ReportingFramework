@@ -26,3 +26,4 @@ A data.table containing the aggregated simulated time profiles for all scenarios
 \description{
 This function aggregates simulated time profiles for different scenarios based on the provided results and output paths.
 }
+\keyword{internal}

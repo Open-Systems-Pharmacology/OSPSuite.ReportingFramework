@@ -40,3 +40,4 @@ A function that performs the specified aggregation. The returned function accept
 \description{
 This function retrieves the appropriate aggregation function based on the specified aggregation flag.
 }
+\keyword{internal}

@@ -5,6 +5,7 @@
 #' @param n Number of new lines. Defaults to 1.
 #'
 #' @export
+#' @family markdown helper function
 mdNewline <- function(n = 1) {
   for (i in seq_len(n)) {
     cat("  \n")
@@ -24,6 +25,7 @@ mdNewline <- function(n = 1) {
 #' @param newlines Number of newlines to insert afterwards. Defaults to 1.
 #'
 #' @export
+#' @family markdown helper function
 mdPaste <- function(..., sep = " ", collapse = NULL, newlines = 1) {
   cat(paste(..., sep = sep, collapse = collapse))
 
@@ -42,6 +44,7 @@ mdPaste <- function(..., sep = " ", collapse = NULL, newlines = 1) {
 #' @param newlines Number of newlines to insert afterwards. Defaults to 1.
 #'
 #' @export
+#' @family markdown helper function
 mdPaste0 <- function(..., collapse = NULL, newlines = 1) {
   cat(paste0(..., collapse = collapse))
 
@@ -56,6 +59,7 @@ mdPaste0 <- function(..., collapse = NULL, newlines = 1) {
 #' Insert a page break and a newline.
 #'
 #' @export
+#' @family markdown helper function
 mdNewpage <- function() {
   mdNewline(2)
   mdPaste("\\newpage", newlines = 2)
@@ -71,6 +75,7 @@ mdNewpage <- function() {
 #' @param newlines The number of newlines inserted after the heading. Defaults to 2.
 #'
 #' @export
+#' @family markdown helper function
 mdHeading <- function(..., level = 1, newlines = 2) {
   checkmate::assert_int(level, lower = 1, upper = 6)
 
@@ -86,6 +91,7 @@ mdHeading <- function(..., level = 1, newlines = 2) {
 #' @param bullet `character` type of bullet
 #'
 #' @export
+#' @family markdown helper function
 mdBullet <- function(..., bullet = "-", level = 1) {
   checkmate::assertString(bullet)
   checkmate::assertInt(level, lower = 1)
@@ -106,6 +112,7 @@ mdBullet <- function(..., bullet = "-", level = 1) {
 #' @param bullet `character` type of bullet
 #'
 #' @export
+#' @family markdown helper function
 mdBullet0 <- function(..., bullet = "-", level = 1) {
   checkmate::assertString(bullet)
   checkmate::assertInt(level, lower = 1)
@@ -132,6 +139,7 @@ mdBullet0 <- function(..., bullet = "-", level = 1) {
 #' @param customStyles list of custom styles usable for figure and table captions and footnotes
 #'
 #' @export
+#' @family markdown helper function
 mdFigure <- function(
     figureNumber,
     figureFile,
@@ -182,6 +190,7 @@ mdFigure <- function(
 #' @param prefix An optional prefix to place in front of the link. Defaults to "".
 #'
 #' @export
+#' @family markdown helper function
 mdLink <- function(label, filename, folder, prefix = "") {
   mdPaste0(prefix, "[", label, "](", file.path(folder, filename), ")  ")
   mdNewline()
@@ -199,6 +208,7 @@ mdLink <- function(label, filename, folder, prefix = "") {
 #'
 #' @return `x`, invisibly
 #' @export
+#' @family markdown helper function
 mdTable <- function(tableNumber,
                     tableCsv,
                     captionFile,
@@ -252,6 +262,7 @@ mdTable <- function(tableNumber,
 #'
 #' @inheritParams mdFigure
 #' @param footNoteCustomStyle a character describing custom style footnotes
+#' @family markdown helper function
 mdFootNote <- function(subfolder, footNoteFile, footNoteCustomStyle = NULL) {
   if (file.exists(file.path(subfolder, footNoteFile))) {
     footnoteLines <- readLines(file.path(subfolder, footNoteFile))
@@ -279,7 +290,8 @@ mdFootNote <- function(subfolder, footNoteFile, footNoteCustomStyle = NULL) {
 #' @inheritParams mdFigure
 #' @param captionPrefix 'a character which starts the caption like 'Figure 1:'
 #' @param captionStyle 'custom-style for captions'
-#'
+#' @export
+#' @family markdown helper function
 mdCaption <- function(subfolder, captionFile, captionPrefix, captionStyle = NULL) {
   caption <- paste(
     captionPrefix,
@@ -302,7 +314,7 @@ mdCaption <- function(subfolder, captionFile, captionPrefix, captionStyle = NULL
 #'
 #' @inherit mdFigure
 #' @param importFile figure file or table .csv file
-#'
+#' @keywords internal
 validateMdFigureTableInputs <- function(subfolder, importFile, captionFile, customStyles) {
   checkmate::assertFileExists(file.path(subfolder, importFile))
   checkmate::assertFileExists(file.path(subfolder, captionFile))
@@ -328,6 +340,7 @@ validateMdFigureTableInputs <- function(subfolder, importFile, captionFile, cust
 #'
 #' @return list of numbers and figures after loop
 #' @export
+#' @family markdown helper function
 addFiguresAndTables <- function(keyList,
                                 subfolder,
                                 numbersOf,
@@ -376,6 +389,7 @@ addFiguresAndTables <- function(keyList,
 #' @param title title of report
 #'
 #' @return character with startlines
+#' @keywords internal
 startRmd <- function(title = "Report") {
   return(c(
     "---",
@@ -403,6 +417,7 @@ startRmd <- function(title = "Report") {
 #' @param projectConfiguration Object of class `ProjectConfiguration` containing information on paths and file names
 #'
 #' @export
+#' @family functions called by workflow script
 mergeRmds <- function(
     newName = "appendix",
     title = "Appendix",

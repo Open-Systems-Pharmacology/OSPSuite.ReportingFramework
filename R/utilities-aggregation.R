@@ -22,7 +22,7 @@
 #' If legendsize 3 is needed should contain 3 elements, e.g. "median | 5th percentile | 95th percentile"
 #'
 #' @return A function that performs the specified aggregation. The returned function accepts a numeric vector and returns a list containing the aggregated values and error types.
-#' @export
+#' @keywords internal
 getAggregationFunction <- function(aggregationFlag,
                                    percentiles,
                                    customFunction,
@@ -126,7 +126,7 @@ getErrorTypeForPercentiles <- function(percentiles, legendsize) {
 #'
 #' @return A data.table containing aggregated results with counts (`numberOfIndividuals`),
 #' aggregated values, and the number of measurements below the lower limit of quantification (`nBelowLLOQ`).
-#' @export
+#' @keywords internal
 performAggregation <- function(dataToAggregate,
                                aggregationFun,
                                aggrCriteria) {
@@ -212,8 +212,6 @@ getAggregatedVariance <- function(dt,
 
   return(dtAggregated)
 }
-
-
 #' Calculate Aggregation and Confidence Interval by Group
 #'
 #' This function calculates a specified aggregation function (e.g., geometric mean)
@@ -245,7 +243,7 @@ getAggregatedVariance <- function(dt,
 #'   - `yErrorType`: A descriptive string indicating the aggregation function and confidence interval bounds.
 #'
 #'
-#' @export
+#' @keywords internal
 calculateAggregationWithCIBYGroup <- function(dt,
                                               aggregationFun,
                                               confLevel = 0.9,

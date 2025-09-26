@@ -24,3 +24,15 @@ or `DataCombined` object containing the observed data to be plotted.}
 \description{
 Validation of config table for time profiles plots
 }
+\seealso{
+Other plot configuration validation function: 
+\code{\link{validateDistributionVsDemographicsConfig}()},
+\code{\link{validateHistogramsConfig}()},
+\code{\link{validatePKBoxwhiskerConfig}()},
+\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
+\code{\link{validatePKForestAggregatedRatiosConfig}()},
+\code{\link{validatePKForestPointEstimateOfAbsoluteValuesConfig}()},
+\code{\link{validatePKForestPointEstimateOfRatiosConfig}()},
+\code{\link{validateSensitivityConfig}()}
+}
+\concept{plot configuration validation function}

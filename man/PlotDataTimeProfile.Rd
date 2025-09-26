@@ -11,6 +11,7 @@ Load simulated results for the specified project configuration
 \description{
 An object to collect plot Data and other information to create a time profile plot
 }
+\keyword{internal}
 \section{Super class}{
 \code{\link[ospsuite.utils:Printable]{ospsuite.utils::Printable}} -> \code{RmdPlotManager}
 }

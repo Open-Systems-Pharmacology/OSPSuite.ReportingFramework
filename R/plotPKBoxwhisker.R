@@ -50,6 +50,8 @@
 #' )
 #' }
 #' @export
+#' @family plot functions
+#' @family functions to generate box whisker plots
 plotPKBoxwhisker <- function(projectConfiguration,
                              onePlotConfig,
                              pkParameterDT,
@@ -289,6 +291,7 @@ getSummaryTable <- function(plotDataPk, asRatio, onePlotConfig, percentiles) {
 #' @param plotDataPk A data.table containing PK parameter data for generating the plot caption.
 #'
 #' @return A data.table prepared for plotting, including merged configuration and parameter data.
+#' @keywords internal
 prepareTableForExport <- function(dtExport, asRatio, plotCaptionAddon, plotDataPk) {
   # initialize to avoid linter messages
   colorIndex <- scenarioShortName <- scenario <- NULL
@@ -338,7 +341,7 @@ prepareTableForExport <- function(dtExport, asRatio, plotCaptionAddon, plotDataP
 #' @param isPlotCaption Logical indicating if the caption is for the plot.
 #' @param asRatio boolean indicating if the plot is for ratios.
 #' @return A character string containing the caption.
-#' @keywords interal
+#' @keywords internal
 getCaptionForBoxwhiskerPlot <- function(plotDataPk,
                                         percentiles = NULL,
                                         yScale = NULL,
@@ -444,7 +447,9 @@ createBaseBoxWhisker <- function(plotDataPk, yScale, asRatio, colorVector, onePl
 #' @param ... Additional arguments for validation.
 #' @return NULL (invisible).
 #'
-#' @keywords internal
+#' @export
+#' @family plot configuration validation function
+#' @family functions to generate box whisker plots
 validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   # initialize to avoid linter messages
   plot_Ratio <- plot_Absolute <- NULL # nolint
@@ -542,7 +547,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
 #'
 #' @return None. The function will print any invalid configurations and stop
 #'         execution if the validation fails.
-#' @keywords internals
+#' @keywords internal
 validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
   # initialize to avoid linter messages
   populationId <- populationIdReference <- NULL
@@ -632,7 +637,8 @@ validateExistenceOfReferenceForRatio <- function(configTablePlots, pkParameterDT
 #' It is called for its side effects.
 #'
 #' @export
-#'
+#' @family plot configuration helper function
+#' @family functions to generate box whisker plots
 addDefaultConfigForPKBoxwhsikerPlots <- function(projectConfiguration,
                                                  pkParameterDT,
                                                  sheetName = "PKParameter_Boxplot",
@@ -673,7 +679,7 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(projectConfiguration,
   ]
 
 
-  wb <- addDataUsingTemplate(
+  wb <- xlsxAddDataUsingTemplate(
     wb = wb,
     templateSheet = "PKParameter_Boxplot",
     sheetName = sheetName,
