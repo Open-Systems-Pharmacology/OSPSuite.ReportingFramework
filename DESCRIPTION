@@ -31,6 +31,7 @@ Imports:
     fs,
     ospsuite,
     ospsuite.utils,
+    rSharp,
     ggplot2,
     ggsci,
     scales,
@@ -49,7 +50,6 @@ Depends:
     R (>= 2.10)
 Suggests: 
     rstudioapi,
-    officer,
     cowplot,
     spelling,
     vdiffr,
@@ -58,3 +58,8 @@ Suggests:
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 RoxygenNote: 7.3.1
+Remotes: 
+    Open-Systems-Pharmacology/rSharp,
+    Open-Systems-Pharmacology/OSPSuite.RUtils,
+    Open-Systems-Pharmacology/OSPSuite-R,
+    esqLABS/esqlabsR
