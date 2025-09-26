@@ -9,7 +9,7 @@ Authors@R:
              family = "Coboeken",
              role = c("aut", "cre"),
              email = "katrin.coboeken@bayer.com"))
-Description: The OSPSuite Reporting Framework, which is based on the esqlabsR package, 
+Description: The OSP Suite Reporting Framework, which is based on the esqlabsR package, 
     is a robust tool designed to systematically define simulation scenarios, their inputs and outputs,
     and standardize data import and matching processes. 
     These functionalities allow for easy and automatable model execution and plot generation, 
@@ -17,7 +17,7 @@ Description: The OSPSuite Reporting Framework, which is based on the esqlabsR pa
     OSP physiologically-based pharmacokinetic (PBPK) models. 
     As a result, this framework significantly enhances reporting efficiency, 
     enabling researchers to create clear, tailored reports that effectively communicate complex modeling results.
-URL: https://www.open-systems-pharmacology.org/OSPSuite.Plots/
+URL: https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/
 License: GPL-2 | file LICENSE
 Language: en-US
 Encoding: UTF-8
