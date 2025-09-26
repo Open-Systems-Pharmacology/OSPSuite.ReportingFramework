@@ -92,7 +92,6 @@ mdHeading <- function(..., level = 1, newlines = 2) {
 #'
 #' @export
 #' @family markdown helper function
-#' @family markdown helper function
 mdBullet <- function(..., bullet = "-", level = 1) {
   checkmate::assertString(bullet)
   checkmate::assertInt(level, lower = 1)
