@@ -59,7 +59,8 @@ Config/testthat/edition: 3
 VignetteBuilder: knitr
 RoxygenNote: 7.3.1
 Remotes: 
-    Open-Systems-Pharmacology/rSharp,
-    Open-Systems-Pharmacology/OSPSuite.RUtils,
-    Open-Systems-Pharmacology/OSPSuite-R,
-    esqLABS/esqlabsR
+    rSharp = Open-Systems-Pharmacology/rSharp,
+    ospsuite.utils = Open-Systems-Pharmacology/OSPSuite.RUtils,
+    ospsuite = Open-Systems-Pharmacology/OSPSuite-R,
+    ospsuite.plots = Open-Systems-Pharmacology/OSPSuite.Plots,
+    esqlabsR = esqLABS/esqlabsR
