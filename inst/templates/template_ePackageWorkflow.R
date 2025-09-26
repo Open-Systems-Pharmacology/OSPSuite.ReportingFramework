@@ -11,7 +11,7 @@ projectDirectory <- 'XXprojectDirectoryXX'
 # leaving only the newly generated outputs
 cleanUp = TRUE
 
-ospsuite.reportingframework::logCatch(expr = {
+ospsuite.reportingframework::captureLog(expr = {
 
   setWorkflowOptions(isValidRun = getQCpassedEnvironmentVariable())
 

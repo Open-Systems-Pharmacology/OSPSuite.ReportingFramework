@@ -65,3 +65,22 @@ runPlot(
 }
 
 }
+\seealso{
+Other plot functions: 
+\code{\link{addDefaultConfigForPKForestPlots}()},
+\code{\link{addDefaultConfigForTimeProfilePlots}()},
+\code{\link{plotDistributionVsDemographics}()},
+\code{\link{plotPKBoxwhisker}()},
+\code{\link{plotPKForestAggregatedAbsoluteValues}()},
+\code{\link{plotPKForestAggregatedRatios}()},
+\code{\link{plotPKForestPointEstimateOfAbsoluteValues}()},
+\code{\link{plotPKForestPointEstimateOfRatios}()},
+\code{\link{plotSensitivity}()},
+\code{\link{plotTimeProfiles}()}
+
+Other functions to generate histograms: 
+\code{\link{addDefaultConfigForDistributionsVsDemographics}()},
+\code{\link{validateHistogramsConfig}()}
+}
+\concept{functions to generate histograms}
+\concept{plot functions}

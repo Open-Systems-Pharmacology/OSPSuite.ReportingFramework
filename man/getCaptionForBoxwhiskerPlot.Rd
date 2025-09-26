@@ -32,4 +32,4 @@ A character string containing the caption.
 \description{
 Generates a caption for the box-and-whisker plot based on the data and configuration.
 }
-\keyword{interal}
+\keyword{internal}

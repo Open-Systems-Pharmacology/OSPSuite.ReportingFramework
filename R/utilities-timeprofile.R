@@ -8,7 +8,7 @@
 #' @param aggregationFun A function to aggregate simulation data.
 #'
 #' @return A data.table containing the aggregated simulated time profiles for all scenarios.
-#' @export
+#' @keywords internal
 loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, outputPathsPerScenario, aggregationFun) {
   dtSimulated <- data.table()
   for (scenarioName in names(outputPathsPerScenario)) {
@@ -45,7 +45,7 @@ loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, out
 #' @param dtSimulated A data.table containing simulated results.
 #' @param dtOutputs A data.table containing output specifications.
 #' @return A data.table with unit conversion factors and unique paths.
-#' @export
+#' @keywords internal
 getUnitConversionDT <- function(dtSimulated, dtOutputs) {
   # avoid warning for global variable
   unitFactor <- NULL
@@ -80,7 +80,7 @@ getUnitConversionDT <- function(dtSimulated, dtOutputs) {
 #' @param outputPathsPerScenario A named list of output paths for each scenario.
 #' @param simulatedResults List with simulation results
 #' @return A list containing the start and end times of applications for each scenario.
-#' @export
+#' @keywords internal
 getApplicationTimes <- function(outputPathsPerScenario, simulatedResults) {
   applicationTimes <- list()
 
@@ -120,7 +120,7 @@ getApplicationTimes <- function(outputPathsPerScenario, simulatedResults) {
 #' @param aggregationFun A function to aggregate the simulation data if necessary.
 #'
 #' @return A data.table with the processed time profile data.
-#' @export
+#' @keywords internal
 getSimulatedTimeprofile <- function(simulatedResult, outputPaths, aggregationFun, individualMatch) {
   # reduce list of outputPaths to available paths
   outputPaths <- intersect(
@@ -173,7 +173,7 @@ getSimulatedTimeprofile <- function(simulatedResult, outputPaths, aggregationFun
 #' @param timeprofile A data.table containing time profile data.
 #' @param dtUnit A data.table with unit conversion factors.
 #' @return A data.table with the y-values converted to the target unit.
-#' @export
+#' @keywords internal
 convertYunit <- function(timeprofile, dtUnit) {
   # Initialize variables used for data.tables
   yErrorValues <- unitFactor <- NULL
@@ -214,7 +214,7 @@ convertYunit <- function(timeprofile, dtUnit) {
 #' @param targetTimeUnit The target time unit for conversion.
 #' @param timeOffset An optional time offset to be applied after conversion (default is 0).
 #' @return A data.table with the time values converted and shifted.
-#' @export
+#' @keywords internal
 convertAndShiftTimeUnits <- function(timeprofile, targetTimeUnit, timeOffset = 0) {
   # avoid warnings during check
   xValues <- xUnit <- NULL
@@ -248,7 +248,7 @@ convertAndShiftTimeUnits <- function(timeprofile, targetTimeUnit, timeOffset = 0
 #' @return A data frame containing only the rows from `timeprofile` that match the specified
 #'         individual IDs. If no IDs are provided, the original `timeprofile` is returned.
 #'
-#' @export
+#' @keywords internal
 filterIndividualID <- function(timeprofile, individualList) {
   # Initialize variables used for data.tables
   individualId <- NULL

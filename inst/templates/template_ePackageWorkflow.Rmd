@@ -136,7 +136,7 @@ dataObservedPK <- readObservedDataByDictionary(projectConfiguration = projectCon
 
 ```{r observedPKParameter-QC}
 # check the format
-validateObservedData(dataObserved,dataClassType = 'pkParameter')
+validateObservedData(dataObservedPK,dataClassType = 'pkParameter')
 
 #  add quality checks to ensure data contains only data which is needed.
 print(names(dataObservedPK))

@@ -16,3 +16,4 @@
 ^inst/WORDLIST
 ^\.lintr
 ^codecov\.yml$
+^pkgdown$

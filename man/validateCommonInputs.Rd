@@ -6,7 +6,7 @@
 \usage{
 validateCommonInputs(
   pkParameterDT,
-  pkParameterObserved,
+  dataObservedPK,
   scaleVectors,
   labelWrapWidth,
   vlineIntercept
@@ -15,7 +15,7 @@ validateCommonInputs(
 \arguments{
 \item{pkParameterDT}{Data table containing PK parameter data.}
 
-\item{pkParameterObserved}{Optional data table for observed PK parameters.}
+\item{dataObservedPK}{Optional data table for observed PK parameters.}
 
 \item{scaleVectors}{A list defining colors, fills, and shapes for the plot.}
 

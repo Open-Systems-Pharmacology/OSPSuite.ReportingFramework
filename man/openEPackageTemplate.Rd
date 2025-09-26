@@ -9,3 +9,11 @@ openEPackageTemplate()
 \description{
 Opens the  template for figure creation as new document
 }
+\seealso{
+Other Addins Support: 
+\code{\link{createDocumentFromTemplate}()},
+\code{\link{createWorkflowTemplate}()},
+\code{\link{openFigureTemplate}()},
+\code{\link{openWorkflowTemplate}()}
+}
+\concept{Addins Support}

@@ -18,3 +18,13 @@ saveSessionInfo()
 }
 
 }
+\seealso{
+Other log file management: 
+\code{\link{addMessageToLog}()},
+\code{\link{captureLog}()},
+\code{\link{initLogfunction}()},
+\code{\link{setShowLogMessages}()},
+\code{\link{writeTableToLog}()},
+\code{\link{writeToLog}()}
+}
+\concept{log file management}

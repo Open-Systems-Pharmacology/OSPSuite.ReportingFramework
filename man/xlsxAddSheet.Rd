@@ -28,3 +28,13 @@ data <- data.table(Name = c("Alice", "Bob"), Age = c(30, 25))
 xlsxAddSheet(wb, "NewSheet", data)
 }
 }
+\seealso{
+Other function to read from and write to xlsx: 
+\code{\link{setHeadersToLowerCase}()},
+\code{\link{splitInputs}()},
+\code{\link{xlsxAddDataUsingTemplate}()},
+\code{\link{xlsxCloneAndSet}()},
+\code{\link{xlsxReadData}()},
+\code{\link{xlsxWriteData}()}
+}
+\concept{function to read from and write to xlsx}

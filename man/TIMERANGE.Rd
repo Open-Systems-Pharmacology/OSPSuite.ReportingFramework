@@ -13,4 +13,11 @@ TIMERANGE
 \description{
 enumeration keys for Time range shortcut
 }
+\seealso{
+Other enumerations: 
+\code{\link{BIOMETRICUNITS}},
+\code{\link{DATACLASS}},
+\code{\link{EXPORTDIR}}
+}
+\concept{enumerations}
 \keyword{datasets}

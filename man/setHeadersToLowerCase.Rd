@@ -21,3 +21,13 @@ dtLower <- setHeadersToLowerCase(dt)
 print(names(dtLower)) # Result: c("firstname", "lastname")
 
 }
+\seealso{
+Other function to read from and write to xlsx: 
+\code{\link{splitInputs}()},
+\code{\link{xlsxAddDataUsingTemplate}()},
+\code{\link{xlsxAddSheet}()},
+\code{\link{xlsxCloneAndSet}()},
+\code{\link{xlsxReadData}()},
+\code{\link{xlsxWriteData}()}
+}
+\concept{function to read from and write to xlsx}

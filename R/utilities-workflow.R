@@ -25,6 +25,7 @@
 #'        options are set for a valid run; if FALSE, options are set for an invalid run.
 #'
 #' @export
+#' @family project initialisation
 setWorkflowOptions <- function(isValidRun = NULL) {
   checkmate::assertLogical(isValidRun)
 
@@ -49,6 +50,7 @@ setWorkflowOptions <- function(isValidRun = NULL) {
 #'
 #' @return A logical value indicating whether the QC passed (`TRUE` or `FALSE`).
 #' @export
+#' @family project initialisation
 #'
 #' @examples
 #' \dontrun{
@@ -86,6 +88,7 @@ getQCpassedEnvironmentVariable <- function() {
 #'
 #' Stops execution with an error message if called during a valid run or if the option is not set.
 #'
+#' @keywords internal
 stopHelperFunction <- function() {
   stopHelperFunction <- getOption("OSPSuite.RF.stopHelperFunction")
 

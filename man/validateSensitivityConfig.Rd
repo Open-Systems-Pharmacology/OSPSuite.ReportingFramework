@@ -18,4 +18,16 @@ A validated data frame containing the configuration table for sensitivity plots.
 This function checks the headers of the configuration table, validates output IDs and data group IDs for plotting,
 and ensures the configuration adheres to specified criteria. It also checks for file existence in the output folder.
 }
-\keyword{internal}
+\seealso{
+Other plot configuration validation function: 
+\code{\link{validateDistributionVsDemographicsConfig}()},
+\code{\link{validateHistogramsConfig}()},
+\code{\link{validatePKBoxwhiskerConfig}()},
+\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
+\code{\link{validatePKForestAggregatedRatiosConfig}()},
+\code{\link{validatePKForestPointEstimateOfAbsoluteValuesConfig}()},
+\code{\link{validatePKForestPointEstimateOfRatiosConfig}()},
+\code{\link{validateTimeProfilesConfig}()}
+}
+\concept{functions to generate sensitivity plots}
+\concept{plot configuration validation function}

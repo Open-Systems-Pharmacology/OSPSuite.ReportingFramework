@@ -13,4 +13,11 @@ DATACLASS
 \description{
 enumeration keys for `DataClass`
 }
+\seealso{
+Other enumerations: 
+\code{\link{BIOMETRICUNITS}},
+\code{\link{EXPORTDIR}},
+\code{\link{TIMERANGE}}
+}
+\concept{enumerations}
 \keyword{datasets}

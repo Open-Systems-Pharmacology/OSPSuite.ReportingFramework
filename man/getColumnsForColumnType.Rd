@@ -17,3 +17,4 @@ A vector with column names.
 \description{
 Select all columns where the attribute `columnType` matches the requirement
 }
+\keyword{internal}

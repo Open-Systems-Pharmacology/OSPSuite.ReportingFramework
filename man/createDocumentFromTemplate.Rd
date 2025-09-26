@@ -17,3 +17,11 @@ createDocumentFromTemplate(
 \description{
 Opens a template file a new document
 }
+\seealso{
+Other Addins Support: 
+\code{\link{createWorkflowTemplate}()},
+\code{\link{openEPackageTemplate}()},
+\code{\link{openFigureTemplate}()},
+\code{\link{openWorkflowTemplate}()}
+}
+\concept{Addins Support}

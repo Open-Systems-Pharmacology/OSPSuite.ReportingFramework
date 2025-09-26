@@ -22,4 +22,4 @@ This function checks if the provided `configTablePlots` and `pkParameterDT`
 data frames represent a valid cross-over study by ensuring that the scenario
 and reference scenario are based on the same population.
 }
-\keyword{internals}
+\keyword{internal}

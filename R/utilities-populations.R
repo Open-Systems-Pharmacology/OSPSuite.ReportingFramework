@@ -8,6 +8,7 @@
 #'
 #' @return Returns NULL invisibly if no groups are available for virtual twin population creation. Modifies the workbook specified in projectConfiguration.
 #' @export
+#' @family population export
 setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups = NULL) {
   # avoid warning for global variable
   populationName <- dataGroups <- group <- NULL
@@ -92,7 +93,7 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
 #' @param overwrite A logical indicating whether to overwrite existing files. Defaults to FALSE
 #'
 #' @export
-#'
+#' @family population export
 exportVirtualTwinPopulations <- function(projectConfiguration, modelFile, overwrite = FALSE, populationNames = NULL) {
   # Initialize variables used for data.tables
   populationName <- individualId <- NULL
@@ -128,60 +129,10 @@ exportVirtualTwinPopulations <- function(projectConfiguration, modelFile, overwr
   dtIndividualBiometrics <- xlsxReadData(wb = projectConfiguration$individualsFile, sheetName = "IndividualBiometrics")
   dtIndividualBiometrics <- dtIndividualBiometrics[individualId %in% dtTwinPops$individualId]
 
-
   .generatePopulationFiles(dtTwinPops, params, dtIndividualBiometrics, projectConfiguration, sim)
 
   return(invisible())
 }
-
-#' Get Individual Match for a Scenario
-#'
-#' This function retrieves the individual match data for a specified scenario
-#' from a project configuration. It checks if the scenario is a population
-#' scenario with a static population file containing the column `ObservedIndividualId`
-#' and reads the `IndividualId` of the simulated results and the `ObservedIndividualId`
-#' of the observed data.
-#'
-#' @param projectConfiguration A list containing the project configuration,
-#' including the path to the populations folder.
-#' @param scenario A string specifying the name of the scenario for which
-#' the individual match data is to be retrieved.
-#' @param dtScenarios A data table containing scenario details.
-#'
-#' @return A data.table containing the `IndividualId` and `ObservedIndividualId`
-#' if the population scenario is a virtual twin population; otherwise, returns NULL.
-#'
-#' @export
-getIndividualMatchForScenario <- function(projectConfiguration,
-                                          scenario,
-                                          dtScenarios) {
-  # avoid warnings for global variables
-  scenarioName <- ObservedIndividualId <- NULL # nolint object_name_linter
-
-  dtScenarioRow <- dtScenarios[scenarioName == scenario]
-
-  # check if is is a population scenario with a static population file
-  if (is.na(dtScenarioRow$populationId) ||
-    is.na(dtScenarioRow$readPopulationFromCSV) || # nolint indentation_linter
-    dtScenarioRow$readPopulationFromCSV == 0) {
-    return(NULL)
-  }
-
-  # read static population file
-  filename <- file.path(projectConfiguration$populationsFolder, paste0(dtScenarioRow$populationId, ".csv"))
-  checkmate::assertFile(filename)
-  poptable <- data.table::fread(filename)
-
-  # check if ths is an virtual twin Population with column ObservedIndividualId
-  if (!("ObservedIndividualId" %in% names(poptable))) {
-    return(NULL)
-  }
-
-  poptable[, ObservedIndividualId := as.character(ObservedIndividualId)]
-
-  return(poptable %>% dplyr::select("IndividualId", "ObservedIndividualId") %>% setHeadersToLowerCase())
-}
-
 #' Export Random Populations
 #'
 #' This function generates virtual populations based on demographic data and exports them to CSV files.
@@ -206,6 +157,7 @@ getIndividualMatchForScenario <- function(projectConfiguration,
 #' )
 #' }
 #' @export
+#' @family population export
 exportRandomPopulations <- function(projectConfiguration, populationNames = NULL, customParameters = NULL, overwrite = FALSE) {
   # initialize variable to avoid messages
   proportionOfFemales <- NULL # nolint
@@ -248,9 +200,9 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
   }
 
   tmp <- dtPops[proportionOfFemales > 0 & proportionOfFemales <= 1]
-  if (nrow(tmp) > 1) {
+  if (nrow(tmp) > 0) {
     warning(paste(
-      "You have very small values for Proportion of female in the population configurations.
+      "You have very small values for 'ProportionOfFemales' in the population configurations.
     Unit is percent not fraction. Are you sure?\n",
       paste(paste(tmp$populationName, tmp$proportionOfFemales, sep = ": "), collapse = "; ")
     ))
@@ -290,59 +242,6 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
 
   return(invisible())
 }
-
-
-#' Update Exported Population
-#'
-#' This function updates an existing exported population by loading data from a
-#' specified source population file and extending it with additional data from
-#' an Excel sheet. It checks for the existence of the target population file and
-#' can optionally overwrite existing files.
-#'
-#' @param projectConfiguration A list containing configuration settings, including
-#'                             the path to the populations folder and the populations file.
-#' @param sourcePopulation A character string representing the name of the source
-#'                         population to load.
-#' @param targetPopulation A character string representing the name of the target
-#'                         population to be updated.
-#' @param sheetName A character string specifying the name of the sheet in the Excel
-#'               file from which to extend the population data.
-#' @param overwrite A logical value indicating whether to overwrite the existing
-#'                  target population file. Default is FALSE.
-#'
-#' @return NULL (invisible), or a warning if the target population already exists
-#'         and overwrite is FALSE.
-#'
-#' @export
-updateExportedPopulation <- function(projectConfiguration, sourcePopulation, targetPopulation, sheetName, overwrite = FALSE) {
-  sourcepopFilename <- file.path(projectConfiguration$populationsFolder, paste0(sourcePopulation, ".csv"))
-
-  checkmate::assertFileExists(sourcepopFilename)
-
-  # Check if overwrite is FALSE and filter for existing files
-  if (!overwrite) {
-    existingFiles <- list.files(projectConfiguration$populationsFolder, pattern = "*.csv", full.names = TRUE)
-    existingPopulationNames <- sub("\\.csv$", "", basename(existingFiles))
-
-    if (targetPopulation %in% existingPopulationNames) {
-      warning(paste(targetPopulation, "already exists, nothing is done. Do you want to set overwrite to TRUE?"))
-      return(invisible())
-    }
-  }
-
-  population <- ospsuite::loadPopulation(sourcepopFilename)
-  extendPopulationFromXLS_RF(
-    population = population,
-    XLSpath = projectConfiguration$populationsFile, sheet = sheetName
-  )
-  ospsuite::exportPopulationToCSV(
-    population = population,
-    filePath = file.path(projectConfiguration$populationsFolder, paste0(targetPopulation, ".csv"))
-  )
-
-  return(invisible())
-}
-
 #' Set Custom Parameters to Population
 #'
 #' This function updates the parameter values of a population based on custom parameters defined in a scenario.
@@ -360,7 +259,7 @@ updateExportedPopulation <- function(projectConfiguration, sourcePopulation, tar
 #'
 #' @return The updated `scenario` object, with the population's parameters set accordingly. If the scenario type is not "Population" or if there are no custom parameters, the original scenario is returned unchanged.
 #'
-#' @export
+#' @keywords internal
 setCustomParamsToPopulation <- function(scenario) {
   # avoid warning for global variable
   paths <- dimension <- values <- NULL
@@ -502,7 +401,10 @@ setCustomParamsToPopulation <- function(scenario) {
 #' @return An individual characteristics object.
 #' @keywords internal
 .createIndividualCharacteristics <- function(biomForInd) {
-  moleculeOntogenies <- esqlabsR:::.readOntongeniesFromXLS(biomForInd)
+  # ! Attention esqlabsR uses Columns starting with upperCase
+  moleculeOntogenies <- esqlabsR:::.readOntongeniesFromXLS(biomForInd[,c('protein Ontogenies')] %>%
+           setnames(old = c('protein Ontogenies'),
+                    new = c('Protein Ontogenies')))
 
   ospsuite::createIndividualCharacteristics(
     species = biomForInd$species,
@@ -705,7 +607,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #' @param sim A simulation object.
 #'
 #' @return A data.table with converted biometrics.
-#' #' @keywords internal
+#' @keywords internal
 .convertBiomForIndStatics <- function(biomForInd, sim) {
   # avoid messages for global variables during check
   paths <- NULL

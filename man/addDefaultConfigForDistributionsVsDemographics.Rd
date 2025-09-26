@@ -38,3 +38,16 @@ and fills in the default configuration values for the histograms.
 Additionally, the function performs a validity check to ensure that it is not executed during a context
 where helper functions are prohibited (validRun). If such a context is detected, an error is raised to prevent execution.
 }
+\seealso{
+Other plot configuration helper function: 
+\code{\link{addDefaultConfigForHistograms}()},
+\code{\link{addDefaultConfigForPKBoxwhsikerPlots}()},
+\code{\link{addDefaultConfigForPKForestPlots}()},
+\code{\link{addDefaultConfigForTimeProfilePlots}()}
+
+Other functions to generate histograms: 
+\code{\link{plotHistograms}()},
+\code{\link{validateHistogramsConfig}()}
+}
+\concept{functions to generate histograms}
+\concept{plot configuration helper function}

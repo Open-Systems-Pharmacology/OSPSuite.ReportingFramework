@@ -35,3 +35,11 @@ and copying configuration files from a source Excel file. It reads the directory
 structure and files specified in the provided Excel template and sets up the project
 environment accordingly.
 }
+\seealso{
+Other project initialisation: 
+\code{\link{ProjectConfigurationRF}},
+\code{\link{createProjectConfiguration}()},
+\code{\link{getQCpassedEnvironmentVariable}()},
+\code{\link{setWorkflowOptions}()}
+}
+\concept{project initialisation}

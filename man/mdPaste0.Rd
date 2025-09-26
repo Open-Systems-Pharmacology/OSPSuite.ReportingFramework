@@ -16,3 +16,19 @@ mdPaste0(..., collapse = NULL, newlines = 1)
 \description{
 `cat` text using `paste0` and optionally end with newlines.
 }
+\seealso{
+Other markdown helper function: 
+\code{\link{addFiguresAndTables}()},
+\code{\link{mdBullet}()},
+\code{\link{mdBullet0}()},
+\code{\link{mdCaption}()},
+\code{\link{mdFigure}()},
+\code{\link{mdFootNote}()},
+\code{\link{mdHeading}()},
+\code{\link{mdLink}()},
+\code{\link{mdNewline}()},
+\code{\link{mdNewpage}()},
+\code{\link{mdPaste}()},
+\code{\link{mdTable}()}
+}
+\concept{markdown helper function}

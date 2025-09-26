@@ -17,3 +17,4 @@ A list containing the start and end times of applications for each scenario.
 \description{
 This helper function prepares the time range filter for application times based on output paths and simulation results.
 }
+\keyword{internal}

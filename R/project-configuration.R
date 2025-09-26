@@ -3,6 +3,7 @@
 #' @description An object storing configuration used project-wide
 #' @format NULL
 #' @export
+#' @family project initialisation
 ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
   "ProjectConfigurationRF",
   inherit = esqlabsR::ProjectConfiguration,

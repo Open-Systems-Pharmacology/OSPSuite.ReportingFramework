@@ -19,3 +19,20 @@ NULL (invisible).
 \description{
 Validates the configuration table for distribution vs demographics plots.
 }
+\seealso{
+Other plot configuration validation function: 
+\code{\link{validateHistogramsConfig}()},
+\code{\link{validatePKBoxwhiskerConfig}()},
+\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
+\code{\link{validatePKForestAggregatedRatiosConfig}()},
+\code{\link{validatePKForestPointEstimateOfAbsoluteValuesConfig}()},
+\code{\link{validatePKForestPointEstimateOfRatiosConfig}()},
+\code{\link{validateSensitivityConfig}()},
+\code{\link{validateTimeProfilesConfig}()}
+
+Other functions to generate plots displaying distribution vs demographics: 
+\code{\link{addDefaultConfigForHistograms}()},
+\code{\link{plotDistributionVsDemographics}()}
+}
+\concept{functions to generate plots displaying distribution vs demographics}
+\concept{plot configuration validation function}

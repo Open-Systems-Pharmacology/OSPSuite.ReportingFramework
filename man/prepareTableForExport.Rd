@@ -23,3 +23,4 @@ Prepares and cleans data for box-and-whisker plotting by merging the PK paramete
 with the configuration settings. This function ensures that the data is structured
 correctly for plotting.
 }
+\keyword{internal}

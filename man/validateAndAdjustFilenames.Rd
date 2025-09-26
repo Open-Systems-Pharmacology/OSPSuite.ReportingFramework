@@ -22,9 +22,4 @@ It checks for valid file extensions, converts filenames to lowercase, replaces s
 removes non-alphanumeric characters (except underscores), and ensures that filenames do not start with a number.
 Additionally, it checks the length of the filename against specified limits based on the file type.
 }
-\examples{
-# Example usage of validateAndAdjustFilenames function
-adjustedName <- validateAndAdjustFilenames("My Data File.csv", "data")
-print(adjustedName) # Outputs: "my_data_file.csv"
-
-}
+\keyword{internal}

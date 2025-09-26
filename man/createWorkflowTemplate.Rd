@@ -9,3 +9,11 @@ createWorkflowTemplate()
 \description{
 Opens the workflow template as new document
 }
+\seealso{
+Other Addins Support: 
+\code{\link{createDocumentFromTemplate}()},
+\code{\link{openEPackageTemplate}()},
+\code{\link{openFigureTemplate}()},
+\code{\link{openWorkflowTemplate}()}
+}
+\concept{Addins Support}

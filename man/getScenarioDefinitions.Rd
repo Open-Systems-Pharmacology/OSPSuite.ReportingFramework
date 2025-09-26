@@ -17,3 +17,12 @@ A `data.table` with scenario definitions.
 \description{
 This function loads the scenario definitions from the specified workbooks.
 }
+\seealso{
+Other get identifier: 
+\code{\link{getDataGroups}()},
+\code{\link{getModelParameterDefinitions}()},
+\code{\link{getOutputPathIds}()},
+\code{\link{getTimeRangeTags}()},
+\code{\link{loadConfigTableEnvironment}()}
+}
+\concept{get identifier}

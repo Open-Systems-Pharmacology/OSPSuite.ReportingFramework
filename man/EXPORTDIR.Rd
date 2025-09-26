@@ -13,4 +13,11 @@ EXPORTDIR
 \description{
 enumeration keys for exportDirectories
 }
+\seealso{
+Other enumerations: 
+\code{\link{BIOMETRICUNITS}},
+\code{\link{DATACLASS}},
+\code{\link{TIMERANGE}}
+}
+\concept{enumerations}
 \keyword{datasets}

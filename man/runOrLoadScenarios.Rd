@@ -29,3 +29,12 @@ A list containing the simulation results for each scenario that was loaded or ru
 This function checks if the simulation results for scenarios already exist.
 If they do, it loads them; otherwise, it runs the scenarios and saves the results.
 }
+\seealso{
+Other scenario management: 
+\code{\link{calculatePKParameterForScenarios}()},
+\code{\link{createScenarios.wrapped}()},
+\code{\link{loadPKParameter}()},
+\code{\link{loadScenarioResultsToFramework}()},
+\code{\link{runAndSaveScenarios}()}
+}
+\concept{scenario management}

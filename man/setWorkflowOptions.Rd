@@ -33,3 +33,11 @@ Relevant Options:
 
 - `OSPSuite.RF.stopHelperFunction`: Set to TRUE when `isValidRun` is TRUE to stop the execution of helper functions during valid runs.
 }
+\seealso{
+Other project initialisation: 
+\code{\link{ProjectConfigurationRF}},
+\code{\link{createProjectConfiguration}()},
+\code{\link{getQCpassedEnvironmentVariable}()},
+\code{\link{initProject}()}
+}
+\concept{project initialisation}

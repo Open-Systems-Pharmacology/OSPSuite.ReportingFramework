@@ -35,3 +35,13 @@ logFunction <- initLogfunction(rootDirectory = "path/to/project")
 }
 
 }
+\seealso{
+Other log file management: 
+\code{\link{addMessageToLog}()},
+\code{\link{captureLog}()},
+\code{\link{saveSessionInfo}()},
+\code{\link{setShowLogMessages}()},
+\code{\link{writeTableToLog}()},
+\code{\link{writeToLog}()}
+}
+\concept{log file management}

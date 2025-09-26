@@ -154,3 +154,17 @@ plotList <- runPlot(
 }
 
 }
+\seealso{
+Other plot functions: 
+\code{\link{addDefaultConfigForPKForestPlots}()},
+\code{\link{addDefaultConfigForTimeProfilePlots}()},
+\code{\link{plotDistributionVsDemographics}()},
+\code{\link{plotHistograms}()},
+\code{\link{plotPKBoxwhisker}()},
+\code{\link{plotPKForestAggregatedAbsoluteValues}()},
+\code{\link{plotPKForestAggregatedRatios}()},
+\code{\link{plotPKForestPointEstimateOfAbsoluteValues}()},
+\code{\link{plotPKForestPointEstimateOfRatios}()},
+\code{\link{plotSensitivity}()}
+}
+\concept{plot functions}

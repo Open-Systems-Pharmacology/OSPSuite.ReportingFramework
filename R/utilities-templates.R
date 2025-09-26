@@ -5,6 +5,7 @@
 #' set the path to the template via option `options(OSPSuite.RF.PathForWorkflowTemplate = 'myTemplateDirectory')`
 #'
 #' @export
+#' @family Addins Support
 openWorkflowTemplate <- function() {
   rstudioapi::callFun("sendToConsole", "ospsuite.reportingframework::createWorkflowTemplate()")
 }
@@ -12,6 +13,7 @@ openWorkflowTemplate <- function() {
 #' Opens the  template for figure creation as new document
 #'
 #' @export
+#' @family Addins Support
 openFigureTemplate <- function() {
   rstudioapi::callFun(
     "sendToConsole",
@@ -22,6 +24,7 @@ openFigureTemplate <- function() {
 #' Opens the  template for figure creation as new document
 #'
 #' @export
+#' @family Addins Support
 openEPackageTemplate <- function() {
   rstudioapi::callFun(
     "sendToConsole",
@@ -33,6 +36,7 @@ openEPackageTemplate <- function() {
 #' Opens the workflow template as new document
 #'
 #' @export
+#' @family Addins Support
 createWorkflowTemplate <- function() {
   ospsuite.reportingframework::createDocumentFromTemplate(
     template = "template_workflow.R",
@@ -50,6 +54,7 @@ createWorkflowTemplate <- function() {
 #' @param templatePath  path of template script
 #'
 #' @export
+#' @family Addins Support
 createDocumentFromTemplate <- function(template = "template_workflow",
                                        templatePath = system.file("templates", package = "ospsuite.reportingframework")) {
   templateFile <- file.path(

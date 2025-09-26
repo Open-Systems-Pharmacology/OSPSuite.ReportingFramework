@@ -1,7 +1,7 @@
 #' @title WorkflowScriptExporter
 #' @docType class
 #' @description Manages the export of an ePackage workflow.
-#' @export
+#' @keywords internal
 WorkflowScriptExporter <- R6::R6Class( # nolint
   "WorkflowScriptExporter",
   inherit = ospsuite.utils::Printable,
@@ -621,7 +621,7 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
             collapse = "\n"
           ),
           "\nYou may use the input variable `fileNameReplacements` of the workflow export function",
-          "to configure file names more appropriately."
+          " to configure file names more appropriately."
         ))
       }
 
@@ -1027,6 +1027,7 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
 #' )
 #' }
 #' @export
+#' @family electronic package
 exportSimulationWorkflowToEPackage <- function(projectConfiguration,
                                                wfIdentifier,
                                                scenarioNames,
@@ -1083,6 +1084,7 @@ exportSimulationWorkflowToEPackage <- function(projectConfiguration,
 #' )
 #' }
 #' @export
+#' @family electronic package
 exportTLFWorkflowToEPackage <- function(projectConfiguration,
                                         wfIdentifier,
                                         workflowRmd,
@@ -1111,6 +1113,24 @@ exportTLFWorkflowToEPackage <- function(projectConfiguration,
 
   return(invisible())
 }
+#' @title Import Workflow
+#' @description
+#' This function imports a workflow from an electronic package (ePackage) into a project directory.
+#' It initializes the project configuration, retrieves relevant project files, and synchronizes
+#' scenarios with plots. The function ensures that the necessary directories exist and that the
+#' configuration is set up correctly for further processing.
+#'
+#' @param projectDirectory A character string representing the path to the project directory where
+#'                         the workflow will be imported.
+#' @param wfIdentifier An integer identifier for the workflow being imported. This identifier is
+#'                     used to distinguish between different workflows.
+#' @param ePackageFolder A character string representing the path to the electronic package folder
+#'                       that contains the workflow files and configurations to be imported.
+#' @param configurationDirectory A character string representing the directory where the configuration
+#'                               files will be stored.
+#' @return An object containing the updated project configuration after the workflow has been imported.
+#' @export
+#' @family electronic package
 importWorkflow <- function(projectDirectory,
                            wfIdentifier,
                            ePackageFolder,
@@ -1173,12 +1193,8 @@ importWorkflow <- function(projectDirectory,
 #'                 This is used to determine the length limit for the filename.
 #' @return A character string representing the adjusted filename that meets the specified naming conventions.
 #'         If the filename does not meet the criteria, an error will be raised with an informative message.
-#' @examples
-#' # Example usage of validateAndAdjustFilenames function
-#' adjustedName <- validateAndAdjustFilenames("My Data File.csv", "data")
-#' print(adjustedName) # Outputs: "my_data_file.csv"
 #'
-#' @export
+#' @keywords internal
 validateAndAdjustFilenames <- function(fileName, fileType) {
   # Check if the file has a valid extension
   extension <- fs::path_ext(fileName)
@@ -1219,10 +1235,12 @@ validateAndAdjustFilenames <- function(fileName, fileType) {
 
   return(fileName)
 }
-#' Convert Excel file to list structure for JSON serialization
+#' @title Convert Excel file to List Structure
+#' @description
+#' This function converts the content of an Excel sheet into a list structure suitable for JSON serialization.
 #'
-#' @param df content of an Excel sheet
-#' @return List structure ready for JSON serialization
+#' @param df A data frame representing the content of an Excel sheet.
+#' @return A list structure ready for JSON serialization, containing column names and rows.
 #' @keywords internal
 excelToListStructure <- function(df) {
   # Convert to simple list format
@@ -1242,7 +1260,16 @@ excelToListStructure <- function(df) {
 
   return(sheetData)
 }
-
+#' @title Import Project Configuration
+#' @description
+#' This function imports the project configuration from an electronic package (ePackage) into a specified directory.
+#' It reads the configuration data from a JSON file and creates the necessary Excel sheets.
+#'
+#' @param configurationDirectory A character string representing the directory where the configuration files will be stored.
+#' @param ePackageFolder A character string representing the path to the electronic package folder containing the configuration.
+#' @param wfIdentifier An integer identifier for the workflow being imported.
+#' @return A character string indicating the direction of synchronization (e.g., "plotToScenario", "bothways").
+#' @keywords internal
 importProjectConfiguration <- function(
     configurationDirectory,
     ePackageFolder,
@@ -1293,7 +1320,13 @@ importProjectConfiguration <- function(
 
   return(directionOfSynchronisation)
 }
-
+#' @title Convert Sheet Data to Data Frame
+#' @description
+#' This function converts the sheet data from a JSON structure into a data frame format suitable for Excel.
+#'
+#' @param sheetsData A list containing the sheet data in a structured format.
+#' @return A list of data frames representing the sheets ready for Excel writing.
+#' @keywords internal
 convertSheet <- function(sheetsData) {
   excelSheets <- list()
 
@@ -1333,7 +1366,16 @@ convertSheet <- function(sheetsData) {
 
   return(excelSheets)
 }
-
+#' @title Import Workflow Files
+#' @description
+#' This function imports workflow files from an electronic package (ePackage) into a new project configuration.
+#' It handles different file types and copies them to the appropriate directories.
+#'
+#' @param projectConfigurationNew An object representing the new project configuration where files will be imported.
+#' @param ePackageFolder A character string representing the path to the electronic package folder containing the workflow files.
+#' @param wfIdentifier An integer identifier for the workflow being imported.
+#' @return Invisible NULL.
+#' @keywords internal
 importWorkflowFiles <- function(projectConfigurationNew,
                                 ePackageFolder,
                                 wfIdentifier) {
@@ -1369,7 +1411,6 @@ importWorkflowFiles <- function(projectConfigurationNew,
 #' @param df Data frame with columns that need type conversion
 #' @return Data frame with columns converted to appropriate types
 #' @keywords internal
-#' @noRd
 .convertDataTypes <- function(df) {
   if (ncol(df) == 0 || nrow(df) == 0) {
     return(df)
@@ -1402,14 +1443,26 @@ importWorkflowFiles <- function(projectConfigurationNew,
 
   return(df)
 }
-
+#' @title Get Project Directory
+#' @description
+#' This function retrieves the common project directory based on the configuration settings.
+#'
+#' @param projectConfiguration An object containing the project configuration details.
+#' @return A character string representing the common project directory.
+#' @keywords internal
 getProjectDirectory <- function(projectConfiguration) {
   fs::path_common(path = c(
     projectConfiguration$configurationsFolder,
     projectConfiguration$outputFolder
   ))
 }
-
+#' @title Get Configuration Directory for Workflow
+#' @description
+#' This function generates the configuration directory path for a specific workflow based on its identifier.
+#'
+#' @param wfIdentifier An integer identifier for the workflow.
+#' @return A character string representing the configuration directory path for the specified workflow.
+#' @keywords internal
 getConfigDirectoryForWorkflow <- function(wfIdentifier) {
   paste0("Scripts_w", wfIdentifier)
 }

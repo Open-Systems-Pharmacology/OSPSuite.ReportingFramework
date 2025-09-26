@@ -17,3 +17,4 @@ A data.table with the y-values converted to the target unit.
 \description{
 This function converts the y-values of a time profile based on unit conversion factors.
 }
+\keyword{internal}

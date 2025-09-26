@@ -75,3 +75,22 @@ plotList <- plotPKBoxwhisker(
 )
 }
 }
+\seealso{
+Other plot functions: 
+\code{\link{addDefaultConfigForPKForestPlots}()},
+\code{\link{addDefaultConfigForTimeProfilePlots}()},
+\code{\link{plotDistributionVsDemographics}()},
+\code{\link{plotHistograms}()},
+\code{\link{plotPKForestAggregatedAbsoluteValues}()},
+\code{\link{plotPKForestAggregatedRatios}()},
+\code{\link{plotPKForestPointEstimateOfAbsoluteValues}()},
+\code{\link{plotPKForestPointEstimateOfRatios}()},
+\code{\link{plotSensitivity}()},
+\code{\link{plotTimeProfiles}()}
+
+Other functions to generate box whisker plots: 
+\code{\link{addDefaultConfigForPKBoxwhsikerPlots}()},
+\code{\link{validatePKBoxwhiskerConfig}()}
+}
+\concept{functions to generate box whisker plots}
+\concept{plot functions}

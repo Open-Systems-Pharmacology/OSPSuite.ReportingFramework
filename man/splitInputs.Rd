@@ -23,3 +23,13 @@ splitInputs(originalVector)
 }
 
 }
+\seealso{
+Other function to read from and write to xlsx: 
+\code{\link{setHeadersToLowerCase}()},
+\code{\link{xlsxAddDataUsingTemplate}()},
+\code{\link{xlsxAddSheet}()},
+\code{\link{xlsxCloneAndSet}()},
+\code{\link{xlsxReadData}()},
+\code{\link{xlsxWriteData}()}
+}
+\concept{function to read from and write to xlsx}

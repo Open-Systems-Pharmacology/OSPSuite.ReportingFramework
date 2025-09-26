@@ -25,3 +25,4 @@ The method reads the information from the specified excel sheet(s)
   and calls `extendPopulationByUserDefinedParams`
   copy of esqlabsR::extendPopulationFromXLS but columnNames always withdot
 }
+\keyword{internal}

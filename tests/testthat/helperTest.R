@@ -47,8 +47,7 @@ buildTestData <- function(rootDirectory = NULL,
     weightUnit = "kg",
     heightUnit = "cm",
     bMIUnit = "kg/m\u00B2",
-    protein = "CYP3A4,UGT1A4",
-    ontogeny = "CYP3A4,UGT1A4"
+    'protein Ontogenies' = "CYP3A4:CYP3A4, UGT1A4:UGT1A4"
   )
   pBuilder$mockManualEditingsPopulation(projectConfiguration,
                                         randomPops = randomPops
@@ -446,7 +445,7 @@ mockManualEditingsPlotDemographicsTest <- function(projectConfiguration) {
   ))]
   dt[plotName == "pkparameter2", `:=`(
     referenceScenario = gsub("po", "iv", scenario),
-    colorLegend = "IV application | PO application",
+    colorLegend = "PO application | IV application",
     plotCaptionAddon = "Comparison of IV and PO application"
   )]
 

@@ -289,7 +289,7 @@ This function adds biometric ranges for virtual pediatric and one adult populati
     "school-children", "adolescents"), species = "Human", population =
     "European_ICRP_2002", numberOfIndividuals = 100, proportionOfFemales = 50, ageMin =
     c(20, 0.5, 2, 6, 12), ageMax = c(40, 2, 6, 12, 18), weightUnit = "kg", heightUnit =
-    "cm", bMIUnit = "kg/m²", protein = "CYP3A4,UGT1A4", ontogeny = "CYP3A4,UGT1A4")
+    "cm", bMIUnit = "kg/m²", `protein Ontogenies` = "CYP3A4:CYP3A4, UGT1A4:UGT1A4")
 )}\if{html}{\out{</div>}}
 }
 

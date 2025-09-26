@@ -12,3 +12,13 @@ setShowLogMessages(verbose = TRUE)
 \description{
 Function to switch the display of log messages on the console on and off
 }
+\seealso{
+Other log file management: 
+\code{\link{addMessageToLog}()},
+\code{\link{captureLog}()},
+\code{\link{initLogfunction}()},
+\code{\link{saveSessionInfo}()},
+\code{\link{writeTableToLog}()},
+\code{\link{writeToLog}()}
+}
+\concept{log file management}

@@ -15,3 +15,14 @@ A `data.table` containing the converted data.
 \description{
 Format corresponds to `data.table` produced by `readObservedDataByDictionary`.
 }
+\seealso{
+Other observed data processing: 
+\code{\link{addBiometricsToConfig}()},
+\code{\link{aggregateObservedDataGroups}()},
+\code{\link{convertDataTableToDataCombined}()},
+\code{\link{readObservedDataByDictionary}()},
+\code{\link{updateDataGroupId}()},
+\code{\link{updateOutputPathId}()},
+\code{\link{validateObservedData}()}
+}
+\concept{observed data processing}

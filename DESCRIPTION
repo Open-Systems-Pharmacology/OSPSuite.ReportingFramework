@@ -1,7 +1,7 @@
 Package: ospsuite.reportingframework
 Type: Package
 Title: Provides a framework for report generation with the ospsuite
-Version: 1.0.0
+Version: 1.0.0.9000
 Authors@R: 
     c(person(given = "Open-Systems-Pharmacology Community",
              role = "cph"),
@@ -9,11 +9,15 @@ Authors@R:
              family = "Coboeken",
              role = c("aut", "cre"),
              email = "katrin.coboeken@bayer.com"))
-Maintainer: The package maintainer <katrin.coboeken@bayer.com>
-Description: This package uses the EsqlabsR package to set up simulations and scenerios.
-    It provides functions to generate default graphics and tables.
-    This figures are included in .Rmd files which are then merged 
-    to the selected output format e.g. a "Report.docx".
+Description: The OSPSuite Reporting Framework, which is based on the esqlabsR package, 
+    is a robust tool designed to systematically define simulation scenarios, their inputs and outputs,
+    and standardize data import and matching processes. 
+    These functionalities allow for easy and automatable model execution and plot generation, 
+    ultimately facilitating the generation of customizable reports for 
+    OSP physiologically-based pharmacokinetic (PBPK) models. 
+    As a result, this framework significantly enhances reporting efficiency, 
+    enabling researchers to create clear, tailored reports that effectively communicate complex modeling results.
+URL: https://www.open-systems-pharmacology.org/OSPSuite.Plots/
 License: GPL-2 | file LICENSE
 Language: en-US
 Encoding: UTF-8
@@ -38,8 +42,6 @@ Imports:
     foreach,
     boot,
     doParallel,
-    formattable,
-    ggh4x,
     jsonlite
 Depends:
     esqlabsR,
