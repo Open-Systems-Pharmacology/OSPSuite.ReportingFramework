@@ -3,10 +3,10 @@
 <!-- badges: start -->
 
   [![Latest release download count badge](https://img.shields.io/github/downloads/Open-Systems-Pharmacology/OSPSuite.ReportingFramework/latest/total?label=%E2%AD%B3%20Downloads%20latest%20release)](https://github.com/Open-Systems-Pharmacology/OSPSuite.ReportingFramework/releases/latest)
-  [![Total downloads count badge](https://img.shields.io/github/downloads/Open-Systems-Pharmacology/OSPSuite.Plots/total?label=%E2%AD%B3%20Downloads%20total)](https://github.com/Open-Systems-Pharmacology/OSPSuite.ReportingFrameworks/releases)
+  [![Total downloads count badge](https://img.shields.io/github/downloads/Open-Systems-Pharmacology/OSPSuite.ReportingFrameworks/total?label=%E2%AD%B3%20Downloads%20total)](https://github.com/Open-Systems-Pharmacology/OSPSuite.ReportingFrameworks/releases)
 
   [![build](https://img.shields.io/github/actions/workflow/status/Open-Systems-Pharmacology/OSPSuite.ReportingFramework/main-workflow.yaml?logo=github&logoColor=white&label=Build)](https://github.com/Open-Systems-Pharmacology/OSPSuite.ReportingFramework/actions/workflows/main-workflow.yaml)
-  [![codecov](https://codecov.io/gh/Open-Systems-Pharmacology/OSPSuite.ReportingFramework/branch/main/graph/badge.svg)](https://codecov.io/gh/Open-Systems-Pharmacology/OSPSuite.Plots)
+  [![codecov](https://codecov.io/gh/Open-Systems-Pharmacology/OSPSuite.ReportingFramework/branch/main/graph/badge.svg)](https://codecov.io/gh/Open-Systems-Pharmacology/OSPSuite.ReportingFrameworks)
   [![Lint Test](https://img.shields.io/github/actions/workflow/status/Open-Systems-Pharmacology/OSPSuite.ReportingFramework/lint.yaml?logo=githubactions&logoColor=white&label=lint)](https://github.com/Open-Systems-Pharmacology/OSPSuite.ReportingFramework/actions/workflows/lint.yaml)
 
 <!-- badges: end -->
@@ -49,6 +49,6 @@ standards](https://github.com/Open-Systems-Pharmacology/Suite/blob/master/CODING
 
 ## License
 
-OSPSuite.Plots Library is released under the [GPLv2 License](LICENSE).
+OSPSuite.ReportingFrameworks Library is released under the [GPLv2 License](LICENSE).
 
 All trademarks within this document belong to their legitimate owners.

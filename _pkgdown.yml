@@ -96,7 +96,7 @@ reference:
       - matches("^validate")
       - matches("formatPercentiles")
   - title: "Constants"
-    desc: "Enumeration constants for OSPSuite.plots options and scaling."
+    desc: "Enumeration constants for OSPSuite.ReportingFrameworks options and scaling."
     contents:
       - has_concept("enumerations")
   - title: "Markdown helpers"
