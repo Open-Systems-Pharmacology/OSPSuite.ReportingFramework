@@ -31,6 +31,7 @@ Imports:
     fs,
     ospsuite,
     ospsuite.utils,
+    tlf (>= 1.6.0),
     rSharp,
     ggplot2,
     ggsci,
@@ -51,7 +52,6 @@ Depends:
 Suggests: 
     rstudioapi,
     cowplot,
-    tlf (>= 1.6.0),
     spelling,
     vdiffr,
     withr,
@@ -63,7 +63,7 @@ RoxygenNote: 7.3.1
 Remotes: 
     Open-Systems-Pharmacology/rSharp,
     ospsuite.utils=Open-Systems-Pharmacology/OSPSuite.RUtils,
-    Open-Systems-Pharmacology/TLF-Library,
-    ospsuite.plots = Open-Systems-Pharmacology/OSPSuite.Plots,
-    ospsuite = Open-Systems-Pharmacology/OSPSuite-R,
-    esqlabsR = esqLABS/esqlabsR
+    tlf=Open-Systems-Pharmacology/TLF-Library,
+    ospsuite.plots=Open-Systems-Pharmacology/OSPSuite.Plots,
+    ospsuite=Open-Systems-Pharmacology/OSPSuite-R,
+    esqlabsR=esqLABS/esqlabsR
