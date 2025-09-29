@@ -2,7 +2,7 @@
 title: "Tutorial: Time Profile Plotting"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Tutorial-timeprofiles}
+  %\VignetteIndexEntry{Tutorial_Timeprofiles}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

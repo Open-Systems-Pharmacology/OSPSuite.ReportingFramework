@@ -42,3 +42,5 @@ tests/testthat/*.pdf
 
 inst/doc
 inst/template/.~lock*
+/doc/
+/Meta/

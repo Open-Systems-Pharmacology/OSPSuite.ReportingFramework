@@ -2,7 +2,7 @@
 title: "PK Parameters"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{PK Parameters}
+  %\VignetteIndexEntry{PK_Parameter}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 

@@ -23,9 +23,9 @@ articles:
     contents:
       - Workflow
       - Data_import_by_dictionary
-      - PK-Parameter
+      - PK_Parameter
       - Population
-      - Electronic-Package
+      - Electronic_Package
       - Plot_and_Report_Generation
   - title: Tutorials
     navbar: Tutorials
