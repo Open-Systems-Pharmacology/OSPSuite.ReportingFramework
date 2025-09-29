@@ -16,10 +16,10 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
       } else {
         return(stats::setNames(
           lapply(names(private$.projectConfigurationDataAddOns), function(property) {
-            private$.clean_path(path = private$.projectConfigurationDataAddOns[[property]],
+            suppressWarnings(private$.clean_path(path = private$.projectConfigurationDataAddOns[[property]],
                                 parent = self$configurationsFolder,
                                 replace_env_vars = FALSE
-            )
+            ))
           }),
           names(private$.projectConfigurationDataAddOns)
         ))
