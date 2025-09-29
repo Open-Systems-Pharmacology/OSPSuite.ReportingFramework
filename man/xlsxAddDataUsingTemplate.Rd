@@ -32,9 +32,11 @@ it is taken from the configuration file of the package installation.
 In this case, formats are not preserved.
 }
 \examples{
+\dontrun{
 wb <- loadWorkbook("config.xlsx")
 newData <- data.table(Name = c("Gina", "Hank"), Age = c(29, 33))
 xlsxAddDataUsingTemplate(wb, "TemplateSheet", "NewDataSheet", newData)
+}
 
 }
 \seealso{
