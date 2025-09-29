@@ -2,7 +2,7 @@
 title: "Data Import by Dictionary"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Data_Import_by_Dictionary}
+  %\VignetteIndexEntry{DataImport_by_Dictionary}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

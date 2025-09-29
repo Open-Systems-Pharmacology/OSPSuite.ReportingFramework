@@ -24,7 +24,7 @@ articles:
     desc: Workflow and Configuration
     contents:
       - Workflow
-      - Data_Import_by_Dictionary
+      - DataImport_by_Dictionary
       - PK_Parameter
       - Population
       - Electronic_Package
