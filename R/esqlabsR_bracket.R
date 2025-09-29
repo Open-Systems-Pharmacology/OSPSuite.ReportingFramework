@@ -240,6 +240,47 @@ runOrLoadScenarios <- function(projectConfiguration, scenarioList, simulationRun
 
   return(invisible(scenarioResults))
 }
+#' Read Ontogenies from Data
+#'
+#' based on esqlabsR:::.readOntongeniesFromXLS
+#'
+#' This function extracts protein ontogeny mappings from the provided data.
+#' It splits the mappings into individual protein-ontogeny pairs and validates
+#' the structure of each pair. Each valid pair is then converted into a
+#' `MoleculeOntogeny` object.
+#'
+#' @param data A data frame containing a column named "Protein Ontogenies".
+#'
+#' @return A list of `MoleculeOntogeny` objects, each representing a protein
+#' and its corresponding ontogeny. Returns NULL if the "Protein Ontogenies"
+#' field is NA.
+#'
+#' @keywords internal
+readOntongenies <- function (data) {
+  proteinOntogenyMappings <- data[["protein Ontogenies"]]
+  if (is.na(proteinOntogenyMappings)) {
+    return(NULL)
+  }
+  proteinOntogenyMappings <- as.character(proteinOntogenyMappings)
+  proteinOntogenyMappings <- unlist(strsplit(x = proteinOntogenyMappings,
+                                             split = ",", fixed = TRUE))
+  proteinOntogenyMappings <- trimws(proteinOntogenyMappings)
+  moleculeOntogenies <- vector("list", length(proteinOntogenyMappings))
+  for (i in seq_along(proteinOntogenyMappings)) {
+    ontogeny <- proteinOntogenyMappings[[i]]
+    ontogenyMapping <- unlist(strsplit(x = ontogeny, split = ":",
+                                       fixed = TRUE))
+    if (length(ontogenyMapping) != 2) {
+      stop(messages$errorWrongOntogenyStructure(ontogeny))
+    }
+    protein <- ontogenyMapping[[1]]
+    ontogeny <- ontogenyMapping[[2]]
+    validateEnumValue(value = ontogeny, enum = ospsuite::StandardOntogeny)
+    moleculeOntogenies[[i]] <- ospsuite::MoleculeOntogeny$new(molecule = protein,
+                                                              ontogeny = ospsuite::StandardOntogeny[[ontogeny]])
+  }
+  return(moleculeOntogenies)
+}
 #' Add user defined variability on parameters to a population from an excel file.
 #'
 #' @param population Object of type `Population`
