@@ -47,16 +47,18 @@ initProject <- function(configurationDirectory = ".",
     unique()
 
   for (d in dirsToCreate) {
-    if (!dir.exists(file.path(configurationDirectory, d))) {
-      dir.create(file.path(configurationDirectory, d), recursive = TRUE, showWarnings = FALSE)
+    dabsolute <- fs::path_abs(d,start = configurationDirectory)
+    if (!dir.exists(dabsolute)) {
+      dir.create(dabsolute, recursive = TRUE, showWarnings = FALSE)
     }
   }
 
   for (f in filesToCopy) {
-    if (!file.exists(file.path(configurationDirectory, f)) | overwrite) {
+    fabsolute <- fs::path_abs(f,start = configurationDirectory)
+    if (!file.exists(fabsolute) | overwrite) {
       file.copy(
         from = file.path(templatePath, f),
-        to = file.path(configurationDirectory, f),
+        to = fabsolute,
         overwrite = overwrite
       )
     }

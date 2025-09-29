@@ -188,9 +188,11 @@ xlsxReadData <- function(wb, sheetName = 1,
 #' @return The current configuration file with the added sheet.
 #'
 #' @examples
+#' \dontrun{
 #' wb <- loadWorkbook("config.xlsx")
 #' newData <- data.table(Name = c("Gina", "Hank"), Age = c(29, 33))
 #' xlsxAddDataUsingTemplate(wb, "TemplateSheet", "NewDataSheet", newData)
+#' }
 #'
 #' @export
 #' @family function to read from and write to xlsx
