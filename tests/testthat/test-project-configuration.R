@@ -51,6 +51,7 @@ test_that("Add-on folder is added correctly", {
   )
   description <- "test folder 2"
 
+  warning(value,projectConfiguration$outputFolder)
   # Call the function to add an add-on folder
   projectConfiguration$addAddOnFolderToConfiguration(property, value, description)
 
