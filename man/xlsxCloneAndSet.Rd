@@ -16,7 +16,7 @@ xlsxCloneAndSet(wb, clonedSheet, sheetName, dt)
 \item{dt}{A `data.table` with new content.}
 }
 \value{
-An invisible NULL value. The function performs an action (cole a sheet)
+An invisible NULL value. The function performs an action (clone a sheet)
 }
 \description{
 This function wraps `openxlsx::cloneWorksheet` but sets new content in the cloned sheet.

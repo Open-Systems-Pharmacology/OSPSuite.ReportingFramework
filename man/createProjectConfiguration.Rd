@@ -18,10 +18,10 @@ Create a `ProjectConfigurationRF` based on the `"ProjectConfiguration.xlsx"`
 based on esqlabsR::ProjectConfiguration but with additional file information for PK Parameter definitions
 }
 \seealso{
-Other project initialisation: 
+Other project initialization: 
 \code{\link{ProjectConfigurationRF}},
 \code{\link{getQCpassedEnvironmentVariable}()},
 \code{\link{initProject}()},
 \code{\link{setWorkflowOptions}()}
 }
-\concept{project initialisation}
+\concept{project initialization}

@@ -36,10 +36,10 @@ structure and files specified in the provided Excel template and sets up the pro
 environment accordingly.
 }
 \seealso{
-Other project initialisation: 
+Other project initialization: 
 \code{\link{ProjectConfigurationRF}},
 \code{\link{createProjectConfiguration}()},
 \code{\link{getQCpassedEnvironmentVariable}()},
 \code{\link{setWorkflowOptions}()}
 }
-\concept{project initialisation}
+\concept{project initialization}

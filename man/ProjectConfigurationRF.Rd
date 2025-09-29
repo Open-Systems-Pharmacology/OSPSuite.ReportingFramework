@@ -8,13 +8,13 @@
 An object storing configuration used project-wide
 }
 \seealso{
-Other project initialisation: 
+Other project initialization: 
 \code{\link{createProjectConfiguration}()},
 \code{\link{getQCpassedEnvironmentVariable}()},
 \code{\link{initProject}()},
 \code{\link{setWorkflowOptions}()}
 }
-\concept{project initialisation}
+\concept{project initialization}
 \section{Super class}{
 \code{\link[esqlabsR:ProjectConfiguration]{esqlabsR::ProjectConfiguration}} -> \code{ProjectConfigurationRF}
 }
