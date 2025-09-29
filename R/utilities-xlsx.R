@@ -463,7 +463,7 @@ splitInputs <- function(originalVector) {
 #' @return The modified data.table with updated column names.
 #'
 #' @examples
-#' dt <- data.table(FirstName = c("John", "Jane"), LastName = c("Doe", "Smith"))
+#' dt <- data.table::data.table(FirstName = c("John", "Jane"), LastName = c("Doe", "Smith"))
 #' dtLower <- setHeadersToLowerCase(dt)
 #' print(names(dtLower)) # Result: c("firstname", "lastname")
 #'
