@@ -31,8 +31,6 @@ Imports:
     fs,
     ospsuite,
     ospsuite.utils,
-    tlf (>= 1.6.0),
-    rSharp,
     ggplot2,
     ggsci,
     scales,
@@ -62,9 +60,7 @@ Config/testthat/edition: 3
 VignetteBuilder: knitr
 RoxygenNote: 7.3.1
 Remotes: 
-    Open-Systems-Pharmacology/rSharp,
     ospsuite.utils=Open-Systems-Pharmacology/OSPSuite.RUtils,
-    tlf=Open-Systems-Pharmacology/TLF-Library,
     ospsuite.plots=Open-Systems-Pharmacology/OSPSuite.Plots,
     ospsuite=Open-Systems-Pharmacology/OSPSuite-R,
     esqlabsR=esqLABS/esqlabsR
