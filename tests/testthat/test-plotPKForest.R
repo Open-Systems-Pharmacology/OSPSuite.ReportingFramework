@@ -68,7 +68,7 @@ test_that("AbsoluteValues pediatric with data", {
       plotNames = "pediatric_data",
       inputs = list(
         pkParameterDT = pkParameterDT,
-        pkParameterObserved = dataObservedPK
+        dataObservedPK = dataObservedPK
       )
     ))
 
@@ -194,7 +194,7 @@ test_that("Ratios crossover PE with data", {
       plotNames = "crossover_data",
       inputs = list(
         pkParameterDT = pkParameterDT,
-        pkParameterObserved = dataObservedPK
+        dataObservedPK = dataObservedPK
       )
     )
 

@@ -18,14 +18,13 @@ knitr::opts_chunk$set(
   fig.width = 7,
   comment = "#>"
 )
-options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
 ```{r setup, echo=FALSE, eval=TRUE}
 library(ospsuite.reportingframework)
 library(tidyr)
 library(data.table)
-
+options(rmarkdown.html_vignette.check_title = FALSE)
 
 setDefaults()
 theme_update(legend.position = "top")

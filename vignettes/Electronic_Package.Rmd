@@ -20,6 +20,7 @@ knitr::opts_chunk$set(
 
 ```{r setup,echo=FALSE}
 library(ospsuite.reportingframework)
+options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
 ## Introduction
