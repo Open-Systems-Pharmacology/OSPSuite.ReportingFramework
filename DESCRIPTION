@@ -38,6 +38,7 @@ Imports:
     scales,
     tidyr,
     rlang,
+    styler,
     openxlsx,
     dplyr,
     stats,
