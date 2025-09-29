@@ -41,6 +41,8 @@ doc
 tests/testthat/*.pdf
 
 inst/doc
-inst/template/.~lock*
 /doc/
 /Meta/
+
+# do not add lockfiles for libre office files
+.~lock.*
