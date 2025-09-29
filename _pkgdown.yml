@@ -1,6 +1,8 @@
 template:
   bootstrap: 5
 
+url: https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/
+
 development:
   mode: auto
 
@@ -22,7 +24,7 @@ articles:
     desc: Workflow and Configuration
     contents:
       - Workflow
-      - Data_Import_by_Dictionary
+      - data_import_by_dictionary
       - PK_Parameter
       - Population
       - Electronic_Package
@@ -32,7 +34,7 @@ articles:
     desc: Tutorials
     contents:
       - Workflow
-      - Tutorial-timeprofiles
+      - Tutorial_Timeprofiles
 
 figures:
   dev: ragg::agg_png
