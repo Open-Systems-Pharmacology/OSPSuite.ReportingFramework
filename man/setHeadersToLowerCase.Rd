@@ -16,7 +16,7 @@ The modified data.table with updated column names.
 This function takes a data.table and converts the first letter of all column names to lowercase.
 }
 \examples{
-dt <- data.table(FirstName = c("John", "Jane"), LastName = c("Doe", "Smith"))
+dt <- data.table::data.table(FirstName = c("John", "Jane"), LastName = c("Doe", "Smith"))
 dtLower <- setHeadersToLowerCase(dt)
 print(names(dtLower)) # Result: c("firstname", "lastname")
 

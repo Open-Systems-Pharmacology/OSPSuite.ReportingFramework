@@ -22,7 +22,7 @@
 #'
 #'
 #' @export
-#' @family project initialisation
+#' @family project initialization
 initProject <- function(configurationDirectory = ".",
                         sourceConfigurationXlsx = system.file("templates", "ProjectConfiguration.xlsx", package = "ospsuite.reportingframework"),
                         templatePath = system.file("templates", package = "ospsuite.reportingframework"),
@@ -75,7 +75,7 @@ initProject <- function(configurationDirectory = ".",
 #'
 #' @return Object of type `ProjectConfigurationRF`
 #' @export
-#' @family project initialisation
+#' @family project initialization
 createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xlsx")) {
   projectConfiguration <- ProjectConfigurationRF$new(projectConfigurationFilePath = path)
 

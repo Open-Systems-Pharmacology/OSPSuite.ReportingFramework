@@ -92,7 +92,7 @@ xlsxWriteData <- function(wb, sheetName, dt) {
 #' @param sheetName A character string specifying the name of the new sheet.
 #' @param dt A `data.table` with new content.
 #'
-#' @return An invisible NULL value. The function performs an action (cole a sheet)
+#' @return An invisible NULL value. The function performs an action (clone a sheet)
 #'
 #' @examples
 #' \dontrun{

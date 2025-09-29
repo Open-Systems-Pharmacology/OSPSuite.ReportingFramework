@@ -25,7 +25,7 @@
 #'        options are set for a valid run; if FALSE, options are set for an invalid run.
 #'
 #' @export
-#' @family project initialisation
+#' @family project initialization
 setWorkflowOptions <- function(isValidRun = NULL) {
   checkmate::assertLogical(isValidRun)
 
@@ -50,7 +50,7 @@ setWorkflowOptions <- function(isValidRun = NULL) {
 #'
 #' @return A logical value indicating whether the QC passed (`TRUE` or `FALSE`).
 #' @export
-#' @family project initialisation
+#' @family project initialization
 #'
 #' @examples
 #' \dontrun{

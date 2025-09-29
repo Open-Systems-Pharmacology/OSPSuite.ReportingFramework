@@ -38,7 +38,7 @@ Framework to create R workflows which configures simulations, runs them plots re
 
 The `{ospsuite.reportingframework}` package is compatible with version 2.10 and higher of R. Please follow the installation instructions below:
 
-### From Github <img src=https://avatars.githubusercontent.com/github width=15px></img>
+### From GitHub <img src=https://avatars.githubusercontent.com/github width=15px></img>
 
 You can install the development version of `{ospsuite.reportingframework}` from [GitHub](https://github.com/) with:
 
@@ -55,10 +55,9 @@ remotes::install_github("Open-Systems-Pharmacology/OSPSuite.ReportingFramework")
 
 |Package|Version|Installation Instructions|
 |-------|-------|------------|
-|[`{rSharp}`](https://github.com/Open-Systems-Pharmacology/rSharp)|latest|Download and install package bundle [here &#128230;](https://github.com/Open-Systems-Pharmacology/rSharp/releases)|
 |[`{ospsuite.plots}`](https://github.com/Open-Systems-Pharmacology/OSPSuite.Plots)|latest|Download and install package bundle [here &#128230;](https://github.com/Open-Systems-Pharmacology/OSPSuite.Plots/releases)|
-|[`{ospsuite}`](https://github.com/Open-Systems-Pharmacology/OSPSuite-R)|$\geq$ 12.1|Download and install package bundle [here &#128230;](https://github.com/Open-Systems-Pharmacology/OSPSuite-R/releases)<br>Instructions are available [here &#128214;](https://github.com/Open-Systems-Pharmacology/OSPSuite-R#installation)<br>&#9888; Visit [`{ospsuite}` Documentation](https://github.com/Open-Systems-Pharmacology/OSPSuite-R) to install its dependencies &#9888;|
-|[`{ospsuite.utils}`](https://github.com/Open-Systems-Pharmacology/OSPSuite.RUtils)|$\geq$ 1.5|Download and install package bundle [here &#128230;](https://github.com/Open-Systems-Pharmacology/OSPSuite.RUtils/releases)|
+|[`{ospsuite}`](https://github.com/Open-Systems-Pharmacology/OSPSuite-R)|latest|Download and install package bundle [here &#128230;](https://github.com/Open-Systems-Pharmacology/OSPSuite-R/releases)<br>Instructions are available [here &#128214;](https://github.com/Open-Systems-Pharmacology/OSPSuite-R#installation)<br>&#9888; Visit [`{ospsuite}` Documentation](https://github.com/Open-Systems-Pharmacology/OSPSuite-R) to install its dependencies &#9888;|
+|[`{ospsuite.utils}`](https://github.com/Open-Systems-Pharmacology/OSPSuite.RUtils)|latest|Download and install package bundle [here &#128230;](https://github.com/Open-Systems-Pharmacology/OSPSuite.RUtils/releases)|
 
 
 - From the [esqLABS](https://github.com/esqLABS) ecosystem:
@@ -71,7 +70,6 @@ Once the bundles downloaded, you can install the packages by using the code belo
 
 ```r
 # bundlePath <- path/to/osp/bundles
-install.packages(file.path(bundlePath,"rSharp.zip"), repos = NULL)
 install.packages(file.path(bundlePath,"ospsuite.plots.zip"), repos = NULL)
 install.packages(file.path(bundlePath,"ospsuite.zip"), repos = NULL)
 install.packages(file.path(bundlePath,"ospsuite.utils.zip"), repos = NULL)
@@ -143,6 +141,6 @@ standards](https://github.com/Open-Systems-Pharmacology/Suite/blob/master/CODING
 
 ## License
 
-OSPSuite.ReportingFrameworks Library is released under the [GPLv2 License](LICENSE).
+OSPSuite.ReportingFramework Library is released under the [GPLv2 License](LICENSE).
 
 All trademarks within this document belong to their legitimate owners.
