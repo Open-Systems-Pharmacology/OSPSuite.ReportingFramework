@@ -70,7 +70,7 @@ invisible(file.copy(
 exportVirtualTwinPopulations(
   projectConfiguration = projectConfiguration,
   populationNames = NULL,
-  modelFile = "po 3 mg solution.pkml",
+  modelFile = "po_3_mg_solution.pkml",
   overwrite = FALSE
 )
 scenarioList <-
@@ -123,7 +123,7 @@ print(system.file(
   mustWork = TRUE
 ))
 ```
-You can access the folder containing the models used in the tutorial ("iv 1 mg 5 min.pkml" and "po 3 mg solution.pkml") using the command below:
+You can access the folder containing the models used in the tutorial ("iv_1_mg_5_min.pkml" and "po_3_mg_solution.pkml") using the command below:
 
 ```{r model-path, eval = TRUE}
 print(system.file(

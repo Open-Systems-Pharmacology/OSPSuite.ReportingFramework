@@ -271,11 +271,11 @@ readOntongenies <- function (data) {
     ontogenyMapping <- unlist(strsplit(x = ontogeny, split = ":",
                                        fixed = TRUE))
     if (length(ontogenyMapping) != 2) {
-      stop(messages$errorWrongOntogenyStructure(ontogeny))
+      stop(paste('The ontogeny has the wrong structure:',ontogeny))
     }
     protein <- ontogenyMapping[[1]]
     ontogeny <- ontogenyMapping[[2]]
-    validateEnumValue(value = ontogeny, enum = ospsuite::StandardOntogeny)
+    ospsuite.utils::validateEnumValue(value = ontogeny, enum = ospsuite::StandardOntogeny)
     moleculeOntogenies[[i]] <- ospsuite::MoleculeOntogeny$new(molecule = protein,
                                                               ontogeny = ospsuite::StandardOntogeny[[ontogeny]])
   }
