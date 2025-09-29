@@ -82,7 +82,6 @@ cloneable
 codeChunks
 codebases
 codecov
-cole
 colorLegend
 colorVector
 columnNames
@@ -129,7 +128,6 @@ individualIds
 individualRatios
 initLogfile
 initLogfunction
-initialisation
 initializePlotManager
 interpretability
 isValidRun

@@ -58,22 +58,43 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
     },
     #' @description Read configuration from file
     .read_config = function(file_path) { # nolint
-      path <- fs::path_abs(file_path)
+      path <- private$.clean_path(file_path, replace_env_var = FALSE)
+
       # Update private values
       private$.projectConfigurationFilePath <- path
       private$.projectConfigurationDirPath <- dirname(path)
-      data <- readExcel(path = path)
-      for (property in intersect(data$Property, names(self))) {
-        # Update each private property
-        self[[property]] <- data[data$Property == property, ]$Value
+
+      inputData <- readExcel(path = path)
+
+      # Reset private variables
+      private$.replaced_env_vars <- list()
+      private$.projectConfigurationData <- list()
+
+      for (property in intersect(inputData$Property, names(self))) {
+        private$.projectConfigurationData[[property]] <- list(
+          value = inputData$Value[inputData$Property == property],
+          description = inputData$Description[inputData$Property == property]
+        )
       }
+
+      private$.checkProjectConfigurationFile()
+
+      for (property in colnames(private$.projectConfigurationData)) {
+        # Update each private property
+        self[[property]] <- private$.projectConfigurationData[[property]]$value
+      }
+
+      # Mark as not modified after loading from file
+      private$.modified <- FALSE
+
+      # add addOns
       for (property in setdiff(
-        data$Property,
+        inputData$Property,
         c(names(private$.projectConfigurationDataAddOns), names(self))
       )) {
         private$.addOnFile(
           property = property,
-          value = data[data$Property == property, ]$Value
+          value = inputData[inputData$Property == property, ]$Value
         )
       }
     }
