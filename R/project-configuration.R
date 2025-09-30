@@ -166,13 +166,11 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
 
 
       dirPath <- fs::path_abs(value, start = self$configurationsFolder)
-      warning(dirPath)
       if (!dir.exists(dirPath)) {
         dir.create(dirPath, recursive = TRUE)
       }
 
       value <- as.character(fs::path_rel(value, start = self$configurationsFolder))
-      warning(value)
 
       private$.writeToConfigXlsx(property, value, description)
 

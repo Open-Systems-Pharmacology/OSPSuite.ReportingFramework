@@ -21,9 +21,11 @@ test_that("writeToLog appends log message to file", {
 
 # Unit tests errors and warnings
 test_that("captureLog function catches only messages to display", {
+  # set logging folder explicitly to avoid crashes for very long file names
   initLogfunction(
     projectConfiguration = projectConfiguration,
-    verbose = FALSE
+    verbose = FALSE,
+    loggingFolder = tempdir()
   )
 
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")

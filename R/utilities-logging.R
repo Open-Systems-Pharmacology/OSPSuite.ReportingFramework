@@ -1,12 +1,13 @@
 #' Initializing a Log Function
 #'
-#' This function initialize the logging during a workflow. It is called at the start of the workflow script.
-#' It is used to configure options for the log file folder, warnings which should not logged and messages which should not logged.
+#' This function initializes the logging during a workflow. It is called at the start of the workflow script.
+#' It is used to configure options for the log file folder, warnings which should not be logged, and messages which should not be logged.
 #'
 #' @param projectConfiguration Object of class `ProjectConfiguration` containing information on paths and file names
 #' @param warningsNotDisplayed A list of warnings that should not be logged.
 #' @param messagesNotDisplayed A list of messages that should not be logged.
-#' @param verbose boolean, if true log message will be shown on the console
+#' @param verbose boolean, if true log messages will be shown on the console
+#' @param loggingFolder A character string specifying the folder where log files should be stored. If NULL, defaults to a "Logs" sub-folder within the output folder of the project configuration.
 #'
 #' @examples
 #' \dontrun{
@@ -31,11 +32,13 @@ initLogfunction <- function(projectConfiguration,
                             messagesNotDisplayed = c(
                               "Each group consists of only one observation"
                             ),
-                            verbose = TRUE) {
+                            verbose = TRUE,
+                            loggingFolder = NULL) {
   checkmate::assertCharacter(warningsNotDisplayed)
   checkmate::assertCharacter(messagesNotDisplayed)
 
-  loggingFolder <- file.path(projectConfiguration$outputFolder, "Logs")
+  if (is.null(loggingFolder))
+    loggingFolder <- file.path(projectConfiguration$outputFolder, "Logs")
   if (!dir.exists(loggingFolder)) dir.create(loggingFolder, recursive = TRUE)
 
   # Create the log file sub-folder with a time stamp
