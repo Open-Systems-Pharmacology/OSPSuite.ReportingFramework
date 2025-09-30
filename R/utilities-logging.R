@@ -60,9 +60,6 @@ initLogfunction <- function(projectConfiguration,
 
   logFileFolder <- file.path(loggingFolder, logFileSubFolder)
 
-  warning(logFileFolder)
-  warning(length(logFileFolder))
-
   # Create the log file sub-folder if it doesn't exist
   if (!dir.exists(logFileFolder)) {
     dir.create(logFileFolder, recursive = TRUE)
@@ -253,6 +250,8 @@ writeToLog <- function(type, msg, filename = NULL) {
   checkmate::assertCharacter(msg)
   checkmate::assertDirectoryExists(logFileFolder)
   checkmate::assertCharacter(filename, len = 1, any.missing = FALSE)
+
+  warning(paste(logFileFolder),nchar(logFileFolder))
 
   cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
     paste0(type, ":"),
