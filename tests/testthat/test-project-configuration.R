@@ -52,6 +52,7 @@ test_that("Add-on folder is added correctly", {
   # Call the function to add an add-on folder
   projectConfiguration$addAddOnFolderToConfiguration(property, value, description)
 
+  warning(projectConfiguration$addOns[[property]])
   # Check if the directory exists
   expect_true(dir.exists(projectConfiguration$addOns[[property]]))
 

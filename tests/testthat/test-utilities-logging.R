@@ -29,6 +29,7 @@ test_that("captureLog function catches only messages to display", {
   )
 
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
+  warning(logFileFolder)
 
   captureLog(expr = warning("Warning message"))
   suppressWarnings(logFile <- readLines(file.path(logFileFolder, "run.log")))
