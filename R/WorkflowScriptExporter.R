@@ -1139,9 +1139,9 @@ importWorkflow <- function(projectDirectory,
   checkmate::assertDirectoryExists(ePackageFolder)
   checkmate::assertIntegerish(wfIdentifier)
 
-  configurationDirectory <- fs::path_abs(getConfigDirectoryForWorkflow(wfIdentifier = wfIdentifier),
-    start = projectDirectory
-  )
+  configurationDirectory <- file.path(
+    projectDirectory,
+    getConfigDirectoryForWorkflow(wfIdentifier = wfIdentifier))
 
   if (!dir.exists(configurationDirectory)) {
     dir.create(configurationDirectory, recursive = TRUE)
@@ -1154,9 +1154,12 @@ importWorkflow <- function(projectDirectory,
   )
 
   # get paths of all relevant project files
+  projectConfigurationXlsx <- file.path(configurationDirectory, "ProjectConfiguration.xlsx")
+  warning(paste(projectConfigurationXlsx))
+  warning(fs::path_rel(projectConfigurationXlsx))
   projectConfigurationNew <-
     ospsuite.reportingframework::createProjectConfiguration(
-      path = fs::path_rel(file.path(configurationDirectory, "ProjectConfiguration.xlsx"))
+      path = fs::path_rel(projectConfigurationXlsx)
     )
 
   # add data folder
