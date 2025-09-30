@@ -76,7 +76,7 @@ initLogfunction <- function(projectConfiguration,
 
   # startlogfile
   addMessageToLog("Start run of workflow")
-  addMessageToLog(paste(utils::capture.output(projectConfiguration), collapse = "\n"))
+  #addMessageToLog(paste(utils::capture.output(projectConfiguration), collapse = "\n"))
 
   optionstxt <- paste(
     "\n\n",
@@ -250,8 +250,6 @@ writeToLog <- function(type, msg, filename = NULL) {
   checkmate::assertCharacter(msg)
   checkmate::assertDirectoryExists(logFileFolder)
   checkmate::assertCharacter(filename, len = 1, any.missing = FALSE)
-
-  warning(paste(logFileFolder),nchar(logFileFolder))
 
   cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
     paste0(type, ":"),
