@@ -42,7 +42,8 @@ test_that("captureLog function catches only messages to display", {
 
 test_that("saveSessionInfo writes session info to log file", {
   # Set up log function
-  suppressMessages(initLogfunction(projectConfiguration = projectConfiguration))
+  suppressMessages(initLogfunction(projectConfiguration = projectConfiguration,,
+                                   loggingFolder = tempdir()))
 
   # Call the saveSessionInfo function
   saveSessionInfo()
@@ -60,7 +61,8 @@ test_that("saveSessionInfo writes session info to log file", {
 test_that("captureLog Logs messages when verbose is TRUE", {
   myMessage <- "Test message"
 
-  initLogfunction(projectConfiguration = projectConfiguration, verbose = FALSE)
+  initLogfunction(projectConfiguration = projectConfiguration, verbose = FALSE,
+                  loggingFolder = tempdir())
   setShowLogMessages(TRUE)
   output <- utils::capture.output(captureLog(message(myMessage)), type = "message")
 

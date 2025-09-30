@@ -166,8 +166,10 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
 
 
       dirPath <- fs::path_abs(value, start = self$configurationsFolder)
+      warning(paste('before',dirPath , value,self$configurationsFolder ))
       if (!dir.exists(dirPath)) {
-        dir.create(dirPath, recursive = TRUE)
+        success = dir.create(dirPath, recursive = TRUE)
+        warning(success)
       }
 
       value <- as.character(fs::path_rel(value, start = self$configurationsFolder))
