@@ -164,12 +164,15 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
       checkmate::assertString(value)
       checkmate::assertString(description)
 
-      value <- as.character(fs::path_rel(value, start = self$configurationsFolder))
 
       dirPath <- fs::path_abs(value, start = self$configurationsFolder)
+      warning(dirPath)
       if (!dir.exists(dirPath)) {
         dir.create(dirPath, recursive = TRUE)
       }
+
+      value <- as.character(fs::path_rel(value, start = self$configurationsFolder))
+      warning(value)
 
       private$.writeToConfigXlsx(property, value, description)
 

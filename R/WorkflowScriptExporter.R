@@ -1155,8 +1155,7 @@ importWorkflow <- function(projectDirectory,
 
   # get paths of all relevant project files
   projectConfigurationXlsx <- file.path(configurationDirectory, "ProjectConfiguration.xlsx")
-  warning(paste(projectConfigurationXlsx))
-  #warning(fs::path_rel(projectConfigurationXlsx))
+
   projectConfigurationNew <-
     ospsuite.reportingframework::createProjectConfiguration(
       path = projectConfigurationXlsx
