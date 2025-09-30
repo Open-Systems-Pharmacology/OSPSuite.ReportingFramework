@@ -58,7 +58,10 @@ initLogfunction <- function(projectConfiguration,
   logFileSubFolder <- paste(scriptName, timestamp, sep = "_")
 
 
-  logFileFolder <- fs::path_abs(file.path(loggingFolder, logFileSubFolder))
+  logFileFolder <- file.path(loggingFolder, logFileSubFolder)
+
+  warning(logFileFolder)
+  warning(length(logFileFolder))
 
   # Create the log file sub-folder if it doesn't exist
   if (!dir.exists(logFileFolder)) {
