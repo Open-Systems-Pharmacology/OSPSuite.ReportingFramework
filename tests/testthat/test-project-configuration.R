@@ -46,7 +46,7 @@ test_that("Add-on folder is added correctly", {
   # Define parameters for the add-on folder with relative path
   property <- "test folder 2"
   pathTestFolder <- file.path(projectConfiguration$outputFolder, "testfolder")
-  value <- fs::path_rel(pathTestFolder)
+  value <- fs::path_rel(pathTestFolder,start = projectConfiguration$configurationsFolder)
   description <- "test folder 2"
 
   warning(paste(value,projectConfiguration$outputFolder,pathTestFolder))
