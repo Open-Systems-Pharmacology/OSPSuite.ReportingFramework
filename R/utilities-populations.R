@@ -543,7 +543,7 @@ setCustomParamsToPopulation <- function(scenario) {
   dtSheets <- list()
 
   # Use foreach to parallelize the loop
-  dtSheets <- foreach::foreach(sheet = sheets, .packages = c("esqlabsR", "data.table")) %dopar% {
+  dtSheets <- foreach::foreach(sheet = sheets, .packages = c("esqlabsR", "data.table","dplyr")) %dopar% {
     tmp <- esqlabsR::readParametersFromXLS(paramsXLSpath = paramsXLSpath, sheets = sheet) %>%
       data.table::as.data.table()
 

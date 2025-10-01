@@ -1,7 +1,7 @@
 # Assuming projectConfiguration, scenarioList, and scenarioResults are already defined in your test setup
 
 test_that("calculatePKParameterForScenarios works correctly", {
-  expect_silent(calculatePKParameterForScenarios(projectConfiguration, scenarioResults))
+  calculatePKParameterForScenarios(projectConfiguration, scenarioResults)
   # Check if output files are created as expected (you may need to adjust this based on your implementation)
   outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$pKAnalysisResults)
   expect_true(dir.exists(outputFolder))
