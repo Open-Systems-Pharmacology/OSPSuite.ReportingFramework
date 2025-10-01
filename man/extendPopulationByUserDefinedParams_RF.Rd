@@ -33,3 +33,4 @@ A list of supported distributions is defined in `Distributions`. Default is `"No
 \description{
 Add user defined variability on parameters to a population.
 }
+\keyword{internal}

@@ -11,6 +11,7 @@
 #'
 #' @return A `data.table` containing the processed data based on the dictionary. The structure includes relevant columns defined in the data dictionary.
 #' @export
+#' @family observed data processing
 readObservedDataByDictionary <- function(projectConfiguration,
                                          spreadData = TRUE,
                                          dataClassType = c("timeprofile", "pkParameter"),
@@ -173,6 +174,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
 #' It does not return a value.
 #'
 #' @export
+#' @family observed data processing
 validateObservedData <- function(dataDT, dataClassType) {
   # Check column Identifier
   columnsWithAttributes <- lapply(dataDT, attr, "columnType")
@@ -499,6 +501,7 @@ convertBiometrics <- function(data, dict, dictionaryName) {
 #' @return NULL This function updates the Excel workbook in place and does not return a value. It is called for its side effects.
 #'
 #' @export
+#' @family observed data processing
 updateDataGroupId <- function(projectConfiguration, dataDT) {
   # Initialize variables used for data.tables
   studyId <- group <- NULL
@@ -556,6 +559,7 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
 #' @return NULL This function updates the Excel workbook in place and does not return a value. It is called for its side effects.
 #'
 #' @export
+#' @family observed data processing
 updateOutputPathId <- function(projectConfiguration, dataDT) {
   # Initialize variables used for data.tables
   outputPathId <- NULL
@@ -588,6 +592,7 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
 #' @param dataDT A `data.table` with observed data.
 #' @param overwrite If TRUE, existing rows will be overwritten.
 #' @export
+#' @family observed data processing
 addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALSE) {
   if (!("individualId" %in% names(dataDT))) {
     return(invisible())
@@ -651,6 +656,7 @@ addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALS
 #'
 #' @return An object of class `DataCombined`.
 #' @export
+#' @family observed data processing
 convertDataTableToDataCombined <- function(dataDT) {
   validateObservedData(dataDT = dataDT, dataClassType = "timeprofile")
 
@@ -786,6 +792,7 @@ addMetaDataToDataSet <- function(dataSet, groupData) {
 #'
 #' @return A `data.table` containing the converted data.
 #' @export
+#' @family observed data processing
 convertDataCombinedToDataTable <- function(datacombined) {
   # Initialize variables used for data.tables
   dataClass <- yErrorValues <- NULL
@@ -848,6 +855,7 @@ convertDataCombinedToDataTable <- function(datacombined) {
 #'
 #' @return A `data.table` containing aggregated observed data.
 #' @export
+#' @family observed data processing
 aggregateObservedDataGroups <- function(dataObserved,
                                         groups = NULL,
                                         aggregationFlag = c(
@@ -1073,7 +1081,7 @@ setDataTypeAttributes <- function(dataDT, dict = NULL) {
 #' @param columnTypes A vector with required types.
 #'
 #' @return A vector with column names.
-#' @export
+#' @keywords internal
 getColumnsForColumnType <- function(dt, columnTypes) {
   columnsWithAttributes <- unlist(lapply(dt, attr, "columnType"))
 

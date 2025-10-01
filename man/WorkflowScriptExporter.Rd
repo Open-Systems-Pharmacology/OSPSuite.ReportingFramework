@@ -7,6 +7,7 @@
 \description{
 Manages the export of an ePackage workflow.
 }
+\keyword{internal}
 \section{Super class}{
 \code{\link[ospsuite.utils:Printable]{ospsuite.utils::Printable}} -> \code{WorkflowScriptExporter}
 }

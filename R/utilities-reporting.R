@@ -2,8 +2,6 @@
 #'
 #' @param fileName name of .Rmd file to convert to word format (".docx")
 #' @param wordConversionTemplate  template used for conversion
-#' @param doAppendDocToTemplate `boolean`, if TRUE and `wordConversionTemplate` is given,
-#'   new generated document is added to the template after bookmark REPORTBLOCK
 #' @param customStyles list of custom styles usable for figure and table captions and footnotes
 #'    available list elements for styles are: `FigureCaption`, `FigureFootnote`, `TableCaption` and `TableFootnote`
 #'    The selected styles should be defined in the `wordConversionTemplate`
@@ -22,7 +20,6 @@
 #' }
 renderWord <- function(fileName,
                        wordConversionTemplate = NULL,
-                       doAppendDocToTemplate = TRUE,
                        customStyles = list(
                          FigureCaption = NULL,
                          FigureFootnote = NULL,
@@ -49,7 +46,6 @@ renderWord <- function(fileName,
   if (is.null(wordConversionTemplate)) {
     wordConversionTemplate <-
       system.file("extdata", "reference.docx", package = "ospsuite.reportingframework")
-    doAppendDocToTemplate <- FALSE
   }
   checkmate::assertFileExists(wordConversionTemplate)
 
@@ -59,37 +55,6 @@ renderWord <- function(fileName,
     params = list(customStyles = customStyles),
     ...
   )
-
-  # Place the content of the newly create word document to the template document.
-  if (doAppendDocToTemplate) {
-    appendDocToTemplate(
-      wordConversionTemplate = wordConversionTemplate,
-      docReportPath = paste0(tools::file_path_sans_ext(fileName), ".docx")
-    )
-  }
-
-  return(invisible())
-}
-
-
-#' Place the content of the newly create word document to the template document.
-#'
-#' cursor is set to Bookmark, file will be overwritten
-#'
-#' @param wordConversionTemplate path of template (should contain a bookmark REPORTBLOCK
-#'   to mark the place for inclusion)
-#' @param docReportPath path of word document to append
-#'
-#' @export
-appendDocToTemplate <- function(wordConversionTemplate,
-                                docReportPath) {
-  checkmate::assertFileExists(docReportPath)
-
-  docMerged <- officer::read_docx(wordConversionTemplate) %>%
-    officer::cursor_bookmark("REPORTBLOCK") %>%
-    officer::body_add_docx(src = docReportPath, pos = "after")
-
-  print(docMerged, target = docReportPath)
 
   return(invisible())
 }

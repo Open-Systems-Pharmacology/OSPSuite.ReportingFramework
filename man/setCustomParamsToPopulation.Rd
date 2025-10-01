@@ -24,3 +24,4 @@ It first checks if the scenario is of type "Population" and whether custom param
 The function filters the custom parameters to include only those that exist in the population's parameter paths.
 It calculates the base values for these parameters and sets them for the entire population if applicable.
 }
+\keyword{internal}

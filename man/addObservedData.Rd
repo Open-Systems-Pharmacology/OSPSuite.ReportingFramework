@@ -4,12 +4,12 @@
 \alias{addObservedData}
 \title{Add Observed Data to Plot Data}
 \usage{
-addObservedData(plotData, pkParameterObserved, onePlotConfig)
+addObservedData(plotData, dataObservedPK, onePlotConfig)
 }
 \arguments{
 \item{plotData}{Data table with calculated plot data.}
 
-\item{pkParameterObserved}{Optional data table for observed PK parameters.}
+\item{dataObservedPK}{Optional data table for observed PK parameters.}
 
 \item{onePlotConfig}{Configuration for the plot.}
 }

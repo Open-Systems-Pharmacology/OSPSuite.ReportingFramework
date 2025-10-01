@@ -23,3 +23,9 @@ exportVirtualTwinPopulations(
 \description{
 This function generates virtual twin populations based on the provided model and project configuration.
 }
+\seealso{
+Other population export: 
+\code{\link{exportRandomPopulations}()},
+\code{\link{setupVirtualTwinPopConfig}()}
+}
+\concept{population export}

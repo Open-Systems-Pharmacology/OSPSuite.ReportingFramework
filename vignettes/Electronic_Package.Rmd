@@ -2,7 +2,7 @@
 title: "Electronic Package"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{electronic-Package}
+  %\VignetteIndexEntry{Electronic_Package}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -20,6 +20,7 @@ knitr::opts_chunk$set(
 
 ```{r setup,echo=FALSE}
 library(ospsuite.reportingframework)
+options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
 ## Introduction

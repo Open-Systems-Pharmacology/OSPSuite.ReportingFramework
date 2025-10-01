@@ -19,3 +19,26 @@ NULL (invisible).
 \description{
 Validates the configuration for PK forest plots with ratios and variance.
 }
+\seealso{
+Other plot configuration validation function: 
+\code{\link{validateDistributionVsDemographicsConfig}()},
+\code{\link{validateHistogramsConfig}()},
+\code{\link{validatePKBoxwhiskerConfig}()},
+\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
+\code{\link{validatePKForestPointEstimateOfAbsoluteValuesConfig}()},
+\code{\link{validatePKForestPointEstimateOfRatiosConfig}()},
+\code{\link{validateSensitivityConfig}()},
+\code{\link{validateTimeProfilesConfig}()}
+
+Other functions to generate forest plots: 
+\code{\link{addDefaultConfigForPKForestPlots}()},
+\code{\link{plotPKForestAggregatedAbsoluteValues}()},
+\code{\link{plotPKForestAggregatedRatios}()},
+\code{\link{plotPKForestPointEstimateOfAbsoluteValues}()},
+\code{\link{plotPKForestPointEstimateOfRatios}()},
+\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
+\code{\link{validatePKForestPointEstimateOfAbsoluteValuesConfig}()},
+\code{\link{validatePKForestPointEstimateOfRatiosConfig}()}
+}
+\concept{functions to generate forest plots}
+\concept{plot configuration validation function}

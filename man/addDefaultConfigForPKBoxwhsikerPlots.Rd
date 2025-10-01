@@ -39,3 +39,16 @@ and fills in the default configuration values for the time profile plots.
 Additionally, the function performs a validity check to ensure that it is not executed during a context
 where helper functions are prohibited (`validRun`). If such a context is detected, an error is raised to prevent execution.
 }
+\seealso{
+Other plot configuration helper function: 
+\code{\link{addDefaultConfigForDistributionsVsDemographics}()},
+\code{\link{addDefaultConfigForHistograms}()},
+\code{\link{addDefaultConfigForPKForestPlots}()},
+\code{\link{addDefaultConfigForTimeProfilePlots}()}
+
+Other functions to generate box whisker plots: 
+\code{\link{plotPKBoxwhisker}()},
+\code{\link{validatePKBoxwhiskerConfig}()}
+}
+\concept{functions to generate box whisker plots}
+\concept{plot configuration helper function}

@@ -19,3 +19,4 @@ A data.table with the time values converted and shifted.
 \description{
 This function converts time values to a target unit and applies an optional time offset.
 }
+\keyword{internal}

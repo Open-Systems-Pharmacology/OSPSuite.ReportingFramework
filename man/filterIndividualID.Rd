@@ -21,3 +21,4 @@ This function filters a given time profile data frame to include only the rows
 corresponding to specified individual IDs. If the individual list is not provided
 or the time profile has no column "individualId" the original time profile is returned.
 }
+\keyword{internal}

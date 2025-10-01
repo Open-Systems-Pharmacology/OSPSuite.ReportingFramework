@@ -16,3 +16,19 @@ mdHeading(..., level = 1, newlines = 2)
 \description{
 Insert a heading with a specified level.
 }
+\seealso{
+Other markdown helper function: 
+\code{\link{addFiguresAndTables}()},
+\code{\link{mdBullet}()},
+\code{\link{mdBullet0}()},
+\code{\link{mdCaption}()},
+\code{\link{mdFigure}()},
+\code{\link{mdFootNote}()},
+\code{\link{mdLink}()},
+\code{\link{mdNewline}()},
+\code{\link{mdNewpage}()},
+\code{\link{mdPaste}()},
+\code{\link{mdPaste0}()},
+\code{\link{mdTable}()}
+}
+\concept{markdown helper function}

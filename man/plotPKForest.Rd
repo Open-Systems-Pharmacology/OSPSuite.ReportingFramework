@@ -8,7 +8,7 @@ plotPKForest(
   projectConfiguration,
   onePlotConfig,
   pkParameterDT,
-  pkParameterObserved,
+  dataObservedPK,
   ratioMode,
   asPointeEstimate,
   aggregationFlag = NULL,
@@ -35,7 +35,7 @@ single plot, including plot name, x-axis scale, and other aesthetic settings.}
 \item{pkParameterDT}{A data.table containing simulated PK parameter data,
 including columns for scenario names, parameters, values, and output paths.}
 
-\item{pkParameterObserved}{Optional data.table containing observed PK parameter
+\item{dataObservedPK}{Optional data.table containing observed PK parameter
 data for comparison, which can include columns for observed values and associated
 metadata.}
 

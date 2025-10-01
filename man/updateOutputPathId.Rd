@@ -23,3 +23,14 @@ ensuring that output path IDs remain unique.
 The function loads the existing Output Paths from the specified Excel workbook, extracts unique output path IDs from the input data,
 and appends them while maintaining uniqueness. The updated data is then written back to the workbook.
 }
+\seealso{
+Other observed data processing: 
+\code{\link{addBiometricsToConfig}()},
+\code{\link{aggregateObservedDataGroups}()},
+\code{\link{convertDataCombinedToDataTable}()},
+\code{\link{convertDataTableToDataCombined}()},
+\code{\link{readObservedDataByDictionary}()},
+\code{\link{updateDataGroupId}()},
+\code{\link{validateObservedData}()}
+}
+\concept{observed data processing}

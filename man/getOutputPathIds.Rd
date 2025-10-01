@@ -15,3 +15,12 @@ A `data.table` with output configurations.
 \description{
 This function loads the output configurations from the specified workbook.
 }
+\seealso{
+Other get identifier: 
+\code{\link{getDataGroups}()},
+\code{\link{getModelParameterDefinitions}()},
+\code{\link{getScenarioDefinitions}()},
+\code{\link{getTimeRangeTags}()},
+\code{\link{loadConfigTableEnvironment}()}
+}
+\concept{get identifier}

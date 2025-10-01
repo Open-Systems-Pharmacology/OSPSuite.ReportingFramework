@@ -20,3 +20,4 @@ This function adds user-defined pharmacokinetic (PK) parameters to OSP-Suite
 based on the provided definitions. It checks for uniqueness and existence
 of parameters before adding them.
 }
+\keyword{internal}

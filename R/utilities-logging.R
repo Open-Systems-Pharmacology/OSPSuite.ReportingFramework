@@ -1,12 +1,13 @@
 #' Initializing a Log Function
 #'
-#' This function initialize the logging during a workflow. It is called at the start of the workflow script.
-#' It is used to configure options for the log file folder, warnings which should not logged and messages which should not logged.
+#' This function initializes the logging during a workflow. It is called at the start of the workflow script.
+#' It is used to configure options for the log file folder, warnings which should not be logged, and messages which should not be logged.
 #'
 #' @param projectConfiguration Object of class `ProjectConfiguration` containing information on paths and file names
 #' @param warningsNotDisplayed A list of warnings that should not be logged.
 #' @param messagesNotDisplayed A list of messages that should not be logged.
-#' @param verbose boolean, if true log message will be shown on the console
+#' @param verbose boolean, if true log messages will be shown on the console
+#' @param loggingFolder A character string specifying the folder where log files should be stored. If NULL, defaults to a "Logs" sub-folder within the output folder of the project configuration.
 #'
 #' @examples
 #' \dontrun{
@@ -15,6 +16,7 @@
 #' }
 #'
 #' @export
+#' @family log file management
 initLogfunction <- function(projectConfiguration,
                             warningsNotDisplayed = c(
                               "introduced infinite values",
@@ -30,11 +32,13 @@ initLogfunction <- function(projectConfiguration,
                             messagesNotDisplayed = c(
                               "Each group consists of only one observation"
                             ),
-                            verbose = TRUE) {
+                            verbose = TRUE,
+                            loggingFolder = NULL) {
   checkmate::assertCharacter(warningsNotDisplayed)
   checkmate::assertCharacter(messagesNotDisplayed)
 
-  loggingFolder <- file.path(projectConfiguration$outputFolder, "Logs")
+  if (is.null(loggingFolder))
+    loggingFolder <- file.path(projectConfiguration$outputFolder, "Logs")
   if (!dir.exists(loggingFolder)) dir.create(loggingFolder, recursive = TRUE)
 
   # Create the log file sub-folder with a time stamp
@@ -54,14 +58,14 @@ initLogfunction <- function(projectConfiguration,
   logFileSubFolder <- paste(scriptName, timestamp, sep = "_")
 
 
-  logFileFolder <- fs::path_abs(file.path(loggingFolder, logFileSubFolder))
+  logFileFolder <- file.path(loggingFolder, logFileSubFolder)
 
   # Create the log file sub-folder if it doesn't exist
   if (!dir.exists(logFileFolder)) {
     dir.create(logFileFolder, recursive = TRUE)
   }
 
-  # set inputs to options for use in `logCatch` function and `writeToLog`
+  # set inputs to options for use in `captureLog` function and `writeToLog`
   options(list(
     OSPSuite.RF.logFileFolder = logFileFolder,
     OSPSuite.RF.warningsNotDisplayed = warningsNotDisplayed,
@@ -72,7 +76,7 @@ initLogfunction <- function(projectConfiguration,
 
   # startlogfile
   addMessageToLog("Start run of workflow")
-  addMessageToLog(paste(utils::capture.output(projectConfiguration), collapse = "\n"))
+  #addMessageToLog(paste(utils::capture.output(projectConfiguration), collapse = "\n"))
 
   optionstxt <- paste(
     "\n\n",
@@ -94,14 +98,15 @@ initLogfunction <- function(projectConfiguration,
 
 #' Used to add message to log file
 #'
-#' This function is for the usage outside a `logCatch` bracket.
+#' This function is for the usage outside a `captureLog` bracket.
 #' Inside the bracket `message("my message Text")` can be used
 #'
 #' @param messageText character with message text
 #'
 #' @export
+#' @family log file management
 addMessageToLog <- function(messageText) {
-  logCatch(
+  captureLog(
     expr = message(messageText)
   )
 }
@@ -113,7 +118,8 @@ addMessageToLog <- function(messageText) {
 #' @param finallyExpression The expression to evaluate finally
 #'
 #' @export
-logCatch <- function(expr, finallyExpression = invisible()) {
+#' @family log file management
+captureLog <- function(expr, finallyExpression = invisible()) {
   warningsNotDisplayed <- getOption("OSPSuite.RF.warningsNotDisplayed", default = c())
   messagesNotDisplayed <- getOption("OSPSuite.RF.messagesNotDisplayed", default = c())
   verbose <- getOption("OSPSuite.RF.verbose", default = TRUE)
@@ -191,14 +197,14 @@ logCatch <- function(expr, finallyExpression = invisible()) {
 #'   }
 #' )
 #'
-#' @export
+#' @keywords internal
 getErrorTrace <- function(e) {
   calls <- sys.calls()
   errorTrace <- "Error Trace:"
   for (call in calls) {
     textCall <- deparse(call, nlines = 1)
     callNotDisplayed <- any(sapply(
-      c("logCatch", "qualificationCatch", "stop", "tryCatch", "withCallingHandlers", "simpleError", "eval\\(ei, envir\\)"),
+      c("captureLog", "qualificationCatch", "stop", "tryCatch", "withCallingHandlers", "simpleError", "eval\\(ei, envir\\)"),
       FUN = function(pattern) {
         grepl(textCall, pattern = pattern, ignore.case = TRUE)
       }
@@ -231,7 +237,8 @@ getErrorTrace <- function(e) {
 #' # Write a log message
 #' writeToLog(type = "Info", msg = "This is an information message", filename = "run.log")
 #' }
-#'
+#' @export
+#' @family log file management
 writeToLog <- function(type, msg, filename = NULL) {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
   if (is.null(logFileFolder)) {
@@ -259,6 +266,7 @@ writeToLog <- function(type, msg, filename = NULL) {
 #' @param filename filename of log
 #'
 #' @export
+#' @family log file management
 writeTableToLog <- function(dt, filename = "run.log") {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
   if (is.null(logFileFolder)) {
@@ -289,6 +297,7 @@ writeTableToLog <- function(dt, filename = "run.log") {
 #' @param verbose boolean, if true log message will be shown
 #'
 #' @export
+#' @family log file management
 setShowLogMessages <- function(verbose = TRUE) {
   options(OSPSuite.RF.verbose = verbose)
 }
@@ -310,6 +319,7 @@ setShowLogMessages <- function(verbose = TRUE) {
 #' }
 #'
 #' @export
+#' @family log file management
 saveSessionInfo <- function() {
   sessionInfo <- paste(utils::capture.output(sessionInfo()), collapse = "\n")
 

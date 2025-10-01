@@ -131,6 +131,7 @@
 #' }
 #'
 #' @export
+#' @family plot functions
 plotTimeProfiles <- function(projectConfiguration,
                              onePlotConfig,
                              dataObserved = NULL,
@@ -742,7 +743,8 @@ getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotC
     )
   }
 
-  if ("individualId" %in% names(dtCaption)) {
+  if ("individualId" %in% names(dtCaption) &&
+      !all(is.na(dtCaption$individualId))) {
     individualtext <- pasteFigureTags(dtCaption, captionColumn = "individualId")
     if (individualtext != "") {
       individualtext <- paste(
@@ -857,6 +859,7 @@ getGeomLLOQAttributesForTP <- function(plotData) {
 #' @inheritParams plotTimeProfiles
 #' @param configTable Plot configuration table.
 #' @export
+#' @family plot configuration validation function
 validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
                                        scenarioResults, ...) {
   # avoid warning for global variable
@@ -1184,6 +1187,8 @@ validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
 #' It is called for its side effects.
 #'
 #' @export
+#' @family plot functions
+#' @family plot configuration helper function
 addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
                                                 dataObserved = NULL,
                                                 sheetName = "TimeProfiles",
@@ -1223,7 +1228,7 @@ addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
 
   dtNewConfig <- createNewConfig(scenarios, dataObserved)
 
-  wb <- addDataUsingTemplate(
+  wb <- xlsxAddDataUsingTemplate(
     wb = wb,
     templateSheet = "TimeProfiles",
     sheetName = sheetName,

@@ -22,6 +22,7 @@
 #'
 #'
 #' @export
+#' @family project initialization
 initProject <- function(configurationDirectory = ".",
                         sourceConfigurationXlsx = system.file("templates", "ProjectConfiguration.xlsx", package = "ospsuite.reportingframework"),
                         templatePath = system.file("templates", package = "ospsuite.reportingframework"),
@@ -46,16 +47,18 @@ initProject <- function(configurationDirectory = ".",
     unique()
 
   for (d in dirsToCreate) {
-    if (!dir.exists(file.path(configurationDirectory, d))) {
-      dir.create(file.path(configurationDirectory, d), recursive = TRUE, showWarnings = FALSE)
+    dabsolute <- fs::path_abs(d,start = configurationDirectory)
+    if (!dir.exists(dabsolute)) {
+      dir.create(dabsolute, recursive = TRUE, showWarnings = FALSE)
     }
   }
 
   for (f in filesToCopy) {
-    if (!file.exists(file.path(configurationDirectory, f)) | overwrite) {
+    fabsolute <- fs::path_abs(f,start = configurationDirectory)
+    if (!file.exists(fabsolute) | overwrite) {
       file.copy(
         from = file.path(templatePath, f),
-        to = file.path(configurationDirectory, f),
+        to = fabsolute,
         overwrite = overwrite
       )
     }
@@ -74,6 +77,7 @@ initProject <- function(configurationDirectory = ".",
 #'
 #' @return Object of type `ProjectConfigurationRF`
 #' @export
+#' @family project initialization
 createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xlsx")) {
   projectConfiguration <- ProjectConfigurationRF$new(projectConfigurationFilePath = path)
 
@@ -89,6 +93,7 @@ createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xl
 #'
 #' @return  Named list of Scenario objects.
 #' @export
+#' @family scenario management
 createScenarios.wrapped <- function(projectConfiguration, # nolint
                                     scenarioNames = NULL) {
   scenarioList <-
@@ -118,6 +123,7 @@ createScenarios.wrapped <- function(projectConfiguration, # nolint
 #' throws Error if the scenario results do not exist.
 #'
 #' @export
+#' @family scenario management
 loadScenarioResultsToFramework <- function(projectConfiguration, scenarioNames) {
   outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult)
   resultFiles <- file.path(outputFolder, paste0(scenarioNames, ".csv"))
@@ -175,6 +181,7 @@ loadScenarioResultsToFramework <- function(projectConfiguration, scenarioNames) 
 #' }
 #'
 #' @export
+#' @family scenario management
 runAndSaveScenarios <- function(projectConfiguration, scenarioList, simulationRunOptions = NULL, ...) {
   outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$simulationResult)
 
@@ -221,6 +228,7 @@ runAndSaveScenarios <- function(projectConfiguration, scenarioList, simulationRu
 #' @return A list containing the simulation results for each scenario that was loaded or run.
 #'
 #' @export
+#' @family scenario management
 runOrLoadScenarios <- function(projectConfiguration, scenarioList, simulationRunOptions = NULL, ...) {
   scenarioResults <- list()
 
@@ -233,6 +241,47 @@ runOrLoadScenarios <- function(projectConfiguration, scenarioList, simulationRun
   }
 
   return(invisible(scenarioResults))
+}
+#' Read Ontogenies from Data
+#'
+#' based on esqlabsR:::.readOntongeniesFromXLS
+#'
+#' This function extracts protein ontogeny mappings from the provided data.
+#' It splits the mappings into individual protein-ontogeny pairs and validates
+#' the structure of each pair. Each valid pair is then converted into a
+#' `MoleculeOntogeny` object.
+#'
+#' @param data A data frame containing a column named "Protein Ontogenies".
+#'
+#' @return A list of `MoleculeOntogeny` objects, each representing a protein
+#' and its corresponding ontogeny. Returns NULL if the "Protein Ontogenies"
+#' field is NA.
+#'
+#' @keywords internal
+readOntongenies <- function (data) {
+  proteinOntogenyMappings <- data[["protein Ontogenies"]]
+  if (is.na(proteinOntogenyMappings)) {
+    return(NULL)
+  }
+  proteinOntogenyMappings <- as.character(proteinOntogenyMappings)
+  proteinOntogenyMappings <- unlist(strsplit(x = proteinOntogenyMappings,
+                                             split = ",", fixed = TRUE))
+  proteinOntogenyMappings <- trimws(proteinOntogenyMappings)
+  moleculeOntogenies <- vector("list", length(proteinOntogenyMappings))
+  for (i in seq_along(proteinOntogenyMappings)) {
+    ontogeny <- proteinOntogenyMappings[[i]]
+    ontogenyMapping <- unlist(strsplit(x = ontogeny, split = ":",
+                                       fixed = TRUE))
+    if (length(ontogenyMapping) != 2) {
+      stop(paste('The ontogeny has the wrong structure:',ontogeny))
+    }
+    protein <- ontogenyMapping[[1]]
+    ontogeny <- ontogenyMapping[[2]]
+    ospsuite.utils::validateEnumValue(value = ontogeny, enum = ospsuite::StandardOntogeny)
+    moleculeOntogenies[[i]] <- ospsuite::MoleculeOntogeny$new(molecule = protein,
+                                                              ontogeny = ospsuite::StandardOntogeny[[ontogeny]])
+  }
+  return(moleculeOntogenies)
 }
 #' Add user defined variability on parameters to a population from an excel file.
 #'
@@ -248,7 +297,7 @@ runOrLoadScenarios <- function(projectConfiguration, scenarioList, simulationRun
 #'   and calls `extendPopulationByUserDefinedParams`
 #'   copy of esqlabsR::extendPopulationFromXLS but columnNames always withdot
 #'
-#' @export
+#' @keywords internal
 extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { # nolint
   ospsuite.utils::validateIsOfType(population, "Population")
   ospsuite.utils::validateIsString(XLSpath)
@@ -305,7 +354,7 @@ extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { # no
 #' @param distributions Type of distribution from which the random values will
 #'   be sampled. Must have the same length as `parameterPaths`.
 #' A list of supported distributions is defined in `Distributions`. Default is `"Normal"`.
-#' @export
+#' @keywords internal
 extendPopulationByUserDefinedParams_RF <- function(population, # nolint
                                                    parameterPaths,
                                                    meanValues,

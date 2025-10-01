@@ -15,3 +15,14 @@ An object of class `DataCombined`.
 \description{
 The `data.table` must be formatted like a table produced by `readObservedDataByDictionary`.
 }
+\seealso{
+Other observed data processing: 
+\code{\link{addBiometricsToConfig}()},
+\code{\link{aggregateObservedDataGroups}()},
+\code{\link{convertDataCombinedToDataTable}()},
+\code{\link{readObservedDataByDictionary}()},
+\code{\link{updateDataGroupId}()},
+\code{\link{updateOutputPathId}()},
+\code{\link{validateObservedData}()}
+}
+\concept{observed data processing}

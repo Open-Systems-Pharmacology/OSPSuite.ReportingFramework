@@ -40,3 +40,16 @@ and fills in the default configuration values for the histograms.
 Additionally, the function performs a validity check to ensure that it is not executed during a context
 where helper functions are prohibited (validRun). If such a context is detected, an error is raised to prevent execution.
 }
+\seealso{
+Other plot configuration helper function: 
+\code{\link{addDefaultConfigForDistributionsVsDemographics}()},
+\code{\link{addDefaultConfigForPKBoxwhsikerPlots}()},
+\code{\link{addDefaultConfigForPKForestPlots}()},
+\code{\link{addDefaultConfigForTimeProfilePlots}()}
+
+Other functions to generate plots displaying distribution vs demographics: 
+\code{\link{plotDistributionVsDemographics}()},
+\code{\link{validateDistributionVsDemographicsConfig}()}
+}
+\concept{functions to generate plots displaying distribution vs demographics}
+\concept{plot configuration helper function}

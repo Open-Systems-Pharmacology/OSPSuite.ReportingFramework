@@ -6,6 +6,7 @@
 #'
 #' @return An invisible value indicating that the loading was successful.
 #' @export
+#' @family get identifier
 loadConfigTableEnvironment <- function(projectConfiguration) {
   # Initialize the global configuration environment
   if (!exists("configEnv", envir = .GlobalEnv)) {
@@ -32,6 +33,7 @@ loadConfigTableEnvironment <- function(projectConfiguration) {
 #'
 #' @return A `data.table` with data group IDs.
 #' @export
+#' @family get identifier
 getDataGroups <- function(wbPlots) {
   dtDataGroups <- xlsxReadData(
     wb = wbPlots,
@@ -56,6 +58,7 @@ getDataGroups <- function(wbPlots) {
 #'
 #' @return A `data.table` with output configurations.
 #' @export
+#' @family get identifier
 getOutputPathIds <- function(wbPlots) {
   # initialize variable to avoid messages
   displayUnit <- NULL
@@ -85,6 +88,7 @@ getOutputPathIds <- function(wbPlots) {
 #'
 #' @return A `data.table` with time range tags.
 #' @export
+#' @family get identifier
 getTimeRangeTags <- function(wbPlots) {
   dtTimeRange <- xlsxReadData(
     wb = wbPlots,
@@ -108,6 +112,7 @@ getTimeRangeTags <- function(wbPlots) {
 #'
 #' @return A `data.table` with model parameter definitions.
 #' @export
+#' @family get identifier
 getModelParameterDefinitions <- function(wbPlots) {
   # initialize variable to avoid messages
   displayUnit <- NULL
@@ -137,6 +142,7 @@ getModelParameterDefinitions <- function(wbPlots) {
 #'
 #' @return A `data.table` with scenario definitions.
 #' @export
+#' @family get identifier
 getScenarioDefinitions <- function(wbScenarios, wbPlots = NULL) {
   # initialize global parameter to avoid message
   pKParameter <- NULL

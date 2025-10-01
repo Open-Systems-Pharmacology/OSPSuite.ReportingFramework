@@ -29,4 +29,35 @@ Adds default configurations for forest plots to the `Plots.xlsx` configuration f
 \seealso{
 \code{\link{plotPKForestAggregatedAbsoluteValues}}, \code{\link{plotPKForestPointEstimateOfAbsoluteValues}},
 \code{\link{plotPKForestAggregatedRatios}}, \code{\link{plotPKForestPointEstimateOfRatios}},
+
+Other plot functions: 
+\code{\link{addDefaultConfigForTimeProfilePlots}()},
+\code{\link{plotDistributionVsDemographics}()},
+\code{\link{plotHistograms}()},
+\code{\link{plotPKBoxwhisker}()},
+\code{\link{plotPKForestAggregatedAbsoluteValues}()},
+\code{\link{plotPKForestAggregatedRatios}()},
+\code{\link{plotPKForestPointEstimateOfAbsoluteValues}()},
+\code{\link{plotPKForestPointEstimateOfRatios}()},
+\code{\link{plotSensitivity}()},
+\code{\link{plotTimeProfiles}()}
+
+Other plot configuration helper function: 
+\code{\link{addDefaultConfigForDistributionsVsDemographics}()},
+\code{\link{addDefaultConfigForHistograms}()},
+\code{\link{addDefaultConfigForPKBoxwhsikerPlots}()},
+\code{\link{addDefaultConfigForTimeProfilePlots}()}
+
+Other functions to generate forest plots: 
+\code{\link{plotPKForestAggregatedAbsoluteValues}()},
+\code{\link{plotPKForestAggregatedRatios}()},
+\code{\link{plotPKForestPointEstimateOfAbsoluteValues}()},
+\code{\link{plotPKForestPointEstimateOfRatios}()},
+\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
+\code{\link{validatePKForestAggregatedRatiosConfig}()},
+\code{\link{validatePKForestPointEstimateOfAbsoluteValuesConfig}()},
+\code{\link{validatePKForestPointEstimateOfRatiosConfig}()}
 }
+\concept{functions to generate forest plots}
+\concept{plot configuration helper function}
+\concept{plot functions}

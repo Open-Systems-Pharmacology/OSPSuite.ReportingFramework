@@ -39,3 +39,24 @@ and fills in the default configuration values for the time profile plots.
 Additionally, the function performs a validity check to ensure that it is not executed during a context
 where helper functions are prohibited (`validRun`). If such a context is detected, an error is raised to prevent execution.
 }
+\seealso{
+Other plot functions: 
+\code{\link{addDefaultConfigForPKForestPlots}()},
+\code{\link{plotDistributionVsDemographics}()},
+\code{\link{plotHistograms}()},
+\code{\link{plotPKBoxwhisker}()},
+\code{\link{plotPKForestAggregatedAbsoluteValues}()},
+\code{\link{plotPKForestAggregatedRatios}()},
+\code{\link{plotPKForestPointEstimateOfAbsoluteValues}()},
+\code{\link{plotPKForestPointEstimateOfRatios}()},
+\code{\link{plotSensitivity}()},
+\code{\link{plotTimeProfiles}()}
+
+Other plot configuration helper function: 
+\code{\link{addDefaultConfigForDistributionsVsDemographics}()},
+\code{\link{addDefaultConfigForHistograms}()},
+\code{\link{addDefaultConfigForPKBoxwhsikerPlots}()},
+\code{\link{addDefaultConfigForPKForestPlots}()}
+}
+\concept{plot configuration helper function}
+\concept{plot functions}

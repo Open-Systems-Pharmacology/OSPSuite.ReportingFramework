@@ -19,4 +19,20 @@ NULL (invisible).
 \description{
 Validates the configuration table for PK box-and-whisker plots.
 }
-\keyword{internal}
+\seealso{
+Other plot configuration validation function: 
+\code{\link{validateDistributionVsDemographicsConfig}()},
+\code{\link{validateHistogramsConfig}()},
+\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
+\code{\link{validatePKForestAggregatedRatiosConfig}()},
+\code{\link{validatePKForestPointEstimateOfAbsoluteValuesConfig}()},
+\code{\link{validatePKForestPointEstimateOfRatiosConfig}()},
+\code{\link{validateSensitivityConfig}()},
+\code{\link{validateTimeProfilesConfig}()}
+
+Other functions to generate box whisker plots: 
+\code{\link{addDefaultConfigForPKBoxwhsikerPlots}()},
+\code{\link{plotPKBoxwhisker}()}
+}
+\concept{functions to generate box whisker plots}
+\concept{plot configuration validation function}

@@ -17,3 +17,4 @@ are allowed during a valid run. If the option is not initialized, it prompts the
 
 Stops execution with an error message if called during a valid run or if the option is not set.
 }
+\keyword{internal}

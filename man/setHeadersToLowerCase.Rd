@@ -16,8 +16,18 @@ The modified data.table with updated column names.
 This function takes a data.table and converts the first letter of all column names to lowercase.
 }
 \examples{
-dt <- data.table(FirstName = c("John", "Jane"), LastName = c("Doe", "Smith"))
+dt <- data.table::data.table(FirstName = c("John", "Jane"), LastName = c("Doe", "Smith"))
 dtLower <- setHeadersToLowerCase(dt)
 print(names(dtLower)) # Result: c("firstname", "lastname")
 
 }
+\seealso{
+Other function to read from and write to xlsx: 
+\code{\link{splitInputs}()},
+\code{\link{xlsxAddDataUsingTemplate}()},
+\code{\link{xlsxAddSheet}()},
+\code{\link{xlsxCloneAndSet}()},
+\code{\link{xlsxReadData}()},
+\code{\link{xlsxWriteData}()}
+}
+\concept{function to read from and write to xlsx}

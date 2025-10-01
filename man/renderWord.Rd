@@ -7,7 +7,6 @@
 renderWord(
   fileName,
   wordConversionTemplate = NULL,
-  doAppendDocToTemplate = TRUE,
   customStyles = list(FigureCaption = NULL, FigureFootnote = NULL, TableCaption = NULL,
     TableFootnote = NULL),
   ...
@@ -17,9 +16,6 @@ renderWord(
 \item{fileName}{name of .Rmd file to convert to word format (".docx")}
 
 \item{wordConversionTemplate}{template used for conversion}
-
-\item{doAppendDocToTemplate}{`boolean`, if TRUE and `wordConversionTemplate` is given,
-new generated document is added to the template after bookmark REPORTBLOCK}
 
 \item{customStyles}{list of custom styles usable for figure and table captions and footnotes
 available list elements for styles are: `FigureCaption`, `FigureFootnote`, `TableCaption` and `TableFootnote`

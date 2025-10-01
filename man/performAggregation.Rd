@@ -22,3 +22,4 @@ aggregated values, and the number of measurements below the lower limit of quant
 \description{
 This function performs the aggregation of observed data based on the specified criteria.
 }
+\keyword{internal}

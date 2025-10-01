@@ -17,3 +17,4 @@ A data.table with unit conversion factors and unique paths.
 \description{
 This function creates a data table for unit conversion based on simulated data and output specifications.
 }
+\keyword{internal}

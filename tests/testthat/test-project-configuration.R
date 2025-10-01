@@ -45,17 +45,15 @@ test_that("Add-on folder is added correctly", {
 
   # Define parameters for the add-on folder with relative path
   property <- "test folder 2"
-  value <- fs::path_rel(
-    file.path(projectConfiguration$outputFolder, "testfolder"),
-    getwd()
-  )
+  pathTestFolder <- file.path(projectConfiguration$outputFolder, "testfolder")
+  value <- fs::path_rel(pathTestFolder,start = projectConfiguration$configurationsFolder)
   description <- "test folder 2"
 
   # Call the function to add an add-on folder
   projectConfiguration$addAddOnFolderToConfiguration(property, value, description)
 
   # Check if the directory exists
-  expect_true(dir.exists(value))
+  expect_true(dir.exists(pathTestFolder))
 
   # Check if the property was added to the private data
   expect_true(property %in% names(projectConfiguration$addOns))

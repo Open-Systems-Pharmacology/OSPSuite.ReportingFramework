@@ -2,7 +2,7 @@
 title: "Tutorial: Time Profile Plotting"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Tutorial-timeprofiles}
+  %\VignetteIndexEntry{Tutorial_Timeprofiles}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -18,15 +18,17 @@ knitr::opts_chunk$set(
   fig.width = 7,
   comment = "#>"
 )
-options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
 ```{r setup, echo=FALSE, eval=TRUE}
 library(ospsuite.reportingframework)
 library(tidyr)
 library(data.table)
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
 
 
+```{r loadProject, echo=FALSE, eval=TRUE}
 setDefaults()
 theme_update(legend.position = "top")
 
@@ -37,7 +39,10 @@ pBuilder <- TestProjectBuilder$new()
 projectConfiguration <- pBuilder$iniTestProject(rootDirectory = NULL)
 options(OSPSuite.RF.verbose = FALSE)
 
-rootDirectory <- fs::path_abs(file.path("..", ".."), start = projectConfiguration$configurationsFolder)
+rootDirectory <- fs::path_common(path = c(
+    projectConfiguration$configurationsFolder,
+    projectConfiguration$outputFolder
+  ))
 
 instDirectory <- system.file(
   package = "ospsuite.reportingframework",
@@ -67,12 +72,11 @@ invisible(file.copy(
   to = file.path(projectConfiguration$populationsFolder, "random_population.csv"), overwrite = TRUE
 ))
 
-exportVirtualTwinPopulations(
-  projectConfiguration = projectConfiguration,
-  populationNames = NULL,
-  modelFile = "po 3 mg solution.pkml",
-  overwrite = FALSE
-)
+invisible(file.copy(
+  from = file.path(instDirectory, "Tutorial", "study_1234_population.csv"),
+  to = file.path(projectConfiguration$populationsFolder, "study_1234_population.csv"), overwrite = TRUE
+))
+
 scenarioList <-
   createScenarios.wrapped(
     projectConfiguration = projectConfiguration,
@@ -123,7 +127,7 @@ print(system.file(
   mustWork = TRUE
 ))
 ```
-You can access the folder containing the models used in the tutorial ("iv 1 mg 5 min.pkml" and "po 3 mg solution.pkml") using the command below:
+You can access the folder containing the models used in the tutorial ("iv_1_mg_5_min.pkml" and "po_3_mg_solution.pkml") using the command below:
 
 ```{r model-path, eval = TRUE}
 print(system.file(
@@ -389,7 +393,6 @@ knitr::kable(dtPlots[1:4]
 %>% dplyr::select(!c("TimeRange_h0_6", "TimeRange_h6_24")))
 ```
 
-
 Now we can execute the `runPlot` call to generate the plots. For now, we suppress the export of the figures by setting the input parameter `plotNames = c('one_individual', 'one_individual-gof')`. `runPlot` returns a list of ggplot objects. The caption is added as an attribute to each plot.
 
 
@@ -408,7 +411,7 @@ plotList <- runPlot(
 
 Below the logarithmic time-profile is displayed. See the Word document for the other plots.
 
-```{r plot1figure, eval = TRUE,fig.height = 2.8,results='asis'}
+```{r plot1figure, eval = TRUE,fig.height = 2.8, results='asis', fig.alt="Logarithmic time-profile plot comparing simulated data to observed data."}
 print(plotList[["one_individual-TP-log-total"]])
 print(attr(plotList[["one_individual-TP-log-total"]], "caption"))
 ```
@@ -435,7 +438,6 @@ tmp <- xlsxReadData(
 
 knitr::kable(tmp)
 ```
-
 
 ### Step 2: Export Population
 
@@ -483,7 +485,6 @@ scenarioResults <- runAndSaveScenarios(
   )
 )
 ```
-
 
 ### Step 4: Configure and Generate Plots
 
@@ -536,13 +537,10 @@ plotList <- runPlot(
 
 Below the logarithmic time-profile for all individuals is displayed. See the Word document for the other plots.
 
-
-```{r plot2figure, eval=TRUE,fig.height = 4.5,results='asis'}
+```{r plot2figure, eval=TRUE,fig.height = 4.5, results='asis', fig.alt="Logarithmic time-profile plot for all individuals."}
 print(plotList[["all_individuals-TP-log-total"]])
 print(attr(plotList[["all_individuals-TP-log-total"]], "caption"))
 ```
-
-
 
 ## 3) Adding Random Populations and Use of Aggregated Data
 
@@ -599,7 +597,6 @@ exportRandomPopulations(
   overwrite = FALSE
 )
 ```
-
 
 This will create a population based on the configuration table from the previous section. It is saved as a CSV file in `Models/Poulations`.
 
@@ -668,11 +665,10 @@ plotList <- runPlot(
 
 Below the logarithmic time-profile is displayed. See the Word document for the other plots.
 
-```{r plot3figure, eval=TRUE,fig.height = 4,results='asis'}
+```{r plot3figure, eval=TRUE,fig.height = 4, results='asis', fig.alt="Logarithmic time-profile plot for random populations."}
 print(plotList[["random_population-TP-log-total"]])
 print(attr(plotList[["random_population-TP-log-total"]], "caption"))
 ```
-
 
 ## 4) Adding Reference Populations
 
@@ -711,12 +707,10 @@ plotList <- runPlot(
 
 Below the logarithmic time-profile is displayed. See the Word document for the other plot.
 
-
-```{r plot4figure, eval = TRUE,results='asis'}
+```{r plot4figure, eval = TRUE, results='asis', fig.alt="Logarithmic time-profile plot comparing reference populations."}
 print(plotList[["reference-TP-log-total"]])
 print(attr(plotList[["reference-TP-log-total"]], "caption"))
 ```
-
 
 ## 5) Adding Plots with different Time Ranges
 
@@ -750,9 +744,7 @@ tmp <- xlsxReadData(
 knitr::kable(tmp)
 ```
 
-
 ### Step 2: Configure and Generate Plots
-
 
 Open the plot configuration table and adjust the plot configurations.
 
@@ -793,8 +785,7 @@ plotList <- runPlot(
 
 Below the logarithmic time-profile for the plot that combines the time profiles is displayed. See the Word document for the other plots.
 
-
-```{r plot5figure, eval = TRUE,fig.height=7,results='asis'}
+```{r plot5figure, eval = TRUE,fig.height=7, results='asis', fig.alt="Logarithmic time-profile plot showing combined time ranges."}
 print(plotList[["timeranges-split-TP-log-allTimeRanges"]])
 print(attr(plotList[["timeranges-split-TP-log-allTimeRanges"]], "caption"))
 ```

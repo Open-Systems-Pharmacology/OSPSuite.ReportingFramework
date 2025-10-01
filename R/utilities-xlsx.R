@@ -19,6 +19,7 @@
 #' xlsxAddSheet(wb, "NewSheet", data)
 #' }
 #' @export
+#' @family function to read from and write to xlsx
 xlsxAddSheet <- function(wb, sheetName, dt) {
   # Input validation
   checkmate::assertClass(wb, "Workbook", null.ok = FALSE)
@@ -54,6 +55,7 @@ xlsxAddSheet <- function(wb, sheetName, dt) {
 #'}
 #'
 #' @export
+#' @family function to read from and write to xlsx
 xlsxWriteData <- function(wb, sheetName, dt) {
   # Input validation
   checkmate::assertClass(wb, "Workbook", null.ok = FALSE)
@@ -90,7 +92,7 @@ xlsxWriteData <- function(wb, sheetName, dt) {
 #' @param sheetName A character string specifying the name of the new sheet.
 #' @param dt A `data.table` with new content.
 #'
-#' @return An invisible NULL value. The function performs an action (cole a sheet)
+#' @return An invisible NULL value. The function performs an action (clone a sheet)
 #'
 #' @examples
 #' \dontrun{
@@ -100,6 +102,7 @@ xlsxWriteData <- function(wb, sheetName, dt) {
 #' }
 #'
 #' @export
+#' @family function to read from and write to xlsx
 xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
   # Input validation
   checkmate::assertClass(wb, "Workbook", null.ok = FALSE)
@@ -148,6 +151,7 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 #' }
 #'
 #' @export
+#' @family function to read from and write to xlsx
 xlsxReadData <- function(wb, sheetName = 1,
                          skipDescriptionRow = FALSE,
                          alwaysCharacter = c("Group", "Id$", "Ids$"),
@@ -184,12 +188,15 @@ xlsxReadData <- function(wb, sheetName = 1,
 #' @return The current configuration file with the added sheet.
 #'
 #' @examples
+#' \dontrun{
 #' wb <- loadWorkbook("config.xlsx")
 #' newData <- data.table(Name = c("Gina", "Hank"), Age = c(29, 33))
-#' addDataUsingTemplate(wb, "TemplateSheet", "NewDataSheet", newData)
+#' xlsxAddDataUsingTemplate(wb, "TemplateSheet", "NewDataSheet", newData)
+#' }
 #'
 #' @export
-addDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, templateXlsx = "Plots.xlsx") {
+#' @family function to read from and write to xlsx
+xlsxAddDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, templateXlsx = "Plots.xlsx") {
   # Input validation
   checkmate::assertClass(wb, "Workbook", null.ok = FALSE)
   checkmate::assertCharacter(templateSheet, len = 1)
@@ -438,6 +445,7 @@ cleanCharacterColumns <- function(dt,emptyAsNA) {
 #' }
 #'
 #' @export
+#' @family function to read from and write to xlsx
 splitInputs <- function(originalVector) {
   if (all(is.na(originalVector))) {
     return(NULL)
@@ -457,11 +465,12 @@ splitInputs <- function(originalVector) {
 #' @return The modified data.table with updated column names.
 #'
 #' @examples
-#' dt <- data.table(FirstName = c("John", "Jane"), LastName = c("Doe", "Smith"))
+#' dt <- data.table::data.table(FirstName = c("John", "Jane"), LastName = c("Doe", "Smith"))
 #' dtLower <- setHeadersToLowerCase(dt)
 #' print(names(dtLower)) # Result: c("firstname", "lastname")
 #'
 #' @export
+#' @family function to read from and write to xlsx
 setHeadersToLowerCase <- function(dt) {
   checkmate::assertDataTable(dt)
 

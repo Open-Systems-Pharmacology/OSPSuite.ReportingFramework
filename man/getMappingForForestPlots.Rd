@@ -16,7 +16,6 @@ mapping. It should include at least `yColumn` for the y-axis.}
 \value{
 A mapping object created using `aes` from ggplot2, which can be used
   in a ggplot call to create forest plots.
-  @keywords internal
 }
 \description{
 This function generates a mapping for forest plots based on the provided plot data
@@ -24,3 +23,4 @@ and the specified column list. It uses the `aes` function from ggplot2 to create
 the mapping, which includes x and y values, and optionally includes error bars
 based on the plot data provided.
 }
+\keyword{internal}

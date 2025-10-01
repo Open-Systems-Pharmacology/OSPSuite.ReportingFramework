@@ -15,3 +15,4 @@ character with startlines
 \description{
 creates startlines of Rmd file
 }
+\keyword{internal}

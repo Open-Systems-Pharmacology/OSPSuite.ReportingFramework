@@ -4,10 +4,10 @@
 \alias{filterParameterObserved}
 \title{Filter Observed Parameters}
 \usage{
-filterParameterObserved(pkParameterObserved, onePlotConfig)
+filterParameterObserved(dataObservedPK, onePlotConfig)
 }
 \arguments{
-\item{pkParameterObserved}{Optional data.table containing observed PK parameter
+\item{dataObservedPK}{Optional data.table containing observed PK parameter
 data for comparison, which can include columns for observed values and associated
 metadata.}
 

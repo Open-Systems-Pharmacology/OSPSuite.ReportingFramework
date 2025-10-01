@@ -502,50 +502,6 @@ getDefaultShapesForScaleVector <- function(n) {
 
   return(shapes[1:n])
 }
-
-
-
-#' generates named color vectors usable for scale_color_manual
-#'
-#' @param dt `data.table` with aesthetic and index column
-#' @param aesthetic  named `list`, names correspond to aesthetic columns,
-#'          entries are either 'dark' or 'light'
-#' @param index name of index column
-#'
-#' @return named list of color vectors
-#' @export
-generateColorScaleVectors <- function(dt,
-                                      aesthetic = list(
-                                        color = "dark",
-                                        fill = "light"
-                                      ),
-                                      index = "colorIndex") {
-  n <- nrow(dt)
-  scaleVectors <- list()
-  for (col in names(aesthetic)) {
-    for (col2 in c(col, setdiff(names(aesthetic), col))) {
-      if (!all(is.na(scaleVectors[[col]]))) {
-        scaleVectors[[col]] <- dt[[col2]]
-        break
-      }
-    }
-
-    if (is.null(scaleVectors[[col]])) {
-      if (n <= 10) {
-        if (aesthetic[[col]] == "dark") {
-          scaleVectors[[col]] <- ggsci::pal_d3("category20c")(20)[1:n]
-        } else {
-          scaleVectors[[col]] <- ggsci::pal_d3("category20c")(20)[(10 + 1):(10 + n)]
-        }
-      } else {
-        scaleVectors[[col]] <- ospsuite.plots::colorMaps[["ospDefault"]][1:n]
-      }
-    }
-    names(scaleVectors[[col]]) <- dt[[index]]
-  }
-  return(scaleVectors)
-}
-
 #' Get Color Vector for Legend
 #'
 #' This function generates a color vector for a given color legend,
@@ -691,6 +647,7 @@ concatWithAnd <- function(textVector) {
 #'  otherwise 0th 50th 100th
 #'
 #' @return A vector containing the mapped labels for specific percentiles and formatted strings for others.
+#' @export
 formatPercentiles <- function(percentiles, suffix = "", allAsPercentiles = FALSE) {
   lapply(percentiles * 100, function(p) {
     if (p == 0 & !allAsPercentiles) {
@@ -836,6 +793,7 @@ validateHeaders <- function(configTable) {
 #'  list(cols = 'vector with columns',
 #'  allowedValues = vector with allowed values)
 #'
+#' @export
 validateConfigTablePlots <- function(configTablePlots,
                                      charactersWithoutMissing = NULL,
                                      charactersWithMissing = NULL,
@@ -909,6 +867,7 @@ validateColumn <- function(col, data, type, anyMissing = FALSE) {
 #'
 #' @param subsetList A list containing subsets to validate.
 #' @param data A data frame containing the columns to validate.
+#' @keywords internal
 validateSubsetList <- function(subsetList, data) {
   for (subsetCheck in subsetList) {
     invisible(lapply(subsetCheck$cols, function(col) {
@@ -942,6 +901,7 @@ validateSubsetList <- function(subsetList, data) {
 #' @param columns A vector of column names to validate.
 #' @param data A data frame containing the columns to validate.
 #' @param ... additionally parameters parsed to checkmate::assertNumeric
+#' @export
 validateNumericVectorColumns <- function(columns, data, ...) {
   for (col in columns) {
     if (any(!is.na(data[[col]]))) {
@@ -1008,6 +968,7 @@ validateGroupConsistency <- function(
 #' @param configTablePlots `data.table` Configuration table without header lines
 #' @param columnVector vector of columns to check
 #'
+#' @export
 validateAtleastOneEntry <- function(configTablePlots, columnVector) {
   if (nrow(configTablePlots[rowSums(is.na(configTablePlots)) == length(columnVector), ]) > 0) {
     stop(paste(

@@ -23,3 +23,4 @@ mergeRmds(
 \description{
 Creates Rmd file which include specified  .Rmd s
 }
+\concept{functions called by workflow script}

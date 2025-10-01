@@ -22,5 +22,14 @@ The path for the logfile has to be initialized by the function initLogfile
 # Write a log message
 writeToLog(type = "Info", msg = "This is an information message", filename = "run.log")
 }
-
 }
+\seealso{
+Other log file management: 
+\code{\link{addMessageToLog}()},
+\code{\link{captureLog}()},
+\code{\link{initLogfunction}()},
+\code{\link{saveSessionInfo}()},
+\code{\link{setShowLogMessages}()},
+\code{\link{writeTableToLog}()}
+}
+\concept{log file management}

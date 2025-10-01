@@ -19,3 +19,17 @@ A list of plots and tables, where each entry corresponds to a generated sensitiv
 \description{
 Generates sensitivity plots based on the provided project configuration and scenario list.
 }
+\seealso{
+Other plot functions: 
+\code{\link{addDefaultConfigForPKForestPlots}()},
+\code{\link{addDefaultConfigForTimeProfilePlots}()},
+\code{\link{plotDistributionVsDemographics}()},
+\code{\link{plotHistograms}()},
+\code{\link{plotPKBoxwhisker}()},
+\code{\link{plotPKForestAggregatedAbsoluteValues}()},
+\code{\link{plotPKForestAggregatedRatios}()},
+\code{\link{plotPKForestPointEstimateOfAbsoluteValues}()},
+\code{\link{plotPKForestPointEstimateOfRatios}()},
+\code{\link{plotTimeProfiles}()}
+}
+\concept{plot functions}

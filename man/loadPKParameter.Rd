@@ -22,3 +22,12 @@ This function loads pharmacokinetic (PK) parameters for specified scenarios
 based on project configuration and a list of scenarios. It processes each
 scenario and returns the results as a data.table.
 }
+\seealso{
+Other scenario management: 
+\code{\link{calculatePKParameterForScenarios}()},
+\code{\link{createScenarios.wrapped}()},
+\code{\link{loadScenarioResultsToFramework}()},
+\code{\link{runAndSaveScenarios}()},
+\code{\link{runOrLoadScenarios}()}
+}
+\concept{scenario management}

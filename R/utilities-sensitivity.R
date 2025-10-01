@@ -29,7 +29,7 @@ addSensitivityTable <- function(projectConfiguration, scenarioList = NULL, scena
       parameterPath = parameterPaths
     )
 
-    wb <- addDataUsingTemplate(
+    wb <- xlsxAddDataUsingTemplate(
       wb = openxlsx::loadWorkbook(projectConfiguration$addOns$sensitivityFile),
       templateSheet = "Template",
       sheetName = sheetName,
@@ -112,6 +112,7 @@ runSensitivityAnalysisForScenarios <-
 #' @param sensitivitysheet The name of the sensitivity sheet.
 #'
 #' @return A string representing the generated file name for the sensitivity analysis results.
+#' @keywords internal
 sensitivityAnalyisName <- function(scenarioName, sensitivitysheet) {
   paste0(scenarioName, "_", sensitivitysheet, ".csv")
 }

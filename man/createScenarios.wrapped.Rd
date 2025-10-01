@@ -18,3 +18,12 @@ Named list of Scenario objects.
 \description{
 wrap of `esqlabsR::createDefaultProjectConfiguration()` with `esqlabsR::createScenarios()` as input
 }
+\seealso{
+Other scenario management: 
+\code{\link{calculatePKParameterForScenarios}()},
+\code{\link{loadPKParameter}()},
+\code{\link{loadScenarioResultsToFramework}()},
+\code{\link{runAndSaveScenarios}()},
+\code{\link{runOrLoadScenarios}()}
+}
+\concept{scenario management}

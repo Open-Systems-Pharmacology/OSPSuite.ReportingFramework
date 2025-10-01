@@ -26,3 +26,11 @@ Sys.unsetenv("QCpassed")
 getQCpassedEnvironmentVariable() # Should return FALSE and issue a warning
 }
 }
+\seealso{
+Other project initialization: 
+\code{\link{ProjectConfigurationRF}},
+\code{\link{createProjectConfiguration}()},
+\code{\link{initProject}()},
+\code{\link{setWorkflowOptions}()}
+}
+\concept{project initialization}

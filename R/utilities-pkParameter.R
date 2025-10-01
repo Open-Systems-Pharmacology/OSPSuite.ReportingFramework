@@ -13,6 +13,7 @@
 #' @return This function is called for its side effects and does not return a value.
 #'
 #' @export
+#' @family scenario management
 calculatePKParameterForScenarios <- function(projectConfiguration,
                                              scenarioResults) {
   # initialize parameter to avoid linter message
@@ -134,7 +135,7 @@ readUserDefinedPKParameters <- function(file) {
 #'
 #' @return NULL. The function updates the OSPSuite environment and does not return a value.
 #' throws Error if user-defined parameters are not defined or are not unique.
-#' @export
+#' @keywords internal
 addUserDefinedParameters <- function(userdefinedParameters, dtUserdefPKParameter) {
   for (userPar in userdefinedParameters) {
     iRow <- which(dtUserdefPKParameter$name == userPar)
@@ -182,6 +183,7 @@ addUserDefinedParameters <- function(userdefinedParameters, dtUserdefPKParameter
 #' @return A data.table containing the processed PK analyses.
 #'
 #' @export
+#' @family scenario management
 loadPKParameter <- function(projectConfiguration,
                             scenarioListOrResult) {
   # initialize variable to avoid messages

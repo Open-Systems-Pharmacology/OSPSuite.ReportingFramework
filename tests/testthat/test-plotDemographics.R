@@ -17,7 +17,7 @@ test_that("Default Config For Histograms", {
   expect_contains(wb$sheet_names, "HistogramTest")
 })
 
-test_that("Default Config For Histograms", {
+test_that("Default Config For Rangeplots", {
   addDefaultConfigForDistributionsVsDemographics(
     projectConfiguration = projectConfiguration,
     sheetName = "RangePlotTest",

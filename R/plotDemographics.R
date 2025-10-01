@@ -45,6 +45,8 @@
 #' }
 #'
 #' @export
+#' @family plot functions
+#' @family functions to generate plots displaying distribution vs demographics
 plotDistributionVsDemographics <- function(projectConfiguration,
                                            onePlotConfig,
                                            pkParameterDT = NULL,
@@ -149,6 +151,8 @@ plotDistributionVsDemographics <- function(projectConfiguration,
 #' }
 #'
 #' @export
+#' @family plot functions
+#' @family functions to generate histograms
 plotHistograms <- function(projectConfiguration,
                            onePlotConfig,
                            pkParameterDT = NULL,
@@ -898,6 +902,8 @@ getNFacetsForDemographics <- function(idData, isRangePlot, nMaxFacetRows = 2) {
 #' @param ... Additional arguments for validation.
 #' @return NULL (invisible).
 #' @export
+#' @family plot configuration validation function
+#' @family functions to generate plots displaying distribution vs demographics
 validateDistributionVsDemographicsConfig <- function(configTable, scenarioList, ...) {
   # initialize to avoid linter messages
   modeOfBinning <- referenceScenario <- NULL
@@ -989,6 +995,8 @@ validateDistributionVsDemographicsConfig <- function(configTable, scenarioList, 
 #' @param ... Additional arguments for validation.
 #' @return NULL (invisible).
 #' @export
+#' @family plot configuration validation function
+#' @family functions to generate histograms
 validateHistogramsConfig <- function(configTable, ...) {
   # initialize variable to avoid messages
   referenceScenario <- NULL
@@ -1138,6 +1146,8 @@ validateParameterID <- function(configTablePlots, ...) {
 #' It is called for its side effects.
 #' Add Default Configuration for Histograms
 #' @export
+#' @family plot configuration helper function
+#' @family functions to generate plots displaying distribution vs demographics
 addDefaultConfigForHistograms <- function(projectConfiguration,
                                           pkParameterDT = NULL,
                                           sheetName = "Histograms",
@@ -1177,6 +1187,8 @@ addDefaultConfigForHistograms <- function(projectConfiguration,
 #'
 #' @return NULL This function updates the Excel workbook in place and does not return a value.
 #' @export
+#' @family plot configuration helper function
+#' @family functions to generate histograms
 addDefaultConfigForDistributionsVsDemographics <- function(projectConfiguration,
                                                            pkParameterDT = NULL,
                                                            sheetName = "DistributionVsRange",
@@ -1284,7 +1296,7 @@ addDefaultDemographicPlots <- function(projectConfiguration,
       fill = TRUE
     )
   }
-  wb <- addDataUsingTemplate(
+  wb <- xlsxAddDataUsingTemplate(
     wb = wb,
     templateSheet = templateSheet,
     sheetName = sheetName,

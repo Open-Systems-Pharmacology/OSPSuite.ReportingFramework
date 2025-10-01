@@ -1,7 +1,7 @@
 #' @title RmdPlotManager
 #' @docType class
 #' @description Manages the creation and writing of .Rmd files for plots.
-#' @export
+#' @keywords internal
 RmdPlotManager <- R6::R6Class( # nolint
   "RmdPlotManager",
   inherit = ospsuite.utils::Printable,
@@ -234,7 +234,7 @@ RmdPlotManager <- R6::R6Class( # nolint
         file = file.path(
           private$.rmdfolder,
           private$.rmdName,
-          ospsuite.plots::validateFilename(paste0(tableKey, ".csv"))
+          paste0(gsub("[<>:\"/\\\\|?*]", "_", tableKey),".csv")
         ),
         na = "",
         row.names = FALSE,
@@ -408,21 +408,22 @@ RmdPlotManager <- R6::R6Class( # nolint
         return(exportArguments)
       }
 
-      if (!is.null(exportArguments[["heightToWidth"]]) & is.null(exportArguments[["height"]])) {
-        if (is.null(exportArguments[["width"]])) {
-          exportArguments[["width"]] <- getOspsuite.plots.option(optionKey = OptionKeys$export.width)
-        }
-        width <- exportArguments[["width"]]
-
-        if ("CombinedPlot" %in% class(plotObject)) {
-          dimensions <- calculatePlotDimensions(plotObject$plotObject, width)
-        } else {
-          dimensions <- calculatePlotDimensions(plotObject, width)
-        }
-
-        exportArguments[["height"]] <- exportArguments[["heightToWidth"]] * width + dimensions$heightOffset
-        exportArguments[["heightToWidth"]] <- NULL
-      }
+      # if (!is.null(exportArguments[["heightToWidth"]]) & is.null(exportArguments[["height"]])) {
+      #   if (is.null(exportArguments[["width"]])) {
+      #     exportArguments[["width"]] <- getOspsuite.plots.option(optionKey = OptionKeys$export.width)
+      #   }
+      #   width <- exportArguments[["width"]]
+      #
+      #   if ("CombinedPlot" %in% class(plotObject)) {
+      #     dimensions <- ospsuite.plots:::calculatePlotDimensions(plotObject$plotObject, width)
+      #     dimensions <- ospsuite.plots:::calculatePlotDimensions(plotObject$tableObject, width)
+      #   } else {
+      #     dimensions <- ospsuite.plots:::calculatePlotDimensions(plotObject, width)
+      #   }
+      #
+      #   exportArguments[["height"]] <- exportArguments[["heightToWidth"]] * width + dimensions$heightOffset
+      #   exportArguments[["heightToWidth"]] <- NULL
+      # }
 
       return(exportArguments)
     }

@@ -26,3 +26,14 @@ A `data.table` containing the processed data based on the dictionary. The struct
 \description{
 This function reads and processes data based on the provided project configuration.
 }
+\seealso{
+Other observed data processing: 
+\code{\link{addBiometricsToConfig}()},
+\code{\link{aggregateObservedDataGroups}()},
+\code{\link{convertDataCombinedToDataTable}()},
+\code{\link{convertDataTableToDataCombined}()},
+\code{\link{updateDataGroupId}()},
+\code{\link{updateOutputPathId}()},
+\code{\link{validateObservedData}()}
+}
+\concept{observed data processing}

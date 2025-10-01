@@ -15,3 +15,12 @@ An invisible value indicating that the loading was successful.
 \description{
 This function loads various configuration tables from specified Excel files into a global environment.
 }
+\seealso{
+Other get identifier: 
+\code{\link{getDataGroups}()},
+\code{\link{getModelParameterDefinitions}()},
+\code{\link{getOutputPathIds}()},
+\code{\link{getScenarioDefinitions}()},
+\code{\link{getTimeRangeTags}()}
+}
+\concept{get identifier}

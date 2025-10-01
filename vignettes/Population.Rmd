@@ -22,6 +22,7 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(ospsuite.reportingframework)
+options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
 ![Populations within the reporting framework](images/Population.png)

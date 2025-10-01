@@ -14,3 +14,13 @@ writeTableToLog(dt, filename = "run.log")
 \description{
 write a table to the logfile
 }
+\seealso{
+Other log file management: 
+\code{\link{addMessageToLog}()},
+\code{\link{captureLog}()},
+\code{\link{initLogfunction}()},
+\code{\link{saveSessionInfo}()},
+\code{\link{setShowLogMessages}()},
+\code{\link{writeToLog}()}
+}
+\concept{log file management}

@@ -20,3 +20,12 @@ throws Error if the scenario results do not exist.
 This function loads the results of specified scenarios. If the results do not exist,
 it returns an error.
 }
+\seealso{
+Other scenario management: 
+\code{\link{calculatePKParameterForScenarios}()},
+\code{\link{createScenarios.wrapped}()},
+\code{\link{loadPKParameter}()},
+\code{\link{runAndSaveScenarios}()},
+\code{\link{runOrLoadScenarios}()}
+}
+\concept{scenario management}

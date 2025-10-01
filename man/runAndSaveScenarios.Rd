@@ -39,3 +39,12 @@ runAndSaveScenarios(
 }
 
 }
+\seealso{
+Other scenario management: 
+\code{\link{calculatePKParameterForScenarios}()},
+\code{\link{createScenarios.wrapped}()},
+\code{\link{loadPKParameter}()},
+\code{\link{loadScenarioResultsToFramework}()},
+\code{\link{runOrLoadScenarios}()}
+}
+\concept{scenario management}

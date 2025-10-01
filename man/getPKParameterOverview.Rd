@@ -17,3 +17,4 @@ This function retrieves and compiles pharmacokinetic (PK) parameter data from sp
 and a PK parameter Excel file. It processes the data by reading the relevant sheets and merging them with
 scenario information.
 }
+\keyword{internal}

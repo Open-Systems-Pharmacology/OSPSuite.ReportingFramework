@@ -39,3 +39,9 @@ exportRandomPopulations(projectConfiguration,
 )
 }
 }
+\seealso{
+Other population export: 
+\code{\link{exportVirtualTwinPopulations}()},
+\code{\link{setupVirtualTwinPopConfig}()}
+}
+\concept{population export}

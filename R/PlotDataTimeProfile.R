@@ -1,7 +1,7 @@
 #' @title plotData for Time profile plot Data
 #' @docType class
 #' @description An object to collect plot Data and other information to create a time profile plot
-#' @export
+#' @keywords internal
 PlotDataTimeProfile <- R6::R6Class( # nolint
   "RmdPlotManager",
   inherit = ospsuite.utils::Printable,

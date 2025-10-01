@@ -54,7 +54,8 @@ test_that("Time profiles of individual scenarios", {
         suppressExport = TRUE,
         plotNames = c("Individuals_withoutData"),
         inputs = list(
-          scenarioResults = scenarioResultsInd
+          scenarioResults = scenarioResultsInd,
+          y2scale.args = list(limits = c(0,1.05))
         )
       )
     )
