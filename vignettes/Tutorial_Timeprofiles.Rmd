@@ -25,7 +25,10 @@ library(ospsuite.reportingframework)
 library(tidyr)
 library(data.table)
 options(rmarkdown.html_vignette.check_title = FALSE)
+```
 
+
+```{r loadProject, echo=FALSE, eval=TRUE}
 setDefaults()
 theme_update(legend.position = "top")
 
@@ -36,7 +39,10 @@ pBuilder <- TestProjectBuilder$new()
 projectConfiguration <- pBuilder$iniTestProject(rootDirectory = NULL)
 options(OSPSuite.RF.verbose = FALSE)
 
-rootDirectory <- fs::path_abs(file.path("..", ".."), start = projectConfiguration$configurationsFolder)
+rootDirectory <- fs::path_common(path = c(
+    projectConfiguration$configurationsFolder,
+    projectConfiguration$outputFolder
+  ))
 
 instDirectory <- system.file(
   package = "ospsuite.reportingframework",
@@ -66,12 +72,11 @@ invisible(file.copy(
   to = file.path(projectConfiguration$populationsFolder, "random_population.csv"), overwrite = TRUE
 ))
 
-exportVirtualTwinPopulations(
-  projectConfiguration = projectConfiguration,
-  populationNames = NULL,
-  modelFile = "po_3_mg_solution.pkml",
-  overwrite = FALSE
-)
+invisible(file.copy(
+  from = file.path(instDirectory, "Tutorial", "study_1234_population.csv"),
+  to = file.path(projectConfiguration$populationsFolder, "study_1234_population.csv"), overwrite = TRUE
+))
+
 scenarioList <-
   createScenarios.wrapped(
     projectConfiguration = projectConfiguration,
