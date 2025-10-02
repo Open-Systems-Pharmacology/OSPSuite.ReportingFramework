@@ -661,10 +661,10 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
       private$.dataSimulated[, colorIndex := scenarioType]
       # revert order, scenario should be plotted over reference
-      private$.reverseLegend = TRUE
+      private$.reverseLegend <- TRUE
       private$.dataSimulated$colorIndex <-
         factor(private$.dataSimulated$colorIndex,
-          levels = c("referenceScenario","scenario"),
+          levels = c("referenceScenario", "scenario"),
           labels = rev(names(referenceColorScaleVector)),
           ordered = TRUE
         )

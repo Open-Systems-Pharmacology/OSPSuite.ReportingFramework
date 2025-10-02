@@ -59,7 +59,7 @@ test_that("It should check the validity of the observed dataset", {
   dataObservedTestChanged[2, outputPathId := 101]
 
   expect_warning(validateObservedData(
-    dataDT  = dataObservedTestChanged,
+    dataDT = dataObservedTestChanged,
     dataClassType = "timeprofile"
   ))
 })

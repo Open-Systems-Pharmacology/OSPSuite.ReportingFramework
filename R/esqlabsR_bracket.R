@@ -47,14 +47,14 @@ initProject <- function(configurationDirectory = ".",
     unique()
 
   for (d in dirsToCreate) {
-    dabsolute <- fs::path_abs(d,start = configurationDirectory)
+    dabsolute <- fs::path_abs(d, start = configurationDirectory)
     if (!dir.exists(dabsolute)) {
       dir.create(dabsolute, recursive = TRUE, showWarnings = FALSE)
     }
   }
 
   for (f in filesToCopy) {
-    fabsolute <- fs::path_abs(f,start = configurationDirectory)
+    fabsolute <- fs::path_abs(f, start = configurationDirectory)
     if (!file.exists(fabsolute) | overwrite) {
       file.copy(
         from = file.path(templatePath, f),
@@ -258,28 +258,34 @@ runOrLoadScenarios <- function(projectConfiguration, scenarioList, simulationRun
 #' field is NA.
 #'
 #' @keywords internal
-readOntongenies <- function (data) {
+readOntongenies <- function(data) {
   proteinOntogenyMappings <- data[["protein Ontogenies"]]
   if (is.na(proteinOntogenyMappings)) {
     return(NULL)
   }
   proteinOntogenyMappings <- as.character(proteinOntogenyMappings)
-  proteinOntogenyMappings <- unlist(strsplit(x = proteinOntogenyMappings,
-                                             split = ",", fixed = TRUE))
+  proteinOntogenyMappings <- unlist(strsplit(
+    x = proteinOntogenyMappings,
+    split = ",", fixed = TRUE
+  ))
   proteinOntogenyMappings <- trimws(proteinOntogenyMappings)
   moleculeOntogenies <- vector("list", length(proteinOntogenyMappings))
   for (i in seq_along(proteinOntogenyMappings)) {
     ontogeny <- proteinOntogenyMappings[[i]]
-    ontogenyMapping <- unlist(strsplit(x = ontogeny, split = ":",
-                                       fixed = TRUE))
+    ontogenyMapping <- unlist(strsplit(
+      x = ontogeny, split = ":",
+      fixed = TRUE
+    ))
     if (length(ontogenyMapping) != 2) {
-      stop(paste('The ontogeny has the wrong structure:',ontogeny))
+      stop(paste("The ontogeny has the wrong structure:", ontogeny))
     }
     protein <- ontogenyMapping[[1]]
     ontogeny <- ontogenyMapping[[2]]
     ospsuite.utils::validateEnumValue(value = ontogeny, enum = ospsuite::StandardOntogeny)
-    moleculeOntogenies[[i]] <- ospsuite::MoleculeOntogeny$new(molecule = protein,
-                                                              ontogeny = ospsuite::StandardOntogeny[[ontogeny]])
+    moleculeOntogenies[[i]] <- ospsuite::MoleculeOntogeny$new(
+      molecule = protein,
+      ontogeny = ospsuite::StandardOntogeny[[ontogeny]]
+    )
   }
   return(moleculeOntogenies)
 }

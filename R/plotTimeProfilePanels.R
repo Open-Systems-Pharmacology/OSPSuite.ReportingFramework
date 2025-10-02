@@ -744,7 +744,7 @@ getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotC
   }
 
   if ("individualId" %in% names(dtCaption) &&
-      !all(is.na(dtCaption$individualId))) {
+    !all(is.na(dtCaption$individualId))) {
     individualtext <- pasteFigureTags(dtCaption, captionColumn = "individualId")
     if (individualtext != "") {
       individualtext <- paste(

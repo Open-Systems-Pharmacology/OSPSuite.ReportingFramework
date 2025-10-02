@@ -24,7 +24,7 @@ xlsxAddSheet <- function(wb, sheetName, dt) {
   # Input validation
   checkmate::assertClass(wb, "Workbook", null.ok = FALSE)
   checkmate::assertCharacter(sheetName, len = 1)
-  checkmate::assertDataTable(dt,null.ok = FALSE)
+  checkmate::assertDataTable(dt, null.ok = FALSE)
 
   if (sheetName %in% wb$sheet_names) {
     warning(paste(sheetName, "already exists. Existing content will be cleared."))
@@ -52,7 +52,7 @@ xlsxAddSheet <- function(wb, sheetName, dt) {
 #' wb <- loadWorkbook("example.xlsx")
 #' data <- data.table(Name = c("Charlie", "Dana"), Age = c(28, 32))
 #' xlsxWriteData(wb, "ExistingSheet", data)
-#'}
+#' }
 #'
 #' @export
 #' @family function to read from and write to xlsx
@@ -208,7 +208,8 @@ xlsxAddDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, te
     templateConfiguration <- xlsxReadData(wb = wb, sheetName = templateSheet)
   } else {
     templatePath <- system.file("templates", templateXlsx,
-                                package = "ospsuite.reportingframework", mustWork = FALSE)
+      package = "ospsuite.reportingframework", mustWork = FALSE
+    )
 
     if (!file.exists(templatePath)) {
       stop(paste("Template file", templatePath, "does not exist."))
@@ -222,8 +223,8 @@ xlsxAddDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, te
   }
 
   dtNewData <- rbind(templateConfiguration[1, ],
-                     setHeadersToLowerCase(dtNewData),
-                     fill = TRUE
+    setHeadersToLowerCase(dtNewData),
+    fill = TRUE
   )
 
   if (templateSheet != sheetName) {
@@ -285,21 +286,21 @@ adjustDataTableDimensions <- function(dt, existingData) {
 #' @keywords internal
 alignColumnNames <- function(dt, existingData) {
   data.table::setnames(dt,
-                       old = names(dt),
-                       new = unlist(lapply(names(dt), function(x) {
-                         ix <- which(tolower(x) == tolower(names(existingData)))
-                         if (length(ix) == 1) {
-                           newName <- names(existingData)[ix]
-                         } else if (length(ix) > 1) {
-                           stop(paste(
-                             "ambiguous header names in sheet", existingData,
-                             paste(names(existingData)[ix], collapse = ",")
-                           ))
-                         } else {
-                           newName <- x
-                         }
-                         return(newName)
-                       }))
+    old = names(dt),
+    new = unlist(lapply(names(dt), function(x) {
+      ix <- which(tolower(x) == tolower(names(existingData)))
+      if (length(ix) == 1) {
+        newName <- names(existingData)[ix]
+      } else if (length(ix) > 1) {
+        stop(paste(
+          "ambiguous header names in sheet", existingData,
+          paste(names(existingData)[ix], collapse = ",")
+        ))
+      } else {
+        newName <- x
+      }
+      return(newName)
+    }))
   )
   return(dt)
 }
@@ -339,8 +340,9 @@ readSheetData <- function(wb, sheetName) {
 processSheetData <- function(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA, convertHeaders) {
   if (as.logical(skipDescriptionRow)) {
     dt <- dt[-seq_len(as.integer(skipDescriptionRow))]
-    if ("Comment" %in% names(dt))
+    if ("Comment" %in% names(dt)) {
       dt <- dt[, !("Comment"), with = FALSE]
+    }
   }
 
   # Capture all columns matching the patterns in alwaysCharacter
@@ -359,7 +361,7 @@ processSheetData <- function(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA,
   dt <- convertColumnsToNumeric(dt, alwaysCharacter)
 
   # Trim whitespace for character columns and replace curly quotes
-  dt <- cleanCharacterColumns(dt,emptyAsNA)
+  dt <- cleanCharacterColumns(dt, emptyAsNA)
 
   # Convert column names to start with a lowercase letter
   if (convertHeaders) {
@@ -380,7 +382,7 @@ processSheetData <- function(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA,
 #' @keywords internal
 convertColumnsToNumeric <- function(dt, alwaysCharacter) {
   convertibleCols <- suppressWarnings(names(dt)[sapply(dt, function(x) {
-    xWithoutNA <- x[!is.na(x) & x!='']
+    xWithoutNA <- x[!is.na(x) & x != ""]
     return(length(xWithoutNA) == 0 || !any(is.na(as.numeric(xWithoutNA))))
   })])
   numericCols <- setdiff(convertibleCols, alwaysCharacter)
@@ -400,7 +402,7 @@ convertColumnsToNumeric <- function(dt, alwaysCharacter) {
 #'
 #' @return A `data.table` with cleaned character columns.
 #' @keywords internal
-cleanCharacterColumns <- function(dt,emptyAsNA) {
+cleanCharacterColumns <- function(dt, emptyAsNA) {
   characterCols <- setdiff(names(dt), names(dt)[sapply(dt, is.numeric)])
   if (length(characterCols) > 0) {
     # Trim whitespace for character columns
@@ -416,14 +418,14 @@ cleanCharacterColumns <- function(dt,emptyAsNA) {
       return(x)
     }), .SDcols = characterCols]
     # Keeps NA and empty string consistent within one table
-      dt[, (characterCols) := lapply(.SD, function(x) {
-        if (emptyAsNA) {
-          x[x == ""] <- NA_character_
-        } else {
-          x[is.na(x)] <- ''
-        }
-        return(x)
-      }), .SDcols = characterCols]
+    dt[, (characterCols) := lapply(.SD, function(x) {
+      if (emptyAsNA) {
+        x[x == ""] <- NA_character_
+      } else {
+        x[is.na(x)] <- ""
+      }
+      return(x)
+    }), .SDcols = characterCols]
   }
 
   return(dt)
@@ -585,11 +587,11 @@ synchronizeScenariosOutputsWithPlots <- function(projectConfiguration,
 
   # Merge the outputs based on the outputPathId
   opMerged <- merge(outputsSc, outputsPl[-1],
-                    by = "outputPathId",
-                    all.x = direction %in% c("bothways", "scenarioToPlot"),
-                    all.y = direction %in% c("bothways", "plotToScenario"),
-                    suffixes = c("Sc", "Pl"),
-                    sort = FALSE
+    by = "outputPathId",
+    all.x = direction %in% c("bothways", "scenarioToPlot"),
+    all.y = direction %in% c("bothways", "plotToScenario"),
+    suffixes = c("Sc", "Pl"),
+    sort = FALSE
   )
 
   # Initialize the outputPath column
@@ -614,15 +616,15 @@ synchronizeScenariosOutputsWithPlots <- function(projectConfiguration,
 
   # Write back to Scenario workbook if changes are detected
   if (any(!(opMerged$outputPathId %in% outputsSc$outputPathId)) |
-      any(!(opMerged[!is.na(outputPath)]$outputPath %in% outputsSc[!is.na(outputPath)]$outputPath)) |
-      nrow(outputsSc) != nrow(opMerged)) {
+    any(!(opMerged[!is.na(outputPath)]$outputPath %in% outputsSc[!is.na(outputPath)]$outputPath)) |
+    nrow(outputsSc) != nrow(opMerged)) {
     xlsxWriteData(wbSc, sheetName = "OutputPaths", opMerged[, c("outputPathId", "outputPath")])
     openxlsx::saveWorkbook(wb = wbSc, file = projectConfiguration$scenariosFile, overwrite = TRUE)
   }
   # Write back to Plot workbook if changes are detected
   if (any(!(opMerged$outputPathId %in% outputsPl$outputPathId)) |
-      any(!(opMerged[!is.na(outputPath)]$outputPath %in% outputsPl[!is.na(outputPath)]$outputPath)) |
-      nrow(outputsPl) != (nrow(opMerged) + 1)) {
+    any(!(opMerged[!is.na(outputPath)]$outputPath %in% outputsPl[!is.na(outputPath)]$outputPath)) |
+    nrow(outputsPl) != (nrow(opMerged) + 1)) {
     xlsxWriteData(wbPl, sheetName = "Outputs", rbind(outputsPl[1], opMerged))
     openxlsx::saveWorkbook(wb = wbPl, file = projectConfiguration$plotsFile, overwrite = TRUE)
   }

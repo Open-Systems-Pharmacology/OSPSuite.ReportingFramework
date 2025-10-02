@@ -8,6 +8,10 @@ theme_update(legend.position = "top") # Update theme for legend position
 options(OSPSuite.RF.skipFailingPlots = FALSE)
 
 
-withr::defer({ospsuite.plots::resetDefaults(oldOspSuitePlotDefaults)
-  options(OSPSuite.RF.verbose = FALSE)},
-  teardown_env())
+withr::defer(
+  {
+    ospsuite.plots::resetDefaults(oldOspSuitePlotDefaults)
+    options(OSPSuite.RF.verbose = FALSE)
+  },
+  teardown_env()
+)

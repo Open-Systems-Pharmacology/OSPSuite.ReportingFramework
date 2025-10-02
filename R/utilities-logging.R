@@ -37,8 +37,9 @@ initLogfunction <- function(projectConfiguration,
   checkmate::assertCharacter(warningsNotDisplayed)
   checkmate::assertCharacter(messagesNotDisplayed)
 
-  if (is.null(loggingFolder))
+  if (is.null(loggingFolder)) {
     loggingFolder <- file.path(projectConfiguration$outputFolder, "Logs")
+  }
   if (!dir.exists(loggingFolder)) dir.create(loggingFolder, recursive = TRUE)
 
   # Create the log file sub-folder with a time stamp
@@ -76,7 +77,6 @@ initLogfunction <- function(projectConfiguration,
 
   # startlogfile
   addMessageToLog("Start run of workflow")
-  #addMessageToLog(paste(utils::capture.output(projectConfiguration), collapse = "\n"))
 
   optionstxt <- paste(
     "\n\n",

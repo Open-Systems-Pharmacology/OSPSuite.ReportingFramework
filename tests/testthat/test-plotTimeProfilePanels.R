@@ -55,7 +55,7 @@ test_that("Time profiles of individual scenarios", {
         plotNames = c("Individuals_withoutData"),
         inputs = list(
           scenarioResults = scenarioResultsInd,
-          y2scale.args = list(limits = c(0,1.05))
+          y2scale.args = list(limits = c(0, 1.05))
         )
       )
     )
@@ -96,19 +96,21 @@ test_that("Time profiles of virtual twin scenarios", {
   skip_if(getRversion() < "4.1")
 
   expect_error(runPlot(
-      nameOfplotFunction = "plotTimeProfiles",
-      configTableSheet = "TimeProfileTest",
-      projectConfiguration = projectConfiguration,
-      suppressExport = TRUE,
-      plotNames = c(
-        "VirtualTwin_withReferencePop"
+    nameOfplotFunction = "plotTimeProfiles",
+    configTableSheet = "TimeProfileTest",
+    projectConfiguration = projectConfiguration,
+    suppressExport = TRUE,
+    plotNames = c(
+      "VirtualTwin_withReferencePop"
+    ),
+    inputs = list(
+      scenarioResults = c(
+        scenarioResults,
+        scenarioResultsInd
       ),
-      inputs = list(
-        scenarioResults = c(scenarioResults,
-                            scenarioResultsInd),
-        dataObserved = dataObserved
-      )
-    ))
+      dataObserved = dataObserved
+    )
+  ))
 
 
   plotList <-
@@ -118,15 +120,17 @@ test_that("Time profiles of virtual twin scenarios", {
       projectConfiguration = projectConfiguration,
       suppressExport = TRUE,
       plotNames = c(
-         "VirtualTwin",
-         "VirtualTwin_withData_all",
-         "VirtualTwin_withData_selected",
-         "VirtualTwin_withReferenceInd",
+        "VirtualTwin",
+        "VirtualTwin_withData_all",
+        "VirtualTwin_withData_selected",
+        "VirtualTwin_withReferenceInd",
         "VirtualTwin_withReferenceTwinPop"
       ),
       inputs = list(
-        scenarioResults = c(scenarioResults,
-                            scenarioResultsInd),
+        scenarioResults = c(
+          scenarioResults,
+          scenarioResultsInd
+        ),
         dataObserved = dataObserved
       )
     )

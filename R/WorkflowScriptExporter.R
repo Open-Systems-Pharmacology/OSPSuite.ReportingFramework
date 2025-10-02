@@ -1141,7 +1141,8 @@ importWorkflow <- function(projectDirectory,
 
   configurationDirectory <- file.path(
     projectDirectory,
-    getConfigDirectoryForWorkflow(wfIdentifier = wfIdentifier))
+    getConfigDirectoryForWorkflow(wfIdentifier = wfIdentifier)
+  )
 
   if (!dir.exists(configurationDirectory)) {
     dir.create(configurationDirectory, recursive = TRUE)
