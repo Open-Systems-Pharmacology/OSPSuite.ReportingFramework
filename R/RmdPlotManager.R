@@ -234,7 +234,7 @@ RmdPlotManager <- R6::R6Class( # nolint
         file = file.path(
           private$.rmdfolder,
           private$.rmdName,
-          paste0(gsub("[<>:\"/\\\\|?*]", "_", tableKey),".csv")
+          paste0(gsub("[<>:\"/\\\\|?*]", "_", tableKey), ".csv")
         ),
         na = "",
         row.names = FALSE,
