@@ -16,9 +16,10 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
       } else {
         return(stats::setNames(
           lapply(names(private$.projectConfigurationDataAddOns), function(property) {
-            suppressWarnings(private$.clean_path(path = private$.projectConfigurationDataAddOns[[property]],
-                                parent = self$configurationsFolder,
-                                replace_env_vars = FALSE
+            suppressWarnings(private$.clean_path(
+              path = private$.projectConfigurationDataAddOns[[property]],
+              parent = self$configurationsFolder,
+              replace_env_vars = FALSE
             ))
           }),
           names(private$.projectConfigurationDataAddOns)
@@ -167,7 +168,7 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
 
       dirPath <- fs::path_abs(value, start = self$configurationsFolder)
       if (!dir.exists(dirPath)) {
-        success = dir.create(dirPath, recursive = TRUE)
+        success <- dir.create(dirPath, recursive = TRUE)
       }
 
       value <- as.character(fs::path_rel(value, start = self$configurationsFolder))

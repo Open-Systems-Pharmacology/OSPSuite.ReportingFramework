@@ -10,5 +10,3 @@ library(testthat)
 library(ospsuite.reportingframework)
 
 test_check("ospsuite.reportingframework")
-
-

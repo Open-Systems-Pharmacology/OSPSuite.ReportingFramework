@@ -40,9 +40,9 @@ projectConfiguration <- pBuilder$iniTestProject(rootDirectory = NULL)
 options(OSPSuite.RF.verbose = FALSE)
 
 rootDirectory <- fs::path_common(path = c(
-    projectConfiguration$configurationsFolder,
-    projectConfiguration$outputFolder
-  ))
+  projectConfiguration$configurationsFolder,
+  projectConfiguration$outputFolder
+))
 
 instDirectory <- system.file(
   package = "ospsuite.reportingframework",

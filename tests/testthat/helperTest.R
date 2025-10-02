@@ -47,16 +47,16 @@ buildTestData <- function(rootDirectory = NULL,
     weightUnit = "kg",
     heightUnit = "cm",
     bMIUnit = "kg/m\u00B2",
-    'protein Ontogenies' = "CYP3A4:CYP3A4, UGT1A4:UGT1A4"
+    "protein Ontogenies" = "CYP3A4:CYP3A4, UGT1A4:UGT1A4"
   )
   pBuilder$mockManualEditingsPopulation(projectConfiguration,
-                                        randomPops = randomPops
+    randomPops = randomPops
   )
 
   # Set up scenarios based on the defined populations, add PK Parameter and output paths
   pBuilder$mockManualEditingsScenario(projectConfiguration,
-                                      dtTestScenarios = getTestScenarios(projectConfiguration),
-                                      pKParameter = "PK_Plasma, PK_Fraction"
+    dtTestScenarios = getTestScenarios(projectConfiguration),
+    pKParameter = "PK_Plasma, PK_Fraction"
   )
 
   # Add PK parameters to the project configuration
@@ -126,8 +126,7 @@ buildTestData <- function(rootDirectory = NULL,
   )))
 }
 
-expectDoppelgangerLoop <- function(plotList){
-
+expectDoppelgangerLoop <- function(plotList) {
   for (pName in names(plotList)) {
     set.seed(123)
     vdiffr::expect_doppelganger(
@@ -185,7 +184,7 @@ setupRandomDataForTest <- function(pBuilder, projectConfiguration, scenarioList,
 #' @return A data.table containing the scenarios
 getTestScenarios <- function(projectConfiguration) {
   # initialize variable to avoid messages
-  scenario_name <- NULL #nolint
+  scenario_name <- NULL # nolint
   longName <- shortName <- outputPathsIds <- NULL
 
   instDirectory <- system.file(
@@ -235,7 +234,7 @@ getTestScenarios <- function(projectConfiguration) {
 setupVirtualTwinScenariosForTest <- function(pBuilder, projectConfiguration) {
   # initialize variable to avoid messages
   modelFile <- readPopulationFromCSV <- NULL
-  scenario_name <- NULL #nolint
+  scenario_name <- NULL # nolint
 
   invisible(readObservedDataByDictionary(projectConfiguration))
 
@@ -540,7 +539,7 @@ mockManualEditingsPlotSensitivityTest <- function(projectConfiguration,
 mockManualEditingsPlotTimeProfileTest <- function(projectConfiguration) {
   # initialize variable to avoid messages
   plotName <- scenario <- individualIds <- NULL
-  timeRange_h0_6 <- timeRange_h6_24 <- NULL # nolint used with tags
+  timeRange_h0_6 <- timeRange_h6_24 <- timeRange_firstApplication <- NULL # nolint used with tags
 
   sheetName <- "TimeProfileTest"
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
@@ -782,7 +781,7 @@ mockManualEditingsPlotTimeProfileTest <- function(projectConfiguration) {
   )]
   dt <- rbind(dt, dtnew)
 
-  #keep only adjusted entries
+  # keep only adjusted entries
   dt[is.na(timeRange_firstApplication) | scenario != plotName]
 
   xlsxWriteData(wb = wb, sheetName = sheetName, dt = dt)

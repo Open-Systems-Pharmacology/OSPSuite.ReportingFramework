@@ -7,10 +7,10 @@ openxlsx::writeData(wb, "ExistingSheet", data.table(Name = c("Alice", "Bob"), Ag
 openxlsx::addWorksheet(wb, "TestSheet")
 openxlsx::writeData(wb, "TestSheet", data.frame(
   Name = c("Alice", "Bob", "Charlie", ""),
-  Age = c(30, 25, NA, ''),
+  Age = c(30, 25, NA, ""),
   Comment = c("Good", "Average", "Excellent", "N/A")
 ))
-testxlsx <- file.path(tempdir(), 'test_workbook.xlsx')
+testxlsx <- file.path(tempdir(), "test_workbook.xlsx")
 openxlsx::saveWorkbook(wb, testxlsx, overwrite = TRUE)
 
 # Unit tests for the xlsxWriteData function
@@ -46,8 +46,10 @@ test_that("xlsxWriteData works correctly", {
   expect_equal(result, expected)
 
   # Test case 4: Error when writing to a non-existent sheet
-  expect_error(xlsxWriteData(wb, "NonExistentSheet", newData),
-               "Sheet NonExistentSheet does not exist.")
+  expect_error(
+    xlsxWriteData(wb, "NonExistentSheet", newData),
+    "Sheet NonExistentSheet does not exist."
+  )
 })
 
 # Unit tests for the xlsxReadData function
@@ -57,31 +59,38 @@ test_that("xlsxReadData works correctly", {
 
   # Test case 1: Reading data without skipping any rows
   result <- xlsxReadData(wb, "TestSheet", skipDescriptionRow = FALSE)
-  expected <- data.table(name = c("Alice", "Bob", "Charlie",NA),
-                         age = c(30, 25, NA, NA),
-                         comment = c("Good", "Average", "Excellent", "N/A"))
+  expected <- data.table(
+    name = c("Alice", "Bob", "Charlie", NA),
+    age = c(30, 25, NA, NA),
+    comment = c("Good", "Average", "Excellent", "N/A")
+  )
   expect_equal(result, expected)
 
   # Test case 2: Reading data and skipping the first row
   result <- xlsxReadData(wb, "TestSheet", skipDescriptionRow = TRUE)
-  expected <- data.table(name = c("Bob", "Charlie", NA),
-                         age = c(25, NA, NA))
+  expected <- data.table(
+    name = c("Bob", "Charlie", NA),
+    age = c(25, NA, NA)
+  )
   expect_equal(result, expected)
 
   # Test case 3: Reading data with empty strings converted to NA
   result <- xlsxReadData(wb, "TestSheet", emptyAsNA = FALSE)
-  expected <- data.table(name = c("Alice", "Bob", "Charlie", ''),
-                         age = c(30, 25, NA, NA),
-                         comment = c("Good", "Average", "Excellent", "N/A"))
+  expected <- data.table(
+    name = c("Alice", "Bob", "Charlie", ""),
+    age = c(30, 25, NA, NA),
+    comment = c("Good", "Average", "Excellent", "N/A")
+  )
   expect_equal(result, expected)
 
   # Test case 4: Reading data and converting headers to lowercase
   result <- xlsxReadData(wb, "TestSheet", convertHeaders = FALSE)
-  expected <- data.table(Name = c("Alice", "Bob", "Charlie", NA),
-                         Age = c(30, 25, NA, NA),
-                         Comment = c("Good", "Average", "Excellent", "N/A"))
+  expected <- data.table(
+    Name = c("Alice", "Bob", "Charlie", NA),
+    Age = c(30, 25, NA, NA),
+    Comment = c("Good", "Average", "Excellent", "N/A")
+  )
   expect_equal(result, expected)
-
 })
 
 # Unit tests for the xlsxCloneAndSet function
@@ -99,12 +108,13 @@ test_that("xlsxCloneAndSet works correctly", {
   expect_equal(result, expected)
 
   # Test case 2: Attempting to clone a non-existent sheet
-  expect_error(xlsxCloneAndSet(wb, "NonExistentSheet", "AnotherSheet", newData),
-               "Sheet NonExistentSheet does not exist in the workbook.")
+  expect_error(
+    xlsxCloneAndSet(wb, "NonExistentSheet", "AnotherSheet", newData),
+    "Sheet NonExistentSheet does not exist in the workbook."
+  )
 
   # Test case 3: Cloning an existing sheet to a sheet name that already exists
   expect_no_error(xlsxCloneAndSet(wb, "ExistingSheet", "ClonedSheet", newData))
-
 })
 
 # Unit tests for the xlsxAddSheet function
@@ -122,20 +132,23 @@ test_that("xlsxAddSheet works correctly", {
   expect_equal(result, expected)
 
   # Test case 2: Adding a sheet that already exists
-  expect_warning(xlsxAddSheet(wb, "NewSheet", newData),
-                 "NewSheet already exists. Existing content will be cleared.")
+  expect_warning(
+    xlsxAddSheet(wb, "NewSheet", newData),
+    "NewSheet already exists. Existing content will be cleared."
+  )
 
   # Check if the existing sheet content is cleared and new data is written
   result <- xlsxReadData(wb, "NewSheet")
   expect_equal(result, expected)
 
   # Test case 3: Attempting to add a sheet with invalid workbook
-  expect_error(xlsxAddSheet(NULL, "InvalidSheet", newData),
-               "Assertion on 'wb' failed: Must inherit from class 'Workbook', but has class 'NULL'.")
+  expect_error(
+    xlsxAddSheet(NULL, "InvalidSheet", newData),
+    "Assertion on 'wb' failed: Must inherit from class 'Workbook', but has class 'NULL'."
+  )
 
   # Test case 4: Attempting to add a sheet with invalid data.table
   expect_error(xlsxAddSheet(wb, "AnotherSheets", NULL))
-
 })
 
 # Unit tests for the xlsxAddDataUsingTemplate function
@@ -153,17 +166,22 @@ test_that("xlsxAddDataUsingTemplate works correctly", {
   expect_equal(result, expected)
 
   # Test case 2: Attempting to add data using a non-existent template sheet
-  expect_error(xlsxAddDataUsingTemplate(wb, "NonExistentTemplate", "AnotherSheet", newData),
-               'Cannot find sheet named "NonExistentTemplate"')
+  expect_error(
+    xlsxAddDataUsingTemplate(wb, "NonExistentTemplate", "AnotherSheet", newData),
+    'Cannot find sheet named "NonExistentTemplate"'
+  )
 
   # Test case 3: Attempting to add data with invalid workbook
-  expect_error(xlsxAddDataUsingTemplate(NULL, "TemplateSheet", "InvalidSheet", newData),
-               "Assertion on 'wb' failed: Must inherit from class 'Workbook', but has class 'NULL'.")
+  expect_error(
+    xlsxAddDataUsingTemplate(NULL, "TemplateSheet", "InvalidSheet", newData),
+    "Assertion on 'wb' failed: Must inherit from class 'Workbook', but has class 'NULL'."
+  )
 
   # Test case 4: Attempting to add data with invalid data.table
-  expect_error(xlsxAddDataUsingTemplate(wb, "TemplateSheet", "AnotherSheet", NULL),
-               "Assertion on 'dtNewData' failed: Must be a data.table, not 'NULL'.")
-
+  expect_error(
+    xlsxAddDataUsingTemplate(wb, "TemplateSheet", "AnotherSheet", NULL),
+    "Assertion on 'dtNewData' failed: Must be a data.table, not 'NULL'."
+  )
 })
 
 test_that("Splits vectors is working", {
@@ -182,7 +200,6 @@ test_that("Splits vectors is working", {
 
 # Unit tests for the separateAndTrimColumn function
 test_that("separateAndTrimColumn works correctly", {
-
   # Test case 1: Basic functionality
   dt <- data.table(ID = 1:3, Comments = c("a, b, c", "d, e", "f"))
   result <- separateAndTrimColumn(dt, "Comments")

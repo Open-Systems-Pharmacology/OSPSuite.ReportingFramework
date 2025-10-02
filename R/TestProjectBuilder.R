@@ -29,7 +29,7 @@ TestProjectBuilder <- R6::R6Class( # nolint
     #' @param verbose A logical value indicating whether to print messages about the process.
     #'
     #' @return A ProjectConfiguration object containing the details of the initialized project.
-    iniTestProject = function(rootDirectory,verbose = FALSE) {
+    iniTestProject = function(rootDirectory, verbose = FALSE) {
       if (is.null(rootDirectory)) {
         rootDirectory <- file.path(tempdir(), "testProject")
       }
@@ -48,7 +48,7 @@ TestProjectBuilder <- R6::R6Class( # nolint
         path = file.path(file.path(self$rootDirectory, "Scripts", "ReportingFramework", "ProjectConfiguration.xlsx"))
       )
 
-      initLogfunction(projectConfiguration = projectConfiguration,verbose = verbose)
+      initLogfunction(projectConfiguration = projectConfiguration, verbose = verbose)
 
       private$synchronizeDirectories(
         fromDir = file.path(private$packageDirFramework, "Models"),
@@ -375,7 +375,7 @@ TestProjectBuilder <- R6::R6Class( # nolint
                                               weightUnit = "kg",
                                               heightUnit = "cm",
                                               bMIUnit = "kg/m\u00B2",
-                                              'protein Ontogenies' = "CYP3A4:CYP3A4, UGT1A4:UGT1A4"
+                                              "protein Ontogenies" = "CYP3A4:CYP3A4, UGT1A4:UGT1A4"
                                             )) {
       # add virtual population with in bio metric ranges of observed data
       wb <- openxlsx::loadWorkbook(projectConfiguration$populationsFile)
@@ -500,9 +500,9 @@ TestProjectBuilder <- R6::R6Class( # nolint
         wb = wb, sheetName = "IndividualBiometrics",
         skipDescriptionRow = FALSE, emptyAsNA = FALSE
       )
-      dt[['protein Ontogenies']] <- NA_character_
+      dt[["protein Ontogenies"]] <- NA_character_
       dt[, `:=`(
-        'protein Ontogenies' = "CYP3A4:CYP3A4, UGT1A4:UGT1A4"
+        "protein Ontogenies" = "CYP3A4:CYP3A4, UGT1A4:UGT1A4"
       )]
 
       individualIds <- dt$individualId
@@ -655,7 +655,7 @@ TestProjectBuilder <- R6::R6Class( # nolint
       outputPaths <- getOutputPathIds(wbPlots = projectConfiguration$plotsFile)
       randomIndividuals <- merge(randomIndividuals, outputPaths, by.x = "paths", by.y = "outputPath")
       randomIndividuals <- randomIndividuals[outputPathId %in% outputPathIds]
-      randomIndividuals[,outputPathId := as.character(outputPathId)]
+      randomIndividuals[, outputPathId := as.character(outputPathId)]
 
       return(randomIndividuals)
     },

@@ -145,9 +145,9 @@ plotPKForest <- function(projectConfiguration,
 
   onePlotConfig <-
     merge(onePlotConfig,
-          unique(pkParameterDT[, c("scenario", "pkParameter", "outputPathId")]),
-          by = c("scenario", "pkParameter", "outputPathId"),
-          sort = FALSE
+      unique(pkParameterDT[, c("scenario", "pkParameter", "outputPathId")]),
+      by = c("scenario", "pkParameter", "outputPathId"),
+      sort = FALSE
     )
 
   scaleVectors <- updateScalevector(scaleVectorsInput = scaleVectors)
@@ -264,9 +264,9 @@ plotPKForest <- function(projectConfiguration,
 
       # Create figure key and store plot
       figureKey <- paste(onePlotConfig$plotName[1],
-                         groupName,
-                         ifelse(xScale == "log", "log", "linear"),
-                         sep = "-"
+        groupName,
+        ifelse(xScale == "log", "log", "linear"),
+        sep = "-"
       )
       plotList[[figureKey]] <- combinedObject
     }
@@ -316,17 +316,17 @@ plotPKForestAggregatedAbsoluteValues <- function(projectConfiguration,
 
   plotList <-
     plotPKForest(projectConfiguration,
-                 onePlotConfig = onePlotConfig,
-                 pkParameterDT = pkParameterDT,
-                 ratioMode = "none",
-                 asPointeEstimate = FALSE,
-                 dataObservedPK = dataObservedPK,
-                 aggregationFlag = aggregationFlag,
-                 aggregationFun = aggregationFun,
-                 percentiles = percentiles,
-                 scaleVectors = scaleVectors,
-                 vlineIntercept = vlineIntercept,
-                 labelWrapWidth = labelWrapWidth
+      onePlotConfig = onePlotConfig,
+      pkParameterDT = pkParameterDT,
+      ratioMode = "none",
+      asPointeEstimate = FALSE,
+      dataObservedPK = dataObservedPK,
+      aggregationFlag = aggregationFlag,
+      aggregationFun = aggregationFun,
+      percentiles = percentiles,
+      scaleVectors = scaleVectors,
+      vlineIntercept = vlineIntercept,
+      labelWrapWidth = labelWrapWidth
     )
   return(plotList)
 }
@@ -446,17 +446,17 @@ plotPKForestAggregatedRatios <- function(projectConfiguration,
 
   plotList <-
     plotPKForest(projectConfiguration,
-                 onePlotConfig = onePlotConfig,
-                 pkParameterDT = pkParameterDT,
-                 ratioMode = "individualRatios",
-                 asPointeEstimate = FALSE,
-                 dataObservedPK = dataObservedPK,
-                 aggregationFlag = aggregationFlag,
-                 aggregationFun = aggregationFun,
-                 percentiles = percentiles,
-                 scaleVectors = scaleVectors,
-                 vlineIntercept = vlineIntercept,
-                 labelWrapWidth = labelWrapWidth
+      onePlotConfig = onePlotConfig,
+      pkParameterDT = pkParameterDT,
+      ratioMode = "individualRatios",
+      asPointeEstimate = FALSE,
+      dataObservedPK = dataObservedPK,
+      aggregationFlag = aggregationFlag,
+      aggregationFun = aggregationFun,
+      percentiles = percentiles,
+      scaleVectors = scaleVectors,
+      vlineIntercept = vlineIntercept,
+      labelWrapWidth = labelWrapWidth
     )
 
 
@@ -672,7 +672,6 @@ prepareDataForPKForest <- function(
     confLevel,
     aggregationFun,
     aggregationFlag) {
-
   if (asPointeEstimate) {
     plotData <- aggregatePointEstimate(
       pkParameterFiltered = pkParameterFiltered,
@@ -810,12 +809,12 @@ aggregatePointEstimate <- function(pkParameterFiltered,
     )
     plotData <- unique(onePlotConfig[, c("pkParameter", "outputPathId", "scenario", "referenceScenario")]) %>%
       merge(results[["base"]],
-            by = c("scenario", "pkParameter", "outputPathId")
+        by = c("scenario", "pkParameter", "outputPathId")
       ) %>%
       merge(results[["reference"]],
-            by.x = c("referenceScenario", "pkParameter", "outputPathId"),
-            by.y = c("scenario", "pkParameter", "outputPathId"),
-            suffixes = c("", ".reference")
+        by.x = c("referenceScenario", "pkParameter", "outputPathId"),
+        by.y = c("scenario", "pkParameter", "outputPathId"),
+        suffixes = c("", ".reference")
       )
 
     plotData[, xValues := xValues / xValues.reference]
@@ -914,12 +913,12 @@ addObservedData <- function(plotData, dataObservedPK, onePlotConfig) {
   if (!is.null(dataObservedPK) && nrow(dataObservedPK) > 0) {
     tmp <- dataObservedPK %>%
       merge(configToFilter,
-            by = c("dataGroupId", "pkParameter", "outputPathId")
+        by = c("dataGroupId", "pkParameter", "outputPathId")
       ) %>%
       dplyr::select(dplyr::any_of(names(plotData)))
     plotData <- rbind(plotData,
-                      tmp,
-                      fill = TRUE
+      tmp,
+      fill = TRUE
     )
   }
   return(plotData)
@@ -939,14 +938,15 @@ addDescriptions <- function(plotData, onePlotConfig, pkParameterDT) {
   pkParameter <- NULL
 
   plotData <- merge(plotData,
-                    onePlotConfig[, c("scenario", "scenarioShortName", "scenarioGroup")] %>% unique(),
-                    by = "scenario"
+    onePlotConfig[, c("scenario", "scenarioShortName", "scenarioGroup")] %>% unique(),
+    by = "scenario"
   )
 
   plotData$scenarioGroup <- factor(
     plotData$scenarioGroup,
     levels = unique(onePlotConfig$scenarioGroup),
-    ordered = TRUE)
+    ordered = TRUE
+  )
 
   plotData$scenarioShortName <- factor(
     plotData$scenarioShortName,
@@ -956,9 +956,9 @@ addDescriptions <- function(plotData, onePlotConfig, pkParameterDT) {
 
   #' Add Output Path Details to Plot Data
   plotData <- merge(plotData,
-                    configEnv$outputPaths[, c("outputPathId", "displayNameOutput", "displayUnit")] %>%
-                      unique(),
-                    by = "outputPathId"
+    configEnv$outputPaths[, c("outputPathId", "displayNameOutput", "displayUnit")] %>%
+      unique(),
+    by = "outputPathId"
   )
 
   #' Add PK Parameter Details to Plot Data
@@ -1281,9 +1281,9 @@ getRatioMode <- function(onePlotConfig, pkParameterDT, asRatio) {
     by = "scenario"
   ) %>%
     merge(pkParameterDTScenarios,
-          by.x = "referenceScenario",
-          by.y = "scenario",
-          suffixes = c("", "Reference")
+      by.x = "referenceScenario",
+      by.y = "scenario",
+      suffixes = c("", "Reference")
     )
 
   if (all(dtPop$populationId == dtPop$populationId.reference)) {
@@ -1571,8 +1571,8 @@ addDefaultConfigForPKForestPlots <- function(projectConfiguration,
     templateSheet = "PKParameter_Forest",
     sheetName = sheetName,
     dtNewData = rbind(dtNewHeader,
-                      dtNewConfig, # nolint indentation_linter
-                      fill = TRUE
+      dtNewConfig, # nolint indentation_linter
+      fill = TRUE
     )
   )
 
