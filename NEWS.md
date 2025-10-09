@@ -1,5 +1,3 @@
 # ospsuite.reportingframework 1.0.1
 
-# ospsuite.reportingframework 1.0.0
-
-- Initial release of the package
+- Initial release of the package as beta version
