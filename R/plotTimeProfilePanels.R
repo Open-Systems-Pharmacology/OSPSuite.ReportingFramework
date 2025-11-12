@@ -889,10 +889,10 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
         "individualIds"
       ),
     numericColumns = c(
+      "foldDistance_PvO",
       "timeOffset",
       "timeOffset_Reference",
-      "nFacetColumns",
-      "foldDistance_PvO"
+      "nFacetColumns"
     ),
     logicalColumns = c(
       "splitPlotsPerTimeRange",

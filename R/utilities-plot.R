@@ -798,6 +798,7 @@ validateConfigTablePlots <- function(configTablePlots,
                                      charactersWithoutMissing = NULL,
                                      charactersWithMissing = NULL,
                                      numericColumns = NULL,
+                                     numericWithoutMissing = NULL,
                                      logicalColumns = NULL,
                                      numericRangeColumns = NULL,
                                      subsetList = list()) {
@@ -811,8 +812,12 @@ validateConfigTablePlots <- function(configTablePlots,
   }
 
   # Validate numeric columns
+  if (!is.null(numericWithoutMissing)) {
+    invisible(lapply(numericWithoutMissing, function(col) validateColumn(col, configTablePlots, "numeric",anyMissing = FALSE)))
+  }
+
   if (!is.null(numericColumns)) {
-    invisible(lapply(numericColumns, function(col) validateColumn(col, configTablePlots, "numeric")))
+    invisible(lapply(numericColumns, function(col) validateColumn(col, configTablePlots, "numeric",anyMissing = TRUE)))
   }
 
   # Validate logical columns
@@ -853,7 +858,9 @@ validateColumn <- function(col, data, type, anyMissing = FALSE) {
       any.missing = anyMissing,
       .var.name = paste("Plot configuration column", col)
     ),
-    numeric = checkmate::assertNumeric(data[[col]], .var.name = paste("Plot configuration column", col)),
+    numeric = checkmate::assertNumeric(data[[col]],
+                                       any.missing = anyMissing,
+                                       .var.name = paste("Plot configuration column", col)),
     logical = checkmate::assertLogical(
       as.logical(data[[col]]),
       any.missing = FALSE,

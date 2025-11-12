@@ -120,7 +120,7 @@ getApplicationTimes <- function(outputPathsPerScenario, simulatedResults) {
 #' @param aggregationFun A function to aggregate the simulation data if necessary.
 #'
 #' @return A data.table with the processed time profile data.
-#' @keywords internal
+#' @export
 getSimulatedTimeprofile <- function(simulatedResult, outputPaths, aggregationFun, individualMatch) {
   # reduce list of outputPaths to available paths
   outputPaths <- intersect(

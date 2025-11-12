@@ -496,7 +496,8 @@ setHeadersToLowerCase <- function(dt) {
 #'
 #' @return A data.table with the specified column separated into multiple rows,
 #'         trimmed of whitespace, and renamed to remove the plural 's'.
-#' @keywords internal
+#' @export
+#' @family function to read from and write to xlsx
 separateAndTrimColumn <- function(data, columnName) {
   # Create a copy of the data.table to avoid modifying the original
   separatedData <- copy(data)
@@ -527,7 +528,8 @@ separateAndTrimColumn <- function(data, columnName) {
 #' @param projectConfiguration An object of class ProjectConfiguration containing the file paths for scenariosFile and plotsFile.
 #'
 #' @return Returns invisibly.
-#' @keywords internal
+#' @export
+#' @family function to read from and write to xlsx
 synchronizeScenariosWithPlots <- function(projectConfiguration) {
   # Load the workbooks for scenarios and plots
   wbSc <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
@@ -569,7 +571,8 @@ synchronizeScenariosWithPlots <- function(projectConfiguration) {
 #' @param projectConfiguration An object of class ProjectConfiguration containing the file paths for scenariosFile and plotsFile.
 #'
 #' @return Returns invisibly.
-#' @keywords internal
+#' @export
+#' @family function to read from and write to xlsx
 synchronizeScenariosOutputsWithPlots <- function(projectConfiguration,
                                                  direction = c("bothways", "scenarioToPlot", "plotToScenario")) {
   # initialize variable to avoid messages
