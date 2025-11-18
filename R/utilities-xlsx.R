@@ -262,7 +262,7 @@ copyConfigSheet <- function(projectConfiguration,sourceSheetName,
   checkmate::assertFileExists(sourceFile)
   sourceWb <- openxlsx::loadWorkbook(sourceFile)
   checkmate::assertChoice(sourceSheetName, choices = sourceWb$sheet_names)
-  dt <- openxlsx::read.xlsx(sourceWb, sheet = sourceSheetName)
+  dt <- xlsxReadData(sourceWb, sheet = sourceSheetName,convertHeaders = FALSE)
 
   # Add the sheet to the destination workbook
   openxlsx::addWorksheet(destWb, destinationSheetName)
