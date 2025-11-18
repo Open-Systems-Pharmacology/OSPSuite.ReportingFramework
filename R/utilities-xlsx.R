@@ -235,7 +235,58 @@ xlsxAddDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, te
 
   return(wb)
 }
+#' Copy a configuration sheet from source to destination
+#'
+#' This function copies a specified sheet from a source Excel file to a destination Excel file,
+#' including the data and styles.
+#'
+#' @param projectConfiguration An object containing the file paths for source and destination files.
+#' @param sourceSheetName A character string specifying the name of the sheet to copy.
+#' @param destinationSheetName A character string specifying the name of the new sheet.
+#' @param sourceFile A character string specifying the path to the source Excel file.
+#' @param destinationFile A character string specifying the path to the destination Excel file.
+#'
+#' @return An invisible NULL value. The function performs an action (copying a sheet).
+#' @export
+#' @family function to read from and write to xlsx
+copyConfigSheet <- function(projectConfiguration,sourceSheetName,
+                            destinationSheetName,sourceFile,destinationFile) {
 
+  # Load or create the destination workbook
+  destWb <- openxlsx::loadWorkbook(destinationFile)
+  if (destinationSheetName %in% destWb$sheet_names) {
+    return(invisible())
+  }
+
+  # Load the source workbook and read the sheet
+  checkmate::assertFileExists(sourceFile)
+  sourceWb <- openxlsx::loadWorkbook(sourceFile)
+  checkmate::assertChoice(sourceSheetName, choices = sourceWb$sheet_names)
+  dt <- openxlsx::read.xlsx(sourceWb, sheet = sourceSheetName)
+
+  # Add the sheet to the destination workbook
+  openxlsx::addWorksheet(destWb, destinationSheetName)
+  openxlsx::writeData(destWb, destinationSheetName, dt)
+
+  for (i in which(sapply(sourceWb$styleObjects, getElement, "sheet") == sourceSheetName)) {
+    theseRows <- unique(sourceWb$styleObjects[[i]]$rows)
+    theseCols <- unique(sourceWb$styleObjects[[i]]$cols)
+
+    openxlsx::addStyle(destWb,
+                       sheet = destinationSheetName,
+                       style = openxlsx::getStyles(sourceWb)[[i]],
+                       rows = theseRows,
+                       cols = theseCols,
+                       gridExpand = TRUE,
+                       stack = TRUE
+    )
+  }
+
+  # Save the destination workbook
+  openxlsx::saveWorkbook(destWb, destinationFile, overwrite = TRUE)
+
+  return(invisible())
+}
 
 # auxiliary ---------
 #' Check if the specified sheet exists in the workbook
