@@ -20,4 +20,17 @@ This function synchronizes output paths between two Excel files: one containing
 scenario outputs and the other containing plot outputs. It only writes back to the
 Excel files if changes are detected in the output paths.
 }
-\keyword{internal}
+\seealso{
+Other function to read from and write to xlsx: 
+\code{\link{copyConfigSheet}()},
+\code{\link{separateAndTrimColumn}()},
+\code{\link{setHeadersToLowerCase}()},
+\code{\link{splitInputs}()},
+\code{\link{synchronizeScenariosWithPlots}()},
+\code{\link{xlsxAddDataUsingTemplate}()},
+\code{\link{xlsxAddSheet}()},
+\code{\link{xlsxCloneAndSet}()},
+\code{\link{xlsxReadData}()},
+\code{\link{xlsxWriteData}()}
+}
+\concept{function to read from and write to xlsx}

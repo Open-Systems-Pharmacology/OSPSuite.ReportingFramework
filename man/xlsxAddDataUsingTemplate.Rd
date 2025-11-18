@@ -41,8 +41,12 @@ xlsxAddDataUsingTemplate(wb, "TemplateSheet", "NewDataSheet", newData)
 }
 \seealso{
 Other function to read from and write to xlsx: 
+\code{\link{copyConfigSheet}()},
+\code{\link{separateAndTrimColumn}()},
 \code{\link{setHeadersToLowerCase}()},
 \code{\link{splitInputs}()},
+\code{\link{synchronizeScenariosOutputsWithPlots}()},
+\code{\link{synchronizeScenariosWithPlots}()},
 \code{\link{xlsxAddSheet}()},
 \code{\link{xlsxCloneAndSet}()},
 \code{\link{xlsxReadData}()},
