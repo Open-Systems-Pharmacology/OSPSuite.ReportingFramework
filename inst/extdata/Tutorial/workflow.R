@@ -109,7 +109,7 @@ runPlot(
     dataObserved = dataObserved,
     scenarioResults = scenarioResults,
     referenceScaleVector = list('1mg iv simulation' = 'grey'),
-    xscaleArgs = list(limits = c(NA,NA))
+    xScaleArgs = list(limits = c(NA,NA))
   )
 )
 
