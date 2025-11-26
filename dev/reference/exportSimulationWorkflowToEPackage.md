@@ -1,0 +1,79 @@
+# Export Simulation Workflow
+
+This function facilitates the export of a simulation workflow to an
+electronic package (ePackage). It initializes a
+\`WorkflowScriptExporter\` object and executes a series of operations to
+prepare the workflow for export, including generating workflow text,
+retrieving input files, configuring scenario details, and exporting
+necessary files.
+
+## Usage
+
+``` r
+exportSimulationWorkflowToEPackage(
+  projectConfiguration,
+  wfIdentifier,
+  scenarioNames,
+  fileNameReplacements = c()
+)
+```
+
+## Arguments
+
+- projectConfiguration:
+
+  An object of class \`projectConfiguration\` that contains various
+  configuration details, including paths for input files, output
+  directories, and any other relevant settings required for the workflow
+  export.
+
+- wfIdentifier:
+
+  A unique identifier (integer) for the workflow. This identifier is
+  used to distinguish this workflow from others and is included in the
+  names of the exported files.
+
+- scenarioNames:
+
+  A character vector of scenario names that should be included in the
+  workflow export. These scenarios determine which specific
+  configurations and input files will be processed and exported as part
+  of the ePackage.
+
+- fileNameReplacements:
+
+  An optional character vector that specifies replacements for file
+  names. The vector should contain pairs of values, where the first
+  value in each pair represents the original file name, and the second
+  value represents the desired replacement name. This allows for
+  customization of exported file names to meet specific naming
+  conventions or requirements. For Files not listed in this variable the
+  source filename is converted to a valid filename.
+
+## Value
+
+Invisible NULL. The function does not return any value but performs a
+series of operations that result in the creation of exported files and
+configurations necessary for the ePackage. If successful, the function
+will complete without errors; otherwise, it will raise an informative
+error.
+
+## See also
+
+Other electronic package:
+[`exportTLFWorkflowToEPackage()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/exportTLFWorkflowToEPackage.md),
+[`importWorkflow()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/importWorkflow.md)
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# Example usage of exportSimulationWorkflow function
+exportSimulationWorkflow(
+  projectConfiguration = projectConfiguration,
+  wfIdentifier = 1,
+  scenarioNames = c("Scenario1", "Scenario2"),
+  fileNameReplacements = c("oldName.pkml", "new_name.pkml")
+)
+} # }
+```

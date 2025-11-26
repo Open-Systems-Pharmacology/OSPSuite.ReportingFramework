@@ -1,0 +1,101 @@
+# Aggregate Observed Data Groups
+
+This function aggregates observed data based on specified groups and an
+aggregation method. It allows for different aggregation techniques,
+including geometric and arithmetic standard deviations, percentiles, or
+a user-defined custom function.
+
+## Usage
+
+``` r
+aggregateObservedDataGroups(
+  dataObserved,
+  groups = NULL,
+  aggregationFlag = c("GeometricStdDev", "ArithmeticStdDev", "Percentiles", "Custom"),
+  percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1, 3, 5)],
+  groupSuffix = "aggregated",
+  customFunction = NULL,
+  lloqCheckColumns2of3 = NULL,
+  lloqCheckColumns1of2 = NULL
+)
+```
+
+## Arguments
+
+- dataObserved:
+
+  A \`data.table\` containing observed data.
+
+- groups:
+
+  A character vector specifying the groups to aggregate. If NULL, all
+  available groups are used.
+
+- aggregationFlag:
+
+  A character string indicating the aggregation method. Options include
+  "GeometricStdDev", "ArithmeticStdDev", "Percentiles", or "Custom".
+
+- percentiles:
+
+  A numeric vector of percentiles to calculate if \`aggregationFlag\` is
+  "Percentiles". Default is c(5, 50, 95).
+
+- groupSuffix:
+
+  A character string to append to group names in the aggregated output.
+  Default is 'aggregated'.
+
+- customFunction:
+
+  A custom function for aggregation if \`aggregationFlag\` is "Custom".
+  Default is NULL.
+
+- lloqCheckColumns2of3:
+
+  A character vector specifying columns to check for LLOQ (Lower Limit
+  of Quantification) for 1/3 data points. Default is NULL, is used only
+  for \`aggregationFlag\` "Custom".
+
+- lloqCheckColumns1of2:
+
+  A character vector specifying columns to check for LLOQ for 2/3 data
+  points. Default is NULL, is used only for \`aggregationFlag\`
+  "Custom".
+
+## Value
+
+A \`data.table\` containing aggregated observed data.
+
+## Details
+
+The function also checks for values below the Lower Limit of
+Quantification (LLOQ) and adjusts the aggregated results accordingly.
+For aggregationFlag 'GeometricStdDev' and 'GeometricStdDev', the
+statistics at any time point will only be calculated if at least 2/3 of
+the individual data were measured and were above the lower limit of
+quantification (lloq). For aggregationFlag 'Percentile', the statistics
+will only be calculated if less than or equal to 1/2 of the data is
+above LLOQ. If you use aggregationFlag 'Custom', please set parameters
+lloqCheckColumns2of3 and lloqCheckColumns1of2 accordingly.
+
+A custom function should take a numeric vector \`y\` as input and return
+a list containing: - \`yValues\`: The aggregated value (e.g., mean). -
+\`yMin\`: The lower value of the aggregated data (e.g., mean - sd). -
+\`yMax\`: The upper value of the aggregated data (e.g., mean + sd). -
+\`yErrorType\`: A string indicating the type of error associated with
+the aggregation, it is used in plot legends and captions. It must be a
+concatenation of the descriptor of yValues and the descriptor of yMin -
+yMax range separated by "\|" (e.g., "mean \| standard deviation" or
+"median \| 5th - 95th percentile").
+
+## See also
+
+Other observed data processing:
+[`addBiometricsToConfig()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addBiometricsToConfig.md),
+[`convertDataCombinedToDataTable()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/convertDataCombinedToDataTable.md),
+[`convertDataTableToDataCombined()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/convertDataTableToDataCombined.md),
+[`readObservedDataByDictionary()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/readObservedDataByDictionary.md),
+[`updateDataGroupId()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/updateDataGroupId.md),
+[`updateOutputPathId()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/updateOutputPathId.md),
+[`validateObservedData()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/validateObservedData.md)
