@@ -1,4 +1,4 @@
-# testProject was set up by setup.R, this provide varaible projectconfiguration and test data
+# testProject was set up by setup.R, this provide variable projectconfiguration and test data
 
 dataObserved <- readObservedDataByDictionary(projectConfiguration)
 
