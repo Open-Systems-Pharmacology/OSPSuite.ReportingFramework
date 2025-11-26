@@ -1,4 +1,4 @@
-# testProject was set up by setup.R, this provide varaible projectconfiguration and test data
+# testProject was set up by setup.R, this provide variable projectconfiguration and test data
 
 dataObserved <- readObservedDataByDictionary(projectConfiguration)
 
@@ -18,6 +18,46 @@ test_that("It should read and process data based on the provided project configu
   expect_contains(dtOutputPaths$outputPathId, c("Plasma", "CYP3A4total", "CYP3A4Liver"))
 })
 
+test_that("It should filter data by fileIds parameter", {
+  # Read the DataFiles sheet to get available fileIdentifiers
+  wb <- openxlsx::loadWorkbook(projectConfiguration$dataImporterConfigurationFile)
+  dataList <- xlsxReadData(
+    wb = wb,
+    sheetName = "DataFiles",
+    skipDescriptionRow = TRUE
+  )
+  
+  # Get available file identifiers
+  availableFileIds <- unique(dataList$fileIdentifier)
+  
+  # Test that we can filter by a subset of fileIds
+  if (length(availableFileIds) > 1) {
+    # Select first fileId
+    selectedFileId <- availableFileIds[1]
+    
+    dataObservedFiltered <- readObservedDataByDictionary(
+      projectConfiguration,
+      fileIds = selectedFileId
+    )
+    
+    # Should return a valid data.table
+    expect_true(data.table::is.data.table(dataObservedFiltered), 
+                "Filtered data should be a data table")
+    
+    # Should have fewer rows than the full dataset
+    expect_lt(nrow(dataObservedFiltered), nrow(dataObserved),
+              label = "Filtered data should have fewer rows than unfiltered data")
+  }
+  
+  # Test that passing invalid fileIds raises an error
+  expect_error(
+    readObservedDataByDictionary(
+      projectConfiguration,
+      fileIds = "nonexistent_file_id"
+    ),
+    "subset"
+  )
+})
 
 
 test_that("It should check the validity of the observed dataset", {
