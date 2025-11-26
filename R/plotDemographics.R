@@ -320,7 +320,7 @@ generateHistograms <- function(onePlotConfig,
         ospsuite.plots::plotHistogram(
           data = idData,
           mapping = mapping,
-          xscale = xscale,
+          xScale = xscale,
           xscaleArgs = getXorYlimits(onePlotConfig, xscale, direction = "x", ...),
           ...
         ) +
@@ -431,7 +431,7 @@ generateRangePlots <- function(onePlotConfig,
           modeOfBinning = onePlotConfig$modeOfBinning[1],
           numberOfBins = numberOfBins,
           breaks = breaks,
-          yscale = yscale,
+          yScale = yscale,
           yscaleArgs = getXorYlimits(onePlotConfig, yscale, direction = "y", ...),
           asStepPlot = asStepPlot,
           statFun = statFun,

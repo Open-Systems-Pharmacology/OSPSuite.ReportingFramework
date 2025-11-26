@@ -407,7 +407,7 @@ createBaseBoxWhisker <- function(plotDataPk, yScale, asRatio, colorVector, onePl
   plotObject <- ospsuite.plots::plotBoxWhisker(
     data = plotDataPk,
     mapping = aesMapping,
-    yscale = yScale,
+    yScale = yScale,
     yscaleArgs = getXorYlimits(onePlotConfig, yScale, ...)
   )
 

@@ -199,7 +199,7 @@ plotPKForest <- function(projectConfiguration,
           xLabel = columnList$xLabel,
           yFacetColumns = columnList$yFacetColumns,
           xFacetColumn = columnList$xFacetColumn,
-          xscale = xScale,
+          xScale = xScale,
           xscaleArgs = getXorYlimits(
             onePlotConfig = onePlotConfig,
             xOryScale = xScale,
