@@ -767,7 +767,7 @@ We add another example where we display the time ranges in one plot:
 knitr::kable(dtPlots[17:19])
 ```
 
-Execute the `runPlot` call again to generate the plots. The variable `plotList` contains all generated plots. In the example below, the input argument `xscale.args = c(NA, NA)` is added. This argument is passed to the function `ospsuite.plots::plotTimeprofile` and overwrites the default time-profile x-limits, which is `c(0, NA)`.
+Execute the `runPlot` call again to generate the plots. The variable `plotList` contains all generated plots. In the example below, the input argument `xScaleArgs = c(NA, NA)` is added. This argument is passed to the function `ospsuite.plots::plotTimeprofile` and overwrites the default time-profile x-limits, which is `c(0, NA)`.
 
 ```{r plot5, eval = TRUE}
 plotList <- runPlot(
@@ -778,7 +778,7 @@ plotList <- runPlot(
   inputs = list(
     dataObserved = dataObserved,
     scenarioResults = scenarioResults,
-    xscale.args = list(limits = c(NA, NA))
+    xScaleArgs = list(limits = c(NA, NA))
   )
 )
 ```
@@ -805,7 +805,7 @@ runPlot(
     dataObserved = dataObserved,
     scenarioResults = scenarioResults,
     referenceScaleVector = list("1mg iv simulation" = "grey"),
-    xscale.args = list(limits = c(NA, NA))
+    xScaleArgs = list(limits = c(NA, NA))
   )
 )
 ```

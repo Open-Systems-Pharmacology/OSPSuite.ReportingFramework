@@ -17,7 +17,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
                                          dataClassType = c("timeprofile", "pkParameter"),
                                          fileIds = NULL) {
   # avoid warning for global variable
-  individualId <- outputPathId <- dataType <- filePathFilter <- fileIdentifier <- dataClass <- NULL
+  individualId <- outputPathId <- dataType <- fileIdentifier <- dataClass <- NULL
 
   dataClassType <- match.arg(dataClassType)
 
@@ -37,7 +37,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
 
   if (!is.null(fileIds)) {
     checkmate::assertNames(fileIds, subset.of = dataList$fileIdentifier)
-    dataList <- dataList[fileIdentifier %in% filePathFilter]
+    dataList <- dataList[fileIdentifier %in% fileIds]
   }
 
   checkmate::assertFileExists(fs::path_abs(

@@ -320,8 +320,8 @@ generateHistograms <- function(onePlotConfig,
         ospsuite.plots::plotHistogram(
           data = idData,
           mapping = mapping,
-          xscale = xscale,
-          xscale.args = getXorYlimits(onePlotConfig, xscale, direction = "x", ...),
+          xScale = xscale,
+          xScaleArgs = getXorYlimits(onePlotConfig, xscale, direction = "x", ...),
           ...
         ) +
         facet_wrap(vars(plotTag)) +
@@ -431,8 +431,8 @@ generateRangePlots <- function(onePlotConfig,
           modeOfBinning = onePlotConfig$modeOfBinning[1],
           numberOfBins = numberOfBins,
           breaks = breaks,
-          yscale = yscale,
-          yscale.args = getXorYlimits(onePlotConfig, yscale, direction = "y", ...),
+          yScale = yscale,
+          yScaleArgs = getXorYlimits(onePlotConfig, yscale, direction = "y", ...),
           asStepPlot = asStepPlot,
           statFun = statFun,
           identifier = "individualId",
