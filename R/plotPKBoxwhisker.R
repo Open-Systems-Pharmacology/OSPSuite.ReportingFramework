@@ -408,7 +408,7 @@ createBaseBoxWhisker <- function(plotDataPk, yScale, asRatio, colorVector, onePl
     data = plotDataPk,
     mapping = aesMapping,
     yscale = yScale,
-    yscale.args = getXorYlimits(onePlotConfig, yScale, ...)
+    yscaleArgs = getXorYlimits(onePlotConfig, yScale, ...)
   )
 
   if (uniqueN(plotDataPk$colorIndex) == 1) {

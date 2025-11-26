@@ -321,7 +321,7 @@ generateHistograms <- function(onePlotConfig,
           data = idData,
           mapping = mapping,
           xscale = xscale,
-          xscale.args = getXorYlimits(onePlotConfig, xscale, direction = "x", ...),
+          xscaleArgs = getXorYlimits(onePlotConfig, xscale, direction = "x", ...),
           ...
         ) +
         facet_wrap(vars(plotTag)) +
@@ -432,7 +432,7 @@ generateRangePlots <- function(onePlotConfig,
           numberOfBins = numberOfBins,
           breaks = breaks,
           yscale = yscale,
-          yscale.args = getXorYlimits(onePlotConfig, yscale, direction = "y", ...),
+          yscaleArgs = getXorYlimits(onePlotConfig, yscale, direction = "y", ...),
           asStepPlot = asStepPlot,
           statFun = statFun,
           identifier = "individualId",

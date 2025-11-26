@@ -276,7 +276,7 @@ generatePlotForPlotType <- function(plotData,
               yscale = yScale,
               mapping = getGroupbyMapping(plotData, plotType),
               groupAesthetics = getGroupAesthetics(plotData),
-              yscale.args = list(limits = yLimits),
+              yscaleArgs = list(limits = yLimits),
               geomLineAttributes = getGeomLineAttributesForTP(plotData),
               geomLLOQAttributes = getGeomLLOQAttributesForTP(plotData),
               ...

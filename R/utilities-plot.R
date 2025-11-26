@@ -696,7 +696,7 @@ generatePlotTag <- function(index) {
 #' default is `y`.
 #'
 #' @param ... Additional arguments that can be passed to customize the y-scale.
-#' These can include `yscale.args` for further customization of the y-axis scale.
+#' These can include `yscaleArgs` for further customization of the y-axis scale.
 #'
 #' @return A list of y-scale arguments, including limits, which can be used
 #' in plotting functions.
@@ -705,8 +705,8 @@ getXorYlimits <- function(onePlotConfig, xOryScale, direction = c("y", "x"), ...
   direction <- match.arg(direction)
 
   dotargs <- list(...)
-  if (paste0(direction, "scale.args") %in% dotargs) {
-    xOrYscaleArgs <- dotargs[[paste0(direction, "scale.args")]]
+  if (paste0(direction, "scaleArgs") %in% names(dotargs)) {
+    xOrYscaleArgs <- dotargs[[paste0(direction, "scaleArgs")]]
   } else {
     xOrYscaleArgs <- list()
   }

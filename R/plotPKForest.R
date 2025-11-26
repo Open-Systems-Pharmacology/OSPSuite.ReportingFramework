@@ -200,7 +200,7 @@ plotPKForest <- function(projectConfiguration,
           yFacetColumns = columnList$yFacetColumns,
           xFacetColumn = columnList$xFacetColumn,
           xscale = xScale,
-          xscale.args = getXorYlimits(
+          xscaleArgs = getXorYlimits(
             onePlotConfig = onePlotConfig,
             xOryScale = xScale,
             direction = "x"
