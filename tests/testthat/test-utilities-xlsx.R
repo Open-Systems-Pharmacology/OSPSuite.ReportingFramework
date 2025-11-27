@@ -284,8 +284,8 @@ test_that("copyConfigSheet works correctly", {
   expect_equal(copiedData, sourceData)
   
   # Verify styles were copied (check that styleObjects exist for the copied sheet)
-  copiedSheetStyles <- sapply(destWbCheck$styleObjects, function(x) x$sheet == "CopiedSheet")
-  expect_true(any(copiedSheetStyles))
+  hasCopiedSheetStyles <- sapply(destWbCheck$styleObjects, function(x) x$sheet == "CopiedSheet")
+  expect_true(any(hasCopiedSheetStyles))
   
   # Test case 2: Handling when destination sheet already exists (early return)
   # Call again with same destination sheet name
@@ -320,10 +320,10 @@ test_that("copyConfigSheet works correctly", {
   
   # Load and verify styles
   destWbStyleCheck <- openxlsx::loadWorkbook(destFile3)
-  styledSheetStyles <- which(sapply(destWbStyleCheck$styleObjects, function(x) x$sheet == "StyledSheet"))
+  styledSheetStyleIndices <- which(sapply(destWbStyleCheck$styleObjects, function(x) x$sheet == "StyledSheet"))
   
   # Should have styles applied to the sheet
-  expect_true(length(styledSheetStyles) > 0)
+  expect_true(length(styledSheetStyleIndices) > 0)
   
   # Clean up test files
   file.remove(sourceFile)
