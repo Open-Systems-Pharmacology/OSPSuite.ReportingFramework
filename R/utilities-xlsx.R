@@ -246,7 +246,7 @@ xlsxAddDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, te
 #' @param sourceFile A character string specifying the path to the source Excel file.
 #' @param destinationFile A character string specifying the path to the destination Excel file.
 #'
-#' @return An invisible NULL value. The function performs an action (copying a sheet).
+#' @return Invisibly returns NULL. The function performs a side effect (copying a sheet between workbooks).
 #' @export
 #' @family function to read from and write to xlsx
 copyConfigSheet <- function(projectConfiguration,sourceSheetName,
