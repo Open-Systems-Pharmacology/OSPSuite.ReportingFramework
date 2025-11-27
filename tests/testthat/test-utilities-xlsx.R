@@ -237,5 +237,99 @@ test_that("separateAndTrimColumn works correctly", {
   expect_true("Comment" %in% names(result)) # Ensure the singular 'Comment' exists
 })
 
+# Unit tests for the copyConfigSheet function
+test_that("copyConfigSheet works correctly", {
+  # Create source workbook with data and styles
+  sourceWb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(sourceWb, "SourceSheet")
+  sourceData <- data.table(Product = c("A", "B", "C"), Price = c(10, 20, 30), Quantity = c(5, 10, 15))
+  openxlsx::writeData(sourceWb, "SourceSheet", sourceData)
+  
+  # Add some styles to the source sheet
+  headerStyle <- openxlsx::createStyle(
+    fontSize = 12,
+    fontColour = "#FFFFFF",
+    fgFill = "#4F81BD",
+    halign = "center",
+    valign = "center",
+    textDecoration = "bold"
+  )
+  openxlsx::addStyle(sourceWb, "SourceSheet", headerStyle, rows = 1, cols = 1:3, gridExpand = TRUE)
+  
+  dataStyle <- openxlsx::createStyle(
+    fontSize = 10,
+    halign = "left"
+  )
+  openxlsx::addStyle(sourceWb, "SourceSheet", dataStyle, rows = 2:4, cols = 1:3, gridExpand = TRUE, stack = TRUE)
+  
+  sourceFile <- file.path(tempdir(), "test_source_copyconfig.xlsx")
+  openxlsx::saveWorkbook(sourceWb, sourceFile, overwrite = TRUE)
+  
+  # Create destination workbook
+  destWb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(destWb, "ExistingSheet")
+  openxlsx::writeData(destWb, "ExistingSheet", data.table(X = c(1, 2), Y = c(3, 4)))
+  destFile <- file.path(tempdir(), "test_dest_copyconfig.xlsx")
+  openxlsx::saveWorkbook(destWb, destFile, overwrite = TRUE)
+  
+  # Test case 1: Successfully copying a sheet with data and styles
+  copyConfigSheet("SourceSheet", "CopiedSheet", sourceFile, destFile)
+  
+  # Verify the sheet was copied
+  destWbCheck <- openxlsx::loadWorkbook(destFile)
+  expect_true("CopiedSheet" %in% destWbCheck$sheet_names)
+  
+  # Verify the data was copied correctly
+  copiedData <- xlsxReadData(destWbCheck, "CopiedSheet", convertHeaders = FALSE)
+  expect_equal(copiedData, sourceData)
+  
+  # Verify styles were copied (check that styleObjects exist for the copied sheet)
+  copiedSheetStyles <- sapply(destWbCheck$styleObjects, function(x) x$sheet == "CopiedSheet")
+  expect_true(any(copiedSheetStyles))
+  
+  # Test case 2: Handling when destination sheet already exists (early return)
+  # Call again with same destination sheet name
+  copyConfigSheet("SourceSheet", "CopiedSheet", sourceFile, destFile)
+  
+  # Verify the sheet still exists and data hasn't changed
+  destWbCheck2 <- openxlsx::loadWorkbook(destFile)
+  copiedData2 <- xlsxReadData(destWbCheck2, "CopiedSheet", convertHeaders = FALSE)
+  expect_equal(copiedData2, sourceData)
+  
+  # Test case 3: Error handling for non-existent source files
+  nonExistentFile <- file.path(tempdir(), "non_existent_file.xlsx")
+  expect_error(
+    copyConfigSheet("SourceSheet", "NewSheet", nonExistentFile, destFile),
+    "File does not exist"
+  )
+  
+  # Test case 4: Error handling for non-existent source sheets
+  expect_error(
+    copyConfigSheet("NonExistentSheet", "NewSheet2", sourceFile, destFile),
+    "Must be element of set"
+  )
+  
+  # Test case 5: Proper preservation of styles during copy
+  # Create a new destination to test style preservation
+  destWb3 <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(destWb3, "Original")
+  destFile3 <- file.path(tempdir(), "test_dest_copyconfig3.xlsx")
+  openxlsx::saveWorkbook(destWb3, destFile3, overwrite = TRUE)
+  
+  copyConfigSheet("SourceSheet", "StyledSheet", sourceFile, destFile3)
+  
+  # Load and verify styles
+  destWbStyleCheck <- openxlsx::loadWorkbook(destFile3)
+  styledSheetStyles <- which(sapply(destWbStyleCheck$styleObjects, function(x) x$sheet == "StyledSheet"))
+  
+  # Should have styles applied to the sheet
+  expect_true(length(styledSheetStyles) > 0)
+  
+  # Clean up test files
+  file.remove(sourceFile)
+  file.remove(destFile)
+  file.remove(destFile3)
+})
+
 # Clean up
 file.remove(testxlsx)
