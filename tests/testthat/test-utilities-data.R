@@ -41,12 +41,15 @@ test_that("It should filter data by fileIds parameter", {
     )
 
     # Should return a valid data.table
-    expect_true(data.table::is.data.table(dataObservedFiltered),
-                "Filtered data should be a data table")
+    expect_true(
+      data.table::is.data.table(dataObservedFiltered),
+      "Filtered data should be a data table"
+    )
 
     # Should have fewer rows than the full dataset
     expect_lt(nrow(dataObservedFiltered), nrow(dataObserved),
-              label = "Filtered data should have fewer rows than unfiltered data")
+      label = "Filtered data should have fewer rows than unfiltered data"
+    )
   }
 
   # Test that passing invalid fileIds raises an error

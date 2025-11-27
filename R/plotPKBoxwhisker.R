@@ -479,8 +479,8 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
         cols = c("outputPathIds"),
         allowedValues = unique(pkParameterDT$outputPathId)
       ),
-      yscale = list(
-        cols = c("yscale"),
+      yScale = list(
+        cols = c("yScale"),
         allowedValues = c("linear", "log")
       ),
       facetScale = list(

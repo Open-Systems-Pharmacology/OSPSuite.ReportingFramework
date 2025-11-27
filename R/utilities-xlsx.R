@@ -249,9 +249,8 @@ xlsxAddDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, te
 #' @return Invisibly returns NULL. The function performs a side effect (copying a sheet between workbooks).
 #' @export
 #' @family function to read from and write to xlsx
-copyConfigSheet <- function(projectConfiguration,sourceSheetName,
-                            destinationSheetName,sourceFile,destinationFile) {
-
+copyConfigSheet <- function(projectConfiguration, sourceSheetName,
+                            destinationSheetName, sourceFile, destinationFile) {
   # Load or create the destination workbook
   destWb <- openxlsx::loadWorkbook(destinationFile)
   if (destinationSheetName %in% destWb$sheet_names) {
@@ -262,7 +261,7 @@ copyConfigSheet <- function(projectConfiguration,sourceSheetName,
   checkmate::assertFileExists(sourceFile)
   sourceWb <- openxlsx::loadWorkbook(sourceFile)
   checkmate::assertChoice(sourceSheetName, choices = sourceWb$sheet_names)
-  dt <- xlsxReadData(sourceWb, sheet = sourceSheetName,convertHeaders = FALSE)
+  dt <- xlsxReadData(sourceWb, sheet = sourceSheetName, convertHeaders = FALSE)
 
   # Add the sheet to the destination workbook
   openxlsx::addWorksheet(destWb, destinationSheetName)
@@ -273,12 +272,12 @@ copyConfigSheet <- function(projectConfiguration,sourceSheetName,
     theseCols <- unique(sourceWb$styleObjects[[i]]$cols)
 
     openxlsx::addStyle(destWb,
-                       sheet = destinationSheetName,
-                       style = openxlsx::getStyles(sourceWb)[[i]],
-                       rows = theseRows,
-                       cols = theseCols,
-                       gridExpand = TRUE,
-                       stack = TRUE
+      sheet = destinationSheetName,
+      style = openxlsx::getStyles(sourceWb)[[i]],
+      rows = theseRows,
+      cols = theseCols,
+      gridExpand = TRUE,
+      stack = TRUE
     )
   }
 

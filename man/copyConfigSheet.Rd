@@ -24,7 +24,7 @@ copyConfigSheet(
 \item{destinationFile}{A character string specifying the path to the destination Excel file.}
 }
 \value{
-An invisible NULL value. The function performs an action (copying a sheet).
+Invisibly returns NULL. The function performs a side effect (copying a sheet between workbooks).
 }
 \description{
 This function copies a specified sheet from a source Excel file to a destination Excel file,

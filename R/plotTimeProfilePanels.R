@@ -921,8 +921,8 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
         cols = "individualIds",
         allowedValues = c("*", unique(dataObserved[!is.na(individualId)]$individualId))
       ),
-      yscale = list(
-        cols = c("yscale"),
+      yScale = list(
+        cols = c("yScale"),
         allowedValues = c("linear", "log")
       ),
       timeUnit = list(

@@ -18,7 +18,7 @@ y(x)-axis. It should be either "linear" or "log".}
 default is `y`.}
 
 \item{...}{Additional arguments that can be passed to customize the y-scale.
-These can include `yscale.args` for further customization of the y-axis scale.}
+These can include `yScaleArgs` for further customization of the y-axis scale.}
 }
 \value{
 A list of y-scale arguments, including limits, which can be used

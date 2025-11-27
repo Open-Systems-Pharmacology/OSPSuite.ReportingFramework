@@ -315,13 +315,13 @@ generateHistograms <- function(onePlotConfig,
       mapping <- aes(x = value, groupby = scenarioType)
     }
 
-    for (xscale in splitInputs(onePlotConfig$xScale[1])) {
+    for (xScale in splitInputs(onePlotConfig$xScale[1])) {
       plotObject <-
         ospsuite.plots::plotHistogram(
           data = idData,
           mapping = mapping,
-          xScale = xscale,
-          xScaleArgs = getXorYlimits(onePlotConfig, xscale, direction = "x", ...),
+          xScale = xScale,
+          xScaleArgs = getXorYlimits(onePlotConfig, xScale, direction = "x", ...),
           ...
         ) +
         facet_wrap(vars(plotTag)) +
@@ -351,13 +351,13 @@ generateHistograms <- function(onePlotConfig,
           idData = idData,
           valueLabel = xlabel,
           binLabel = NULL,
-          valueScale = xscale,
+          valueScale = xScale,
           plotCaptionAddon = onePlotConfig$plotCaptionAddon[1]
         )
       )
 
       # prepare export
-      figureKey <- paste(onePlotConfig$plotName[1], pid, xscale, sep = "_")
+      figureKey <- paste(onePlotConfig$plotName[1], pid, xScale, sep = "_")
       plotList[[figureKey]] <- plotObject
     }
   }
@@ -423,7 +423,7 @@ generateRangePlots <- function(onePlotConfig,
     # initialize dtExport (will be the set only once per pid)
     dtExport <- NULL
 
-    for (yscale in splitInputs(onePlotConfig$yScale[1])) {
+    for (yScale in splitInputs(onePlotConfig$yScale[1])) {
       plotObject <-
         plotRangeDistribution(
           data = idData,
@@ -431,8 +431,8 @@ generateRangePlots <- function(onePlotConfig,
           modeOfBinning = onePlotConfig$modeOfBinning[1],
           numberOfBins = numberOfBins,
           breaks = breaks,
-          yScale = yscale,
-          yScaleArgs = getXorYlimits(onePlotConfig, yscale, direction = "y", ...),
+          yScale = yScale,
+          yScaleArgs = getXorYlimits(onePlotConfig, yScale, direction = "y", ...),
           asStepPlot = asStepPlot,
           statFun = statFun,
           identifier = "individualId",
@@ -472,14 +472,14 @@ generateRangePlots <- function(onePlotConfig,
           idData = idData,
           valueLabel = ylabel,
           binLabel = xlabel,
-          valueScale = yscale,
+          valueScale = yScale,
           plotCaptionAddon = onePlotConfig$plotCaptionAddon[1]
         ),
         footNoteLines = getFootnoteLinesForRangePlots(attr(dtExport, "errorLabels"))
       )
 
       # prepare export
-      figureKey <- paste(onePlotConfig$plotName[1], pid, yscale, sep = "_")
+      figureKey <- paste(onePlotConfig$plotName[1], pid, yScale, sep = "_")
       plotList[[figureKey]] <- plotObject
     }
     # Export table
@@ -943,7 +943,7 @@ validateDistributionVsDemographicsConfig <- function(configTable, scenarioList, 
         cols = c("modeOfBinning"),
         allowedValues = unlist(unname(BINNINGMODE))
       ),
-      yscale = list(
+      yScale = list(
         cols = c("yScale"),
         allowedValues = c("linear", "log")
       ),
@@ -1034,7 +1034,7 @@ validateHistogramsConfig <- function(configTable, ...) {
         allowedValues = popScenarios,
         splitAllowed = FALSE
       ),
-      yscale = list(
+      yScale = list(
         cols = c("xScale"),
         allowedValues = c("linear", "log")
       ),
