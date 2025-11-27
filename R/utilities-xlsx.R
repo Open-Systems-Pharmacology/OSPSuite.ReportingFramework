@@ -240,7 +240,6 @@ xlsxAddDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, te
 #' This function copies a specified sheet from a source Excel file to a destination Excel file,
 #' including the data and styles.
 #'
-#' @param projectConfiguration An object containing the file paths for source and destination files.
 #' @param sourceSheetName A character string specifying the name of the sheet to copy.
 #' @param destinationSheetName A character string specifying the name of the new sheet.
 #' @param sourceFile A character string specifying the path to the source Excel file.
@@ -249,8 +248,7 @@ xlsxAddDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, te
 #' @return Invisibly returns NULL. The function performs a side effect (copying a sheet between workbooks).
 #' @export
 #' @family function to read from and write to xlsx
-copyConfigSheet <- function(projectConfiguration, sourceSheetName,
-                            destinationSheetName, sourceFile, destinationFile) {
+copyConfigSheet <- function(sourceSheetName,destinationSheetName, sourceFile, destinationFile) {
   # Load or create the destination workbook
   destWb <- openxlsx::loadWorkbook(destinationFile)
   if (destinationSheetName %in% destWb$sheet_names) {
