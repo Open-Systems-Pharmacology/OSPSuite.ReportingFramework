@@ -62,6 +62,71 @@ The `readObservedDataByDictionary` function plays a pivotal role in the data imp
 observedData <- readObservedDataByDictionary(projectConfiguration)
 ```
 
+## Debug Mode
+
+The `readObservedDataByDictionary` function includes an optional `debugMode` parameter that helps identify and troubleshoot configuration issues in your data dictionary. When enabled, debug mode provides additional warnings and allows you to inspect problematic data without stopping execution.
+
+### When to Use Debug Mode
+
+Debug mode is particularly useful when:
+
+- You are setting up a new data import configuration
+- You encounter unexpected results or errors during data import
+- You want to validate your dictionary configuration before running production workflows
+
+### Enabling Debug Mode
+
+To enable debug mode, set the `debugMode` parameter to `TRUE`:
+
+```{r debugMode, eval = FALSE, echo = TRUE}
+# Enable debug mode for troubleshooting
+observedData <- readObservedDataByDictionary(
+  projectConfiguration,
+  debugMode = TRUE
+)
+```
+
+### Debug Mode Features
+
+When debug mode is enabled, the function provides enhanced diagnostics:
+
+1. **Filter Validation Warning**: If a filter column contains the value `"1"`, the function warns that this may result from using the Excel/LibreOffice function `TRUE()` instead of the character string `'TRUE'`. This is a common mistake that causes filters to apply only to the first row instead of all rows.
+
+   **Example warning:**
+   ```
+   Warning: Dictionary: 'tpDictionary'; targetColumn: 'individualId'; 
+   Filter column contains '1'. This may result from using TRUE() function 
+   in Excel/LibreOffice. Please use the character 'TRUE' instead of the 
+   function TRUE(). Filter '1' only applies to the first row instead of 
+   all rows.
+   ```
+
+2. **Validation Errors as Warnings**: In debug mode, data validation errors (such as duplicate rows or missing values) are converted to warnings instead of stopping execution. This allows you to inspect the invalid data and understand what needs to be corrected in your configuration.
+
+### Important Restrictions
+
+**Debug mode is not allowed during valid/production runs.** If you have set workflow options with `setWorkflowOptions(isValidRun = TRUE)`, attempting to use `debugMode = TRUE` will result in an error. This ensures that production workflows maintain strict validation standards.
+
+To use debug mode, ensure your workflow is configured for exploratory analysis:
+
+```{r debugModeWorkflow, eval = FALSE, echo = TRUE}
+# Configure for exploratory analysis (allows debug mode)
+setWorkflowOptions(isValidRun = FALSE)
+
+# Now debug mode can be used
+observedData <- readObservedDataByDictionary(
+  projectConfiguration,
+  debugMode = TRUE
+)
+```
+
+### Best Practices
+
+- Use debug mode during development and testing of your data import configuration
+- Review all warnings carefully to identify configuration issues
+- Once your configuration is validated, disable debug mode (`debugMode = FALSE`, the default) for regular use
+- Never use debug mode in production/valid runs
+
 # Filling the Excel Table
 
 ```{r load-template, eval=TRUE, echo=FALSE}

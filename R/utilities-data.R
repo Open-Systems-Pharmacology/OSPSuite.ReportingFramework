@@ -8,6 +8,7 @@
 #' @param spreadData If TRUE, information derived from observed data, such as identifiers and biometrics, is spread to other tables.
 #' @param dataClassType A character string indicating the type of data class to process. Options are "timeprofile" or "pkParameter".
 #' @param fileIds A character vector with file identifiers to be selected, if NULL (default) all are selected.
+#' @param debugMode If TRUE, enables debug mode which provides additional warnings to help identify configuration issues. In debug mode, validation errors become warnings. Default is FALSE.
 #'
 #' @return A `data.table` containing the processed data based on the dictionary. The structure includes relevant columns defined in the data dictionary.
 #' @export
@@ -15,9 +16,21 @@
 readObservedDataByDictionary <- function(projectConfiguration,
                                          spreadData = TRUE,
                                          dataClassType = c("timeprofile", "pkParameter"),
-                                         fileIds = NULL) {
+                                         fileIds = NULL,
+                                         debugMode = FALSE) {
   # avoid warning for global variable
   individualId <- outputPathId <- dataType <- fileIdentifier <- dataClass <- NULL
+
+  # Validate debugMode parameter
+  checkmate::assertLogical(debugMode, len = 1)
+
+  # Check if debugMode is allowed (not in valid runs)
+  if (debugMode) {
+    stopHelperFunction <- getOption("OSPSuite.RF.stopHelperFunction", default = NULL)
+    if (!is.null(stopHelperFunction) && isTRUE(stopHelperFunction)) {
+      stop("debugMode is not allowed during valid runs. Please set isValidRun to FALSE in setWorkflowOptions().")
+    }
+  }
 
   dataClassType <- match.arg(dataClassType)
 
@@ -67,7 +80,8 @@ readObservedDataByDictionary <- function(projectConfiguration,
         data = tmpData,
         dataFilter = d$dataFilter,
         dict = tmpdict,
-        dictionaryName = d$dictionary
+        dictionaryName = d$dictionary,
+        debugMode = debugMode
       ) %>%
         dplyr::mutate(dataClass = d$dataClass),
       fill = TRUE
@@ -89,7 +103,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
 
   dataDT <- setDataTypeAttributes(dataDT, dict)
 
-  validateObservedData(dataDT = dataDT, dataClassType)
+  validateObservedData(dataDT = dataDT, dataClassType, debugMode = debugMode)
 
   # Spread data to other tables
   if (spreadData) {
@@ -161,6 +175,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
 #'   - `lloq`: Lower limit of quantification (optional).
 #'   - `nBelowLLOQ`: Count of values below the lower limit of quantification (optional).
 #' @param dataClassType A string indicating the type of data class (e.g., "timeprofile" or "pkParameter").
+#' @param debugMode If TRUE, validation errors are converted to warnings. Default is FALSE.
 #'
 #' @details
 #' The function performs several checks, including:
@@ -175,7 +190,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
 #'
 #' @export
 #' @family observed data processing
-validateObservedData <- function(dataDT, dataClassType) {
+validateObservedData <- function(dataDT, dataClassType, debugMode = FALSE) {
   # Check column Identifier
   columnsWithAttributes <- lapply(dataDT, attr, "columnType")
   columnsWithAttributes <-
@@ -199,12 +214,15 @@ validateObservedData <- function(dataDT, dataClassType) {
       names(dataDT)
     )
   if (any(duplicated(dataDT, by = colIdentifier))) {
-    stop(
-      paste(
-        "Data must be unique in columns",
-        paste(colIdentifier, collapse = ", ")
-      )
+    msg <- paste(
+      "Data must be unique in columns",
+      paste(colIdentifier, collapse = ", ")
     )
+    if (debugMode) {
+      warning(msg)
+    } else {
+      stop(msg)
+    }
   }
   for (col in setdiff(
     names(dataDT),
@@ -374,12 +392,14 @@ readDataDictionary <- function(dictionaryFile,
 #' @param dataFilter The filter to be applied to the data.
 #' @param dict The dictionary to be used for conversion.
 #' @param dictionaryName The name of the dictionary.
+#' @param debugMode If TRUE, enables debug mode with additional warnings. Default is FALSE.
 #' @return A `data.table` containing the converted data.
 #' @keywords internal
 convertDataByDictionary <- function(data,
                                     dataFilter,
                                     dict,
-                                    dictionaryName) {
+                                    dictionaryName,
+                                    debugMode = FALSE) {
   # Initialize variables used for data.tables
   targetColumn <- sourceColumn <- xUnit <- filter <- type <- NULL
 
@@ -391,6 +411,17 @@ convertDataByDictionary <- function(data,
     dictFilters <- dict[!is.na(filter)]
 
     for (myFilter in split(dictFilters, seq_len(nrow(dictFilters)))) {
+      # Check for filter values that may be incorrectly read as "1" (from TRUE() function in Excel)
+      if (debugMode && grepl("^\\s*1\\s*$", myFilter$filter)) {
+        warning(paste0(
+          "Dictionary: '", dictionaryName,
+          "'; targetColumn: '", myFilter$targetColumn,
+          "'; Filter column contains '1'. This may result from using TRUE() function in Excel/LibreOffice. ",
+          "Please use the character 'TRUE' instead of the function TRUE(). ",
+          "Filter '1' only applies to the first row instead of all rows."
+        ))
+      }
+
       tryCatch(
         {
           data[

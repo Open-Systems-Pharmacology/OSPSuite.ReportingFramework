@@ -8,7 +8,8 @@ readObservedDataByDictionary(
   projectConfiguration,
   spreadData = TRUE,
   dataClassType = c("timeprofile", "pkParameter"),
-  fileIds = NULL
+  fileIds = NULL,
+  debugMode = FALSE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ readObservedDataByDictionary(
 \item{dataClassType}{A character string indicating the type of data class to process. Options are "timeprofile" or "pkParameter".}
 
 \item{fileIds}{A character vector with file identifiers to be selected, if NULL (default) all are selected.}
+
+\item{debugMode}{If TRUE, enables debug mode which provides additional warnings to help identify configuration issues. In debug mode, validation errors become warnings. Default is FALSE.}
 }
 \value{
 A `data.table` containing the processed data based on the dictionary. The structure includes relevant columns defined in the data dictionary.

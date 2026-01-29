@@ -1,7 +1,5 @@
 # testProject was set up by setup.R, this provides variable projectconfiguration and test data
-
 dataObserved <- readObservedDataByDictionary(projectConfiguration)
-
 
 test_that("It should read and process data based on the provided project configuration", {
   expect_true(data.table::is.data.table(dataObserved), "Processed data should be a data table")
@@ -37,7 +35,8 @@ test_that("It should filter data by fileIds parameter", {
 
     dataObservedFiltered <- readObservedDataByDictionary(
       projectConfiguration,
-      fileIds = selectedFileId
+      fileIds = selectedFileId,
+      spreadData = FALSE
     )
 
     # Should return a valid data.table
@@ -285,4 +284,134 @@ test_that("addUniqueColumns works correctly", {
   # Check that unique columns are added correctly
   expect_false("additionalCol1" %in% names(result))
   expect_true("additionalCol2" %in% names(result))
+})
+
+
+# Unit tests for debugMode functionality
+test_that("debugMode parameter converts validation errors to warnings", {
+  # Create a sample observed dataset with duplicated rows (which should cause an error)
+  dataObservedTest <- data.table(
+    individualId = c(1, 1, 2),
+    group = c(1, 1, 2),
+    outputPathId = c(101, 101, 102),
+    xValues = c(10, 10, 20),
+    yValues = c(5.6, 7.8, 9.3),
+    yUnit = c("mg/L", "mg/L", "mg/L"),
+    lloq = c(1.0, 1.0, 1.0)
+  )
+  data.table::setattr(dataObservedTest[["individualId"]], "columnType", "identifier")
+  data.table::setattr(dataObservedTest[["group"]], "columnType", "identifier")
+  data.table::setattr(dataObservedTest[["outputPathId"]], "columnType", "identifier")
+  data.table::setattr(dataObservedTest[["xValues"]], "columnType", "timeprofile")
+  data.table::setattr(dataObservedTest[["yValues"]], "columnType", "timeprofile")
+  data.table::setattr(dataObservedTest[["yUnit"]], "columnType", "timeprofile")
+  data.table::setattr(dataObservedTest[["lloq"]], "columnType", "timeprofile")
+
+  # Without debugMode, should throw an error
+  expect_error(
+    validateObservedData(dataDT = dataObservedTest, dataClassType = "timeprofile", debugMode = FALSE),
+    "Data must be unique"
+  )
+
+  # With debugMode, should throw a warning instead
+  expect_warning(
+    validateObservedData(dataDT = dataObservedTest, dataClassType = "timeprofile", debugMode = TRUE),
+    "Data must be unique"
+  )
+})
+
+
+test_that("debugMode warns about filter column containing '1'", {
+  # Create test data
+  testData <- data.table(
+    col1 = c("A", "B", "C"),
+    col2 = c(10, 20, 30),
+    col3 = c("x", "y", "z")
+  )
+
+  # Create a dictionary with filter = "1" (simulating TRUE() function from Excel)
+  testDict <- data.table(
+    targetColumn = c("col1", "newCol"),
+    sourceColumn = c("col1", NA),
+    filter = c(NA, "1"),
+    filterValue = c(NA, "'test'"),
+    type = c("identifier", "metadata")
+  )
+
+  # With debugMode TRUE, should warn about filter containing "1"
+  expect_warning(
+    convertDataByDictionary(
+      data = testData,
+      dataFilter = NA,
+      dict = testDict,
+      dictionaryName = "testDict",
+      debugMode = TRUE
+    ),
+    "Filter column contains '1'"
+  )
+
+  # Without debugMode, should not warn
+  expect_no_warning(
+    convertDataByDictionary(
+      data = testData,
+      dataFilter = NA,
+      dict = testDict,
+      dictionaryName = "testDict",
+      debugMode = FALSE
+    )
+  )
+})
+
+
+test_that("debugMode parameter is passed through the function chain", {
+  # This test verifies that debugMode is correctly passed from readObservedDataByDictionary
+  # We can't easily test the full chain without a complete test project,
+  # but we can verify that the parameter is accepted and doesn't cause errors
+
+  # Test that readObservedDataByDictionary accepts debugMode parameter
+  expect_no_error({
+    # This should work without errors (using existing test project)
+    dataObservedDebug <- readObservedDataByDictionary(
+      projectConfiguration,
+      debugMode = TRUE,
+      spreadData = FALSE
+    )
+  })
+
+  # Verify it's still a valid data.table
+  expect_true(data.table::is.data.table(dataObservedDebug))
+})
+
+
+test_that("debugMode is not allowed during valid runs", {
+  # Save the current option state
+  originalOption <- getOption("OSPSuite.RF.stopHelperFunction")
+
+  # Set the option to simulate a valid run
+  options(OSPSuite.RF.stopHelperFunction = TRUE)
+
+  # Test that debugMode is rejected during valid runs
+  expect_error(
+    readObservedDataByDictionary(
+      projectConfiguration,
+      debugMode = TRUE
+    ),
+    "debugMode is not allowed during valid runs"
+  )
+
+  # Test that debugMode = FALSE works during valid runs
+  expect_no_error({
+    dataObserved <- readObservedDataByDictionary(
+      projectConfiguration,
+      debugMode = FALSE,
+      spreadData = FALSE
+    )
+  })
+
+  # Restore the original option
+  if (is.null(originalOption)) {
+    options(OSPSuite.RF.stopHelperFunction = NULL)
+  } else {
+    options(OSPSuite.RF.stopHelperFunction = originalOption)
+  }
 })
