@@ -1,3 +1,20 @@
+# Default values for time profiles configuration columns
+TIMEPROFILES_CONFIG_DEFAULTS <- list( # nolint
+  timeUnit = "h",
+  timeOffset = 0,
+  timeOffset_Reference = 0,
+  splitPlotsPerTimeRange = 1,
+  nFacetColumns = 3,
+  yScale = "linear, log",
+  facetScale = "fixed",
+  plot_TimeProfiles = 1,
+  plot_PredictedVsObserved = 0,
+  plot_ResidualsAsHistogram = 0,
+  plot_ResidualsVsTime = 0,
+  plot_ResidualsVsObserved = 0,
+  plot_QQ = 0
+)
+
 #' Generate Time Profile Panels
 #'
 #' The `plotTimeProfiles` function creates a series of time profile plots as facet panels
@@ -854,6 +871,31 @@ getGeomLLOQAttributesForTP <- function(plotData) {
 
 # validation ----------------
 
+#' Apply default values to empty columns in time profiles configuration
+#'
+#' @param configTablePlots `data.table` configuration table without header lines
+#' @return Modified configTablePlots with defaults applied
+#' @keywords internal
+applyTimeProfilesConfigDefaults <- function(configTablePlots) {
+  # Get column names that exist in configTablePlots and have defaults defined
+  defaultColumns <- names(TIMEPROFILES_CONFIG_DEFAULTS)
+  existingColumns <- intersect(defaultColumns, names(configTablePlots))
+  
+  for (col in existingColumns) {
+    # Check if all values in the column are NA
+    if (all(is.na(configTablePlots[[col]]))) {
+      defaultValue <- TIMEPROFILES_CONFIG_DEFAULTS[[col]]
+      configTablePlots[[col]] <- defaultValue
+      warning(paste0(
+        "Column '", col, "' was empty. Setting all values to default: ",
+        if (is.numeric(defaultValue)) defaultValue else paste0("'", defaultValue, "'")
+      ))
+    }
+  }
+  
+  return(configTablePlots)
+}
+
 #' Validation of config table for time profiles plots
 #'
 #' @inheritParams plotTimeProfiles
@@ -866,6 +908,10 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
   individualId <- invalid <- colorLegend <- outputPathIds <- referenceScenario <- NULL
 
   configTablePlots <- validateHeaders(configTable)
+  
+  # Apply defaults for empty columns and print warnings
+  configTablePlots <- applyTimeProfilesConfigDefaults(configTablePlots)
+  
   validateOutputIdsForPlot()
   validateDataGroupIdsForPlot()
 
