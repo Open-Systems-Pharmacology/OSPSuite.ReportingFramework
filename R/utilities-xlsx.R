@@ -255,7 +255,7 @@ copyConfigSheet <- function(sourceSheetName, destinationSheetName, sourceFile, d
   checkmate::assertFileExists(sourceFile)
   checkmate::assertFileExists(destinationFile)
 
-  # Load or create the destination workbook
+  # Load the destination workbook
   destWb <- openxlsx::loadWorkbook(destinationFile)
   if (destinationSheetName %in% destWb$sheet_names) {
     return(invisible())
