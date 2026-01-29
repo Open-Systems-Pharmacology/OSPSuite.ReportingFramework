@@ -781,6 +781,58 @@ validateHeaders <- function(configTable) {
   return(configTablePlots)
 }
 
+#' Apply default values to configuration table columns
+#'
+#' This function applies default values to columns in a configuration table.
+#' It handles three cases:
+#' 1. Missing columns: Adds the column with default values
+#' 2. Columns with all NA values: Fills with default values
+#' 3. Columns with some NA values: Fills only the NA values with defaults
+#'
+#' @param configTablePlots `data.table` configuration table without header lines
+#' @param defaults A named list of default values for columns
+#' @return Modified configTablePlots with defaults applied
+#' @export
+applyConfigDefaults <- function(configTablePlots, defaults) {
+  # Get all default column names
+  defaultColumns <- names(defaults)
+  
+  for (col in defaultColumns) {
+    defaultValue <- defaults[[col]]
+    
+    # Check if column doesn't exist
+    if (!col %in% names(configTablePlots)) {
+      # Add missing column with default value
+      configTablePlots[[col]] <- defaultValue
+      warning(paste0(
+        "Column '", col, "' was missing. Adding column with default: ",
+        if (is.numeric(defaultValue)) defaultValue else paste0("'", defaultValue, "'")
+      ))
+    } else {
+      # Column exists - check for NA values
+      naIndices <- is.na(configTablePlots[[col]])
+      
+      if (all(naIndices)) {
+        # All values are NA
+        configTablePlots[[col]] <- defaultValue
+        warning(paste0(
+          "Column '", col, "' was empty. Setting all values to default: ",
+          if (is.numeric(defaultValue)) defaultValue else paste0("'", defaultValue, "'")
+        ))
+      } else if (any(naIndices)) {
+        # Some values are NA
+        configTablePlots[[col]][naIndices] <- defaultValue
+        warning(paste0(
+          "Column '", col, "' had ", sum(naIndices), " missing value(s). Setting to default: ",
+          if (is.numeric(defaultValue)) defaultValue else paste0("'", defaultValue, "'")
+        ))
+      }
+    }
+  }
+  
+  return(configTablePlots)
+}
+
 #' validate types of plot configuration tables
 #'
 #' @param configTablePlots `data.table` configuration table without header lines

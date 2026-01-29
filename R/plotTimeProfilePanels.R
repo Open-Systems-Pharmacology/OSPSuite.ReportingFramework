@@ -871,39 +871,6 @@ getGeomLLOQAttributesForTP <- function(plotData) {
 
 # validation ----------------
 
-#' Apply default values to empty columns in time profiles configuration
-#'
-#' @param configTablePlots `data.table` configuration table without header lines
-#' @return Modified configTablePlots with defaults applied
-#' @keywords internal
-applyTimeProfilesConfigDefaults <- function(configTablePlots) {
-  # Get all default column names
-  defaultColumns <- names(TIMEPROFILES_CONFIG_DEFAULTS)
-  
-  for (col in defaultColumns) {
-    # Check if column doesn't exist or if all values are NA
-    if (!col %in% names(configTablePlots)) {
-      # Add missing column with default value
-      defaultValue <- TIMEPROFILES_CONFIG_DEFAULTS[[col]]
-      configTablePlots[[col]] <- defaultValue
-      warning(paste0(
-        "Column '", col, "' was missing. Adding column with default: ",
-        if (is.numeric(defaultValue)) defaultValue else paste0("'", defaultValue, "'")
-      ))
-    } else if (all(is.na(configTablePlots[[col]]))) {
-      # Fill empty column with default value
-      defaultValue <- TIMEPROFILES_CONFIG_DEFAULTS[[col]]
-      configTablePlots[[col]] <- defaultValue
-      warning(paste0(
-        "Column '", col, "' was empty. Setting all values to default: ",
-        if (is.numeric(defaultValue)) defaultValue else paste0("'", defaultValue, "'")
-      ))
-    }
-  }
-  
-  return(configTablePlots)
-}
-
 #' Validation of config table for time profiles plots
 #'
 #' @inheritParams plotTimeProfiles
@@ -918,7 +885,7 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
   configTablePlots <- validateHeaders(configTable)
   
   # Apply defaults for empty columns and print warnings
-  configTablePlots <- applyTimeProfilesConfigDefaults(configTablePlots)
+  configTablePlots <- applyConfigDefaults(configTablePlots, TIMEPROFILES_CONFIG_DEFAULTS)
   
   validateOutputIdsForPlot()
   validateDataGroupIdsForPlot()
