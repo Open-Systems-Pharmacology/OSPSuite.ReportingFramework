@@ -36,3 +36,23 @@ BIOMETRICUNITS <- ospsuite.utils::enum(c( # nolint
   weight = "kg",
   height = "cm"
 ))
+
+#' @title Default values for time profiles configuration columns
+#' This are not enumeration as the value type (character or numeric must be preserved)
+#' @keywords internal
+#' @noRd
+TIMEPROFILES_CONFIG_DEFAULTS <- list(# nolint
+  timeUnit = "h",
+  timeOffset = 0,
+  timeOffset_Reference = 0,
+  splitPlotsPerTimeRange = 1,
+  nFacetColumns = 3,
+  yScale = "linear, log",
+  facetScale = "fixed",
+  plot_TimeProfiles = 1,
+  plot_PredictedVsObserved = 0,
+  plot_ResidualsAsHistogram = 0,
+  plot_ResidualsVsTime = 0,
+  plot_ResidualsVsObserved = 0,
+  plot_QQ = 0
+)

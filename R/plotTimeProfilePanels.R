@@ -866,6 +866,10 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
   individualId <- invalid <- colorLegend <- outputPathIds <- referenceScenario <- NULL
 
   configTablePlots <- validateHeaders(configTable)
+  
+  # Apply defaults for empty columns and print warnings
+  configTablePlots <- applyConfigDefaults(configTablePlots, TIMEPROFILES_CONFIG_DEFAULTS)
+  
   validateOutputIdsForPlot()
   validateDataGroupIdsForPlot()
 
@@ -1256,22 +1260,22 @@ createNewConfig <- function(scenarios, dataObserved) {
     plotName = scenarios$scenarioName,
     scenario = scenarios$scenarioName,
     outputPathIds = paste(unique(configEnv$outputPaths$outputPathId), collapse = ", "),
-    timeUnit = "h",
-    timeOffset = 0,
-    timeOffset_Reference = 0,
+    timeUnit = TIMEPROFILES_CONFIG_DEFAULTS$timeUnit,
+    timeOffset = TIMEPROFILES_CONFIG_DEFAULTS$timeOffset,
+    timeOffset_Reference = TIMEPROFILES_CONFIG_DEFAULTS$timeOffset_Reference,
     timeRange_total = TIMERANGE$total,
     timeRange_firstApplication = TIMERANGE$firstApplication,
     timeRange_lastApplication = TIMERANGE$lastApplication,
-    splitPlotsPerTimeRange = 1,
-    nFacetColumns = 3,
-    yScale = "linear, log",
-    facetScale = "fixed",
-    plot_TimeProfiles = 1,
-    plot_PredictedVsObserved = 0,
-    plot_ResidualsAsHistogram = 0,
-    plot_ResidualsVsTime = 0,
-    plot_ResidualsVsObserved = 0,
-    plot_QQ = 0
+    splitPlotsPerTimeRange = TIMEPROFILES_CONFIG_DEFAULTS$splitPlotsPerTimeRange,
+    nFacetColumns = TIMEPROFILES_CONFIG_DEFAULTS$nFacetColumns,
+    yScale = TIMEPROFILES_CONFIG_DEFAULTS$yScale,
+    facetScale = TIMEPROFILES_CONFIG_DEFAULTS$facetScale,
+    plot_TimeProfiles = TIMEPROFILES_CONFIG_DEFAULTS$plot_TimeProfiles,
+    plot_PredictedVsObserved = TIMEPROFILES_CONFIG_DEFAULTS$plot_PredictedVsObserved,
+    plot_ResidualsAsHistogram = TIMEPROFILES_CONFIG_DEFAULTS$plot_ResidualsAsHistogram,
+    plot_ResidualsVsTime = TIMEPROFILES_CONFIG_DEFAULTS$plot_ResidualsVsTime,
+    plot_ResidualsVsObserved = TIMEPROFILES_CONFIG_DEFAULTS$plot_ResidualsVsObserved,
+    plot_QQ = TIMEPROFILES_CONFIG_DEFAULTS$plot_QQ
   )
 
   if (any(!is.na(configEnv$dataGroupIds$defaultScenario))) {
