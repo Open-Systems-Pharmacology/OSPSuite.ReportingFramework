@@ -792,14 +792,14 @@ validateHeaders <- function(configTable) {
 #' @param configTablePlots `data.table` configuration table without header lines
 #' @param defaults A named list of default values for columns
 #' @return Modified configTablePlots with defaults applied
-#' @export
+#' @keywords internal
 applyConfigDefaults <- function(configTablePlots, defaults) {
   # Get all default column names
   defaultColumns <- names(defaults)
-  
+
   for (col in defaultColumns) {
     defaultValue <- defaults[[col]]
-    
+
     # Check if column doesn't exist
     if (!col %in% names(configTablePlots)) {
       # Add missing column with default value
@@ -811,7 +811,7 @@ applyConfigDefaults <- function(configTablePlots, defaults) {
     } else {
       # Column exists - check for NA values
       naIndices <- is.na(configTablePlots[[col]])
-      
+
       if (all(naIndices)) {
         # All values are NA
         configTablePlots[[col]] <- defaultValue
@@ -829,7 +829,7 @@ applyConfigDefaults <- function(configTablePlots, defaults) {
       }
     }
   }
-  
+
   return(configTablePlots)
 }
 
