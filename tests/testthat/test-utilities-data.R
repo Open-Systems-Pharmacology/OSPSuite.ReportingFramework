@@ -1,7 +1,5 @@
 # testProject was set up by setup.R, this provides variable projectconfiguration and test data
-
 dataObserved <- readObservedDataByDictionary(projectConfiguration)
-
 
 test_that("It should read and process data based on the provided project configuration", {
   expect_true(data.table::is.data.table(dataObserved), "Processed data should be a data table")
@@ -37,7 +35,8 @@ test_that("It should filter data by fileIds parameter", {
 
     dataObservedFiltered <- readObservedDataByDictionary(
       projectConfiguration,
-      fileIds = selectedFileId
+      fileIds = selectedFileId,
+      spreadData = FALSE
     )
 
     # Should return a valid data.table
@@ -374,7 +373,8 @@ test_that("debugMode parameter is passed through the function chain", {
     # This should work without errors (using existing test project)
     dataObservedDebug <- readObservedDataByDictionary(
       projectConfiguration,
-      debugMode = TRUE
+      debugMode = TRUE,
+      spreadData = FALSE
     )
   })
 
@@ -403,7 +403,8 @@ test_that("debugMode is not allowed during valid runs", {
   expect_no_error({
     dataObserved <- readObservedDataByDictionary(
       projectConfiguration,
-      debugMode = FALSE
+      debugMode = FALSE,
+      spreadData = FALSE
     )
   })
 

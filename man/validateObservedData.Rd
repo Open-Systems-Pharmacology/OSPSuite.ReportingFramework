@@ -4,7 +4,7 @@
 \alias{validateObservedData}
 \title{Validate Observed Data}
 \usage{
-validateObservedData(dataDT, dataClassType)
+validateObservedData(dataDT, dataClassType, debugMode = FALSE)
 }
 \arguments{
 \item{dataDT}{A `data.table` containing observed data with the following relevant columns:
@@ -20,6 +20,8 @@ validateObservedData(dataDT, dataClassType)
 - `nBelowLLOQ`: Count of values below the lower limit of quantification (optional).}
 
 \item{dataClassType}{A string indicating the type of data class (e.g., "timeprofile" or "pkParameter").}
+
+\item{debugMode}{If TRUE, validation errors are converted to warnings. Default is FALSE.}
 }
 \value{
 NULL This function performs checks and stops execution if any validation fails.

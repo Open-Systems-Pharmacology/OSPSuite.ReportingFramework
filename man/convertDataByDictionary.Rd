@@ -4,7 +4,13 @@
 \alias{convertDataByDictionary}
 \title{Convert data by dictionary}
 \usage{
-convertDataByDictionary(data, dataFilter, dict, dictionaryName)
+convertDataByDictionary(
+  data,
+  dataFilter,
+  dict,
+  dictionaryName,
+  debugMode = FALSE
+)
 }
 \arguments{
 \item{data}{The data to be converted.}
@@ -14,6 +20,8 @@ convertDataByDictionary(data, dataFilter, dict, dictionaryName)
 \item{dict}{The dictionary to be used for conversion.}
 
 \item{dictionaryName}{The name of the dictionary.}
+
+\item{debugMode}{If TRUE, enables debug mode with additional warnings. Default is FALSE.}
 }
 \value{
 A `data.table` containing the converted data.

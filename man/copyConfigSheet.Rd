@@ -5,7 +5,6 @@
 \title{Copy a configuration sheet from source to destination}
 \usage{
 copyConfigSheet(
-  projectConfiguration,
   sourceSheetName,
   destinationSheetName,
   sourceFile,
@@ -13,8 +12,6 @@ copyConfigSheet(
 )
 }
 \arguments{
-\item{projectConfiguration}{An object containing the file paths for source and destination files.}
-
 \item{sourceSheetName}{A character string specifying the name of the sheet to copy.}
 
 \item{destinationSheetName}{A character string specifying the name of the new sheet.}
