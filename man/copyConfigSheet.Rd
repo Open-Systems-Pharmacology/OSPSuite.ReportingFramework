@@ -28,7 +28,7 @@ This function copies a specified sheet from a source Excel file to a destination
 including the data and styles.
 }
 \seealso{
-Other function to read from and write to xlsx: 
+Other functions to read from and write to xlsx: 
 \code{\link{separateAndTrimColumn}()},
 \code{\link{setHeadersToLowerCase}()},
 \code{\link{splitInputs}()},
