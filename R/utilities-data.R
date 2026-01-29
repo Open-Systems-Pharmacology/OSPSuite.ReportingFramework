@@ -410,22 +410,18 @@ convertDataByDictionary <- function(data,
   if (any(!is.na(dict$filter))) {
     dictFilters <- dict[!is.na(filter)]
 
-    # Check for filter values that may be incorrectly read as "1" (from TRUE() function in Excel)
-    if (debugMode) {
-      for (myFilter in split(dictFilters, seq_len(nrow(dictFilters)))) {
-        if (identical(myFilter$filter, "1") || grepl("^\\s*1\\s*$", myFilter$filter)) {
-          warning(paste0(
-            "Dictionary: '", dictionaryName,
-            "'; targetColumn: '", myFilter$targetColumn,
-            "'; Filter column contains '1'. This may result from using TRUE() function in Excel/LibreOffice. ",
-            "Please use the character 'TRUE' instead of the function TRUE(). ",
-            "Filter '1' only applies to the first row instead of all rows."
-          ))
-        }
-      }
-    }
-
     for (myFilter in split(dictFilters, seq_len(nrow(dictFilters)))) {
+      # Check for filter values that may be incorrectly read as "1" (from TRUE() function in Excel)
+      if (debugMode && grepl("^\\s*1\\s*$", myFilter$filter)) {
+        warning(paste0(
+          "Dictionary: '", dictionaryName,
+          "'; targetColumn: '", myFilter$targetColumn,
+          "'; Filter column contains '1'. This may result from using TRUE() function in Excel/LibreOffice. ",
+          "Please use the character 'TRUE' instead of the function TRUE(). ",
+          "Filter '1' only applies to the first row instead of all rows."
+        ))
+      }
+
       tryCatch(
         {
           data[
