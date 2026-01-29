@@ -877,13 +877,21 @@ getGeomLLOQAttributesForTP <- function(plotData) {
 #' @return Modified configTablePlots with defaults applied
 #' @keywords internal
 applyTimeProfilesConfigDefaults <- function(configTablePlots) {
-  # Get column names that exist in configTablePlots and have defaults defined
+  # Get all default column names
   defaultColumns <- names(TIMEPROFILES_CONFIG_DEFAULTS)
-  existingColumns <- intersect(defaultColumns, names(configTablePlots))
   
-  for (col in existingColumns) {
-    # Check if all values in the column are NA
-    if (all(is.na(configTablePlots[[col]]))) {
+  for (col in defaultColumns) {
+    # Check if column doesn't exist or if all values are NA
+    if (!col %in% names(configTablePlots)) {
+      # Add missing column with default value
+      defaultValue <- TIMEPROFILES_CONFIG_DEFAULTS[[col]]
+      configTablePlots[[col]] <- defaultValue
+      warning(paste0(
+        "Column '", col, "' was missing. Adding column with default: ",
+        if (is.numeric(defaultValue)) defaultValue else paste0("'", defaultValue, "'")
+      ))
+    } else if (all(is.na(configTablePlots[[col]]))) {
+      # Fill empty column with default value
       defaultValue <- TIMEPROFILES_CONFIG_DEFAULTS[[col]]
       configTablePlots[[col]] <- defaultValue
       warning(paste0(
