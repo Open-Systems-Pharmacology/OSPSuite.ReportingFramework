@@ -280,9 +280,15 @@ test_that("applyConfigDefaults adds missing columns with default values", {
     yScale = "linear"
   )
   
-  # Apply defaults
+  # Apply defaults - expect warnings for each missing column
   expect_warning(
-    result <- applyConfigDefaults(testConfig, testDefaults),
+    expect_warning(
+      expect_warning(
+        result <- applyConfigDefaults(testConfig, testDefaults),
+        "was missing"
+      ),
+      "was missing"
+    ),
     "was missing"
   )
   
@@ -310,9 +316,12 @@ test_that("applyConfigDefaults fills columns with all NA values", {
     timeOffset = 0
   )
   
-  # Apply defaults
+  # Apply defaults - expect warnings for each empty column
   expect_warning(
-    result <- applyConfigDefaults(testConfig, testDefaults),
+    expect_warning(
+      result <- applyConfigDefaults(testConfig, testDefaults),
+      "was empty"
+    ),
     "was empty"
   )
   
@@ -334,9 +343,12 @@ test_that("applyConfigDefaults fills partial NA values in columns", {
     timeOffset = 0
   )
   
-  # Apply defaults
+  # Apply defaults - expect warnings for each column with missing values
   expect_warning(
-    result <- applyConfigDefaults(testConfig, testDefaults),
+    expect_warning(
+      result <- applyConfigDefaults(testConfig, testDefaults),
+      "missing value"
+    ),
     "missing value"
   )
   
@@ -379,11 +391,8 @@ test_that("applyConfigDefaults handles numeric defaults correctly", {
     plot_TimeProfiles = 1
   )
   
-  # Apply defaults
-  expect_warning(
-    result <- applyConfigDefaults(testConfig, testDefaults),
-    "was missing"
-  )
+  # Apply defaults - suppress warnings since we're testing functionality
+  result <- suppressWarnings(applyConfigDefaults(testConfig, testDefaults))
   
   # Check numeric values
   expect_equal(result$timeOffset, c(0, 0))
@@ -404,11 +413,8 @@ test_that("applyConfigDefaults handles character defaults correctly", {
     facetScale = "fixed"
   )
   
-  # Apply defaults
-  expect_warning(
-    result <- applyConfigDefaults(testConfig, testDefaults),
-    "was missing"
-  )
+  # Apply defaults - suppress warnings since we're testing functionality
+  result <- suppressWarnings(applyConfigDefaults(testConfig, testDefaults))
   
   # Check character values
   expect_equal(result$timeUnit, c("h", "h"))
@@ -424,11 +430,8 @@ test_that("applyConfigDefaults works with TIMEPROFILES_CONFIG_DEFAULTS", {
     scenario = c("scen1", "scen2")
   )
   
-  # Apply actual TIMEPROFILES_CONFIG_DEFAULTS
-  expect_warning(
-    result <- applyConfigDefaults(testConfig, TIMEPROFILES_CONFIG_DEFAULTS),
-    "was missing"
-  )
+  # Apply actual TIMEPROFILES_CONFIG_DEFAULTS - suppress warnings since we're testing functionality
+  result <- suppressWarnings(applyConfigDefaults(testConfig, TIMEPROFILES_CONFIG_DEFAULTS))
   
   # Check that all default columns were added
   expect_true("timeUnit" %in% names(result))
