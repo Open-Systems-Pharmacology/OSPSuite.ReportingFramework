@@ -24,6 +24,14 @@ readObservedDataByDictionary <- function(projectConfiguration,
   # Validate debugMode parameter
   checkmate::assertLogical(debugMode, len = 1)
 
+  # Check if debugMode is allowed (not in valid runs)
+  if (debugMode) {
+    stopHelperFunction <- getOption("OSPSuite.RF.stopHelperFunction", default = NULL)
+    if (!is.null(stopHelperFunction) && isTRUE(stopHelperFunction)) {
+      stop("debugMode is not allowed during valid runs. Please set isValidRun to FALSE in setWorkflowOptions().")
+    }
+  }
+
   dataClassType <- match.arg(dataClassType)
 
 

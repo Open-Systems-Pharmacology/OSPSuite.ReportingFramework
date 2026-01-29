@@ -381,3 +381,36 @@ test_that("debugMode parameter is passed through the function chain", {
   # Verify it's still a valid data.table
   expect_true(data.table::is.data.table(dataObservedDebug))
 })
+
+
+test_that("debugMode is not allowed during valid runs", {
+  # Save the current option state
+  originalOption <- getOption("OSPSuite.RF.stopHelperFunction")
+
+  # Set the option to simulate a valid run
+  options(OSPSuite.RF.stopHelperFunction = TRUE)
+
+  # Test that debugMode is rejected during valid runs
+  expect_error(
+    readObservedDataByDictionary(
+      projectConfiguration,
+      debugMode = TRUE
+    ),
+    "debugMode is not allowed during valid runs"
+  )
+
+  # Test that debugMode = FALSE works during valid runs
+  expect_no_error({
+    dataObserved <- readObservedDataByDictionary(
+      projectConfiguration,
+      debugMode = FALSE
+    )
+  })
+
+  # Restore the original option
+  if (is.null(originalOption)) {
+    options(OSPSuite.RF.stopHelperFunction = NULL)
+  } else {
+    options(OSPSuite.RF.stopHelperFunction = originalOption)
+  }
+})
