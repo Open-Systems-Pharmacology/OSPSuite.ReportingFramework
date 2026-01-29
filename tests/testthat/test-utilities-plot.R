@@ -264,3 +264,227 @@ test_that("validateTimeRangeColumns function test", {
   # Test if the function correctly validates the inputs in the TimeRange columns
   expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 7)]))
 })
+
+# Test cases for applyConfigDefaults function
+test_that("applyConfigDefaults adds missing columns with default values", {
+  # Create a simple config table without some columns
+  testConfig <- data.table::data.table(
+    plotName = c("plot1", "plot2"),
+    scenario = c("scen1", "scen2")
+  )
+  
+  # Define defaults for columns that don't exist
+  testDefaults <- list(
+    timeUnit = "h",
+    timeOffset = 0,
+    yScale = "linear"
+  )
+  
+  # Apply defaults
+  expect_warning(
+    result <- applyConfigDefaults(testConfig, testDefaults),
+    "was missing"
+  )
+  
+  # Check that columns were added
+  expect_true("timeUnit" %in% names(result))
+  expect_true("timeOffset" %in% names(result))
+  expect_true("yScale" %in% names(result))
+  
+  # Check that values are correct
+  expect_equal(result$timeUnit, c("h", "h"))
+  expect_equal(result$timeOffset, c(0, 0))
+  expect_equal(result$yScale, c("linear", "linear"))
+})
+
+test_that("applyConfigDefaults fills columns with all NA values", {
+  # Create a config table with columns that have all NA values
+  testConfig <- data.table::data.table(
+    plotName = c("plot1", "plot2"),
+    timeUnit = c(NA_character_, NA_character_),
+    timeOffset = c(NA_real_, NA_real_)
+  )
+  
+  testDefaults <- list(
+    timeUnit = "h",
+    timeOffset = 0
+  )
+  
+  # Apply defaults
+  expect_warning(
+    result <- applyConfigDefaults(testConfig, testDefaults),
+    "was empty"
+  )
+  
+  # Check that NA values were replaced
+  expect_equal(result$timeUnit, c("h", "h"))
+  expect_equal(result$timeOffset, c(0, 0))
+})
+
+test_that("applyConfigDefaults fills partial NA values in columns", {
+  # Create a config table with some NA values
+  testConfig <- data.table::data.table(
+    plotName = c("plot1", "plot2", "plot3"),
+    timeUnit = c("h", NA_character_, "min"),
+    timeOffset = c(0, NA_real_, 5)
+  )
+  
+  testDefaults <- list(
+    timeUnit = "h",
+    timeOffset = 0
+  )
+  
+  # Apply defaults
+  expect_warning(
+    result <- applyConfigDefaults(testConfig, testDefaults),
+    "missing value"
+  )
+  
+  # Check that only NA values were replaced
+  expect_equal(result$timeUnit, c("h", "h", "min"))
+  expect_equal(result$timeOffset, c(0, 0, 5))
+})
+
+test_that("applyConfigDefaults does not modify columns without NA values", {
+  # Create a config table with no NA values
+  testConfig <- data.table::data.table(
+    plotName = c("plot1", "plot2"),
+    timeUnit = c("h", "min"),
+    timeOffset = c(0, 5)
+  )
+  
+  testDefaults <- list(
+    timeUnit = "h",
+    timeOffset = 0
+  )
+  
+  # Apply defaults - should not generate warnings or modify data
+  expect_silent(
+    result <- applyConfigDefaults(testConfig, testDefaults)
+  )
+  
+  # Check that values remain unchanged
+  expect_equal(result$timeUnit, c("h", "min"))
+  expect_equal(result$timeOffset, c(0, 5))
+})
+
+test_that("applyConfigDefaults handles numeric defaults correctly", {
+  testConfig <- data.table::data.table(
+    plotName = c("plot1", "plot2")
+  )
+  
+  testDefaults <- list(
+    timeOffset = 0,
+    nFacetColumns = 3,
+    plot_TimeProfiles = 1
+  )
+  
+  # Apply defaults
+  expect_warning(
+    result <- applyConfigDefaults(testConfig, testDefaults),
+    "was missing"
+  )
+  
+  # Check numeric values
+  expect_equal(result$timeOffset, c(0, 0))
+  expect_equal(result$nFacetColumns, c(3, 3))
+  expect_equal(result$plot_TimeProfiles, c(1, 1))
+  expect_type(result$timeOffset, "double")
+  expect_type(result$nFacetColumns, "double")
+})
+
+test_that("applyConfigDefaults handles character defaults correctly", {
+  testConfig <- data.table::data.table(
+    plotName = c("plot1", "plot2")
+  )
+  
+  testDefaults <- list(
+    timeUnit = "h",
+    yScale = "linear, log",
+    facetScale = "fixed"
+  )
+  
+  # Apply defaults
+  expect_warning(
+    result <- applyConfigDefaults(testConfig, testDefaults),
+    "was missing"
+  )
+  
+  # Check character values
+  expect_equal(result$timeUnit, c("h", "h"))
+  expect_equal(result$yScale, c("linear, log", "linear, log"))
+  expect_equal(result$facetScale, c("fixed", "fixed"))
+  expect_type(result$timeUnit, "character")
+})
+
+test_that("applyConfigDefaults works with TIMEPROFILES_CONFIG_DEFAULTS", {
+  # Create a minimal config table
+  testConfig <- data.table::data.table(
+    plotName = c("plot1", "plot2"),
+    scenario = c("scen1", "scen2")
+  )
+  
+  # Apply actual TIMEPROFILES_CONFIG_DEFAULTS
+  expect_warning(
+    result <- applyConfigDefaults(testConfig, TIMEPROFILES_CONFIG_DEFAULTS),
+    "was missing"
+  )
+  
+  # Check that all default columns were added
+  expect_true("timeUnit" %in% names(result))
+  expect_true("timeOffset" %in% names(result))
+  expect_true("timeOffset_Reference" %in% names(result))
+  expect_true("splitPlotsPerTimeRange" %in% names(result))
+  expect_true("nFacetColumns" %in% names(result))
+  expect_true("yScale" %in% names(result))
+  expect_true("facetScale" %in% names(result))
+  expect_true("plot_TimeProfiles" %in% names(result))
+  expect_true("plot_PredictedVsObserved" %in% names(result))
+  expect_true("plot_ResidualsAsHistogram" %in% names(result))
+  expect_true("plot_ResidualsVsTime" %in% names(result))
+  expect_true("plot_ResidualsVsObserved" %in% names(result))
+  expect_true("plot_QQ" %in% names(result))
+  
+  # Check specific default values
+  expect_equal(result$timeUnit, c("h", "h"))
+  expect_equal(result$timeOffset, c(0, 0))
+  expect_equal(result$nFacetColumns, c(3, 3))
+  expect_equal(result$yScale, c("linear, log", "linear, log"))
+})
+
+test_that("applyConfigDefaults returns data.table", {
+  testConfig <- data.table::data.table(
+    plotName = c("plot1", "plot2")
+  )
+  
+  testDefaults <- list(timeUnit = "h")
+  
+  expect_warning(
+    result <- applyConfigDefaults(testConfig, testDefaults)
+  )
+  
+  # Check that result is a data.table
+  expect_s3_class(result, "data.table")
+})
+
+test_that("applyConfigDefaults preserves existing columns", {
+  testConfig <- data.table::data.table(
+    plotName = c("plot1", "plot2"),
+    scenario = c("scen1", "scen2"),
+    existingCol = c("val1", "val2")
+  )
+  
+  testDefaults <- list(timeUnit = "h")
+  
+  expect_warning(
+    result <- applyConfigDefaults(testConfig, testDefaults)
+  )
+  
+  # Check that original columns are preserved
+  expect_true("plotName" %in% names(result))
+  expect_true("scenario" %in% names(result))
+  expect_true("existingCol" %in% names(result))
+  expect_equal(result$plotName, c("plot1", "plot2"))
+  expect_equal(result$scenario, c("scen1", "scen2"))
+  expect_equal(result$existingCol, c("val1", "val2"))
+})
