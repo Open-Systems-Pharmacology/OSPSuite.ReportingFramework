@@ -248,15 +248,20 @@ xlsxAddDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, te
 #' @return Invisibly returns NULL. The function performs a side effect (copying a sheet between workbooks).
 #' @export
 #' @family function to read from and write to xlsx
-copyConfigSheet <- function(sourceSheetName,destinationSheetName, sourceFile, destinationFile) {
-  # Load or create the destination workbook
+copyConfigSheet <- function(sourceSheetName, destinationSheetName, sourceFile, destinationFile) {
+  # Input validation
+  checkmate::assertCharacter(sourceSheetName, len = 1)
+  checkmate::assertCharacter(destinationSheetName, len = 1)
+  checkmate::assertFileExists(sourceFile)
+  checkmate::assertFileExists(destinationFile)
+
+  # Load the destination workbook
   destWb <- openxlsx::loadWorkbook(destinationFile)
   if (destinationSheetName %in% destWb$sheet_names) {
     return(invisible())
   }
 
   # Load the source workbook and read the sheet
-  checkmate::assertFileExists(sourceFile)
   sourceWb <- openxlsx::loadWorkbook(sourceFile)
   checkmate::assertChoice(sourceSheetName, choices = sourceWb$sheet_names)
   dt <- xlsxReadData(sourceWb, sheet = sourceSheetName, convertHeaders = FALSE)
