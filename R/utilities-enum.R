@@ -38,9 +38,10 @@ BIOMETRICUNITS <- ospsuite.utils::enum(c( # nolint
 ))
 
 #' @title Default values for time profiles configuration columns
-#' @export
-#' @family enumerations
-TIMEPROFILES_CONFIG_DEFAULTS <- ospsuite.utils::enum(c( # nolint
+#' This are not enumeration as the value type (character or numeric must be preserved)
+#' @keywords internal
+#' @noRd
+TIMEPROFILES_CONFIG_DEFAULTS <- list(# nolint
   timeUnit = "h",
   timeOffset = 0,
   timeOffset_Reference = 0,
@@ -54,4 +55,4 @@ TIMEPROFILES_CONFIG_DEFAULTS <- ospsuite.utils::enum(c( # nolint
   plot_ResidualsVsTime = 0,
   plot_ResidualsVsObserved = 0,
   plot_QQ = 0
-))
+)

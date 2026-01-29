@@ -793,6 +793,7 @@ validateHeaders <- function(configTable) {
 #' @param defaults A named list of default values for columns
 #' @return Modified configTablePlots with defaults applied
 #' @keywords internal
+#' @noRd
 applyConfigDefaults <- function(configTablePlots, defaults) {
   # Get all default column names
   defaultColumns <- names(defaults)
