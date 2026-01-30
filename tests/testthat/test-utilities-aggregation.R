@@ -57,7 +57,7 @@ test_that("getAggregationFunction handles invalid inputs correctly", {
   expect_error(.getAggregationFunction("Percentiles", percentiles = c(0.5, 0.25, 0.75), customFunction = NULL)) # Not sorted
 
   # Test invalid legendsize
-  expect_error(.getAggregationFunction("Percentiles", percentiles = c(0.25, 0.5, 0.75), customFunction = NULL, legendsize = 4))
+  expect_error(.getAggregationFunction("Percentiles", percentiles = c(0.25, 0.5, 0.75), customFunction = NULL, legendsize = 4), messages$errorLegendSizeNotCovered())
 
   # Test with a valid custom function
   customFunc <- function(y) {
@@ -70,6 +70,6 @@ test_that("getAggregationFunction handles invalid inputs correctly", {
 # Test for getErrorTypeForPercentiles
 test_that("getErrorTypeForPercentiles handles invalid legendsize correctly", {
   # Test invalid legendsize
-  expect_error(.getErrorTypeForPercentiles(c(0.25, 0.5, 0.75), legendsize = 4))
-  expect_error(.getErrorTypeForPercentiles(c(0.25, 0.5, 0.75), legendsize = 0))
+  expect_error(.getErrorTypeForPercentiles(c(0.25, 0.5, 0.75), legendsize = 4), messages$errorLegendSizeNotCovered())
+  expect_error(.getErrorTypeForPercentiles(c(0.25, 0.5, 0.75), legendsize = 0), messages$errorLegendSizeNotCovered())
 })

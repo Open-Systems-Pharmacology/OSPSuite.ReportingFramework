@@ -435,7 +435,7 @@ setExportAttributes <- function(object,
   }
 
   if (is.null(scaleVector)) {
-    stop(paste("no valid values for scalevector for", paste0(namesOfScaleVector, collapse = ", ")))
+    stop(messages$errorNoValidScaleVector(namesOfScaleVector))
   }
 
   names(scaleVector) <- namesOfScaleVector
@@ -474,7 +474,7 @@ setExportAttributes <- function(object,
       )
   } else {
     if (n > length(ospsuite.plots::colorMaps[["ospDefault"]])) {
-      stop(paste("To many colors for colorVector, maximal", length(ospsuite.plots::colorMaps[["ospDefault"]]), "allowed"))
+      stop(messages$errorTooManyColors(length(ospsuite.plots::colorMaps[["ospDefault"]])))
     }
     colorVector <- ospsuite.plots::colorMaps[["ospDefault"]][1:n]
   }
@@ -502,11 +502,11 @@ setExportAttributes <- function(object,
 .getDefaultShapesForScaleVector <- function(n) {
   shapes <- ospsuite.plots::getOspsuite.plots.option(optionKey = ospsuite.plots::OptionKeys$shapeValues)
   if (is.null(shapes)) {
-    stop("no default shape sets for ospsuite.plots. Please use ospsuite.plots::setDefaults()")
+    stop(messages$errorNoDefaultShapeSets())
   }
 
   if (n > length(shapes)) {
-    stop("not enough shapes available")
+    stop(messages$errorNotEnoughShapes())
   }
 
   return(shapes[1:n])
@@ -1034,7 +1034,7 @@ validateGroupConsistency <- function(
   # Check if any value column has more than one unique value within each group
   lapply(valueColumns, function(col) {
     if (any(uniqueValueCounts[[col]] > 1)) {
-      stop(paste("Values for", col, "should be the same within each group defined by", paste(groupingColumns, collapse = ", ")))
+      stop(messages$errorValuesNotSameWithinGroup(col, groupingColumns))
     }
   })
 
@@ -1107,7 +1107,7 @@ validateAtleastOneEntry <- function(configTablePlots, columnVector) {
           suppressMessages(ospsuite::getDimensionForUnit(unit))
         },
         error = function(e) {
-          stop(paste0('Please check sheet Outputs in plotconfiguration file. Unit "', unit, '" is not valid'))
+          stop(messages$errorInvalidUnit(unit))
         }
       )
     }
@@ -1166,7 +1166,7 @@ validateAtleastOneEntry <- function(configTablePlots, columnVector) {
   if (nrow(dt) > 0) {
     print(dt[, c("plotName", "colorLegend")] %>%
       unique())
-    stop("colorLegend must be a character string concatenated from two characters separated by |.")
+    stop(messages$errorColorLegendFormat())
   }
 
   return(invisible())
@@ -1191,7 +1191,7 @@ validateAtleastOneEntry <- function(configTablePlots, columnVector) {
   validColors <- sapply(colorVector, function(x) is.na(x) || isTRUE(grDevices::col2rgb(x, alpha = TRUE)[1] >= 0))
 
   if (!all(validColors)) {
-    stop("All values in colorVector must be valid color names.")
+    stop(messages$errorInvalidColorNames())
   }
 
   return(invisible())
