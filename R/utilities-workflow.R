@@ -68,7 +68,7 @@ getQCpassedEnvironmentVariable <- function() {
   if (is.na(qCpassed)) qCpassed <- as.logical(Sys.getenv(x = "QCpassed"))
   # add warning message for unset or corrupt variable, set to default to avoid further messages
   if (is.na(qCpassed)) {
-    warning("Environment Variable 'QCpassed' not found, empty or a non logical, set 'QCpassed' to FALSE")
+    warning(messages$warningQCPassedNotFound())
     Sys.setenv(QCpassed = 0)
     qCpassed <- FALSE
   }
@@ -94,12 +94,12 @@ getQCpassedEnvironmentVariable <- function() {
   stopHelperFunction <- getOption("OSPSuite.RF.stopHelperFunction")
 
   if (is.null(stopHelperFunction)) {
-    stop("Option stopHelperFunction to control valid runs is not initialized. Please call `executeAsValidRun(isValidRun)`")
+    stop(messages$errorStopHelperFunctionNotInitialized())
   }
 
   if (stopHelperFunction) {
     callingFunction <- as.character(sys.call(-1)) # Get the calling function
-    stop(paste("You are using a helper function, which is not allowed during a valid run. Called from:", callingFunction))
+    stop(messages$errorHelperFunctionNotAllowedInValidRun(callingFunction))
   }
 
   return(invisible())

@@ -530,7 +530,7 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
   }
 
   if (nrow(plotData) == 0) {
-    stop("No data for this plot available")
+    stop(messages$errorNoDataForPlot())
   }
 
   return(plotData)
@@ -628,7 +628,7 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
     )
 
     if (length(unique(plotData[!is.na(yErrorType)][["yErrorType"]])) > 1) {
-      stop("Please do not mix different error Types in one plot")
+      stop(messages$errorMixedErrorTypes())
     }
 
     if (any(plotData[["yErrorType"]] == ospsuite::DataErrorType$ArithmeticStdDev, na.rm = TRUE)) {
