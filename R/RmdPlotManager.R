@@ -25,7 +25,7 @@ RmdPlotManager <- R6::R6Class( # nolint
                           digitsOfSignificance = 3) {
       private$.rmdfolder <- rmdfolder
       self$suppressExport <- suppressExport
-      self$validateConfigTableFunction <- validateConfigTableForPlots
+      self$validateConfigTableFunction <- .validateConfigTableForPlots
       self$digitsOfSignificance <- digitsOfSignificance
 
       if (!suppressExport) {
@@ -60,7 +60,7 @@ RmdPlotManager <- R6::R6Class( # nolint
       } else {
         # otherwise use default function
         message("No specific plotconfiguration validation function available.")
-        self$validateConfigTableFunction <- validateConfigTableForPlots
+        self$validateConfigTableFunction <- .validateConfigTableForPlots
       }
 
       # add start of rmd
