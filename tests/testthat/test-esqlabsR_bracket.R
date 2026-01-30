@@ -132,3 +132,41 @@ test_that(".fixFilePathsInScenarioConfigurations throws error for nonexistent fi
   )
 })
 
+test_that(".fixFilePathsInScenarioConfigurations throws error for NULL modelFile", {
+  # Create a mock scenario configuration with NULL modelFile
+  mockScenarioConfig <- list(
+    list(
+      scenarioName = "test_scenario_null",
+      modelFile = NULL
+    )
+  )
+
+  # Test that the function throws an error
+  expect_error(
+    .fixFilePathsInScenarioConfigurations(
+      scenarioConfigurations = mockScenarioConfig,
+      projectConfiguration = projectConfiguration
+    ),
+    regexp = "Invalid scenario configuration.*modelFile is NULL"
+  )
+})
+
+test_that(".fixFilePathsInScenarioConfigurations throws error for empty modelFile", {
+  # Create a mock scenario configuration with empty modelFile
+  mockScenarioConfig <- list(
+    list(
+      scenarioName = "test_scenario_empty",
+      modelFile = ""
+    )
+  )
+
+  # Test that the function throws an error
+  expect_error(
+    .fixFilePathsInScenarioConfigurations(
+      scenarioConfigurations = mockScenarioConfig,
+      projectConfiguration = projectConfiguration
+    ),
+    regexp = "Invalid scenario configuration.*modelFile is empty"
+  )
+})
+

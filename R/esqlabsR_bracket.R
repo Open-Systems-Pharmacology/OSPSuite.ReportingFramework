@@ -115,41 +115,47 @@ createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xl
   for (i in seq_along(scenarioConfigurations)) {
     scenarioConfig <- scenarioConfigurations[[i]]
 
-    # Check if modelFile field exists and is not NULL or empty
-    if (!is.null(scenarioConfig$modelFile) && nchar(scenarioConfig$modelFile) > 0) {
-      modelFile <- scenarioConfig$modelFile
-      modelPath <- file.path(projectConfiguration$modelFolder, modelFile)
+    # Validate that modelFile exists and is not NULL or empty
+    if (is.null(scenarioConfig$modelFile) || nchar(scenarioConfig$modelFile) == 0) {
+      stop(paste0(
+        "Invalid scenario configuration for scenario '", scenarioConfig$scenarioName, "': ",
+        "modelFile is ", if (is.null(scenarioConfig$modelFile)) "NULL" else "empty", ". ",
+        "All scenarios must have a non-empty modelFile with .pkml extension."
+      ))
+    }
 
-      # Check if file exists
-      if (!file.exists(modelPath)) {
-        # Try replacing each dash variant with standard hyphen-minus
-        correctedFile <- modelFile
-        for (dashVariant in dashVariants) {
-          correctedFile <- gsub(dashVariant, "-", correctedFile, fixed = TRUE)
-        }
+    modelFile <- scenarioConfig$modelFile
+    modelPath <- file.path(projectConfiguration$modelFolder, modelFile)
 
-        correctedPath <- file.path(projectConfiguration$modelFolder, correctedFile)
+    # Check if file exists
+    if (!file.exists(modelPath)) {
+      # Try replacing each dash variant with standard hyphen-minus
+      correctedFile <- modelFile
+      for (dashVariant in dashVariants) {
+        correctedFile <- gsub(dashVariant, "-", correctedFile, fixed = TRUE)
+      }
 
-        # If corrected path exists, update the configuration
-        if (file.exists(correctedPath)) {
-          writeToLog(
-            type = "Warning",
-            msg = paste0(
-              "File '", modelFile, "' not found. ",
-              "Using corrected filename '", correctedFile, "' instead. ",
-              "Consider updating the scenario configuration file to use standard hyphens (-)."
-            )
+      correctedPath <- file.path(projectConfiguration$modelFolder, correctedFile)
+
+      # If corrected path exists, update the configuration
+      if (file.exists(correctedPath)) {
+        writeToLog(
+          type = "Warning",
+          msg = paste0(
+            "File '", modelFile, "' not found. ",
+            "Using corrected filename '", correctedFile, "' instead. ",
+            "Consider updating the scenario configuration file to use standard hyphens (-)."
           )
-          scenarioConfigurations[[i]]$modelFile <- correctedFile
-        } else {
-          # File not found even after correction
-          stop(paste0(
-            "Model file not found for scenario '", scenarioConfig$scenarioName, "': ",
-            "Neither '", modelFile, "' nor '", correctedFile, "' exists in '",
-            projectConfiguration$modelFolder, "'. ",
-            "Please check the file name in the scenario configuration."
-          ))
-        }
+        )
+        scenarioConfigurations[[i]]$modelFile <- correctedFile
+      } else {
+        # File not found even after correction
+        stop(paste0(
+          "Model file not found for scenario '", scenarioConfig$scenarioName, "': ",
+          "Neither '", modelFile, "' nor '", correctedFile, "' exists in '",
+          projectConfiguration$modelFolder, "'. ",
+          "Please check the file name in the scenario configuration."
+        ))
       }
     }
   }
