@@ -83,13 +83,13 @@ createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xl
 
   return(projectConfiguration)
 }
-#' Fix file paths in scenario configurations by replacing dash variants with standard dash
+#' Fix file paths in scenario configurations by replacing dash variants with standard hyphen-minus
 #'
 #' This function checks if all files referenced in scenario configurations exist.
-#' If a file is not found, it tries replacing various hyphen/dash unicode characters
-#' with the standard dash character (-). This addresses issues where LibreOffice
-#' converts dashes to other unicode variants (e.g., EN DASH U+2013, EM DASH U+2014)
-#' when saving Excel files.
+#' If a file is not found, it tries replacing various dash unicode characters
+#' with the standard hyphen-minus character (U+002D). This addresses issues where
+#' LibreOffice converts standard hyphens to other unicode variants (e.g., EN DASH
+#' U+2013, EM DASH U+2014) when saving Excel files.
 #'
 #' @param scenarioConfigurations List of scenario configuration objects from
 #'   `esqlabsR::readScenarioConfigurationFromExcel()`
@@ -100,8 +100,8 @@ createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xl
 #' @keywords internal
 fixFilePathsInScenarioConfigurations <- function(scenarioConfigurations,
                                                  projectConfiguration) {
-  # Define unicode characters that might be mistaken for dashes
-  # U+002D: HYPHEN-MINUS (standard dash)
+  # Define unicode dash characters that might be mistaken for standard hyphen-minus
+  # U+002D: HYPHEN-MINUS (standard keyboard character)
   # U+2010: HYPHEN
   # U+2011: NON-BREAKING HYPHEN
   # U+2012: FIGURE DASH
@@ -121,7 +121,7 @@ fixFilePathsInScenarioConfigurations <- function(scenarioConfigurations,
 
       # Check if file exists
       if (!file.exists(modelPath)) {
-        # Try replacing each dash variant with standard dash
+        # Try replacing each dash variant with standard hyphen-minus
         correctedFile <- modelFile
         for (dashVariant in dashVariants) {
           correctedFile <- gsub(dashVariant, "-", correctedFile, fixed = TRUE)
@@ -136,7 +136,7 @@ fixFilePathsInScenarioConfigurations <- function(scenarioConfigurations,
             msg = paste0(
               "File '", modelFile, "' not found. ",
               "Using corrected filename '", correctedFile, "' instead. ",
-              "Consider updating the scenario configuration file to use standard dashes (-)."
+              "Consider updating the scenario configuration file to use standard hyphens (-)."
             )
           )
           scenarioConfigurations[[i]]$modelFile <- correctedFile
