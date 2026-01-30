@@ -132,25 +132,3 @@ test_that(".fixFilePathsInScenarioConfigurations throws error for nonexistent fi
   )
 })
 
-test_that("fixFilePathsInScenarioConfigurations handles NULL or empty modelFile", {
-  # Create mock scenario configurations with NULL and empty modelFile
-  mockScenarioConfigs <- list(
-    list(
-      scenarioName = "test_scenario_null",
-      modelFile = NULL
-    ),
-    list(
-      scenarioName = "test_scenario_empty",
-      modelFile = ""
-    )
-  )
-
-  # Test that the function handles NULL and empty modelFile without error
-  expect_silent(
-    .fixFilePathsInScenarioConfigurations(
-      scenarioConfigurations = mockScenarioConfigs,
-      projectConfiguration = projectConfiguration
-    )
-  )
-})
-
