@@ -66,16 +66,16 @@ xlsxWriteData <- function(wb, sheetName, dt) {
   dt <- data.table::copy(dt)
 
   # Check if the sheet exists
-  checkSheetExists(wb, sheetName)
+  .checkSheetExists(wb, sheetName)
 
   # Read existing data to determine dimensions
   existingData <- xlsxReadData(wb, sheetName = sheetName, convertHeaders = FALSE)
 
   # Adjust data.table to match existing dimensions
-  dt <- adjustDataTableDimensions(dt, existingData)
+  dt <- .adjustDataTableDimensions(dt, existingData)
 
   # Align column names
-  dt <- alignColumnNames(dt, existingData)
+  dt <- .alignColumnNames(dt, existingData)
 
   # Write new data to the specified sheet
   openxlsx::writeData(wb = wb, sheet = sheetName, x = dt)
@@ -166,10 +166,10 @@ xlsxReadData <- function(wb, sheetName = 1,
 
 
   # Read data from the specified sheet
-  dt <- readSheetData(wb, sheetName)
+  dt <- .readSheetData(wb, sheetName)
 
   # Process the data based on the provided parameters
-  dt <- processSheetData(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA, convertHeaders)
+  dt <- .processSheetData(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA, convertHeaders)
 
   return(dt)
 }
@@ -300,7 +300,8 @@ copyConfigSheet <- function(sourceSheetName, destinationSheetName, sourceFile, d
 #'
 #' @return NULL. If the sheet does not exist, an error is thrown.
 #' @keywords internal
-checkSheetExists <- function(wb, sheetName) {
+#' @noRd
+.checkSheetExists <- function(wb, sheetName) {
   if (!(sheetName %in% wb$sheet_names)) {
     stop(paste("Sheet", sheetName, "does not exist."))
   }
@@ -316,7 +317,8 @@ checkSheetExists <- function(wb, sheetName) {
 #'
 #' @return A data.table with adjusted dimensions.
 #' @keywords internal
-adjustDataTableDimensions <- function(dt, existingData) {
+#' @noRd
+.adjustDataTableDimensions <- function(dt, existingData) {
   if (nrow(existingData) > nrow(dt)) {
     # Add NA rows if existing data has more rows than the new data
     naRows <- data.table(matrix(NA, nrow = nrow(existingData) - nrow(dt), ncol = ncol(dt)))
@@ -337,7 +339,8 @@ adjustDataTableDimensions <- function(dt, existingData) {
 #'
 #' @return A data.table with aligned column names.
 #' @keywords internal
-alignColumnNames <- function(dt, existingData) {
+#' @noRd
+.alignColumnNames <- function(dt, existingData) {
   data.table::setnames(dt,
     old = names(dt),
     new = unlist(lapply(names(dt), function(x) {
@@ -366,7 +369,8 @@ alignColumnNames <- function(dt, existingData) {
 #'
 #' @return A `data.table` containing the raw data from the sheet.
 #' @keywords internal
-readSheetData <- function(wb, sheetName) {
+#' @noRd
+.readSheetData <- function(wb, sheetName) {
   dt <- data.table::setDT(openxlsx::read.xlsx(
     xlsxFile = wb,
     sheet = sheetName,
@@ -390,7 +394,8 @@ readSheetData <- function(wb, sheetName) {
 #'
 #' @return A processed `data.table`.
 #' @keywords internal
-processSheetData <- function(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA, convertHeaders) {
+#' @noRd
+.processSheetData <- function(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA, convertHeaders) {
   if (as.logical(skipDescriptionRow)) {
     dt <- dt[-seq_len(as.integer(skipDescriptionRow))]
     if ("Comment" %in% names(dt)) {
@@ -411,10 +416,10 @@ processSheetData <- function(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA,
   }
 
   # Convert convertible columns to numeric
-  dt <- convertColumnsToNumeric(dt, alwaysCharacter)
+  dt <- .convertColumnsToNumeric(dt, alwaysCharacter)
 
   # Trim whitespace for character columns and replace curly quotes
-  dt <- cleanCharacterColumns(dt, emptyAsNA)
+  dt <- .cleanCharacterColumns(dt, emptyAsNA)
 
   # Convert column names to start with a lowercase letter
   if (convertHeaders) {
@@ -433,7 +438,8 @@ processSheetData <- function(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA,
 #'
 #' @return A `data.table` with numeric conversions applied where appropriate.
 #' @keywords internal
-convertColumnsToNumeric <- function(dt, alwaysCharacter) {
+#' @noRd
+.convertColumnsToNumeric <- function(dt, alwaysCharacter) {
   convertibleCols <- suppressWarnings(names(dt)[sapply(dt, function(x) {
     xWithoutNA <- x[!is.na(x) & x != ""]
     return(length(xWithoutNA) == 0 || !any(is.na(as.numeric(xWithoutNA))))
@@ -455,7 +461,8 @@ convertColumnsToNumeric <- function(dt, alwaysCharacter) {
 #'
 #' @return A `data.table` with cleaned character columns.
 #' @keywords internal
-cleanCharacterColumns <- function(dt, emptyAsNA) {
+#' @noRd
+.cleanCharacterColumns <- function(dt, emptyAsNA) {
   characterCols <- setdiff(names(dt), names(dt)[sapply(dt, is.numeric)])
   if (length(characterCols) > 0) {
     # Trim whitespace for character columns

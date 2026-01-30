@@ -2,6 +2,7 @@
 #' @docType class
 #' @description Manages the creation and writing of .Rmd files for plots.
 #' @keywords internal
+#' @noRd
 RmdPlotManager <- R6::R6Class( # nolint
   "RmdPlotManager",
   inherit = ospsuite.utils::Printable,
@@ -24,7 +25,7 @@ RmdPlotManager <- R6::R6Class( # nolint
                           digitsOfSignificance = 3) {
       private$.rmdfolder <- rmdfolder
       self$suppressExport <- suppressExport
-      self$validateConfigTableFunction <- validateConfigTableForPlots
+      self$validateConfigTableFunction <- .validateConfigTableForPlots
       self$digitsOfSignificance <- digitsOfSignificance
 
       if (!suppressExport) {
@@ -59,7 +60,7 @@ RmdPlotManager <- R6::R6Class( # nolint
       } else {
         # otherwise use default function
         message("No specific plotconfiguration validation function available.")
-        self$validateConfigTableFunction <- validateConfigTableForPlots
+        self$validateConfigTableFunction <- .validateConfigTableForPlots
       }
 
       # add start of rmd
@@ -336,7 +337,7 @@ RmdPlotManager <- R6::R6Class( # nolint
     # function to initialize rmdLines
     .startRMD = function(rmdfolder) {
       return(c(
-        startRmd(),
+        .startRmd(),
         "  ",
         paste0("```{r setup_", private$.rmdName, ", include=FALSE}"),
         'if (!exists("setupDone"))',

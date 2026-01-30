@@ -47,7 +47,7 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
     dtTwinPops <- xlsxReadData(wb, "VirtualTwinPopulation")
   }
 
-  if (is.null(groups)) groups <- getIndividualDataGroups(dataObserved, groups)
+  if (is.null(groups)) groups <- .getIndividualDataGroups(dataObserved, groups)
   # Remove any groups that are already in dtTwinPops
   groups <- setdiff(groups, unique(splitInputs(as.character(dtTwinPops$dataGroups))))
 
@@ -220,7 +220,7 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
       population <- ospsuite::createPopulation(populationCharacteristics = popCharacteristics)
 
       if (dPop$populationName %in% openxlsx::getSheetNames(projectConfiguration$populationsFile)) {
-        extendPopulationFromXLS_RF(population, projectConfiguration$populationsFile, sheet = dPop$populationName)
+        .extendPopulationFromXLS_RF(population, projectConfiguration$populationsFile, sheet = dPop$populationName)
       }
 
       poptable <- ospsuite::populationToDataFrame(population$population) %>%
@@ -260,7 +260,8 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
 #' @return The updated `scenario` object, with the population's parameters set accordingly. If the scenario type is not "Population" or if there are no custom parameters, the original scenario is returned unchanged.
 #'
 #' @keywords internal
-setCustomParamsToPopulation <- function(scenario) {
+#' @noRd
+.setCustomParamsToPopulation <- function(scenario) {
   # avoid warning for global variable
   paths <- dimension <- values <- NULL
 
@@ -306,6 +307,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @return A list of parameters for the specified sheets.
 #' @keywords internal
+#' @noRd
 .readParameterSheetList <- function(projectConfiguration, dtTwinPops, sim) {
   # Define the sheets and corresponding files
   sheets <- c("modelParameterSheets", "individualId", "applicationProtocol")
@@ -345,6 +347,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #' @param sim A simulation object.
 #'
 #' @keywords internal
+#' @noRd
 .generatePopulationFiles <- function(dtTwinPops, params, dtIndividualBiometrics, projectConfiguration, sim) {
   # initialize variable to avoid messages
   individualId <- IndividualId <- NULL # nolint
@@ -400,9 +403,10 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @return An individual characteristics object.
 #' @keywords internal
+#' @noRd
 .createIndividualCharacteristics <- function(biomForInd) {
   # ! Attention esqlabsR uses Columns starting with upperCase
-  moleculeOntogenies <- readOntongenies(biomForInd[, c("protein Ontogenies")])
+  moleculeOntogenies <- .readOntongenies(biomForInd[, c("protein Ontogenies")])
 
   ospsuite::createIndividualCharacteristics(
     species = biomForInd$species,
@@ -427,6 +431,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @return A list of results for the individual.
 #' @keywords internal
+#' @noRd
 .processIndividual <- function(individual, biomForInd, params, projectConfiguration, sim) {
   # avoid warnings during check
   paths <- NULL
@@ -453,6 +458,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #' @param projectConfiguration A list containing project configuration details.
 #'
 #' @keywords internal
+#' @noRd
 .savePopulationFile <- function(poptable, populationName, projectConfiguration) {
   utils::write.csv(
     x = poptable,
@@ -478,6 +484,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @return A data.table representing the virtual twin population.
 #' @keywords internal
+#' @noRd
 .buildVirtualTwinPopulation <- function(projectConfiguration, params, dPop) {
   poptable <- data.table()
 
@@ -523,6 +530,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @return A list of parameters for the specified sheets.
 #' @keywords internal
+#' @noRd
 .getAllParameterForSheets <- function(projectConfiguration, sheets, paramsXLSpath, sim) {
   # avoid warnings for global variables during check
   paths <- dimension <- values <- sheet <- NULL
@@ -588,6 +596,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @return A cleaned character vector of sheet names.
 #' @keywords internal
+#' @noRd
 .cleanUpSheetList <- function(sheets) {
   sheets <- unique(sheets)
   sheets <- splitInputs(sheets)
@@ -606,6 +615,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @return A data.table with converted biometrics.
 #' @keywords internal
+#' @noRd
 .convertBiomForIndStatics <- function(biomForInd, sim) {
   # avoid messages for global variables during check
   paths <- NULL

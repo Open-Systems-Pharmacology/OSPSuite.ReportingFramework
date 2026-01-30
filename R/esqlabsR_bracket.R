@@ -278,7 +278,7 @@ runAndSaveScenarios <- function(projectConfiguration, scenarioList, simulationRu
     writeToLog(type = "Info", msg = paste("Start simulation of", sc))
 
     # Make sure custom params are not again overwritten by population
-    scenarioList[[sc]] <- setCustomParamsToPopulation(scenarioList[[sc]])
+    scenarioList[[sc]] <- .setCustomParamsToPopulation(scenarioList[[sc]])
 
     scenarioResults[sc] <- esqlabsR::runScenarios(
       scenarios = scenarioList[sc],
@@ -345,7 +345,8 @@ runOrLoadScenarios <- function(projectConfiguration, scenarioList, simulationRun
 #' field is NA.
 #'
 #' @keywords internal
-readOntongenies <- function(data) {
+#' @noRd
+.readOntongenies <- function(data) {
   proteinOntogenyMappings <- data[["protein Ontogenies"]]
   if (is.na(proteinOntogenyMappings)) {
     return(NULL)
@@ -391,7 +392,8 @@ readOntongenies <- function(data) {
 #'   copy of esqlabsR::extendPopulationFromXLS but columnNames always withdot
 #'
 #' @keywords internal
-extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { # nolint
+#' @noRd
+.extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { # nolint
   ospsuite.utils::validateIsOfType(population, "Population")
   ospsuite.utils::validateIsString(XLSpath)
   ospsuite.utils::validateIsString(sheet, nullAllowed = TRUE)
@@ -424,7 +426,7 @@ extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { # no
     distributions[[i]] <- data[["Distribution"]][[i]]
   }
 
-  extendPopulationByUserDefinedParams_RF(
+  .extendPopulationByUserDefinedParams_RF(
     population = population, parameterPaths = paramPaths,
     meanValues = meanVals, sdValues = sdVals,
     distributions = distributions
@@ -448,7 +450,8 @@ extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { # no
 #'   be sampled. Must have the same length as `parameterPaths`.
 #' A list of supported distributions is defined in `Distributions`. Default is `"Normal"`.
 #' @keywords internal
-extendPopulationByUserDefinedParams_RF <- function(population, # nolint
+#' @noRd
+.extendPopulationByUserDefinedParams_RF <- function(population, # nolint
                                                    parameterPaths,
                                                    meanValues,
                                                    sdValues,

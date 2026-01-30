@@ -169,7 +169,7 @@ plotTimeProfiles <- function(projectConfiguration,
 
   # read aggregation function for simulated populations
   aggregationFlag <- match.arg(aggregationFlag)
-  aggregationFun <- getAggregationFunction(aggregationFlag, percentiles, customFunction)
+  aggregationFun <- .getAggregationFunction(aggregationFlag, percentiles, customFunction)
 
   checkmate::assertDataTable(onePlotConfig)
   if (dplyr::n_distinct(onePlotConfig$plotName) > 1) stop("onePlotConfig conatinas more than one plotName")
@@ -220,7 +220,7 @@ plotTimeProfiles <- function(projectConfiguration,
   for (plotType in c("TP", "PvO", "ResvT", "ResvO", "ResH", "QQ")) {
     plotList <- c(
       plotList,
-      generatePlotForPlotType(
+      .generatePlotForPlotType(
         plotData = plotData,
         facetAspectRatio = facetAspectRatio,
         plotType = plotType,
@@ -231,7 +231,7 @@ plotTimeProfiles <- function(projectConfiguration,
 
   if (checkForUnusedData) {
     # this is a QC functionality which should not done in a valid Run
-    stopHelperFunction()
+    .stopHelperFunction()
 
     if (plotData$hasObservedData()) {
       plotList[["unusedDataRows"]] <-
@@ -251,18 +251,19 @@ plotTimeProfiles <- function(projectConfiguration,
 #'
 #' @return Updated `rmdPlotManager` with the generated plot.
 #' @keywords internal
-generatePlotForPlotType <- function(plotData,
+#' @noRd
+.generatePlotForPlotType <- function(plotData,
                                     facetAspectRatio,
                                     plotType,
                                     ...) {
   plotList <- list()
-  if (!isPlotTypeNeededAndPossible(plotType, plotData)) {
+  if (!.isPlotTypeNeededAndPossible(plotType, plotData)) {
     return(plotList)
   }
   for (timeRangeFilter in names(plotData$timeRangeTagFilter)) {
     for (yScale in splitInputs(plotData$configTable$yScale[1])) {
       for (plotCounter in unique(plotData$dtCaption$counter)) {
-        yLimits <- checkAndAdjustYlimits(
+        yLimits <- .checkAndAdjustYlimits(
           plotData = plotData,
           yScale = yScale,
           timeRangeFilter = timeRangeFilter,
@@ -274,65 +275,65 @@ generatePlotForPlotType <- function(plotData,
             TP = ospsuite_plotTimeProfile(
               plotData = plotData$getDataForTimeRange(timeRangeFilter, plotCounter = plotCounter, yScale = yScale),
               yScale = yScale,
-              mapping = getGroupbyMapping(plotData, plotType),
-              groupAesthetics = getGroupAesthetics(plotData),
+              mapping = .getGroupbyMapping(plotData, plotType),
+              groupAesthetics = .getGroupAesthetics(plotData),
               yScaleArgs = list(limits = yLimits),
-              geomLineAttributes = getGeomLineAttributesForTP(plotData),
-              geomLLOQAttributes = getGeomLLOQAttributesForTP(plotData),
+              geomLineAttributes = .getGeomLineAttributesForTP(plotData),
+              geomLLOQAttributes = .getGeomLLOQAttributesForTP(plotData),
               ...
             ),
             PvO = ospsuite_plotPredictedVsObserved(
               plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter, yScale = yScale),
               xyScale = yScale,
-              mapping = getGroupbyMapping(plotData, plotType),
-              groupAesthetics = getGroupAesthetics(plotData),
-              comparisonLineVector = getFoldDistanceForPvO(plotData),
+              mapping = .getGroupbyMapping(plotData, plotType),
+              groupAesthetics = .getGroupAesthetics(plotData),
+              comparisonLineVector = .getFoldDistanceForPvO(plotData),
               ...
             ),
             ResvT = ospsuite_plotResidualsVsTime(
               plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter, yScale = yScale),
               residualScale = yScale,
-              mapping = getGroupbyMapping(plotData, plotType),
-              groupAesthetics = getGroupAesthetics(plotData),
+              mapping = .getGroupbyMapping(plotData, plotType),
+              groupAesthetics = .getGroupAesthetics(plotData),
               ...
             ),
             ResvO = ospsuite_plotResidualsVsObserved(
               plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter, yScale = yScale),
               residualScale = yScale,
               xScale = yScale,
-              mapping = getGroupbyMapping(plotData, plotType),
-              groupAesthetics = getGroupAesthetics(plotData),
+              mapping = .getGroupbyMapping(plotData, plotType),
+              groupAesthetics = .getGroupAesthetics(plotData),
               ...
             ),
             ResH = ospsuite_plotResidualsAsHistogram(
               plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter, yScale = yScale),
               residualScale = yScale,
-              mapping = getGroupbyMapping(plotData, plotType),
+              mapping = .getGroupbyMapping(plotData, plotType),
               distribution = "normal",
               ...
             ),
             QQ = ospsuite_plotQuantileQuantilePlot(
               plotData = plotData$getDataForTimeRange(timeRangeFilter, typeFilter = "observed", plotCounter = plotCounter, yScale = yScale),
               residualScale = yScale,
-              mapping = getGroupbyMapping(plotData, plotType),
-              groupAesthetics = getGroupAesthetics(plotData),
+              mapping = .getGroupbyMapping(plotData, plotType),
+              groupAesthetics = .getGroupAesthetics(plotData),
               ...
             )
           )
 
-        plotObject <- setManualScalevectors(
+        plotObject <- .setManualScalevectors(
           plotObject = plotObject,
           plotData = plotData,
           plotType = plotType
         )
-        plotObject <- updateGuides(
+        plotObject <- .updateGuides(
           plotData = plotData,
           plotObject = plotObject,
           plotType = plotType
         )
 
         # add Facet Columns
-        plotObject <- addFacets(
+        plotObject <- .addFacets(
           plotObject = plotObject,
           nFacetColumns = plotData$nFacetColumns,
           facetScale = plotData$configTable$facetScale[1],
@@ -352,14 +353,14 @@ generatePlotForPlotType <- function(plotData,
         # prepare for export
         plotObject <- setExportAttributes(
           object = plotObject,
-          caption = getCaptionForPlot(plotData,
+          caption = .getCaptionForPlot(plotData,
             yScale = yScale, # nolint indentation_linter
             timeRangeFilter = timeRangeFilter,
             plotType = plotType,
             plotCounter = plotCounter
           ),
           footNoteLines =
-            getFootNoteLines(
+            .getFootNoteLines(
               dataObserved = plotData$getDataForTimeRange(
                 filterName = timeRangeFilter,
                 typeFilter = "observed",
@@ -397,7 +398,8 @@ generatePlotForPlotType <- function(plotData,
 #'
 #' @return Logical indicating if the plot type is needed and possible.
 #' @keywords internal
-isPlotTypeNeededAndPossible <- function(plotType, plotData) {
+#' @noRd
+.isPlotTypeNeededAndPossible <- function(plotType, plotData) {
   configColumn <- switch(plotType,
     TP = "plot_TimeProfiles",
     PvO = "plot_PredictedVsObserved",
@@ -423,7 +425,8 @@ isPlotTypeNeededAndPossible <- function(plotType, plotData) {
 #'
 #' @return Data table mapping simulated and observed data.
 #' @keywords internal
-getMapSimulatedAndObserved <- function(plotData) {
+#' @noRd
+.getMapSimulatedAndObserved <- function(plotData) {
   # initialize data.table variables
   dataType <- NULL
 
@@ -450,7 +453,8 @@ getMapSimulatedAndObserved <- function(plotData) {
 #'
 #' @return Numeric vector of Y limits.
 #' @keywords internal
-checkAndAdjustYlimits <- function(plotData,
+#' @noRd
+.checkAndAdjustYlimits <- function(plotData,
                                   yScale,
                                   timeRangeFilter,
                                   plotType,
@@ -538,7 +542,8 @@ checkAndAdjustYlimits <- function(plotData,
 #'
 #' @return Aesthetic mappings for grouping.
 #' @keywords internal
-getGroupbyMapping <- function(plotData, plotType) {
+#' @noRd
+.getGroupbyMapping <- function(plotData, plotType) {
   # avoid warning for global variable
   colorIndex <- shapeIndex <- NULL
 
@@ -566,7 +571,8 @@ getGroupbyMapping <- function(plotData, plotType) {
 #'
 #' @return Vector with aesthetics to group by.
 #' @keywords internal
-getGroupAesthetics <- function(plotData) {
+#' @noRd
+.getGroupAesthetics <- function(plotData) {
   return(intersect(
     c("colour", "fill", "shape"),
     ggplot2::standardise_aes_names(c(
@@ -582,7 +588,8 @@ getGroupAesthetics <- function(plotData) {
 #'
 #' @return Updated ggplot object with guides.
 #' @keywords internal
-updateGuides <- function(plotData, plotObject, plotType) { # nolint
+#' @noRd
+.updateGuides <- function(plotData, plotObject, plotType) { # nolint
   # Initialize legend titles
   legendTitleObservedData <- "Observed data"
   legendTitleColor <- ""
@@ -676,7 +683,8 @@ updateGuides <- function(plotData, plotObject, plotType) { # nolint
 #'
 #' @return Updated ggplot object with manual scale vectors.
 #' @keywords internal
-setManualScalevectors <- function(plotObject, plotData, plotType) {
+#' @noRd
+.setManualScalevectors <- function(plotObject, plotData, plotType) {
   for (aesthetic in names(plotData$scaleVectors)) {
     scaleVector <- plotData$scaleVectors[[aesthetic]]
     labels <- waiver()
@@ -718,7 +726,8 @@ setManualScalevectors <- function(plotObject, plotData, plotType) {
 #'
 #' @return Caption text for the plot.
 #' @keywords internal
-getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotCounter) {
+#' @noRd
+.getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotCounter) {
   # avoid warning for global variable
   counter <- NULL
   dtCaption <-
@@ -745,7 +754,7 @@ getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotC
 
   if ("individualId" %in% names(dtCaption) &&
     !all(is.na(dtCaption$individualId))) {
-    individualtext <- pasteFigureTags(dtCaption, captionColumn = "individualId")
+    individualtext <- .pasteFigureTags(dtCaption, captionColumn = "individualId")
     if (individualtext != "") {
       individualtext <- paste(
         " for subject",
@@ -758,14 +767,14 @@ getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotC
   captiontext <- paste0(
     plotTypeTxt,
     " for ",
-    pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"),
+    .pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"),
     " for ",
-    pasteFigureTags(dtCaption, captionColumn = "scenarioLongName"),
+    .pasteFigureTags(dtCaption, captionColumn = "scenarioLongName"),
     individualtext,
     scaleName,
-    pasteFigureTags(dtCaption, captionColumn = "timeRangeCaption", endWithDot = TRUE, startWithBlank = TRUE)
+    .pasteFigureTags(dtCaption, captionColumn = "timeRangeCaption", endWithDot = TRUE, startWithBlank = TRUE)
   )
-  captiontext <- addCaptionTextAddon(captiontext, plotData$configTable$plotCaptionAddon[1])
+  captiontext <- .addCaptionTextAddon(captiontext, plotData$configTable$plotCaptionAddon[1])
 
 
   return(captiontext)
@@ -777,14 +786,15 @@ getCaptionForPlot <- function(plotData, yScale, timeRangeFilter, plotType, plotC
 #'
 #' @return Vector of characters, each entry is one footnote line.
 #' @keywords internal
-getFootNoteLines <- function(dataObserved, dtDataReference) {
+#' @noRd
+.getFootNoteLines <- function(dataObserved, dtDataReference) {
   if (nrow(dataObserved) == 0) {
     return(NULL)
   }
 
   footnoteLines <- NULL
   if (any(dataObserved$dataClass == DATACLASS$tpAggregated)) {
-    errorLabels <- getErrorLabels(dataObserved$yErrorType[1])
+    errorLabels <- .getErrorLabels(dataObserved$yErrorType[1])
 
     footnoteLines <- paste(
       "Observed data is displayed as",
@@ -816,7 +826,8 @@ getFootNoteLines <- function(dataObserved, dtDataReference) {
 #'
 #' @return List which can be used as input for comparisonLineVector.
 #' @keywords internal
-getFoldDistanceForPvO <- function(plotData) {
+#' @noRd
+.getFoldDistanceForPvO <- function(plotData) {
   foldDistance <- ifelse(!is.na(plotData$configTable$foldDistance_PvO[1]),
     as.double(plotData$configTable$foldDistance_PvO[1]), # nolint indentation_linter
     2
@@ -830,7 +841,8 @@ getFoldDistanceForPvO <- function(plotData) {
 #'
 #' @return list with additional attributes for geom_line
 #' @keywords internal
-getGeomLineAttributesForTP <- function(plotData) {
+#' @noRd
+.getGeomLineAttributesForTP <- function(plotData) {
   if (plotData$hasObservedDataRange()) {
     return(list(linetype = "solid", show.legend = TRUE))
   } else {
@@ -844,7 +856,8 @@ getGeomLineAttributesForTP <- function(plotData) {
 #'
 #' @return list with additional attributes for lloq line
 #' @keywords internal
-getGeomLLOQAttributesForTP <- function(plotData) {
+#' @noRd
+.getGeomLLOQAttributesForTP <- function(plotData) {
   if (plotData$hasObservedDataRange()) {
     return(list(linewidth = 0.5, show.legend = TRUE))
   } else {
@@ -868,10 +881,10 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
   configTablePlots <- validateHeaders(configTable)
   
   # Apply defaults for empty columns and print warnings
-  configTablePlots <- applyConfigDefaults(configTablePlots, TIMEPROFILES_CONFIG_DEFAULTS)
+  configTablePlots <- .applyConfigDefaults(configTablePlots, TIMEPROFILES_CONFIG_DEFAULTS)
   
-  validateOutputIdsForPlot()
-  validateDataGroupIdsForPlot()
+  .validateOutputIdsForPlot()
+  .validateDataGroupIdsForPlot()
 
   checkmate::assertCharacter(configTablePlots$scenarioLongName, any.missing = FALSE, .var.name = "longName for relevant scenarios")
   checkmate::assertList(scenarioResults, any.missing = FALSE, null.ok = FALSE, min.len = 1)
@@ -940,7 +953,7 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
     )
   )
 
-  validateTimeRangeColumns(configTablePlots)
+  .validateTimeRangeColumns(configTablePlots)
 
   validateGroupConsistency(
     dt = configTablePlots,
@@ -963,13 +976,13 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
     )
   )
 
-  validateUnitConsistency(configTablePlots = configTablePlots)
+  .validateUnitConsistency(configTablePlots = configTablePlots)
 
-  validateOutputPathIdFormat(configTablePlots = configTablePlots)
+  .validateOutputPathIdFormat(configTablePlots = configTablePlots)
 
-  validateOutputPathIdFormat(configTablePlots = configTablePlots, column = "individualIds")
+  .validateOutputPathIdFormat(configTablePlots = configTablePlots, column = "individualIds")
 
-  validateVirtualTwinPop(
+  .validateVirtualTwinPop(
     configTablePlots = configTablePlots,
     scenarioResults = scenarioResults
   )
@@ -1003,7 +1016,8 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
 #' @param configTablePlots `data.table` configuration table without header lines
 #'
 #' @keywords internal
-validateUnitConsistency <- function(
+#' @noRd
+.validateUnitConsistency <- function(
     configTablePlots) {
   # avoid warning for global variable
   outputPathId <- NULL
@@ -1029,7 +1043,8 @@ validateUnitConsistency <- function(
 #'
 #' @param configTablePlots `data.table` configuration table without header lines
 #' @keywords internal
-validateTimeRangeColumns <- function(configTablePlots) {
+#' @noRd
+.validateTimeRangeColumns <- function(configTablePlots) {
   timeRangeColumns <-
     names(configTablePlots)[grepl("^timeRange_", names(configTablePlots))]
 
@@ -1070,7 +1085,8 @@ validateTimeRangeColumns <- function(configTablePlots) {
 #'
 #' @param configTablePlots `data.table` configuration table without header lines
 #' @keywords internal
-validateOutputPathIdFormat <- function(configTablePlots, column = "outputPathIds") {
+#' @noRd
+.validateOutputPathIdFormat <- function(configTablePlots, column = "outputPathIds") {
   # avoid warning for global variable
   nBracketOpen <- nBracketClosed <- NULL
 
@@ -1096,7 +1112,8 @@ validateOutputPathIdFormat <- function(configTablePlots, column = "outputPathIds
 #' @param configTablePlots A data table containing the plot configuration, including scenario names and individual IDs.
 #' @param scenarioResults A list with scenario results.
 #' @keywords internal
-validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
+#' @noRd
+.validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
   # avoid warning for global variable
   dataGroupIds <- individualIds <- scenario <- referenceScenario <- NULL
   plot_TimeProfiles <- NULL # nolint
@@ -1201,7 +1218,7 @@ addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
   scenarioName <- NULL
 
   # this function stops in valid runs
-  stopHelperFunction()
+  .stopHelperFunction()
 
   # use data.table format for dataObserved
   if (!is.null(dataObserved)) {
@@ -1230,7 +1247,7 @@ addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
     )
   }
 
-  dtNewConfig <- createNewConfig(scenarios, dataObserved)
+  dtNewConfig <- .createNewConfig(scenarios, dataObserved)
 
   wb <- xlsxAddDataUsingTemplate(
     wb = wb,
@@ -1255,7 +1272,8 @@ addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
 #'
 #' @return A data.table containing the new configuration for time profile plots.
 #' @keywords internal
-createNewConfig <- function(scenarios, dataObserved) {
+#' @noRd
+.createNewConfig <- function(scenarios, dataObserved) {
   dtNewConfig <- data.table(
     plotName = scenarios$scenarioName,
     scenario = scenarios$scenarioName,
@@ -1279,7 +1297,7 @@ createNewConfig <- function(scenarios, dataObserved) {
   )
 
   if (any(!is.na(configEnv$dataGroupIds$defaultScenario))) {
-    dtNewConfig <- mergeDataGroups(dtNewConfig, configEnv$dataGroupIds, dataObserved)
+    dtNewConfig <- .mergeDataGroups(dtNewConfig, configEnv$dataGroupIds, dataObserved)
   }
 
   return(dtNewConfig)
@@ -1295,7 +1313,8 @@ createNewConfig <- function(scenarios, dataObserved) {
 #'
 #' @return A data.table with merged data group information.
 #' @keywords internal
-mergeDataGroups <- function(dtNewConfig, dtDataGroups, dataObserved) {
+#' @noRd
+.mergeDataGroups <- function(dtNewConfig, dtDataGroups, dataObserved) {
   # initialize data.table variables
   outputPathIds <- scenario <- group <- individualIds <- NULL
 

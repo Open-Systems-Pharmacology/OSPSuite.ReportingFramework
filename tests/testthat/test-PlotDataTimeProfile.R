@@ -22,40 +22,40 @@ dtOutputPaths <- data.table(
 
 # Unit tests
 test_that("getPlotIdForColumns works correctly", {
-  result <- getPlotIdForColumns(configTable, "outputPathIds")
+  result <- .getPlotIdForColumns(configTable, "outputPathIds")
   expect_true("plotId" %in% names(result))
   expect_equal(nrow(result), 5) # Check the number of rows
 })
 
 test_that("splitCaptionByIndividuals works correctly", {
-  dtCaption <- getPlotIdForColumns(configTable, "outputPathIds")
-  result <- splitCaptionByIndividuals(configTable, individualIdVector = c("1", "2"), dtCaption)
+  dtCaption <- .getPlotIdForColumns(configTable, "outputPathIds")
+  result <- .splitCaptionByIndividuals(configTable, individualIdVector = c("1", "2"), dtCaption)
   expect_true("individualId" %in% names(result))
   expect_equal(nrow(result), 8) # Adjust based on expected output
 })
 
 
 test_that("addTimeTagsToCaption works correctly", {
-  dtCaption <- getPlotIdForColumns(configTable, "outputPathIds")
-  result <- addTimeTagsToCaption(dtCaption, timeTags, splitPlotsPerTimeRange = 0)
+  dtCaption <- .getPlotIdForColumns(configTable, "outputPathIds")
+  result <- .addTimeTagsToCaption(dtCaption, timeTags, splitPlotsPerTimeRange = 0)
   expect_true("timeRangeTag" %in% names(result))
   expect_contains(result$timeRangeTag, timeTags)
   expect_equal(nrow(result), length(timeTags) * nrow(dtCaption)) # Check number of rows after adding tags
 })
 
 test_that("setTimeRangeFilter works correctly", {
-  result <- setTimeRangeFilter(splitPlotsPerTimeRange = 1, timeTags)
+  result <- .setTimeRangeFilter(splitPlotsPerTimeRange = 1, timeTags)
   expect_equal(length(result), 2) # Check length of filters
 })
 
 test_that("restructureApplicationTimeByScenarioIndex works correctly", {
   applicationTimes <- list(A = c(1, 2), B = c(3, 4))
-  result <- restructureApplicationTimeByScenarioIndex(applicationTimes, configTable)
+  result <- .restructureApplicationTimeByScenarioIndex(applicationTimes, configTable)
   expect_equal(length(result), 4) # Check number of scenarios
 })
 
 test_that("getOutputPathsPerScenario works correctly", {
-  result <- getOutputPathsPerScenario(configTable, dtOutputPaths)
+  result <- .getOutputPathsPerScenario(configTable, dtOutputPaths)
   expect_true(is.list(result))
   expect_equal(length(result), 2) # Check number of scenarios
 })
@@ -71,7 +71,7 @@ test_that("getObservedUnitConversionDT works correctly", {
       unitFactor = c(1000, 1)
     )
 
-  result <- getObservedUnitConversionDT(dataObserved, dtUnit)
+  result <- .getObservedUnitConversionDT(dataObserved, dtUnit)
   expect_true("unitFactor" %in% names(result))
   expect_equal(nrow(result), 2) # Check number of rows
 })

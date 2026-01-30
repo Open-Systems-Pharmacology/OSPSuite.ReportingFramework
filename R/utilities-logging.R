@@ -129,7 +129,7 @@ captureLog <- function(expr, finallyExpression = invisible()) {
       withCallingHandlers(
         expr,
         error = function(e) {
-          errorMessage <- getErrorTrace(e)
+          errorMessage <- .getErrorTrace(e)
           writeToLog(
             type = "Error",
             msg = errorMessage
@@ -192,13 +192,14 @@ captureLog <- function(expr, finallyExpression = invisible()) {
 #'     # Some code that may produce an error
 #'   },
 #'   error = function(e) {
-#'     errorTrace <- getErrorTrace(e)
+#'     errorTrace <- .getErrorTrace(e)
 #'     cat(errorTrace)
 #'   }
 #' )
 #'
 #' @keywords internal
-getErrorTrace <- function(e) {
+#' @noRd
+.getErrorTrace <- function(e) {
   calls <- sys.calls()
   errorTrace <- "Error Trace:"
   for (call in calls) {

@@ -502,6 +502,7 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
 #'
 #' @return A `data.table` with data formatted for plotting.
 #' @keywords internal
+#' @noRd
 .validateAndConvertData <- function(plotData, predictedIsNeeded) {
   # initialize variables used for data.table to avoid messages during checks
   dataType <- NULL
@@ -558,6 +559,7 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
 #' - `yValues`: A list with `dimension` and `unit` for the primary y-axis.
 #' - `y2`: (optional) A list with `dimension` and `unit` for the secondary y-axis if applicable.
 #' @keywords internal
+#' @noRd
 .constructMetDataForTimeProfile <- function(plotData) {
   xUnit <- unique(plotData$xUnit)
   if (length(xUnit) > 1) stop("x Unit ambiguous")
@@ -607,6 +609,7 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
 #'
 #' @return A mapping object for ggplot2.
 #' @keywords internal
+#' @noRd
 .getMappingForTimeprofiles <- function(plotData, metaData, userMapping) {
   # initialize variables used for data.table to avoid warnings during checks
   xValues <- yValues <- group <- yErrorType <- yErrorValues <- yMin <- yMax <- lloq <- NULL

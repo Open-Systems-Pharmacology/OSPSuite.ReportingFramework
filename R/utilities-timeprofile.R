@@ -9,7 +9,8 @@
 #'
 #' @return A data.table containing the aggregated simulated time profiles for all scenarios.
 #' @keywords internal
-loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, outputPathsPerScenario, aggregationFun) {
+#' @noRd
+.loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, outputPathsPerScenario, aggregationFun) {
   dtSimulated <- data.table()
   for (scenarioName in names(outputPathsPerScenario)) {
     individualMatch <- NULL
@@ -46,7 +47,8 @@ loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, out
 #' @param dtOutputs A data.table containing output specifications.
 #' @return A data.table with unit conversion factors and unique paths.
 #' @keywords internal
-getUnitConversionDT <- function(dtSimulated, dtOutputs) {
+#' @noRd
+.getUnitConversionDT <- function(dtSimulated, dtOutputs) {
   # avoid warning for global variable
   unitFactor <- NULL
   dtUnit <- dtSimulated %>%
@@ -81,7 +83,8 @@ getUnitConversionDT <- function(dtSimulated, dtOutputs) {
 #' @param simulatedResults List with simulation results
 #' @return A list containing the start and end times of applications for each scenario.
 #' @keywords internal
-getApplicationTimes <- function(outputPathsPerScenario, simulatedResults) {
+#' @noRd
+.getApplicationTimes <- function(outputPathsPerScenario, simulatedResults) {
   applicationTimes <- list()
 
   for (scenarioName in names(outputPathsPerScenario)) {
@@ -147,7 +150,7 @@ getSimulatedTimeprofile <- function(simulatedResult, outputPaths, aggregationFun
       data.table::setnames(old = "observedIndividualId", new = "individualId") %>%
       dplyr::mutate(dataClass = DATACLASS$tpTwinPop)
   } else if (dplyr::n_distinct(dt$IndividualId) > 1) {
-    dt <- performAggregation(
+    dt <- .performAggregation(
       dataToAggregate = dt,
       aggregationFun = aggregationFun,
       aggrCriteria = c("xValues", "paths", "dimension", "yUnit", "molWeight")
@@ -174,7 +177,8 @@ getSimulatedTimeprofile <- function(simulatedResult, outputPaths, aggregationFun
 #' @param dtUnit A data.table with unit conversion factors.
 #' @return A data.table with the y-values converted to the target unit.
 #' @keywords internal
-convertYunit <- function(timeprofile, dtUnit) {
+#' @noRd
+.convertYunit <- function(timeprofile, dtUnit) {
   # Initialize variables used for data.tables
   yErrorValues <- unitFactor <- NULL
 
@@ -215,7 +219,8 @@ convertYunit <- function(timeprofile, dtUnit) {
 #' @param timeOffset An optional time offset to be applied after conversion (default is 0).
 #' @return A data.table with the time values converted and shifted.
 #' @keywords internal
-convertAndShiftTimeUnits <- function(timeprofile, targetTimeUnit, timeOffset = 0) {
+#' @noRd
+.convertAndShiftTimeUnits <- function(timeprofile, targetTimeUnit, timeOffset = 0) {
   # avoid warnings during check
   xValues <- xUnit <- NULL
 
@@ -249,7 +254,8 @@ convertAndShiftTimeUnits <- function(timeprofile, targetTimeUnit, timeOffset = 0
 #'         individual IDs. If no IDs are provided, the original `timeprofile` is returned.
 #'
 #' @keywords internal
-filterIndividualID <- function(timeprofile, individualList) {
+#' @noRd
+.filterIndividualID <- function(timeprofile, individualList) {
   # Initialize variables used for data.tables
   individualId <- NULL
 

@@ -8,6 +8,7 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+options(rmarkdown.html_vignette.check_title = FALSE)
 knitr::opts_chunk$set(
   collapse = TRUE,
   eval = FALSE,
@@ -20,7 +21,6 @@ knitr::opts_chunk$set(
 
 ```{r setup,echo=FALSE}
 library(ospsuite.reportingframework)
-options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
 ## Introduction

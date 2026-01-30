@@ -3,29 +3,29 @@
 # Test cases for concatWithAnd function
 test_that("concatWithAnd works correctly", {
   # Test with no elements
-  expect_equal(concatWithAnd(character(0)), "")
+  expect_equal(.concatWithAnd(character(0)), "")
 
   # Test with one element
-  expect_equal(concatWithAnd(c("apple")), "apple")
+  expect_equal(.concatWithAnd(c("apple")), "apple")
 
   # Test with two elements
-  expect_equal(concatWithAnd(c("apple", "banana")), "apple and banana")
+  expect_equal(.concatWithAnd(c("apple", "banana")), "apple and banana")
 
   # Test with three elements
-  expect_equal(concatWithAnd(c("apple", "banana", "cherry")), "apple, banana and cherry")
+  expect_equal(.concatWithAnd(c("apple", "banana", "cherry")), "apple, banana and cherry")
 
   # Test with four elements
-  expect_equal(concatWithAnd(c("apple", "banana", "cherry", "date")), "apple, banana, cherry and date")
+  expect_equal(.concatWithAnd(c("apple", "banana", "cherry", "date")), "apple, banana, cherry and date")
 
   # Test with special characters
-  expect_equal(concatWithAnd(c("apple!", "banana@", "cherry#")), "apple!, banana@ and cherry#")
+  expect_equal(.concatWithAnd(c("apple!", "banana@", "cherry#")), "apple!, banana@ and cherry#")
 
   # Test with empty strings
-  expect_equal(concatWithAnd(c("", "banana")), "banana")
-  expect_equal(concatWithAnd(c("apple", "", "cherry")), "apple and cherry")
+  expect_equal(.concatWithAnd(c("", "banana")), "banana")
+  expect_equal(.concatWithAnd(c("apple", "", "cherry")), "apple and cherry")
 
   # Test with ws
-  expect_equal(concatWithAnd(c("apple ", "", " cherry")), "apple and cherry")
+  expect_equal(.concatWithAnd(c("apple ", "", " cherry")), "apple and cherry")
 })
 
 test_that("formatPercentiles returns correct labels for specific values", {
@@ -173,7 +173,7 @@ dtOutputPaths <- data.table(
 # Write unit tests for the function
 test_that("validateOutputIdsForPlot function test", {
   # Test if the function correctly find the inconsistency in displayUnit
-  expect_error(validateOutputIdsForPlot(dtOutputPaths))
+  expect_error(.validateOutputIdsForPlot(dtOutputPaths))
 })
 
 # ColorVector
@@ -181,7 +181,7 @@ test_that("getColorVectorForLegend works correctly with valid inputs", {
   colorLegend <- "red|green|blue"
   colorVector <- c(red = "#FF0000", green = "#00FF00", blue = "#0000FF")
 
-  result <- getColorVectorForLegend(colorLegend, colorVector)
+  result <- .getColorVectorForLegend(colorLegend, colorVector)
 
   expect_equal(result, c(red = "#FF0000", green = "#00FF00", blue = "#0000FF"))
 })
@@ -190,18 +190,18 @@ test_that("getColorVectorForLegend returns default colors when colorVector is em
   colorLegend <- "red|green|blue"
   colorVector <- character(0) # Empty character vector
 
-  result <- getColorVectorForLegend(colorLegend, colorVector)
+  result <- .getColorVectorForLegend(colorLegend, colorVector)
 
-  expect_no_error(validateColorVector(result))
+  expect_no_error(.validateColorVector(result))
 })
 
 test_that("getColorVectorForLegend handles missing colors gracefully", {
   colorLegend <- "red|green|blue"
   colorVector <- c(red = "#FF0000", blue = "#0000FF") # Missing green
 
-  result <- getColorVectorForLegend(colorLegend, colorVector)
+  result <- .getColorVectorForLegend(colorLegend, colorVector)
 
-  expect_no_error(validateColorVector(result))
+  expect_no_error(.validateColorVector(result))
 })
 
 
@@ -250,19 +250,19 @@ configTablePlots <- data.table(
 # Write unit tests for the function
 test_that("validateTimeRangeColumns function test", {
   # Test if the function correctly validates correct TimeRange Columns
-  expect_no_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4)]))
+  expect_no_error(.validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4)]))
 
   # Test if the function correctly checks for at least one TimeRange Column
-  expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2)]))
+  expect_error(.validateTimeRangeColumns(configTablePlots[, c(1, 2)]))
 
   # Test if the function correctly validates the inputs in the TimeRange columns
-  expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 5)]))
+  expect_error(.validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 5)]))
 
   # Test if the function correctly validates the inputs in the TimeRange columns
-  expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 6)]))
+  expect_error(.validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 6)]))
 
   # Test if the function correctly validates the inputs in the TimeRange columns
-  expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 7)]))
+  expect_error(.validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 7)]))
 })
 
 # Test cases for applyConfigDefaults function
@@ -284,7 +284,7 @@ test_that("applyConfigDefaults adds missing columns with default values", {
   expect_warning(
     expect_warning(
       expect_warning(
-        result <- applyConfigDefaults(testConfig, testDefaults),
+        result <- .applyConfigDefaults(testConfig, testDefaults),
         "was missing"
       ),
       "was missing"
@@ -319,7 +319,7 @@ test_that("applyConfigDefaults fills columns with all NA values", {
   # Apply defaults - expect warnings for each empty column
   expect_warning(
     expect_warning(
-      result <- applyConfigDefaults(testConfig, testDefaults),
+      result <- .applyConfigDefaults(testConfig, testDefaults),
       "was empty"
     ),
     "was empty"
@@ -346,7 +346,7 @@ test_that("applyConfigDefaults fills partial NA values in columns", {
   # Apply defaults - expect warnings for each column with missing values
   expect_warning(
     expect_warning(
-      result <- applyConfigDefaults(testConfig, testDefaults),
+      result <- .applyConfigDefaults(testConfig, testDefaults),
       "missing value"
     ),
     "missing value"
@@ -372,7 +372,7 @@ test_that("applyConfigDefaults does not modify columns without NA values", {
   
   # Apply defaults - should not generate warnings or modify data
   expect_silent(
-    result <- applyConfigDefaults(testConfig, testDefaults)
+    result <- .applyConfigDefaults(testConfig, testDefaults)
   )
   
   # Check that values remain unchanged
@@ -392,7 +392,7 @@ test_that("applyConfigDefaults handles numeric defaults correctly", {
   )
   
   # Apply defaults - suppress warnings since we're testing functionality
-  result <- suppressWarnings(applyConfigDefaults(testConfig, testDefaults))
+  result <- suppressWarnings(.applyConfigDefaults(testConfig, testDefaults))
   
   # Check numeric values
   expect_equal(result$timeOffset, c(0, 0))
@@ -414,7 +414,7 @@ test_that("applyConfigDefaults handles character defaults correctly", {
   )
   
   # Apply defaults - suppress warnings since we're testing functionality
-  result <- suppressWarnings(applyConfigDefaults(testConfig, testDefaults))
+  result <- suppressWarnings(.applyConfigDefaults(testConfig, testDefaults))
   
   # Check character values
   expect_equal(result$timeUnit, c("h", "h"))
@@ -431,7 +431,7 @@ test_that("applyConfigDefaults works with TIMEPROFILES_CONFIG_DEFAULTS", {
   )
   
   # Apply actual TIMEPROFILES_CONFIG_DEFAULTS - suppress warnings since we're testing functionality
-  result <- suppressWarnings(applyConfigDefaults(testConfig, TIMEPROFILES_CONFIG_DEFAULTS))
+  result <- suppressWarnings(.applyConfigDefaults(testConfig, TIMEPROFILES_CONFIG_DEFAULTS))
   
   # Check that all default columns were added
   expect_true("timeUnit" %in% names(result))
@@ -463,7 +463,7 @@ test_that("applyConfigDefaults returns data.table", {
   testDefaults <- list(timeUnit = "h")
   
   expect_warning(
-    result <- applyConfigDefaults(testConfig, testDefaults)
+    result <- .applyConfigDefaults(testConfig, testDefaults)
   )
   
   # Check that result is a data.table
@@ -480,7 +480,7 @@ test_that("applyConfigDefaults preserves existing columns", {
   testDefaults <- list(timeUnit = "h")
   
   expect_warning(
-    result <- applyConfigDefaults(testConfig, testDefaults)
+    result <- .applyConfigDefaults(testConfig, testDefaults)
   )
   
   # Check that original columns are preserved

@@ -148,7 +148,7 @@ mdFigure <- function(
     subfolder,
     addNewPage = TRUE,
     customStyles = list()) {
-  validateMdFigureTableInputs(
+  .validateMdFigureTableInputs(
     subfolder = subfolder,
     importFile = figureFile,
     captionFile = captionFile,
@@ -218,7 +218,7 @@ mdTable <- function(tableNumber,
                     digitsOfSignificance = 3,
                     addNewPage = TRUE,
                     ...) {
-  validateMdFigureTableInputs(
+  .validateMdFigureTableInputs(
     subfolder = subfolder,
     importFile = tableCsv,
     captionFile = captionFile,
@@ -315,7 +315,8 @@ mdCaption <- function(subfolder, captionFile, captionPrefix, captionStyle = NULL
 #' @inherit mdFigure
 #' @param importFile figure file or table .csv file
 #' @keywords internal
-validateMdFigureTableInputs <- function(subfolder, importFile, captionFile, customStyles) {
+#' @noRd
+.validateMdFigureTableInputs <- function(subfolder, importFile, captionFile, customStyles) {
   checkmate::assertFileExists(file.path(subfolder, importFile))
   checkmate::assertFileExists(file.path(subfolder, captionFile))
   checkmate::assertList(customStyles)
@@ -390,7 +391,8 @@ addFiguresAndTables <- function(keyList,
 #'
 #' @return character with startlines
 #' @keywords internal
-startRmd <- function(title = "Report") {
+#' @noRd
+.startRmd <- function(title = "Report") {
   return(c(
     "---",
     paste0('title: "', title, '"'),
@@ -443,7 +445,7 @@ mergeRmds <- function(
   checkmate::assertFileExists(file.path(projectConfiguration$outputFolder, sourceRmds))
 
   rmdTxt <- c(
-    startRmd(title = title),
+    .startRmd(title = title),
     "  ",
     "```{r setup, include=FALSE}",
     'knitr::opts_chunk$set(echo = FALSE,warning = FALSE,results = "asis",error = FALSE,message = FALSE)',
