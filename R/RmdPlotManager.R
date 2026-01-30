@@ -336,7 +336,7 @@ RmdPlotManager <- R6::R6Class( # nolint
     # function to initialize rmdLines
     .startRMD = function(rmdfolder) {
       return(c(
-        startRmd(),
+        .startRmd(),
         "  ",
         paste0("```{r setup_", private$.rmdName, ", include=FALSE}"),
         'if (!exists("setupDone"))',

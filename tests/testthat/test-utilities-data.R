@@ -109,14 +109,14 @@ test_that("It should check the validity of the observed dataset", {
 
 # Unit tests for groupDataByIdentifier function
 test_that("groupDataByIdentifier function test", {
-  groupedData <- groupDataByIdentifier(dataObserved)
+  groupedData <- .groupDataByIdentifier(dataObserved)
 
   # Add assertions based on the expected output of the function
   expect_s3_class(groupedData, "list")
   expect_true(
     length(groupedData) ==
       dataObserved %>%
-        dplyr::select(getColumnsForColumnType(dataObserved, columnTypes = "identifier")) %>%
+        dplyr::select(.getColumnsForColumnType(dataObserved, columnTypes = "identifier")) %>%
         unique() %>%
         nrow()
   )
@@ -125,7 +125,7 @@ test_that("groupDataByIdentifier function test", {
 # Unit tests for getColumnsForColumnType function
 test_that("getColumnsForColumnType function test", {
   columnTypes <- c("identifier")
-  columnNames <- getColumnsForColumnType(dataObserved, columnTypes)
+  columnNames <- .getColumnsForColumnType(dataObserved, columnTypes)
 
   #
   expect_equal(length(columnNames), 7)
@@ -136,33 +136,33 @@ test_that("getColumnsForColumnType function test", {
 test_that("createDataSets function test", {
   tmpData <- dataObserved[outputPathId == "Plasma"]
 
-  groupedData <- groupDataByIdentifier(tmpData)
+  groupedData <- .groupDataByIdentifier(tmpData)
 
-  dataSet <- createDataSets(groupData = groupedData[[1]])
+  dataSet <- .createDataSets(groupData = groupedData[[1]])
 
   expect_s3_class(dataSet, "DataSet")
   expect_equal(dataSet$LLOQ, unique(tmpData$lloq))
 
   # unique yUnit
   tmpData$yUnit[1] <- "pmol/L"
-  groupedData <- groupDataByIdentifier(tmpData)
-  expect_error(createDataSets(groupedData[[1]]))
+  groupedData <- .groupDataByIdentifier(tmpData)
+  expect_error(.createDataSets(groupedData[[1]]))
 
   # Warning for different LLOQ
   tmpData <- dataObserved[outputPathId == "Plasma"]
   tmpData$lloq[1] <- 2
-  groupedData <- groupDataByIdentifier(tmpData)
-  expect_warning(dataSet <- createDataSets(groupedData[[1]]))
+  groupedData <- .groupDataByIdentifier(tmpData)
+  expect_warning(dataSet <- .createDataSets(groupedData[[1]]))
 })
 
 # Unit tests for addMetaDataToDataSet function
 test_that("addMetaDataToDataSet function test", {
   tmpData <- dataObserved[outputPathId == "Plasma"]
-  groupedData <- groupDataByIdentifier(tmpData)
+  groupedData <- .groupDataByIdentifier(tmpData)
 
-  dataSet <- createDataSets(groupData = groupedData[[1]])
+  dataSet <- .createDataSets(groupData = groupedData[[1]])
 
-  dataSetWithMeta <- addMetaDataToDataSet(dataSet, groupData = groupedData[[1]])
+  dataSetWithMeta <- .addMetaDataToDataSet(dataSet, groupData = groupedData[[1]])
 
   # Add assertions based on the expected output of the function
   expect_s3_class(dataSetWithMeta, "DataSet")
@@ -191,14 +191,14 @@ test_that("convertIdentifierColumns function works as expected", {
   testDt <- data.table(col1 = c("a,b,c", "d,e,f"), col2 = c("x,y,z", "1,2,3"), col3 = c("1,2,3", "4,5,6"))
 
   identifierCols <- c("col1", "col2")
-  updatedDt <- suppressWarnings(convertIdentifierColumns(testDt, identifierCols))
+  updatedDt <- suppressWarnings(.convertIdentifierColumns(testDt, identifierCols))
 
   # Check if commas were replaced by underscores
   expect_equal(updatedDt$col1[1], "a_b_c")
   expect_equal(updatedDt$col2[1], "x_y_z")
 
 
-  expect_warning(updatedDt <- convertIdentifierColumns(testDt, "col1"))
+  expect_warning(updatedDt <- .convertIdentifierColumns(testDt, "col1"))
 })
 
 # Test for aggregateObservedDataGroups
@@ -273,7 +273,7 @@ aggregatedData <- data.table(
 
 # Test for addUniqueColumns
 test_that("addUniqueColumns works correctly", {
-  result <- addUniqueColumns(dataObserved = originalData, aggregatedData = aggregatedData)
+  result <- .addUniqueColumns(dataObserved = originalData, aggregatedData = aggregatedData)
 
   # Check that the result is a data.table
   expect_s3_class(result, "data.table")
@@ -340,7 +340,7 @@ test_that("debugMode warns about filter column containing '1'", {
 
   # With debugMode TRUE, should warn about filter containing "1"
   expect_warning(
-    convertDataByDictionary(
+    .convertDataByDictionary(
       data = testData,
       dataFilter = NA,
       dict = testDict,
@@ -352,7 +352,7 @@ test_that("debugMode warns about filter column containing '1'", {
 
   # Without debugMode, should not warn
   expect_no_warning(
-    convertDataByDictionary(
+    .convertDataByDictionary(
       data = testData,
       dataFilter = NA,
       dict = testDict,

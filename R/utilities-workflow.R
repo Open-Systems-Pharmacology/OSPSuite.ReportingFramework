@@ -89,7 +89,8 @@ getQCpassedEnvironmentVariable <- function() {
 #' Stops execution with an error message if called during a valid run or if the option is not set.
 #'
 #' @keywords internal
-stopHelperFunction <- function() {
+#' @noRd
+.stopHelperFunction <- function() {
   stopHelperFunction <- getOption("OSPSuite.RF.stopHelperFunction")
 
   if (is.null(stopHelperFunction)) {

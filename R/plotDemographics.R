@@ -68,7 +68,7 @@ plotDistributionVsDemographics <- function(projectConfiguration,
 
   checkmate::assertFlag(asStepPlot)
   checkmate::assertNumeric(facetAspectRatio, lower = 0, finite = TRUE, len = 1)
-  colorVector <- getColorVectorForLegend(
+  colorVector <- .getColorVectorForLegend(
     colorVector = colorVector,
     colorLegend = onePlotConfig[["colorLegend"]][1]
   )
@@ -77,9 +77,9 @@ plotDistributionVsDemographics <- function(projectConfiguration,
   %in% configEnv$modelParameter$parameterId)
 
   checkmate::assertList(scenarioList, types = "Scenario", null.ok = FALSE)
-  if (usePKParameter) validatePKParameterDT(pkParameterDT)
+  if (usePKParameter) .validatePKParameterDT(pkParameterDT)
 
-  plotData <- prepareDemographicPlotData(
+  plotData <- .prepareDemographicPlotData(
     onePlotConfig = onePlotConfig,
     pkParameterDT = pkParameterDT,
     scenarioList = scenarioList,
@@ -90,9 +90,9 @@ plotDistributionVsDemographics <- function(projectConfiguration,
 
   # read aggregation function
   aggregationFlag <- match.arg(aggregationFlag)
-  aggregationFun <- getAggregationFunction(aggregationFlag, percentiles, customFunction, legendsize = 3)
+  aggregationFun <- .getAggregationFunction(aggregationFlag, percentiles, customFunction, legendsize = 3)
 
-  plotList <- generateRangePlots(
+  plotList <- .generateRangePlots(
     onePlotConfig = onePlotConfig,
     plotData = plotData[!is.na(value)],
     colorVector = colorVector,
@@ -104,7 +104,7 @@ plotDistributionVsDemographics <- function(projectConfiguration,
   if ("categoricValue" %in% names(plotData)) {
     warning(paste(
       "Categoric parameter are not suited for this kind of plot and will be ignored:",
-      concatWithAnd(unique(plotData[!is.na(categoricValue), ]$parameterId))
+      .concatWithAnd(unique(plotData[!is.na(categoricValue), ]$parameterId))
     ))
   }
 
@@ -164,16 +164,16 @@ plotHistograms <- function(projectConfiguration,
   checkmate::assertNumeric(facetAspectRatio, lower = 0, finite = TRUE, len = 1)
   colorLegend <- onePlotConfig[["colorLegend"]][1]
   if (is.na(colorLegend)) colorLegend <- "scenario | reference"
-  colorVector <- getColorVectorForLegend(
+  colorVector <- .getColorVectorForLegend(
     colorVector = colorVector,
     colorLegend = colorLegend
   )
   usePKParameter <- !any(splitInputs(onePlotConfig$parameterIds)
   %in% configEnv$modelParameter$parameterId)
   checkmate::assertList(scenarioList, types = "Scenario", null.ok = usePKParameter)
-  if (usePKParameter) validatePKParameterDT(pkParameterDT)
+  if (usePKParameter) .validatePKParameterDT(pkParameterDT)
 
-  plotData <- prepareDemographicPlotData(
+  plotData <- .prepareDemographicPlotData(
     onePlotConfig = onePlotConfig,
     pkParameterDT = pkParameterDT,
     scenarioList = scenarioList,
@@ -182,7 +182,7 @@ plotHistograms <- function(projectConfiguration,
     colorVector = colorVector
   )
 
-  plotList <- generateHistograms(
+  plotList <- .generateHistograms(
     onePlotConfig = onePlotConfig,
     plotData = plotData,
     colorVector = colorVector,
@@ -206,7 +206,8 @@ plotHistograms <- function(projectConfiguration,
 #' @param colorVector A named vector for colors corresponding to scenarios.
 #' @return A data.table containing the prepared data for plotting.
 #' @keywords internal
-prepareDemographicPlotData <- function(onePlotConfig,
+#' @noRd
+.prepareDemographicPlotData <- function(onePlotConfig,
                                        pkParameterDT,
                                        scenarioList,
                                        usePKParameter,
@@ -225,7 +226,7 @@ prepareDemographicPlotData <- function(onePlotConfig,
     ) %>%
       unique()
 
-    plotData <- mergePKParameterWithConfigTable(
+    plotData <- .mergePKParameterWithConfigTable(
       onePlotConfig = onePlotConfigIdentifier,
       pkParameterDT = pkParameterDT,
       colorVector = colorVector,
@@ -239,12 +240,12 @@ prepareDemographicPlotData <- function(onePlotConfig,
       skip_absent = TRUE
     )
   } else {
-    plotData <- loadDemographicParameters(onePlotConfig, scenarioList)
+    plotData <- .loadDemographicParameters(onePlotConfig, scenarioList)
   }
 
 
   if (asRangePlot) {
-    plotData <- addDemographicsToBin(
+    plotData <- .addDemographicsToBin(
       plotData = plotData,
       onePlotConfig = onePlotConfig,
       scenarioList = scenarioList
@@ -274,7 +275,7 @@ prepareDemographicPlotData <- function(onePlotConfig,
     }
   }
 
-  plotData <- setPlotTag(
+  plotData <- .setPlotTag(
     plotData = plotData, asRangePlot = asRangePlot,
     usePKParameter = usePKParameter
   )
@@ -293,7 +294,8 @@ prepareDemographicPlotData <- function(onePlotConfig,
 #' @param ... Additional arguments passed to the histogram plotting function.
 #' @return A list of histogram plot objects.
 #' @keywords internal
-generateHistograms <- function(onePlotConfig,
+#' @noRd
+.generateHistograms <- function(onePlotConfig,
                                plotData,
                                colorVector,
                                facetAspectRatio,
@@ -321,7 +323,7 @@ generateHistograms <- function(onePlotConfig,
           data = idData,
           mapping = mapping,
           xScale = xScale,
-          xScaleArgs = getXorYlimits(onePlotConfig, xScale, direction = "x", ...),
+          xScaleArgs = .getXorYlimits(onePlotConfig, xScale, direction = "x", ...),
           ...
         ) +
         facet_wrap(vars(plotTag)) +
@@ -332,13 +334,13 @@ generateHistograms <- function(onePlotConfig,
       if (idData[, uniqueN(scenarioType)] == 1) {
         plotObject <- plotObject + theme(legend.position = "none")
       }
-      nFacetColumns <- getNFacetsForDemographics(
+      nFacetColumns <- .getNFacetsForDemographics(
         idData = idData,
         isRangePlot = FALSE,
         nMaxFacetRows = nMaxFacetRows
       )
 
-      plotObject <- addFacets(plotObject,
+      plotObject <- .addFacets(plotObject,
         onePlotConfig$facetScale[1],
         facetAspectRatio = facetAspectRatio,
         nFacetColumns = nFacetColumns
@@ -347,7 +349,7 @@ generateHistograms <- function(onePlotConfig,
       # Prepare for export
       plotObject <- setExportAttributes(
         object = plotObject,
-        caption = getCaptionForDemographicPlot(
+        caption = .getCaptionForDemographicPlot(
           idData = idData,
           valueLabel = xlabel,
           binLabel = NULL,
@@ -377,7 +379,8 @@ generateHistograms <- function(onePlotConfig,
 #' @param ... Additional arguments passed to the range plotting function.
 #' @return A list of range plot objects.
 #' @keywords internal
-generateRangePlots <- function(onePlotConfig,
+#' @noRd
+.generateRangePlots <- function(onePlotConfig,
                                plotData,
                                colorVector,
                                facetAspectRatio,
@@ -432,7 +435,7 @@ generateRangePlots <- function(onePlotConfig,
           numberOfBins = numberOfBins,
           breaks = breaks,
           yScale = yScale,
-          yScaleArgs = getXorYlimits(onePlotConfig, yScale, direction = "y", ...),
+          yScaleArgs = .getXorYlimits(onePlotConfig, yScale, direction = "y", ...),
           asStepPlot = asStepPlot,
           statFun = statFun,
           identifier = "individualId",
@@ -450,15 +453,15 @@ generateRangePlots <- function(onePlotConfig,
         plotObject <- plotObject + theme(legend.position = "none")
       }
 
-      nFacetColumns <- getNFacetsForDemographics(idData = idData, isRangePlot = TRUE)
-      plotObject <- addFacets(plotObject,
+      nFacetColumns <- .getNFacetsForDemographics(idData = idData, isRangePlot = TRUE)
+      plotObject <- .addFacets(plotObject,
         onePlotConfig$facetScale[1],
         facetAspectRatio = facetAspectRatio,
         nFacetColumns = nFacetColumns
       )
 
       if (is.null(dtExport)) {
-        dtExport <- getExportTableForRanges(
+        dtExport <- .getExportTableForRanges(
           plotObject = plotObject,
           aggregationFun = aggregationFun,
           xLabel = constructLabelWithUnit(xlabel, xlabelUnit)
@@ -468,14 +471,14 @@ generateRangePlots <- function(onePlotConfig,
       # Prepare for export
       plotObject <- setExportAttributes(
         object = plotObject,
-        caption = getCaptionForDemographicPlot(
+        caption = .getCaptionForDemographicPlot(
           idData = idData,
           valueLabel = ylabel,
           binLabel = xlabel,
           valueScale = yScale,
           plotCaptionAddon = onePlotConfig$plotCaptionAddon[1]
         ),
-        footNoteLines = getFootnoteLinesForRangePlots(attr(dtExport, "errorLabels"))
+        footNoteLines = .getFootnoteLinesForRangePlots(attr(dtExport, "errorLabels"))
       )
 
       # prepare export
@@ -489,7 +492,7 @@ generateRangePlots <- function(onePlotConfig,
 
       dtExportTag <- setExportAttributes(
         object = dtExportTag[, !c("plotTag", "scenarioType"), with = FALSE],
-        caption = getCaptionForDemographicPlot(
+        caption = .getCaptionForDemographicPlot(
           idData = idData[plotTag == dtExportTag$plotTag[1]],
           valueLabel = ylabel,
           binLabel = xlabel,
@@ -514,7 +517,8 @@ generateRangePlots <- function(onePlotConfig,
 #' @param scenarioList A list of scenarios to consider.
 #' @return A data.table containing the loaded demographic parameters.
 #' @keywords internal
-loadDemographicParameters <- function(onePlotConfig, scenarioList) {
+#' @noRd
+.loadDemographicParameters <- function(onePlotConfig, scenarioList) {
   # initialize to avoid linter messages
   referenceScenario <- NULL
 
@@ -534,7 +538,7 @@ loadDemographicParameters <- function(onePlotConfig, scenarioList) {
   # Combine the results into a single data.table
   plotData <- rbindlist(
     lapply(scenarioNames, function(scName) {
-      loadPopulationParameterForScenario(
+      .loadPopulationParameterForScenario(
         scenarioName = scName,
         scenarioList = scenarioList,
         onePlotConfigIdentifier = onePlotConfigIdentifier
@@ -585,7 +589,8 @@ loadDemographicParameters <- function(onePlotConfig, scenarioList) {
 #' @param scenarioList A list of scenarios to consider.
 #' @return A data.table containing the updated plot data with demographic bins.
 #' @keywords internal
-addDemographicsToBin <- function(plotData = plotData,
+#' @noRd
+.addDemographicsToBin <- function(plotData = plotData,
                                  onePlotConfig = onePlotConfig,
                                  scenarioList = scenarioList) {
   onePlotConfigIdentifier <- onePlotConfig[, c("scenario", "parameterId_Bin")] %>%
@@ -595,7 +600,7 @@ addDemographicsToBin <- function(plotData = plotData,
   scenarioNames <- unique(onePlotConfigIdentifier$scenario)
   plotDataBin <- rbindlist(
     lapply(scenarioNames, function(scName) {
-      loadPopulationParameterForScenario(
+      .loadPopulationParameterForScenario(
         scenarioName = scName,
         scenarioList = scenarioList,
         onePlotConfigIdentifier = onePlotConfigIdentifier
@@ -633,7 +638,8 @@ addDemographicsToBin <- function(plotData = plotData,
 #' @param usePKParameter Logical indicating if PK parameters are to be used.
 #' @return A data.table containing the updated plot data with assigned plot tags.
 #' @keywords internal
-setPlotTag <- function(plotData, asRangePlot, usePKParameter) {
+#' @noRd
+.setPlotTag <- function(plotData, asRangePlot, usePKParameter) {
   # initialize to avoid linter messages
   plotTag <- NULL
 
@@ -648,10 +654,10 @@ setPlotTag <- function(plotData, asRangePlot, usePKParameter) {
     dtPlotTag <- plotData[, .SD, .SDcols = plotTagIdentifier] %>% # nolint
       unique() %>%
       setorderv(plotTagIdentifier)
-    dtPlotTag[, plotTag := generatePlotTag(.I)]
+    dtPlotTag[, plotTag := .generatePlotTag(.I)]
     plotData <- merge(plotData, dtPlotTag, by = plotTagIdentifier)
   } else {
-    plotData[, plotTag := generatePlotTag(1)]
+    plotData[, plotTag := .generatePlotTag(1)]
   }
 
   return(plotData)
@@ -665,7 +671,8 @@ setPlotTag <- function(plotData, asRangePlot, usePKParameter) {
 #' @param xLabel A label for the x-axis.
 #' @return A data.table containing the export data for range plots.
 #' @keywords internal
-getExportTableForRanges <- function(plotObject, aggregationFun, xLabel) {
+#' @noRd
+.getExportTableForRanges <- function(plotObject, aggregationFun, xLabel) {
   # initialize to avoid linter messages
   bin <- .bin <- scenarioType <- yErrorType <- value <- breaks <- NULL
 
@@ -674,7 +681,7 @@ getExportTableForRanges <- function(plotObject, aggregationFun, xLabel) {
     aggregationFun(value)
   )), by = c(".bin", "plotTag", "scenarioType")]
 
-  errorLabels <- getErrorLabels(dtExport$yErrorType[1])
+  errorLabels <- .getErrorLabels(dtExport$yErrorType[1])
   setnames(dtExport,
     old = intersect(
       c("yValues", "yErrorValues", "yMin", "yMax"),
@@ -724,7 +731,8 @@ getExportTableForRanges <- function(plotObject, aggregationFun, xLabel) {
 #' @param onePlotConfigIdentifier A configuration identifier for the plot.
 #' @return A data.table containing the loaded population parameters.
 #' @keywords internal
-loadPopulationParameterForScenario <- function(scenarioName, scenarioList, onePlotConfigIdentifier) {
+#' @noRd
+.loadPopulationParameterForScenario <- function(scenarioName, scenarioList, onePlotConfigIdentifier) {
   # initialize to avoid linter messages
   modelPath <- value <- categoricValue <- scenario <- NULL
 
@@ -798,7 +806,8 @@ loadPopulationParameterForScenario <- function(scenarioName, scenarioList, onePl
 #' @param plotCaptionAddon Additional text to append to the caption (optional).
 #' @return A string containing the generated caption for the plot.
 #' @keywords internal
-getCaptionForDemographicPlot <- function(
+#' @noRd
+.getCaptionForDemographicPlot <- function(
     idData,
     valueLabel,
     binLabel,
@@ -811,7 +820,7 @@ getCaptionForDemographicPlot <- function(
         "plotTag"
       )] %>% unique()
 
-    outputText <- paste(" of", pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"))
+    outputText <- paste(" of", .pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"))
   } else {
     outputText <- ""
   }
@@ -832,7 +841,7 @@ getCaptionForDemographicPlot <- function(
         "plotTag"
       )] %>% unique()
 
-    scenarioText <- paste(" for", pasteFigureTags(dtCaption, captionColumn = "scenarioLongName"))
+    scenarioText <- paste(" for", .pasteFigureTags(dtCaption, captionColumn = "scenarioLongName"))
   } else {
     scenarioText <- ""
   }
@@ -844,7 +853,7 @@ getCaptionForDemographicPlot <- function(
     scaletxt
   )
 
-  captiontxt <- addCaptionTextAddon(captiontxt, plotCaptionAddon)
+  captiontxt <- .addCaptionTextAddon(captiontxt, plotCaptionAddon)
   return(captiontxt)
 }
 #' Get Footnote Lines for Range Plots
@@ -854,11 +863,12 @@ getCaptionForDemographicPlot <- function(
 #' @param errorLabels A vector of error labels to include in the footnotes.
 #' @return A string containing the footnote lines for the plot.
 #' @keywords internal
-getFootnoteLinesForRangePlots <- function(errorLabels) {
+#' @noRd
+.getFootnoteLinesForRangePlots <- function(errorLabels) {
   footnoteLines <-
     paste0(
       "Data is displayed as ",
-      concatWithAnd(errorLabels),
+      .concatWithAnd(errorLabels),
       "."
     )
 
@@ -873,7 +883,8 @@ getFootnoteLinesForRangePlots <- function(errorLabels) {
 #' @param nMaxFacetRows Maximum number of facet rows (default is 2).
 #' @return The number of facet columns to use.
 #' @keywords internal
-getNFacetsForDemographics <- function(idData, isRangePlot, nMaxFacetRows = 2) {
+#' @noRd
+.getNFacetsForDemographics <- function(idData, isRangePlot, nMaxFacetRows = 2) {
   # initialize to avoid linter messages
   scenario <- displayNameOutput <- plotTag <- NULL
 
@@ -955,7 +966,7 @@ validateDistributionVsDemographicsConfig <- function(configTable, scenarioList, 
   )
 
   # check for ParameterID
-  validateParameterID(configTablePlots, ...)
+  .validateParameterID(configTablePlots, ...)
 
 
   if (any(configTablePlots$modeOfBinning != BINNINGMODE$breaks)) {
@@ -985,7 +996,7 @@ validateDistributionVsDemographicsConfig <- function(configTable, scenarioList, 
     )
   )
 
-  validateColorLegend(dt = configTablePlots[!is.na(referenceScenario)])
+  .validateColorLegend(dt = configTablePlots[!is.na(referenceScenario)])
 }
 #' Validate Histograms Configuration
 #'
@@ -1061,9 +1072,9 @@ validateHistogramsConfig <- function(configTable, ...) {
     )
   )
 
-  validateParameterID(configTablePlots, ...)
+  .validateParameterID(configTablePlots, ...)
 
-  validateColorLegend(dt = configTablePlots[!is.na(referenceScenario)])
+  .validateColorLegend(dt = configTablePlots[!is.na(referenceScenario)])
 }
 
 #' Validate Parameter ID
@@ -1074,7 +1085,8 @@ validateHistogramsConfig <- function(configTable, ...) {
 #' @param ... Additional arguments for validation.
 #' @return NULL (invisible).
 #' @keywords internal
-validateParameterID <- function(configTablePlots, ...) {
+#' @noRd
+.validateParameterID <- function(configTablePlots, ...) {
   if (any(splitInputs(configTablePlots$parameterIds) %in%
     configEnv$modelParameter$parameterId)) {
     validateConfigTablePlots(
@@ -1096,8 +1108,8 @@ validateParameterID <- function(configTablePlots, ...) {
       ))
     }
 
-    validatePKParameterDT(dotarg$pkParameterDT)
-    validateOutputIdsForPlot()
+    .validatePKParameterDT(dotarg$pkParameterDT)
+    .validateOutputIdsForPlot()
 
     validateConfigTablePlots(
       configTablePlots = configTablePlots,
@@ -1152,7 +1164,7 @@ addDefaultConfigForHistograms <- function(projectConfiguration,
                                           pkParameterDT = NULL,
                                           sheetName = "Histograms",
                                           overwrite = FALSE) {
-  addDefaultDemographicPlots(
+  .addDefaultDemographicPlots(
     projectConfiguration = projectConfiguration,
     pkParameterDT = pkParameterDT,
     sheetName = sheetName,
@@ -1193,7 +1205,7 @@ addDefaultConfigForDistributionsVsDemographics <- function(projectConfiguration,
                                                            pkParameterDT = NULL,
                                                            sheetName = "DistributionVsRange",
                                                            overwrite = FALSE) {
-  addDefaultDemographicPlots(
+  .addDefaultDemographicPlots(
     projectConfiguration = projectConfiguration,
     pkParameterDT = pkParameterDT,
     sheetName = sheetName,
@@ -1212,7 +1224,8 @@ addDefaultConfigForDistributionsVsDemographics <- function(projectConfiguration,
 #' @param templateSheet Name of templateSheet in Configuration table
 #' @return NULL (invisible).
 #' @keywords internal
-addDefaultDemographicPlots <- function(projectConfiguration,
+#' @noRd
+.addDefaultDemographicPlots <- function(projectConfiguration,
                                        pkParameterDT,
                                        sheetName,
                                        overwrite,
@@ -1224,7 +1237,7 @@ addDefaultDemographicPlots <- function(projectConfiguration,
   ID <- NULL # nolint
 
   # this function stops in valid runs
-  stopHelperFunction()
+  .stopHelperFunction()
   wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
 
   scenarios <- getScenarioDefinitions(projectConfiguration$scenariosFile)

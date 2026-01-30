@@ -2,6 +2,7 @@
 #' @docType class
 #' @description An object to collect plot Data and other information to create a time profile plot
 #' @keywords internal
+#' @noRd
 PlotDataTimeProfile <- R6::R6Class( # nolint
   "RmdPlotManager",
   inherit = ospsuite.utils::Printable,
@@ -35,18 +36,18 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       )
 
       # Process simulated results
-      outputPathsPerScenario <- getOutputPathsPerScenario(
+      outputPathsPerScenario <- .getOutputPathsPerScenario(
         configTable = self$configTable,
         dtOutputPaths = private$.dtOutputPaths
       )
-      dtSimulated <- loadScenarioTimeProfiles(
+      dtSimulated <- .loadScenarioTimeProfiles(
         projectConfiguration = projectConfiguration,
         simulatedResults = scenarioResults,
         outputPathsPerScenario = outputPathsPerScenario,
         aggregationFun = aggregationFun
       )
       # Get unit conversion data.table
-      private$.dtUnit <- getUnitConversionDT(
+      private$.dtUnit <- .getUnitConversionDT(
         dtSimulated = dtSimulated,
         dtOutputs = private$.dtOutputPaths
       )
@@ -62,17 +63,17 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
       # Get application times
       applicationTimes <-
-        getApplicationTimes(
+        .getApplicationTimes(
           outputPathsPerScenario = outputPathsPerScenario,
           simulatedResults = scenarioResults
         )
       private$.applicationTimes <-
-        restructureApplicationTimeByScenarioIndex(applicationTimes,
+        .restructureApplicationTimeByScenarioIndex(applicationTimes,
           configTable = self$configTable
         )
       # Set labels
       if (any(unique(dtSimulated$dataClass) %in% DATACLASS$tpAggregated)) {
-        errorLabels <- getErrorLabels(dtSimulated$yErrorType[1])
+        errorLabels <- .getErrorLabels(dtSimulated$yErrorType[1])
         private$.tpLabelSimulatedMean <- errorLabels[1]
         private$.tpLabelSimulatedRange <- errorLabels[2]
       } else {
@@ -92,7 +93,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         return(invisible())
       }
 
-      dtUnit <- getObservedUnitConversionDT(dataObserved, private$.dtUnit)
+      dtUnit <- .getObservedUnitConversionDT(dataObserved, private$.dtUnit)
       observedDataForPlot <- data.table()
 
       for (scenarioIndex in seq_len(nrow(self$configTable))) {
@@ -105,18 +106,18 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
               outputPathId %in% gsub("[()]", "", splitInputs(configList$outputPathIds)),
           ]
 
-          observedDataTmp <- filterIndividualID(
+          observedDataTmp <- .filterIndividualID(
             timeprofile = observedDataTmp,
             individualList = configList$individualIds
           )
 
           observedDataTmp <- observedDataTmp %>%
-            dplyr::select(dplyr::any_of(getColumnsForColumnType(dataObserved, columnTypes = c("identifier", "timeprofile")))) %>%
+            dplyr::select(dplyr::any_of(.getColumnsForColumnType(dataObserved, columnTypes = c("identifier", "timeprofile")))) %>%
             dplyr::mutate(scenarioIndex = scenarioIndex)
 
           # Convert y units and time units
-          observedDataTmp <- convertYunit(observedDataTmp, dtUnit)
-          observedDataTmp <- convertAndShiftTimeUnits(observedDataTmp, targetTimeUnit = configList$timeUnit)
+          observedDataTmp <- .convertYunit(observedDataTmp, dtUnit)
+          observedDataTmp <- .convertAndShiftTimeUnits(observedDataTmp, targetTimeUnit = configList$timeUnit)
 
           observedDataForPlot <- rbind(observedDataForPlot, observedDataTmp)
         }
@@ -135,7 +136,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     addTimeRangeTags = function() {
       timeRangeColumns <- names(private$.configTable)[grepl("^timeRange_", names(private$.configTable))]
 
-      private$.dataSimulated <- addTimeRangeTagsToData(
+      private$.dataSimulated <- .addTimeRangeTagsToData(
         timeRangeColumns = timeRangeColumns,
         dataOld = private$.dataSimulated,
         configTable = self$configTable,
@@ -148,7 +149,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       }
 
       if (nrow(private$.dataObserved) > 0) {
-        private$.dataObserved <- addTimeRangeTagsToData(
+        private$.dataObserved <- .addTimeRangeTagsToData(
           timeRangeColumns = timeRangeColumns,
           dataOld = private$.dataObserved,
           configTable = self$configTable,
@@ -168,16 +169,16 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       configTable <- data.table::copy(self$configTable) %>%
         dplyr::select("scenarioIndex", "outputPathIds", "scenarioLongName", "dataGroupIds", "individualIds")
 
-      dtCaption <- getPlotIdForColumns(configTable = configTable, col = "outputPathIds")
+      dtCaption <- .getPlotIdForColumns(configTable = configTable, col = "outputPathIds")
 
       if (any(private$.dataSimulated$dataClass == DATACLASS$tpTwinPop)) {
-        dtCaption <- splitCaptionByIndividuals(
+        dtCaption <- .splitCaptionByIndividuals(
           configTable = configTable,
           individualIdVector = sort(unique(self$data$individualId)),
           dtCaption = dtCaption
         )
       }
-      dtCaption <- addTimeTagsToCaption(
+      dtCaption <- .addTimeTagsToCaption(
         dtCaption = dtCaption,
         timeTags = private$.timeTags$tag,
         splitPlotsPerTimeRange = as.logical(self$configTable$splitPlotsPerTimeRange[1])
@@ -185,7 +186,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       private$.nFacetColumns <-
         min(self$configTable$nFacetColumns[1], max(dtCaption[["plotId"]]))
 
-      private$.dtCaption <- finalizeCaptionTable(
+      private$.dtCaption <- .finalizeCaptionTable(
         dtCaption = dtCaption,
         timeTags = private$.timeTags,
         dtOutputPaths = private$.dtOutputPaths,
@@ -193,7 +194,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         nMaxFacetRows = nMaxFacetRows
       )
 
-      private$.timeRangeTagFilter <- setTimeRangeFilter(
+      private$.timeRangeTagFilter <- .setTimeRangeFilter(
         splitPlotsPerTimeRange = as.logical(self$configTable$splitPlotsPerTimeRange[1]),
         timeTags = private$.timeTags$tag
       )
@@ -237,7 +238,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       }
 
       # clean up individual (*) for legend this has to be done after the merge with the data
-      private$.dtCaption <- updateDtCaption(
+      private$.dtCaption <- .updateDtCaption(
         dtCaption = self$dtCaption,
         configTable = self$configTable
       )
@@ -549,17 +550,17 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
                 scenarioType = ScenarioField
               )
 
-            timeprofile <- filterIndividualID(
+            timeprofile <- .filterIndividualID(
               timeprofile = timeprofile,
               individualList = configList$individualIds
             )
 
-            timeprofile <- convertYunit(
+            timeprofile <- .convertYunit(
               timeprofile = timeprofile,
               dtUnit = private$.dtUnit
             )
 
-            timeprofile <- convertAndShiftTimeUnits(
+            timeprofile <- .convertAndShiftTimeUnits(
               timeprofile = timeprofile,
               targetTimeUnit = configList$timeUnit,
               timeOffset = ifelse(ScenarioField == "scenario",
@@ -603,24 +604,24 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
             )
         }
       }
-      private$.scaleVectors[["colour"]] <- getScalevector(
+      private$.scaleVectors[["colour"]] <- .getScalevector(
         namesOfScaleVector = levels(private$.dataSimulated$colorIndex),
         listOfValues = list(
           private$.dtOutputPaths$color,
           private$.dtOutputPaths$fill,
-          getDefaultColorsForScaleVector(
+          .getDefaultColorsForScaleVector(
             shade = "dark",
             n = length(levels(private$.dataSimulated$colorIndex))
           )
         )
       )
       if (self$hasObservedData() | self$hasSimulatedPop()) {
-        private$.scaleVectors[["fill"]] <- getScalevector(
+        private$.scaleVectors[["fill"]] <- .getScalevector(
           namesOfScaleVector = levels(private$.dataSimulated$colorIndex),
           listOfValues = list(
             private$.dtOutputPaths$fill,
             private$.dtOutputPaths$color,
-            getDefaultColorsForScaleVector(
+            .getDefaultColorsForScaleVector(
               shade = "light",
               n = length(levels(private$.dataSimulated$colorIndex))
             )
@@ -680,7 +681,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       if (any(is.na(referenceColorScaleVector))) {
         private$.scaleVectors[["colour"]] <-
           setNames(
-            c(getDefaultColorsForScaleVector(shade = "dark", n = 1), "grey"),
+            c(.getDefaultColorsForScaleVector(shade = "dark", n = 1), "grey"),
             names(referenceColorScaleVector)
           )
       } else {
@@ -690,7 +691,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         if (any(is.na(referenceColorScaleVector))) {
           private$.scaleVectors[["fill"]] <-
             setNames(
-              c(getDefaultColorsForScaleVector(shade = "light", n = 1), "grey"),
+              c(.getDefaultColorsForScaleVector(shade = "light", n = 1), "grey"),
               names(referenceColorScaleVector)
             )
         } else {
@@ -718,14 +719,14 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
             )
         }
       }
-      private$.scaleVectors[["colour"]] <- getScalevector(
+      private$.scaleVectors[["colour"]] <- .getScalevector(
         namesOfScaleVector = levels(private$.dataSimulated$colorIndex)[1],
-        listOfValues = list(getDefaultColorsForScaleVector("dark", n = 1))
+        listOfValues = list(.getDefaultColorsForScaleVector("dark", n = 1))
       )
       if (self$hasSimulatedPop() | self$hasObservedData()) {
-        private$.scaleVectors[["fill"]] <- getScalevector(
+        private$.scaleVectors[["fill"]] <- .getScalevector(
           namesOfScaleVector = levels(private$.dataSimulated$colorIndex)[1],
-          listOfValues = list(getDefaultColorsForScaleVector("light", n = 1))
+          listOfValues = list(.getDefaultColorsForScaleVector("light", n = 1))
         )
       }
     },
@@ -742,11 +743,11 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
           labels = private$.dtDataGroups$displayName,
           ordered = FALSE
         )
-      private$.scaleVectors[["shape"]] <- getScalevector(
+      private$.scaleVectors[["shape"]] <- .getScalevector(
         namesOfScaleVector = levels(private$.dataObserved$shapeIndex),
         listOfValues = list(
           private$.dtDataGroups$shape,
-          getDefaultShapesForScaleVector(n = length(levels(private$.dataObserved$shapeIndex)))
+          .getDefaultShapesForScaleVector(n = length(levels(private$.dataObserved$shapeIndex)))
         )
       )
     }
@@ -763,7 +764,8 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 #' @param col The column name to be processed.
 #' @return A data table with updated Plot IDs.
 #' @keywords internal
-getPlotIdForColumns <- function(configTable, col) {
+#' @noRd
+.getPlotIdForColumns <- function(configTable, col) {
   # avoid warning for global variable
   nBracketOpen <- nBracketClosed <- countAdd <- plotId <- NULL
 
@@ -800,7 +802,8 @@ getPlotIdForColumns <- function(configTable, col) {
 #' @param dtCaption A data table containing the caption data.
 #' @return A data table with merged caption data by individuals.
 #' @keywords internal
-splitCaptionByIndividuals <- function(configTable, individualIdVector, dtCaption) {
+#' @noRd
+.splitCaptionByIndividuals <- function(configTable, individualIdVector, dtCaption) {
   # avoid warning for global variable
   individualIds <- plotId <- NULL
 
@@ -810,7 +813,7 @@ splitCaptionByIndividuals <- function(configTable, individualIdVector, dtCaption
     by = "individualIds" # nolint indentation_linter
   ]
 
-  dtCaptionInd <- getPlotIdForColumns(configTable = tmp, col = "individualIds")
+  dtCaptionInd <- .getPlotIdForColumns(configTable = tmp, col = "individualIds")
 
   dtCaptionMerge <- merge(
     dtCaption[, -c("individualIds")],
@@ -844,7 +847,8 @@ splitCaptionByIndividuals <- function(configTable, individualIdVector, dtCaption
 #' @param splitPlotsPerTimeRange Boolean, if TRUE for each Time-range a plot is created
 #' @return A data table with added time tags.
 #' @keywords internal
-addTimeTagsToCaption <- function(dtCaption, timeTags, splitPlotsPerTimeRange) {
+#' @noRd
+.addTimeTagsToCaption <- function(dtCaption, timeTags, splitPlotsPerTimeRange) {
   # avoid warnings for global variables
   timeRangeTag <- plotId <- NULL
 
@@ -879,7 +883,8 @@ addTimeTagsToCaption <- function(dtCaption, timeTags, splitPlotsPerTimeRange) {
 #' @param timeTags A vector of time tags.
 #' @return A list of time range filters.
 #' @keywords internal
-setTimeRangeFilter <- function(splitPlotsPerTimeRange, timeTags) {
+#' @noRd
+.setTimeRangeFilter <- function(splitPlotsPerTimeRange, timeTags) {
   if (!splitPlotsPerTimeRange) {
     timeRangeTagFilter <- list(allTimeRanges = "TRUE")
   } else {
@@ -904,7 +909,8 @@ setTimeRangeFilter <- function(splitPlotsPerTimeRange, timeTags) {
 #' @param configTable A data frame containing the configuration data.
 #' @return A list of application times by scenario index.
 #' @keywords internal
-restructureApplicationTimeByScenarioIndex <- function(applicationTimes, configTable) {
+#' @noRd
+.restructureApplicationTimeByScenarioIndex <- function(applicationTimes, configTable) {
   applicationTimesByIndex <- list()
 
   for (scenarioIndex in seq_len(nrow(configTable))) {
@@ -934,7 +940,8 @@ restructureApplicationTimeByScenarioIndex <- function(applicationTimes, configTa
 #' @param configTable A data frame containing the configuration data.
 #' @return A list of output paths per scenario.
 #' @keywords internal
-getOutputPathsPerScenario <- function(configTable, dtOutputPaths) {
+#' @noRd
+.getOutputPathsPerScenario <- function(configTable, dtOutputPaths) {
   # avoid warning for global variable
   outputPathId <- NULL
 
@@ -969,7 +976,8 @@ getOutputPathsPerScenario <- function(configTable, dtOutputPaths) {
 #' @param dtUnit A data table containing unit information.
 #' @return A data table with unit conversions for observed data.
 #' @keywords internal
-getObservedUnitConversionDT <- function(dataObserved, dtUnit) {
+#' @noRd
+.getObservedUnitConversionDT <- function(dataObserved, dtUnit) {
   # avoid warnings for global variables
   unitFactor <- NULL
 
@@ -1003,7 +1011,8 @@ getObservedUnitConversionDT <- function(dataObserved, dtUnit) {
 #' @param applicationTimes A list of application times.
 #' @return A data table with added time range tags.
 #' @keywords internal
-addTimeRangeTagsToData <- function(timeRangeColumns, dataOld, configTable, applicationTimes, timeTags) {
+#' @noRd
+.addTimeRangeTagsToData <- function(timeRangeColumns, dataOld, configTable, applicationTimes, timeTags) {
   # avoid warnings for global variables
   xValues <- timeRangeTag <- scenarioIndex <- NULL
 
@@ -1059,7 +1068,8 @@ addTimeRangeTagsToData <- function(timeRangeColumns, dataOld, configTable, appli
 #'
 #' @return A data.table that includes updated plot IDs, plot tags, and merged output display names.
 #' @keywords internal
-finalizeCaptionTable <- function(dtCaption, timeTags, dtOutputPaths, nFacetColumns, nMaxFacetRows) {
+#' @noRd
+.finalizeCaptionTable <- function(dtCaption, timeTags, dtOutputPaths, nFacetColumns, nMaxFacetRows) {
   # Initialize variables used for data.tables
   counter <- plotId <- plotTag <- NULL
 
@@ -1069,7 +1079,7 @@ finalizeCaptionTable <- function(dtCaption, timeTags, dtOutputPaths, nFacetColum
   dtCaption[, counter := ceiling(plotId / maxPlotId)]
   dtCaption[, plotId := plotId - (counter - 1) * maxPlotId]
 
-  dtCaption[, plotTag := generatePlotTag(plotId)]
+  dtCaption[, plotTag := .generatePlotTag(plotId)]
 
   dtCaption$plotTag <-
     factor(dtCaption$plotTag,
@@ -1119,7 +1129,8 @@ finalizeCaptionTable <- function(dtCaption, timeTags, dtOutputPaths, nFacetColum
 #' @return A data.table with updated captions, where individual IDs marked
 #'         with '(*)' are removed.
 #' @keywords internal
-updateDtCaption <- function(dtCaption, configTable) {
+#' @noRd
+.updateDtCaption <- function(dtCaption, configTable) {
   # avoid warning for global variable
   individualIds <- scenarioIndex <- individualId <- NULL # nolint object_name_linter
 
