@@ -327,6 +327,10 @@ messages$errorScenarioAndReferenceMustBothBePopOrInd <- function(plotNames) {
   )
 }
 
+messages$errorOnePlotConfigContainsMoreThanOnePlotName <- function() {
+  "onePlotConfig contains more than one plotName"
+}
+
 messages$errorPlotsBasedOnDifferentTimeUnits <- function(outputPaths, unit1, unit2, plotName) {
   paste(
     "For output paths", paste(outputPaths, collapse = ", "),

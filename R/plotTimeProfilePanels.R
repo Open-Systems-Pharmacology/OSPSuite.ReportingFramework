@@ -172,7 +172,7 @@ plotTimeProfiles <- function(projectConfiguration,
   aggregationFun <- .getAggregationFunction(aggregationFlag, percentiles, customFunction)
 
   checkmate::assertDataTable(onePlotConfig)
-  if (dplyr::n_distinct(onePlotConfig$plotName) > 1) stop("onePlotConfig conatinas more than one plotName")
+  if (dplyr::n_distinct(onePlotConfig$plotName) > 1) stop(messages$errorOnePlotConfigContainsMoreThanOnePlotName())
 
   writeToLog(type = "Info", paste("Create Plot", onePlotConfig$plotName[1]))
   plotData <- PlotDataTimeProfile$new(
