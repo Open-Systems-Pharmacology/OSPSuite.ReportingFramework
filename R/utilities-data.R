@@ -28,7 +28,7 @@ readObservedDataByDictionary <- function(projectConfiguration,
   if (debugMode) {
     stopHelperFunction <- getOption("OSPSuite.RF.stopHelperFunction", default = NULL)
     if (!is.null(stopHelperFunction) && isTRUE(stopHelperFunction)) {
-      stop("debugMode is not allowed during valid runs. Please set isValidRun to FALSE in setWorkflowOptions().")
+      stop(messages$errorDebugModeInValidRun())
     }
   }
 

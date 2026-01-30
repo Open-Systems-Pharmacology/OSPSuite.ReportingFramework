@@ -27,10 +27,10 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
       self$fileNameReplacements <- fileNameReplacements
 
       if (is.null(scenarioNames) & is.null(workflowRmd)) {
-        stop("Error: Please provide either scenarioNames or workflowRmd. Only one of the two is required.")
+        stop(messages$errorProvideOnlyOneScenarioOrWorkflow())
       }
       if (!is.null(scenarioNames) & !is.null(workflowRmd)) {
-        stop("Error: Please provide either scenarioNames or workflowRmd. At least one of the two is required for initialization.")
+        stop(messages$errorProvideAtLeastOneScenarioOrWorkflow())
       }
 
       electronicPackageFolder <- suppressWarnings(projectConfiguration$addOns$electronicPackageFolder)
@@ -72,7 +72,7 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
         # Wait until the file exists and is not empty, or timeout after 1 minute
         while (is.null(unlist(tail(codeChunks, 1)))) {
           if (as.numeric(difftime(Sys.time(), startTime, units = "secs")) >= timeout) {
-            stop("Error: The file did not become available within 1 minute.")
+            stop(messages$errorFileNotAvailableWithinTime())
           }
           Sys.sleep(0.1) # Check every 0.1 seconds
           codeChunks <- knitr::read_chunk(tmpScript)
@@ -92,10 +92,7 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
 
       if (!all(unlist(chunkLabels) %in% names(codeChunks))) {
         tmp <- setdiff(unlist(chunkLabels), names(codeChunks))
-        stop(paste(
-          "Chunks are missing in workflowRmd check:",
-          paste(tmp, collapse = ", ")
-        ))
+        stop(messages$errorChunksMissing(tmp))
       }
 
       codeChunks <- codeChunks[unlist(chunkLabels)]
@@ -295,7 +292,7 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
       inputFiles <- data.table()
 
       if (is.null(self$scenarioNames) | length(self$scenarioNames) == 0) {
-        stop("no scenarios for export available")
+        stop(messages$errorNoScenariosForExport())
       }
 
       wb <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
@@ -309,10 +306,7 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
           as.logical(dtScenarios[!is.na(populationId)]$readPopulationFromCSV)
         if (any(!(readPopulationFromCSV), na.rm = TRUE) |
           any(is.na(readPopulationFromCSV))) {
-          stop(paste(
-            "Error: Please use only population scenarios that have exported populations",
-            "in workflows intended for an electronic package."
-          ))
+          stop(messages$errorOnlyPopulationScenariosWithExportedPopulations())
         }
 
         inputFiles <-
@@ -391,11 +385,7 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
       inputFiles <- self$inputFiles
 
       if (any(duplicated(inputFiles$fileName))) {
-        stop(paste(
-          "Error: File names must be unique. Duplicate file names found:",
-          paste(inputFiles$fileName[duplicated(inputFiles$fileName)], collapse = ", "),
-          ". Please ensure all file names are unique."
-        ))
+        stop(messages$errorDuplicateFileNames(inputFiles$fileName[duplicated(inputFiles$fileName)]))
       }
 
       success <- file.copy(
@@ -405,11 +395,7 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
       )
 
       if (!all(success)) {
-        stop(paste(
-          "Error: File copy to the ePackage folder failed for the following files:",
-          paste(inputFiles[!success]$fileName, collapse = ", "),
-          ". Please check the source paths and ensure the files exist."
-        ))
+        stop(messages$errorFileCopyFailed(inputFiles[!success]$fileName))
       }
 
       fwrite(
@@ -616,14 +602,7 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
         )
       }
       if (length(ixChanged > 0)) {
-        warning(paste0(
-          "Warning: Adjusted filenames due to naming requirements:\n",
-          paste(basename(changedInputFiles$source), "->", changedInputFiles$fileName,
-            collapse = "\n"
-          ),
-          "\nYou may use the input variable `fileNameReplacements` of the workflow export function",
-          " to configure file names more appropriately."
-        ))
+        warning(messages$warningAdjustedFilenames(changedInputFiles))
       }
 
       # set source of data files to NA, as copy is not needed
@@ -700,11 +679,7 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
             workflowTextLines
           )
           if (length(ixStart) * length(ixEnd) == 0) {
-            stop(paste(
-              "Error: Inconsisten placeholders in workflow script template and chunk Names.",
-              "Placeholder for chunk", chunkName, "is missing",
-              "\nThat should not happen. Please ask package administrator for help."
-            ))
+            stop(messages$errorInconsistentPlaceholders(chunkName))
           }
           workflowTextLines <-
             c(
@@ -729,10 +704,7 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
 
       # Check if the expected variable exists
       if (!exists(expectedVarName)) {
-        stop(paste0(
-          "The chunk `", chunkName, "` of the workflowRmd does not evaluate to a variable `", expectedVarName, "`. ",
-          "Please adjust chunk code."
-        ))
+        stop(messages$errorChunkDoesNotEvaluateToVariable(chunkName, expectedVarName))
       }
 
       # Check if the variable is NULL or empty
@@ -1204,7 +1176,7 @@ importWorkflow <- function(projectDirectory,
   # Check if the file has a valid extension
   extension <- fs::path_ext(fileName)
   if (!(extension %in% c("txt", "csv", "xml"))) {
-    stop(paste("Error: Invalid file extension for", fileName))
+    stop(messages$errorInvalidFileExtension(fileName))
   }
 
   # use only lowercase
@@ -1221,21 +1193,13 @@ importWorkflow <- function(projectDirectory,
 
   # Check if the first character is numeric
   if (grepl("^[0-9]", fileName)) {
-    stop(paste(
-      "Error: Filename cannot start with a number:", fileName,
-      "\nPlease use valid file names that do not start with a numeric character.",
-      "\nThe workflow export function provides the input variable `fileNameReplacements` to configure file names."
-    ))
+    stop(messages$errorFilenameStartsWithNumber(fileName))
   }
 
   # Check if the length of the filename is below the limit
   limitLength <- ifelse(fileType == "data", 32, 64)
   if (nchar(fileName) > limitLength) {
-    stop(paste(
-      "Error: Filename is too long (greater than", limitLength, "characters):", fileName,
-      "\nPlease shorten the filename to meet the length requirement.",
-      "\nThe workflow export function provides the input variable `fileNameReplacements` to configure file names."
-    ))
+    stop(messages$errorFilenameTooLong(limitLength, fileName))
   }
 
   return(fileName)
@@ -1284,7 +1248,7 @@ importWorkflow <- function(projectDirectory,
   # Check if JSON file exists
   jsonPath <- file.path(ePackageFolder, paste0("w", wfIdentifier, "_config_json.txt"))
   if (!file.exists(jsonPath)) {
-    stop("JSON file does not exist: ", jsonPath)
+    stop(messages$errorJSONFileDoesNotExist(jsonPath))
   }
 
   # Load JSON data

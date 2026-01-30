@@ -27,7 +27,7 @@ test_that("addUserDefinedParameters adds parameters correctly", {
 
   userdefinedParameters <- c("DoesNotExist") # Example parameters
   dtUserdefPKParameter <- .readUserDefinedPKParameters(projectConfiguration$addOns$pKParameterFile)
-  expect_error(.addUserDefinedParameters(userdefinedParameters, dtUserdefPKParameter))
+  expect_error(.addUserDefinedParameters(userdefinedParameters, dtUserdefPKParameter), messages$errorPKParameterNotDefined("DoesNotExist"))
 })
 
 test_that("loadPKParameter loads parameters correctly", {

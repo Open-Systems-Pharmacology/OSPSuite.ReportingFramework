@@ -6,7 +6,7 @@ test_that("Creation and print of startlines", {
     rmdName = NULL,
     rmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "plotTimeProfiles"
-  ))
+  ), messages$errorProvideValidRmdName())
 
   rmdPlotManager <- RmdPlotManager$new(
     rmdName = "test",
@@ -16,7 +16,7 @@ test_that("Creation and print of startlines", {
   expect_s3_class(rmdPlotManager, "RmdPlotManager")
 
   testPath <- file.path(projectConfiguration$outputFolder, "Test.Rmd")
-  expect_error(rmdPlotManager$writeRmd(projectConfiguration$outputFolder))
+  expect_error(rmdPlotManager$writeRmd(projectConfiguration$outputFolder), messages$errorProvideFileNameAsBasename())
 
   rmdPlotManager$writeRmd(basename(testPath))
   expect_true(file.exists(testPath))
@@ -24,10 +24,10 @@ test_that("Creation and print of startlines", {
 
 
 test_that("Initialization with invalid parameters", {
-  expect_error(RmdPlotManager$new(rmdName = NULL, rmdfolder = projectConfiguration$outputFolder, nameOfplotFunction = "plotTimeProfiles"))
+  expect_error(RmdPlotManager$new(rmdName = NULL, rmdfolder = projectConfiguration$outputFolder, nameOfplotFunction = "plotTimeProfiles"), messages$errorProvideValidRmdName())
   expect_error(RmdPlotManager$new(rmdName = "test", rmdfolder = NULL, nameOfplotFunction = "plotTimeProfiles"))
   expect_error(RmdPlotManager$new(rmdName = "test", rmdfolder = projectConfiguration$outputFolder, nameOfplotFunction = 123))
-  expect_error(RmdPlotManager$new(rmdName = "test", rmdfolder = projectConfiguration$outputFolder, nameOfplotFunction = "nonExistentFunction"))
+  expect_error(RmdPlotManager$new(rmdName = "test", rmdfolder = projectConfiguration$outputFolder, nameOfplotFunction = "nonExistentFunction"), messages$errorFunctionDoesNotExist("nonExistentFunction"))
 })
 
 test_that("Headers, newlines", {

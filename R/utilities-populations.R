@@ -35,7 +35,7 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
       openxlsx::removeWorksheet(wbPop, "VirtualTwinPopulation")
       openxlsx::saveWorkbook(wb = wbPop, file = projectConfiguration$populationsFile, overwrite = TRUE)
 
-      message("shift sheet 'VirtualTwinPopulation' from 'Indvidual.xslx' to 'Population.xlsx'")
+      message(messages$messageShiftVirtualTwinPopulation())
     } else {
       dtTwinPops <- xlsxReadData(projectConfiguration$scenariosFile, sheetName = "Scenarios") %>%
         data.table::setnames("populationId", "populationName") %>%
@@ -201,11 +201,7 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
 
   tmp <- dtPops[proportionOfFemales > 0 & proportionOfFemales <= 1]
   if (nrow(tmp) > 0) {
-    warning(paste(
-      "You have very small values for 'ProportionOfFemales' in the population configurations.
-    Unit is percent not fraction. Are you sure?\n",
-      paste(paste(tmp$populationName, tmp$proportionOfFemales, sep = ": "), collapse = "; ")
-    ))
+    warning(messages$warningSmallProportionOfFemales(tmp))
   }
 
 
@@ -229,7 +225,7 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
       if (!is.null(customParameters)) {
         for (cp in customParameters) {
           if (length(cp$values) != 1 & length(cp$values) != nrow(poptable)) {
-            stop(paste("Inconsistent number of values for", cp$path, "in", dPop$populationName))
+            stop(messages$errorInconsistentNumberOfValues(cp$path, dPop$populationName))
           }
           poptable[[cp$path]] <- cp$values
         }
@@ -506,10 +502,7 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
         setdiff(names(poptable), names(popRow))
       )
       if (length(tmp) > 1) {
-        stop(paste(
-          "population parameter must be consistent within a virtual population. Check",
-          paste(tmp, collapse = ", "), "for", popRow$ObservedIndividualId
-        ))
+        stop(messages$errorPopulationParameterMustBeConsistent(tmp, popRow$ObservedIndividualId))
       }
     }
 

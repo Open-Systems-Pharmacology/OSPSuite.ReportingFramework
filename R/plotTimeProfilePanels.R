@@ -172,7 +172,7 @@ plotTimeProfiles <- function(projectConfiguration,
   aggregationFun <- .getAggregationFunction(aggregationFlag, percentiles, customFunction)
 
   checkmate::assertDataTable(onePlotConfig)
-  if (dplyr::n_distinct(onePlotConfig$plotName) > 1) stop("onePlotConfig conatinas more than one plotName")
+  if (dplyr::n_distinct(onePlotConfig$plotName) > 1) stop(messages$errorOnePlotConfigContainsMoreThanOnePlotName())
 
   writeToLog(type = "Info", paste("Create Plot", onePlotConfig$plotName[1]))
   plotData <- PlotDataTimeProfile$new(
@@ -193,10 +193,7 @@ plotTimeProfiles <- function(projectConfiguration,
   if (any(plotData$data$dataClass == DATACLASS$tpAggregated) &&
     plotData$data[dataClass == DATACLASS$tpAggregated, uniqueN(yErrorType)] > 1) {
     tmp <- unique(plotData$data[, c("dataType", "yErrorType")])
-    stop(paste(
-      "Aggregation methods are not consistent! ",
-      paste(paste(tmp$dataType, tmp$yErrorType, sep = ": "), collapse = ", ")
-    ))
+    stop(messages$errorAggregationMethodsNotConsistent(tmp))
   }
 
   # replicate and filter data for each Time Range Tag
@@ -407,7 +404,7 @@ plotTimeProfiles <- function(projectConfiguration,
     ResvO = "plot_ResidualsVsObserved",
     ResH = "plot_ResidualsAsHistogram",
     QQ = "plot_QQ",
-    stop(paste("unknown plottype:", plotType))
+    stop(messages$errorUnknownPlotType(plotType))
   )
 
   if (plotType == "TP") {
@@ -487,10 +484,7 @@ plotTimeProfiles <- function(projectConfiguration,
     <= ylimits[1]) | # nolint indentation_linter
       any(observedData$yValues # nolint indentation_linter
       >= ylimits[2], na.rm = TRUE)) {
-      stop(paste(
-        "data outside ylimit for", plotData$plotName,
-        "time range", timeRangeFilter
-      ))
+      stop(messages$errorDataOutsideYLimit(plotData$plotName, timeRangeFilter))
     }
   }
 
@@ -1000,10 +994,7 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
   configTablePlots[, invalid := !is.na(referenceScenario) & is.na(colorLegend), by = .I]
   tmp <- configTablePlots[invalid == TRUE]
   if (nrow(tmp) > 0) {
-    stop(paste0(
-      "Plot configurations with reference scenarios need to have a color legend ",
-      'Please check "', paste0(unique(tmp$plotName), collapse = '", "', '"')
-    ))
+    stop(messages$errorPlotConfigsWithReferenceNeedColorLegend(tmp$plotName))
   }
 
   return(invisible())
@@ -1027,7 +1018,7 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
   for (configPanel in configTableList) {
     outputs <- gsub("[()]", "", splitInputs(configPanel$outputPathIds))
     if (dplyr::n_distinct(configEnv$outputPaths[outputPathId %in% outputs]$displayUnit) > 2) {
-      stop("do not combine more than two yUnits in one Panel")
+      stop(messages$errorMoreThanTwoYUnitsInPanel())
     }
   }
 
@@ -1070,11 +1061,11 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
         }
         return(all(valid))
       }))) {
-        stop('invalid inputs in one of the "TimeRange" columns')
+        stop(messages$errorInvalidTimeRangeColumn())
       }
     },
     error = function(err) {
-      stop('invalid inputs in one of the "TimeRange" columns')
+      stop(messages$errorInvalidTimeRangeColumn())
     }
   )
 
@@ -1098,7 +1089,7 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
   tmp <- tmp[nBracketOpen != nBracketClosed]
 
   if (nrow(tmp) > 0) {
-    stop(paste("Please check the brackets in column", column, paste(tmp[[column]], collapse = ";")))
+    stop(messages$errorBracketsInColumn(column, tmp[[column]]))
   }
 }
 
@@ -1133,11 +1124,7 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
 
   # individualIds is filled
   if (any(is.na(configTablePlots[scenario %in% indScenariosNames]$individualIds))) {
-    stop(paste(
-      "For scenarios with virtual twin populations, column individualIds has to be filled.",
-      'Use "*" or "(*)", if you want to plot all. (Brackets not allowed for Timeprofile Plots)',
-      "Check Scenarios:", paste(indScenariosNames, collapse = ", ")
-    ))
+    stop(messages$errorVirtualTwinIndividualIdsMustBeFilled(indScenariosNames))
   }
 
   tmp <- configTablePlots[scenario %in% indScenariosNames & as.logical(plot_TimeProfiles)]
@@ -1154,11 +1141,7 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
     !is.na(individualIds) &
     is.na(dataGroupIds)]
   if (nrow(tmp) > 0) {
-    warning(paste(
-      'Column "individualIds" is filled but no data group is selected and
-    scenario is not a virtual twin population scenario. "individualIds" will be ignored.',
-      "Check Plots:", paste(tmp$plotName, collapse = ", ")
-    ))
+    warning(messages$warningIndividualIdsIgnored(tmp$plotName))
   }
 
   popScenariosNames <- setdiff(names(popScenarios), indScenariosNames)
@@ -1168,10 +1151,7 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
       ((scenario %in% popScenariosNames) &
         !(referenceScenario %in% popScenariosNames)))]
   if (nrow(tmp) > 0) {
-    stop(paste(
-      "scenario and referenceScenario must be both populations or both indviduals",
-      "Check Plots:", paste(tmp$plotName, collapse = ", ")
-    ))
+    stop(messages$errorScenarioAndReferenceMustBothBePopOrInd(tmp$plotName))
   }
 
   return(invisible())

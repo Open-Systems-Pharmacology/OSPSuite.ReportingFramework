@@ -748,15 +748,10 @@ plotPKForestPointEstimateOfRatios <- function(projectConfiguration,
     "dataType"
   )]
   if (any(tmp$N > 1)) {
-    stop("Scenarios are not unique regarding scenarioShortName and scenarioGroup.
-           Check configuration for: ", onePlotConfig$plotName[1], )
+    stop(messages$errorScenariosNotUniqueCheckConfig(onePlotConfig$plotName[1]))
   }
   if (uniqueN(dataGroup[["xErrorType"]]) > 1) {
-    stop(
-      "Scenarios are not unique regarding aggregation for observed and simulated data.
-           Check errorType column for data relevant for plot: ", onePlotConfig$plotName[1],
-      "errorTypes are: ", paste(unique(dataGroup[["xErrorType"]]), collapse = ", ")
-    )
+    stop(messages$errorScenariosNotUniqueAggregation(onePlotConfig$plotName[1], unique(dataGroup[["xErrorType"]])))
   }
 
   dataGroup$outputPathId <- factor(
@@ -1309,8 +1304,7 @@ plotPKForestPointEstimateOfRatios <- function(projectConfiguration,
     ratioMode <- "ratioOfPopulation"
   } else {
     print(dtPop)
-    stop("Within one plot you must either compare always scenarios with the same base population or
-             always scenarios with different base populations")
+    stop(messages$errorInconsistentBasePopulationAlways())
   }
 
   return(ratioMode)
@@ -1423,7 +1417,7 @@ validatePKForestPointEstimateOfRatiosConfig <-
   if (!is.null(dataObservedPK)) {
     checkmate::assertDataTable(dataObservedPK)
     if (!DATACLASS$pkAggregated %in% unique(dataObservedPK$dataClass)) {
-      stop("Please provide aggregated observed PK-Parameter data for this kind of plot ")
+      stop(messages$errorNoAggregatedObservedPKParameter())
     }
   }
 

@@ -120,8 +120,7 @@ calculatePKParameterForScenarios <- function(projectConfiguration,
 
   checkmate::assertCharacter(dtUserdefPKParameter$name, any.missing = FALSE, unique = TRUE)
   if (any(is.na(dtUserdefPKParameter[["display Unit"]]))) {
-    stop("empty string is not possible as displayUnit in the sheet 'Userdef PK Parameter',
-    workaround: use % and set displayUnit in sheet derived from template-sheet to empty string")
+    stop(messages$errorEmptyDisplayUnit())
   }
 
   return(dtUserdefPKParameter)
@@ -144,10 +143,10 @@ calculatePKParameterForScenarios <- function(projectConfiguration,
     iRow <- which(dtUserdefPKParameter$name == userPar)
 
     if (length(iRow) == 0) {
-      stop(paste("pkParameter", userPar, 'is not defined in "Userdef PK Parameter" sheet.'))
+      stop(messages$errorPKParameterNotDefined(userPar))
     }
     if (length(iRow) > 1) {
-      stop(paste("pkParameter", userPar, 'is not unique in "Userdef PK Parameter" sheet.'))
+      stop(messages$errorPKParameterNotUnique(userPar))
     }
 
     myPK <- ospsuite::addUserDefinedPKParameter(

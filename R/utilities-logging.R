@@ -243,7 +243,7 @@ captureLog <- function(expr, finallyExpression = invisible()) {
 writeToLog <- function(type, msg, filename = NULL) {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
   if (is.null(logFileFolder)) {
-    warning("Logfile was not initialized")
+    warning(messages$warningLogfileNotInitialized())
     return(invisible())
   }
   if (is.null(filename)) filename <- "run.log"
@@ -272,7 +272,7 @@ writeToLog <- function(type, msg, filename = NULL) {
 writeTableToLog <- function(dt, filename = "run.log") {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
   if (is.null(logFileFolder)) {
-    warning("Logfile was not initialized")
+    warning(messages$warningLogfileNotInitialized())
     print(dt)
     return(invisible())
   }
@@ -328,7 +328,7 @@ saveSessionInfo <- function() {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
 
   if (is.null(logFileFolder)) {
-    warning("Logfile was not initialized")
+    warning(messages$warningLogfileNotInitialized())
     return(invisible())
   }
 
