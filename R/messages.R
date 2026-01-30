@@ -224,15 +224,15 @@ messages$errorNoSimulatedDataFound <- function(plotName) {
 }
 
 messages$errorAllDataOutsideTimeRange <- function(plotName) {
-  glue::glue("All simulated data outside time range for {plotName}")
+  paste("All simulated data outside time range for", plotName)
 }
 
 messages$warningNoObservedDataAvailable <- function(plotName, columns) {
-  glue::glue("For plot {plotName}, no observed data available for {paste(columns, collapse = ', ')}, plots will be omitted")
+  paste0("For plot ", plotName, ", no observed data available for ", paste(columns, collapse = ', '), ", plots will be omitted")
 }
 
 messages$errorPlotTypeNotSuitedForMultipleUnits <- function(plotName) {
-  glue::glue("For plot {plotName}, you selected a plotType which is not suited for multiple units. Only Timeprofile can handle a secondary axis with a second unit. Please split outputPathId in the plot configuration xlsx to different rows.")
+  paste0("For plot ", plotName, ", you selected a plotType which is not suited for multiple units. Only Timeprofile can handle a secondary axis with a second unit. Please split outputPathId in the plot configuration xlsx to different rows.")
 }
 
 # Time profile panels messages

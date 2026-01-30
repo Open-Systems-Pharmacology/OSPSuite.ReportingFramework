@@ -58,7 +58,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
 
       # Error handling
       if (is.null(private$.dataSimulated) || nrow(private$.dataSimulated) == 0) {
-        stop(paste("No simulated data found for", self$configTable$plotName[1]))
+        stop(messages$errorNoSimulatedDataFound(self$configTable$plotName[1]))
       }
 
       # Get application times
@@ -145,7 +145,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       )
 
       if (nrow(private$.dataSimulated) == 0) {
-        stop(glue::glue("All simulated data outside time range for {self$configTable$plotName[1]}"))
+        stop(messages$errorAllDataOutsideTimeRange(self$configTable$plotName[1]))
       }
 
       if (nrow(private$.dataObserved) > 0) {
@@ -303,11 +303,11 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       isNeeded <- length(plotCols) > 0
 
       if (!self$hasObservedData() & isNeeded) {
-        warning(glue::glue("For plot {self$configTable$plotName[1]}, no observed data available for {paste(plotCols, collapse = ', ')}, plots will be omitted"))
+        warning(messages$warningNoObservedDataAvailable(self$configTable$plotName[1], plotCols))
         return(invisible())
       }
       if (isNeeded & dplyr::n_distinct(private$.dataObserved$yUnit) > 1) {
-        stop(glue::glue("For plot {self$configTable$plotName[1]}, you selected a plotType which is not suited for multiple units. Only Timeprofile can handle a secondary axis with a second unit. Please split outputPathId in the plot configuration xlsx to different rows."))
+        stop(messages$errorPlotTypeNotSuitedForMultipleUnits(self$configTable$plotName[1]))
       }
 
       if (isNeeded) {
