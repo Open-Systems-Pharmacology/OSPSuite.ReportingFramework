@@ -98,7 +98,8 @@ createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xl
 #'
 #' @return The scenarioConfigurations list with corrected file paths
 #' @keywords internal
-fixFilePathsInScenarioConfigurations <- function(scenarioConfigurations,
+#' @noRd
+.fixFilePathsInScenarioConfigurations <- function(scenarioConfigurations,
                                                  projectConfiguration) {
   # Define unicode dash characters that might be mistaken for standard hyphen-minus
   # U+002D: HYPHEN-MINUS (standard keyboard character)
@@ -175,7 +176,7 @@ createScenarios.wrapped <- function(projectConfiguration, # nolint
   )
 
   # Check and fix file paths with hyphen/dash issues
-  scenarioConfigurations <- fixFilePathsInScenarioConfigurations(
+  scenarioConfigurations <- .fixFilePathsInScenarioConfigurations(
     scenarioConfigurations = scenarioConfigurations,
     projectConfiguration = projectConfiguration
   )
