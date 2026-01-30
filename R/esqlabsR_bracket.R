@@ -83,6 +83,85 @@ createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xl
 
   return(projectConfiguration)
 }
+#' Fix file paths in scenario configurations by replacing dash variants with standard hyphen-minus
+#'
+#' This function checks if all files referenced in scenario configurations exist.
+#' If a file is not found, it tries replacing various dash unicode characters
+#' with the standard hyphen-minus character (U+002D). This addresses issues where
+#' LibreOffice converts standard hyphens to other unicode variants (e.g., EN DASH
+#' U+2013, EM DASH U+2014) when saving Excel files.
+#'
+#' @param scenarioConfigurations List of scenario configuration objects from
+#'   `esqlabsR::readScenarioConfigurationFromExcel()`
+#' @param projectConfiguration Object of class `ProjectConfiguration` containing
+#'   information on paths and file names
+#'
+#' @return The scenarioConfigurations list with corrected file paths
+#' @keywords internal
+#' @noRd
+.fixFilePathsInScenarioConfigurations <- function(scenarioConfigurations,
+                                                 projectConfiguration) {
+  # Define unicode dash characters that might be mistaken for standard hyphen-minus
+  # U+002D: HYPHEN-MINUS (standard keyboard character)
+  # U+2010: HYPHEN
+  # U+2011: NON-BREAKING HYPHEN
+  # U+2012: FIGURE DASH
+  # U+2013: EN DASH (commonly inserted by LibreOffice)
+  # U+2014: EM DASH
+  # U+2015: HORIZONTAL BAR
+  dashVariants <- c("\u2010", "\u2011", "\u2012", "\u2013", "\u2014", "\u2015")
+
+  # Process each scenario configuration
+  for (i in seq_along(scenarioConfigurations)) {
+    scenarioConfig <- scenarioConfigurations[[i]]
+
+    # Validate that modelFile exists and is not NULL or empty
+    if (is.null(scenarioConfig$modelFile) || nchar(scenarioConfig$modelFile) == 0) {
+      stop(paste0(
+        "Invalid scenario configuration for scenario '", scenarioConfig$scenarioName, "': ",
+        "modelFile is ", if (is.null(scenarioConfig$modelFile)) "NULL" else "empty", ". ",
+        "All scenarios must have a non-empty modelFile with .pkml extension."
+      ))
+    }
+
+    modelFile <- scenarioConfig$modelFile
+    modelPath <- file.path(projectConfiguration$modelFolder, modelFile)
+
+    # Check if file exists
+    if (!file.exists(modelPath)) {
+      # Try replacing each dash variant with standard hyphen-minus
+      correctedFile <- modelFile
+      for (dashVariant in dashVariants) {
+        correctedFile <- gsub(dashVariant, "-", correctedFile, fixed = TRUE)
+      }
+
+      correctedPath <- file.path(projectConfiguration$modelFolder, correctedFile)
+
+      # If corrected path exists, update the configuration
+      if (file.exists(correctedPath)) {
+        writeToLog(
+          type = "Warning",
+          msg = paste0(
+            "File '", modelFile, "' not found. ",
+            "Using corrected filename '", correctedFile, "' instead. ",
+            "Consider updating the scenario configuration file to use standard hyphens (-)."
+          )
+        )
+        scenarioConfigurations[[i]]$modelFile <- correctedFile
+      } else {
+        # File not found even after correction
+        stop(paste0(
+          "Model file not found for scenario '", scenarioConfig$scenarioName, "': ",
+          "Neither '", modelFile, "' nor '", correctedFile, "' exists in '",
+          projectConfiguration$modelFolder, "'. ",
+          "Please check the file name in the scenario configuration."
+        ))
+      }
+    }
+  }
+
+  return(scenarioConfigurations)
+}
 #' Create Scenario objects from `ScenarioConfiguration` objects
 #'
 #' wrap of `esqlabsR::createDefaultProjectConfiguration()` with `esqlabsR::createScenarios()` as input
@@ -96,14 +175,22 @@ createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xl
 #' @family scenario management
 createScenarios.wrapped <- function(projectConfiguration, # nolint
                                     scenarioNames = NULL) {
-  scenarioList <-
-    esqlabsR::createScenarios(
-      scenarioConfigurations =
-        esqlabsR::readScenarioConfigurationFromExcel(
-          scenarioNames = scenarioNames,
-          projectConfiguration = projectConfiguration
-        )
-    )
+  # Read scenario configurations from Excel
+  scenarioConfigurations <- esqlabsR::readScenarioConfigurationFromExcel(
+    scenarioNames = scenarioNames,
+    projectConfiguration = projectConfiguration
+  )
+
+  # Check and fix file paths with hyphen/dash issues
+  scenarioConfigurations <- .fixFilePathsInScenarioConfigurations(
+    scenarioConfigurations = scenarioConfigurations,
+    projectConfiguration = projectConfiguration
+  )
+
+  # Create scenarios with fixed configurations
+  scenarioList <- esqlabsR::createScenarios(
+    scenarioConfigurations = scenarioConfigurations
+  )
 
   synchronizeScenariosWithPlots(projectConfiguration)
   synchronizeScenariosOutputsWithPlots(projectConfiguration)

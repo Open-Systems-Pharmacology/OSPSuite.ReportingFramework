@@ -77,3 +77,96 @@ test_that("runAndSaveScenarios runs and saves scenarios", {
   # Clean up
   rm(projectConfigurationTest)
 })
+
+test_that(".fixFilePathsInScenarioConfigurations handles hyphen/dash variants", {
+  # Skip if model files don't exist
+  skip_if_not(dir.exists(projectConfiguration$modelFolder))
+
+  # Get existing model files
+  modelFiles <- list.files(projectConfiguration$modelFolder, pattern = "\\.pkml$")
+  skip_if(length(modelFiles) == 0, "No model files found")
+
+  # create a model file with a dash in the name
+  modelFileWithDash <- 'file-with-dashes.pkml'
+  invisible(file.copy(from = file.path(projectConfiguration$modelFolder,modelFiles[1]),
+            to = file.path(projectConfiguration$modelFolder,modelFileWithDash),overwrite = TRUE))
+
+  # Create a test scenario configuration with EN DASH in filename
+  testModelFileWithEnDash <- gsub("-", "\u2013", modelFileWithDash) # Replace dash with EN DASH
+
+  # Create mock scenario configuration
+  mockScenarioConfig <- list(
+    list(
+      scenarioName = "test_scenario",
+      modelFile = testModelFileWithEnDash
+    )
+  )
+
+  # Test that the function corrects the file path
+  correctedConfigs <- .fixFilePathsInScenarioConfigurations(
+    scenarioConfigurations = mockScenarioConfig,
+    projectConfiguration = projectConfiguration
+  )
+
+  # Check that the file path was corrected
+  expect_equal(correctedConfigs[[1]]$modelFile, modelFileWithDash)
+  expect_false(correctedConfigs[[1]]$modelFile == testModelFileWithEnDash)
+})
+
+test_that(".fixFilePathsInScenarioConfigurations throws error for nonexistent files", {
+  # Create a mock scenario configuration with a nonexistent file
+  mockScenarioConfig <- list(
+    list(
+      scenarioName = "test_scenario",
+      modelFile = "nonexistent\u2013file.pkml"
+    )
+  )
+
+  # Test that the function throws an error
+  expect_error(
+    .fixFilePathsInScenarioConfigurations(
+      scenarioConfigurations = mockScenarioConfig,
+      projectConfiguration = projectConfiguration
+    ),
+    regexp = "Model file not found"
+  )
+})
+
+test_that(".fixFilePathsInScenarioConfigurations throws error for NULL modelFile", {
+  # Create a mock scenario configuration with NULL modelFile
+  mockScenarioConfig <- list(
+    list(
+      scenarioName = "test_scenario_null",
+      modelFile = NULL
+    )
+  )
+
+  # Test that the function throws an error
+  expect_error(
+    .fixFilePathsInScenarioConfigurations(
+      scenarioConfigurations = mockScenarioConfig,
+      projectConfiguration = projectConfiguration
+    ),
+    regexp = "Invalid scenario configuration.*modelFile is NULL"
+  )
+})
+
+test_that(".fixFilePathsInScenarioConfigurations throws error for empty modelFile", {
+  # Create a mock scenario configuration with empty modelFile
+  mockScenarioConfig <- list(
+    list(
+      scenarioName = "test_scenario_empty",
+      modelFile = ""
+    )
+  )
+
+  # Test that the function throws an error
+  expect_error(
+    .fixFilePathsInScenarioConfigurations(
+      scenarioConfigurations = mockScenarioConfig,
+      projectConfiguration = projectConfiguration
+    ),
+    regexp = "Invalid scenario configuration.*modelFile is empty"
+  )
+})
+

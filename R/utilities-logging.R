@@ -254,6 +254,7 @@ writeToLog <- function(type, msg, filename = NULL) {
   cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
     paste0(type, ":"),
     paste(msg, collapse = "\n"),
+    '\n',
     file = file.path(logFileFolder, filename),
     append = TRUE
   )
