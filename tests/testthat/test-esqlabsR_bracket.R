@@ -86,9 +86,12 @@ test_that("fixFilePathsInScenarioConfigurations handles hyphen/dash variants", {
   modelFiles <- list.files(projectConfiguration$modelFolder, pattern = "\\.pkml$")
   skip_if(length(modelFiles) == 0, "No model files found")
 
+  # Find a model file with a dash in the name
+  modelFileWithDash <- modelFiles[grep("-", modelFiles)][1]
+  skip_if(is.na(modelFileWithDash), "No model files with dashes found")
+
   # Create a test scenario configuration with EN DASH in filename
-  testModelFile <- modelFiles[1]
-  testModelFileWithEnDash <- gsub("-", "\u2013", testModelFile) # Replace dash with EN DASH
+  testModelFileWithEnDash <- gsub("-", "\u2013", modelFileWithDash) # Replace dash with EN DASH
 
   # Create mock scenario configuration
   mockScenarioConfig <- list(
@@ -105,7 +108,7 @@ test_that("fixFilePathsInScenarioConfigurations handles hyphen/dash variants", {
   )
 
   # Check that the file path was corrected
-  expect_equal(correctedConfigs[[1]]$modelFile, testModelFile)
+  expect_equal(correctedConfigs[[1]]$modelFile, modelFileWithDash)
 })
 
 test_that("fixFilePathsInScenarioConfigurations throws error for nonexistent files", {

@@ -83,13 +83,13 @@ createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xl
 
   return(projectConfiguration)
 }
-#' Fix file paths in scenario configurations by replacing hyphens with dashes
+#' Fix file paths in scenario configurations by replacing dash variants with standard dash
 #'
 #' This function checks if all files referenced in scenario configurations exist.
 #' If a file is not found, it tries replacing various hyphen/dash unicode characters
 #' with the standard dash character (-). This addresses issues where LibreOffice
-#' converts dashes to hyphens (e.g., EN DASH U+2013, EM DASH U+2014) when saving
-#' Excel files.
+#' converts dashes to other unicode variants (e.g., EN DASH U+2013, EM DASH U+2014)
+#' when saving Excel files.
 #'
 #' @param scenarioConfigurations List of scenario configuration objects from
 #'   `esqlabsR::readScenarioConfigurationFromExcel()`
