@@ -604,8 +604,6 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
       if (length(ixChanged > 0)) {
         warning(messages$warningAdjustedFilenames(changedInputFiles))
       }
-        ))
-      }
 
       # set source of data files to NA, as copy is not needed
       inputFiles[fileType == "data", source := NA_character_]

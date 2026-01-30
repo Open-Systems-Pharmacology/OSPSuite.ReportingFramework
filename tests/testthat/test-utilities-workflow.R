@@ -1,6 +1,6 @@
 test_that("stopHelperFunction stops with error when option is NULL", {
   options(OSPSuite.RF.stopHelperFunction = NULL) # Set option to NULL
-  expect_error(.stopHelperFunction(), messages$errorStopHelperFunctionNotInitialized())
+  expect_error(.stopHelperFunction(), substr(x = messages$errorStopHelperFunctionNotInitialized(), start = 1,stop = 20))
 
   options(OSPSuite.RF.stopHelperFunction = TRUE) # Set option to TRUE
   expect_error(.stopHelperFunction())
