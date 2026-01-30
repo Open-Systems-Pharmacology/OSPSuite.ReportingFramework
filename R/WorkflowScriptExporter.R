@@ -1474,6 +1474,7 @@ importWorkflow <- function(projectDirectory,
 #' @param wfIdentifier An integer identifier for the workflow.
 #' @return A character string representing the configuration directory path for the specified workflow.
 #' @keywords internal
+#' @noRd
 .getConfigDirectoryForWorkflow <- function(wfIdentifier) {
   paste0("Scripts_w", wfIdentifier)
 }

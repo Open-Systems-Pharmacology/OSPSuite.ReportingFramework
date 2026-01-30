@@ -2,6 +2,7 @@
 #' @docType class
 #' @description Manages the creation and writing of .Rmd files for plots.
 #' @keywords internal
+#' @noRd
 RmdPlotManager <- R6::R6Class( # nolint
   "RmdPlotManager",
   inherit = ospsuite.utils::Printable,

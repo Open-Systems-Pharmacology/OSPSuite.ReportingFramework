@@ -841,6 +841,7 @@ plotTimeProfiles <- function(projectConfiguration,
 #'
 #' @return list with additional attributes for geom_line
 #' @keywords internal
+#' @noRd
 .getGeomLineAttributesForTP <- function(plotData) {
   if (plotData$hasObservedDataRange()) {
     return(list(linetype = "solid", show.legend = TRUE))
