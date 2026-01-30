@@ -114,8 +114,7 @@
 #' \code{\link{addDefaultConfigForPKForestPlots}}
 #'
 #' @keywords internal
-#' @noRd
-.plotPKForest <- function(projectConfiguration,
+plotPKForest <- function(projectConfiguration,
                          onePlotConfig,
                          pkParameterDT,
                          dataObservedPK,
@@ -316,7 +315,7 @@ plotPKForestAggregatedAbsoluteValues <- function(projectConfiguration,
   aggregationFun <- .getAggregationFunction(aggregationFlag, percentiles, customFunction, legendsize = 3)
 
   plotList <-
-    .plotPKForest(projectConfiguration,
+    plotPKForest(projectConfiguration,
       onePlotConfig = onePlotConfig,
       pkParameterDT = pkParameterDT,
       ratioMode = "none",
@@ -374,7 +373,7 @@ plotPKForestPointEstimateOfAbsoluteValues <- function(projectConfiguration,
   )
 
 
-  plotList <- .plotPKForest(
+  plotList <- plotPKForest(
     projectConfiguration = projectConfiguration,
     onePlotConfig = onePlotConfig,
     pkParameterDT = pkParameterDT,
@@ -446,7 +445,7 @@ plotPKForestAggregatedRatios <- function(projectConfiguration,
   )
 
   plotList <-
-    .plotPKForest(projectConfiguration,
+    plotPKForest(projectConfiguration,
       onePlotConfig = onePlotConfig,
       pkParameterDT = pkParameterDT,
       ratioMode = "individualRatios",
@@ -509,7 +508,7 @@ plotPKForestPointEstimateOfRatios <- function(projectConfiguration,
     statFun = statFun
   )
 
-  plotList <- .plotPKForest(
+  plotList <- plotPKForest(
     projectConfiguration = projectConfiguration,
     onePlotConfig = onePlotConfig,
     pkParameterDT = pkParameterDT,
@@ -941,8 +940,8 @@ plotPKForestPointEstimateOfRatios <- function(projectConfiguration,
 #' @param pkParameterDT Data table containing PK parameter data.
 #'
 #' @return Updated plot data with descriptions added.
-#' @keywords internal
 #' @noRd
+#' @keywords internal
 .addDescriptions <- function(plotData, onePlotConfig, pkParameterDT) {
   # initialize to avoid linter messages
   pkParameter <- NULL
