@@ -102,10 +102,7 @@ plotDistributionVsDemographics <- function(projectConfiguration,
   )
 
   if ("categoricValue" %in% names(plotData)) {
-    warning(paste(
-      "Categoric parameter are not suited for this kind of plot and will be ignored:",
-      .concatWithAnd(unique(plotData[!is.na(categoricValue), ]$parameterId))
-    ))
+    warning(messages$warningCategoricParameterIgnored(unique(plotData[!is.na(categoricValue), ]$parameterId)))
   }
 
   return(plotList)
@@ -611,7 +608,7 @@ plotHistograms <- function(projectConfiguration,
     setnames(old = "parameterId", new = "parameterId_Bin")
 
   if (all(is.na(plotData$value)) & "categoricValue" %in% names(plotData)) {
-    stop(paste("Categoric Values are not allowed for x-axis on rangeplots. Check plotName", onePlotConfig$plotName[1]))
+    stop(messages$errorCategoricValuesNotAllowedForXAxis(onePlotConfig$plotName[1]))
   }
 
   plotData <- plotData %>%
@@ -740,10 +737,7 @@ plotHistograms <- function(projectConfiguration,
   modelPaths <- unique(onePlotConfigIdentifier$modelPath)
 
   if (!all(modelPaths %in% names(dtPop))) {
-    stop(paste(
-      "Parameter path(s)", paste(setdiff(modelPaths, names(dtPop)), collapse = ", "),
-      "is not available for", scenarioName
-    ))
+    stop(messages$errorParameterPathsNotAvailable(setdiff(modelPaths, names(dtPop)), scenarioName))
   }
 
   dtPop <- dtPop[, .SD, .SDcols = c("IndividualId", modelPaths)][
@@ -1027,7 +1021,7 @@ validateHistogramsConfig <- function(configTable, ...) {
   } else if ("pkParameterDT" %in% names(dotarg)) {
     popScenarios <- unique(dotarg$pkParameterDT$scenario)
   } else {
-    stop("Inputs are missing, please provide scenarioList and/or pkParameterDT")
+    stop(messages$errorMissingInputs())
   }
 
   validateConfigTablePlots(
@@ -1101,11 +1095,7 @@ validateHistogramsConfig <- function(configTable, ...) {
   } else {
     dotarg <- list(...)
     if (!("pkParameterDT" %in% names(dotarg))) {
-      stop(paste(
-        "The ParameterIds are no valid modelparameters!
-                 Are they PK-Parameter? But pkParameterDT is missing as input.",
-        configTablePlots$plotName[1]
-      ))
+      stop(messages$errorParameterIdsNotValidModelParameters(configTablePlots$plotName[1]))
     }
 
     .validatePKParameterDT(dotarg$pkParameterDT)

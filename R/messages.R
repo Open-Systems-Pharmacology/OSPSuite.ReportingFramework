@@ -362,8 +362,26 @@ messages$errorScenariosNotUnique <- function() {
   "Scenarios are not unique regarding scenarioShortName and scenarioGroup.\n Possible reason: population scenarios with the same name but different base populations,\n where the first unique scenario is selected"
 }
 
+messages$errorScenariosNotUniqueCheckConfig <- function(plotName) {
+  paste0("Scenarios are not unique regarding scenarioShortName and scenarioGroup.
+           Check configuration for: ", plotName)
+}
+
+messages$errorScenariosNotUniqueAggregation <- function(plotName, errorTypes) {
+  paste0(
+    "Scenarios are not unique regarding aggregation for observed and simulated data.
+           Check errorType column for data relevant for plot: ", plotName,
+    "errorTypes are: ", paste(errorTypes, collapse = ", ")
+  )
+}
+
 messages$errorInconsistentBasePopulation <- function() {
   "Within one plot you must either compare always scenarios with the same base population or\ncompare always scenarios with different base populations"
+}
+
+messages$errorInconsistentBasePopulationAlways <- function() {
+  "Within one plot you must either compare always scenarios with the same base population or
+             always scenarios with different base populations"
 }
 
 messages$errorNoAggregatedObservedPKParameter <- function() {
@@ -376,6 +394,28 @@ messages$warningMeanSEMNotAllowed <- function(plotName) {
     "Mean_SEM for aggregation is not allowed for a scatter and range plot",
     "-> plotName:", plotName,
     "\nRangePlots can also displayed with percentiles/quantiles.\nUse percentiles in Scenario.xlsx AggrType"
+  )
+}
+
+messages$warningCategoricParameterIgnored <- function(parameterIds) {
+  paste(
+    "Categoric parameter are not suited for this kind of plot and will be ignored:",
+    .concatWithAnd(parameterIds)
+  )
+}
+
+messages$errorParameterPathsNotAvailable <- function(modelPaths, scenarioName) {
+  paste(
+    "Parameter path(s)", paste(modelPaths, collapse = ", "),
+    "is not available for", scenarioName
+  )
+}
+
+messages$errorParameterIdsNotValidModelParameters <- function(plotName) {
+  paste(
+    "The ParameterIds are no valid modelparameters!
+                 Are they PK-Parameter? But pkParameterDT is missing as input.",
+    plotName
   )
 }
 
@@ -421,6 +461,20 @@ messages$errorSelectPlotTypeAbsoluteOrRatio <- function() {
 
 messages$errorRatioOnlySamePopulation <- function() {
   "Ratio plots are only available if scenario and referenceScenario is based on the same population"
+}
+
+messages$errorOneCombinationPerPlot <- function(plotNames) {
+  paste(
+    "Per plot only one combination of scenario, outputPathId and pkParameter is allowed. Please check plot",
+    paste(plotNames, collapse = ", ")
+  )
+}
+
+messages$errorRatioNeedsReferenceScenario <- function(plotNames) {
+  paste(
+    "For ratio plots at lease one reference scenario has to be selected. Check PlotName",
+    paste(plotNames, collapse = ", ")
+  )
 }
 
 messages$errorInconsistentPlotRatioConfig <- function(plotName) {
@@ -649,6 +703,13 @@ messages$errorInvalidSheetRange <- function(sheetName, startRow, startColumn, da
 
 messages$warningInconsistentOutputDefinition <- function() {
   "Output definition in Scenario.xlsx and Plot.xlsx is inconsistent. Please synchronize manually"
+}
+
+messages$errorAmbiguousHeaderNames <- function(existingData, headerNames) {
+  paste(
+    "ambiguous header names in sheet", existingData,
+    paste(headerNames, collapse = ",")
+  )
 }
 
 # RmdPlotManager messages

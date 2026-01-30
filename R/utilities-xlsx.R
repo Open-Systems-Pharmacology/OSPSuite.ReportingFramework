@@ -27,7 +27,7 @@ xlsxAddSheet <- function(wb, sheetName, dt) {
   checkmate::assertDataTable(dt, null.ok = FALSE)
 
   if (sheetName %in% wb$sheet_names) {
-    warning(paste(sheetName, "already exists. Existing content will be cleared."))
+    warning(messages$warningSheetAlreadyExists(sheetName))
     invisible(xlsxReadData(wb, sheetName))
   } else {
     openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
@@ -112,7 +112,7 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 
   # Check if the clonedSheet exists in the workbook
   if (!(clonedSheet %in% wb$sheet_names)) {
-    stop(paste("Sheet", clonedSheet, "does not exist in the workbook."))
+    stop(messages$errorSheetDoesNotExist(clonedSheet))
   }
   if (!(sheetName %in% wb$sheet_names)) {
     openxlsx::cloneWorksheet(wb = wb, clonedSheet = clonedSheet, sheetName = sheetName)
@@ -212,7 +212,7 @@ xlsxAddDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, te
     )
 
     if (!file.exists(templatePath)) {
-      stop(paste("Template file", templatePath, "does not exist."))
+      stop(messages$errorTemplateFileDoesNotExist(templatePath))
     }
     templateConfiguration <-
       xlsxReadData(
@@ -303,7 +303,7 @@ copyConfigSheet <- function(sourceSheetName, destinationSheetName, sourceFile, d
 #' @noRd
 .checkSheetExists <- function(wb, sheetName) {
   if (!(sheetName %in% wb$sheet_names)) {
-    stop(paste("Sheet", sheetName, "does not exist."))
+    stop(messages$errorSheetDoesNotExist(sheetName))
   }
 }
 
@@ -348,10 +348,7 @@ copyConfigSheet <- function(sourceSheetName, destinationSheetName, sourceFile, d
       if (length(ix) == 1) {
         newName <- names(existingData)[ix]
       } else if (length(ix) > 1) {
-        stop(paste(
-          "ambiguous header names in sheet", existingData,
-          paste(names(existingData)[ix], collapse = ",")
-        ))
+        stop(messages$errorAmbiguousHeaderNames(existingData, names(existingData)[ix]))
       } else {
         newName <- x
       }
@@ -662,7 +659,7 @@ synchronizeScenariosOutputsWithPlots <- function(projectConfiguration,
 
   # Check for inconsistencies between scenario and plot output paths
   if (nrow(opMerged[!is.na(outputPathSc) & !is.na(outputPathPl) & outputPathSc != outputPathPl]) > 0) {
-    warning("Output definition in Scenario.xlsx and Plot.xlsx is inconsistent. Please synchronize manually")
+    warning(messages$warningInconsistentOutputDefinition())
   }
 
   # Synchronize output paths based on availability

@@ -123,7 +123,7 @@ plotPKBoxwhisker <- function(projectConfiguration,
     asRatio = asRatio
   )
   if (nrow(plotData) == 0) {
-    warning(paste("No data for", onePlotConfig$plotName[1]))
+    warning(messages$warningNoDataForPlot(onePlotConfig$plotName[1]))
     return(list())
   }
 
@@ -514,10 +514,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   tmp <- tmp[, c("plotName", "scenario", "outputPathId", "pkParameter")]
   if (any(duplicated(tmp))) {
     tmp <- duplicated(tmp)
-    stop(paste(
-      "Per plot only one combination of scenario, outputPathId and pkParameter is allowed. Please check plot",
-      paste(tmp$plotName %>% unique(), collapse = ", ")
-    ))
+    stop(messages$errorOneCombinationPerPlot(tmp$plotName %>% unique()))
   }
 
   .validateColorLegend(dt = configTablePlots[!is.na(referenceScenario)])
@@ -526,7 +523,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   tmp <- configTablePlots[as.logical(plot_Ratio) == FALSE & as.logical(plot_Absolute) == FALSE] %>% unique()
   if (nrow(tmp) > 0) {
     print(tmp)
-    stop("Please select either Plot_Ratio or Plot_Absolute!")
+    stop(messages$errorSelectPlotTypeAbsoluteOrRatio())
   }
 
 
@@ -576,7 +573,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   configTablePlots <- configTablePlots[populationId != populationIdReference]
   if (nrow(configTablePlots) > 0) {
     print(configTablePlots)
-    stop("Ratio plots are only available if scenario and referenceScenario is based on the same population")
+    stop(messages$errorRatioOnlySamePopulation())
   }
 }
 #' Validate Existence of Reference for Ratio Plots
@@ -606,10 +603,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   # check if reference Scenarios are there
   tmp <- configTablePlots[, .(isValid = any(!is.na(referenceScenario))), by = plotName]
   if (any(tmp$isValid == FALSE)) {
-    stop(paste(
-      "For ratio plots at lease one reference scenario has to be selected. Check PlotName",
-      paste(tmp[isValid == FALSE, ]$plotName, collapse = ", ")
-    ))
+    stop(messages$errorRatioNeedsReferenceScenario(tmp[isValid == FALSE, ]$plotName))
   }
 
   return(invisible())
