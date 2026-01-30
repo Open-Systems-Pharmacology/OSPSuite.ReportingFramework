@@ -117,11 +117,7 @@ createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xl
 
     # Validate that modelFile exists and is not NULL or empty
     if (is.null(scenarioConfig$modelFile) || nchar(scenarioConfig$modelFile) == 0) {
-      stop(paste0(
-        "Invalid scenario configuration for scenario '", scenarioConfig$scenarioName, "': ",
-        "modelFile is ", if (is.null(scenarioConfig$modelFile)) "NULL" else "empty", ". ",
-        "All scenarios must have a non-empty modelFile with .pkml extension."
-      ))
+      stop(messages$errorInvalidScenarioConfig(scenarioConfig$scenarioName, is.null(scenarioConfig$modelFile)))
     }
 
     modelFile <- scenarioConfig$modelFile
@@ -150,12 +146,7 @@ createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xl
         scenarioConfigurations[[i]]$modelFile <- correctedFile
       } else {
         # File not found even after correction
-        stop(paste0(
-          "Model file not found for scenario '", scenarioConfig$scenarioName, "': ",
-          "Neither '", modelFile, "' nor '", correctedFile, "' exists in '",
-          projectConfiguration$modelFolder, "'. ",
-          "Please check the file name in the scenario configuration."
-        ))
+        stop(messages$errorModelFileNotFound(scenarioConfig$scenarioName, modelFile, correctedFile, projectConfiguration$modelFolder))
       }
     }
   }
@@ -216,11 +207,7 @@ loadScenarioResultsToFramework <- function(projectConfiguration, scenarioNames) 
   resultFiles <- file.path(outputFolder, paste0(scenarioNames, ".csv"))
 
   if (!all(file.exists(resultFiles))) {
-    stop(paste(
-      "Error: Simulation results for scenario(s)",
-      paste(scenarioNames[!file.exists(resultFiles)], collapse = ", "),
-      "do not exist."
-    ))
+    stop(messages$errorSimulationResultsDoNotExist(scenarioNames[!file.exists(resultFiles)]))
   }
 
   scenarioResults <- list()
@@ -365,7 +352,7 @@ runOrLoadScenarios <- function(projectConfiguration, scenarioList, simulationRun
       fixed = TRUE
     ))
     if (length(ontogenyMapping) != 2) {
-      stop(paste("The ontogeny has the wrong structure:", ontogeny))
+      stop(messages$errorOntogenyWrongStructure(ontogeny))
     }
     protein <- ontogenyMapping[[1]]
     ontogeny <- ontogenyMapping[[2]]
@@ -409,7 +396,7 @@ runOrLoadScenarios <- function(projectConfiguration, scenarioList, simulationRun
   data <- readExcel(path = XLSpath, sheet = sheet)
   names(data) <- gsub(" ", "\\.", names(data))
   if (!all(columnNames %in% names(data))) {
-    stop("errorWrongXLSStructure")
+    stop(messages$errorWrongXLSStructure())
     # stop(messages$errorWrongXLSStructure(filePath = XLSpath, expectedColNames = columnNames)) # nolint
   }
 

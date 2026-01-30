@@ -493,6 +493,10 @@ messages$errorInconsistentTimeVectorForSensitivity <- function(runIds) {
   )
 }
 
+messages$errorSensitivityFileNotAdded <- function() {
+  "SensitivityParameter xlsx is not added to the projectConfiguration Please call 'addSensitivityTable(projectConfiguration)'"
+}
+
 # esqlabsR bracket messages
 messages$errorOntologyCouldNotBeLoaded <- function(ontogeny) {
   paste("The ontogeny could not be loaded for", ontogeny)
@@ -519,6 +523,31 @@ messages$errorOntogenyWrongStructure <- function(ontogeny) {
 
 messages$errorWrongXLSStructure <- function() {
   "errorWrongXLSStructure"
+}
+
+messages$errorInvalidScenarioConfig <- function(scenarioName, isNull) {
+  paste0(
+    "Invalid scenario configuration for scenario '", scenarioName, "': ",
+    "modelFile is ", if (isNull) "NULL" else "empty", ". ",
+    "All scenarios must have a non-empty modelFile with .pkml extension."
+  )
+}
+
+messages$errorModelFileNotFound <- function(scenarioName, modelFile, correctedFile, modelFolder) {
+  paste0(
+    "Model file not found for scenario '", scenarioName, "': ",
+    "Neither '", modelFile, "' nor '", correctedFile, "' exists in '",
+    modelFolder, "'. ",
+    "Please check the file name in the scenario configuration."
+  )
+}
+
+messages$errorSimulationResultsDoNotExist <- function(scenarioNames) {
+  paste(
+    "Error: Simulation results for scenario(s)",
+    paste(scenarioNames, collapse = ", "),
+    "do not exist."
+  )
 }
 
 # Markdown messages
@@ -749,6 +778,21 @@ messages$warningLogfileNotInitialized <- function() {
 # Population messages
 messages$messageShiftVirtualTwinPopulation <- function() {
   "shift sheet 'VirtualTwinPopulation' from 'Indvidual.xslx' to 'Population.xlsx'"
+}
+
+messages$warningSmallProportionOfFemales <- function(populationData) {
+  paste(
+    "You have very small values for 'ProportionOfFemales' in the population configurations.
+    Unit is percent not fraction. Are you sure?\n",
+    paste(paste(populationData$populationName, populationData$proportionOfFemales, sep = ": "), collapse = "; ")
+  )
+}
+
+messages$errorPopulationParameterMustBeConsistent <- function(tmp, observedIndividualId) {
+  paste(
+    "population parameter must be consistent within a virtual population. Check",
+    paste(tmp, collapse = ", "), "for", observedIndividualId
+  )
 }
 
 messages$warningParameterPathColumnMissing <- function(xslxFile) {
