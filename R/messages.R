@@ -267,6 +267,66 @@ messages$errorBracketsInColumn <- function(column, values) {
   paste("Please check the brackets in column", column, paste(values, collapse = ";"))
 }
 
+messages$errorAggregationMethodsNotConsistent <- function(tmp) {
+  paste(
+    "Aggregation methods are not consistent! ",
+    paste(paste(tmp$dataType, tmp$yErrorType, sep = ": "), collapse = ", ")
+  )
+}
+
+messages$errorDataOutsideYLimit <- function(plotName, timeRangeFilter) {
+  paste(
+    "data outside ylimit for", plotName,
+    "time range", timeRangeFilter
+  )
+}
+
+messages$errorCombineOutputsWithBracketsAndReferenceScenarios <- function(plotNames) {
+  paste0(
+    "Do not combine outputs in one panel with brackets () ",
+    'if you want to display reference scenarios.
+                Please check "', paste0(unique(plotNames), collapse = '", "', '"')
+  )
+}
+
+messages$errorPlotConfigsWithReferenceNeedColorLegend <- function(plotNames) {
+  paste0(
+    "Plot configurations with reference scenarios need to have a color legend ",
+    'Please check "', paste0(unique(plotNames), collapse = '", "', '"')
+  )
+}
+
+messages$errorVirtualTwinIndividualIdsMustBeFilled <- function(scenarioNames) {
+  paste(
+    "For scenarios with virtual twin populations, column individualIds has to be filled.",
+    'Use "*" or "(*)", if you want to plot all. (Brackets not allowed for Timeprofile Plots)',
+    "Check Scenarios:", paste(scenarioNames, collapse = ", ")
+  )
+}
+
+messages$errorVirtualTwinBracketsNotAllowed <- function(plotNames) {
+  paste(
+    "For scenarios with virtual twin populations and selected Plot_TimeProfiles,
+                brackets are not allowed in column individualIds.",
+    "Check Plots:", paste(plotNames, collapse = ", ")
+  )
+}
+
+messages$warningIndividualIdsIgnored <- function(plotNames) {
+  paste(
+    'Column "individualIds" is filled but no data group is selected and
+    scenario is not a virtual twin population scenario. "individualIds" will be ignored.',
+    "Check Plots:", paste(plotNames, collapse = ", ")
+  )
+}
+
+messages$errorScenarioAndReferenceMustBothBePopOrInd <- function(plotNames) {
+  paste(
+    "scenario and referenceScenario must be both populations or both indviduals",
+    "Check Plots:", paste(plotNames, collapse = ", ")
+  )
+}
+
 messages$errorPlotsBasedOnDifferentTimeUnits <- function(outputPaths, unit1, unit2, plotName) {
   paste(
     "For output paths", paste(outputPaths, collapse = ", "),
@@ -448,6 +508,78 @@ messages$errorInvalidFileExtension <- function(fileName) {
 
 messages$errorJSONFileDoesNotExist <- function(jsonPath) {
   paste("JSON file does not exist:", jsonPath)
+}
+
+messages$errorChunksMissing <- function(missingChunks) {
+  paste(
+    "Chunks are missing in workflowRmd check:",
+    paste(missingChunks, collapse = ", ")
+  )
+}
+
+messages$errorOnlyPopulationScenariosWithExportedPopulations <- function() {
+  paste(
+    "Error: Please use only population scenarios that have exported populations",
+    "in workflows intended for an electronic package."
+  )
+}
+
+messages$errorDuplicateFileNames <- function(duplicateNames) {
+  paste(
+    "Error: File names must be unique. Duplicate file names found:",
+    paste(duplicateNames, collapse = ", "),
+    ". Please ensure all file names are unique."
+  )
+}
+
+messages$errorFileCopyFailed <- function(failedFiles) {
+  paste(
+    "Error: File copy to the ePackage folder failed for the following files:",
+    paste(failedFiles, collapse = ", "),
+    ". Please check the source paths and ensure the files exist."
+  )
+}
+
+messages$warningAdjustedFilenames <- function(changedFiles) {
+  paste0(
+    "Warning: Adjusted filenames due to naming requirements:\n",
+    paste(basename(changedFiles$source), "->", changedFiles$fileName,
+      collapse = "\n"
+    ),
+    "\nYou may use the input variable `fileNameReplacements` of the workflow export function",
+    " to configure file names more appropriately."
+  )
+}
+
+messages$errorInconsistentPlaceholders <- function(chunkName) {
+  paste(
+    "Error: Inconsisten placeholders in workflow script template and chunk Names.",
+    "Placeholder for chunk", chunkName, "is missing",
+    "\nThat should not happen. Please ask package administrator for help."
+  )
+}
+
+messages$errorChunkDoesNotEvaluateToVariable <- function(chunkName, expectedVarName) {
+  paste0(
+    "The chunk `", chunkName, "` of the workflowRmd does not evaluate to a variable `", expectedVarName, "`. ",
+    "Please adjust chunk code."
+  )
+}
+
+messages$errorFilenameStartsWithNumber <- function(fileName) {
+  paste(
+    "Error: Filename cannot start with a number:", fileName,
+    "\nPlease use valid file names that do not start with a numeric character.",
+    "\nThe workflow export function provides the input variable `fileNameReplacements` to configure file names."
+  )
+}
+
+messages$errorFilenameTooLong <- function(limitLength, fileName) {
+  paste(
+    "Error: Filename is too long (greater than", limitLength, "characters):", fileName,
+    "\nPlease shorten the filename to meet the length requirement.",
+    "\nThe workflow export function provides the input variable `fileNameReplacements` to configure file names."
+  )
 }
 
 messages$errorFirstElementNotScenarioName <- function(scenarioName, firstElement) {
