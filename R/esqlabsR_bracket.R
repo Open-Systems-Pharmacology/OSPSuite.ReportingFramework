@@ -41,9 +41,9 @@ initProject <- function(configurationDirectory = ".",
   dt <- xlsxReadData(sourceConfigurationXlsx)
   filesAvailable <- list.files(templatePath)
 
-  filesToCopy <- intersect(dt$value, filesAvailable) %>% unique()
+  filesToCopy <- intersect(dt$value, filesAvailable) |> unique()
 
-  dirsToCreate <- setdiff(dt$value, c(filesToCopy)) %>%
+  dirsToCreate <- setdiff(dt$value, c(filesToCopy)) |>
     unique()
 
   for (d in dirsToCreate) {

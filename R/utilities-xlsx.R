@@ -560,9 +560,9 @@ separateAndTrimColumn <- function(data, columnName) {
   separatedData <- copy(data)
 
   # Use tidyr to separate rows based on the specified column and trim whitespace
-  separatedData <- separatedData %>%
-    tidyr::separate_rows(!!sym(columnName), sep = ",") %>%
-    dplyr::mutate(!!sym(columnName) := trimws(!!sym(columnName))) %>%
+  separatedData <- separatedData |>
+    tidyr::separate_rows(!!sym(columnName), sep = ",") |>
+    dplyr::mutate(!!sym(columnName) := trimws(!!sym(columnName))) |>
     data.table() # Convert back to data.table
 
   # Rename the column to remove plural 's'

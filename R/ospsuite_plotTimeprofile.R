@@ -434,15 +434,15 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
     must.include = c("xValues", "yValues", identifier)
   )
   # make sure to exclude nas and sorting is correct
-  dtSimulated <- data.table::copy(dtSimulated) %>%
-    dplyr::select(dplyr::all_of(c("xValues", "yValues", identifier))) %>%
+  dtSimulated <- data.table::copy(dtSimulated) |>
+    dplyr::select(dplyr::all_of(c("xValues", "yValues", identifier))) |>
     data.table::setorderv(c("xValues", identifier))
   dtSimulated <- dtSimulated[!is.nan(xValues) & !is.nan(yValues)]
 
   dtObserved[, predicted := NA_real_]
 
   for (iRow in seq_len(nrow(dtObserved))) {
-    dtSimulatedGroup <- dtSimulated %>%
+    dtSimulatedGroup <- dtSimulated |>
       merge(dtObserved[iRow, .SD, .SDcols = identifier], by = identifier)
 
     if (nrow(dtSimulatedGroup) > 2) {
@@ -508,7 +508,7 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
   dataType <- NULL
 
   if ("DataCombined" %in% class(plotData)) {
-    plotData <- plotData$toDataFrame() %>%
+    plotData <- plotData$toDataFrame() |>
       data.table::setDT()
   }
   checkmate::assertDataFrame(plotData)

@@ -314,7 +314,7 @@ test_that("QC functionality", {
       )
     )
 
-  unusedSubjects <- plotList$unusedDataRows$subjectId %>% unique()
+  unusedSubjects <- plotList$unusedDataRows$subjectId |> unique()
   expect_length(unusedSubjects, n = 3)
   expect_contains(unusedSubjects, expected = "50")
 
@@ -333,7 +333,7 @@ test_that("QC functionality", {
       )
     )
 
-  unusedSubjects <- plotList$unusedDataRows$subjectId %>% unique()
+  unusedSubjects <- plotList$unusedDataRows$subjectId |> unique()
   expect_equal(nrow(plotList$unusedDataRows), expected = 0)
 
   plotList <-

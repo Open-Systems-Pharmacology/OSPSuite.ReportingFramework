@@ -275,8 +275,7 @@ plotPKBoxwhisker <- function(projectConfiguration,
     return(r)
   }
 
-  dtExport <- plotDataPk %>%
-    .[, as.list(statFun(value)),
+  dtExport <- plotDataPk[, as.list(statFun(value)),
       by = intersect(c("scenarioShortName", "colorIndex", "plotTag"), names(plotDataPk))
     ]
 
@@ -360,7 +359,7 @@ plotPKBoxwhisker <- function(projectConfiguration,
       "plotTag",
       "displayNamePKParameter",
       "displayNameOutput"
-    )] %>% unique()
+    )] |> unique()
 
 
   captiontext <- paste(
@@ -514,13 +513,13 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   tmp <- tmp[, c("plotName", "scenario", "outputPathId", "pkParameter")]
   if (any(duplicated(tmp))) {
     tmp <- duplicated(tmp)
-    stop(messages$errorOneCombinationPerPlot(tmp$plotName %>% unique()))
+    stop(messages$errorOneCombinationPerPlot(tmp$plotName |> unique()))
   }
 
   .validateColorLegend(dt = configTablePlots[!is.na(referenceScenario)])
 
 
-  tmp <- configTablePlots[as.logical(plot_Ratio) == FALSE & as.logical(plot_Absolute) == FALSE] %>% unique()
+  tmp <- configTablePlots[as.logical(plot_Ratio) == FALSE & as.logical(plot_Absolute) == FALSE] |> unique()
   if (nrow(tmp) > 0) {
     print(tmp)
     stop(messages$errorSelectPlotTypeAbsoluteOrRatio())
@@ -531,7 +530,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   .validateExistenceOfReferenceForRatio(configTablePlots = configTablePlots[as.logical(plot_Ratio) == TRUE], pkParameterDT)
 
   # check if populations are consistent for ratio plots
-  tmp <- configTablePlots[as.logical(plot_Ratio) == TRUE & !is.na(referenceScenario), c("plotName", "scenario", "referenceScenario")] %>% unique()
+  tmp <- configTablePlots[as.logical(plot_Ratio) == TRUE & !is.na(referenceScenario), c("plotName", "scenario", "referenceScenario")] |> unique()
   .validateIsCrossOverStudy(configTablePlots = tmp, pkParameterDT = pkParameterDT)
 
   return(invisible())
@@ -556,14 +555,14 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   # initialize to avoid linter messages
   populationId <- populationIdReference <- NULL
 
-  configTablePlots <- configTablePlots %>%
+  configTablePlots <- configTablePlots |>
     merge(
-      pkParameterDT[, c("scenario", "populationId")] %>%
+      pkParameterDT[, c("scenario", "populationId")] |>
         unique(),
       by = "scenario",
-    ) %>%
+    ) |>
     merge(
-      pkParameterDT[, c("scenario", "populationId")] %>%
+      pkParameterDT[, c("scenario", "populationId")] |>
         unique(),
       by.x = "referenceScenario",
       by.y = "scenario",
@@ -665,8 +664,10 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(projectConfiguration,
   }
 
   # Create a unique combination of parameters and outputPathId
-  dt <- pkParameterDT[, .(pkParameters = paste(unique(pkParameter), collapse = ", ")), by = outputPathId] %>%
-    .[, .(outputPathIds = paste(unique(outputPathId), collapse = ", ")), by = pkParameters]
+  dt <- pkParameterDT[, .(pkParameters = paste(unique(pkParameter), collapse = ", ")),
+                      by = outputPathId][, .(outputPathIds =
+                                               paste(unique(outputPathId), collapse = ", ")),
+                                         by = pkParameters]
 
   # Create a new data.table with all combinations of pkParameters and scenario names
   dtNewConfig <- dt[, .(

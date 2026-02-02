@@ -115,8 +115,8 @@ calculatePKParameterForScenarios <- function(projectConfiguration,
     wb = file,
     sheetName = "Userdef PK Parameter",
     skipDescriptionRow = TRUE
-  ) %>%
-    stats::setNames(gsub(" \\[.*\\]", "", names(.)))
+  )
+  stats::setNames(dtUserdefPKParameter,gsub(" \\[.*\\]", "", names(dtUserdefPKParameter)))
 
   checkmate::assertCharacter(dtUserdefPKParameter$name, any.missing = FALSE, unique = TRUE)
   if (any(is.na(dtUserdefPKParameter[["display Unit"]]))) {
@@ -239,7 +239,7 @@ loadPKParameter <- function(projectConfiguration,
     projectConfiguration = projectConfiguration,
     scenarioName = scenarioName,
     scenarioSimulation = scenarioSimulation
-  ) %>%
+  ) |>
     dplyr::mutate(scenario = scenarioName)
 
   dtOutputPaths <- getOutputPathIds(projectConfiguration$plotsFile)
@@ -263,13 +263,13 @@ loadPKParameter <- function(projectConfiguration,
     resultsList <- append(
       resultsList,
       list(
-        dtPkAnalyses %>%
+        dtPkAnalyses |>
           merge(
             dtPkParameterDefinition,
             by.x = c("parameter", "quantityPath"),
             by.y = c("name", "outputPath")
-          ) %>%
-          dplyr::mutate(value = value * unitFactor) %>%
+          ) |>
+          dplyr::mutate(value = value * unitFactor) |>
           dplyr::select(
             "scenario",
             "parameter",
@@ -278,7 +278,7 @@ loadPKParameter <- function(projectConfiguration,
             "outputPathId",
             "displayName",
             "displayUnit"
-          ) %>%
+          ) |>
           setnames(
             old = c("parameter", "displayName", "displayUnit"),
             new = c("pkParameter", "displayNamePKParameter", "displayUnitPKParameter")
@@ -327,8 +327,8 @@ loadPKParameter <- function(projectConfiguration,
     simulation = scenarioSimulation
   )
 
-  dtPkAnalyses <- ospsuite::pkAnalysesToDataFrame(pkAnalyses = pkAnalyses) %>%
-    data.table::setDT() %>%
+  dtPkAnalyses <- ospsuite::pkAnalysesToDataFrame(pkAnalyses = pkAnalyses) |>
+    data.table::setDT() |>
     setHeadersToLowerCase()
 
   dtPkAnalyses[is.na(unit), unit := ""]
@@ -359,11 +359,11 @@ loadPKParameter <- function(projectConfiguration,
 
   # Select relevant columns from dtOutputPaths and merge with dtPkAnalyses
   # This creates a dataset (dtO) that contains output path IDs and their associated parameters
-  dtO <- dtOutputPaths %>%
-    dplyr::select(c("outputPathId", "outputPath")) %>%
+  dtO <- dtOutputPaths |>
+    dplyr::select(c("outputPathId", "outputPath")) |>
     merge(
-      dtPkAnalyses %>%
-        dplyr::select("parameter", "quantityPath", "unit") %>%
+      dtPkAnalyses |>
+        dplyr::select("parameter", "quantityPath", "unit") |>
         unique(),
       by.x = "outputPath",
       by.y = "quantityPath"
@@ -377,7 +377,7 @@ loadPKParameter <- function(projectConfiguration,
   }
 
   # Remove descriptions from dtPkParameterDefinition and handle NA outputPathIds
-  dtPkParameterDefinition <- dtPkParameterDefinition %>%
+  dtPkParameterDefinition <- dtPkParameterDefinition |>
     dplyr::select(!dplyr::any_of(c("descriptions")))
 
   # If outputPathIds are NA, concatenate unique outputPathIds from dtO
@@ -387,7 +387,7 @@ loadPKParameter <- function(projectConfiguration,
   dtPkParameterDefinition <-
     dtPkParameterDefinition[, .(outputPathId = splitInputs(outputPathIds)),
       by = c("name", "displayName", "displayUnit")
-    ] %>%
+    ] |>
     merge(dtO,
       by.x = c("name", "outputPathId"),
       by.y = c("parameter", "outputPathId")
@@ -449,16 +449,16 @@ loadPKParameter <- function(projectConfiguration,
   )) {
     onePlotConfig <- separateAndTrimColumn(onePlotConfig, col)
   }
-  mergedData <- onePlotConfig %>%
+  mergedData <- onePlotConfig |>
     dplyr::select(dplyr::any_of(c(
       "plotName", "scenario", "referenceScenario", "pkParameter", "outputPathId",
       "scenarioShortName", "scenarioLongName"
-    ))) %>%
+    ))) |>
     merge(
-      pkParameterDT %>%
+      pkParameterDT |>
         unique(),
       by = c("scenario", "pkParameter", "outputPathId")
-    ) %>%
+    ) |>
     merge(configEnv$outputPaths[, c("outputPathId", "displayNameOutput")],
       by = "outputPathId"
     )
@@ -518,7 +518,7 @@ loadPKParameter <- function(projectConfiguration,
   valueBase <- valueReference <- value <- NULL
 
   mergedData <- merge(mergedData,
-    pkParameterDT[, c("scenario", "pkParameter", "individualId", "outputPathId", "value", "populationId")] %>%
+    pkParameterDT[, c("scenario", "pkParameter", "individualId", "outputPathId", "value", "populationId")] |>
       setnames(
         old = c("scenario"),
         new = c("referenceScenario")
@@ -552,7 +552,7 @@ loadPKParameter <- function(projectConfiguration,
   checkmate::assertDataTable(pkParameterDT)
   checkmate::assertNames(names(pkParameterDT), must.include = c("scenario", "pkParameter", "individualId", "value", "outputPathId", "displayNamePKParameter", "displayUnitPKParameter"))
 
-  tmp <- pkParameterDT[, c("pkParameter", "outputPathId", "displayUnitPKParameter")] %>%
+  tmp <- pkParameterDT[, c("pkParameter", "outputPathId", "displayUnitPKParameter")] |>
     unique()
 
   if (any(duplicated(tmp[, c("outputPathId", "pkParameter")]))) {
