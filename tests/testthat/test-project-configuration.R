@@ -58,3 +58,18 @@ test_that("Add-on folder is added correctly", {
   # Check if the property was added to the private data
   expect_true(property %in% names(projectConfiguration$addOns))
 })
+
+test_that("ProjectConfiguration print method works", {
+  # Capture the print output
+  output <- capture.output(projectConfiguration$print())
+  
+  # Check that output was generated
+  expect_true(length(output) > 0)
+  
+  # Check for expected content
+  expect_true(any(grepl("ProjectConfigurationRF", output)))
+  
+  # Test with className = FALSE
+  output_no_class <- capture.output(projectConfiguration$print(className = FALSE))
+  expect_true(length(output_no_class) > 0)
+})

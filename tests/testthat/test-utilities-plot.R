@@ -491,3 +491,106 @@ test_that("applyConfigDefaults preserves existing columns", {
   expect_equal(result$scenario, c("scen1", "scen2"))
   expect_equal(result$existingCol, c("val1", "val2"))
 })
+
+# Tests for .handleNoConfigTable
+test_that(".handleNoConfigTable works with suppressExport = FALSE", {
+  rmdPlotManager <- RmdPlotManager$new(
+    rmdName = "test_no_config",
+    rmdfolder = projectConfiguration$outputFolder,
+    nameOfplotFunction = "plotTimeProfiles",
+    suppressExport = FALSE
+  )
+  
+  # Create minimal inputs
+  inputs <- list(
+    scenarioResults = scenarioResults,
+    dataObserved = NULL
+  )
+  
+  result <- ospsuite.reportingframework:::.handleNoConfigTable(
+    rmdPlotManager = rmdPlotManager,
+    projectConfiguration = projectConfiguration,
+    inputs = inputs,
+    suppressExport = FALSE
+  )
+  
+  # Should return empty list when not suppressing export
+  expect_type(result, "list")
+  expect_equal(length(result), 0)
+})
+
+test_that(".handleNoConfigTable works with suppressExport = TRUE", {
+  rmdPlotManager <- RmdPlotManager$new(
+    rmdName = "test_no_config_suppress",
+    rmdfolder = projectConfiguration$outputFolder,
+    nameOfplotFunction = "plotTimeProfiles",
+    suppressExport = TRUE
+  )
+  
+  inputs <- list(
+    scenarioResults = scenarioResults,
+    dataObserved = NULL
+  )
+  
+  result <- ospsuite.reportingframework:::.handleNoConfigTable(
+    rmdPlotManager = rmdPlotManager,
+    projectConfiguration = projectConfiguration,
+    inputs = inputs,
+    suppressExport = TRUE
+  )
+  
+  # Should return plot list when suppressing export
+  expect_type(result, "list")
+})
+
+# Tests for .getDefaultColorsForScaleVector with n > 10
+test_that(".getDefaultColorsForScaleVector works for n <= 10", {
+  colors <- ospsuite.reportingframework:::.getDefaultColorsForScaleVector(5)
+  expect_length(colors, 5)
+  expect_type(colors, "character")
+})
+
+test_that(".getDefaultColorsForScaleVector works for n > 10", {
+  # This should use the default color map
+  colors <- ospsuite.reportingframework:::.getDefaultColorsForScaleVector(15)
+  expect_length(colors, 15)
+  expect_type(colors, "character")
+})
+
+test_that(".getDefaultColorsForScaleVector errors when n exceeds available colors", {
+  # Get the max available colors
+  max_colors <- length(ospsuite.plots::colorMaps[["ospDefault"]])
+  
+  expect_error(
+    ospsuite.reportingframework:::.getDefaultColorsForScaleVector(max_colors + 1)
+  )
+})
+
+# Tests for .getDefaultShapesForScaleVector
+test_that(".getDefaultShapesForScaleVector returns correct number of shapes", {
+  shapes <- ospsuite.reportingframework:::.getDefaultShapesForScaleVector(3)
+  expect_length(shapes, 3)
+})
+
+test_that(".getDefaultShapesForScaleVector errors when n exceeds available shapes", {
+  # Get available shapes
+  available_shapes <- ospsuite.plots::getOspsuite.plots.option(
+    optionKey = ospsuite.plots::OptionKeys$shapeValues
+  )
+  
+  expect_error(
+    ospsuite.reportingframework:::.getDefaultShapesForScaleVector(length(available_shapes) + 1)
+  )
+})
+
+# Tests for .validateConfigTableForPlots
+test_that(".validateConfigTableForPlots validates config table", {
+  # Load a valid config table
+  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+  configTable <- xlsxReadData(wb = wb, sheetName = "TimeProfileTest")
+  
+  # Should not error with valid table
+  expect_silent(
+    ospsuite.reportingframework:::.validateConfigTableForPlots(configTable)
+  )
+})

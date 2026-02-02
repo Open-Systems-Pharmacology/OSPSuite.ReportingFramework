@@ -415,3 +415,118 @@ test_that("debugMode is not allowed during valid runs", {
     options(OSPSuite.RF.stopHelperFunction = originalOption)
   }
 })
+
+# Tests for .readDataDictionary with different dataClass values
+test_that(".readDataDictionary works for DATACLASS$pkIndividual", {
+  # Create a temporary dictionary file
+  tmpdir <- tempdir()
+  dictFile <- file.path(tmpdir, "test_dict_pk.xlsx")
+  
+  # Create minimal dictionary structure for PK individual data
+  dict_data <- data.table(
+    targetColumn = c("studyId", "individualId", "group", "outputPathId", "pkParameter", "pkParameterValue", "pkUnit"),
+    sourceColumn = c("study", "id", "grp", "output", "param", "value", "unit"),
+    filter = rep("", 7)
+  )
+  
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Sheet1")
+  openxlsx::writeData(wb, "Sheet1", dict_data)
+  openxlsx::saveWorkbook(wb, dictFile, overwrite = TRUE)
+  
+  # Create minimal test data
+  test_data <- data.table(
+    study = "Study1",
+    id = "ID1",
+    grp = "Group1",
+    output = "Output1",
+    param = "AUC",
+    value = 100,
+    unit = "ng*h/mL"
+  )
+  
+  result <- ospsuite.reportingframework:::.readDataDictionary(
+    dictionaryFile = dictFile,
+    sheet = "Sheet1",
+    data = test_data,
+    dataClass = DATACLASS$pkIndividual
+  )
+  
+  expect_s3_class(result, "data.table")
+  expect_true(all(c("targetColumn", "sourceColumn") %in% names(result)))
+  
+  # Clean up
+  unlink(dictFile)
+})
+
+test_that(".readDataDictionary works for DATACLASS$tpAggregated", {
+  tmpdir <- tempdir()
+  dictFile <- file.path(tmpdir, "test_dict_tp_agg.xlsx")
+  
+  # Create minimal dictionary structure for aggregated time profile data
+  dict_data <- data.table(
+    targetColumn = c("studyId", "group", "outputPathId", "xValues", "yValues", "yUnit", "yErrorType", "nBelowLLOQ"),
+    sourceColumn = c("study", "grp", "output", "time", "conc", "unit", "error", "nlloq"),
+    filter = rep("", 8)
+  )
+  
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Sheet1")
+  openxlsx::writeData(wb, "Sheet1", dict_data)
+  openxlsx::saveWorkbook(wb, dictFile, overwrite = TRUE)
+  
+  test_data <- data.table(
+    study = "Study1",
+    grp = "Group1",
+    output = "Output1",
+    time = 1.0,
+    conc = 50,
+    unit = "ng/mL",
+    error = "SD",
+    nlloq = 0
+  )
+  
+  result <- ospsuite.reportingframework:::.readDataDictionary(
+    dictionaryFile = dictFile,
+    sheet = "Sheet1",
+    data = test_data,
+    dataClass = DATACLASS$tpAggregated
+  )
+  
+  expect_s3_class(result, "data.table")
+  expect_true(all(c("targetColumn", "sourceColumn") %in% names(result)))
+  
+  # Clean up
+  unlink(dictFile)
+})
+
+test_that(".readDataDictionary validates required columns for pkIndividual", {
+  tmpdir <- tempdir()
+  dictFile <- file.path(tmpdir, "test_dict_incomplete.xlsx")
+  
+  # Create incomplete dictionary (missing required columns)
+  dict_data <- data.table(
+    targetColumn = c("studyId", "individualId"),
+    sourceColumn = c("study", "id"),
+    filter = rep("", 2)
+  )
+  
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Sheet1")
+  openxlsx::writeData(wb, "Sheet1", dict_data)
+  openxlsx::saveWorkbook(wb, dictFile, overwrite = TRUE)
+  
+  test_data <- data.table(study = "Study1", id = "ID1")
+  
+  expect_error(
+    ospsuite.reportingframework:::.readDataDictionary(
+      dictionaryFile = dictFile,
+      sheet = "Sheet1",
+      data = test_data,
+      dataClass = DATACLASS$pkIndividual
+    )
+  )
+  
+  # Clean up
+  unlink(dictFile)
+})
