@@ -1266,8 +1266,10 @@ addDefaultConfigForDistributionsVsDemographics <- function(projectConfiguration,
     )
 
     # Create a unique combination of parameters and outputPathId
-    dt <- pkParameterDT[, .(parameterIds = paste(unique(pkParameter), collapse = ", ")), by = outputPathId] |>
-      .[, .(outputPathIds = paste(unique(outputPathId), collapse = ", ")), by = parameterIds]
+    dt <- pkParameterDT[, .(parameterIds = paste(unique(pkParameter), collapse = ", ")),
+                        by = outputPathId][, .(outputPathIds = paste(unique(outputPathId),
+                                                                      collapse = ", ")),
+                                            by = parameterIds]
     dt[, ID := .I]
 
     # Create a new data.table with all combinations of pkParameters and scenario names

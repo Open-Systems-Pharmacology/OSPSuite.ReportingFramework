@@ -119,8 +119,10 @@ plotSensitivity <- function(projectConfiguration,
   # initialize variable to avoid messages
   sens <- pKParameter <- outputPathId <- plotTag <- parameterPath <- NULL
 
-  pkDefinitions <- .getPKParameterOverview(projectConfiguration) |>
-    .[, c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")]
+  pkDefinitions <-
+    .getPKParameterOverview(projectConfiguration)[,c("pKParameter",
+                                                     "displayNamePKParameter",
+                                                     "displayUnitPKParameter")]
 
   onePlotConfig <- onePlotConfig |>
     separateAndTrimColumn("pKParameters") |>
@@ -187,8 +189,7 @@ plotSensitivity <- function(projectConfiguration,
         ),
         by = "parameterPath",
         suffixes = c("Internal", "Name")
-      ) |>
-      .[, parameterPath := NULL]
+      )[, parameterPath := NULL]
 
     plotDataLine <-
       merge(rbindlist(plotDataLine),
@@ -277,7 +278,7 @@ plotSensitivity <- function(projectConfiguration,
     pkParameterSheets
   ) |>
     rbindlist(idcol = "pKParameter")
-  
+
   pkSheets <- pkSheets[, descriptions := NULL][, pKParameter := NULL] |>
     setnames(
       old = c("name", "displayName", "displayUnit"),

@@ -275,8 +275,7 @@ plotPKBoxwhisker <- function(projectConfiguration,
     return(r)
   }
 
-  dtExport <- plotDataPk |>
-    .[, as.list(statFun(value)),
+  dtExport <- plotDataPk[, as.list(statFun(value)),
       by = intersect(c("scenarioShortName", "colorIndex", "plotTag"), names(plotDataPk))
     ]
 
@@ -665,8 +664,10 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(projectConfiguration,
   }
 
   # Create a unique combination of parameters and outputPathId
-  dt <- pkParameterDT[, .(pkParameters = paste(unique(pkParameter), collapse = ", ")), by = outputPathId] |>
-    .[, .(outputPathIds = paste(unique(outputPathId), collapse = ", ")), by = pkParameters]
+  dt <- pkParameterDT[, .(pkParameters = paste(unique(pkParameter), collapse = ", ")),
+                      by = outputPathId][, .(outputPathIds =
+                                               paste(unique(outputPathId), collapse = ", ")),
+                                         by = pkParameters]
 
   # Create a new data.table with all combinations of pkParameters and scenario names
   dtNewConfig <- dt[, .(
