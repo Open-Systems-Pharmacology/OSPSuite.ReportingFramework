@@ -352,3 +352,96 @@ test_that("QC functionality", {
 
   rm(plotList)
 })
+
+# Unit tests for internal functions
+test_that(".mergeDataGroups merges data groups correctly", {
+  # Create test data
+  dtNewConfig <- data.table(
+    scenario = c("scenario1", "scenario2", "scenario3"),
+    plotName = c("plot1", "plot2", "plot3")
+  )
+  
+  dtDataGroups <- data.table(
+    defaultScenario = c("scenario1", "scenario1", "scenario2"),
+    group = c("group1", "group2", "group3")
+  )
+  
+  # Test without observed data
+  result <- ospsuite.reportingframework:::.mergeDataGroups(
+    dtNewConfig = dtNewConfig,
+    dtDataGroups = dtDataGroups,
+    dataObserved = NULL
+  )
+  
+  expect_s3_class(result, "data.table")
+  expect_true("dataGroupIds" %in% names(result))
+  expect_true("individualIds" %in% names(result))
+  
+  # Check that dataGroupIds are correctly merged
+  expect_equal(result[scenario == "scenario1"]$dataGroupIds, "group1, group2")
+  expect_equal(result[scenario == "scenario2"]$dataGroupIds, "group3")
+  expect_true(is.na(result[scenario == "scenario3"]$dataGroupIds))
+  
+  # Check that individualIds is set to "*" where dataGroupIds is not NA
+  expect_equal(result[scenario == "scenario1"]$individualIds, "*")
+  expect_equal(result[scenario == "scenario2"]$individualIds, "*")
+  expect_true(is.na(result[scenario == "scenario3"]$individualIds))
+})
+
+test_that(".mergeDataGroups handles observed data correctly", {
+  # Create test data
+  dtNewConfig <- data.table(
+    scenario = c("scenario1", "scenario2"),
+    plotName = c("plot1", "plot2")
+  )
+  
+  dtDataGroups <- data.table(
+    defaultScenario = c("scenario1", "scenario1"),
+    group = c("group1", "group2")
+  )
+  
+  dataObserved <- data.table(
+    group = c("group1", "group1", "group2", "group2"),
+    outputPathId = c("output1", "output2", "output2", "output3")
+  )
+  
+  # Test with observed data
+  result <- ospsuite.reportingframework:::.mergeDataGroups(
+    dtNewConfig = dtNewConfig,
+    dtDataGroups = dtDataGroups,
+    dataObserved = dataObserved
+  )
+  
+  expect_s3_class(result, "data.table")
+  expect_true("outputPathIds" %in% names(result))
+  
+  # Check that outputPathIds are correctly populated from observed data
+  outputPaths <- result[scenario == "scenario1"]$outputPathIds
+  expect_true(grepl("output1", outputPaths))
+  expect_true(grepl("output2", outputPaths))
+  expect_true(grepl("output3", outputPaths))
+})
+
+test_that(".mergeDataGroups handles empty data groups", {
+  # Create test data with no matching scenarios
+  dtNewConfig <- data.table(
+    scenario = c("scenario1", "scenario2"),
+    plotName = c("plot1", "plot2")
+  )
+  
+  dtDataGroups <- data.table(
+    defaultScenario = character(0),
+    group = character(0)
+  )
+  
+  result <- ospsuite.reportingframework:::.mergeDataGroups(
+    dtNewConfig = dtNewConfig,
+    dtDataGroups = dtDataGroups,
+    dataObserved = NULL
+  )
+  
+  expect_s3_class(result, "data.table")
+  expect_equal(nrow(result), 2)
+  # All dataGroupIds should be NA when no groups match
+  expect_true(all(is.na(result$dataGroupIds)))
+})
