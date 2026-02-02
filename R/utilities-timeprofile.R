@@ -125,6 +125,13 @@
 #' @return A data.table with the processed time profile data.
 #' @export
 getSimulatedTimeprofile <- function(simulatedResult, outputPaths, aggregationFun, individualMatch) {
+  # Input validation
+  checkmate::assertList(simulatedResult, names = "named")
+  checkmate::assertNames(names(simulatedResult), must.include = "results")
+  checkmate::assertCharacter(outputPaths, any.missing = FALSE, min.len = 0)
+  checkmate::assertFunction(aggregationFun, null.ok = TRUE)
+  checkmate::assertDataFrame(individualMatch, null.ok = TRUE)
+  
   # reduce list of outputPaths to available paths
   outputPaths <- intersect(
     outputPaths,

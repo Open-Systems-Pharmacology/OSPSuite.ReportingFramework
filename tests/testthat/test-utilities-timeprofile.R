@@ -2,7 +2,79 @@
 # Note: Many functions in this file are internal and complex, requiring significant setup
 # These tests focus on the exported function and basic validation
 
-test_that("getSimulatedTimeprofile requires valid parameters", {
+test_that("getSimulatedTimeprofile validates input parameters", {
+  skip_if(length(scenarioResults) == 0, "No scenario results available")
+  
+  scenarioName <- names(scenarioResults)[1]
+  simulatedResult <- scenarioResults[[scenarioName]]
+  outputPaths <- head(simulatedResult$results$allQuantityPaths, 2)
+  
+  # Test invalid simulatedResult
+  expect_error(
+    getSimulatedTimeprofile(
+      simulatedResult = NULL,
+      outputPaths = outputPaths,
+      aggregationFun = NULL,
+      individualMatch = NULL
+    ),
+    "Assertion on 'simulatedResult' failed"
+  )
+  
+  expect_error(
+    getSimulatedTimeprofile(
+      simulatedResult = list(),  # Missing 'results' element
+      outputPaths = outputPaths,
+      aggregationFun = NULL,
+      individualMatch = NULL
+    ),
+    "Must include the elements.*results"
+  )
+  
+  # Test invalid outputPaths
+  expect_error(
+    getSimulatedTimeprofile(
+      simulatedResult = simulatedResult,
+      outputPaths = NULL,
+      aggregationFun = NULL,
+      individualMatch = NULL
+    ),
+    "Assertion on 'outputPaths' failed"
+  )
+  
+  expect_error(
+    getSimulatedTimeprofile(
+      simulatedResult = simulatedResult,
+      outputPaths = c("valid", NA),
+      aggregationFun = NULL,
+      individualMatch = NULL
+    ),
+    "Contains missing values"
+  )
+  
+  # Test invalid aggregationFun
+  expect_error(
+    getSimulatedTimeprofile(
+      simulatedResult = simulatedResult,
+      outputPaths = outputPaths,
+      aggregationFun = "not a function",
+      individualMatch = NULL
+    ),
+    "Assertion on 'aggregationFun' failed"
+  )
+  
+  # Test invalid individualMatch
+  expect_error(
+    getSimulatedTimeprofile(
+      simulatedResult = simulatedResult,
+      outputPaths = outputPaths,
+      aggregationFun = NULL,
+      individualMatch = list()  # Should be data.frame or NULL
+    ),
+    "Assertion on 'individualMatch' failed"
+  )
+})
+
+test_that("getSimulatedTimeprofile works with valid parameters", {
   skip_if(length(scenarioResults) == 0, "No scenario results available")
   
   # Get first scenario result
