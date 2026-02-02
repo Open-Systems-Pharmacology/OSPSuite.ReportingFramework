@@ -416,13 +416,6 @@ plotTimeProfiles <- function(projectConfiguration,
 }
 
 
-#' Get mapping for simulated and observed data
-#'
-#' @param plotData Object containing the data for the plot.
-#'
-#' @return Data table mapping simulated and observed data.
-#' @keywords internal
-#' @noRd
 #' Check and adjust Y limits for plots
 #'
 #' @param yScale Y scale of the plot.
