@@ -78,7 +78,7 @@ plotSensitivity <- function(projectConfiguration,
 
 
     plotDataTag <- setExportAttributes(
-      object = plotDataTag[, c("parameterName", "sens")] %>%
+      object = plotDataTag[, c("parameterName", "sens")] |>
         setnames(
           old = c("parameterName", "sens"),
           new = c("Parameter", "Sensitivity")
@@ -119,16 +119,16 @@ plotSensitivity <- function(projectConfiguration,
   # initialize variable to avoid messages
   sens <- pKParameter <- outputPathId <- plotTag <- parameterPath <- NULL
 
-  pkDefinitions <- .getPKParameterOverview(projectConfiguration) %>%
+  pkDefinitions <- .getPKParameterOverview(projectConfiguration) |>
     .[, c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")]
 
-  onePlotConfig <- onePlotConfig %>%
-    separateAndTrimColumn("pKParameters") %>%
-    separateAndTrimColumn("outputPathIds") %>%
+  onePlotConfig <- onePlotConfig |>
+    separateAndTrimColumn("pKParameters") |>
+    separateAndTrimColumn("outputPathIds") |>
     merge(
       pkDefinitions,
       by = c("pKParameter")
-    ) %>%
+    ) |>
     merge(configEnv$outputPaths, by = "outputPathId")
 
   plotData <- data.table()
@@ -152,7 +152,7 @@ plotSensitivity <- function(projectConfiguration,
               outputPath = cL$outputPath,
               totalSensitivityThreshold = cL$threshold
             ), getElement, "value"
-          ) %>%
+          ) |>
             unlist(),
           parameterInternal = lapply(
             sensitivityResults$allPKParameterSensitivitiesFor(
@@ -160,7 +160,7 @@ plotSensitivity <- function(projectConfiguration,
               outputPath = cL$outputPath,
               totalSensitivityThreshold = cL$threshold
             ), getElement, "parameterName"
-          ) %>%
+          ) |>
             unlist(),
           outputPathId = cL$outputPathId,
           pKParameter = cL$pKParameter,
@@ -175,8 +175,8 @@ plotSensitivity <- function(projectConfiguration,
           projectConfiguration$outputFolder,
           EXPORTDIR$sensitivityResults,
           .sensitivityAnalyisName(configLine$scenario[1], configLine$sensitivityParameterSheet[1])
-        ))[, c("ParameterPath", "Parameter")] %>%
-          unique() %>%
+        ))[, c("ParameterPath", "Parameter")] |>
+          unique() |>
           setnames(
             old = c("ParameterPath", "Parameter"),
             new = c("parameterPath", "parameter")
@@ -187,7 +187,7 @@ plotSensitivity <- function(projectConfiguration,
         ),
         by = "parameterPath",
         suffixes = c("Internal", "Name")
-      ) %>%
+      ) |>
       .[, parameterPath := NULL]
 
     plotDataLine <-
@@ -227,9 +227,9 @@ plotSensitivity <- function(projectConfiguration,
 #' @keywords internal
 #' @noRd
 .getCaptionForSensitivityPlot <- function(plotData, projectConfiguration, plotCaptionAddon) {
-  dtCaption <- plotData %>%
-    dplyr::select(c("plotTag", "outputPathId", "pKParameter", "scenarioLongName")) %>%
-    unique() %>%
+  dtCaption <- plotData |>
+    dplyr::select(c("plotTag", "outputPathId", "pKParameter", "scenarioLongName")) |>
+    unique() |>
     merge(configEnv$outputPaths[, c("outputPathId", "displayNameOutput")],
       by = "outputPathId"
     )
@@ -275,14 +275,14 @@ plotSensitivity <- function(projectConfiguration,
       )
     }),
     pkParameterSheets
-  ) %>%
-    rbindlist(idcol = "pKParameter") %>%
-    .[, descriptions := NULL] %>%
-    .[, pKParameter := NULL] %>%
+  ) |>
+    rbindlist(idcol = "pKParameter") |>
+    .[, descriptions := NULL] |>
+    .[, pKParameter := NULL] |>
     setnames(
       old = c("name", "displayName", "displayUnit"),
       new = c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")
-    ) %>%
+    ) |>
     separateAndTrimColumn(columnName = "outputPathIds")
 
   return(pkSheets)

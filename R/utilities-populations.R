@@ -37,10 +37,10 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
 
       message(messages$messageShiftVirtualTwinPopulation())
     } else {
-      dtTwinPops <- xlsxReadData(projectConfiguration$scenariosFile, sheetName = "Scenarios") %>%
-        data.table::setnames("populationId", "populationName") %>%
-        dplyr::mutate("dataGroups" = "") %>%
-        dplyr::select(c("populationName", "dataGroups", "individualId", "modelParameterSheets", "applicationProtocol")) %>%
+      dtTwinPops <- xlsxReadData(projectConfiguration$scenariosFile, sheetName = "Scenarios") |>
+        data.table::setnames("populationId", "populationName") |>
+        dplyr::mutate("dataGroups" = "") |>
+        dplyr::select(c("populationName", "dataGroups", "individualId", "modelParameterSheets", "applicationProtocol")) |>
         dplyr::filter(FALSE)
     }
   } else {
@@ -58,9 +58,9 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
   }
 
   # Create new virtual twin population data
-  dtTwinPopsNew <- dataObserved[group %in% groups, c("group", "individualId")] %>%
-    unique() %>%
-    .[, .(dataGroups = paste(group, collapse = ", ")), by = "individualId"] %>%
+  dtTwinPopsNew <- dataObserved[group %in% groups, c("group", "individualId")] |>
+    unique() |>
+    .[, .(dataGroups = paste(group, collapse = ", ")), by = "individualId"] |>
     .[, populationName := gsub(", ", "_", dataGroups)]
 
   writeToLog(type = "Info", msg = "add virtual twin population configuration in Population configuration file:")
@@ -219,7 +219,7 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
         .extendPopulationFromXLS_RF(population, projectConfiguration$populationsFile, sheet = dPop$populationName)
       }
 
-      poptable <- ospsuite::populationToDataFrame(population$population) %>%
+      poptable <- ospsuite::populationToDataFrame(population$population) |>
         data.table::setDT()
 
       if (!is.null(customParameters)) {
@@ -545,7 +545,7 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
 
   # Use foreach to parallelize the loop
   dtSheets <- foreach::foreach(sheet = sheets, .packages = c("esqlabsR", "data.table", "dplyr")) %dopar% {
-    tmp <- esqlabsR::readParametersFromXLS(paramsXLSpath = paramsXLSpath, sheets = sheet) %>%
+    tmp <- esqlabsR::readParametersFromXLS(paramsXLSpath = paramsXLSpath, sheets = sheet) |>
       data.table::as.data.table()
 
     if (nrow(tmp) > 0) {
@@ -619,8 +619,8 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
     paths = c("ObservedIndividualId", "Population", "Gender", "Organism|Height", "Organism|Age", "Organism|Gestational age")
   )
 
-  tmp <- biomForInd %>%
-    dplyr::select(dplyr::any_of(dtSelection$pName)) %>%
+  tmp <- biomForInd |>
+    dplyr::select(dplyr::any_of(dtSelection$pName)) |>
     data.table::setnames(old = dtSelection$pName, new = dtSelection$paths, skip_absent = TRUE)
 
   if (!is.null(tmp$`Organism|Height`)) {

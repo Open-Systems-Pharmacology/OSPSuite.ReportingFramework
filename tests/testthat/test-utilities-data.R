@@ -115,9 +115,9 @@ test_that("groupDataByIdentifier function test", {
   expect_s3_class(groupedData, "list")
   expect_true(
     length(groupedData) ==
-      dataObserved %>%
-        dplyr::select(.getColumnsForColumnType(dataObserved, columnTypes = "identifier")) %>%
-        unique() %>%
+      dataObserved |>
+        dplyr::select(.getColumnsForColumnType(dataObserved, columnTypes = "identifier")) |>
+        unique() |>
         nrow()
   )
 })

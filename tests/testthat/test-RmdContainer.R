@@ -113,7 +113,7 @@ test_that("Table export export", {
   dt <- data.table(
     x = rnorm(1000),
     class = sample(c("Female", "Male"), size = 1000, replace = TRUE)
-  ) %>%
+  ) |>
     .[, as.list(quantile(x)), by = "class"]
 
   rmdPlotManager$addAndExportTable(

@@ -227,7 +227,7 @@ runPlot <- function(projectConfiguration,
                   rbind(plotList[["unusedDataRows"]],
                     plotListiRow[["unusedDataRows"]],
                     fill = TRUE
-                  ) %>%
+                  ) |>
                   unique()
                 plotListiRow[["unusedDataRows"]] <- NULL
               }
@@ -303,7 +303,7 @@ runPlot <- function(projectConfiguration,
         by.y = "scenarioName",
         all.x = TRUE,
         sort = FALSE
-      ) %>%
+      ) |>
       data.table::setnames(
         old = c("longName", "shortName"),
         c("scenarioLongName", "scenarioShortName")
@@ -674,7 +674,7 @@ formatPercentiles <- function(percentiles, suffix = "", allAsPercentiles = FALSE
     } else {
       paste0(p, "th", suffix)
     }
-  }) %>% unlist()
+  }) |> unlist()
 }
 
 #' Generate a Plot Tag
@@ -776,7 +776,7 @@ validateHeaders <- function(configTable) {
   checkmate::assertIntegerish(configTableHeader$level, lower = 1, any.missing = FALSE)
   checkmate::assertCharacter(configTableHeader$header, any.missing = FALSE)
 
-  if (any(!is.na(configTableHeader %>% dplyr::select(setdiff(
+  if (any(!is.na(configTableHeader |> dplyr::select(setdiff(
     names(configTableHeader), c("level", "header")
   ))))) {
     stop(
@@ -1164,7 +1164,7 @@ validateAtleastOneEntry <- function(configTablePlots, columnVector) {
   dt <- dt[!grep("\\|", colorLegend)]
 
   if (nrow(dt) > 0) {
-    print(dt[, c("plotName", "colorLegend")] %>%
+    print(dt[, c("plotName", "colorLegend")] |>
       unique())
     stop(messages$errorColorLegendFormat())
   }

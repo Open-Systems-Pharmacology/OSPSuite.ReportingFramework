@@ -495,7 +495,7 @@ test_that("evaluates chunk for scenarioNames chunk correctly", {
     function(x) {
       length(grep(x, exporter$codeChunks[["scenarioNames-copy"]])) > 0
     }
-  ) %>%
+  ) |>
     unlist()))
 
   cleanupElectronicPackage(projectConfiguration)

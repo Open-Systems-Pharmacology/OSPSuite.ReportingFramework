@@ -275,7 +275,7 @@ Values defined by filters are set sequentially in the order of the dictionary, s
 The data contains the covariate `country` in the column "COUNTRY". Additionally, the metadata `dose` is available.
 
 ```{r, echo=FALSE}
-tpDictionaryInd <- tpDictionary %>%
+tpDictionaryInd <- tpDictionary |>
   dplyr::filter(!(TargetColumn %in% c("yErrorValues", "yErrorType", "nBelowLLOQ", "numberOfIndividuals", "yMin", "yMax", "route")))
 
 tpDictionaryInd[TargetColumn == "group"]$FilterValue <- 'paste(STUD, GRPNAME, "individual", sep = "_")'

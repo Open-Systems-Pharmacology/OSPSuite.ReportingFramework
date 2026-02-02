@@ -432,8 +432,8 @@ plotTimeProfiles <- function(projectConfiguration,
   }
 
   mapSimulatedAndObserved <- data.table(
-    simulated = as.character(plotData$data[dataType == "simulated"]$colorIndex) %>% unique(),
-    observed = as.character(plotData$data[dataType == "observed"]$colorIndex) %>% unique(),
+    simulated = as.character(plotData$data[dataType == "simulated"]$colorIndex) |> unique(),
+    observed = as.character(plotData$data[dataType == "observed"]$colorIndex) |> unique(),
     color = plotData$scaleVectors$colour,
     fill = plotData$scaleVectors$fill
   )
@@ -804,7 +804,7 @@ plotTimeProfiles <- function(projectConfiguration,
       paste0(
         "Data source: [",
         paste(
-          dtDataReference$reference %>%
+          dtDataReference$reference |>
             unique(),
           collapse = ", "
         ),
@@ -1049,7 +1049,7 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
 
   tryCatch(
     {
-      if (!all(sapply(configTablePlots %>%
+      if (!all(sapply(configTablePlots |>
         dplyr::select(dplyr::all_of(timeRangeColumns)), function(x) {
         valid <- x %in% c(NA, "total", "firstApplication", "lastApplication")
         if (!all(valid)) {
@@ -1301,7 +1301,7 @@ addDefaultConfigForTimeProfilePlots <- function(projectConfiguration,
   tmp <- dtDataGroups[, .(dataGroupIds = paste(as.character(group), collapse = ", ")), by = "defaultScenario"]
   data.table::setnames(tmp, old = c("defaultScenario"), new = c("scenario"))
 
-  dtNewConfig <- dtNewConfig %>%
+  dtNewConfig <- dtNewConfig |>
     merge(tmp, by = "scenario", all.x = TRUE, sort = FALSE)
 
   dtNewConfig[!is.na(dataGroupIds), individualIds := "*"]

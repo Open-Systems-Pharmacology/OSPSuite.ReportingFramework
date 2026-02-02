@@ -111,8 +111,8 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
             individualList = configList$individualIds
           )
 
-          observedDataTmp <- observedDataTmp %>%
-            dplyr::select(dplyr::any_of(.getColumnsForColumnType(dataObserved, columnTypes = c("identifier", "timeprofile")))) %>%
+          observedDataTmp <- observedDataTmp |>
+            dplyr::select(dplyr::any_of(.getColumnsForColumnType(dataObserved, columnTypes = c("identifier", "timeprofile")))) |>
             dplyr::mutate(scenarioIndex = scenarioIndex)
 
           # Convert y units and time units
@@ -166,7 +166,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       nFacetColumns <- self$configTable$nFacetColumns[1]
       splitPlotsPerTimeRange <- as.logical(self$configTable$splitPlotsPerTimeRange[1])
 
-      configTable <- data.table::copy(self$configTable) %>%
+      configTable <- data.table::copy(self$configTable) |>
         dplyr::select("scenarioIndex", "outputPathIds", "scenarioLongName", "dataGroupIds", "individualIds")
 
       dtCaption <- .getPlotIdForColumns(configTable = configTable, col = "outputPathIds")
@@ -199,10 +199,10 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         timeTags = private$.timeTags$tag
       )
 
-      private$.nColorPerPlotID <- dtCaption[, .(N = dplyr::n_distinct(outputPathId)), by = c("plotTag", "counter")]$N %>%
+      private$.nColorPerPlotID <- dtCaption[, .(N = dplyr::n_distinct(outputPathId)), by = c("plotTag", "counter")]$N |>
         max()
 
-      private$.nDataGroupPerPlotID <- dtCaption[, .(N = length(strsplit(dataGroupIds, ",")[[1]])), by = c("dataGroupIds", "counter")]$N %>%
+      private$.nDataGroupPerPlotID <- dtCaption[, .(N = length(strsplit(dataGroupIds, ",")[[1]])), by = c("dataGroupIds", "counter")]$N |>
         max()
 
       for (fieldName in c(".dataObserved", ".dataSimulated")) {
@@ -502,8 +502,8 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       # Shorten tables to the ones needed in plot
       private[[tableName]] <- private[[tableName]][get(identifier) %in% private[[dataToMatch]][[identifierData]]]
 
-      identifierLevels <- private[[tableName]][[identifier]] %>%
-        as.character() %>%
+      identifierLevels <- private[[tableName]][[identifier]] |>
+        as.character() |>
         unique()
 
       private[[tableName]][[identifier]] <-
@@ -538,12 +538,12 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         configList <- as.list(private$.configTable[scenarioIndex, ])
 
         outputs <- gsub("[()]", "", splitInputs(configList$outputPathIds))
-        outputPaths <- private$.dtOutputPaths[outputPathId %in% outputs]$outputPath %>%
+        outputPaths <- private$.dtOutputPaths[outputPathId %in% outputs]$outputPath |>
           unique()
 
         for (ScenarioField in c("scenario", "referenceScenario")) {
           if (!is.na(configList[[ScenarioField]])) {
-            timeprofile <- dtSimulated[scenario == configList[[ScenarioField]]] %>%
+            timeprofile <- dtSimulated[scenario == configList[[ScenarioField]]] |>
               dplyr::mutate(
                 scenarioIndex = scenarioIndex,
                 scenario = NULL,
@@ -776,8 +776,8 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
   dtCaption <-
     tidyr::separate_rows(data.table::setDF(data.table::copy(configTable)), !!col,
       sep = ",\\s*|(?<=\\)),\\s*|\\s(?=\\()"
-    ) %>%
-    data.table::setDT() %>%
+    ) |>
+    data.table::setDT() |>
     data.table::setnames(
       old = col,
       new = colNew
@@ -790,7 +790,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
   dtCaption[, plotId := cumsum(data.table::shift(countAdd, fill = 1))]
   dtCaption[, (colNew) := trimws(gsub("[()]", "", get(colNew)))]
 
-  return(dtCaption %>% dplyr::select(!c("nBracketOpen", "nBracketClosed", "countAdd")))
+  return(dtCaption |> dplyr::select(!c("nBracketOpen", "nBracketClosed", "countAdd")))
 }
 
 #' Split Caption by Individuals
@@ -807,7 +807,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
   # avoid warning for global variable
   individualIds <- plotId <- NULL
 
-  tmp <- data.table::copy(configTable) %>%
+  tmp <- data.table::copy(configTable) |>
     data.table::setDT()
   tmp[, individualIds := gsub("\\*", paste(individualIdVector, collapse = ","), individualIds),
     by = "individualIds" # nolint indentation_linter
@@ -823,16 +823,16 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     allow.cartesian = TRUE
   )
 
-  tmpCount <- dtCaptionMerge %>%
-    dplyr::select(c("plotId.O", "plotId.Ind")) %>%
-    unique() %>%
+  tmpCount <- dtCaptionMerge |>
+    dplyr::select(c("plotId.O", "plotId.Ind")) |>
+    unique() |>
     data.table::setorderv(c("plotId.Ind", "plotId.O"))
 
   tmpCount[, plotId := .I]
 
-  dtCaptionMerge <- dtCaptionMerge %>%
-    merge(tmpCount, by = c("plotId.O", "plotId.Ind"), sort = FALSE) %>%
-    dplyr::select(!c("plotId.O", "plotId.Ind")) %>%
+  dtCaptionMerge <- dtCaptionMerge |>
+    merge(tmpCount, by = c("plotId.O", "plotId.Ind"), sort = FALSE) |>
+    dplyr::select(!c("plotId.O", "plotId.Ind")) |>
     data.table::setorderv(c("plotId"))
 
   return(dtCaptionMerge)
@@ -856,7 +856,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     data.table::rbindlist(lapply(
       timeTags,
       function(tag) {
-        dtCaption %>%
+        dtCaption |>
           dplyr::mutate(timeRangeTag = tag)
       }
     ))
@@ -954,12 +954,12 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
         getElement,
         "outputPathIds"
       ), function(x) {
-        outputs <- x %>%
-          unique() %>%
-          gsub(pattern = "[()]", replacement = "") %>%
-          splitInputs() %>%
+        outputs <- x |>
+          unique() |>
+          gsub(pattern = "[()]", replacement = "") |>
+          splitInputs() |>
           unique()
-        outputPaths <- dtOutputPaths[outputPathId %in% outputs]$outputPath %>%
+        outputPaths <- dtOutputPaths[outputPathId %in% outputs]$outputPath |>
           unique()
         return(outputPaths)
       })
@@ -981,10 +981,10 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
   # avoid warnings for global variables
   unitFactor <- NULL
 
-  dtUnitObserved <- dataObserved %>%
-    dplyr::select(c("outputPathId", "yUnit")) %>%
-    unique() %>%
-    merge(dtUnit %>% dplyr::select(-c("unitFactor", "yUnit")),
+  dtUnitObserved <- dataObserved |>
+    dplyr::select(c("outputPathId", "yUnit")) |>
+    unique() |>
+    merge(dtUnit |> dplyr::select(-c("unitFactor", "yUnit")),
       by = "outputPathId" # nolint indentation_linter
     )
   dtUnitObserved[, unitFactor := apply(dtUnitObserved, 1, function(row) {
@@ -1093,10 +1093,10 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
     labels = timeTags$captionText
   )
 
-  dtCaption <- dtCaption %>%
-    merge(dtOutputPaths %>% dplyr::select("outputPathId", "displayNameOutput"),
+  dtCaption <- dtCaption |>
+    merge(dtOutputPaths |> dplyr::select("outputPathId", "displayNameOutput"),
       by = "outputPathId"
-    ) %>%
+    ) |>
     dplyr::select(dplyr::any_of(c(
       "scenarioIndex", "outputPathId", "plotTag", "counter",
       "scenarioLongName", "displayNameOutput", "dataGroupIds",

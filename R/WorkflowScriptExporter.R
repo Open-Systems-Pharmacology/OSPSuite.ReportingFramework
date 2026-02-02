@@ -152,9 +152,9 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
           chunkText,
           perl = TRUE
         )
-      ) %>%
-        unlist() %>%
-        sub(pattern = "configTableSheet\\s*=\\s*['\"](.*?)['\"]", replacement = "\\1") %>%
+      ) |>
+        unlist() |>
+        sub(pattern = "configTableSheet\\s*=\\s*['\"](.*?)['\"]", replacement = "\\1") |>
         unique()
 
       # return if no sheets are found
@@ -490,7 +490,7 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
           value <- rbind(
             private$.inputFiles,
             private$addValidFileNames(value)
-          ) %>%
+          ) |>
             unique()
         }
       }
@@ -505,7 +505,7 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
           value <- rbind(
             private$.changedInputFiles,
             value
-          ) %>%
+          ) |>
             unique()
         }
       }

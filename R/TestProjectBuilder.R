@@ -614,7 +614,7 @@ TestProjectBuilder <- R6::R6Class( # nolint
       # scenarios
       dtScenario <- xlsxReadData(wb = wb, sheetName = "Scenarios", skipDescriptionRow = FALSE)
 
-      dtScenario <- dtScenario %>%
+      dtScenario <- dtScenario |>
         merge(dtTestScenarios[, c("scenario_name", "shortName", "longName")],
           by.x = "scenario",
           by.y = "scenario_name",
