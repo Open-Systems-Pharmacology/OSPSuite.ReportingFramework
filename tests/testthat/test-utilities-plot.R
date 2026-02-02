@@ -494,13 +494,17 @@ test_that("applyConfigDefaults preserves existing columns", {
 
 # Tests for .handleNoConfigTable
 test_that(".handleNoConfigTable works with suppressExport = FALSE", {
-
-  myPlotFunction <- function(...){return(list(ggplot()))}
+  # Define function in global environment so RmdPlotManager can find it
+  assign("testPlotFunction", function(projectConfiguration, configTable, ...) {
+    return(list(testPlot = ggplot2::ggplot()))
+  }, envir = .GlobalEnv)
+  
+  on.exit(rm(testPlotFunction, envir = .GlobalEnv), add = TRUE)
 
   rmdPlotManager <- suppressMessages(RmdPlotManager$new(
     rmdName = "test_no_config",
     rmdfolder = projectConfiguration$outputFolder,
-    nameOfplotFunction = "myPlotFunction",
+    nameOfplotFunction = "testPlotFunction",
     suppressExport = FALSE
   ))
 
@@ -523,12 +527,17 @@ test_that(".handleNoConfigTable works with suppressExport = FALSE", {
 })
 
 test_that(".handleNoConfigTable works with suppressExport = TRUE", {
-  myPlotFunction <- function(...){return(list(ggplot()))}
+  # Define function in global environment so RmdPlotManager can find it
+  assign("testPlotFunction2", function(projectConfiguration, configTable, ...) {
+    return(list(testPlot = ggplot2::ggplot()))
+  }, envir = .GlobalEnv)
+  
+  on.exit(rm(testPlotFunction2, envir = .GlobalEnv), add = TRUE)
 
   rmdPlotManager <- suppressMessages(RmdPlotManager$new(
     rmdName = "test_no_config_suppress",
     rmdfolder = projectConfiguration$outputFolder,
-    nameOfplotFunction = "myPlotFunction",
+    nameOfplotFunction = "testPlotFunction2",
     suppressExport = TRUE
   ))
 
