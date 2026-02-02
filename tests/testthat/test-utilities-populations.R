@@ -68,14 +68,13 @@ test_that("exportRandomPopulations handles valid customParameters structure", {
   )
   
   # Should not error during parameter validation
-  # (may error later due to other reasons, but validation should pass)
-  expect_error(
+  # Using expect_silent to verify function completes without error when given empty population list
+  expect_silent(
     exportRandomPopulations(
       projectConfiguration = projectConfiguration,
       populationNames = character(0),  # Empty list to avoid actual export
       customParameters = customParam,
       overwrite = FALSE
-    ),
-    NA  # Expect no error, or at least not a validation error
+    )
   )
 })
