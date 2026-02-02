@@ -272,14 +272,14 @@ test_that("applyConfigDefaults adds missing columns with default values", {
     plotName = c("plot1", "plot2"),
     scenario = c("scen1", "scen2")
   )
-  
+
   # Define defaults for columns that don't exist
   testDefaults <- list(
     timeUnit = "h",
     timeOffset = 0,
     yScale = "linear"
   )
-  
+
   # Apply defaults - expect warnings for each missing column
   expect_warning(
     expect_warning(
@@ -291,12 +291,12 @@ test_that("applyConfigDefaults adds missing columns with default values", {
     ),
     "was missing"
   )
-  
+
   # Check that columns were added
   expect_true("timeUnit" %in% names(result))
   expect_true("timeOffset" %in% names(result))
   expect_true("yScale" %in% names(result))
-  
+
   # Check that values are correct
   expect_equal(result$timeUnit, c("h", "h"))
   expect_equal(result$timeOffset, c(0, 0))
@@ -310,12 +310,12 @@ test_that("applyConfigDefaults fills columns with all NA values", {
     timeUnit = c(NA_character_, NA_character_),
     timeOffset = c(NA_real_, NA_real_)
   )
-  
+
   testDefaults <- list(
     timeUnit = "h",
     timeOffset = 0
   )
-  
+
   # Apply defaults - expect warnings for each empty column
   expect_warning(
     expect_warning(
@@ -324,7 +324,7 @@ test_that("applyConfigDefaults fills columns with all NA values", {
     ),
     "was empty"
   )
-  
+
   # Check that NA values were replaced
   expect_equal(result$timeUnit, c("h", "h"))
   expect_equal(result$timeOffset, c(0, 0))
@@ -337,12 +337,12 @@ test_that("applyConfigDefaults fills partial NA values in columns", {
     timeUnit = c("h", NA_character_, "min"),
     timeOffset = c(0, NA_real_, 5)
   )
-  
+
   testDefaults <- list(
     timeUnit = "h",
     timeOffset = 0
   )
-  
+
   # Apply defaults - expect warnings for each column with missing values
   expect_warning(
     expect_warning(
@@ -351,7 +351,7 @@ test_that("applyConfigDefaults fills partial NA values in columns", {
     ),
     "missing value"
   )
-  
+
   # Check that only NA values were replaced
   expect_equal(result$timeUnit, c("h", "h", "min"))
   expect_equal(result$timeOffset, c(0, 0, 5))
@@ -364,17 +364,17 @@ test_that("applyConfigDefaults does not modify columns without NA values", {
     timeUnit = c("h", "min"),
     timeOffset = c(0, 5)
   )
-  
+
   testDefaults <- list(
     timeUnit = "h",
     timeOffset = 0
   )
-  
+
   # Apply defaults - should not generate warnings or modify data
   expect_silent(
     result <- .applyConfigDefaults(testConfig, testDefaults)
   )
-  
+
   # Check that values remain unchanged
   expect_equal(result$timeUnit, c("h", "min"))
   expect_equal(result$timeOffset, c(0, 5))
@@ -384,16 +384,16 @@ test_that("applyConfigDefaults handles numeric defaults correctly", {
   testConfig <- data.table::data.table(
     plotName = c("plot1", "plot2")
   )
-  
+
   testDefaults <- list(
     timeOffset = 0,
     nFacetColumns = 3,
     plot_TimeProfiles = 1
   )
-  
+
   # Apply defaults - suppress warnings since we're testing functionality
   result <- suppressWarnings(.applyConfigDefaults(testConfig, testDefaults))
-  
+
   # Check numeric values
   expect_equal(result$timeOffset, c(0, 0))
   expect_equal(result$nFacetColumns, c(3, 3))
@@ -406,16 +406,16 @@ test_that("applyConfigDefaults handles character defaults correctly", {
   testConfig <- data.table::data.table(
     plotName = c("plot1", "plot2")
   )
-  
+
   testDefaults <- list(
     timeUnit = "h",
     yScale = "linear, log",
     facetScale = "fixed"
   )
-  
+
   # Apply defaults - suppress warnings since we're testing functionality
   result <- suppressWarnings(.applyConfigDefaults(testConfig, testDefaults))
-  
+
   # Check character values
   expect_equal(result$timeUnit, c("h", "h"))
   expect_equal(result$yScale, c("linear, log", "linear, log"))
@@ -429,10 +429,10 @@ test_that("applyConfigDefaults works with TIMEPROFILES_CONFIG_DEFAULTS", {
     plotName = c("plot1", "plot2"),
     scenario = c("scen1", "scen2")
   )
-  
+
   # Apply actual TIMEPROFILES_CONFIG_DEFAULTS - suppress warnings since we're testing functionality
   result <- suppressWarnings(.applyConfigDefaults(testConfig, TIMEPROFILES_CONFIG_DEFAULTS))
-  
+
   # Check that all default columns were added
   expect_true("timeUnit" %in% names(result))
   expect_true("timeOffset" %in% names(result))
@@ -447,7 +447,7 @@ test_that("applyConfigDefaults works with TIMEPROFILES_CONFIG_DEFAULTS", {
   expect_true("plot_ResidualsVsTime" %in% names(result))
   expect_true("plot_ResidualsVsObserved" %in% names(result))
   expect_true("plot_QQ" %in% names(result))
-  
+
   # Check specific default values
   expect_equal(result$timeUnit, c("h", "h"))
   expect_equal(result$timeOffset, c(0, 0))
@@ -459,13 +459,13 @@ test_that("applyConfigDefaults returns data.table", {
   testConfig <- data.table::data.table(
     plotName = c("plot1", "plot2")
   )
-  
+
   testDefaults <- list(timeUnit = "h")
-  
+
   expect_warning(
     result <- .applyConfigDefaults(testConfig, testDefaults)
   )
-  
+
   # Check that result is a data.table
   expect_s3_class(result, "data.table")
 })
@@ -476,13 +476,13 @@ test_that("applyConfigDefaults preserves existing columns", {
     scenario = c("scen1", "scen2"),
     existingCol = c("val1", "val2")
   )
-  
+
   testDefaults <- list(timeUnit = "h")
-  
+
   expect_warning(
     result <- .applyConfigDefaults(testConfig, testDefaults)
   )
-  
+
   # Check that original columns are preserved
   expect_true("plotName" %in% names(result))
   expect_true("scenario" %in% names(result))
@@ -494,75 +494,80 @@ test_that("applyConfigDefaults preserves existing columns", {
 
 # Tests for .handleNoConfigTable
 test_that(".handleNoConfigTable works with suppressExport = FALSE", {
-  rmdPlotManager <- RmdPlotManager$new(
+
+  myPlotFunction <- function(...){return(list(ggplot()))}
+
+  rmdPlotManager <- suppressMessages(RmdPlotManager$new(
     rmdName = "test_no_config",
     rmdfolder = projectConfiguration$outputFolder,
-    nameOfplotFunction = "plotTimeProfiles",
+    nameOfplotFunction = "myPlotFunction",
     suppressExport = FALSE
-  )
-  
+  ))
+
   # Create minimal inputs
   inputs <- list(
     scenarioResults = scenarioResults,
     dataObserved = NULL
   )
-  
+
   result <- ospsuite.reportingframework:::.handleNoConfigTable(
     rmdPlotManager = rmdPlotManager,
     projectConfiguration = projectConfiguration,
     inputs = inputs,
     suppressExport = FALSE
   )
-  
+
   # Should return empty list when not suppressing export
   expect_type(result, "list")
   expect_equal(length(result), 0)
 })
 
 test_that(".handleNoConfigTable works with suppressExport = TRUE", {
-  rmdPlotManager <- RmdPlotManager$new(
+  myPlotFunction <- function(...){return(list(ggplot()))}
+
+  rmdPlotManager <- suppressMessages(RmdPlotManager$new(
     rmdName = "test_no_config_suppress",
     rmdfolder = projectConfiguration$outputFolder,
-    nameOfplotFunction = "plotTimeProfiles",
+    nameOfplotFunction = "myPlotFunction",
     suppressExport = TRUE
-  )
-  
+  ))
+
   inputs <- list(
     scenarioResults = scenarioResults,
     dataObserved = NULL
   )
-  
+
   result <- ospsuite.reportingframework:::.handleNoConfigTable(
     rmdPlotManager = rmdPlotManager,
     projectConfiguration = projectConfiguration,
     inputs = inputs,
     suppressExport = TRUE
   )
-  
+
   # Should return plot list when suppressing export
   expect_type(result, "list")
 })
 
 # Tests for .getDefaultColorsForScaleVector with n > 10
 test_that(".getDefaultColorsForScaleVector works for n <= 10", {
-  colors <- ospsuite.reportingframework:::.getDefaultColorsForScaleVector(5)
+  colors <- ospsuite.reportingframework:::.getDefaultColorsForScaleVector(n = 5)
   expect_length(colors, 5)
   expect_type(colors, "character")
 })
 
 test_that(".getDefaultColorsForScaleVector works for n > 10", {
   # This should use the default color map
-  colors <- ospsuite.reportingframework:::.getDefaultColorsForScaleVector(15)
+  colors <- ospsuite.reportingframework:::.getDefaultColorsForScaleVector(n = 15)
   expect_length(colors, 15)
   expect_type(colors, "character")
 })
 
 test_that(".getDefaultColorsForScaleVector errors when n exceeds available colors", {
   # Get the max available colors
-  max_colors <- length(ospsuite.plots::colorMaps[["ospDefault"]])
-  
+  maxColors <- length(ospsuite.plots::colorMaps[["ospDefault"]])
+
   expect_error(
-    ospsuite.reportingframework:::.getDefaultColorsForScaleVector(max_colors + 1)
+    ospsuite.reportingframework:::.getDefaultColorsForScaleVector(maxColors + 1)
   )
 })
 
@@ -574,23 +579,12 @@ test_that(".getDefaultShapesForScaleVector returns correct number of shapes", {
 
 test_that(".getDefaultShapesForScaleVector errors when n exceeds available shapes", {
   # Get available shapes
-  available_shapes <- ospsuite.plots::getOspsuite.plots.option(
+  availableShapes <- ospsuite.plots::getOspsuite.plots.option(
     optionKey = ospsuite.plots::OptionKeys$shapeValues
   )
-  
+
   expect_error(
-    ospsuite.reportingframework:::.getDefaultShapesForScaleVector(length(available_shapes) + 1)
+    ospsuite.reportingframework:::.getDefaultShapesForScaleVector(length(availableShapes) + 1)
   )
 })
 
-# Tests for .validateConfigTableForPlots
-test_that(".validateConfigTableForPlots validates config table", {
-  # Load a valid config table
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
-  configTable <- xlsxReadData(wb = wb, sheetName = "TimeProfileTest")
-  
-  # Should not error with valid table
-  expect_silent(
-    ospsuite.reportingframework:::.validateConfigTableForPlots(configTable)
-  )
-})

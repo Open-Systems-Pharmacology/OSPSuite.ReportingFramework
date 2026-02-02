@@ -421,21 +421,21 @@ test_that(".readDataDictionary works for DATACLASS$pkIndividual", {
   # Create a temporary dictionary file
   tmpdir <- tempdir()
   dictFile <- file.path(tmpdir, "test_dict_pk.xlsx")
-  
+
   # Create minimal dictionary structure for PK individual data
-  dict_data <- data.table(
-    targetColumn = c("studyId", "individualId", "group", "outputPathId", "pkParameter", "pkParameterValue", "pkUnit"),
-    sourceColumn = c("study", "id", "grp", "output", "param", "value", "unit"),
-    filter = rep("", 7)
+  dictData <- data.table(
+    targetColumn = c("desc","studyId", "individualId", "group", "outputPathId", "pkParameter", "values", "unit"),
+    sourceColumn = c("desc","study", "id", "grp", "output", "param", "value", "unit"),
+    filter = rep("", 8)
   )
-  
+
   wb <- openxlsx::createWorkbook()
   openxlsx::addWorksheet(wb, "Sheet1")
-  openxlsx::writeData(wb, "Sheet1", dict_data)
+  openxlsx::writeData(wb, "Sheet1", dictData)
   openxlsx::saveWorkbook(wb, dictFile, overwrite = TRUE)
-  
+
   # Create minimal test data
-  test_data <- data.table(
+  testData <- data.table(
     study = "Study1",
     id = "ID1",
     grp = "Group1",
@@ -444,17 +444,17 @@ test_that(".readDataDictionary works for DATACLASS$pkIndividual", {
     value = 100,
     unit = "ng*h/mL"
   )
-  
+
   result <- ospsuite.reportingframework:::.readDataDictionary(
     dictionaryFile = dictFile,
     sheet = "Sheet1",
-    data = test_data,
+    data = testData,
     dataClass = DATACLASS$pkIndividual
   )
-  
+
   expect_s3_class(result, "data.table")
   expect_true(all(c("targetColumn", "sourceColumn") %in% names(result)))
-  
+
   # Clean up
   unlink(dictFile)
 })
@@ -462,20 +462,20 @@ test_that(".readDataDictionary works for DATACLASS$pkIndividual", {
 test_that(".readDataDictionary works for DATACLASS$tpAggregated", {
   tmpdir <- tempdir()
   dictFile <- file.path(tmpdir, "test_dict_tp_agg.xlsx")
-  
+
   # Create minimal dictionary structure for aggregated time profile data
-  dict_data <- data.table(
-    targetColumn = c("studyId", "group", "outputPathId", "xValues", "yValues", "yUnit", "yErrorType", "nBelowLLOQ"),
-    sourceColumn = c("study", "grp", "output", "time", "conc", "unit", "error", "nlloq"),
-    filter = rep("", 8)
+  dictData <- data.table(
+    targetColumn = c("desc","studyId", "group", "outputPathId", "xValues", "yValues", "yUnit", "yErrorType", "nBelowLLOQ"),
+    sourceColumn = c("desc","study", "grp", "output", "time", "conc", "unit", "error", "nlloq"),
+    filter = rep("", 9)
   )
-  
+
   wb <- openxlsx::createWorkbook()
   openxlsx::addWorksheet(wb, "Sheet1")
-  openxlsx::writeData(wb, "Sheet1", dict_data)
+  openxlsx::writeData(wb, "Sheet1", dictData)
   openxlsx::saveWorkbook(wb, dictFile, overwrite = TRUE)
-  
-  test_data <- data.table(
+
+  testData <- data.table(
     study = "Study1",
     grp = "Group1",
     output = "Output1",
@@ -485,17 +485,17 @@ test_that(".readDataDictionary works for DATACLASS$tpAggregated", {
     error = "SD",
     nlloq = 0
   )
-  
+
   result <- ospsuite.reportingframework:::.readDataDictionary(
     dictionaryFile = dictFile,
     sheet = "Sheet1",
-    data = test_data,
+    data = testData,
     dataClass = DATACLASS$tpAggregated
   )
-  
+
   expect_s3_class(result, "data.table")
   expect_true(all(c("targetColumn", "sourceColumn") %in% names(result)))
-  
+
   # Clean up
   unlink(dictFile)
 })
@@ -503,30 +503,30 @@ test_that(".readDataDictionary works for DATACLASS$tpAggregated", {
 test_that(".readDataDictionary validates required columns for pkIndividual", {
   tmpdir <- tempdir()
   dictFile <- file.path(tmpdir, "test_dict_incomplete.xlsx")
-  
+
   # Create incomplete dictionary (missing required columns)
-  dict_data <- data.table(
-    targetColumn = c("studyId", "individualId"),
-    sourceColumn = c("study", "id"),
+  dictData <- data.table(
+    targetColumn = c("desc","studyId", "individualId"),
+    sourceColumn = c("desc","study", "id"),
     filter = rep("", 2)
   )
-  
+
   wb <- openxlsx::createWorkbook()
   openxlsx::addWorksheet(wb, "Sheet1")
-  openxlsx::writeData(wb, "Sheet1", dict_data)
+  openxlsx::writeData(wb, "Sheet1", dictData)
   openxlsx::saveWorkbook(wb, dictFile, overwrite = TRUE)
-  
-  test_data <- data.table(study = "Study1", id = "ID1")
-  
+
+  testData <- data.table(study = "Study1", id = "ID1")
+
   expect_error(
     ospsuite.reportingframework:::.readDataDictionary(
       dictionaryFile = dictFile,
       sheet = "Sheet1",
-      data = test_data,
+      data = testData,
       dataClass = DATACLASS$pkIndividual
     )
   )
-  
+
   # Clean up
   unlink(dictFile)
 })
