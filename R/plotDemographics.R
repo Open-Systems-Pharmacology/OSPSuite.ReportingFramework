@@ -257,15 +257,12 @@ plotHistograms <- function(projectConfiguration,
       # for the facet plots reference scenario has to be duplicated
       plotData <-
         rbind(
-          plotData[!(scenario %in% onePlotConfig$referenceScenario)] |>
-            .[, scenarioType := names(colorVector)[1]],
+          plotData[!(scenario %in% onePlotConfig$referenceScenario)][, scenarioType := names(colorVector)[1]],
           merge(onePlotConfig[, c("scenario", "referenceScenario")],
             plotData[scenario %in% onePlotConfig$referenceScenario],
             by.x = "referenceScenario",
             by.y = "scenario", allow.cartesian = TRUE
-          ) |>
-            .[, referenceScenario := NULL] |>
-            .[, scenarioType := names(colorVector)[2]]
+          )[, referenceScenario := NULL][, scenarioType := names(colorVector)[2]]
         )
     } else {
       plotData[, scenarioType := names(colorVector)[1]]

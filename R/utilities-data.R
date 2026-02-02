@@ -1045,8 +1045,7 @@ aggregateObservedDataGroups <- function(dataObserved,
   columnISUnique <- dataObserved[, lapply(.SD, function(x) length(unique(x))),
     by = identifier, # nolint indentation_linter
     .SDcols = colsToCheck
-  ] |>
-    .[, lapply(.SD, function(x) all(x == 1)), .SDcols = colsToCheck] |>
+  ][, lapply(.SD, function(x) all(x == 1)), .SDcols = colsToCheck] |>
     unlist()
 
   tmp <- dataObserved |>

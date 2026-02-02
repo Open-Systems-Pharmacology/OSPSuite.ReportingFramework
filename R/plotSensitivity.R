@@ -276,9 +276,9 @@ plotSensitivity <- function(projectConfiguration,
     }),
     pkParameterSheets
   ) |>
-    rbindlist(idcol = "pKParameter") |>
-    .[, descriptions := NULL] |>
-    .[, pKParameter := NULL] |>
+    rbindlist(idcol = "pKParameter")
+  
+  pkSheets <- pkSheets[, descriptions := NULL][, pKParameter := NULL] |>
     setnames(
       old = c("name", "displayName", "displayUnit"),
       new = c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")

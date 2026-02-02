@@ -66,8 +66,7 @@ plotMyFunction <- function(projectConfiguration,
   dt <- data.table(
     x = rnorm(1000),                      # Generate random data
     class = sample(c("Female", "Male"), size = 1000, replace = TRUE)  # Create a categorical variable
-  ) |>
-    .[, as.list(quantile(x)), by = "class"]  # Calculate quantiles by class
+  )[, as.list(quantile(x)), by = "class"]  # Calculate quantiles by class
 
   # Set attributes for the table export
   dt <- setExportAttributes(object = dt,
