@@ -61,7 +61,8 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
   dtTwinPopsNew <- dataObserved[group %in% groups, c("group", "individualId")] |>
     unique()
   
-  dtTwinPopsNew <- dtTwinPopsNew[, .(dataGroups = paste(group, collapse = ", ")), by = "individualId"][, populationName := gsub(", ", "_", dataGroups)]
+  dtTwinPopsNew <- dtTwinPopsNew[, .(dataGroups = paste(group, collapse = ", ")), by = "individualId"]
+  dtTwinPopsNew <- dtTwinPopsNew[, populationName := gsub(", ", "_", dataGroups)]
 
   writeToLog(type = "Info", msg = "add virtual twin population configuration in Population configuration file:")
   writeTableToLog(dtTwinPopsNew[, .N, by = "populationName"])
