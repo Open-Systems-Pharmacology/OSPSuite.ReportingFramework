@@ -817,3 +817,146 @@ messages$errorPopulationNotUnique <- function(populationFile, duplPopName) {
     paste(duplPopName, collapse = ", ")
   )
 }
+
+# Data file messages
+messages$errorNoDatafilesDefined <- function(dataClassType) {
+  paste("no datafiles defined for", dataClassType)
+}
+
+messages$warningFileExecutionError <- function(functionCall, errorMsg) {
+  paste(
+    "Error during execution of", functionCall,
+    "\nMessage:", errorMsg,
+    "\nAre all relevant xlsx files closed? Retry manually."
+  )
+}
+
+messages$warningSomeColumnsNoAttribute <- function(columns) {
+  paste0(
+    'Some data columns have no attribute: "',
+    paste(columns, collapse = '", "'),
+    '"'
+  )
+}
+
+messages$errorDataNotUniqueInColumns <- function(columns) {
+  paste(
+    "Data must be unique in columns",
+    paste(columns, collapse = ", ")
+  )
+}
+
+messages$warningAmbiguousUnits <- function(summary) {
+  paste(
+    "Ambiguous units:", summary,
+    "\nPlease check if this acceptable, e.g. pkParameter as ratio and absolute values."
+  )
+}
+
+messages$errorDictionarySourceOrFilterRequired <- function(sheet, targetColumns) {
+  paste0(
+    'Either sourceColumn or Filter on sourceColumn has to be filled in dictionary "', sheet,
+    '" for targetColumn(s) "', paste(targetColumns, collapse = '", "'), '"'
+  )
+}
+
+messages$warningDictionaryFilterMayBeIncorrect <- function(dictionaryName, targetColumn) {
+  paste0(
+    "Dictionary: '", dictionaryName,
+    "'; targetColumn: '", targetColumn,
+    "'; Filter column contains '1'. This may result from using TRUE() function in Excel/LibreOffice. ",
+    "Please use the character 'TRUE' instead of the function TRUE(). ",
+    "Filter '1' only applies to the first row instead of all rows."
+  )
+}
+
+messages$warningDictionaryFilterError <- function(dictionaryName, targetColumn, filter, filterValue) {
+  paste0(
+    "tpDictionary: '", dictionaryName,
+    "'; targetColumn: '", targetColumn,
+    "'; filter: '", filter,
+    "'; filterValue: '", filterValue,
+    "'"
+  )
+}
+
+messages$errorDataYUnitNotUnique <- function(groupName) {
+  paste(
+    "DataDT to combinedData: y Unit for dataset",
+    groupName, "is not unique"
+  )
+}
+
+messages$errorDataXUnitNotUnique <- function(groupName) {
+  paste(
+    "DataDT to combinedData: x Unit for dataset",
+    groupName, "is not unique"
+  )
+}
+
+messages$warningMultipleLLOQValues <- function(groupName) {
+  paste(
+    "DataDT to combinedData: More than one LLOQ for dataset",
+    groupName,
+    "is set to minimal"
+  )
+}
+
+messages$warningGroupsNotSuitedForAggregation <- function(unsuitableGroups, minN, dataClass) {
+  paste(
+    "Groups", paste(unsuitableGroups, collapse = ", "), "are not suited for grouping.",
+    "Check if they are available in data, have more then", minN, "Individuals or
+                    if they are have data class", dataClass
+  )
+}
+
+# Plot configuration messages
+messages$warningColumnMissingAddingDefault <- function(col, defaultValue) {
+  paste0(
+    "Column '", col, "' was missing. Adding column with default: ",
+    if (is.numeric(defaultValue)) defaultValue else paste0("'", defaultValue, "'")
+  )
+}
+
+messages$warningColumnEmptySettingDefault <- function(col, defaultValue) {
+  paste0(
+    "Column '", col, "' was empty. Setting all values to default: ",
+    if (is.numeric(defaultValue)) defaultValue else paste0("'", defaultValue, "'")
+  )
+}
+
+messages$warningColumnHasMissingValues <- function(col, count, defaultValue) {
+  paste0(
+    "Column '", col, "' had ", count, " missing value(s). Setting to default: ",
+    if (is.numeric(defaultValue)) defaultValue else paste0("'", defaultValue, "'")
+  )
+}
+
+messages$errorPlotConfigColumnNoAllowedValues <- function(col) {
+  paste("Plot configuration column", col, "has entries but no allowed values.
+                     Did you forget some inputs e.g. observedData or pkParameterDT?")
+}
+
+messages$errorInvalidInputsInPlotConfigColumn <- function(col) {
+  paste("Invalid inputs in plot configuration column", col)
+}
+
+messages$errorValuesNotSameWithinOutputPathIdGeneric <- function(col) {
+  paste("values for", col, "should be the same within outputPathId")
+}
+
+messages$errorInvalidConfigAtLeastOneEntry <- function(columns) {
+  paste(
+    "Invalid configTable, each plot row needs at least one entry in one of the columns",
+    paste(columns, collapse = ", ")
+  )
+}
+
+# Time profile messages
+messages$errorXUnitAmbiguous <- function() {
+  "x Unit ambiguous"
+}
+
+messages$errorYUnitAmbiguous <- function() {
+  "y Unit ambiguous"
+}
