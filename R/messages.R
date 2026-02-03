@@ -960,3 +960,8 @@ messages$errorXUnitAmbiguous <- function() {
 messages$errorYUnitAmbiguous <- function() {
   "y Unit ambiguous"
 }
+
+# Time profile panel messages
+messages$errorNeedAtLeastOneTimeRangeColumn <- function() {
+  "You need at least one TimeRange Column"
+}

@@ -1014,7 +1014,7 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
   timeRangeColumns <-
     names(configTablePlots)[grepl("^timeRange_", names(configTablePlots))]
 
-  if (length(timeRangeColumns) == 0) stop("You need at least one TimeRange Column")
+  if (length(timeRangeColumns) == 0) stop(messages$errorNeedAtLeastOneTimeRangeColumn())
 
   validateAtleastOneEntry(configTablePlots, columnVector = timeRangeColumns)
 
