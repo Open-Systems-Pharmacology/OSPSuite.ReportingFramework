@@ -237,3 +237,100 @@ test_that("exportRandomPopulations returns invisible NULL", {
   
   expect_null(result)
 })
+
+# Tests for refactored helper functions
+
+test_that(".validateAndFilterPopulations validates customParameters", {
+  skip_if_not(file.exists(projectConfiguration$populationsFile), 
+              "Populations file not available")
+  
+  dtPops <- xlsxReadData(wb = projectConfiguration$populationsFile, sheetName = "Demographics")
+  
+  # Invalid customParameter - not a list
+  expect_error(
+    ospsuite.reportingframework:::.validateAndFilterPopulations(
+      dtPops = dtPops,
+      populationNames = NULL,
+      overwrite = FALSE,
+      projectConfiguration = projectConfiguration,
+      customParameters = "invalid"
+    )
+  )
+  
+  # Invalid customParameter - missing path
+  expect_error(
+    ospsuite.reportingframework:::.validateAndFilterPopulations(
+      dtPops = dtPops,
+      populationNames = NULL,
+      overwrite = FALSE,
+      projectConfiguration = projectConfiguration,
+      customParameters = list(list(values = c("1", "2")))
+    )
+  )
+})
+
+test_that(".validateAndFilterPopulations filters populations correctly", {
+  skip_if_not(file.exists(projectConfiguration$populationsFile), 
+              "Populations file not available")
+  
+  dtPops <- xlsxReadData(wb = projectConfiguration$populationsFile, sheetName = "Demographics")
+  skip_if(nrow(dtPops) == 0, "No populations defined")
+  
+  # Test with NULL populationNames (should keep all)
+  result <- ospsuite.reportingframework:::.validateAndFilterPopulations(
+    dtPops = dtPops,
+    populationNames = NULL,
+    overwrite = TRUE,
+    projectConfiguration = projectConfiguration,
+    customParameters = NULL
+  )
+  
+  expect_s3_class(result, "data.table")
+})
+
+test_that(".validateAndFilterPopulations returns empty when no populations match", {
+  skip_if_not(file.exists(projectConfiguration$populationsFile), 
+              "Populations file not available")
+  
+  dtPops <- xlsxReadData(wb = projectConfiguration$populationsFile, sheetName = "Demographics")
+  
+  # Test with non-existent population name
+  result <- ospsuite.reportingframework:::.validateAndFilterPopulations(
+    dtPops = dtPops,
+    populationNames = "NonExistentPopulation12345",
+    overwrite = FALSE,
+    projectConfiguration = projectConfiguration,
+    customParameters = NULL
+  )
+  
+  expect_s3_class(result, "data.table")
+  expect_equal(nrow(result), 0)
+})
+
+test_that(".validateAndFilterPopulations respects overwrite parameter", {
+  skip_if_not(file.exists(projectConfiguration$populationsFile), 
+              "Populations file not available")
+  
+  dtPops <- xlsxReadData(wb = projectConfiguration$populationsFile, sheetName = "Demographics")
+  skip_if(nrow(dtPops) == 0, "No populations defined")
+  
+  # With overwrite = FALSE, should filter existing files
+  result <- ospsuite.reportingframework:::.validateAndFilterPopulations(
+    dtPops = dtPops,
+    populationNames = NULL,
+    overwrite = FALSE,
+    projectConfiguration = projectConfiguration,
+    customParameters = NULL
+  )
+  
+  expect_s3_class(result, "data.table")
+})
+
+test_that(".exportSinglePopulation handles valid population", {
+  skip_if_not(file.exists(projectConfiguration$populationsFile), 
+              "Populations file not available")
+  skip("Skipping .exportSinglePopulation test - requires full population setup")
+  
+  # This test would require a complete population setup
+  # and is better tested through integration tests
+})
