@@ -416,31 +416,6 @@ plotTimeProfiles <- function(projectConfiguration,
 }
 
 
-#' Get mapping for simulated and observed data
-#'
-#' @param plotData Object containing the data for the plot.
-#'
-#' @return Data table mapping simulated and observed data.
-#' @keywords internal
-#' @noRd
-.getMapSimulatedAndObserved <- function(plotData) {
-  # initialize data.table variables
-  dataType <- NULL
-
-  if (!plotData$hasObservedData()) {
-    return(NULL)
-  }
-
-  mapSimulatedAndObserved <- data.table(
-    simulated = as.character(plotData$data[dataType == "simulated"]$colorIndex) |> unique(),
-    observed = as.character(plotData$data[dataType == "observed"]$colorIndex) |> unique(),
-    color = plotData$scaleVectors$colour,
-    fill = plotData$scaleVectors$fill
-  )
-
-  return(mapSimulatedAndObserved)
-}
-
 #' Check and adjust Y limits for plots
 #'
 #' @param yScale Y scale of the plot.

@@ -415,3 +415,263 @@ test_that("debugMode is not allowed during valid runs", {
     options(OSPSuite.RF.stopHelperFunction = originalOption)
   }
 })
+
+# Tests for .readDataDictionary with different dataClass values
+test_that(".readDataDictionary works for DATACLASS$pkIndividual", {
+  # Create a temporary dictionary file
+  tmpdir <- tempdir()
+  dictFile <- file.path(tmpdir, "test_dict_pk.xlsx")
+
+  # Create minimal dictionary structure for PK individual data
+  dictData <- data.table(
+    targetColumn = c("desc","studyId", "individualId", "group", "outputPathId", "pkParameter", "values", "unit"),
+    sourceColumn = c("desc","study", "id", "grp", "output", "param", "value", "unit"),
+    filter = rep("", 8)
+  )
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Sheet1")
+  openxlsx::writeData(wb, "Sheet1", dictData)
+  openxlsx::saveWorkbook(wb, dictFile, overwrite = TRUE)
+
+  # Create minimal test data
+  testData <- data.table(
+    study = "Study1",
+    id = "ID1",
+    grp = "Group1",
+    output = "Output1",
+    param = "AUC",
+    value = 100,
+    unit = "ng*h/mL"
+  )
+
+  result <- ospsuite.reportingframework:::.readDataDictionary(
+    dictionaryFile = dictFile,
+    sheet = "Sheet1",
+    data = testData,
+    dataClass = DATACLASS$pkIndividual
+  )
+
+  expect_s3_class(result, "data.table")
+  expect_true(all(c("targetColumn", "sourceColumn") %in% names(result)))
+
+  # Clean up
+  unlink(dictFile)
+})
+
+test_that(".readDataDictionary works for DATACLASS$tpAggregated", {
+  tmpdir <- tempdir()
+  dictFile <- file.path(tmpdir, "test_dict_tp_agg.xlsx")
+
+  # Create minimal dictionary structure for aggregated time profile data
+  dictData <- data.table(
+    targetColumn = c("desc","studyId", "group", "outputPathId", "xValues", "yValues", "yUnit", "yErrorType", "nBelowLLOQ"),
+    sourceColumn = c("desc","study", "grp", "output", "time", "conc", "unit", "error", "nlloq"),
+    filter = rep("", 9)
+  )
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Sheet1")
+  openxlsx::writeData(wb, "Sheet1", dictData)
+  openxlsx::saveWorkbook(wb, dictFile, overwrite = TRUE)
+
+  testData <- data.table(
+    study = "Study1",
+    grp = "Group1",
+    output = "Output1",
+    time = 1.0,
+    conc = 50,
+    unit = "ng/mL",
+    error = "SD",
+    nlloq = 0
+  )
+
+  result <- ospsuite.reportingframework:::.readDataDictionary(
+    dictionaryFile = dictFile,
+    sheet = "Sheet1",
+    data = testData,
+    dataClass = DATACLASS$tpAggregated
+  )
+
+  expect_s3_class(result, "data.table")
+  expect_true(all(c("targetColumn", "sourceColumn") %in% names(result)))
+
+  # Clean up
+  unlink(dictFile)
+})
+
+test_that(".readDataDictionary validates required columns for pkIndividual", {
+  tmpdir <- tempdir()
+  dictFile <- file.path(tmpdir, "test_dict_incomplete.xlsx")
+
+  # Create incomplete dictionary (missing required columns)
+  dictData <- data.table(
+    targetColumn = c("desc","studyId", "individualId"),
+    sourceColumn = c("desc","study", "id"),
+    filter = rep("", 3)
+  )
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Sheet1")
+  openxlsx::writeData(wb, "Sheet1", dictData)
+  openxlsx::saveWorkbook(wb, dictFile, overwrite = TRUE)
+
+  testData <- data.table(study = "Study1", id = "ID1")
+
+  expect_error(
+    ospsuite.reportingframework:::.readDataDictionary(
+      dictionaryFile = dictFile,
+      sheet = "Sheet1",
+      data = testData,
+      dataClass = DATACLASS$pkIndividual
+    )
+  )
+
+  # Clean up
+  unlink(dictFile)
+})
+
+
+test_that("convertDataCombinedToDataTable converts DataCombined back to data.table", {
+  # First convert data.table to DataCombined
+  testData <- dataObserved[outputPathId == "Plasma"]
+  dataCombined <- convertDataTableToDataCombined(testData)
+
+  # Then convert back to data.table
+  result <- convertDataCombinedToDataTable(dataCombined)
+
+  expect_s3_class(result, "data.table")
+  expect_true(nrow(result) > 0)
+})
+
+test_that(".prepareDataForAggregation prepares data correctly", {
+  testData <- dataObserved[outputPathId == "Plasma"]
+  groups <- unique(testData$group)[1:2]
+
+  result <- ospsuite.reportingframework:::.prepareDataForAggregation(
+    dataObserved = testData,
+    groups = groups,
+    groupSuffix = "_test"
+  )
+
+  expect_s3_class(result, "data.table")
+  expect_true("group" %in% names(result))
+})
+
+test_that(".checkLLOQ handles LLOQ checks correctly", {
+  # Create test aggregated data
+  testAggData <- data.table(
+    group = c("A", "B"),
+    outputPathId = c("Plasma", "Plasma"),
+    xValues = c(1, 2),
+    yValues = c(10, 20),
+    yErrorValues = c(1, 2),
+    lloq = c(0.5, 0.5),
+    numberOfIndividuals = c(10, 10),
+    nBelowLLOQ = c(1, 8)
+  )
+
+  result <- ospsuite.reportingframework:::.checkLLOQ(
+    aggregatedData = testAggData,
+    lloqCheckColumns2of3 = NULL,
+    lloqCheckColumns1of2 = NULL,
+    aggregationFlag = "GeometricStdDev"
+  )
+
+  expect_s3_class(result, "data.table")
+  # When more than 1/3 below LLOQ, yValues should be NA
+  expect_true(is.na(result[nBelowLLOQ >= numberOfIndividuals * 1/3]$yValues[1]))
+})
+
+test_that(".setDataTypeAttributes sets attributes correctly", {
+  testData <- data.table(
+    col1 = c(1, 2, 3),
+    col2 = c("a", "b", "c")
+  )
+
+  dict <- data.table(
+    col1 = "timeprofile",
+    col2 = "identifier"
+  )
+
+  result <- ospsuite.reportingframework:::.setDataTypeAttributes(testData, dict)
+
+  expect_s3_class(result, "data.table")
+  expect_equal(attr(result$col1, "columnType"), "timeprofile")
+  expect_equal(attr(result$col2, "columnType"), "identifier")
+})
+
+test_that(".convertBiometrics converts biometrics correctly", {
+  testData <- data.table(
+    age = c(10, 20, 10 , 29, 15),
+    gender = c('m', 'F', 1, 3, 'binary')
+  )
+
+  dict <- data.table(
+    targetColumn = c("age",'gender'),
+    sourceColumn = c('colAge','colGender'),
+    filter = c(NA,NA),
+    filterValue = c(NA,NA),
+    sourceUnit = c('day(s)',''),
+    type = c("biometric","biometric")
+  )
+
+  expect_warning(result <- ospsuite.reportingframework:::.convertBiometrics(
+    data = copy(testData),
+    dict = dict
+  ))
+
+  expect_s3_class(result, "data.table")
+  expect_equal(result$gender ,c("MALE", "FEMALE", "MALE", "UNKNOWN", "UNKNOWN"))
+  expect_equal(result$age ,testData$age/365.25)
+
+})
+
+test_that("readObservedDataByDictionary handles pkParameter dataClassType", {
+  skip_if_not(file.exists(projectConfiguration$dataImporterConfigurationFile),
+              "Data importer config not available")
+
+  # Read PK parameter data
+  dataPK <- suppressWarnings(readObservedDataByDictionary(
+    projectConfiguration,
+    dataClassType = "pkParameter",
+    spreadData = FALSE
+  ))
+
+  expect_s3_class(dataPK, "data.table")
+})
+
+test_that("readObservedDataByDictionary validates fileIds correctly", {
+  # Test with invalid fileIds
+  expect_error(
+    readObservedDataByDictionary(
+      projectConfiguration,
+      fileIds = c("invalid_id_1", "invalid_id_2")
+    ),
+    "subset"
+  )
+})
+
+test_that("aggregateObservedDataGroups handles ArithmeticStdDev", {
+  result <- aggregateObservedDataGroups(
+    dataObserved = dataObserved,
+    groups = NULL,
+    aggregationFlag = "ArithmeticStdDev"
+  )
+
+  expect_s3_class(result, "data.table")
+  expect_equal(unique(result$yErrorType), ospsuite::DataErrorType$ArithmeticStdDev)
+})
+
+test_that("aggregateObservedDataGroups handles Percentiles", {
+  result <- aggregateObservedDataGroups(
+    dataObserved = dataObserved,
+    groups = NULL,
+    aggregationFlag = "Percentiles",
+    percentiles = c(0.05, 0.5, 0.95)
+  )
+
+  expect_s3_class(result, "data.table")
+  expect_true("yMin" %in% names(result))
+  expect_true("yMax" %in% names(result))
+})

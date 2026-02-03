@@ -148,7 +148,7 @@ RmdPlotManager <- R6::R6Class( # nolint
           caption <- "Missing"
         }
 
-        if (is.ggplot(obj) | "CombinedPlot" %in% class(obj)) {
+        if (is_ggplot(obj) | "CombinedPlot" %in% class(obj)) {
           self$addAndExportFigure(
             plotObject = obj,
             caption = caption,

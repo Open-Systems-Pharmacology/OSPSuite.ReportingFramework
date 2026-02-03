@@ -170,3 +170,98 @@ test_that(".fixFilePathsInScenarioConfigurations throws error for empty modelFil
   )
 })
 
+
+# Tests for .extendPopulationFromXLS_RF
+test_that(".extendPopulationFromXLS_RF validates inputs", {
+  skip_if(length(scenarioList) == 0, "No scenarios available")
+
+  # Get a population from scenario
+  scenarioName <- names(scenarioList)[1]
+  population <- scenarioList[[scenarioName]]$population
+
+  # Test with invalid population
+  expect_error(
+    ospsuite.reportingframework:::.extendPopulationFromXLS_RF(
+      population = "not a population",
+      XLSpath = "dummy.xlsx"
+    )
+  )
+
+  # Test with invalid XLSpath
+  expect_error(
+    ospsuite.reportingframework:::.extendPopulationFromXLS_RF(
+      population = population,
+      XLSpath = 123
+    )
+  )
+})
+
+test_that(".extendPopulationFromXLS_RF handles file with correct structure", {
+  skip_if(length(scenarioList) == 0, "No scenarios available")
+
+  # Create a test XLS file with the expected structure
+  tmpdir <- tempdir()
+  testFile <- file.path(tmpdir, "test_population_params.xlsx")
+
+  # Create data with expected column names
+  test_data <- data.table(
+    "Container Path" = c("Organism", "Organism"),
+    "Parameter Name" = c("Weight", "Height"),
+    "Mean" = c(70, 175),
+    "SD" = c(10, 15),
+    "Distribution" = c("Normal", "Normal")
+  )
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Sheet1")
+  openxlsx::writeData(wb, "Sheet1", test_data)
+  openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
+
+  population <- ospsuite::loadPopulation(list.files(projectConfiguration$populationsFolder,full.names = TRUE)[1])
+
+  popBefore <- ospsuite::populationToDataFrame(population)
+
+  # Should not error with correct structure
+  result <- ospsuite.reportingframework:::.extendPopulationFromXLS_RF(
+    population = population,
+    XLSpath = testFile,
+    sheet = "Sheet1"
+  )
+
+  popAfter <- ospsuite::populationToDataFrame(population)
+  expect_true(all(popAfter$`Organism|Height` != popBefore$`Organism|Height`))
+
+  # Clean up
+  unlink(testFile)
+})
+
+test_that(".extendPopulationFromXLS_RF errors with wrong structure", {
+  skip_if(length(scenarioList) == 0, "No scenarios available")
+
+  # Create a test XLS file with wrong column names
+  tmpdir <- tempdir()
+  testFile <- file.path(tmpdir, "test_wrong_structure.xlsx")
+
+  test_data <- data.table(
+    "WrongColumn1" = c(1, 2),
+    "WrongColumn2" = c(3, 4)
+  )
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Sheet1")
+  openxlsx::writeData(wb, "Sheet1", test_data)
+  openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
+
+  population <- ospsuite::loadPopulation(list.files(projectConfiguration$populationsFolder,full.names = TRUE)[1])
+
+  expect_error(
+    ospsuite.reportingframework:::.extendPopulationFromXLS_RF(
+      population = population,
+      XLSpath = testFile,
+      sheet = 1
+    )
+  )
+
+  # Clean up
+  unlink(testFile)
+})

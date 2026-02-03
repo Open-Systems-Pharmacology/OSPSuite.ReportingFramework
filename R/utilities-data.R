@@ -486,7 +486,7 @@ validateObservedData <- function(dataDT, dataClassType, debugMode = FALSE) {
 #' @return A `data.table` with converted columns.
 #' @keywords internal
 #' @noRd
-.convertBiometrics <- function(data, dict, dictionaryName) {
+.convertBiometrics <- function(data, dict) {
   # Initialize variables used for data.tables
   targetColumn <- gender <- NULL
 
@@ -504,9 +504,9 @@ validateObservedData <- function(dataDT, dataClassType, debugMode = FALSE) {
   if ("gender" %in% dict$targetColumn) {
     data[, gender := ifelse(gender == 1, "MALE", gender)]
     data[, gender := ifelse(gender == 2, "FEMALE", gender)]
+    data[, gender := toupper(gender)]
     data[, gender := ifelse(gender == "M", "MALE", gender)]
     data[, gender := ifelse(gender == "F", "FEMALE", gender)]
-    data[, gender := toupper(gender)]
 
     data[, gender := ifelse(gender != "MALE" & gender != "FEMALE", "UNKNOWN", gender)]
 
@@ -849,6 +849,9 @@ convertDataCombinedToDataTable <- function(datacombined) {
     !("individualId" %in% names(dataDT))) { # nolint indentation_linter
     stop("IndividualData needs meta data individualId")
   }
+
+
+  return(dataDT)
 }
 
 # Data aggregation ------------
@@ -994,7 +997,7 @@ aggregateObservedDataGroups <- function(dataObserved,
   # initialize data.table variables
   nBelowLLOQ <- numberOfIndividuals <- NULL
 
-  if (aggregationFlag != "Custom" &
+  if (aggregationFlag %in%  c(ospsuite::DataErrorType,"Percentiles") &
     (!is.null(lloqCheckColumns2of3) | !is.null(lloqCheckColumns1of2))) {
     warning(paste("input variable lloqCheckColumns2of3 and lloqCheckColumns1of2 are not used for aggregationFlag", aggregationFlag))
     lloqCheckColumns2of3 <- NULL
@@ -1013,7 +1016,7 @@ aggregateObservedDataGroups <- function(dataObserved,
 
   if (length(lloqCheckColumns2of3) > 0) {
     aggregatedData[, (lloqCheckColumns2of3) := lapply(.SD, function(x) {
-      ifelse((nBelowLLOQ / numberOfIndividuals) > (2 / 3), NA, x)
+      ifelse((nBelowLLOQ / numberOfIndividuals) > (1 / 3), NA, x)
     }),
     .SDcols = lloqCheckColumns2of3, by = .I
     ]
