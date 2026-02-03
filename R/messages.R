@@ -86,6 +86,13 @@ messages$errorNoPKParameterAvailable <- function(plotName) {
   )
 }
 
+messages$errorPKParameterNotCalculated <- function(scenarioName) {
+  paste(
+    "PK Parameter for", scenarioName, "is not calculated!",
+    "Use function calculatePKParameterForCalculation to generate the result"
+  )
+}
+
 messages$errorInconsistentDisplayUnit <- function() {
   "Please check pkParameterDT. It seems that displayUnitPKParameter is not consistent for outputPathId and pkParameter"
 }

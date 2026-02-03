@@ -959,11 +959,7 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
   configTablePlots[, invalid := !is.na(referenceScenario) & (length(grep("\\(", outputPathIds)) > 0), by = .I]
   tmp <- configTablePlots[invalid == TRUE]
   if (nrow(tmp) > 0) {
-    stop(paste0(
-      "Do not combine outputs in one panel with brackets () ",
-      'if you want to display reference scenarios.
-               Please check "', paste0(unique(tmp$plotName), collapse = '", "', '"')
-    ))
+    stop(messages$errorCombineOutputsWithBracketsAndReferenceScenarios(tmp$plotName))
   }
 
   configTablePlots[, invalid := !is.na(referenceScenario) & is.na(colorLegend), by = .I]
@@ -1105,11 +1101,7 @@ validateTimeProfilesConfig <- function(configTable, dataObserved = NULL,
   tmp <- configTablePlots[scenario %in% indScenariosNames & as.logical(plot_TimeProfiles)]
   errorRows <- which(grepl("\\(", tmp$individualIds) | grepl("\\)", tmp$individualIds))
   if (length(errorRows) > 0) {
-    stop(paste(
-      "For scenarios with virtual twin populations and selected Plot_TimeProfiles,
-               brackets are not allowed in column individualIds.",
-      "Check Plots:", paste(tmp$plotName[errorRows], collapse = ", ")
-    ))
+    stop(messages$errorVirtualTwinBracketsNotAllowed(tmp$plotName[errorRows]))
   }
 
   tmp <- configTablePlots[!(scenario %in% indScenariosNames) &

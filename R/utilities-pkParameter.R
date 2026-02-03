@@ -311,10 +311,7 @@ loadPKParameter <- function(projectConfiguration,
 
   fileName <- file.path(outputFolder, paste0(scenarioName, ".csv"))
   if (!file.exists(fileName)) {
-    stop(paste(
-      "PK Parameter for", scenarioName, "is not calculated!",
-      "Use function calculatePKParameterForCalculation to generate the result"
-    ))
+    stop(messages$errorPKParameterNotCalculated(scenarioName))
   }
 
   writeToLog(
@@ -463,7 +460,7 @@ loadPKParameter <- function(projectConfiguration,
       by = "outputPathId"
     )
 
-  if (nrow(mergedData) == 0) stop(paste("no PK-Parameter available for", onePlotConfig$plotName[1]))
+  if (nrow(mergedData) == 0) stop(messages$errorNoPKParameterAvailable(onePlotConfig$plotName[1]))
 
 
   if (asRatio) {
