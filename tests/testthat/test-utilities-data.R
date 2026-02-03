@@ -530,3 +530,185 @@ test_that(".readDataDictionary validates required columns for pkIndividual", {
   # Clean up
   unlink(dictFile)
 })
+
+# Additional tests for utilities-data.R to increase coverage
+
+test_that("updateDataGroupId updates data group IDs correctly", {
+  # Create test data
+  testData <- copy(dataObserved[1:10])
+  
+  # Should update dataGroupId column if project configuration is valid
+  result <- updateDataGroupId(projectConfiguration, testData)
+  
+  expect_s3_class(result, "data.table")
+  expect_true("dataGroupId" %in% names(result))
+})
+
+test_that("updateOutputPathId updates output path IDs correctly", {
+  testData <- copy(dataObserved[1:10])
+  
+  result <- updateOutputPathId(projectConfiguration, testData)
+  
+  expect_s3_class(result, "data.table")
+  # outputPathId should still be in the data
+  expect_true("outputPathId" %in% names(result))
+})
+
+test_that("addBiometricsToConfig handles biometrics correctly", {
+  skip_if_not(file.exists(projectConfiguration$individualsFile),
+              "Individuals file not available")
+  
+  testData <- copy(dataObserved[1:50])
+  
+  # Test with overwrite = FALSE (default)
+  expect_silent(
+    addBiometricsToConfig(projectConfiguration, testData, overwrite = FALSE)
+  )
+  
+  # Test with overwrite = TRUE
+  expect_silent(
+    addBiometricsToConfig(projectConfiguration, testData, overwrite = TRUE)
+  )
+})
+
+test_that("convertDataCombinedToDataTable converts DataCombined back to data.table", {
+  # First convert data.table to DataCombined
+  testData <- dataObserved[outputPathId == "Plasma"]
+  dataCombined <- convertDataTableToDataCombined(testData)
+  
+  # Then convert back to data.table
+  result <- convertDataCombinedToDataTable(dataCombined)
+  
+  expect_s3_class(result, "data.table")
+  expect_true(nrow(result) > 0)
+})
+
+test_that(".prepareDataForAggregation prepares data correctly", {
+  testData <- dataObserved[outputPathId == "Plasma"]
+  groups <- unique(testData$group)[1:2]
+  
+  result <- ospsuite.reportingframework:::.prepareDataForAggregation(
+    dataObserved = testData,
+    groups = groups,
+    groupSuffix = "_test"
+  )
+  
+  expect_s3_class(result, "data.table")
+  expect_true("group" %in% names(result))
+})
+
+test_that(".checkLLOQ handles LLOQ checks correctly", {
+  # Create test aggregated data
+  testAggData <- data.table(
+    group = c("A", "B"),
+    outputPathId = c("Plasma", "Plasma"),
+    xValues = c(1, 2),
+    yValues = c(10, 20),
+    yErrorValues = c(1, 2),
+    lloq = c(0.5, 0.5),
+    numberOfIndividuals = c(10, 10),
+    nBelowLLOQ = c(1, 8)
+  )
+  
+  result <- ospsuite.reportingframework:::.checkLLOQ(
+    aggregatedData = testAggData,
+    lloqCheckColumns2of3 = c("yValues"),
+    lloqCheckColumns1of2 = c("yErrorValues"),
+    aggregationFlag = "GeometricStdDev"
+  )
+  
+  expect_s3_class(result, "data.table")
+  # When more than 2/3 below LLOQ, yValues should be NA
+  expect_true(is.na(result[nBelowLLOQ >= numberOfIndividuals * 2/3]$yValues[1]))
+})
+
+test_that(".setDataTypeAttributes sets attributes correctly", {
+  testData <- data.table(
+    col1 = c(1, 2, 3),
+    col2 = c("a", "b", "c")
+  )
+  
+  dict <- data.table(
+    targetColumn = c("col1", "col2"),
+    type = c("timeprofile", "identifier")
+  )
+  
+  result <- ospsuite.reportingframework:::.setDataTypeAttributes(testData, dict)
+  
+  expect_s3_class(result, "data.table")
+  expect_equal(attr(result$col1, "columnType"), "timeprofile")
+  expect_equal(attr(result$col2, "columnType"), "identifier")
+})
+
+test_that(".convertBiometrics converts biometrics correctly", {
+  testData <- data.table(
+    col1 = c("val1", "val2"),
+    col2 = c(10, 20)
+  )
+  
+  dict <- data.table(
+    targetColumn = c("newCol1"),
+    sourceColumn = c(NA),
+    filter = c(NA),
+    filterValue = c("'biometric_value'"),
+    type = c("biometric")
+  )
+  
+  result <- ospsuite.reportingframework:::.convertBiometrics(
+    data = testData,
+    dict = dict,
+    dictionaryName = "test_dict"
+  )
+  
+  expect_s3_class(result, "data.table")
+  expect_true("newCol1" %in% names(result))
+})
+
+test_that("readObservedDataByDictionary handles pkParameter dataClassType", {
+  skip_if_not(file.exists(projectConfiguration$dataImporterConfigurationFile),
+              "Data importer config not available")
+  
+  # Read PK parameter data
+  dataPK <- readObservedDataByDictionary(
+    projectConfiguration,
+    dataClassType = "pkParameter",
+    spreadData = FALSE
+  )
+  
+  expect_s3_class(dataPK, "data.table")
+})
+
+test_that("readObservedDataByDictionary validates fileIds correctly", {
+  # Test with invalid fileIds
+  expect_error(
+    readObservedDataByDictionary(
+      projectConfiguration,
+      fileIds = c("invalid_id_1", "invalid_id_2")
+    ),
+    "subset"
+  )
+})
+
+test_that("aggregateObservedDataGroups handles ArithmeticStdDev", {
+  result <- aggregateObservedDataGroups(
+    dataObserved = dataObserved,
+    groups = NULL,
+    aggregationFlag = "ArithmeticStdDev"
+  )
+  
+  expect_s3_class(result, "data.table")
+  expect_equal(unique(result$yErrorType), ospsuite::DataErrorType$ArithmeticStdDev)
+})
+
+test_that("aggregateObservedDataGroups handles Percentiles", {
+  result <- aggregateObservedDataGroups(
+    dataObserved = dataObserved,
+    groups = NULL,
+    aggregationFlag = "Percentiles",
+    percentiles = c(0.05, 0.5, 0.95)
+  )
+  
+  expect_s3_class(result, "data.table")
+  expect_true("yMin" %in% names(result))
+  expect_true("yMax" %in% names(result))
+})
