@@ -12,13 +12,22 @@ test_that("concatWithAnd works correctly", {
   expect_equal(.concatWithAnd(c("apple", "banana")), "apple and banana")
 
   # Test with three elements
-  expect_equal(.concatWithAnd(c("apple", "banana", "cherry")), "apple, banana and cherry")
+  expect_equal(
+    .concatWithAnd(c("apple", "banana", "cherry")),
+    "apple, banana and cherry"
+  )
 
   # Test with four elements
-  expect_equal(.concatWithAnd(c("apple", "banana", "cherry", "date")), "apple, banana, cherry and date")
+  expect_equal(
+    .concatWithAnd(c("apple", "banana", "cherry", "date")),
+    "apple, banana, cherry and date"
+  )
 
   # Test with special characters
-  expect_equal(.concatWithAnd(c("apple!", "banana@", "cherry#")), "apple!, banana@ and cherry#")
+  expect_equal(
+    .concatWithAnd(c("apple!", "banana@", "cherry#")),
+    "apple!, banana@ and cherry#"
+  )
 
   # Test with empty strings
   expect_equal(.concatWithAnd(c("", "banana")), "banana")
@@ -68,7 +77,16 @@ test_that("formatPercentiles handles mixed input correctly when allAsPercentiles
   suffix <- " percentile"
 
   result <- formatPercentiles(c(0, 50, 100, 25.5, 75) / 100, suffix, TRUE)
-  expect_equal(result, c("0th percentile", "50th percentile", "100th percentile", "25.5th percentile", "75th percentile"))
+  expect_equal(
+    result,
+    c(
+      "0th percentile",
+      "50th percentile",
+      "100th percentile",
+      "25.5th percentile",
+      "75th percentile"
+    )
+  )
 })
 
 
@@ -109,7 +127,8 @@ configTablePlots <- data.table(
 )
 
 test_that("validateConfigTablePlots function test", {
-  expect_no_error(validateConfigTablePlots(configTablePlots,
+  expect_no_error(validateConfigTablePlots(
+    configTablePlots,
     charactersWithoutMissing = c("CharacterColumn1"),
     charactersWithMissing = c("CharacterColumn2"),
     numericColumns = "NumericColumn1",
@@ -121,27 +140,33 @@ test_that("validateConfigTablePlots function test", {
     ))
   ))
 
-
   # Test if the function correctly validates character columns without missing values
-  expect_error(validateConfigTablePlots(configTablePlots,
+  expect_error(validateConfigTablePlots(
+    configTablePlots,
     charactersWithoutMissing = c("CharacterColumn2")
   ))
 
   # Test if the function correctly validates numeric columns
-  expect_error(validateConfigTablePlots(configTablePlots,
+  expect_error(validateConfigTablePlots(
+    configTablePlots,
     numericColumns = c("CharacterColumn2")
   ))
 
   # Test if the function correctly validates logical columns
-  expect_error(validateConfigTablePlots(configTablePlots,
+  expect_error(validateConfigTablePlots(
+    configTablePlots,
     logicalColumns = "CharacterColumn1"
   ))
 
   # Test if the function correctly validates numeric range columns
-  expect_error(validateConfigTablePlots(configTablePlots, numericRangeColumns = "NumericColumn1"))
+  expect_error(validateConfigTablePlots(
+    configTablePlots,
+    numericRangeColumns = "NumericColumn1"
+  ))
 
   # Test if the function correctly validates subset list
-  expect_error(validateConfigTablePlots(configTablePlots,
+  expect_error(validateConfigTablePlots(
+    configTablePlots,
     subsetList = list(list(
       cols = c("CharacterColumn2"),
       allowedValues = c("A", "B", "C", "D")
@@ -159,7 +184,10 @@ configTablePlots <- data.table(
 
 test_that("validateAtleastOneEntry function test", {
   # Test if the function correctly validates that each plot row needs at least one entry in specified columns
-  expect_error(validateAtleastOneEntry(configTablePlots, c("Column1", "Column2", "Column3")))
+  expect_error(validateAtleastOneEntry(
+    configTablePlots,
+    c("Column1", "Column2", "Column3")
+  ))
 })
 
 
@@ -231,9 +259,11 @@ configTablePlots <- data.table(
 
 test_that("validateGroupConsistency function test", {
   # Test if the function correctly checks for unique values of panel columns for each PlotName
-  expect_error(validateGroupConsistency(configTablePlots, c("column1", "column2")))
+  expect_error(validateGroupConsistency(
+    configTablePlots,
+    c("column1", "column2")
+  ))
 })
-
 
 
 # Create example data for testing
@@ -242,9 +272,24 @@ configTablePlots <- data.table(
   value2 = c("A", "B", "C", "D"),
   timeRange_Valid1 = c(NA, "total", "firstApplication", "lastApplication"),
   timeRange_Valid2 = c("c(0,30)", NA, "c(0,40)", "lastApplication"),
-  timeRange_invalid1 = c("total", "invalid", "firstApplication", "lastApplication"),
-  timeRange_invalid1 = c("c(0,30,50)", "total", "firstApplication", "lastApplication"),
-  timeRange_invalid1 = c("c(0,NA)", "total", "firstApplication", "lastApplication")
+  timeRange_invalid1 = c(
+    "total",
+    "invalid",
+    "firstApplication",
+    "lastApplication"
+  ),
+  timeRange_invalid1 = c(
+    "c(0,30,50)",
+    "total",
+    "firstApplication",
+    "lastApplication"
+  ),
+  timeRange_invalid1 = c(
+    "c(0,NA)",
+    "total",
+    "firstApplication",
+    "lastApplication"
+  )
 )
 
 # Write unit tests for the function
@@ -431,7 +476,10 @@ test_that("applyConfigDefaults works with TIMEPROFILES_CONFIG_DEFAULTS", {
   )
 
   # Apply actual TIMEPROFILES_CONFIG_DEFAULTS - suppress warnings since we're testing functionality
-  result <- suppressWarnings(.applyConfigDefaults(testConfig, TIMEPROFILES_CONFIG_DEFAULTS))
+  result <- suppressWarnings(.applyConfigDefaults(
+    testConfig,
+    TIMEPROFILES_CONFIG_DEFAULTS
+  ))
 
   # Check that all default columns were added
   expect_true("timeUnit" %in% names(result))
@@ -495,10 +543,14 @@ test_that("applyConfigDefaults preserves existing columns", {
 # Tests for .handleNoConfigTable
 test_that(".handleNoConfigTable works with suppressExport = FALSE", {
   # Define function in global environment so RmdPlotManager can find it
-  assign("testPlotFunction", function(projectConfiguration, configTable, ...) {
-    return(list(testPlot = ggplot2::ggplot()))
-  }, envir = .GlobalEnv)
-  
+  assign(
+    "testPlotFunction",
+    function(projectConfiguration, configTable, ...) {
+      return(list(testPlot = ggplot2::ggplot()))
+    },
+    envir = .GlobalEnv
+  )
+
   on.exit(rm(testPlotFunction, envir = .GlobalEnv), add = TRUE)
 
   rmdPlotManager <- suppressMessages(RmdPlotManager$new(
@@ -514,11 +566,13 @@ test_that(".handleNoConfigTable works with suppressExport = FALSE", {
     dataObserved = NULL
   )
 
-  result <- ospsuite.reportingframework:::.handleNoConfigTable(
-    rmdPlotManager = rmdPlotManager,
-    projectConfiguration = projectConfiguration,
-    inputs = inputs,
-    suppressExport = FALSE
+  expect_warning(
+    result <- ospsuite.reportingframework:::.handleNoConfigTable(
+      rmdPlotManager = rmdPlotManager,
+      projectConfiguration = projectConfiguration,
+      inputs = inputs,
+      suppressExport = FALSE
+    )
   )
 
   # Should return empty list when not suppressing export
@@ -528,10 +582,14 @@ test_that(".handleNoConfigTable works with suppressExport = FALSE", {
 
 test_that(".handleNoConfigTable works with suppressExport = TRUE", {
   # Define function in global environment so RmdPlotManager can find it
-  assign("testPlotFunction2", function(projectConfiguration, configTable, ...) {
-    return(list(testPlot = ggplot2::ggplot()))
-  }, envir = .GlobalEnv)
-  
+  assign(
+    "testPlotFunction2",
+    function(projectConfiguration, configTable, ...) {
+      return(list(testPlot = ggplot2::ggplot()))
+    },
+    envir = .GlobalEnv
+  )
+
   on.exit(rm(testPlotFunction2, envir = .GlobalEnv), add = TRUE)
 
   rmdPlotManager <- suppressMessages(RmdPlotManager$new(
@@ -566,7 +624,9 @@ test_that(".getDefaultColorsForScaleVector works for n <= 10", {
 
 test_that(".getDefaultColorsForScaleVector works for n > 10", {
   # This should use the default color map
-  colors <- ospsuite.reportingframework:::.getDefaultColorsForScaleVector(n = 15)
+  colors <- ospsuite.reportingframework:::.getDefaultColorsForScaleVector(
+    n = 15
+  )
   expect_length(colors, 15)
   expect_type(colors, "character")
 })
@@ -593,7 +653,8 @@ test_that(".getDefaultShapesForScaleVector errors when n exceeds available shape
   )
 
   expect_error(
-    ospsuite.reportingframework:::.getDefaultShapesForScaleVector(length(availableShapes) + 1)
+    ospsuite.reportingframework:::.getDefaultShapesForScaleVector(
+      length(availableShapes) + 1
+    )
   )
 })
-
