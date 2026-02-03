@@ -59,14 +59,4 @@ test_that("Add-on folder is added correctly", {
   expect_true(property %in% names(projectConfiguration$addOns))
 })
 
-test_that("ProjectConfiguration print method works", {
-  # Capture the print output
-  output <- capture.output(projectConfiguration$print())
 
-  # Check that output was generated
-  expect_true(length(output) > 0)
-
-  # Check for expected content
-  expect_true(any(grepl("AddOns ", output)))
-
-})

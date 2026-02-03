@@ -60,7 +60,7 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
   # Create new virtual twin population data
   dtTwinPopsNew <- dataObserved[group %in% groups, c("group", "individualId")] |>
     unique()
-  
+
   dtTwinPopsNew <- dtTwinPopsNew[, .(dataGroups = paste(group, collapse = ", ")), by = "individualId"]
   dtTwinPopsNew <- dtTwinPopsNew[, populationName := gsub(", ", "_", dataGroups)]
 
@@ -159,6 +159,38 @@ exportVirtualTwinPopulations <- function(projectConfiguration, modelFile, overwr
 #' }
 #' @export
 #' @family population export
+exportRandomPopulations <- function(projectConfiguration, populationNames = NULL, customParameters = NULL, overwrite = FALSE) {
+  # Read population demographics
+  dtPops <- xlsxReadData(wb = projectConfiguration$populationsFile, sheetName = "Demographics")
+
+  # Validate and filter populations
+  dtPops <- .validateAndFilterPopulations(
+    dtPops = dtPops,
+    populationNames = populationNames,
+    overwrite = overwrite,
+    projectConfiguration = projectConfiguration,
+    customParameters = customParameters
+  )
+
+  # If no populations to export, return early
+  if (nrow(dtPops) == 0) {
+    return(invisible())
+  }
+
+  # Export each population
+  lapply(
+    split(dtPops, by = "populationName"),
+    function(dPop) {
+      .exportSinglePopulation(
+        dPop = dPop,
+        projectConfiguration = projectConfiguration,
+        customParameters = customParameters
+      )
+    }
+  )
+
+  return(invisible())
+}
 #' Validate and filter populations for export
 #'
 #' @param dtPops Data table with population demographics
@@ -266,38 +298,6 @@ exportVirtualTwinPopulations <- function(projectConfiguration, modelFile, overwr
   return(invisible())
 }
 
-exportRandomPopulations <- function(projectConfiguration, populationNames = NULL, customParameters = NULL, overwrite = FALSE) {
-  # Read population demographics
-  dtPops <- xlsxReadData(wb = projectConfiguration$populationsFile, sheetName = "Demographics")
-
-  # Validate and filter populations
-  dtPops <- .validateAndFilterPopulations(
-    dtPops = dtPops,
-    populationNames = populationNames,
-    overwrite = overwrite,
-    projectConfiguration = projectConfiguration,
-    customParameters = customParameters
-  )
-
-  # If no populations to export, return early
-  if (nrow(dtPops) == 0) {
-    return(invisible())
-  }
-
-  # Export each population
-  lapply(
-    split(dtPops, by = "populationName"),
-    function(dPop) {
-      .exportSinglePopulation(
-        dPop = dPop,
-        projectConfiguration = projectConfiguration,
-        customParameters = customParameters
-      )
-    }
-  )
-
-  return(invisible())
-}
 #' Set Custom Parameters to Population
 #'
 #' This function updates the parameter values of a population based on custom parameters defined in a scenario.

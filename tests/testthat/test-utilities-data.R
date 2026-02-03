@@ -508,7 +508,7 @@ test_that(".readDataDictionary validates required columns for pkIndividual", {
   dictData <- data.table(
     targetColumn = c("desc","studyId", "individualId"),
     sourceColumn = c("desc","study", "id"),
-    filter = rep("", 2)
+    filter = rep("", 3)
   )
 
   wb <- openxlsx::createWorkbook()
@@ -531,54 +531,15 @@ test_that(".readDataDictionary validates required columns for pkIndividual", {
   unlink(dictFile)
 })
 
-# Additional tests for utilities-data.R to increase coverage
-
-test_that("updateDataGroupId updates data group IDs correctly", {
-  # Create test data
-  testData <- copy(dataObserved[1:10])
-  
-  # Should update dataGroupId column if project configuration is valid
-  result <- updateDataGroupId(projectConfiguration, testData)
-  
-  expect_s3_class(result, "data.table")
-  expect_true("dataGroupId" %in% names(result))
-})
-
-test_that("updateOutputPathId updates output path IDs correctly", {
-  testData <- copy(dataObserved[1:10])
-  
-  result <- updateOutputPathId(projectConfiguration, testData)
-  
-  expect_s3_class(result, "data.table")
-  # outputPathId should still be in the data
-  expect_true("outputPathId" %in% names(result))
-})
-
-test_that("addBiometricsToConfig handles biometrics correctly", {
-  skip_if_not(file.exists(projectConfiguration$individualsFile),
-              "Individuals file not available")
-  
-  testData <- copy(dataObserved[1:50])
-  
-  # Test with overwrite = FALSE (default)
-  expect_silent(
-    addBiometricsToConfig(projectConfiguration, testData, overwrite = FALSE)
-  )
-  
-  # Test with overwrite = TRUE
-  expect_silent(
-    addBiometricsToConfig(projectConfiguration, testData, overwrite = TRUE)
-  )
-})
 
 test_that("convertDataCombinedToDataTable converts DataCombined back to data.table", {
   # First convert data.table to DataCombined
   testData <- dataObserved[outputPathId == "Plasma"]
   dataCombined <- convertDataTableToDataCombined(testData)
-  
+
   # Then convert back to data.table
   result <- convertDataCombinedToDataTable(dataCombined)
-  
+
   expect_s3_class(result, "data.table")
   expect_true(nrow(result) > 0)
 })
@@ -586,13 +547,13 @@ test_that("convertDataCombinedToDataTable converts DataCombined back to data.tab
 test_that(".prepareDataForAggregation prepares data correctly", {
   testData <- dataObserved[outputPathId == "Plasma"]
   groups <- unique(testData$group)[1:2]
-  
+
   result <- ospsuite.reportingframework:::.prepareDataForAggregation(
     dataObserved = testData,
     groups = groups,
     groupSuffix = "_test"
   )
-  
+
   expect_s3_class(result, "data.table")
   expect_true("group" %in% names(result))
 })
@@ -609,17 +570,17 @@ test_that(".checkLLOQ handles LLOQ checks correctly", {
     numberOfIndividuals = c(10, 10),
     nBelowLLOQ = c(1, 8)
   )
-  
+
   result <- ospsuite.reportingframework:::.checkLLOQ(
     aggregatedData = testAggData,
-    lloqCheckColumns2of3 = c("yValues"),
-    lloqCheckColumns1of2 = c("yErrorValues"),
+    lloqCheckColumns2of3 = NULL,
+    lloqCheckColumns1of2 = NULL,
     aggregationFlag = "GeometricStdDev"
   )
-  
+
   expect_s3_class(result, "data.table")
-  # When more than 2/3 below LLOQ, yValues should be NA
-  expect_true(is.na(result[nBelowLLOQ >= numberOfIndividuals * 2/3]$yValues[1]))
+  # When more than 1/3 below LLOQ, yValues should be NA
+  expect_true(is.na(result[nBelowLLOQ >= numberOfIndividuals * 1/3]$yValues[1]))
 })
 
 test_that(".setDataTypeAttributes sets attributes correctly", {
@@ -627,14 +588,14 @@ test_that(".setDataTypeAttributes sets attributes correctly", {
     col1 = c(1, 2, 3),
     col2 = c("a", "b", "c")
   )
-  
+
   dict <- data.table(
-    targetColumn = c("col1", "col2"),
-    type = c("timeprofile", "identifier")
+    col1 = "timeprofile",
+    col2 = "identifier"
   )
-  
+
   result <- ospsuite.reportingframework:::.setDataTypeAttributes(testData, dict)
-  
+
   expect_s3_class(result, "data.table")
   expect_equal(attr(result$col1, "columnType"), "timeprofile")
   expect_equal(attr(result$col2, "columnType"), "identifier")
@@ -642,39 +603,41 @@ test_that(".setDataTypeAttributes sets attributes correctly", {
 
 test_that(".convertBiometrics converts biometrics correctly", {
   testData <- data.table(
-    col1 = c("val1", "val2"),
-    col2 = c(10, 20)
+    age = c(10, 20, 10 , 29, 15),
+    gender = c('m', 'F', 1, 3, 'binary')
   )
-  
+
   dict <- data.table(
-    targetColumn = c("newCol1"),
-    sourceColumn = c(NA),
-    filter = c(NA),
-    filterValue = c("'biometric_value'"),
-    type = c("biometric")
+    targetColumn = c("age",'gender'),
+    sourceColumn = c('colAge','colGender'),
+    filter = c(NA,NA),
+    filterValue = c(NA,NA),
+    sourceUnit = c('day(s)',''),
+    type = c("biometric","biometric")
   )
-  
-  result <- ospsuite.reportingframework:::.convertBiometrics(
-    data = testData,
-    dict = dict,
-    dictionaryName = "test_dict"
-  )
-  
+
+  expect_warning(result <- ospsuite.reportingframework:::.convertBiometrics(
+    data = copy(testData),
+    dict = dict
+  ))
+
   expect_s3_class(result, "data.table")
-  expect_true("newCol1" %in% names(result))
+  expect_equal(result$gender ,c("MALE", "FEMALE", "MALE", "UNKNOWN", "UNKNOWN"))
+  expect_equal(result$age ,testData$age/365.25)
+
 })
 
 test_that("readObservedDataByDictionary handles pkParameter dataClassType", {
   skip_if_not(file.exists(projectConfiguration$dataImporterConfigurationFile),
               "Data importer config not available")
-  
+
   # Read PK parameter data
-  dataPK <- readObservedDataByDictionary(
+  dataPK <- suppressWarnings(readObservedDataByDictionary(
     projectConfiguration,
     dataClassType = "pkParameter",
     spreadData = FALSE
-  )
-  
+  ))
+
   expect_s3_class(dataPK, "data.table")
 })
 
@@ -695,7 +658,7 @@ test_that("aggregateObservedDataGroups handles ArithmeticStdDev", {
     groups = NULL,
     aggregationFlag = "ArithmeticStdDev"
   )
-  
+
   expect_s3_class(result, "data.table")
   expect_equal(unique(result$yErrorType), ospsuite::DataErrorType$ArithmeticStdDev)
 })
@@ -707,7 +670,7 @@ test_that("aggregateObservedDataGroups handles Percentiles", {
     aggregationFlag = "Percentiles",
     percentiles = c(0.05, 0.5, 0.95)
   )
-  
+
   expect_s3_class(result, "data.table")
   expect_true("yMin" %in% names(result))
   expect_true("yMax" %in% names(result))

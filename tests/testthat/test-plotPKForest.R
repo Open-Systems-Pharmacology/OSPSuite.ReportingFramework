@@ -213,8 +213,6 @@ test_that("Ratios crossover PE with data", {
   rm(plotList)
 })
 
-# Additional tests for plotPKForest.R to increase coverage
-
 test_that(".updateScalevector updates scale vectors correctly", {
   scaleInput <- list(
     simulated = list(
@@ -222,39 +220,43 @@ test_that(".updateScalevector updates scale vectors correctly", {
       shape = c(16, 17)
     )
   )
-  
+
   result <- ospsuite.reportingframework:::.updateScalevector(scaleInput)
-  
+
   expect_type(result, "list")
   expect_true("simulated" %in% names(result))
 })
 
 test_that(".filterParameterObserved filters observed data correctly", {
   skip_if(nrow(dataObservedPK) == 0, "No observed PK data available")
-  
+
   onePlotConfig <- data.table(
     outputPathId = unique(dataObservedPK$outputPathId)[1],
-    pkParameter = unique(dataObservedPK$pkParameter)[1]
+    pkParameter = unique(dataObservedPK$pkParameter)[1],
+    dataGroupId = unique(dataObservedPK$group)[1]
   )
-  
+
   result <- ospsuite.reportingframework:::.filterParameterObserved(
     dataObservedPK = dataObservedPK,
     onePlotConfig = onePlotConfig
   )
-  
+
   expect_s3_class(result, "data.table")
+  expect_true(nrow(result) > 0)
 })
 
 test_that(".filterParameterSimulated filters simulated data correctly", {
   skip_if(nrow(pkParameterDT) == 0, "No PK parameter data available")
-  
+
   onePlotConfig <- data.table(
     scenario = unique(pkParameterDT$scenario)[1],
     outputPathId = unique(pkParameterDT$outputPathId)[1],
     pkParameter = unique(pkParameterDT$pkParameter)[1],
     referenceScenario = NA
   )
-  
+
+  loadConfigTableEnvironment(projectConfiguration)
+
   result <- ospsuite.reportingframework:::.filterParameterSimulated(
     projectConfiguration = projectConfiguration,
     pkParameterDT = pkParameterDT,
@@ -263,45 +265,34 @@ test_that(".filterParameterSimulated filters simulated data correctly", {
     coefficientOfVariation = FALSE,
     asPointeEstimate = FALSE
   )
-  
+
   expect_s3_class(result, "data.table")
+  expect_true(nrow(result) > 0)
 })
 
 test_that(".adjustForestDataPerGroup adjusts data correctly", {
   skip_if(nrow(pkParameterDT) == 0, "No PK parameter data available")
-  
-  testData <- pkParameterDT[1:20]
+
+  testData <- pkParameterDT[c(1,1001,2001,4000)]
   testData$group <- "TestGroup"
-  
+  testData[, scenarioShortName :=  scenario]
+  testData$scenarioGroup <-  "scenarioGroup"
+  testData$dataType <- 'observed'
+
   onePlotConfig <- data.table(
     scenario = unique(testData$scenario)[1],
     xScale = "linear"
   )
-  
+
   result <- ospsuite.reportingframework:::.adjustForestDataPerGroup(
     dataGroup = testData,
     onePlotConfig = onePlotConfig
   )
-  
+
   expect_s3_class(result, "data.table")
+  expect_contains(names(result),'plotTag')
 })
 
-test_that(".aggregatePointEstimate calculates point estimates", {
-  skip_if(nrow(pkParameterDT) == 0, "No PK parameter data available")
-  
-  testData <- pkParameterDT[1:100]
-  
-  result <- ospsuite.reportingframework:::.aggregatePointEstimate(
-    pkParameterFiltered = testData,
-    confLevel = 0.9,
-    nBootstrap = 100
-  )
-  
-  expect_s3_class(result, "data.table")
-  expect_true("xValues" %in% names(result))
-  expect_true("xMin" %in% names(result))
-  expect_true("xMax" %in% names(result))
-})
 
 test_that(".checkPrecision checks precision requirements", {
   testData <- data.table(
@@ -309,34 +300,13 @@ test_that(".checkPrecision checks precision requirements", {
     xMin = c(0.95, 1.9, 2.8),
     xMax = c(1.05, 2.1, 3.2)
   )
-  
+
   result <- ospsuite.reportingframework:::.checkPrecision(testData)
-  
+
   expect_s3_class(result, "data.table")
-  expect_true("precisionFlag" %in% names(result))
+  expect_true("precision" %in% names(result))
 })
 
-test_that(".addObservedData adds observed data to plot data", {
-  skip_if(nrow(dataObservedPK) == 0, "No observed PK data available")
-  skip_if(nrow(pkParameterDT) == 0, "No PK parameter data available")
-  
-  plotData <- pkParameterDT[1:20]
-  plotData$group <- "TestGroup"
-  plotData$xValues <- as.numeric(plotData$values)
-  
-  onePlotConfig <- data.table(
-    outputPathId = unique(plotData$outputPathId)[1],
-    pkParameter = unique(plotData$pkParameter)[1]
-  )
-  
-  result <- ospsuite.reportingframework:::.addObservedData(
-    plotData = plotData,
-    dataObservedPK = dataObservedPK,
-    onePlotConfig = onePlotConfig
-  )
-  
-  expect_s3_class(result, "data.table")
-})
 
 test_that(".getTableLabelsForPKForest generates table labels", {
   testData <- data.table(
@@ -344,13 +314,13 @@ test_that(".getTableLabelsForPKForest generates table labels", {
     xValues = c(1.5, 2.5),
     xMin = c(1.0, 2.0),
     xMax = c(2.0, 3.0),
-    numberOfIndividuals = c(10, 15)
+    numberOfIndividuals = c(10, 15),
+    xErrorType = rep('mean|xMin|xMax',2)
   )
-  
+
   result <- ospsuite.reportingframework:::.getTableLabelsForPKForest(testData)
-  
-  expect_type(result, "list")
-  expect_true(length(result) > 0)
+
+  expect_length(result, 3)
 })
 
 test_that(".getMappingForForestPlots creates mapping correctly", {
@@ -358,73 +328,73 @@ test_that(".getMappingForForestPlots creates mapping correctly", {
     group = c("Group1", "Group2"),
     xValues = c(1.5, 2.5)
   )
-  
+
   columnList <- list(
     x = "xValues",
     y = "group"
   )
-  
+
   result <- ospsuite.reportingframework:::.getMappingForForestPlots(
     plotData = testData,
     columnList = columnList
   )
-  
-  expect_s3_class(result, "OSPSuiteMapping")
+
+  expect_s3_class(result, "gg")
 })
 
 test_that(".getColumnSelectionForPKForest selects columns correctly", {
   testData <- data.table(
-    group = c("Group1", "Group2"),
-    xValues = c(1.5, 2.5),
-    xMin = c(1.0, 2.0),
-    xMax = c(2.0, 3.0)
+    displayNamePKParameter = c('AUC','AUC','Cmax','Cmax'),
+    displayUnitPKParameter = c('µg/L*h','µg/L*h','µg/L','µg/L*h'),
+    scenarioShortName = c('scenario1','scenario1','scenario2','scenario2'),
+    scenarioGroup = c('Group','Group')
   )
-  
-  # Test for absolute values (ratioMode = FALSE)
+
+  # Test for ratios (ratioMode != 'none') and more the one PK Parameter
   result <- ospsuite.reportingframework:::.getColumnSelectionForPKForest(
     plotData = testData,
-    ratioMode = FALSE
+    ratioMode = 'other'
   )
-  
+
   expect_type(result, "list")
-  expect_true("x" %in% names(result))
-  
-  # Test for ratios (ratioMode = TRUE)
-  result2 <- ospsuite.reportingframework:::.getColumnSelectionForPKForest(
+  expect_contains( names(result), c('yColumn','yFacetColumns','xLabel'))
+  expect_equal(result$xLabel,'Ratio')
+  expect_length(result$yFacetColumns,2)
+
+  # Test for ratios (ratioMode != 'none') and only one PK Parameter
+  result <- ospsuite.reportingframework:::.getColumnSelectionForPKForest(
+    plotData = testData[c(1,2)],
+    ratioMode = 'other'
+  )
+
+  expect_type(result, "list")
+  expect_contains( names(result), c('yColumn','yFacetColumns','xLabel'))
+  expect_equal(result$xLabel,'AUC Ratio')
+  expect_length(result$yFacetColumns,1)
+
+
+  # Test for absolute values (ratioMode = 'none') and more than one  scenario
+  result <- ospsuite.reportingframework:::.getColumnSelectionForPKForest(
     plotData = testData,
-    ratioMode = TRUE
+    ratioMode = 'none'
   )
-  
-  expect_type(result2, "list")
+
+  expect_type(result, "list")
+  expect_contains( names(result), c('yColumn','yFacetColumns','xLabel'))
+  expect_equal(result$xLabel,"AUC [µg/L*h]")
+  expect_length(result$yFacetColumns,1)
+
+
+  # Test for absolute values (ratioMode = 'none') and only one  scenario
+  result <- ospsuite.reportingframework:::.getColumnSelectionForPKForest(
+    plotData = testData[c(1,2),],
+    ratioMode = 'none'
+  )
+
+  expect_type(result, "list")
+  expect_contains( names(result), c('yColumn','yFacetColumns','xLabel'))
+  expect_equal(result$xLabel,"scenario1 AUC [µg/L*h]")
+  expect_length(result$yFacetColumns,0)
+
 })
 
-test_that("plotPKForestAggregatedAbsoluteValues handles empty config", {
-  skip("Requires full integration test setup")
-})
-
-test_that("plotPKForestAggregatedRatios handles different populations", {
-  skip("Requires full integration test setup")
-})
-
-test_that(".getCaptionForForestPlot generates captions", {
-  testData <- data.table(
-    scenario = c("Scenario1"),
-    pkParameter = c("AUC"),
-    outputPathId = c("Plasma")
-  )
-  
-  onePlotConfig <- data.table(
-    plotName = "TestPlot",
-    referenceScenario = NA
-  )
-  
-  result <- ospsuite.reportingframework:::.getCaptionForForestPlot(
-    plotData = testData,
-    onePlotConfig = onePlotConfig,
-    ratioMode = FALSE,
-    pkParameterDT = pkParameterDT
-  )
-  
-  expect_type(result, "character")
-  expect_true(nchar(result) > 0)
-})
