@@ -158,7 +158,7 @@ runSensitivityAnalysisForScenarios <-
 #'   and each element is a character vector of parameter paths to be varied for that label.
 #'   Example: list("Lipophilicity" = c("Aciclovir|Lipophilicity"),
 #'   "Permeability Mucosa" = c("Neighborhoods|Duodenum_int_Duodenum_cell|Aciclovir|P (interstitial->intracellular)",
-#'                             "Neighborhoods|Duodenum_int_Duodenum_cell|Aciclovir|P (intracellular->interstitial)").
+#'                             "Neighborhoods|Duodenum_int_Duodenum_cell|Aciclovir|P (intracellular->interstitial)")).
 #' @param variationRange Numeric scalar (default 0.1). The fractional variation range (e.g., 0.1 =
 #'   ±10% around baseline).
 #' @param numberOfSteps Integer (default 2). Number of positive steps between baseline and
