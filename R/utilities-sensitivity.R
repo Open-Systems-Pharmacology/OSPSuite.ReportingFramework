@@ -280,10 +280,11 @@ calculateSensitivities <- function(scenarioFiles,
     by = .(SensitivityParameter, QuantityPath, PKParameter)
   ]
 
-  # Write out CSV
+  # Write out CSV using the last scenario name
+  lastScenarioName <- names(scenarioFiles)[length(scenarioFiles)]
   utils::write.csv(
     x = sens,
-    file = file.path(sensitivityFolder, paste0(tail(names(scenarioFiles), 1), "-sensitivity.csv")),
+    file = file.path(sensitivityFolder, paste0(lastScenarioName, "-sensitivity.csv")),
     row.names = FALSE,
     fileEncoding = "UTF-8"
   )
@@ -486,12 +487,15 @@ prepareSensitivityPopulation <- function(scenarioFiles,
           # also remove from missingPaths if it was previously missing
           missingPaths <- setdiff(missingPaths, parPath)
         } else if (!is.na(val1) && !is.na(val2)) {
-          if (val1 == 0 && val2 != 0) {
+          # Check for zero values in either scenario
+          if ((val1 == 0 && val2 != 0) || (val2 == 0 && val1 != 0)) {
             stop(sprintf("Baseline parameter value mismatch for '%s' between scenarios: %g vs %g", parPath, val1, val2))
           }
-          if (!isTRUE(all.equal(val2 / val1, 1, tolerance = 1e-8))) {
+          # Only perform division check if val1 is not zero
+          if (val1 != 0 && !isTRUE(all.equal(val2 / val1, 1, tolerance = 1e-8))) {
             stop(sprintf("Baseline parameter value mismatch for '%s' between scenarios: %g vs %g", parPath, val1, val2))
           }
+          # If both are zero, they match (no error)
         }
         # if both NA, keep NA and let missingPaths reflect that
       }
