@@ -72,7 +72,7 @@ test_that("loadPKValues errors when files missing", {
   )
 })
 
-test_that("prepareSensitivityPopulation errors when none of the requested parameter paths exist", {
+test_that(".prepareSensitivityPopulation errors when none of the requested parameter paths exist", {
   # Use a simulation file that should exist in inst/extdata
   test_simulation_file <- system.file("extdata", "SimulationResults", "i123413_iv.pkml", package = "ospsuite.reportingframework")
   
@@ -87,7 +87,7 @@ test_that("prepareSensitivityPopulation errors when none of the requested parame
   )
 
   expect_error(
-    suppressWarnings(prepareSensitivityPopulation(
+    suppressWarnings(ospsuite.reportingframework:::.prepareSensitivityPopulation(
       scenarioFiles = scenarioFiles,
       sensitivityParameter = sensitivityParameter_all_missing,
       variationRange = 0.1,

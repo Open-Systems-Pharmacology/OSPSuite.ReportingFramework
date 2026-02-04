@@ -208,7 +208,7 @@ calculateSensitivities <- function(scenarioFiles,
   if (!dir.exists(sensitivityFolder)) dir.create(sensitivityFolder, recursive = TRUE)
 
   # Prepare temporary sensitivity population (this function validates baseline parameter consistency)
-  sensitivityPopulation <- prepareSensitivityPopulation(
+  sensitivityPopulation <- .prepareSensitivityPopulation(
     scenarioFiles = scenarioFiles,
     sensitivityParameter = sensitivityParameter,
     variationRange = variationRange,
@@ -409,18 +409,12 @@ loadPKValues <- function(scenarioFiles,
 #'   and perturbed parameter sets. The returned population includes a column `IndividualId`
 #'   enumerating rows from 0.
 #'
-#' @examples
-#' \dontrun{
-#' pop <- prepareSensitivityPopulation(scenarioFiles = myScenarios,
-#'                                     sensitivityParameter = list("CL" = c("/Parameters/CL")),
-#'                                     variationRange = 0.1,
-#'                                     numberOfSteps = 2)
-#' }
-#' @export
-prepareSensitivityPopulation <- function(scenarioFiles,
-                                         sensitivityParameter,
-                                         variationRange = 0.1,
-                                         numberOfSteps = 2) {
+#' @keywords internal
+#' @noRd
+.prepareSensitivityPopulation <- function(scenarioFiles,
+                                          sensitivityParameter,
+                                          variationRange = 0.1,
+                                          numberOfSteps = 2) {
 
   checkmate::assertCharacter(scenarioFiles, min.len = 1, max.len = 2)
   checkmate::assertList(sensitivityParameter, min.len = 1)
