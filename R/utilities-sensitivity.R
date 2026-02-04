@@ -128,7 +128,8 @@ runSensitivityAnalysisForScenarios <-
 #' scenario 1 = control and scenario 2 = treatment).
 #'
 #' @details
-#' Background and limitations (default ospsuite method). The default sensitivity method implemented in ospsuite's SensitivityAnalysis computes
+#' Background and limitations (default ospsuite method):
+#' The default sensitivity method implemented in ospsuite's SensitivityAnalysis computes
 #' sensitivities per model parameter and assumes a one-to-one mapping between the
 #' reported "sensitivity parameter" and an underlying model parameter path.
 #' - That default method does not support ratio mode (i.e., calculating sensitivities
@@ -485,7 +486,7 @@ prepareSensitivityPopulation <- function(scenarioFiles,
           # also remove from missingPaths if it was previously missing
           missingPaths <- setdiff(missingPaths, parPath)
         } else if (!is.na(val1) && !is.na(val2)) {
-          if (val1 == 0 & val2 != 0) {
+          if (val1 == 0 && val2 != 0) {
             stop(sprintf("Baseline parameter value mismatch for '%s' between scenarios: %g vs %g", parPath, val1, val2))
           }
           if (!isTRUE(all.equal(val2 / val1, 1, tolerance = 1e-8))) {
