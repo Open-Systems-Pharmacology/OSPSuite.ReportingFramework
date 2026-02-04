@@ -83,20 +83,35 @@ runSensitivityAnalysisForScenarios <-
         if (length(pkParameterSheets) > 0) {
           .initializeParametersOfSheets(projectConfiguration, pkParameterSheets)
 
-          sensitivityAnalysis <- ospsuite::SensitivityAnalysis$new(
-            simulation = scenarioList[[scenarioName]]$simulation,
-            parameterPaths = sensitivityParameterDt$parameterPath
-          )
-
-          sensitivityResults <-
-            ospsuite::runSensitivityAnalysis(
-              sensitivityAnalysis = sensitivityAnalysis,
-              sensitivityAnalysisRunOptions = sensitivityAnalysisRunOptions
-            )
-
-          ospsuite::exportSensitivityAnalysisResultsToCSV(
-            results = sensitivityResults,
-            filePath = file.path(outputFolder, .sensitivityAnalyisName(scenarioName, sensitivitysheet))
+          # Get scenario configuration
+          scenarioConfig <- dtScenarios[scenarioName == scenarioName]
+          
+          # Get model file path
+          modelFile <- file.path(projectConfiguration$modelFolder, scenarioConfig$modelFile[1])
+          
+          # Get output paths from configuration
+          dtOutputPaths <- getOutputPathIds(projectConfiguration$plotsFile)
+          outputPaths <- unique(dtOutputPaths$quantityPath)
+          
+          # Get PK parameters to calculate
+          dtPKParams <- xlsxReadData(projectConfiguration$scenariosFile, sheetName = pkParameterSheets[1])
+          pkParameters <- unique(dtPKParams$pKParameter)
+          
+          # Convert sensitivity parameter data.table to named list format
+          # Use parameter column as names, parameterPath as single-element vectors
+          sensitivityParameter <- as.list(sensitivityParameterDt$parameterPath)
+          names(sensitivityParameter) <- sensitivityParameterDt$parameter
+          
+          # Call calculateSensitivities
+          scenarioFiles <- stats::setNames(modelFile, scenarioName)
+          
+          calculateSensitivities(
+            scenarioFiles = scenarioFiles,
+            outputPaths = outputPaths,
+            pkParameter = pkParameters,
+            sensitivityParameter = sensitivityParameter,
+            outFolder = projectConfiguration$outputFolder,
+            simulationRunOptions = sensitivityAnalysisRunOptions
           )
         }
       }
