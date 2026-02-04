@@ -310,13 +310,13 @@ test_that("debugMode parameter converts validation errors to warnings", {
   # Without debugMode, should throw an error
   expect_error(
     validateObservedData(dataDT = dataObservedTest, dataClassType = "timeprofile", debugMode = FALSE),
-    "Data must be unique"
+    "Data must be unique in columns"
   )
 
   # With debugMode, should throw a warning instead
   expect_warning(
     validateObservedData(dataDT = dataObservedTest, dataClassType = "timeprofile", debugMode = TRUE),
-    "Data must be unique"
+    "Data must be unique in columns"
   )
 })
 

@@ -27,7 +27,7 @@ calculatePKParameterForScenarios <- function(projectConfiguration,
 
   dtScenarios <- getScenarioDefinitions(wbScenarios = projectConfiguration$scenariosFile)
   dtOutputPaths <- getOutputPathIds(projectConfiguration$plotsFile)
-  if (nrow(dtOutputPaths) == 0) stop("Please define ouputPaths in plot configuration xlsx")
+  if (nrow(dtOutputPaths) == 0) stop(messages$errorPleaseDefineOutputPaths())
 
   for (sc in names(scenarioResults)) {
     pkParameterSheets <- dtScenarios[scenarioName == sc & !is.na(pKParameter)]$pKParameter
@@ -197,7 +197,7 @@ loadPKParameter <- function(projectConfiguration,
   dtScenarios <- getScenarioDefinitions(projectConfiguration$scenariosFile)
 
   dtOutputPaths <- getOutputPathIds(projectConfiguration$plotsFile)
-  if (nrow(dtOutputPaths) == 0) stop("Please define ouputPaths in plot configuration xlsx")
+  if (nrow(dtOutputPaths) == 0) stop(messages$errorPleaseDefineOutputPaths())
   # Load or calculate PK analyses for all scenarios
   pkAnalysesList <- lapply(names(scenarioListOrResult), function(sc) {
     pkParameterSheets <- dtScenarios[scenarioName == sc & !is.na(pKParameter)]$pKParameter
@@ -311,10 +311,7 @@ loadPKParameter <- function(projectConfiguration,
 
   fileName <- file.path(outputFolder, paste0(scenarioName, ".csv"))
   if (!file.exists(fileName)) {
-    stop(paste(
-      "PK Parameter for", scenarioName, "is not calculated!",
-      "Use function calculatePKParameterForCalculation to generate the result"
-    ))
+    stop(messages$errorPKParameterNotCalculated(scenarioName))
   }
 
   writeToLog(
@@ -463,7 +460,7 @@ loadPKParameter <- function(projectConfiguration,
       by = "outputPathId"
     )
 
-  if (nrow(mergedData) == 0) stop(paste("no PK-Parameter available for", onePlotConfig$plotName[1]))
+  if (nrow(mergedData) == 0) stop(messages$errorNoPKParameterAvailable(onePlotConfig$plotName[1]))
 
 
   if (asRatio) {
@@ -556,7 +553,7 @@ loadPKParameter <- function(projectConfiguration,
     unique()
 
   if (any(duplicated(tmp[, c("outputPathId", "pkParameter")]))) {
-    stop("Please check pkParameterDT. It seems that displayUnitPKParameter is not consistent for outputPathId and pkParameter")
+    stop(messages$errorInconsistentDisplayUnit())
   }
 
   return(invisible())

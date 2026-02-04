@@ -240,7 +240,7 @@ runPlot <- function(projectConfiguration,
             if (!getOption("OSPSuite.RF.skipFailingPlots", default = FALSE)) {
               stop(err)
             } else {
-              warning(paste0("Error during creation of plot: '", onePlotConfig$plotName[1], "':\n ", conditionMessage(err)))
+              warning(messages$errorCreatingPlot(onePlotConfig$plotName[1], err))
             }
           }
         )
@@ -791,7 +791,7 @@ validateHeaders <- function(configTable) {
     }), # nolint indentation_linter
     .SDcols = "header"
   ])) {
-    stop("Invalid plot configuration table. Missing header for level")
+    stop(messages$errorInvalidPlotConfiguration())
   }
 
   return(configTablePlots)
@@ -821,10 +821,7 @@ validateHeaders <- function(configTable) {
     if (!col %in% names(configTablePlots)) {
       # Add missing column with default value
       configTablePlots[[col]] <- defaultValue
-      warning(paste0(
-        "Column '", col, "' was missing. Adding column with default: ",
-        if (is.numeric(defaultValue)) defaultValue else paste0("'", defaultValue, "'")
-      ))
+      warning(messages$warningColumnMissingAddingDefault(col, defaultValue))
     } else {
       # Column exists - check for NA values
       naIndices <- is.na(configTablePlots[[col]])
@@ -832,17 +829,11 @@ validateHeaders <- function(configTable) {
       if (all(naIndices)) {
         # All values are NA
         configTablePlots[[col]] <- defaultValue
-        warning(paste0(
-          "Column '", col, "' was empty. Setting all values to default: ",
-          if (is.numeric(defaultValue)) defaultValue else paste0("'", defaultValue, "'")
-        ))
+        warning(messages$warningColumnEmptySettingDefault(col, defaultValue))
       } else if (any(naIndices)) {
         # Some values are NA
         configTablePlots[[col]][naIndices] <- defaultValue
-        warning(paste0(
-          "Column '", col, "' had ", sum(naIndices), " missing value(s). Setting to default: ",
-          if (is.numeric(defaultValue)) defaultValue else paste0("'", defaultValue, "'")
-        ))
+        warning(messages$warningColumnHasMissingValues(col, sum(naIndices), defaultValue))
       }
     }
   }
@@ -952,8 +943,7 @@ validateConfigTablePlots <- function(configTablePlots,
     invisible(lapply(subsetCheck$cols, function(col) {
       if (any(!is.na(data[[col]]))) {
         if (is.null(subsetCheck$allowedValues)) {
-          stop(paste("Plot configuration column", col, "has entries but no allowed values.
-                     Did you forget some inputs e.g. observedData or pkParameterDT?"))
+          stop(messages$errorPlotConfigColumnNoAllowedValues(col))
         }
         splitAllowed <- subsetCheck$splitAllowed
         if (is.null(subsetCheck$splitAllowed)) splitAllowed <- TRUE
@@ -991,7 +981,7 @@ validateNumericVectorColumns <- function(columns, data, ...) {
             x <- eval(parse(text = xcharacter))
           },
           error = function(e) {
-            stop(paste("Invalid inputs in plot configuration column", col))
+            stop(messages$errorInvalidInputsInPlotConfigColumn(col))
           }
         )
       }
@@ -1050,10 +1040,7 @@ validateGroupConsistency <- function(
 #' @export
 validateAtleastOneEntry <- function(configTablePlots, columnVector) {
   if (nrow(configTablePlots[rowSums(is.na(configTablePlots)) == length(columnVector), ]) > 0) {
-    stop(paste(
-      "Invalid configTable, each plot row needs at least one entry in one of the columns",
-      paste(columnVector, collapse = ", ")
-    ))
+    stop(messages$errorInvalidConfigAtLeastOneEntry(columnVector))
   }
 
   return(invisible())
@@ -1095,7 +1082,7 @@ validateAtleastOneEntry <- function(configTablePlots, columnVector) {
       length(unique(x))
     }), by = outputPathId, .SDcols = uniqueColumns]
   tmp <- lapply(uniqueColumns, function(col) { # nolint object_usage
-    if (any(uniqueIDValues[[col]] > 1)) stop(paste("values for", col, "should be the same within outputPathId"))
+    if (any(uniqueIDValues[[col]] > 1)) stop(messages$errorValuesNotSameWithinOutputPathIdGeneric(col))
   })
 
   # check validity of units

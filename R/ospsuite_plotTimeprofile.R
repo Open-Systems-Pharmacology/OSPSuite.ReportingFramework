@@ -562,14 +562,14 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
 #' @noRd
 .constructMetDataForTimeProfile <- function(plotData) {
   xUnit <- unique(plotData$xUnit)
-  if (length(xUnit) > 1) stop("x Unit ambiguous")
+  if (length(xUnit) > 1) stop(messages$errorXUnitAmbiguous())
   if ("xDimension" %in% names(plotData)) {
     xDimension <- unique(plotData$xDimension)
   } else {
     xDimension <- ospsuite::getDimensionForUnit(xUnit)
   }
   yUnit <- unique(plotData$yUnit)
-  if (length(yUnit) > 2) stop("y Unit ambiguous")
+  if (length(yUnit) > 2) stop(messages$errorYUnitAmbiguous())
   if ("yDimension" %in% names(plotData)) {
     yDimension <- unique(plotData$yDimension)
   } else {
