@@ -46,6 +46,8 @@ calculatePKParameterForScenarios <- function(projectConfiguration,
         pkAnalyses = pkAnalyses,
         filePath = file.path(outputFolder, paste0(sc, ".csv"))
       )
+    } else {
+      message(messages$warningNoPKSheetDefined(sc))
     }
   }
 
