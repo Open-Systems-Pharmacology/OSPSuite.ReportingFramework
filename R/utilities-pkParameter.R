@@ -118,7 +118,7 @@ calculatePKParameterForScenarios <- function(projectConfiguration,
     sheetName = "Userdef PK Parameter",
     skipDescriptionRow = TRUE
   )
-  stats::setNames(dtUserdefPKParameter,gsub(" \\[.*\\]", "", names(dtUserdefPKParameter)))
+  dtUserdefPKParameter <- stats::setNames(dtUserdefPKParameter, gsub(" \\[.*\\]", "", names(dtUserdefPKParameter)))
 
   checkmate::assertCharacter(dtUserdefPKParameter$name, any.missing = FALSE, unique = TRUE)
   if (any(is.na(dtUserdefPKParameter[["display Unit"]]))) {
