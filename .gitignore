@@ -46,3 +46,8 @@ inst/doc
 
 # do not add lockfiles for libre office files
 .~lock.*
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
