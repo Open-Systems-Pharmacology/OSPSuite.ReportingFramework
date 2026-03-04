@@ -17,4 +17,17 @@ This function synchronizes scenarios between two Excel files: one containing
 scenarios for a project and the other containing scenarios related to plots.
 It adds any missing scenarios from the scenarios file to the plots file.
 }
-\keyword{internal}
+\seealso{
+Other function to read from and write to xlsx: 
+\code{\link{copyConfigSheet}()},
+\code{\link{separateAndTrimColumn}()},
+\code{\link{setHeadersToLowerCase}()},
+\code{\link{splitInputs}()},
+\code{\link{synchronizeScenariosOutputsWithPlots}()},
+\code{\link{xlsxAddDataUsingTemplate}()},
+\code{\link{xlsxAddSheet}()},
+\code{\link{xlsxCloneAndSet}()},
+\code{\link{xlsxReadData}()},
+\code{\link{xlsxWriteData}()}
+}
+\concept{function to read from and write to xlsx}

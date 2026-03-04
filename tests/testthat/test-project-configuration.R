@@ -58,3 +58,5 @@ test_that("Add-on folder is added correctly", {
   # Check if the property was added to the private data
   expect_true(property %in% names(projectConfiguration$addOns))
 })
+
+

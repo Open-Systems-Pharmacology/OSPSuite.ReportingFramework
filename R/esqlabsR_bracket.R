@@ -41,9 +41,9 @@ initProject <- function(configurationDirectory = ".",
   dt <- xlsxReadData(sourceConfigurationXlsx)
   filesAvailable <- list.files(templatePath)
 
-  filesToCopy <- intersect(dt$value, filesAvailable) %>% unique()
+  filesToCopy <- intersect(dt$value, filesAvailable) |> unique()
 
-  dirsToCreate <- setdiff(dt$value, c(filesToCopy)) %>%
+  dirsToCreate <- setdiff(dt$value, c(filesToCopy)) |>
     unique()
 
   for (d in dirsToCreate) {
@@ -83,6 +83,76 @@ createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xl
 
   return(projectConfiguration)
 }
+#' Fix file paths in scenario configurations by replacing dash variants with standard hyphen-minus
+#'
+#' This function checks if all files referenced in scenario configurations exist.
+#' If a file is not found, it tries replacing various dash unicode characters
+#' with the standard hyphen-minus character (U+002D). This addresses issues where
+#' LibreOffice converts standard hyphens to other unicode variants (e.g., EN DASH
+#' U+2013, EM DASH U+2014) when saving Excel files.
+#'
+#' @param scenarioConfigurations List of scenario configuration objects from
+#'   `esqlabsR::readScenarioConfigurationFromExcel()`
+#' @param projectConfiguration Object of class `ProjectConfiguration` containing
+#'   information on paths and file names
+#'
+#' @return The scenarioConfigurations list with corrected file paths
+#' @keywords internal
+#' @noRd
+.fixFilePathsInScenarioConfigurations <- function(scenarioConfigurations,
+                                                 projectConfiguration) {
+  # Define unicode dash characters that might be mistaken for standard hyphen-minus
+  # U+002D: HYPHEN-MINUS (standard keyboard character)
+  # U+2010: HYPHEN
+  # U+2011: NON-BREAKING HYPHEN
+  # U+2012: FIGURE DASH
+  # U+2013: EN DASH (commonly inserted by LibreOffice)
+  # U+2014: EM DASH
+  # U+2015: HORIZONTAL BAR
+  dashVariants <- c("\u2010", "\u2011", "\u2012", "\u2013", "\u2014", "\u2015")
+
+  # Process each scenario configuration
+  for (i in seq_along(scenarioConfigurations)) {
+    scenarioConfig <- scenarioConfigurations[[i]]
+
+    # Validate that modelFile exists and is not NULL or empty
+    if (is.null(scenarioConfig$modelFile) || nchar(scenarioConfig$modelFile) == 0) {
+      stop(messages$errorInvalidScenarioConfig(scenarioConfig$scenarioName, is.null(scenarioConfig$modelFile)))
+    }
+
+    modelFile <- scenarioConfig$modelFile
+    modelPath <- file.path(projectConfiguration$modelFolder, modelFile)
+
+    # Check if file exists
+    if (!file.exists(modelPath)) {
+      # Try replacing each dash variant with standard hyphen-minus
+      correctedFile <- modelFile
+      for (dashVariant in dashVariants) {
+        correctedFile <- gsub(dashVariant, "-", correctedFile, fixed = TRUE)
+      }
+
+      correctedPath <- file.path(projectConfiguration$modelFolder, correctedFile)
+
+      # If corrected path exists, update the configuration
+      if (file.exists(correctedPath)) {
+        writeToLog(
+          type = "Warning",
+          msg = paste0(
+            "File '", modelFile, "' not found. ",
+            "Using corrected filename '", correctedFile, "' instead. ",
+            "Consider updating the scenario configuration file to use standard hyphens (-)."
+          )
+        )
+        scenarioConfigurations[[i]]$modelFile <- correctedFile
+      } else {
+        # File not found even after correction
+        stop(messages$errorModelFileNotFound(scenarioConfig$scenarioName, modelFile, correctedFile, projectConfiguration$modelFolder))
+      }
+    }
+  }
+
+  return(scenarioConfigurations)
+}
 #' Create Scenario objects from `ScenarioConfiguration` objects
 #'
 #' wrap of `esqlabsR::createDefaultProjectConfiguration()` with `esqlabsR::createScenarios()` as input
@@ -96,14 +166,22 @@ createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xl
 #' @family scenario management
 createScenarios.wrapped <- function(projectConfiguration, # nolint
                                     scenarioNames = NULL) {
-  scenarioList <-
-    esqlabsR::createScenarios(
-      scenarioConfigurations =
-        esqlabsR::readScenarioConfigurationFromExcel(
-          scenarioNames = scenarioNames,
-          projectConfiguration = projectConfiguration
-        )
-    )
+  # Read scenario configurations from Excel
+  scenarioConfigurations <- esqlabsR::readScenarioConfigurationFromExcel(
+    scenarioNames = scenarioNames,
+    projectConfiguration = projectConfiguration
+  )
+
+  # Check and fix file paths with hyphen/dash issues
+  scenarioConfigurations <- .fixFilePathsInScenarioConfigurations(
+    scenarioConfigurations = scenarioConfigurations,
+    projectConfiguration = projectConfiguration
+  )
+
+  # Create scenarios with fixed configurations
+  scenarioList <- esqlabsR::createScenarios(
+    scenarioConfigurations = scenarioConfigurations
+  )
 
   synchronizeScenariosWithPlots(projectConfiguration)
   synchronizeScenariosOutputsWithPlots(projectConfiguration)
@@ -129,11 +207,7 @@ loadScenarioResultsToFramework <- function(projectConfiguration, scenarioNames) 
   resultFiles <- file.path(outputFolder, paste0(scenarioNames, ".csv"))
 
   if (!all(file.exists(resultFiles))) {
-    stop(paste(
-      "Error: Simulation results for scenario(s)",
-      paste(scenarioNames[!file.exists(resultFiles)], collapse = ", "),
-      "do not exist."
-    ))
+    stop(messages$errorSimulationResultsDoNotExist(scenarioNames[!file.exists(resultFiles)]))
   }
 
   scenarioResults <- list()
@@ -191,7 +265,7 @@ runAndSaveScenarios <- function(projectConfiguration, scenarioList, simulationRu
     writeToLog(type = "Info", msg = paste("Start simulation of", sc))
 
     # Make sure custom params are not again overwritten by population
-    scenarioList[[sc]] <- setCustomParamsToPopulation(scenarioList[[sc]])
+    scenarioList[[sc]] <- .setCustomParamsToPopulation(scenarioList[[sc]])
 
     scenarioResults[sc] <- esqlabsR::runScenarios(
       scenarios = scenarioList[sc],
@@ -258,7 +332,8 @@ runOrLoadScenarios <- function(projectConfiguration, scenarioList, simulationRun
 #' field is NA.
 #'
 #' @keywords internal
-readOntongenies <- function(data) {
+#' @noRd
+.readOntongenies <- function(data) {
   proteinOntogenyMappings <- data[["protein Ontogenies"]]
   if (is.na(proteinOntogenyMappings)) {
     return(NULL)
@@ -277,7 +352,7 @@ readOntongenies <- function(data) {
       fixed = TRUE
     ))
     if (length(ontogenyMapping) != 2) {
-      stop(paste("The ontogeny has the wrong structure:", ontogeny))
+      stop(messages$errorOntogenyWrongStructure(ontogeny))
     }
     protein <- ontogenyMapping[[1]]
     ontogeny <- ontogenyMapping[[2]]
@@ -304,7 +379,8 @@ readOntongenies <- function(data) {
 #'   copy of esqlabsR::extendPopulationFromXLS but columnNames always withdot
 #'
 #' @keywords internal
-extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { # nolint
+#' @noRd
+.extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { # nolint
   ospsuite.utils::validateIsOfType(population, "Population")
   ospsuite.utils::validateIsString(XLSpath)
   ospsuite.utils::validateIsString(sheet, nullAllowed = TRUE)
@@ -320,7 +396,7 @@ extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { # no
   data <- readExcel(path = XLSpath, sheet = sheet)
   names(data) <- gsub(" ", "\\.", names(data))
   if (!all(columnNames %in% names(data))) {
-    stop("errorWrongXLSStructure")
+    stop(messages$errorWrongXLSStructure())
     # stop(messages$errorWrongXLSStructure(filePath = XLSpath, expectedColNames = columnNames)) # nolint
   }
 
@@ -337,7 +413,7 @@ extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { # no
     distributions[[i]] <- data[["Distribution"]][[i]]
   }
 
-  extendPopulationByUserDefinedParams_RF(
+  .extendPopulationByUserDefinedParams_RF(
     population = population, parameterPaths = paramPaths,
     meanValues = meanVals, sdValues = sdVals,
     distributions = distributions
@@ -361,7 +437,8 @@ extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) { # no
 #'   be sampled. Must have the same length as `parameterPaths`.
 #' A list of supported distributions is defined in `Distributions`. Default is `"Normal"`.
 #' @keywords internal
-extendPopulationByUserDefinedParams_RF <- function(population, # nolint
+#' @noRd
+.extendPopulationByUserDefinedParams_RF <- function(population, # nolint
                                                    parameterPaths,
                                                    meanValues,
                                                    sdValues,

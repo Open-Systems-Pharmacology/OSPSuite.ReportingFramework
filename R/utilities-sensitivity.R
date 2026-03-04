@@ -66,9 +66,7 @@ runSensitivityAnalysisForScenarios <-
     pKParameter <- NULL
 
     if (!("sensitivityFile" %in% names(projectConfiguration$addOns))) {
-      stop(
-        "SensitivityParameter xlsx is not added to the projectConfiguration Please call 'addSensitivityTable(projectConfiguration)'"
-      )
+      stop(messages$errorSensitivityFileNotAdded())
     }
 
     outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$sensitivityResults)
@@ -79,11 +77,11 @@ runSensitivityAnalysisForScenarios <-
     sensitivityParameterDt <- xlsxReadData(projectConfiguration$addOns$sensitivityFile, sheetName = sensitivitysheet)
 
     for (scenarioName in scenarioNames) {
-      if (!file.exists(file.path(outputFolder, sensitivityAnalyisName(scenarioName, sensitivitysheet))) |
+      if (!file.exists(file.path(outputFolder, .sensitivityAnalyisName(scenarioName, sensitivitysheet))) |
         overwrite) {
         pkParameterSheets <- dtScenarios[scenarioName == scenarioName & !is.na(pKParameter)]$pKParameter
         if (length(pkParameterSheets) > 0) {
-          initializeParametersOfSheets(projectConfiguration, pkParameterSheets)
+          .initializeParametersOfSheets(projectConfiguration, pkParameterSheets)
 
           sensitivityAnalysis <- ospsuite::SensitivityAnalysis$new(
             simulation = scenarioList[[scenarioName]]$simulation,
@@ -98,7 +96,7 @@ runSensitivityAnalysisForScenarios <-
 
           ospsuite::exportSensitivityAnalysisResultsToCSV(
             results = sensitivityResults,
-            filePath = file.path(outputFolder, sensitivityAnalyisName(scenarioName, sensitivitysheet))
+            filePath = file.path(outputFolder, .sensitivityAnalyisName(scenarioName, sensitivitysheet))
           )
         }
       }
@@ -113,6 +111,7 @@ runSensitivityAnalysisForScenarios <-
 #'
 #' @return A string representing the generated file name for the sensitivity analysis results.
 #' @keywords internal
-sensitivityAnalyisName <- function(scenarioName, sensitivitysheet) {
+#' @noRd
+.sensitivityAnalyisName <- function(scenarioName, sensitivitysheet) {
   paste0(scenarioName, "_", sensitivitysheet, ".csv")
 }

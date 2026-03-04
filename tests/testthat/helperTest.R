@@ -517,7 +517,7 @@ mockManualEditingsPlotSensitivityTest <- function(projectConfiguration,
   )
   dt <- rbind(
     dt,
-    dt[plotName == "sensitivity_all"] %>%
+    dt[plotName == "sensitivity_all"] |>
       dplyr::mutate(
         plotName = "sensitivity_90",
         threshold = 0.9,
@@ -561,7 +561,7 @@ mockManualEditingsPlotTimeProfileTest <- function(projectConfiguration) {
       timeLabel = "Time after dose",
       timeShift = 6
     )
-  ) %>%
+  ) |>
     unique()
 
   xlsxWriteData(wb = wb, sheetName = "TimeRange", dt = dtTimeRange)

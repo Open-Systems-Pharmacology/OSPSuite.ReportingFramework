@@ -9,25 +9,25 @@ test_that("calculatePKParameterForScenarios works correctly", {
 
 test_that("initializeParametersOfSheets updates parameters", {
   pkParameterSheets <- c("PK_Plasma", "PK_Fraction") # Example sheet names
-  expect_silent(initializeParametersOfSheets(projectConfiguration, pkParameterSheets))
+  expect_silent(.initializeParametersOfSheets(projectConfiguration, pkParameterSheets))
 })
 
 test_that("readUserDefinedPKParameters reads data correctly", {
   file <- projectConfiguration$addOns$pKParameterFile
-  userDefinedParams <- readUserDefinedPKParameters(file)
+  userDefinedParams <- .readUserDefinedPKParameters(file)
   expect_s3_class(userDefinedParams, "data.table")
   expect_true(nrow(userDefinedParams) > 0)
 })
 
 test_that("addUserDefinedParameters adds parameters correctly", {
   userdefinedParameters <- c("F_tEnd", "F_max") # Example parameters
-  dtUserdefPKParameter <- readUserDefinedPKParameters(projectConfiguration$addOns$pKParameterFile)
-  expect_silent(addUserDefinedParameters(userdefinedParameters, dtUserdefPKParameter))
+  dtUserdefPKParameter <- .readUserDefinedPKParameters(projectConfiguration$addOns$pKParameterFile)
+  expect_silent(.addUserDefinedParameters(userdefinedParameters, dtUserdefPKParameter))
   expect_contains(ospsuite::allPKParameterNames(), userdefinedParameters)
 
   userdefinedParameters <- c("DoesNotExist") # Example parameters
-  dtUserdefPKParameter <- readUserDefinedPKParameters(projectConfiguration$addOns$pKParameterFile)
-  expect_error(addUserDefinedParameters(userdefinedParameters, dtUserdefPKParameter))
+  dtUserdefPKParameter <- .readUserDefinedPKParameters(projectConfiguration$addOns$pKParameterFile)
+  expect_error(.addUserDefinedParameters(userdefinedParameters, dtUserdefPKParameter), messages$errorPKParameterNotDefined("DoesNotExist"))
 })
 
 test_that("loadPKParameter loads parameters correctly", {
@@ -40,7 +40,7 @@ test_that("loadPKAnalysisPerScenario processes scenario correctly", {
   scenarioName <- names(scenarioResults)[1]
   scenarioSimulation <- scenarioResults[[scenarioName]]$simulation
   pkParameterSheets <- c("PK_Plasma") # Example sheet name
-  result <- loadPKAnalysisPerScenario(scenarioName, scenarioSimulation, pkParameterSheets, projectConfiguration)
+  result <- .loadPKAnalysisPerScenario(scenarioName, scenarioSimulation, pkParameterSheets, projectConfiguration)
   expect_s3_class(result, "data.table")
   expect_true(nrow(result) == 200)
 })
@@ -48,7 +48,7 @@ test_that("loadPKAnalysisPerScenario processes scenario correctly", {
 test_that("loadPkAnalysisRawData loads data correctly", {
   scenarioName <- names(scenarioResults)[1]
   scenarioSimulation <- scenarioResults[[scenarioName]]$simulation
-  result <- loadPkAnalysisRawData(projectConfiguration, scenarioName, scenarioSimulation)
+  result <- .loadPkAnalysisRawData(projectConfiguration, scenarioName, scenarioSimulation)
   expect_s3_class(result, "data.table")
   expect_true(nrow(result) > 0)
 })

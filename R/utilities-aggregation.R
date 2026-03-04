@@ -23,7 +23,8 @@
 #'
 #' @return A function that performs the specified aggregation. The returned function accepts a numeric vector and returns a list containing the aggregated values and error types.
 #' @keywords internal
-getAggregationFunction <- function(aggregationFlag,
+#' @noRd
+.getAggregationFunction <- function(aggregationFlag,
                                    percentiles,
                                    customFunction,
                                    legendsize = 2) {
@@ -66,7 +67,7 @@ getAggregationFunction <- function(aggregationFlag,
       len = 3,
       sorted = TRUE
     )
-    yErroryType <- getErrorTypeForPercentiles(percentiles, legendsize = legendsize)
+    yErroryType <- .getErrorTypeForPercentiles(percentiles, legendsize = legendsize)
     aggregationFunction <-
       function(y) {
         y <- y[!is.na(y)]
@@ -95,7 +96,8 @@ getAggregationFunction <- function(aggregationFlag,
 #' @return A character string with the error type for the given percentiles,
 #' formatted according to the specified legendsize.
 #' @keywords internal
-getErrorTypeForPercentiles <- function(percentiles, legendsize) {
+#' @noRd
+.getErrorTypeForPercentiles <- function(percentiles, legendsize) {
   mName <- formatPercentiles(percentiles[2], suffix = " percentile")
 
   yMaxTxt <- formatPercentiles(percentiles[3], suffix = " percentile")
@@ -109,7 +111,7 @@ getErrorTypeForPercentiles <- function(percentiles, legendsize) {
       yMinTxt <- formatPercentiles(percentiles[1], suffix = " percentile")
       paste(mName, "|", trimws(yMinTxt), "|", trimws(yMaxTxt))
     },
-    stop("Error: legendsize not covered. Please provide a legendsize of 2 or 3.")
+    stop(messages$errorLegendSizeNotCovered())
   )
   return(result)
 }
@@ -127,7 +129,8 @@ getErrorTypeForPercentiles <- function(percentiles, legendsize) {
 #' @return A data.table containing aggregated results with counts (`numberOfIndividuals`),
 #' aggregated values, and the number of measurements below the lower limit of quantification (`nBelowLLOQ`).
 #' @keywords internal
-performAggregation <- function(dataToAggregate,
+#' @noRd
+.performAggregation <- function(dataToAggregate,
                                aggregationFun,
                                aggrCriteria) {
   # avoid warning for global variable
@@ -162,7 +165,8 @@ performAggregation <- function(dataToAggregate,
 #' @return A character vector of length 2 containing descriptors for mean and range,
 #' based on the specified error type.
 #' @keywords internal
-getErrorLabels <- function(yErrorType) {
+#' @noRd
+.getErrorLabels <- function(yErrorType) {
   errorLabels <-
     switch(yErrorType,
       GeometricStdDev = c("geometric mean", "geometric standard deviation"),
@@ -188,7 +192,8 @@ getErrorLabels <- function(yErrorType) {
 #'
 #' @return A data.table containing the aggregated variance results, including the aggregated values and error types.
 #' @keywords internal
-getAggregatedVariance <- function(dt,
+#' @noRd
+.getAggregatedVariance <- function(dt,
                                   aggregationFun,
                                   valueColumn,
                                   identifier,
@@ -244,7 +249,8 @@ getAggregatedVariance <- function(dt,
 #'
 #'
 #' @keywords internal
-calculateAggregationWithCIBYGroup <- function(dt,
+#' @noRd
+.calculateAggregationWithCIBYGroup <- function(dt,
                                               aggregationFun,
                                               confLevel = 0.9,
                                               identifier,

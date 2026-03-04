@@ -1,12 +1,12 @@
 test_that("stopHelperFunction stops with error when option is NULL", {
   options(OSPSuite.RF.stopHelperFunction = NULL) # Set option to NULL
-  expect_error(stopHelperFunction())
+  expect_error(.stopHelperFunction(), substr(x = messages$errorStopHelperFunctionNotInitialized(), start = 1,stop = 20))
 
   options(OSPSuite.RF.stopHelperFunction = TRUE) # Set option to TRUE
-  expect_error(stopHelperFunction())
+  expect_error(.stopHelperFunction())
 
   options(OSPSuite.RF.stopHelperFunction = FALSE) # Set option to FALSE
-  expect_silent(stopHelperFunction()) # Should not throw an error
+  expect_silent(.stopHelperFunction()) # Should not throw an error
 })
 test_that("getQCpassedEnvironmentVariable works correctly", {
   # Test when QCpassed is set to "TRUE"
@@ -23,7 +23,7 @@ test_that("getQCpassedEnvironmentVariable works correctly", {
     {
       result <- getQCpassedEnvironmentVariable()
     },
-    "Environment Variable 'QCpassed' not found, empty or a non logical, set 'QCpassed' to FALSE"
+    messages$warningQCPassedNotFound()
   )
   expect_equal(result, FALSE)
 
@@ -33,7 +33,7 @@ test_that("getQCpassedEnvironmentVariable works correctly", {
     {
       result <- getQCpassedEnvironmentVariable()
     },
-    "Environment Variable 'QCpassed' not found, empty or a non logical, set 'QCpassed' to FALSE"
+    messages$warningQCPassedNotFound()
   )
   expect_equal(result, FALSE)
 

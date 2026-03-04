@@ -8,6 +8,7 @@ vignette: >
 ---
 
 ```{r, include = FALSE}
+options(rmarkdown.html_vignette.check_title = FALSE)
 knitr::opts_chunk$set(
   collapse = TRUE,
   echo = TRUE,
@@ -24,7 +25,6 @@ knitr::opts_chunk$set(
 library(ospsuite.reportingframework)
 library(tidyr)
 library(data.table)
-options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
 
@@ -390,7 +390,7 @@ dtPlots <- xlsxReadData(
 )
 
 knitr::kable(dtPlots[1:4]
-%>% dplyr::select(!c("TimeRange_h0_6", "TimeRange_h6_24")))
+|> dplyr::select(!c("TimeRange_h0_6", "TimeRange_h6_24")))
 ```
 
 Now we can execute the `runPlot` call to generate the plots. For now, we suppress the export of the figures by setting the input parameter `plotNames = c('one_individual', 'one_individual-gof')`. `runPlot` returns a list of ggplot objects. The caption is added as an attribute to each plot.
@@ -517,7 +517,7 @@ Do not forget to edit the columns `PlotCaptionAddon`, `TimeRange_firstApplicatio
 Add subsections.
 
 ```{r plotconfig-2, echo=FALSE, eval = TRUE}
-knitr::kable(dtPlots[5:11] %>% dplyr::select(!c("TimeRange_h0_6", "TimeRange_h6_24")))
+knitr::kable(dtPlots[5:11] |> dplyr::select(!c("TimeRange_h0_6", "TimeRange_h6_24")))
 ```
 
 Execute the `runPlot` call again to generate the plots. We take the newly generated plot names. The variable `plotList` contains all generated plots.
@@ -645,7 +645,7 @@ Do not forget to edit the columns `TimeRange_firstApplication`, `TimeRange_lastA
 Add subsections.
 
 ```{r plotConfig-3, echo=FALSE, eval = TRUE}
-knitr::kable(dtPlots[12:14] %>% dplyr::select(!c("TimeRange_h0_6", "TimeRange_h6_24")))
+knitr::kable(dtPlots[12:14] |> dplyr::select(!c("TimeRange_h0_6", "TimeRange_h6_24")))
 ```
 
 Execute the `runPlot` call again to generate the plots.. 

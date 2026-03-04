@@ -148,7 +148,7 @@ mdFigure <- function(
     subfolder,
     addNewPage = TRUE,
     customStyles = list()) {
-  validateMdFigureTableInputs(
+  .validateMdFigureTableInputs(
     subfolder = subfolder,
     importFile = figureFile,
     captionFile = captionFile,
@@ -218,7 +218,7 @@ mdTable <- function(tableNumber,
                     digitsOfSignificance = 3,
                     addNewPage = TRUE,
                     ...) {
-  validateMdFigureTableInputs(
+  .validateMdFigureTableInputs(
     subfolder = subfolder,
     importFile = tableCsv,
     captionFile = captionFile,
@@ -315,7 +315,8 @@ mdCaption <- function(subfolder, captionFile, captionPrefix, captionStyle = NULL
 #' @inherit mdFigure
 #' @param importFile figure file or table .csv file
 #' @keywords internal
-validateMdFigureTableInputs <- function(subfolder, importFile, captionFile, customStyles) {
+#' @noRd
+.validateMdFigureTableInputs <- function(subfolder, importFile, captionFile, customStyles) {
   checkmate::assertFileExists(file.path(subfolder, importFile))
   checkmate::assertFileExists(file.path(subfolder, captionFile))
   checkmate::assertList(customStyles)
@@ -376,7 +377,7 @@ addFiguresAndTables <- function(keyList,
         digitsOfSignificance = 3
       )
     } else {
-      stop(paste("No file exists for key. There should be either", figureFile, "or", tableCsv))
+      stop(messages$errorNoFileExistsForKey(figureFile, tableCsv))
     }
   }
 
@@ -390,7 +391,8 @@ addFiguresAndTables <- function(keyList,
 #'
 #' @return character with startlines
 #' @keywords internal
-startRmd <- function(title = "Report") {
+#' @noRd
+.startRmd <- function(title = "Report") {
   return(c(
     "---",
     paste0('title: "', title, '"'),
@@ -429,13 +431,13 @@ mergeRmds <- function(
 
   # Check for any other extensions the .Rmd
   if (any(grepl("\\.[^.Rmd]*$", sourceRmds))) {
-    stop("Error: One or more elements of sourceRmds have an extension other than .Rmd.")
+    stop(messages$errorSourceRmdExtension())
   } else {
     # Add.Rmd extension to elements that don't have it
     sourceRmds <- ifelse(grepl("\\.Rmd$", sourceRmds), sourceRmds, paste0(sourceRmds, ".Rmd"))
   }
   if (any(grepl("\\.[^.Rmd]*$", newName))) {
-    stop("Error: NewName has an extension other than .Rmd.")
+    stop(messages$errorNewNameExtension())
   } else {
     # Add.Rmd extension to elements that don't have it
     newName <- ifelse(grepl("\\.Rmd$", newName), newName, paste0(newName, ".Rmd"))
@@ -443,7 +445,7 @@ mergeRmds <- function(
   checkmate::assertFileExists(file.path(projectConfiguration$outputFolder, sourceRmds))
 
   rmdTxt <- c(
-    startRmd(title = title),
+    .startRmd(title = title),
     "  ",
     "```{r setup, include=FALSE}",
     'knitr::opts_chunk$set(echo = FALSE,warning = FALSE,results = "asis",error = FALSE,message = FALSE)',

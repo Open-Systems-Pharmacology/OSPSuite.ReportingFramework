@@ -1,4 +1,5 @@
 #' @keywords internal
+#' @noRd
 "_PACKAGE"
 
 # try to avoid warning in R cmd check Notes
@@ -18,7 +19,6 @@
 #' @importFrom data.table .SD
 #' @importFrom data.table :=
 #' @importFrom data.table data.table
-#' @importFrom tidyr  %>%
 #' @importFrom foreach %dopar%
 #' @importFrom rlang %||%
 #' @importFrom rlang sym

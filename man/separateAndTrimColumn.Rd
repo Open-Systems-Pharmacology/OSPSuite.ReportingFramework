@@ -20,4 +20,17 @@ This function separates the rows of a specified column in a data.table,
 trims whitespace from the resulting values, and renames the column to remove
 the plural 's' at the end of the column name.
 }
-\keyword{internal}
+\seealso{
+Other function to read from and write to xlsx: 
+\code{\link{copyConfigSheet}()},
+\code{\link{setHeadersToLowerCase}()},
+\code{\link{splitInputs}()},
+\code{\link{synchronizeScenariosOutputsWithPlots}()},
+\code{\link{synchronizeScenariosWithPlots}()},
+\code{\link{xlsxAddDataUsingTemplate}()},
+\code{\link{xlsxAddSheet}()},
+\code{\link{xlsxCloneAndSet}()},
+\code{\link{xlsxReadData}()},
+\code{\link{xlsxWriteData}()}
+}
+\concept{function to read from and write to xlsx}

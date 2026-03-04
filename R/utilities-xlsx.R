@@ -27,7 +27,7 @@ xlsxAddSheet <- function(wb, sheetName, dt) {
   checkmate::assertDataTable(dt, null.ok = FALSE)
 
   if (sheetName %in% wb$sheet_names) {
-    warning(paste(sheetName, "already exists. Existing content will be cleared."))
+    warning(messages$warningSheetAlreadyExists(sheetName))
     invisible(xlsxReadData(wb, sheetName))
   } else {
     openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
@@ -66,16 +66,16 @@ xlsxWriteData <- function(wb, sheetName, dt) {
   dt <- data.table::copy(dt)
 
   # Check if the sheet exists
-  checkSheetExists(wb, sheetName)
+  .checkSheetExists(wb, sheetName)
 
   # Read existing data to determine dimensions
   existingData <- xlsxReadData(wb, sheetName = sheetName, convertHeaders = FALSE)
 
   # Adjust data.table to match existing dimensions
-  dt <- adjustDataTableDimensions(dt, existingData)
+  dt <- .adjustDataTableDimensions(dt, existingData)
 
   # Align column names
-  dt <- alignColumnNames(dt, existingData)
+  dt <- .alignColumnNames(dt, existingData)
 
   # Write new data to the specified sheet
   openxlsx::writeData(wb = wb, sheet = sheetName, x = dt)
@@ -112,7 +112,7 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 
   # Check if the clonedSheet exists in the workbook
   if (!(clonedSheet %in% wb$sheet_names)) {
-    stop(paste("Sheet", clonedSheet, "does not exist in the workbook."))
+    stop(messages$errorSheetDoesNotExist(clonedSheet))
   }
   if (!(sheetName %in% wb$sheet_names)) {
     openxlsx::cloneWorksheet(wb = wb, clonedSheet = clonedSheet, sheetName = sheetName)
@@ -166,10 +166,10 @@ xlsxReadData <- function(wb, sheetName = 1,
 
 
   # Read data from the specified sheet
-  dt <- readSheetData(wb, sheetName)
+  dt <- .readSheetData(wb, sheetName)
 
   # Process the data based on the provided parameters
-  dt <- processSheetData(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA, convertHeaders)
+  dt <- .processSheetData(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA, convertHeaders)
 
   return(dt)
 }
@@ -212,7 +212,7 @@ xlsxAddDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, te
     )
 
     if (!file.exists(templatePath)) {
-      stop(paste("Template file", templatePath, "does not exist."))
+      stop(messages$errorTemplateFileDoesNotExist(templatePath))
     }
     templateConfiguration <-
       xlsxReadData(
@@ -235,7 +235,60 @@ xlsxAddDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, te
 
   return(wb)
 }
+#' Copy a configuration sheet from source to destination
+#'
+#' This function copies a specified sheet from a source Excel file to a destination Excel file,
+#' including the data and styles.
+#'
+#' @param sourceSheetName A character string specifying the name of the sheet to copy.
+#' @param destinationSheetName A character string specifying the name of the new sheet.
+#' @param sourceFile A character string specifying the path to the source Excel file.
+#' @param destinationFile A character string specifying the path to the destination Excel file.
+#'
+#' @return Invisibly returns NULL. The function performs a side effect (copying a sheet between workbooks).
+#' @export
+#' @family function to read from and write to xlsx
+copyConfigSheet <- function(sourceSheetName, destinationSheetName, sourceFile, destinationFile) {
+  # Input validation
+  checkmate::assertCharacter(sourceSheetName, len = 1)
+  checkmate::assertCharacter(destinationSheetName, len = 1)
+  checkmate::assertFileExists(sourceFile)
+  checkmate::assertFileExists(destinationFile)
 
+  # Load the destination workbook
+  destWb <- openxlsx::loadWorkbook(destinationFile)
+  if (destinationSheetName %in% destWb$sheet_names) {
+    return(invisible())
+  }
+
+  # Load the source workbook and read the sheet
+  sourceWb <- openxlsx::loadWorkbook(sourceFile)
+  checkmate::assertChoice(sourceSheetName, choices = sourceWb$sheet_names)
+  dt <- xlsxReadData(sourceWb, sheetName = sourceSheetName, convertHeaders = FALSE)
+
+  # Add the sheet to the destination workbook
+  openxlsx::addWorksheet(destWb, destinationSheetName)
+  openxlsx::writeData(destWb, destinationSheetName, dt)
+
+  for (i in which(sapply(sourceWb$styleObjects, getElement, "sheet") == sourceSheetName)) {
+    theseRows <- unique(sourceWb$styleObjects[[i]]$rows)
+    theseCols <- unique(sourceWb$styleObjects[[i]]$cols)
+
+    openxlsx::addStyle(destWb,
+      sheet = destinationSheetName,
+      style = openxlsx::getStyles(sourceWb)[[i]],
+      rows = theseRows,
+      cols = theseCols,
+      gridExpand = TRUE,
+      stack = TRUE
+    )
+  }
+
+  # Save the destination workbook
+  openxlsx::saveWorkbook(destWb, destinationFile, overwrite = TRUE)
+
+  return(invisible())
+}
 
 # auxiliary ---------
 #' Check if the specified sheet exists in the workbook
@@ -247,9 +300,10 @@ xlsxAddDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, te
 #'
 #' @return NULL. If the sheet does not exist, an error is thrown.
 #' @keywords internal
-checkSheetExists <- function(wb, sheetName) {
+#' @noRd
+.checkSheetExists <- function(wb, sheetName) {
   if (!(sheetName %in% wb$sheet_names)) {
-    stop(paste("Sheet", sheetName, "does not exist."))
+    stop(messages$errorSheetDoesNotExist(sheetName))
   }
 }
 
@@ -263,7 +317,8 @@ checkSheetExists <- function(wb, sheetName) {
 #'
 #' @return A data.table with adjusted dimensions.
 #' @keywords internal
-adjustDataTableDimensions <- function(dt, existingData) {
+#' @noRd
+.adjustDataTableDimensions <- function(dt, existingData) {
   if (nrow(existingData) > nrow(dt)) {
     # Add NA rows if existing data has more rows than the new data
     naRows <- data.table(matrix(NA, nrow = nrow(existingData) - nrow(dt), ncol = ncol(dt)))
@@ -284,7 +339,8 @@ adjustDataTableDimensions <- function(dt, existingData) {
 #'
 #' @return A data.table with aligned column names.
 #' @keywords internal
-alignColumnNames <- function(dt, existingData) {
+#' @noRd
+.alignColumnNames <- function(dt, existingData) {
   data.table::setnames(dt,
     old = names(dt),
     new = unlist(lapply(names(dt), function(x) {
@@ -292,10 +348,7 @@ alignColumnNames <- function(dt, existingData) {
       if (length(ix) == 1) {
         newName <- names(existingData)[ix]
       } else if (length(ix) > 1) {
-        stop(paste(
-          "ambiguous header names in sheet", existingData,
-          paste(names(existingData)[ix], collapse = ",")
-        ))
+        stop(messages$errorAmbiguousHeaderNames(existingData, names(existingData)[ix]))
       } else {
         newName <- x
       }
@@ -313,7 +366,8 @@ alignColumnNames <- function(dt, existingData) {
 #'
 #' @return A `data.table` containing the raw data from the sheet.
 #' @keywords internal
-readSheetData <- function(wb, sheetName) {
+#' @noRd
+.readSheetData <- function(wb, sheetName) {
   dt <- data.table::setDT(openxlsx::read.xlsx(
     xlsxFile = wb,
     sheet = sheetName,
@@ -337,7 +391,8 @@ readSheetData <- function(wb, sheetName) {
 #'
 #' @return A processed `data.table`.
 #' @keywords internal
-processSheetData <- function(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA, convertHeaders) {
+#' @noRd
+.processSheetData <- function(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA, convertHeaders) {
   if (as.logical(skipDescriptionRow)) {
     dt <- dt[-seq_len(as.integer(skipDescriptionRow))]
     if ("Comment" %in% names(dt)) {
@@ -358,10 +413,10 @@ processSheetData <- function(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA,
   }
 
   # Convert convertible columns to numeric
-  dt <- convertColumnsToNumeric(dt, alwaysCharacter)
+  dt <- .convertColumnsToNumeric(dt, alwaysCharacter)
 
   # Trim whitespace for character columns and replace curly quotes
-  dt <- cleanCharacterColumns(dt, emptyAsNA)
+  dt <- .cleanCharacterColumns(dt, emptyAsNA)
 
   # Convert column names to start with a lowercase letter
   if (convertHeaders) {
@@ -380,7 +435,8 @@ processSheetData <- function(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA,
 #'
 #' @return A `data.table` with numeric conversions applied where appropriate.
 #' @keywords internal
-convertColumnsToNumeric <- function(dt, alwaysCharacter) {
+#' @noRd
+.convertColumnsToNumeric <- function(dt, alwaysCharacter) {
   convertibleCols <- suppressWarnings(names(dt)[sapply(dt, function(x) {
     xWithoutNA <- x[!is.na(x) & x != ""]
     return(length(xWithoutNA) == 0 || !any(is.na(as.numeric(xWithoutNA))))
@@ -402,7 +458,8 @@ convertColumnsToNumeric <- function(dt, alwaysCharacter) {
 #'
 #' @return A `data.table` with cleaned character columns.
 #' @keywords internal
-cleanCharacterColumns <- function(dt, emptyAsNA) {
+#' @noRd
+.cleanCharacterColumns <- function(dt, emptyAsNA) {
   characterCols <- setdiff(names(dt), names(dt)[sapply(dt, is.numeric)])
   if (length(characterCols) > 0) {
     # Trim whitespace for character columns
@@ -496,15 +553,16 @@ setHeadersToLowerCase <- function(dt) {
 #'
 #' @return A data.table with the specified column separated into multiple rows,
 #'         trimmed of whitespace, and renamed to remove the plural 's'.
-#' @keywords internal
+#' @export
+#' @family function to read from and write to xlsx
 separateAndTrimColumn <- function(data, columnName) {
   # Create a copy of the data.table to avoid modifying the original
   separatedData <- copy(data)
 
   # Use tidyr to separate rows based on the specified column and trim whitespace
-  separatedData <- separatedData %>%
-    tidyr::separate_rows(!!sym(columnName), sep = ",") %>%
-    dplyr::mutate(!!sym(columnName) := trimws(!!sym(columnName))) %>%
+  separatedData <- separatedData |>
+    tidyr::separate_rows(!!sym(columnName), sep = ",") |>
+    dplyr::mutate(!!sym(columnName) := trimws(!!sym(columnName))) |>
     data.table() # Convert back to data.table
 
   # Rename the column to remove plural 's'
@@ -527,7 +585,8 @@ separateAndTrimColumn <- function(data, columnName) {
 #' @param projectConfiguration An object of class ProjectConfiguration containing the file paths for scenariosFile and plotsFile.
 #'
 #' @return Returns invisibly.
-#' @keywords internal
+#' @export
+#' @family function to read from and write to xlsx
 synchronizeScenariosWithPlots <- function(projectConfiguration) {
   # Load the workbooks for scenarios and plots
   wbSc <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
@@ -569,7 +628,8 @@ synchronizeScenariosWithPlots <- function(projectConfiguration) {
 #' @param projectConfiguration An object of class ProjectConfiguration containing the file paths for scenariosFile and plotsFile.
 #'
 #' @return Returns invisibly.
-#' @keywords internal
+#' @export
+#' @family function to read from and write to xlsx
 synchronizeScenariosOutputsWithPlots <- function(projectConfiguration,
                                                  direction = c("bothways", "scenarioToPlot", "plotToScenario")) {
   # initialize variable to avoid messages
@@ -599,7 +659,7 @@ synchronizeScenariosOutputsWithPlots <- function(projectConfiguration,
 
   # Check for inconsistencies between scenario and plot output paths
   if (nrow(opMerged[!is.na(outputPathSc) & !is.na(outputPathPl) & outputPathSc != outputPathPl]) > 0) {
-    warning("Output definition in Scenario.xlsx and Plot.xlsx is inconsistent. Please synchronize manually")
+    warning(messages$warningInconsistentOutputDefinition())
   }
 
   # Synchronize output paths based on availability

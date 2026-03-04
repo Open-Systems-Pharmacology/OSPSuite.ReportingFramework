@@ -2,6 +2,7 @@
 #' @docType class
 #' @description Manages the creation and writing of .Rmd files for plots.
 #' @keywords internal
+#' @noRd
 RmdPlotManager <- R6::R6Class( # nolint
   "RmdPlotManager",
   inherit = ospsuite.utils::Printable,
@@ -24,12 +25,12 @@ RmdPlotManager <- R6::R6Class( # nolint
                           digitsOfSignificance = 3) {
       private$.rmdfolder <- rmdfolder
       self$suppressExport <- suppressExport
-      self$validateConfigTableFunction <- validateConfigTableForPlots
+      self$validateConfigTableFunction <- .validateConfigTableForPlots
       self$digitsOfSignificance <- digitsOfSignificance
 
       if (!suppressExport) {
         if (is.null(rmdName)) {
-          stop("Please provide a valid name for the .Rmd file and its subfolder.")
+          stop(messages$errorProvideValidRmdName())
         }
         tools::file_path_sans_ext(rmdName)
 
@@ -46,7 +47,7 @@ RmdPlotManager <- R6::R6Class( # nolint
 
       checkmate::assertCharacter(nameOfplotFunction)
       if (!exists(nameOfplotFunction, where = globalenv(), mode = "function")) {
-        stop(paste("Function", nameOfplotFunction, "does not exist"))
+        stop(messages$errorFunctionDoesNotExist(nameOfplotFunction))
       }
       self$plotFunction <- get(nameOfplotFunction)
 
@@ -58,8 +59,8 @@ RmdPlotManager <- R6::R6Class( # nolint
         self$validateConfigTableFunction <- get(nameOfValidationFunction)
       } else {
         # otherwise use default function
-        message("No specific plotconfiguration validation function available.")
-        self$validateConfigTableFunction <- validateConfigTableForPlots
+        message(messages$messageNoValidationFunctionAvailable())
+        self$validateConfigTableFunction <- .validateConfigTableForPlots
       }
 
       # add start of rmd
@@ -80,7 +81,7 @@ RmdPlotManager <- R6::R6Class( # nolint
 
       checkmate::assertPathForOutput(fileName, extension = "Rmd", overwrite = TRUE)
       if (basename(fileName) != fileName) {
-        stop("Please insert fileName as basename, File will be saved in folder defined by class object")
+        stop(messages$errorProvideFileNameAsBasename())
       }
 
       private$.closeFigureKeys()
@@ -143,11 +144,11 @@ RmdPlotManager <- R6::R6Class( # nolint
         obj <- plotList[[key]]
         caption <- attr(obj, "caption")
         if (is.null(caption)) {
-          warning(paste("Caption is missing for key", caption))
+          warning(messages$warningCaptionMissing(key))
           caption <- "Missing"
         }
 
-        if (is.ggplot(obj) | "CombinedPlot" %in% class(obj)) {
+        if (is_ggplot(obj) | "CombinedPlot" %in% class(obj)) {
           self$addAndExportFigure(
             plotObject = obj,
             caption = caption,
@@ -336,7 +337,7 @@ RmdPlotManager <- R6::R6Class( # nolint
     # function to initialize rmdLines
     .startRMD = function(rmdfolder) {
       return(c(
-        startRmd(),
+        .startRmd(),
         "  ",
         paste0("```{r setup_", private$.rmdName, ", include=FALSE}"),
         'if (!exists("setupDone"))',
@@ -399,7 +400,7 @@ RmdPlotManager <- R6::R6Class( # nolint
     # only export if key is unique
     .checkKeyIsUnique = function(key) {
       if (key %in% private$.listOfALLKeys) {
-        stop(paste0('key "', key, '" was already added. The figure and table keys must be unique'))
+        stop(messages$errorKeyAlreadyAdded(key))
       }
     },
     # adjust height if necessary

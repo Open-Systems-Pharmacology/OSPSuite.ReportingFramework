@@ -434,15 +434,15 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
     must.include = c("xValues", "yValues", identifier)
   )
   # make sure to exclude nas and sorting is correct
-  dtSimulated <- data.table::copy(dtSimulated) %>%
-    dplyr::select(dplyr::all_of(c("xValues", "yValues", identifier))) %>%
+  dtSimulated <- data.table::copy(dtSimulated) |>
+    dplyr::select(dplyr::all_of(c("xValues", "yValues", identifier))) |>
     data.table::setorderv(c("xValues", identifier))
   dtSimulated <- dtSimulated[!is.nan(xValues) & !is.nan(yValues)]
 
   dtObserved[, predicted := NA_real_]
 
   for (iRow in seq_len(nrow(dtObserved))) {
-    dtSimulatedGroup <- dtSimulated %>%
+    dtSimulatedGroup <- dtSimulated |>
       merge(dtObserved[iRow, .SD, .SDcols = identifier], by = identifier)
 
     if (nrow(dtSimulatedGroup) > 2) {
@@ -502,12 +502,13 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
 #'
 #' @return A `data.table` with data formatted for plotting.
 #' @keywords internal
+#' @noRd
 .validateAndConvertData <- function(plotData, predictedIsNeeded) {
   # initialize variables used for data.table to avoid messages during checks
   dataType <- NULL
 
   if ("DataCombined" %in% class(plotData)) {
-    plotData <- plotData$toDataFrame() %>%
+    plotData <- plotData$toDataFrame() |>
       data.table::setDT()
   }
   checkmate::assertDataFrame(plotData)
@@ -529,7 +530,7 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
   }
 
   if (nrow(plotData) == 0) {
-    stop("No data for this plot available")
+    stop(messages$errorNoDataForPlot())
   }
 
   return(plotData)
@@ -558,16 +559,17 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
 #' - `yValues`: A list with `dimension` and `unit` for the primary y-axis.
 #' - `y2`: (optional) A list with `dimension` and `unit` for the secondary y-axis if applicable.
 #' @keywords internal
+#' @noRd
 .constructMetDataForTimeProfile <- function(plotData) {
   xUnit <- unique(plotData$xUnit)
-  if (length(xUnit) > 1) stop("x Unit ambiguous")
+  if (length(xUnit) > 1) stop(messages$errorXUnitAmbiguous())
   if ("xDimension" %in% names(plotData)) {
     xDimension <- unique(plotData$xDimension)
   } else {
     xDimension <- ospsuite::getDimensionForUnit(xUnit)
   }
   yUnit <- unique(plotData$yUnit)
-  if (length(yUnit) > 2) stop("y Unit ambiguous")
+  if (length(yUnit) > 2) stop(messages$errorYUnitAmbiguous())
   if ("yDimension" %in% names(plotData)) {
     yDimension <- unique(plotData$yDimension)
   } else {
@@ -607,6 +609,7 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
 #'
 #' @return A mapping object for ggplot2.
 #' @keywords internal
+#' @noRd
 .getMappingForTimeprofiles <- function(plotData, metaData, userMapping) {
   # initialize variables used for data.table to avoid warnings during checks
   xValues <- yValues <- group <- yErrorType <- yErrorValues <- yMin <- yMax <- lloq <- NULL
@@ -625,7 +628,7 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
     )
 
     if (length(unique(plotData[!is.na(yErrorType)][["yErrorType"]])) > 1) {
-      stop("Please do not mix different error Types in one plot")
+      stop(messages$errorMixedErrorTypes())
     }
 
     if (any(plotData[["yErrorType"]] == ospsuite::DataErrorType$ArithmeticStdDev, na.rm = TRUE)) {

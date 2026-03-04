@@ -1,7 +1,5 @@
-# testProject was set up by setup.R, this provide variable projectconfiguration and test data
-
+# testProject was set up by setup.R, this provides variable projectconfiguration and test data
 dataObserved <- readObservedDataByDictionary(projectConfiguration)
-
 
 test_that("It should read and process data based on the provided project configuration", {
   expect_true(data.table::is.data.table(dataObserved), "Processed data should be a data table")
@@ -26,29 +24,33 @@ test_that("It should filter data by fileIds parameter", {
     sheetName = "DataFiles",
     skipDescriptionRow = TRUE
   )
-  
+
   # Get available file identifiers
   availableFileIds <- unique(dataList$fileIdentifier)
-  
+
   # Test that we can filter by a subset of fileIds
   if (length(availableFileIds) > 1) {
     # Select first fileId
     selectedFileId <- availableFileIds[1]
-    
+
     dataObservedFiltered <- readObservedDataByDictionary(
       projectConfiguration,
-      fileIds = selectedFileId
+      fileIds = selectedFileId,
+      spreadData = FALSE
     )
-    
+
     # Should return a valid data.table
-    expect_true(data.table::is.data.table(dataObservedFiltered), 
-                "Filtered data should be a data table")
-    
+    expect_true(
+      data.table::is.data.table(dataObservedFiltered),
+      "Filtered data should be a data table"
+    )
+
     # Should have fewer rows than the full dataset
     expect_lt(nrow(dataObservedFiltered), nrow(dataObserved),
-              label = "Filtered data should have fewer rows than unfiltered data")
+      label = "Filtered data should have fewer rows than unfiltered data"
+    )
   }
-  
+
   # Test that passing invalid fileIds raises an error
   expect_error(
     readObservedDataByDictionary(
@@ -107,15 +109,15 @@ test_that("It should check the validity of the observed dataset", {
 
 # Unit tests for groupDataByIdentifier function
 test_that("groupDataByIdentifier function test", {
-  groupedData <- groupDataByIdentifier(dataObserved)
+  groupedData <- .groupDataByIdentifier(dataObserved)
 
   # Add assertions based on the expected output of the function
   expect_s3_class(groupedData, "list")
   expect_true(
     length(groupedData) ==
-      dataObserved %>%
-        dplyr::select(getColumnsForColumnType(dataObserved, columnTypes = "identifier")) %>%
-        unique() %>%
+      dataObserved |>
+        dplyr::select(.getColumnsForColumnType(dataObserved, columnTypes = "identifier")) |>
+        unique() |>
         nrow()
   )
 })
@@ -123,7 +125,7 @@ test_that("groupDataByIdentifier function test", {
 # Unit tests for getColumnsForColumnType function
 test_that("getColumnsForColumnType function test", {
   columnTypes <- c("identifier")
-  columnNames <- getColumnsForColumnType(dataObserved, columnTypes)
+  columnNames <- .getColumnsForColumnType(dataObserved, columnTypes)
 
   #
   expect_equal(length(columnNames), 7)
@@ -134,33 +136,33 @@ test_that("getColumnsForColumnType function test", {
 test_that("createDataSets function test", {
   tmpData <- dataObserved[outputPathId == "Plasma"]
 
-  groupedData <- groupDataByIdentifier(tmpData)
+  groupedData <- .groupDataByIdentifier(tmpData)
 
-  dataSet <- createDataSets(groupData = groupedData[[1]])
+  dataSet <- .createDataSets(groupData = groupedData[[1]])
 
   expect_s3_class(dataSet, "DataSet")
   expect_equal(dataSet$LLOQ, unique(tmpData$lloq))
 
   # unique yUnit
   tmpData$yUnit[1] <- "pmol/L"
-  groupedData <- groupDataByIdentifier(tmpData)
-  expect_error(createDataSets(groupedData[[1]]))
+  groupedData <- .groupDataByIdentifier(tmpData)
+  expect_error(.createDataSets(groupedData[[1]]))
 
   # Warning for different LLOQ
   tmpData <- dataObserved[outputPathId == "Plasma"]
   tmpData$lloq[1] <- 2
-  groupedData <- groupDataByIdentifier(tmpData)
-  expect_warning(dataSet <- createDataSets(groupedData[[1]]))
+  groupedData <- .groupDataByIdentifier(tmpData)
+  expect_warning(dataSet <- .createDataSets(groupedData[[1]]))
 })
 
 # Unit tests for addMetaDataToDataSet function
 test_that("addMetaDataToDataSet function test", {
   tmpData <- dataObserved[outputPathId == "Plasma"]
-  groupedData <- groupDataByIdentifier(tmpData)
+  groupedData <- .groupDataByIdentifier(tmpData)
 
-  dataSet <- createDataSets(groupData = groupedData[[1]])
+  dataSet <- .createDataSets(groupData = groupedData[[1]])
 
-  dataSetWithMeta <- addMetaDataToDataSet(dataSet, groupData = groupedData[[1]])
+  dataSetWithMeta <- .addMetaDataToDataSet(dataSet, groupData = groupedData[[1]])
 
   # Add assertions based on the expected output of the function
   expect_s3_class(dataSetWithMeta, "DataSet")
@@ -189,14 +191,14 @@ test_that("convertIdentifierColumns function works as expected", {
   testDt <- data.table(col1 = c("a,b,c", "d,e,f"), col2 = c("x,y,z", "1,2,3"), col3 = c("1,2,3", "4,5,6"))
 
   identifierCols <- c("col1", "col2")
-  updatedDt <- suppressWarnings(convertIdentifierColumns(testDt, identifierCols))
+  updatedDt <- suppressWarnings(.convertIdentifierColumns(testDt, identifierCols))
 
   # Check if commas were replaced by underscores
   expect_equal(updatedDt$col1[1], "a_b_c")
   expect_equal(updatedDt$col2[1], "x_y_z")
 
 
-  expect_warning(updatedDt <- convertIdentifierColumns(testDt, "col1"))
+  expect_warning(updatedDt <- .convertIdentifierColumns(testDt, "col1"))
 })
 
 # Test for aggregateObservedDataGroups
@@ -271,7 +273,7 @@ aggregatedData <- data.table(
 
 # Test for addUniqueColumns
 test_that("addUniqueColumns works correctly", {
-  result <- addUniqueColumns(dataObserved = originalData, aggregatedData = aggregatedData)
+  result <- .addUniqueColumns(dataObserved = originalData, aggregatedData = aggregatedData)
 
   # Check that the result is a data.table
   expect_s3_class(result, "data.table")
@@ -282,4 +284,394 @@ test_that("addUniqueColumns works correctly", {
   # Check that unique columns are added correctly
   expect_false("additionalCol1" %in% names(result))
   expect_true("additionalCol2" %in% names(result))
+})
+
+
+# Unit tests for debugMode functionality
+test_that("debugMode parameter converts validation errors to warnings", {
+  # Create a sample observed dataset with duplicated rows (which should cause an error)
+  dataObservedTest <- data.table(
+    individualId = c(1, 1, 2),
+    group = c(1, 1, 2),
+    outputPathId = c(101, 101, 102),
+    xValues = c(10, 10, 20),
+    yValues = c(5.6, 7.8, 9.3),
+    yUnit = c("mg/L", "mg/L", "mg/L"),
+    lloq = c(1.0, 1.0, 1.0)
+  )
+  data.table::setattr(dataObservedTest[["individualId"]], "columnType", "identifier")
+  data.table::setattr(dataObservedTest[["group"]], "columnType", "identifier")
+  data.table::setattr(dataObservedTest[["outputPathId"]], "columnType", "identifier")
+  data.table::setattr(dataObservedTest[["xValues"]], "columnType", "timeprofile")
+  data.table::setattr(dataObservedTest[["yValues"]], "columnType", "timeprofile")
+  data.table::setattr(dataObservedTest[["yUnit"]], "columnType", "timeprofile")
+  data.table::setattr(dataObservedTest[["lloq"]], "columnType", "timeprofile")
+
+  # Without debugMode, should throw an error
+  expect_error(
+    validateObservedData(dataDT = dataObservedTest, dataClassType = "timeprofile", debugMode = FALSE),
+    "Data must be unique in columns"
+  )
+
+  # With debugMode, should throw a warning instead
+  expect_warning(
+    validateObservedData(dataDT = dataObservedTest, dataClassType = "timeprofile", debugMode = TRUE),
+    "Data must be unique in columns"
+  )
+})
+
+
+test_that("debugMode warns about filter column containing '1'", {
+  # Create test data
+  testData <- data.table(
+    col1 = c("A", "B", "C"),
+    col2 = c(10, 20, 30),
+    col3 = c("x", "y", "z")
+  )
+
+  # Create a dictionary with filter = "1" (simulating TRUE() function from Excel)
+  testDict <- data.table(
+    targetColumn = c("col1", "newCol"),
+    sourceColumn = c("col1", NA),
+    filter = c(NA, "1"),
+    filterValue = c(NA, "'test'"),
+    type = c("identifier", "metadata")
+  )
+
+  # With debugMode TRUE, should warn about filter containing "1"
+  expect_warning(
+    .convertDataByDictionary(
+      data = testData,
+      dataFilter = NA,
+      dict = testDict,
+      dictionaryName = "testDict",
+      debugMode = TRUE
+    ),
+    "Filter column contains '1'"
+  )
+
+  # Without debugMode, should not warn
+  expect_no_warning(
+    .convertDataByDictionary(
+      data = testData,
+      dataFilter = NA,
+      dict = testDict,
+      dictionaryName = "testDict",
+      debugMode = FALSE
+    )
+  )
+})
+
+
+test_that("debugMode parameter is passed through the function chain", {
+  # This test verifies that debugMode is correctly passed from readObservedDataByDictionary
+  # We can't easily test the full chain without a complete test project,
+  # but we can verify that the parameter is accepted and doesn't cause errors
+
+  # Test that readObservedDataByDictionary accepts debugMode parameter
+  expect_no_error({
+    # This should work without errors (using existing test project)
+    dataObservedDebug <- readObservedDataByDictionary(
+      projectConfiguration,
+      debugMode = TRUE,
+      spreadData = FALSE
+    )
+  })
+
+  # Verify it's still a valid data.table
+  expect_true(data.table::is.data.table(dataObservedDebug))
+})
+
+
+test_that("debugMode is not allowed during valid runs", {
+  # Save the current option state
+  originalOption <- getOption("OSPSuite.RF.stopHelperFunction")
+
+  # Set the option to simulate a valid run
+  options(OSPSuite.RF.stopHelperFunction = TRUE)
+
+  # Test that debugMode is rejected during valid runs
+  expect_error(
+    readObservedDataByDictionary(
+      projectConfiguration,
+      debugMode = TRUE
+    ),
+    "debugMode is not allowed during valid runs"
+  )
+
+  # Test that debugMode = FALSE works during valid runs
+  expect_no_error({
+    dataObserved <- readObservedDataByDictionary(
+      projectConfiguration,
+      debugMode = FALSE,
+      spreadData = FALSE
+    )
+  })
+
+  # Restore the original option
+  if (is.null(originalOption)) {
+    options(OSPSuite.RF.stopHelperFunction = NULL)
+  } else {
+    options(OSPSuite.RF.stopHelperFunction = originalOption)
+  }
+})
+
+# Tests for .readDataDictionary with different dataClass values
+test_that(".readDataDictionary works for DATACLASS$pkIndividual", {
+  # Create a temporary dictionary file
+  tmpdir <- tempdir()
+  dictFile <- file.path(tmpdir, "test_dict_pk.xlsx")
+
+  # Create minimal dictionary structure for PK individual data
+  dictData <- data.table(
+    targetColumn = c("desc","studyId", "individualId", "group", "outputPathId", "pkParameter", "values", "unit"),
+    sourceColumn = c("desc","study", "id", "grp", "output", "param", "value", "unit"),
+    filter = rep("", 8)
+  )
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Sheet1")
+  openxlsx::writeData(wb, "Sheet1", dictData)
+  openxlsx::saveWorkbook(wb, dictFile, overwrite = TRUE)
+
+  # Create minimal test data
+  testData <- data.table(
+    study = "Study1",
+    id = "ID1",
+    grp = "Group1",
+    output = "Output1",
+    param = "AUC",
+    value = 100,
+    unit = "ng*h/mL"
+  )
+
+  result <- ospsuite.reportingframework:::.readDataDictionary(
+    dictionaryFile = dictFile,
+    sheet = "Sheet1",
+    data = testData,
+    dataClass = DATACLASS$pkIndividual
+  )
+
+  expect_s3_class(result, "data.table")
+  expect_true(all(c("targetColumn", "sourceColumn") %in% names(result)))
+
+  # Clean up
+  unlink(dictFile)
+})
+
+test_that(".readDataDictionary works for DATACLASS$tpAggregated", {
+  tmpdir <- tempdir()
+  dictFile <- file.path(tmpdir, "test_dict_tp_agg.xlsx")
+
+  # Create minimal dictionary structure for aggregated time profile data
+  dictData <- data.table(
+    targetColumn = c("desc","studyId", "group", "outputPathId", "xValues", "yValues", "yUnit", "yErrorType", "nBelowLLOQ"),
+    sourceColumn = c("desc","study", "grp", "output", "time", "conc", "unit", "error", "nlloq"),
+    filter = rep("", 9)
+  )
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Sheet1")
+  openxlsx::writeData(wb, "Sheet1", dictData)
+  openxlsx::saveWorkbook(wb, dictFile, overwrite = TRUE)
+
+  testData <- data.table(
+    study = "Study1",
+    grp = "Group1",
+    output = "Output1",
+    time = 1.0,
+    conc = 50,
+    unit = "ng/mL",
+    error = "SD",
+    nlloq = 0
+  )
+
+  result <- ospsuite.reportingframework:::.readDataDictionary(
+    dictionaryFile = dictFile,
+    sheet = "Sheet1",
+    data = testData,
+    dataClass = DATACLASS$tpAggregated
+  )
+
+  expect_s3_class(result, "data.table")
+  expect_true(all(c("targetColumn", "sourceColumn") %in% names(result)))
+
+  # Clean up
+  unlink(dictFile)
+})
+
+test_that(".readDataDictionary validates required columns for pkIndividual", {
+  tmpdir <- tempdir()
+  dictFile <- file.path(tmpdir, "test_dict_incomplete.xlsx")
+
+  # Create incomplete dictionary (missing required columns)
+  dictData <- data.table(
+    targetColumn = c("desc","studyId", "individualId"),
+    sourceColumn = c("desc","study", "id"),
+    filter = rep("", 3)
+  )
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Sheet1")
+  openxlsx::writeData(wb, "Sheet1", dictData)
+  openxlsx::saveWorkbook(wb, dictFile, overwrite = TRUE)
+
+  testData <- data.table(study = "Study1", id = "ID1")
+
+  expect_error(
+    ospsuite.reportingframework:::.readDataDictionary(
+      dictionaryFile = dictFile,
+      sheet = "Sheet1",
+      data = testData,
+      dataClass = DATACLASS$pkIndividual
+    )
+  )
+
+  # Clean up
+  unlink(dictFile)
+})
+
+
+test_that("convertDataCombinedToDataTable converts DataCombined back to data.table", {
+  # First convert data.table to DataCombined
+  testData <- dataObserved[outputPathId == "Plasma"]
+  dataCombined <- convertDataTableToDataCombined(testData)
+
+  # Then convert back to data.table
+  result <- convertDataCombinedToDataTable(dataCombined)
+
+  expect_s3_class(result, "data.table")
+  expect_true(nrow(result) > 0)
+})
+
+test_that(".prepareDataForAggregation prepares data correctly", {
+  testData <- dataObserved[outputPathId == "Plasma"]
+  groups <- unique(testData$group)[1:2]
+
+  result <- ospsuite.reportingframework:::.prepareDataForAggregation(
+    dataObserved = testData,
+    groups = groups,
+    groupSuffix = "_test"
+  )
+
+  expect_s3_class(result, "data.table")
+  expect_true("group" %in% names(result))
+})
+
+test_that(".checkLLOQ handles LLOQ checks correctly", {
+  # Create test aggregated data
+  testAggData <- data.table(
+    group = c("A", "B"),
+    outputPathId = c("Plasma", "Plasma"),
+    xValues = c(1, 2),
+    yValues = c(10, 20),
+    yErrorValues = c(1, 2),
+    lloq = c(0.5, 0.5),
+    numberOfIndividuals = c(10, 10),
+    nBelowLLOQ = c(1, 8)
+  )
+
+  result <- ospsuite.reportingframework:::.checkLLOQ(
+    aggregatedData = testAggData,
+    lloqCheckColumns2of3 = NULL,
+    lloqCheckColumns1of2 = NULL,
+    aggregationFlag = "GeometricStdDev"
+  )
+
+  expect_s3_class(result, "data.table")
+  # When more than 1/3 below LLOQ, yValues should be NA
+  expect_true(is.na(result[nBelowLLOQ >= numberOfIndividuals * 1/3]$yValues[1]))
+})
+
+test_that(".setDataTypeAttributes sets attributes correctly", {
+  testData <- data.table(
+    col1 = c(1, 2, 3),
+    col2 = c("a", "b", "c")
+  )
+
+  dict <- data.table(
+    col1 = "timeprofile",
+    col2 = "identifier"
+  )
+
+  result <- ospsuite.reportingframework:::.setDataTypeAttributes(testData, dict)
+
+  expect_s3_class(result, "data.table")
+  expect_equal(attr(result$col1, "columnType"), "timeprofile")
+  expect_equal(attr(result$col2, "columnType"), "identifier")
+})
+
+test_that(".convertBiometrics converts biometrics correctly", {
+  testData <- data.table(
+    age = c(10, 20, 10 , 29, 15),
+    gender = c('m', 'F', 1, 3, 'binary')
+  )
+
+  dict <- data.table(
+    targetColumn = c("age",'gender'),
+    sourceColumn = c('colAge','colGender'),
+    filter = c(NA,NA),
+    filterValue = c(NA,NA),
+    sourceUnit = c('day(s)',''),
+    type = c("biometric","biometric")
+  )
+
+  expect_warning(result <- ospsuite.reportingframework:::.convertBiometrics(
+    data = copy(testData),
+    dict = dict
+  ))
+
+  expect_s3_class(result, "data.table")
+  expect_equal(result$gender ,c("MALE", "FEMALE", "MALE", "UNKNOWN", "UNKNOWN"))
+  expect_equal(result$age ,testData$age/365.25)
+
+})
+
+test_that("readObservedDataByDictionary handles pkParameter dataClassType", {
+  skip_if_not(file.exists(projectConfiguration$dataImporterConfigurationFile),
+              "Data importer config not available")
+
+  # Read PK parameter data
+  dataPK <- suppressWarnings(readObservedDataByDictionary(
+    projectConfiguration,
+    dataClassType = "pkParameter",
+    spreadData = FALSE
+  ))
+
+  expect_s3_class(dataPK, "data.table")
+})
+
+test_that("readObservedDataByDictionary validates fileIds correctly", {
+  # Test with invalid fileIds
+  expect_error(
+    readObservedDataByDictionary(
+      projectConfiguration,
+      fileIds = c("invalid_id_1", "invalid_id_2")
+    ),
+    "subset"
+  )
+})
+
+test_that("aggregateObservedDataGroups handles ArithmeticStdDev", {
+  result <- aggregateObservedDataGroups(
+    dataObserved = dataObserved,
+    groups = NULL,
+    aggregationFlag = "ArithmeticStdDev"
+  )
+
+  expect_s3_class(result, "data.table")
+  expect_equal(unique(result$yErrorType), ospsuite::DataErrorType$ArithmeticStdDev)
+})
+
+test_that("aggregateObservedDataGroups handles Percentiles", {
+  result <- aggregateObservedDataGroups(
+    dataObserved = dataObserved,
+    groups = NULL,
+    aggregationFlag = "Percentiles",
+    percentiles = c(0.05, 0.5, 0.95)
+  )
+
+  expect_s3_class(result, "data.table")
+  expect_true("yMin" %in% names(result))
+  expect_true("yMax" %in% names(result))
 })

@@ -35,19 +35,19 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
       openxlsx::removeWorksheet(wbPop, "VirtualTwinPopulation")
       openxlsx::saveWorkbook(wb = wbPop, file = projectConfiguration$populationsFile, overwrite = TRUE)
 
-      message("shift sheet 'VirtualTwinPopulation' from 'Indvidual.xslx' to 'Population.xlsx'")
+      message(messages$messageShiftVirtualTwinPopulation())
     } else {
-      dtTwinPops <- xlsxReadData(projectConfiguration$scenariosFile, sheetName = "Scenarios") %>%
-        data.table::setnames("populationId", "populationName") %>%
-        dplyr::mutate("dataGroups" = "") %>%
-        dplyr::select(c("populationName", "dataGroups", "individualId", "modelParameterSheets", "applicationProtocol")) %>%
+      dtTwinPops <- xlsxReadData(projectConfiguration$scenariosFile, sheetName = "Scenarios") |>
+        data.table::setnames("populationId", "populationName") |>
+        dplyr::mutate("dataGroups" = "") |>
+        dplyr::select(c("populationName", "dataGroups", "individualId", "modelParameterSheets", "applicationProtocol")) |>
         dplyr::filter(FALSE)
     }
   } else {
     dtTwinPops <- xlsxReadData(wb, "VirtualTwinPopulation")
   }
 
-  if (is.null(groups)) groups <- getIndividualDataGroups(dataObserved, groups)
+  if (is.null(groups)) groups <- .getIndividualDataGroups(dataObserved, groups)
   # Remove any groups that are already in dtTwinPops
   groups <- setdiff(groups, unique(splitInputs(as.character(dtTwinPops$dataGroups))))
 
@@ -58,10 +58,11 @@ setupVirtualTwinPopConfig <- function(projectConfiguration, dataObserved, groups
   }
 
   # Create new virtual twin population data
-  dtTwinPopsNew <- dataObserved[group %in% groups, c("group", "individualId")] %>%
-    unique() %>%
-    .[, .(dataGroups = paste(group, collapse = ", ")), by = "individualId"] %>%
-    .[, populationName := gsub(", ", "_", dataGroups)]
+  dtTwinPopsNew <- dataObserved[group %in% groups, c("group", "individualId")] |>
+    unique()
+
+  dtTwinPopsNew <- dtTwinPopsNew[, .(dataGroups = paste(group, collapse = ", ")), by = "individualId"]
+  dtTwinPopsNew <- dtTwinPopsNew[, populationName := gsub(", ", "_", dataGroups)]
 
   writeToLog(type = "Info", msg = "add virtual twin population configuration in Population configuration file:")
   writeTableToLog(dtTwinPopsNew[, .N, by = "populationName"])
@@ -159,10 +160,53 @@ exportVirtualTwinPopulations <- function(projectConfiguration, modelFile, overwr
 #' @export
 #' @family population export
 exportRandomPopulations <- function(projectConfiguration, populationNames = NULL, customParameters = NULL, overwrite = FALSE) {
+  # Read population demographics
+  dtPops <- xlsxReadData(wb = projectConfiguration$populationsFile, sheetName = "Demographics")
+
+  # Validate and filter populations
+  dtPops <- .validateAndFilterPopulations(
+    dtPops = dtPops,
+    populationNames = populationNames,
+    overwrite = overwrite,
+    projectConfiguration = projectConfiguration,
+    customParameters = customParameters
+  )
+
+  # If no populations to export, return early
+  if (nrow(dtPops) == 0) {
+    return(invisible())
+  }
+
+  # Export each population
+  lapply(
+    split(dtPops, by = "populationName"),
+    function(dPop) {
+      .exportSinglePopulation(
+        dPop = dPop,
+        projectConfiguration = projectConfiguration,
+        customParameters = customParameters
+      )
+    }
+  )
+
+  return(invisible())
+}
+#' Validate and filter populations for export
+#'
+#' @param dtPops Data table with population demographics
+#' @param populationNames Vector of population names to export (NULL for all)
+#' @param overwrite Logical indicating whether to overwrite existing files
+#' @param projectConfiguration Project configuration object
+#' @param customParameters List of custom parameters to validate
+#'
+#' @return Filtered data table of populations to export
+#' @keywords internal
+#' @noRd
+.validateAndFilterPopulations <- function(dtPops, populationNames, overwrite, projectConfiguration, customParameters) {
   # initialize variable to avoid messages
   proportionOfFemales <- NULL # nolint
 
-  # Check for valid customParameter if provided
+  # Validate custom parameters if provided
   if (!is.null(customParameters)) {
     # Validate that customParameter is a list
     checkmate::assertList(customParameters, types = "list", min.len = 1)
@@ -174,9 +218,7 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
     }
   }
 
-  # add virtual population with in biometric ranges of observed data
-  dtPops <- xlsxReadData(wb = projectConfiguration$populationsFile, sheetName = "Demographics")
-
+  # Set populationNames to all if NULL
   if (is.null(populationNames)) populationNames <- dtPops$populationName
 
   # Check if overwrite is FALSE and filter for existing files
@@ -184,64 +226,78 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
     existingFiles <- list.files(projectConfiguration$populationsFolder, pattern = "*.csv", full.names = TRUE)
     existingPopulationNames <- sub("\\.csv$", "", basename(existingFiles))
 
-    # Filter dtTwinPops for populations that do not exist
+    # Filter for populations that do not exist
     populationNames <- setdiff(populationNames, existingPopulationNames)
   }
+
+  # Filter dtPops for requested populations
   if (!is.null(populationNames) & nrow(dtPops) > 0) {
     dtPops <- dtPops[dtPops$populationName %in% populationNames]
   }
-  # If no populations left to generate, return with a message
+
+  # If no populations left to generate, return empty data.table
   if (nrow(dtPops) == 0) {
     writeToLog(
       type = "Info",
       msg = ("No new virtual populations to generate; all files already exist.")
     )
-    return(invisible())
+    return(dtPops[FALSE])
   }
 
+  # Warn about small proportionOfFemales
   tmp <- dtPops[proportionOfFemales > 0 & proportionOfFemales <= 1]
   if (nrow(tmp) > 0) {
-    warning(paste(
-      "You have very small values for 'ProportionOfFemales' in the population configurations.
-    Unit is percent not fraction. Are you sure?\n",
-      paste(paste(tmp$populationName, tmp$proportionOfFemales, sep = ": "), collapse = "; ")
-    ))
+    warning(messages$warningSmallProportionOfFemales(tmp))
   }
 
+  return(dtPops)
+}
 
-  lapply(
-    split(dtPops, by = "populationName"),
-    function(dPop) {
-      popCharacteristics <- esqlabsR::readPopulationCharacteristicsFromXLS(
-        XLSpath = projectConfiguration$populationsFile,
-        populationName = dPop$populationName,
-        sheet = "Demographics"
-      )
-      population <- ospsuite::createPopulation(populationCharacteristics = popCharacteristics)
-
-      if (dPop$populationName %in% openxlsx::getSheetNames(projectConfiguration$populationsFile)) {
-        extendPopulationFromXLS_RF(population, projectConfiguration$populationsFile, sheet = dPop$populationName)
-      }
-
-      poptable <- ospsuite::populationToDataFrame(population$population) %>%
-        data.table::setDT()
-
-      if (!is.null(customParameters)) {
-        for (cp in customParameters) {
-          if (length(cp$values) != 1 & length(cp$values) != nrow(poptable)) {
-            stop(paste("Inconsistent number of values for", cp$path, "in", dPop$populationName))
-          }
-          poptable[[cp$path]] <- cp$values
-        }
-      }
-      .savePopulationFile(poptable = poptable, populationName = dPop$populationName, projectConfiguration = projectConfiguration)
-
-      return(invisible())
-    }
+#' Export a single population
+#'
+#' @param dPop Single row data table with population information
+#' @param projectConfiguration Project configuration object
+#' @param customParameters List of custom parameters to add to population
+#'
+#' @return invisible()
+#' @keywords internal
+#' @noRd
+.exportSinglePopulation <- function(dPop, projectConfiguration, customParameters) {
+  # Read population characteristics from file
+  popCharacteristics <- esqlabsR::readPopulationCharacteristicsFromXLS(
+    XLSpath = projectConfiguration$populationsFile,
+    populationName = dPop$populationName,
+    sheet = "Demographics"
   )
+
+  # Create population
+  population <- ospsuite::createPopulation(populationCharacteristics = popCharacteristics)
+
+  # Extend population if additional sheet exists
+  if (dPop$populationName %in% openxlsx::getSheetNames(projectConfiguration$populationsFile)) {
+    .extendPopulationFromXLS_RF(population, projectConfiguration$populationsFile, sheet = dPop$populationName)
+  }
+
+  # Convert to data frame
+  poptable <- ospsuite::populationToDataFrame(population$population) |>
+    data.table::setDT()
+
+  # Add custom parameters if provided
+  if (!is.null(customParameters)) {
+    for (cp in customParameters) {
+      if (length(cp$values) != 1 & length(cp$values) != nrow(poptable)) {
+        stop(messages$errorInconsistentNumberOfValues(cp$path, dPop$populationName))
+      }
+      poptable[[cp$path]] <- cp$values
+    }
+  }
+
+  # Save population file
+  .savePopulationFile(poptable = poptable, populationName = dPop$populationName, projectConfiguration = projectConfiguration)
 
   return(invisible())
 }
+
 #' Set Custom Parameters to Population
 #'
 #' This function updates the parameter values of a population based on custom parameters defined in a scenario.
@@ -260,7 +316,8 @@ exportRandomPopulations <- function(projectConfiguration, populationNames = NULL
 #' @return The updated `scenario` object, with the population's parameters set accordingly. If the scenario type is not "Population" or if there are no custom parameters, the original scenario is returned unchanged.
 #'
 #' @keywords internal
-setCustomParamsToPopulation <- function(scenario) {
+#' @noRd
+.setCustomParamsToPopulation <- function(scenario) {
   # avoid warning for global variable
   paths <- dimension <- values <- NULL
 
@@ -306,6 +363,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @return A list of parameters for the specified sheets.
 #' @keywords internal
+#' @noRd
 .readParameterSheetList <- function(projectConfiguration, dtTwinPops, sim) {
   # Define the sheets and corresponding files
   sheets <- c("modelParameterSheets", "individualId", "applicationProtocol")
@@ -345,6 +403,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #' @param sim A simulation object.
 #'
 #' @keywords internal
+#' @noRd
 .generatePopulationFiles <- function(dtTwinPops, params, dtIndividualBiometrics, projectConfiguration, sim) {
   # initialize variable to avoid messages
   individualId <- IndividualId <- NULL # nolint
@@ -400,9 +459,10 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @return An individual characteristics object.
 #' @keywords internal
+#' @noRd
 .createIndividualCharacteristics <- function(biomForInd) {
   # ! Attention esqlabsR uses Columns starting with upperCase
-  moleculeOntogenies <- readOntongenies(biomForInd[, c("protein Ontogenies")])
+  moleculeOntogenies <- .readOntongenies(biomForInd[, c("protein Ontogenies")])
 
   ospsuite::createIndividualCharacteristics(
     species = biomForInd$species,
@@ -427,6 +487,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @return A list of results for the individual.
 #' @keywords internal
+#' @noRd
 .processIndividual <- function(individual, biomForInd, params, projectConfiguration, sim) {
   # avoid warnings during check
   paths <- NULL
@@ -453,6 +514,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #' @param projectConfiguration A list containing project configuration details.
 #'
 #' @keywords internal
+#' @noRd
 .savePopulationFile <- function(poptable, populationName, projectConfiguration) {
   utils::write.csv(
     x = poptable,
@@ -478,6 +540,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @return A data.table representing the virtual twin population.
 #' @keywords internal
+#' @noRd
 .buildVirtualTwinPopulation <- function(projectConfiguration, params, dPop) {
   poptable <- data.table()
 
@@ -499,10 +562,7 @@ setCustomParamsToPopulation <- function(scenario) {
         setdiff(names(poptable), names(popRow))
       )
       if (length(tmp) > 1) {
-        stop(paste(
-          "population parameter must be consistent within a virtual population. Check",
-          paste(tmp, collapse = ", "), "for", popRow$ObservedIndividualId
-        ))
+        stop(messages$errorPopulationParameterMustBeConsistent(tmp, popRow$ObservedIndividualId))
       }
     }
 
@@ -523,6 +583,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @return A list of parameters for the specified sheets.
 #' @keywords internal
+#' @noRd
 .getAllParameterForSheets <- function(projectConfiguration, sheets, paramsXLSpath, sim) {
   # avoid warnings for global variables during check
   paths <- dimension <- values <- sheet <- NULL
@@ -544,7 +605,7 @@ setCustomParamsToPopulation <- function(scenario) {
 
   # Use foreach to parallelize the loop
   dtSheets <- foreach::foreach(sheet = sheets, .packages = c("esqlabsR", "data.table", "dplyr")) %dopar% {
-    tmp <- esqlabsR::readParametersFromXLS(paramsXLSpath = paramsXLSpath, sheets = sheet) %>%
+    tmp <- esqlabsR::readParametersFromXLS(paramsXLSpath = paramsXLSpath, sheets = sheet) |>
       data.table::as.data.table()
 
     if (nrow(tmp) > 0) {
@@ -588,6 +649,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @return A cleaned character vector of sheet names.
 #' @keywords internal
+#' @noRd
 .cleanUpSheetList <- function(sheets) {
   sheets <- unique(sheets)
   sheets <- splitInputs(sheets)
@@ -606,6 +668,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #'
 #' @return A data.table with converted biometrics.
 #' @keywords internal
+#' @noRd
 .convertBiomForIndStatics <- function(biomForInd, sim) {
   # avoid messages for global variables during check
   paths <- NULL
@@ -616,8 +679,8 @@ setCustomParamsToPopulation <- function(scenario) {
     paths = c("ObservedIndividualId", "Population", "Gender", "Organism|Height", "Organism|Age", "Organism|Gestational age")
   )
 
-  tmp <- biomForInd %>%
-    dplyr::select(dplyr::any_of(dtSelection$pName)) %>%
+  tmp <- biomForInd |>
+    dplyr::select(dplyr::any_of(dtSelection$pName)) |>
     data.table::setnames(old = dtSelection$pName, new = dtSelection$paths, skip_absent = TRUE)
 
   if (!is.null(tmp$`Organism|Height`)) {

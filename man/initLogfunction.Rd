@@ -12,7 +12,8 @@ initLogfunction(
     "was deprecated in ggplot2", "font family not found in Windows font database",
     "mbcsToSbcs"),
   messagesNotDisplayed = c("Each group consists of only one observation"),
-  verbose = TRUE
+  verbose = TRUE,
+  loggingFolder = NULL
 )
 }
 \arguments{
@@ -22,11 +23,13 @@ initLogfunction(
 
 \item{messagesNotDisplayed}{A list of messages that should not be logged.}
 
-\item{verbose}{boolean, if true log message will be shown on the console}
+\item{verbose}{boolean, if true log messages will be shown on the console}
+
+\item{loggingFolder}{A character string specifying the folder where log files should be stored. If NULL, defaults to a "Logs" sub-folder within the output folder of the project configuration.}
 }
 \description{
-This function initialize the logging during a workflow. It is called at the start of the workflow script.
-It is used to configure options for the log file folder, warnings which should not logged and messages which should not logged.
+This function initializes the logging during a workflow. It is called at the start of the workflow script.
+It is used to configure options for the log file folder, warnings which should not be logged, and messages which should not be logged.
 }
 \examples{
 \dontrun{

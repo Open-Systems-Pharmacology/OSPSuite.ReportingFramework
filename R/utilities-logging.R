@@ -129,7 +129,7 @@ captureLog <- function(expr, finallyExpression = invisible()) {
       withCallingHandlers(
         expr,
         error = function(e) {
-          errorMessage <- getErrorTrace(e)
+          errorMessage <- .getErrorTrace(e)
           writeToLog(
             type = "Error",
             msg = errorMessage
@@ -192,13 +192,14 @@ captureLog <- function(expr, finallyExpression = invisible()) {
 #'     # Some code that may produce an error
 #'   },
 #'   error = function(e) {
-#'     errorTrace <- getErrorTrace(e)
+#'     errorTrace <- .getErrorTrace(e)
 #'     cat(errorTrace)
 #'   }
 #' )
 #'
 #' @keywords internal
-getErrorTrace <- function(e) {
+#' @noRd
+.getErrorTrace <- function(e) {
   calls <- sys.calls()
   errorTrace <- "Error Trace:"
   for (call in calls) {
@@ -242,7 +243,7 @@ getErrorTrace <- function(e) {
 writeToLog <- function(type, msg, filename = NULL) {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
   if (is.null(logFileFolder)) {
-    warning("Logfile was not initialized")
+    warning(messages$warningLogfileNotInitialized())
     return(invisible())
   }
   if (is.null(filename)) filename <- "run.log"
@@ -254,6 +255,7 @@ writeToLog <- function(type, msg, filename = NULL) {
   cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
     paste0(type, ":"),
     paste(msg, collapse = "\n"),
+    '\n',
     file = file.path(logFileFolder, filename),
     append = TRUE
   )
@@ -270,7 +272,7 @@ writeToLog <- function(type, msg, filename = NULL) {
 writeTableToLog <- function(dt, filename = "run.log") {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
   if (is.null(logFileFolder)) {
-    warning("Logfile was not initialized")
+    warning(messages$warningLogfileNotInitialized())
     print(dt)
     return(invisible())
   }
@@ -326,7 +328,7 @@ saveSessionInfo <- function() {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
 
   if (is.null(logFileFolder)) {
-    warning("Logfile was not initialized")
+    warning(messages$warningLogfileNotInitialized())
     return(invisible())
   }
 

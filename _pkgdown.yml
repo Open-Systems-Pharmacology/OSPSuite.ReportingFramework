@@ -97,6 +97,7 @@ reference:
       - matches("TestProjectBuilder")
       - matches("^validate")
       - matches("formatPercentiles")
+      - matches("getSimulatedTimeprofile")
   - title: "Constants"
     desc: "Enumeration constants for OSPSuite.ReportingFrameworks options and scaling."
     contents:
