@@ -262,7 +262,7 @@ calculateSensitivities <- function(scenarioFiles,
   sensitivityPopulationDT <- sensitivityPopulationDF[, .(IndividualId, factor, SensitivityParameter)]
 
   # Load PK values: returns data.table with columns QuantityPath, PKParameter, Value, IndividualId
-  pkVals <- loadPKValues(
+  pkVals <- .loadPKValues(
     scenarioFiles = scenarioFiles,
     outputPaths = outputPaths,
     pkParameter = pkParameter,
@@ -324,15 +324,9 @@ calculateSensitivities <- function(scenarioFiles,
 #'   the Value column contains `scenario2 / scenario1` for each matching QuantityPath and Parameter.
 #'   The returned data.table will have a column `PKParameter` (renamed from `Parameter`).
 #'
-#' @examples
-#' \dontrun{
-#' dt <- loadPKValues(scenarioFiles = myScenarios,
-#'                    outputPaths = c("/Plasma/Drug"),
-#'                    pkParameter = "AUC",
-#'                    outFolder = "results/SensitivityResults")
-#' }
-#' @export
-loadPKValues <- function(scenarioFiles,
+#' @keywords internal
+#' @noRd
+.loadPKValues <- function(scenarioFiles,
                          outputPaths,
                          pkParameter,
                          outFolder) {

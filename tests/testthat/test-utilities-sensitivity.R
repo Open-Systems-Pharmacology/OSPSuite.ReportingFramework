@@ -12,7 +12,7 @@ test_that("addSensitivityTable with scenarioList validates scenario name", {
 
 # Tests for new sensitivity functions
 
-test_that("loadPKValues computes ratio correctly when two scenario files exist", {
+test_that(".loadPKValues computes ratio correctly when two scenario files exist", {
   # Prepare a temporary folder and write two small PKAnalysis CSVs
   tmpdir <- tempdir()
   on.exit({
@@ -41,7 +41,7 @@ test_that("loadPKValues computes ratio correctly when two scenario files exist",
   data.table::fwrite(dt_num, file = file.path(tmpdir, "scB-PKAnalysisResults.csv"))
 
   scenarioFiles <- c(scA = "fileA.pkml", scB = "fileB.pkml")
-  out <- loadPKValues(
+  out <- ospsuite.reportingframework:::.loadPKValues(
     scenarioFiles = scenarioFiles,
     outputPaths = c("Q1", "Q2"),
     pkParameter = c("P1", "P2"),
@@ -55,14 +55,14 @@ test_that("loadPKValues computes ratio correctly when two scenario files exist",
   expect_true("IndividualId" %in% names(out))
 })
 
-test_that("loadPKValues errors when files missing", {
+test_that(".loadPKValues errors when files missing", {
   tmpdir <- tempdir()
   scenarioFiles <- c(scA = "fileA.pkml")
   # ensure file missing
   missing_file <- file.path(tmpdir, "scA-PKAnalysisResults.csv")
   if (file.exists(missing_file)) file.remove(missing_file)
   expect_error(
-    loadPKValues(
+    ospsuite.reportingframework:::.loadPKValues(
       scenarioFiles = scenarioFiles,
       outputPaths = "Q1",
       pkParameter = "P1",
