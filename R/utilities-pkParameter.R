@@ -46,6 +46,8 @@ calculatePKParameterForScenarios <- function(projectConfiguration,
         pkAnalyses = pkAnalyses,
         filePath = file.path(outputFolder, paste0(sc, ".csv"))
       )
+    } else {
+      message(messages$warningNoPKSheetDefined(sc))
     }
   }
 
@@ -201,19 +203,27 @@ loadPKParameter <- function(projectConfiguration,
   # Load or calculate PK analyses for all scenarios
   pkAnalysesList <- lapply(names(scenarioListOrResult), function(sc) {
     pkParameterSheets <- dtScenarios[scenarioName == sc & !is.na(pKParameter)]$pKParameter
-
+    
+    if (length(pkParameterSheets) == 0){
+      warning(messages$warningNoPKSheetDefine(sc))
+      return(data.table())
+    } else{
     .loadPKAnalysisPerScenario(
       scenarioName = sc,
       scenarioSimulation = scenarioListOrResult[[sc]]$simulation,
       pkParameterSheets = pkParameterSheets,
       projectConfiguration = projectConfiguration
     )
+    }
   })
-  pkParameterDT <- merge(data.table::rbindlist(pkAnalysesList),
-    dtScenarios[, c("scenarioName", "populationId")],
-    by.x = "scenario",
-    by.y = "scenarioName"
-  )
+  pkParameterDT <- data.table::rbindlist(pkAnalysesList)
+  if (nrow(pkParameterDT) > 0){
+    pkParameterDT <- merge(data.table::rbindlist(pkAnalysesList),
+                           dtScenarios[, c("scenarioName", "populationId")],
+                           by.x = "scenario",
+                           by.y = "scenarioName"
+    )
+  }
 
   return(pkParameterDT)
 }

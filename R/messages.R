@@ -66,6 +66,10 @@ messages$errorColumnHasEntriesButNoAllowedValues <- function(col) {
 }
 
 # PK Parameter messages
+messages$warningNoPKSheetDefined <- function(scenarioName) {
+  paste("there are nor PK-parameters defined for scenario:",scenarioName)
+}
+
 messages$errorEmptyDisplayUnit <- function() {
   "empty string is not possible as displayUnit in the sheet 'Userdef PK Parameter',\n use 'default' instead"
 }
@@ -89,7 +93,7 @@ messages$errorNoPKParameterAvailable <- function(plotName) {
 messages$errorPKParameterNotCalculated <- function(scenarioName) {
   paste(
     "PK Parameter for", scenarioName, "is not calculated!",
-    "Use function calculatePKParameterForCalculation to generate the result"
+    "Use function calculatePKParameterForScenarios to generate the result"
   )
 }
 
