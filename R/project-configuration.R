@@ -75,33 +75,13 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
     },
     #' @description Read configuration from file
     .read_config = function(file_path) { # nolint
-      path <- private$.clean_path(file_path, replace_env_var = FALSE)
+      super$.__enclos_env__$private$.read_config(file_path)
 
-      # Update private values
-      private$.projectConfigurationFilePath <- path
-      private$.projectConfigurationDirPath <- dirname(path)
-
-      inputData <- readExcel(path = path)
-
-      # Reset private variables
-      private$.replaced_env_vars <- list()
-      private$.projectConfigurationData <- list()
+      inputData <- readExcel(path = private$.projectConfigurationFilePath)
       private$.projectConfigurationDataAddOns <- list()
 
-      for (property in intersect(inputData$Property, names(self))) {
-        private$.projectConfigurationData[[property]] <- list(
-          value = inputData$Value[inputData$Property == property],
-          description = inputData$Description[inputData$Property == property]
-        )
-      }
-
-      private$.checkProjectConfigurationFile()
-
-      # Mark as not modified after loading from file
-      private$.modified <- FALSE
-
       # Read RFAddons sheet for RF-specific addon properties (new format)
-      wb <- openxlsx::loadWorkbook(path)
+      wb <- openxlsx::loadWorkbook(private$.projectConfigurationFilePath)
       if ("RFAddons" %in% wb$sheet_names) {
         rfAddOnsData <- xlsxReadData(wb = wb, sheetName = "RFAddons")
         for (i in seq_len(nrow(rfAddOnsData))) {
@@ -133,10 +113,12 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
     #' @param ignoreVersionCheck If `TRUE`, skip the esqlabsR version mismatch
     #' check when loading the configuration file. Defaults to `FALSE`.
     initialize = function(projectConfigurationFilePath = character(),
-                          ignoreVersionCheck = FALSE) {
+                          ignoreVersionCheck = FALSE,
+                          ...) {
       super$initialize(
         projectConfigurationFilePath = projectConfigurationFilePath,
-        ignoreVersionCheck = ignoreVersionCheck
+        ignoreVersionCheck = ignoreVersionCheck,
+        ...
       )
     },
     #' Print

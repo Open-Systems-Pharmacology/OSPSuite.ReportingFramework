@@ -54,6 +54,7 @@ initProject <- function(configurationDirectory = ".",
   # Collect values from the main sheet
   dt <- xlsxReadData(sourceConfigurationXlsx)
   allValues <- dt$value
+  allValues <- allValues[!is.na(allValues) & nzchar(allValues)]
 
   # Also collect values from the RFAddons sheet (RF-specific files/dirs)
   wbSource <- openxlsx::loadWorkbook(sourceConfigurationXlsx)
@@ -61,13 +62,15 @@ initProject <- function(configurationDirectory = ".",
     dtAddOns <- xlsxReadData(wb = wbSource, sheetName = "RFAddons")
     allValues <- c(allValues, dtAddOns$value)
   }
+  allValues <- allValues[!is.na(allValues) & nzchar(allValues)]
 
   filesAvailable <- list.files(templatePath)
 
   filesToCopy <- intersect(allValues, filesAvailable) |> unique()
 
-  dirsToCreate <- setdiff(allValues, c(filesToCopy)) |>
+  potentialDirs <- setdiff(allValues, c(filesToCopy)) |>
     unique()
+  dirsToCreate <- potentialDirs[!grepl("\\.[^/]+$", potentialDirs)]
 
   for (d in dirsToCreate) {
     dabsolute <- fs::path_abs(d, start = configurationDirectory)
@@ -134,15 +137,18 @@ initProject <- function(configurationDirectory = ".",
 #'   loading the configuration file. Use this in non-interactive contexts such as
 #'   automated tests or scripts running from console where interactive user input
 #'   cannot be assured. Defaults to `FALSE`.
+#' @param ... Additional parameters forwarded to `esqlabsR::ProjectConfiguration`.
 #'
 #' @return Object of type `ProjectConfigurationRF`
 #' @export
 #' @family project initialization
 createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xlsx"),
-                                       ignoreVersionCheck = FALSE) {
+                                       ignoreVersionCheck = FALSE,
+                                       ...) {
   projectConfiguration <- ProjectConfigurationRF$new(
     projectConfigurationFilePath = path,
-    ignoreVersionCheck = ignoreVersionCheck
+    ignoreVersionCheck = ignoreVersionCheck,
+    ...
   )
 
   return(projectConfiguration)
