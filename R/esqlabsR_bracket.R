@@ -20,6 +20,10 @@
 #' Excel file containing the project configuration. By default, it uses the template
 #' provided by the 'ospsuite.reportingframework' package.
 #'
+#' @param esqlabsRExamplePath Path to the esqlabsR TestProject directory (with a
+#' `Configurations` subfolder). Used as a fallback to copy configuration templates that
+#' are missing from `templatePath`. Defaults to the installed esqlabsR example project.
+#'
 #' @param templatePath path of all template files
 #'
 #' @param overwrite A logical value indicating whether to overwrite existing files in the
@@ -33,6 +37,7 @@
 #' @family project initialization
 initProject <- function(configurationDirectory = ".",
                         sourceConfigurationXlsx = system.file("templates", "ProjectConfiguration.xlsx", package = "ospsuite.reportingframework"),
+                        esqlabsRExamplePath = system.file("extdata", "examples", "TestProject", package = "esqlabsR"),
                         templatePath = system.file("templates", package = "ospsuite.reportingframework"),
                         overwrite = FALSE) {
   configurationDirectory <- fs::path_abs(configurationDirectory)
@@ -64,9 +69,11 @@ initProject <- function(configurationDirectory = ".",
   }
   allValues <- allValues[!is.na(allValues) & nzchar(allValues)]
 
-  filesAvailable <- list.files(templatePath)
+  filesAvailableRF <- list.files(templatePath)
+  esqlabsRConfigPath <- file.path(esqlabsRExamplePath, "Configurations")
+  filesAvailableEsqlabs <- if (dir.exists(esqlabsRConfigPath)) list.files(esqlabsRConfigPath) else character()
 
-  filesToCopy <- intersect(allValues, filesAvailable) |> unique()
+  filesToCopy <- intersect(allValues, union(filesAvailableRF, filesAvailableEsqlabs)) |> unique()
 
   potentialDirs <- setdiff(allValues, c(filesToCopy)) |>
     unique()
@@ -82,11 +89,36 @@ initProject <- function(configurationDirectory = ".",
   for (f in filesToCopy) {
     fabsolute <- fs::path_abs(f, start = configurationDirectory)
     if (!file.exists(fabsolute) | overwrite) {
+      if (f %in% filesAvailableRF) {
+        sourceFile <- file.path(templatePath, f)
+      } else if (f %in% filesAvailableEsqlabs) {
+        sourceFile <- file.path(esqlabsRConfigPath, f)
+      } else {
+        next
+      }
+
       file.copy(
-        from = file.path(templatePath, f),
+        from = sourceFile,
         to = fabsolute,
         overwrite = overwrite
       )
+
+      if (identical(f, "Scenarios.xlsx")) {
+        wbSc <- openxlsx::loadWorkbook(fabsolute)
+        if (!("PKParameter" %in% wbSc$sheet_names)) {
+          openxlsx::addWorksheet(wbSc, "PKParameter")
+          openxlsx::writeData(
+            wb = wbSc,
+            sheet = "PKParameter",
+            x = data.frame(
+              Scenario_name = character(),
+              PKParameter = character(),
+              stringsAsFactors = FALSE
+            )
+          )
+          openxlsx::saveWorkbook(wbSc, fabsolute, overwrite = TRUE)
+        }
+      }
     }
   }
 
@@ -137,6 +169,7 @@ initProject <- function(configurationDirectory = ".",
 #'   loading the configuration file. Use this in non-interactive contexts such as
 #'   automated tests or scripts running from console where interactive user input
 #'   cannot be assured. Defaults to `FALSE`.
+#' @inheritDotParams esqlabsR::createProjectConfiguration
 #' @param ... Additional parameters forwarded to `esqlabsR::ProjectConfiguration`.
 #'
 #' @return Object of type `ProjectConfigurationRF`

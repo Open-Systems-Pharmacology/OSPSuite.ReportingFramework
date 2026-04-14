@@ -75,13 +75,49 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
     },
     #' @description Read configuration from file
     .read_config = function(file_path) { # nolint
-      super$.__enclos_env__$private$.read_config(file_path)
+      path <- private$.clean_path(file_path, replace_env_var = FALSE)
 
-      inputData <- readExcel(path = private$.projectConfigurationFilePath)
+      wb <- openxlsx::loadWorkbook(path)
+      mainSheet <- wb$sheet_names[1]
+      dtMain <- xlsxReadData(wb = wb, sheetName = mainSheet)
+
+      allowedProperties <- tryCatch(
+        xlsxReadData(system.file("templates", "ProjectConfiguration.xlsx", package = "ospsuite.reportingframework"))$property,
+        error = function(...) dtMain$property
+      )
+      leftoverProperties <- setdiff(dtMain$property, allowedProperties)
+
+      if (length(leftoverProperties) > 0) {
+        if (!("RFAddons" %in% wb$sheet_names)) {
+          openxlsx::addWorksheet(wb, "RFAddons")
+          xlsxWriteData(
+            wb = wb,
+            sheetName = "RFAddons",
+            dt = data.table(
+              property = character(),
+              value = character(),
+              description = character()
+            )
+          )
+        }
+
+        dtAddOns <- xlsxReadData(wb = wb, sheetName = "RFAddons")
+        dtAddOns <- rbind(
+          dtAddOns,
+          dtMain[property %in% leftoverProperties, c("property", "value", "description")]
+        )
+        dtMain <- dtMain[!property %in% leftoverProperties]
+
+        xlsxWriteData(wb = wb, sheetName = mainSheet, dt = dtMain)
+        xlsxWriteData(wb = wb, sheetName = "RFAddons", dt = dtAddOns)
+        openxlsx::saveWorkbook(wb, path, overwrite = TRUE)
+      }
+
+      super$.__enclos_env__$private$.read_config(path)
+
       private$.projectConfigurationDataAddOns <- list()
 
-      # Read RFAddons sheet for RF-specific addon properties (new format)
-      wb <- openxlsx::loadWorkbook(private$.projectConfigurationFilePath)
+      wb <- openxlsx::loadWorkbook(path)
       if ("RFAddons" %in% wb$sheet_names) {
         rfAddOnsData <- xlsxReadData(wb = wb, sheetName = "RFAddons")
         for (i in seq_len(nrow(rfAddOnsData))) {
@@ -90,18 +126,6 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
             value = rfAddOnsData$value[i]
           )
         }
-      }
-
-      # Backward compatibility: read leftover properties from main sheet as addons
-      # (for project files that still have RF-specific properties in the main sheet)
-      for (property in setdiff(
-        inputData$Property,
-        c(names(private$.projectConfigurationDataAddOns), names(self))
-      )) {
-        private$.addOnFile(
-          property = property,
-          value = inputData[inputData$Property == property, ]$Value
-        )
       }
     }
   ),
