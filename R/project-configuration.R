@@ -35,13 +35,29 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
         private$.projectConfigurationDataAddOns[[property]] <- value
       }
     },
-    #' @description Adds new line to configuration xlsx
+    #' @description Adds new line to RFAddons sheet in configuration xlsx
     .writeToConfigXlsx = function(propertyToSet, value, description) {
       wb <- openxlsx::loadWorkbook(self$projectConfigurationFilePath)
-      dtConfiguration <- xlsxReadData(wb = wb, sheetName = wb$sheet_names[1])
-      if (!(propertyToSet %in% dtConfiguration$property)) {
-        dtConfiguration <- rbind(
-          dtConfiguration,
+
+      # Create RFAddons sheet if it does not exist yet
+      if (!("RFAddons" %in% wb$sheet_names)) {
+        openxlsx::addWorksheet(wb, "RFAddons")
+        openxlsx::writeData(
+          wb = wb,
+          sheet = "RFAddons",
+          x = data.frame(
+            property = character(),
+            value = character(),
+            description = character(),
+            stringsAsFactors = FALSE
+          )
+        )
+      }
+
+      dtAddOns <- xlsxReadData(wb = wb, sheetName = "RFAddons")
+      if (!(propertyToSet %in% dtAddOns$property)) {
+        dtAddOns <- rbind(
+          dtAddOns,
           data.table(
             property = propertyToSet,
             value = value,
@@ -49,12 +65,12 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
           )
         )
       } else {
-        dtConfiguration[property == propertyToSet, `:=`(
+        dtAddOns[property == propertyToSet, `:=`(
           value = value,
           description = description
         )]
       }
-      xlsxWriteData(wb = wb, sheetName = wb$sheet_names[1], dt = dtConfiguration)
+      xlsxWriteData(wb = wb, sheetName = "RFAddons", dt = dtAddOns)
       openxlsx::saveWorkbook(wb, self$projectConfigurationFilePath, overwrite = TRUE)
     },
     #' @description Read configuration from file
@@ -70,6 +86,7 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
       # Reset private variables
       private$.replaced_env_vars <- list()
       private$.projectConfigurationData <- list()
+      private$.projectConfigurationDataAddOns <- list()
 
       for (property in intersect(inputData$Property, names(self))) {
         private$.projectConfigurationData[[property]] <- list(
@@ -80,15 +97,23 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
 
       private$.checkProjectConfigurationFile()
 
-      for (property in colnames(private$.projectConfigurationData)) {
-        # Update each private property
-        self[[property]] <- private$.projectConfigurationData[[property]]$value
-      }
-
       # Mark as not modified after loading from file
       private$.modified <- FALSE
 
-      # add addOns
+      # Read RFAddons sheet for RF-specific addon properties (new format)
+      wb <- openxlsx::loadWorkbook(path)
+      if ("RFAddons" %in% wb$sheet_names) {
+        rfAddOnsData <- xlsxReadData(wb = wb, sheetName = "RFAddons")
+        for (i in seq_len(nrow(rfAddOnsData))) {
+          private$.addOnFile(
+            property = rfAddOnsData$property[i],
+            value = rfAddOnsData$value[i]
+          )
+        }
+      }
+
+      # Backward compatibility: read leftover properties from main sheet as addons
+      # (for project files that still have RF-specific properties in the main sheet)
       for (property in setdiff(
         inputData$Property,
         c(names(private$.projectConfigurationDataAddOns), names(self))
@@ -105,9 +130,13 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
     #'
     #' @param projectConfigurationFilePath A string representing the path to the
     #' project configuration file.
-    initialize = function(projectConfigurationFilePath = character()) {
+    #' @param ignoreVersionCheck If `TRUE`, skip the esqlabsR version mismatch
+    #' check when loading the configuration file. Defaults to `FALSE`.
+    initialize = function(projectConfigurationFilePath = character(),
+                          ignoreVersionCheck = FALSE) {
       super$initialize(
-        projectConfigurationFilePath = projectConfigurationFilePath
+        projectConfigurationFilePath = projectConfigurationFilePath,
+        ignoreVersionCheck = ignoreVersionCheck
       )
     },
     #' Print

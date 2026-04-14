@@ -5,6 +5,14 @@
 #' structure and files specified in the provided Excel template and sets up the project
 #' environment accordingly.
 #'
+#' The function first processes the main sheet of the configuration xlsx to create
+#' directories and copy base configuration files (using the RF's own project structure).
+#' It then processes the `RFAddons` sheet to copy RF-specific files such as
+#' `PKParameter.xlsx` and `SensitivityParameter.xlsx`.
+#' Finally it records the currently installed esqlabsR version in the
+#' generated `ProjectConfiguration.xlsx` so that the version check in
+#' `createProjectConfiguration()` passes.
+#'
 #' @param configurationDirectory A character string specifying the path to the project
 #' directory to be initialized. Defaults to the current working directory ('.').
 #'
@@ -32,18 +40,33 @@ initProject <- function(configurationDirectory = ".",
   checkmate::assertFileExists(sourceConfigurationXlsx)
   checkmate::assertDirectoryExists(templatePath)
 
+  destConfigPath <- file.path(configurationDirectory, basename(sourceConfigurationXlsx))
   file.copy(
     from = sourceConfigurationXlsx,
-    to = file.path(configurationDirectory, basename(sourceConfigurationXlsx)),
+    to = destConfigPath,
     overwrite = overwrite
   )
 
+  # Set esqlabsRVersion in the generated ProjectConfiguration.xlsx so the
+  # version check in createProjectConfiguration() passes out of the box.
+  .setEsqlabsRVersionInConfig(destConfigPath)
+
+  # Collect values from the main sheet
   dt <- xlsxReadData(sourceConfigurationXlsx)
+  allValues <- dt$value
+
+  # Also collect values from the RFAddons sheet (RF-specific files/dirs)
+  wbSource <- openxlsx::loadWorkbook(sourceConfigurationXlsx)
+  if ("RFAddons" %in% wbSource$sheet_names) {
+    dtAddOns <- xlsxReadData(wb = wbSource, sheetName = "RFAddons")
+    allValues <- c(allValues, dtAddOns$value)
+  }
+
   filesAvailable <- list.files(templatePath)
 
-  filesToCopy <- intersect(dt$value, filesAvailable) |> unique()
+  filesToCopy <- intersect(allValues, filesAvailable) |> unique()
 
-  dirsToCreate <- setdiff(dt$value, c(filesToCopy)) |>
+  dirsToCreate <- setdiff(allValues, c(filesToCopy)) |>
     unique()
 
   for (d in dirsToCreate) {
@@ -67,6 +90,39 @@ initProject <- function(configurationDirectory = ".",
   return(invisible())
 }
 
+#' Write the currently installed esqlabsR version into a ProjectConfiguration.xlsx
+#'
+#' @param configPath Path to the ProjectConfiguration.xlsx file to update.
+#' @keywords internal
+#' @noRd
+.setEsqlabsRVersionInConfig <- function(configPath) {
+  if (!file.exists(configPath)) {
+    return(invisible())
+  }
+  wb <- openxlsx::loadWorkbook(configPath)
+  mainSheet <- wb$sheet_names[1]
+  # xlsxReadData with default convertHeaders=TRUE lowercases the first letter of
+  # each column name, so "Property" → "property" and "Value" → "value".
+  dtConfig <- xlsxReadData(wb = wb, sheetName = mainSheet)
+  currentVersion <- as.character(utils::packageVersion("esqlabsR"))
+  if ("esqlabsRVersion" %in% dtConfig$property) {
+    dtConfig[property == "esqlabsRVersion", value := currentVersion]
+    xlsxWriteData(wb = wb, sheetName = mainSheet, dt = dtConfig)
+    openxlsx::saveWorkbook(wb, configPath, overwrite = TRUE)
+  } else {
+    # Legacy configuration file that pre-dates the esqlabsRVersion field.
+    # The version check may prompt the user when loading this configuration.
+    # Add an esqlabsRVersion entry to the main sheet of the file to silence it.
+    message(
+      "esqlabsRVersion entry not found in '", basename(configPath), "'. ",
+      "The esqlabsR version check may prompt for confirmation when loading ",
+      "this configuration. Consider adding an esqlabsRVersion entry to the ",
+      "main sheet of '", basename(configPath), "'."
+    )
+  }
+  return(invisible())
+}
+
 #' #' Create a `ProjectConfiguration`
 #'
 #' @description  Create a `ProjectConfigurationRF` based on the `"ProjectConfiguration.xlsx"`
@@ -74,12 +130,20 @@ initProject <- function(configurationDirectory = ".",
 #' based on esqlabsR::ProjectConfiguration but with additional file information for PK Parameter definitions
 #'
 #' @param path path to the `ProjectConfiguration.xlsx` file. default to the `ProjectConfiguration.xlsx` file located in the working directory.
+#' @param ignoreVersionCheck If `TRUE`, skip the esqlabsR version mismatch check when
+#'   loading the configuration file. Use this in non-interactive contexts such as
+#'   automated tests or scripts running from console where interactive user input
+#'   cannot be assured. Defaults to `FALSE`.
 #'
 #' @return Object of type `ProjectConfigurationRF`
 #' @export
 #' @family project initialization
-createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xlsx")) {
-  projectConfiguration <- ProjectConfigurationRF$new(projectConfigurationFilePath = path)
+createProjectConfiguration <- function(path = file.path("ProjectConfiguration.xlsx"),
+                                       ignoreVersionCheck = FALSE) {
+  projectConfiguration <- ProjectConfigurationRF$new(
+    projectConfigurationFilePath = path,
+    ignoreVersionCheck = ignoreVersionCheck
+  )
 
   return(projectConfiguration)
 }
