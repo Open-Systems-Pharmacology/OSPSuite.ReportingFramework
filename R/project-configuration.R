@@ -75,43 +75,11 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
     },
     #' @description Read configuration from file
     .read_config = function(file_path) { # nolint
-      path <- private$.clean_path(file_path, replace_env_var = FALSE)
+      path <- private$.clean_path(file_path, replace_env_vars = FALSE)
 
-      wb <- openxlsx::loadWorkbook(path)
-      mainSheet <- wb$sheet_names[1]
-      dtMain <- xlsxReadData(wb = wb, sheetName = mainSheet)
-
-      allowedProperties <- tryCatch(
-        xlsxReadData(system.file("templates", "ProjectConfiguration.xlsx", package = "ospsuite.reportingframework"))$property,
-        error = function(...) dtMain$property
-      )
-      leftoverProperties <- setdiff(dtMain$property, allowedProperties)
-
-      if (length(leftoverProperties) > 0) {
-        if (!("RFAddons" %in% wb$sheet_names)) {
-          openxlsx::addWorksheet(wb, "RFAddons")
-          xlsxWriteData(
-            wb = wb,
-            sheetName = "RFAddons",
-            dt = data.table(
-              property = character(),
-              value = character(),
-              description = character()
-            )
-          )
-        }
-
-        dtAddOns <- xlsxReadData(wb = wb, sheetName = "RFAddons")
-        dtAddOns <- rbind(
-          dtAddOns,
-          dtMain[property %in% leftoverProperties, c("property", "value", "description")]
-        )
-        dtMain <- dtMain[!property %in% leftoverProperties]
-
-        xlsxWriteData(wb = wb, sheetName = mainSheet, dt = dtMain)
-        xlsxWriteData(wb = wb, sheetName = "RFAddons", dt = dtAddOns)
-        openxlsx::saveWorkbook(wb, path, overwrite = TRUE)
-      }
+      # Convert legacy main-sheet RF properties to the RFAddons sheet before
+      # delegating to the parent reader, which validates the main sheet strictly.
+      .convertLegacyConfigSheet(path)
 
       super$.__enclos_env__$private$.read_config(path)
 
@@ -219,3 +187,59 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
     }
   )
 )
+
+#' Convert a legacy ProjectConfiguration main sheet to RF format
+#'
+#' Moves RF-specific properties (those not present in the RF template's allowed
+#' list) from the main sheet to the `RFAddons` sheet of the given workbook file,
+#' saving the modified workbook in place. This converter runs automatically
+#' before the parent `ProjectConfiguration` reader validates the main sheet.
+#'
+#' @param path Character. Path to the `ProjectConfiguration.xlsx` to convert.
+#' @keywords internal
+#' @noRd
+.convertLegacyConfigSheet <- function(path) {
+  wb <- openxlsx::loadWorkbook(path)
+  mainSheet <- wb$sheet_names[1]
+  dtMain <- xlsxReadData(wb = wb, sheetName = mainSheet)
+
+  allowedProperties <- tryCatch(
+    xlsxReadData(
+      system.file("templates", "ProjectConfiguration.xlsx",
+        package = "ospsuite.reportingframework"
+      )
+    )$property,
+    error = function(...) dtMain$property
+  )
+  leftoverProperties <- setdiff(dtMain$property, allowedProperties)
+
+  if (length(leftoverProperties) == 0) {
+    return(invisible())
+  }
+
+  if (!("RFAddons" %in% wb$sheet_names)) {
+    openxlsx::addWorksheet(wb, "RFAddons")
+    xlsxWriteData(
+      wb = wb,
+      sheetName = "RFAddons",
+      dt = data.table(
+        property = character(),
+        value = character(),
+        description = character()
+      )
+    )
+  }
+
+  dtAddOns <- xlsxReadData(wb = wb, sheetName = "RFAddons")
+  dtAddOns <- rbind(
+    dtAddOns,
+    dtMain[property %in% leftoverProperties, c("property", "value", "description")]
+  )
+  dtMain <- dtMain[!property %in% leftoverProperties]
+
+  xlsxWriteData(wb = wb, sheetName = mainSheet, dt = dtMain)
+  xlsxWriteData(wb = wb, sheetName = "RFAddons", dt = dtAddOns)
+  openxlsx::saveWorkbook(wb, path, overwrite = TRUE)
+
+  return(invisible())
+}

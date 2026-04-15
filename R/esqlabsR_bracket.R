@@ -52,19 +52,25 @@ initProject <- function(configurationDirectory = ".",
     overwrite = overwrite
   )
 
+  # Compare the RF ProjectConfiguration.xlsx with the esqlabsR version and add
+  # any missing property rows so the RF config stays aligned with future
+  # esqlabsR changes.
+  esqlabsRConfigXlsx <- file.path(esqlabsRExamplePath, "ProjectConfiguration.xlsx")
+  if (file.exists(esqlabsRConfigXlsx)) {
+    .mergeEsqlabsRConfigProperties(destConfigPath, esqlabsRConfigXlsx)
+  }
+
   # Set esqlabsRVersion in the generated ProjectConfiguration.xlsx so the
   # version check in createProjectConfiguration() passes out of the box.
   .setEsqlabsRVersionInConfig(destConfigPath)
 
-  # Collect values from the main sheet
-  dt <- xlsxReadData(sourceConfigurationXlsx)
-  allValues <- dt$value
-  allValues <- allValues[!is.na(allValues) & nzchar(allValues)]
-
-  # Also collect values from the RFAddons sheet (RF-specific files/dirs)
-  wbSource <- openxlsx::loadWorkbook(sourceConfigurationXlsx)
-  if ("RFAddons" %in% wbSource$sheet_names) {
-    dtAddOns <- xlsxReadData(wb = wbSource, sheetName = "RFAddons")
+  # Collect values from the merged destination config (main sheet + RFAddons)
+  # so that files introduced by esqlabsR are also candidates for copying.
+  wbDest <- openxlsx::loadWorkbook(destConfigPath)
+  dtMain <- xlsxReadData(wb = wbDest, sheetName = 1)
+  allValues <- dtMain$value
+  if ("RFAddons" %in% wbDest$sheet_names) {
+    dtAddOns <- xlsxReadData(wb = wbDest, sheetName = "RFAddons")
     allValues <- c(allValues, dtAddOns$value)
   }
   allValues <- allValues[!is.na(allValues) & nzchar(allValues)]
@@ -125,6 +131,45 @@ initProject <- function(configurationDirectory = ".",
   return(invisible())
 }
 
+#' Merge missing property rows from esqlabsR's ProjectConfiguration into an RF config
+#'
+#' Compares the property rows in an RF `ProjectConfiguration.xlsx` with those in
+#' the esqlabsR TestProject `ProjectConfiguration.xlsx`. Any property that exists
+#' in the esqlabsR version but is absent from the RF version is appended to the
+#' main sheet of the RF file. This keeps the RF config aligned with future
+#' esqlabsR changes automatically.
+#'
+#' @param rfConfigPath Character. Path to the RF `ProjectConfiguration.xlsx` to update.
+#' @param esqlabsRConfigPath Character. Path to the esqlabsR `ProjectConfiguration.xlsx`
+#'   to compare against.
+#' @keywords internal
+#' @noRd
+.mergeEsqlabsRConfigProperties <- function(rfConfigPath, esqlabsRConfigPath) {
+  if (!file.exists(rfConfigPath) || !file.exists(esqlabsRConfigPath)) {
+    return(invisible())
+  }
+
+  wbRF <- openxlsx::loadWorkbook(rfConfigPath)
+  dtRF <- xlsxReadData(wb = wbRF, sheetName = 1)
+
+  dtEsqlabs <- xlsxReadData(esqlabsRConfigPath, sheetName = 1)
+
+  missingProperties <- setdiff(dtEsqlabs$property, dtRF$property)
+
+  if (length(missingProperties) == 0) {
+    return(invisible())
+  }
+
+  dtToAdd <- dtEsqlabs[property %in% missingProperties, ]
+  dtRF <- rbind(dtRF, dtToAdd)
+
+  mainSheet <- wbRF$sheet_names[1]
+  xlsxWriteData(wb = wbRF, sheetName = mainSheet, dt = dtRF)
+  openxlsx::saveWorkbook(wbRF, rfConfigPath, overwrite = TRUE)
+
+  return(invisible())
+}
+
 #' Write the currently installed esqlabsR version into a ProjectConfiguration.xlsx
 #'
 #' @param configPath Path to the ProjectConfiguration.xlsx file to update.
@@ -170,7 +215,6 @@ initProject <- function(configurationDirectory = ".",
 #'   automated tests or scripts running from console where interactive user input
 #'   cannot be assured. Defaults to `FALSE`.
 #' @inheritDotParams esqlabsR::createProjectConfiguration
-#' @param ... Additional parameters forwarded to `esqlabsR::ProjectConfiguration`.
 #'
 #' @return Object of type `ProjectConfigurationRF`
 #' @export
