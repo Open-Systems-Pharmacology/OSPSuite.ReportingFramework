@@ -10,6 +10,276 @@ test_that("initProject copies files from sourceFolder to destination", {
   expect_true("Plots.xlsx" %in% fileList)
 })
 
+test_that("initProject respects the overwrite flag", {
+  tmpDir <- file.path(tempdir(), paste0("initProject_overwrite_", Sys.getpid()))
+  dir.create(tmpDir, recursive = TRUE)
+  on.exit(unlink(tmpDir, recursive = TRUE))
+
+  # First init
+  initProject(configurationDirectory = tmpDir,
+               overwrite = FALSE)
+  configDir <- file.path(tmpDir, "Configurations")
+  plotsPath <- file.path(configDir, "Plots.xlsx")
+  expect_true(file.exists(plotsPath))
+  t1 <- file.mtime(plotsPath)
+
+  Sys.sleep(1)
+
+  # Second init with overwrite=FALSE should NOT replace the file
+  initProject(configurationDirectory = tmpDir, overwrite = FALSE)
+  expect_equal(file.mtime(plotsPath), t1)
+
+  # Second init with overwrite=TRUE should replace the file
+  initProject(configurationDirectory = tmpDir, overwrite = TRUE)
+  t2 <- file.mtime(plotsPath)
+  expect_gt(t2, t1)
+})
+
+test_that("initProject creates directories listed in the configuration", {
+  tmpDir <- file.path(tempdir(), paste0("initProject_dirs_", Sys.getpid()))
+  dir.create(tmpDir, recursive = TRUE)
+  on.exit(unlink(tmpDir, recursive = TRUE))
+
+  initProject(configurationDirectory = tmpDir)
+  # The RF ProjectConfiguration.xlsx lists an output folder; check it was made
+  expect_true(dir.exists(file.path(tmpDir, "Configurations")))
+})
+
+test_that("initProject adds PKParameter sheet to Scenarios.xlsx when absent", {
+  tmpDir <- file.path(tempdir(), paste0("initProject_pk_", Sys.getpid()))
+  dir.create(tmpDir, recursive = TRUE)
+  on.exit(unlink(tmpDir, recursive = TRUE))
+
+  initProject(configurationDirectory = tmpDir)
+  scenariosPath <- file.path(tmpDir, "Configurations", "Scenarios.xlsx")
+  skip_if_not(file.exists(scenariosPath), "Scenarios.xlsx not created by initProject in this environment")
+
+  wb <- openxlsx::loadWorkbook(scenariosPath)
+  expect_true("PKParameter" %in% wb$sheet_names)
+})
+
+# ── .setEsqlabsRVersionInConfig ───────────────────────────────────────────────
+
+test_that(".setEsqlabsRVersionInConfig updates the esqlabsRVersion row", {
+  tmpXlsx <- tempfile(fileext = ".xlsx")
+  on.exit(unlink(tmpXlsx))
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Sheet1")
+  openxlsx::writeData(wb, "Sheet1", data.frame(
+    Property = c("esqlabsRVersion", "someOtherProp"),
+    Value    = c("0.0.0", "someValue"),
+    Description = c("version", "other")
+  ))
+  openxlsx::saveWorkbook(wb, tmpXlsx, overwrite = TRUE)
+
+  ospsuite.reportingframework:::.setEsqlabsRVersionInConfig(tmpXlsx)
+
+  wbResult <- openxlsx::loadWorkbook(tmpXlsx)
+  dt <- ospsuite.reportingframework:::xlsxReadData(wb = wbResult, sheetName = 1)
+  installedVersion <- as.character(utils::packageVersion("esqlabsR"))
+  expect_equal(dt[property == "esqlabsRVersion", value], installedVersion)
+})
+
+test_that(".setEsqlabsRVersionInConfig emits a message when esqlabsRVersion row is absent", {
+  tmpXlsx <- tempfile(fileext = ".xlsx")
+  on.exit(unlink(tmpXlsx))
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Sheet1")
+  openxlsx::writeData(wb, "Sheet1", data.frame(
+    Property = "someOtherProp",
+    Value    = "someValue",
+    Description = "other"
+  ))
+  openxlsx::saveWorkbook(wb, tmpXlsx, overwrite = TRUE)
+
+  expect_message(
+    ospsuite.reportingframework:::.setEsqlabsRVersionInConfig(tmpXlsx),
+    regexp = "esqlabsRVersion"
+  )
+})
+
+test_that(".setEsqlabsRVersionInConfig is a no-op for non-existent file", {
+  expect_silent(
+    ospsuite.reportingframework:::.setEsqlabsRVersionInConfig(
+      file.path(tempdir(), "does_not_exist_12345.xlsx")
+    )
+  )
+})
+
+# ── .mergeEsqlabsRConfigProperties ────────────────────────────────────────────
+
+test_that(".mergeEsqlabsRConfigProperties appends missing rows", {
+  rfXlsx  <- tempfile(fileext = ".xlsx")
+  esqXlsx <- tempfile(fileext = ".xlsx")
+  on.exit({ unlink(rfXlsx); unlink(esqXlsx) })
+
+  # RF config has only "propA"
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Config")
+  openxlsx::writeData(wb, "Config", data.frame(
+    Property    = "propA",
+    Value       = "valA",
+    Description = "descA"
+  ))
+  openxlsx::saveWorkbook(wb, rfXlsx, overwrite = TRUE)
+
+  # esqlabsR config has "propA" and "propB"
+  wb2 <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb2, "Config")
+  openxlsx::writeData(wb2, "Config", data.frame(
+    Property    = c("propA", "propB"),
+    Value       = c("valA",  "valB"),
+    Description = c("descA", "descB")
+  ))
+  openxlsx::saveWorkbook(wb2, esqXlsx, overwrite = TRUE)
+
+  ospsuite.reportingframework:::.mergeEsqlabsRConfigProperties(rfXlsx, esqXlsx)
+
+  wbResult <- openxlsx::loadWorkbook(rfXlsx)
+  dt <- ospsuite.reportingframework:::xlsxReadData(wb = wbResult, sheetName = 1)
+  expect_true("propA" %in% dt$property)
+  expect_true("propB" %in% dt$property)
+  # propA should not be duplicated
+  expect_equal(sum(dt$property == "propA"), 1L)
+})
+
+test_that(".mergeEsqlabsRConfigProperties is a no-op when nothing is missing", {
+  rfXlsx  <- tempfile(fileext = ".xlsx")
+  esqXlsx <- tempfile(fileext = ".xlsx")
+  on.exit({ unlink(rfXlsx); unlink(esqXlsx) })
+
+  sharedData <- data.frame(
+    Property    = c("propA", "propB"),
+    Value       = c("valA",  "valB"),
+    Description = c("descA", "descB")
+  )
+
+  for (f in c(rfXlsx, esqXlsx)) {
+    wb <- openxlsx::createWorkbook()
+    openxlsx::addWorksheet(wb, "Config")
+    openxlsx::writeData(wb, "Config", sharedData)
+    openxlsx::saveWorkbook(wb, f, overwrite = TRUE)
+  }
+
+  tBefore <- file.mtime(rfXlsx)
+  Sys.sleep(1)
+  ospsuite.reportingframework:::.mergeEsqlabsRConfigProperties(rfXlsx, esqXlsx)
+  # File should not be rewritten when nothing changed
+  expect_equal(file.mtime(rfXlsx), tBefore)
+})
+
+test_that(".mergeEsqlabsRConfigProperties is a no-op for non-existent files", {
+  expect_silent(
+    ospsuite.reportingframework:::.mergeEsqlabsRConfigProperties(
+      rfConfigPath      = file.path(tempdir(), "missing_rf.xlsx"),
+      esqlabsRConfigPath = file.path(tempdir(), "missing_esq.xlsx")
+    )
+  )
+})
+
+# ── .convertLegacyConfigSheet ─────────────────────────────────────────────────
+
+test_that(".convertLegacyConfigSheet is a no-op when all properties are allowed", {
+  tmpXlsx <- tempfile(fileext = ".xlsx")
+  on.exit(unlink(tmpXlsx))
+
+  # Use only a property that exists in the RF template
+  allowedProp <- ospsuite.reportingframework:::xlsxReadData(
+    system.file("templates", "ProjectConfiguration.xlsx",
+                package = "ospsuite.reportingframework")
+  )$property[[1]]
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Config")
+  openxlsx::writeData(wb, "Config", data.frame(
+    Property    = allowedProp,
+    Value       = "someValue",
+    Description = "desc"
+  ))
+  openxlsx::saveWorkbook(wb, tmpXlsx, overwrite = TRUE)
+
+  tBefore <- file.mtime(tmpXlsx)
+  Sys.sleep(1)
+  ospsuite.reportingframework:::.convertLegacyConfigSheet(tmpXlsx)
+  # File should not be rewritten when there are no leftover properties
+  expect_equal(file.mtime(tmpXlsx), tBefore)
+})
+
+test_that(".convertLegacyConfigSheet moves unknown properties to RFAddons sheet", {
+  tmpXlsx <- tempfile(fileext = ".xlsx")
+  on.exit(unlink(tmpXlsx))
+
+  allowedProp <- ospsuite.reportingframework:::xlsxReadData(
+    system.file("templates", "ProjectConfiguration.xlsx",
+                package = "ospsuite.reportingframework")
+  )$property[[1]]
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Config")
+  openxlsx::writeData(wb, "Config", data.frame(
+    Property    = c(allowedProp, "rfSpecificProp"),
+    Value       = c("v1",        "rfValue"),
+    Description = c("d1",        "rfDesc")
+  ))
+  openxlsx::saveWorkbook(wb, tmpXlsx, overwrite = TRUE)
+
+  ospsuite.reportingframework:::.convertLegacyConfigSheet(tmpXlsx)
+
+  wbResult <- openxlsx::loadWorkbook(tmpXlsx)
+  expect_true("RFAddons" %in% wbResult$sheet_names)
+
+  dtMain   <- ospsuite.reportingframework:::xlsxReadData(wb = wbResult, sheetName = 1)
+  dtAddOns <- ospsuite.reportingframework:::xlsxReadData(wb = wbResult, sheetName = "RFAddons")
+
+  expect_false("rfSpecificProp" %in% dtMain$property)
+  expect_true("rfSpecificProp"  %in% dtAddOns$property)
+  expect_equal(dtAddOns[property == "rfSpecificProp", value], "rfValue")
+})
+
+test_that(".convertLegacyConfigSheet appends to an existing RFAddons sheet without duplication", {
+  tmpXlsx <- tempfile(fileext = ".xlsx")
+  on.exit(unlink(tmpXlsx))
+
+  allowedProp <- ospsuite.reportingframework:::xlsxReadData(
+    system.file("templates", "ProjectConfiguration.xlsx",
+                package = "ospsuite.reportingframework")
+  )$property[[1]]
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Config")
+  openxlsx::writeData(wb, "Config", data.frame(
+    Property    = c(allowedProp, "rfProp1", "rfProp2"),
+    Value       = c("v1", "rv1", "rv2"),
+    Description = c("d1", "rd1", "rd2")
+  ))
+  openxlsx::addWorksheet(wb, "RFAddons")
+  openxlsx::writeData(wb, "RFAddons", data.frame(
+    property    = "existingAddon",
+    value       = "exVal",
+    description = "exDesc"
+  ))
+  openxlsx::saveWorkbook(wb, tmpXlsx, overwrite = TRUE)
+
+  ospsuite.reportingframework:::.convertLegacyConfigSheet(tmpXlsx)
+
+  wbResult <- openxlsx::loadWorkbook(tmpXlsx)
+  dtAddOns <- ospsuite.reportingframework:::xlsxReadData(wb = wbResult, sheetName = "RFAddons")
+
+  expect_true("existingAddon" %in% dtAddOns$property)
+  expect_true("rfProp1"       %in% dtAddOns$property)
+  expect_true("rfProp2"       %in% dtAddOns$property)
+  expect_equal(sum(dtAddOns$property == "existingAddon"), 1L)
+})
+
+# ── createProjectConfiguration ────────────────────────────────────────────────
+
+test_that("createProjectConfiguration returns a ProjectConfigurationRF object", {
+  expect_s3_class(projectConfiguration, "ProjectConfigurationRF")
+})
+
+
 
 test_that("TestProject has correct format", {
   expect_s3_class(projectConfiguration, "ProjectConfiguration")
@@ -88,8 +358,8 @@ test_that(".fixFilePathsInScenarioConfigurations handles hyphen/dash variants", 
 
   # create a model file with a dash in the name
   modelFileWithDash <- 'file-with-dashes.pkml'
-  invisible(file.copy(from = file.path(projectConfiguration$modelFolder,modelFiles[1]),
-            to = file.path(projectConfiguration$modelFolder,modelFileWithDash),overwrite = TRUE))
+  invisible(file.copy(from = file.path(projectConfiguration$modelFolder, modelFiles[1]),
+            to = file.path(projectConfiguration$modelFolder, modelFileWithDash), overwrite = TRUE))
 
   # Create a test scenario configuration with EN DASH in filename
   testModelFileWithEnDash <- gsub("-", "\u2013", modelFileWithDash) # Replace dash with EN DASH
@@ -217,7 +487,7 @@ test_that(".extendPopulationFromXLS_RF handles file with correct structure", {
   openxlsx::writeData(wb, "Sheet1", test_data)
   openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
 
-  population <- ospsuite::loadPopulation(list.files(projectConfiguration$populationsFolder,full.names = TRUE)[1])
+  population <- ospsuite::loadPopulation(list.files(projectConfiguration$populationsFolder, full.names = TRUE)[1])
 
   popBefore <- ospsuite::populationToDataFrame(population)
 
@@ -252,7 +522,7 @@ test_that(".extendPopulationFromXLS_RF errors with wrong structure", {
   openxlsx::writeData(wb, "Sheet1", test_data)
   openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
 
-  population <- ospsuite::loadPopulation(list.files(projectConfiguration$populationsFolder,full.names = TRUE)[1])
+  population <- ospsuite::loadPopulation(list.files(projectConfiguration$populationsFolder, full.names = TRUE)[1])
 
   expect_error(
     ospsuite.reportingframework:::.extendPopulationFromXLS_RF(

@@ -947,17 +947,29 @@ WorkflowScriptExporter <- R6::R6Class( # nolint
           start = configDirW
         )
       ]
-      dtConfig[
-        Property == "electronicPackageFolder",
-        Value := fs::path_rel(projectConfiguration$addOns$electronicPackageFolder,
-          start = configDirW
-        )
-      ]
+
+      # Read and update RFAddons sheet; electronicPackageFolder is now stored there
+      dtAddOns <- NULL
+      if ("RFAddons" %in% wb$sheet_names) {
+        # RFAddons sheet always uses lowercase headers so convertHeaders (default TRUE) is a no-op.
+        dtAddOns <- xlsxReadData(wb = wb, sheetName = "RFAddons")
+        dtAddOns[
+          property == "electronicPackageFolder",
+          value := fs::path_rel(projectConfiguration$addOns$electronicPackageFolder,
+            start = configDirW
+          )
+        ]
+      }
 
       configurationSheets <- list(
-        "ProjectConfiguration" =
-          list(Scenarios = .excelToListStructure(dtConfig))
+        "ProjectConfiguration" = list(
+          Scenarios = .excelToListStructure(dtConfig)
+        )
       )
+      if (!is.null(dtAddOns)) {
+        configurationSheets[["ProjectConfiguration"]][["RFAddons"]] <-
+          .excelToListStructure(dtAddOns)
+      }
       self$configurationSheets <- configurationSheets
 
       return(invisible())
@@ -1258,7 +1270,12 @@ importWorkflow <- function(projectDirectory,
   sheetsData <- configData[["ProjectConfiguration"]]
   excelSheets <- .convertSheet(sheetsData)
   excelPath <- file.path(configurationDirectory, "ProjectConfiguration.xlsx")
-  openxlsx::write.xlsx(excelSheets[[1]], file = excelPath)
+
+  # Write all sheets present in the JSON to the configuration file.
+  # openxlsx::write.xlsx handles both a single data frame and a named list of
+  # data frames (backward-compatible: old JSON has one sheet, new JSON may
+  # include RFAddons as a second sheet).
+  openxlsx::write.xlsx(excelSheets, file = excelPath)
 
   initProject(
     configurationDirectory = configurationDirectory,

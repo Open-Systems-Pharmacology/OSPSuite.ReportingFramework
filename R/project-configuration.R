@@ -35,13 +35,29 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
         private$.projectConfigurationDataAddOns[[property]] <- value
       }
     },
-    #' @description Adds new line to configuration xlsx
+    #' @description Adds new line to RFAddons sheet in configuration xlsx
     .writeToConfigXlsx = function(propertyToSet, value, description) {
       wb <- openxlsx::loadWorkbook(self$projectConfigurationFilePath)
-      dtConfiguration <- xlsxReadData(wb = wb, sheetName = wb$sheet_names[1])
-      if (!(propertyToSet %in% dtConfiguration$property)) {
-        dtConfiguration <- rbind(
-          dtConfiguration,
+
+      # Create RFAddons sheet if it does not exist yet
+      if (!("RFAddons" %in% wb$sheet_names)) {
+        openxlsx::addWorksheet(wb, "RFAddons")
+        openxlsx::writeData(
+          wb = wb,
+          sheet = "RFAddons",
+          x = data.frame(
+            property = character(),
+            value = character(),
+            description = character(),
+            stringsAsFactors = FALSE
+          )
+        )
+      }
+
+      dtAddOns <- xlsxReadData(wb = wb, sheetName = "RFAddons")
+      if (!(propertyToSet %in% dtAddOns$property)) {
+        dtAddOns <- rbind(
+          dtAddOns,
           data.table(
             property = propertyToSet,
             value = value,
@@ -49,54 +65,35 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
           )
         )
       } else {
-        dtConfiguration[property == propertyToSet, `:=`(
+        dtAddOns[property == propertyToSet, `:=`(
           value = value,
           description = description
         )]
       }
-      xlsxWriteData(wb = wb, sheetName = wb$sheet_names[1], dt = dtConfiguration)
+      xlsxWriteData(wb = wb, sheetName = "RFAddons", dt = dtAddOns)
       openxlsx::saveWorkbook(wb, self$projectConfigurationFilePath, overwrite = TRUE)
     },
     #' @description Read configuration from file
     .read_config = function(file_path) { # nolint
-      path <- private$.clean_path(file_path, replace_env_var = FALSE)
+      path <- private$.clean_path(file_path, replace_env_vars = FALSE)
 
-      # Update private values
-      private$.projectConfigurationFilePath <- path
-      private$.projectConfigurationDirPath <- dirname(path)
+      # Convert legacy main-sheet RF properties to the RFAddons sheet before
+      # delegating to the parent reader, which validates the main sheet strictly.
+      .convertLegacyConfigSheet(path)
 
-      inputData <- readExcel(path = path)
+      super$.__enclos_env__$private$.read_config(path)
 
-      # Reset private variables
-      private$.replaced_env_vars <- list()
-      private$.projectConfigurationData <- list()
+      private$.projectConfigurationDataAddOns <- list()
 
-      for (property in intersect(inputData$Property, names(self))) {
-        private$.projectConfigurationData[[property]] <- list(
-          value = inputData$Value[inputData$Property == property],
-          description = inputData$Description[inputData$Property == property]
-        )
-      }
-
-      private$.checkProjectConfigurationFile()
-
-      for (property in colnames(private$.projectConfigurationData)) {
-        # Update each private property
-        self[[property]] <- private$.projectConfigurationData[[property]]$value
-      }
-
-      # Mark as not modified after loading from file
-      private$.modified <- FALSE
-
-      # add addOns
-      for (property in setdiff(
-        inputData$Property,
-        c(names(private$.projectConfigurationDataAddOns), names(self))
-      )) {
-        private$.addOnFile(
-          property = property,
-          value = inputData[inputData$Property == property, ]$Value
-        )
+      wb <- openxlsx::loadWorkbook(path)
+      if ("RFAddons" %in% wb$sheet_names) {
+        rfAddOnsData <- xlsxReadData(wb = wb, sheetName = "RFAddons")
+        for (i in seq_len(nrow(rfAddOnsData))) {
+          private$.addOnFile(
+            property = rfAddOnsData$property[i],
+            value = rfAddOnsData$value[i]
+          )
+        }
       }
     }
   ),
@@ -105,9 +102,15 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
     #'
     #' @param projectConfigurationFilePath A string representing the path to the
     #' project configuration file.
-    initialize = function(projectConfigurationFilePath = character()) {
+    #' @param ignoreVersionCheck If `TRUE`, skip the esqlabsR version mismatch
+    #' check when loading the configuration file. Defaults to `FALSE`.
+    initialize = function(projectConfigurationFilePath = character(),
+                          ignoreVersionCheck = FALSE,
+                          ...) {
       super$initialize(
-        projectConfigurationFilePath = projectConfigurationFilePath
+        projectConfigurationFilePath = projectConfigurationFilePath,
+        ignoreVersionCheck = ignoreVersionCheck,
+        ...
       )
     },
     #' Print
@@ -154,12 +157,12 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
 
       invisible(self)
     },
-    #' @description Adds an add-on file to the project configuration.
+    #' @description Adds an add-on folder to the project configuration.
     #'
     #' @param property A string representing the name of the property to add.
-    #' @param value A string representing the path of the value to add.
+    #' @param value A string representing the path of the folder to add (absolute or
+    #'   relative to `configurationsFolder`).
     #' @param description A string providing a description of the property.
-    #' @param templatePath A string representing the path of the template file.
     addAddOnFolderToConfiguration = function(property, value, description) {
       checkmate::assertString(property)
       checkmate::assertString(value)
@@ -184,3 +187,59 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
     }
   )
 )
+
+#' Convert a legacy ProjectConfiguration main sheet to RF format
+#'
+#' Moves RF-specific properties (those not present in the RF template's allowed
+#' list) from the main sheet to the `RFAddons` sheet of the given workbook file,
+#' saving the modified workbook in place. This converter runs automatically
+#' before the parent `ProjectConfiguration` reader validates the main sheet.
+#'
+#' @param path Character. Path to the `ProjectConfiguration.xlsx` to convert.
+#' @keywords internal
+#' @noRd
+.convertLegacyConfigSheet <- function(path) {
+  wb <- openxlsx::loadWorkbook(path)
+  mainSheet <- wb$sheet_names[1]
+  dtMain <- xlsxReadData(wb = wb, sheetName = mainSheet)
+
+  allowedProperties <- tryCatch(
+    xlsxReadData(
+      system.file("templates", "ProjectConfiguration.xlsx",
+        package = "ospsuite.reportingframework"
+      )
+    )$property,
+    error = function(...) dtMain$property
+  )
+  leftoverProperties <- setdiff(dtMain$property, allowedProperties)
+
+  if (length(leftoverProperties) == 0) {
+    return(invisible())
+  }
+
+  if (!("RFAddons" %in% wb$sheet_names)) {
+    openxlsx::addWorksheet(wb, "RFAddons")
+    xlsxWriteData(
+      wb = wb,
+      sheetName = "RFAddons",
+      dt = data.table(
+        property = character(),
+        value = character(),
+        description = character()
+      )
+    )
+  }
+
+  dtAddOns <- xlsxReadData(wb = wb, sheetName = "RFAddons")
+  dtAddOns <- rbind(
+    dtAddOns,
+    dtMain[property %in% leftoverProperties, c("property", "value", "description")]
+  )
+  dtMain <- dtMain[!property %in% leftoverProperties]
+
+  xlsxWriteData(wb = wb, sheetName = mainSheet, dt = dtMain)
+  xlsxWriteData(wb = wb, sheetName = "RFAddons", dt = dtAddOns)
+  openxlsx::saveWorkbook(wb, path, overwrite = TRUE)
+
+  return(invisible())
+}

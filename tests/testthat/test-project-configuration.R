@@ -59,4 +59,78 @@ test_that("Add-on folder is added correctly", {
   expect_true(property %in% names(projectConfiguration$addOns))
 })
 
+test_that("addOns persists across a reload via createProjectConfiguration", {
+  property    <- "reloadTestProp"
+  value       <- "reloadTestFile.txt"
+  description <- "persists across reload"
+  templatePath <- file.path(projectConfiguration$configurationsFolder, "..", "..", "reload_template.txt")
+  writeLines("reload template", templatePath)
+  on.exit(file.remove(templatePath))
+
+  projectConfiguration$addAddOnFileToConfiguration(property, value, description, templatePath)
+
+  # Reload the configuration from disk
+  reloaded <- createProjectConfiguration(
+    path = projectConfiguration$projectConfigurationFilePath,
+    ignoreVersionCheck = TRUE
+  )
+
+  expect_true(property %in% names(reloaded$addOns))
+  expect_equal(
+    as.character(reloaded$addOns[[property]]),
+    as.character(file.path(projectConfiguration$configurationsFolder, value))
+  )
+})
+
+test_that("ProjectConfigurationRF handles legacy main-sheet RF properties via .convertLegacyConfigSheet", {
+  # Build a minimal ProjectConfiguration.xlsx that has an RF-specific property
+  # sitting in the main sheet (legacy layout).
+  tmpDir <- file.path(tempdir(), paste0("legacy_config_", Sys.getpid()))
+  dir.create(tmpDir, recursive = TRUE)
+  on.exit(unlink(tmpDir, recursive = TRUE))
+
+  # Start from the RF template so all required properties are present
+  rfTemplate <- system.file("templates", "ProjectConfiguration.xlsx",
+                            package = "ospsuite.reportingframework")
+  destXlsx <- file.path(tmpDir, "ProjectConfiguration.xlsx")
+  file.copy(rfTemplate, destXlsx)
+
+  # Inject an RF-specific legacy property directly into the main sheet
+  wb <- openxlsx::loadWorkbook(destXlsx)
+  mainSheet <- wb$sheet_names[1]
+  dt <- ospsuite.reportingframework:::xlsxReadData(wb = wb, sheetName = mainSheet)
+  dt <- rbind(dt, data.table::data.table(
+    property    = "PKParameterFile",
+    value       = "PKParameter.xlsx",
+    description = "legacy RF prop"
+  ))
+  ospsuite.reportingframework:::xlsxWriteData(wb = wb, sheetName = mainSheet, dt = dt)
+  # Stamp current esqlabsR version so the version check passes
+  dt[property == "esqlabsRVersion",
+     value := as.character(utils::packageVersion("esqlabsR"))]
+  ospsuite.reportingframework:::xlsxWriteData(wb = wb, sheetName = mainSheet, dt = dt)
+  openxlsx::saveWorkbook(wb, destXlsx, overwrite = TRUE)
+
+  # createProjectConfiguration must convert the legacy layout without error
+  cfg <- createProjectConfiguration(
+    path = destXlsx,
+    ignoreVersionCheck = TRUE
+  )
+
+  expect_s3_class(cfg, "ProjectConfigurationRF")
+  # The RF-specific property must land in addOns, not cause an error
+  expect_true("PKParameterFile" %in% names(cfg$addOns))
+})
+
+test_that("addAddOnFileToConfiguration rejects non-string inputs", {
+  expect_error(projectConfiguration$addAddOnFileToConfiguration(123, "f.txt", "d", "t"))
+  expect_error(projectConfiguration$addAddOnFileToConfiguration("p", 123, "d", "t"))
+  expect_error(projectConfiguration$addAddOnFileToConfiguration("p", "f.txt", 123, "t"))
+})
+
+test_that("addAddOnFolderToConfiguration rejects non-string inputs", {
+  expect_error(projectConfiguration$addAddOnFolderToConfiguration(123, "folder", "d"))
+  expect_error(projectConfiguration$addAddOnFolderToConfiguration("p", 123, "d"))
+  expect_error(projectConfiguration$addAddOnFolderToConfiguration("p", "folder", 123))
+})
 
