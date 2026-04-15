@@ -358,8 +358,8 @@ test_that(".fixFilePathsInScenarioConfigurations handles hyphen/dash variants", 
 
   # create a model file with a dash in the name
   modelFileWithDash <- 'file-with-dashes.pkml'
-  invisible(file.copy(from = file.path(projectConfiguration$modelFolder,modelFiles[1]),
-            to = file.path(projectConfiguration$modelFolder,modelFileWithDash),overwrite = TRUE))
+  invisible(file.copy(from = file.path(projectConfiguration$modelFolder, modelFiles[1]),
+            to = file.path(projectConfiguration$modelFolder, modelFileWithDash), overwrite = TRUE))
 
   # Create a test scenario configuration with EN DASH in filename
   testModelFileWithEnDash <- gsub("-", "\u2013", modelFileWithDash) # Replace dash with EN DASH
@@ -487,7 +487,7 @@ test_that(".extendPopulationFromXLS_RF handles file with correct structure", {
   openxlsx::writeData(wb, "Sheet1", test_data)
   openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
 
-  population <- ospsuite::loadPopulation(list.files(projectConfiguration$populationsFolder,full.names = TRUE)[1])
+  population <- ospsuite::loadPopulation(list.files(projectConfiguration$populationsFolder, full.names = TRUE)[1])
 
   popBefore <- ospsuite::populationToDataFrame(population)
 
@@ -522,7 +522,7 @@ test_that(".extendPopulationFromXLS_RF errors with wrong structure", {
   openxlsx::writeData(wb, "Sheet1", test_data)
   openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
 
-  population <- ospsuite::loadPopulation(list.files(projectConfiguration$populationsFolder,full.names = TRUE)[1])
+  population <- ospsuite::loadPopulation(list.files(projectConfiguration$populationsFolder, full.names = TRUE)[1])
 
   expect_error(
     ospsuite.reportingframework:::.extendPopulationFromXLS_RF(
