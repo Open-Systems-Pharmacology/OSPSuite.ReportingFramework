@@ -157,12 +157,12 @@ ProjectConfigurationRF <- R6::R6Class( # nolint object_name_linter
 
       invisible(self)
     },
-    #' @description Adds an add-on file to the project configuration.
+    #' @description Adds an add-on folder to the project configuration.
     #'
     #' @param property A string representing the name of the property to add.
-    #' @param value A string representing the path of the value to add.
+    #' @param value A string representing the path of the folder to add (absolute or
+    #'   relative to `configurationsFolder`).
     #' @param description A string providing a description of the property.
-    #' @param templatePath A string representing the path of the template file.
     addAddOnFolderToConfiguration = function(property, value, description) {
       checkmate::assertString(property)
       checkmate::assertString(value)
