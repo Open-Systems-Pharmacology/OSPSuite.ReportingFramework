@@ -13,10 +13,14 @@ test_that("Default Config For Boxplots", {
     overwrite = TRUE
   )
 
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+  wb <- openxlsx::loadWorkbook(projectConfiguration$addons$reportsFile)
 
   expect_contains(wb$sheet_names, "PKParameter_BoxplotTest")
-  dt <- xlsxReadData(wb = wb, sheetName = "PKParameter_BoxplotTest", skipDescriptionRow = TRUE)
+  dt <- xlsxReadData(
+    wb = wb,
+    sheetName = "PKParameter_BoxplotTest",
+    skipDescriptionRow = TRUE
+  )
 })
 
 # prepare configtable
@@ -41,7 +45,10 @@ test_that("Boxwhsiker crossover ", {
 
   expect_equal(length(plotList), 4)
 
-  expect_contains(names(plotList$`crossover_AUC_inf-ratio`), expected = "2.5th percentile")
+  expect_contains(
+    names(plotList$`crossover_AUC_inf-ratio`),
+    expected = "2.5th percentile"
+  )
 
   vdiffr::expect_doppelganger(
     title = "crossover_AUC_inf",

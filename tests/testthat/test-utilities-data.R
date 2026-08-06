@@ -4,8 +4,15 @@ dataObserved <- readObservedDataByDictionary(projectConfiguration)
 
 
 test_that("It should read and process data based on the provided project configuration", {
-  expect_true(data.table::is.data.table(dataObserved), "Processed data should be a data table")
-  expect_equal(nrow(dataObserved), expected = 396, label = "Processed data should have the expected number of rows")
+  expect_true(
+    data.table::is.data.table(dataObserved),
+    "Processed data should be a data table"
+  )
+  expect_equal(
+    nrow(dataObserved),
+    expected = 396,
+    label = "Processed data should have the expected number of rows"
+  )
 
   # extract biometrics
   dtIndividualBiometrics <- xlsxReadData(
@@ -14,41 +21,51 @@ test_that("It should read and process data based on the provided project configu
   )
   expect_gte(nrow(dtIndividualBiometrics), 6)
 
-  dtOutputPaths <- getOutputPathIds(projectConfiguration$plotsFile)
-  expect_contains(dtOutputPaths$outputPathId, c("Plasma", "CYP3A4total", "CYP3A4Liver"))
+  dtOutputPaths <- getOutputPathIds(projectConfiguration$addons$reportsFile)
+  expect_contains(
+    dtOutputPaths$outputPathId,
+    c("Plasma", "CYP3A4total", "CYP3A4Liver")
+  )
 })
 
 test_that("It should filter data by fileIds parameter", {
   # Read the DataFiles sheet to get available fileIdentifiers
-  wb <- openxlsx::loadWorkbook(projectConfiguration$dataImporterConfigurationFile)
+  wb <- openxlsx::loadWorkbook(
+    projectConfiguration$dataImporterConfigurationFile
+  )
   dataList <- xlsxReadData(
     wb = wb,
     sheetName = "DataFiles",
     skipDescriptionRow = TRUE
   )
-  
+
   # Get available file identifiers
   availableFileIds <- unique(dataList$fileIdentifier)
-  
+
   # Test that we can filter by a subset of fileIds
   if (length(availableFileIds) > 1) {
     # Select first fileId
     selectedFileId <- availableFileIds[1]
-    
+
     dataObservedFiltered <- readObservedDataByDictionary(
       projectConfiguration,
       fileIds = selectedFileId
     )
-    
+
     # Should return a valid data.table
-    expect_true(data.table::is.data.table(dataObservedFiltered), 
-                "Filtered data should be a data table")
-    
+    expect_true(
+      data.table::is.data.table(dataObservedFiltered),
+      "Filtered data should be a data table"
+    )
+
     # Should have fewer rows than the full dataset
-    expect_lt(nrow(dataObservedFiltered), nrow(dataObserved),
-              label = "Filtered data should have fewer rows than unfiltered data")
+    expect_lt(
+      nrow(dataObservedFiltered),
+      nrow(dataObserved),
+      label = "Filtered data should have fewer rows than unfiltered data"
+    )
   }
-  
+
   # Test that passing invalid fileIds raises an error
   expect_error(
     readObservedDataByDictionary(
@@ -71,16 +88,35 @@ test_that("It should check the validity of the observed dataset", {
     yUnit = c("mg/L", "mg/L", "mg/L"),
     lloq = c(1.0, 1.0, 1.0)
   )
-  data.table::setattr(dataObservedTest[["individualId"]], "columnType", "identifier")
+  data.table::setattr(
+    dataObservedTest[["individualId"]],
+    "columnType",
+    "identifier"
+  )
   data.table::setattr(dataObservedTest[["group"]], "columnType", "identifier")
-  data.table::setattr(dataObservedTest[["outputPathId"]], "columnType", "identifier")
-  data.table::setattr(dataObservedTest[["xValues"]], "columnType", "timeprofile")
-  data.table::setattr(dataObservedTest[["yValues"]], "columnType", "timeprofile")
+  data.table::setattr(
+    dataObservedTest[["outputPathId"]],
+    "columnType",
+    "identifier"
+  )
+  data.table::setattr(
+    dataObservedTest[["xValues"]],
+    "columnType",
+    "timeprofile"
+  )
+  data.table::setattr(
+    dataObservedTest[["yValues"]],
+    "columnType",
+    "timeprofile"
+  )
   data.table::setattr(dataObservedTest[["yUnit"]], "columnType", "timeprofile")
   data.table::setattr(dataObservedTest[["lloq"]], "columnType", "timeprofile")
 
   # Add your assertions here to test the validation result
-  expect_invisible(validateObservedData(dataObservedTest, dataClassType = "timeprofile"))
+  expect_invisible(validateObservedData(
+    dataObservedTest,
+    dataClassType = "timeprofile"
+  ))
 
   # Test for uniqueness of `individualId`, group, `outputPathId`, and time columns
   expect_error(validateObservedData(
@@ -91,7 +127,10 @@ test_that("It should check the validity of the observed dataset", {
   dataObservedTestChanged <- data.table::copy(dataObservedTest)
   dataObservedTestChanged[1, yValues := NA]
 
-  expect_warning(validateObservedData(dataDT = dataObservedTestChanged, dataClassType = "timeprofile"))
+  expect_warning(validateObservedData(
+    dataDT = dataObservedTestChanged,
+    dataClassType = "timeprofile"
+  ))
 
   # Test for uniqueness of yUnit within each outputPathId
   dataObservedTestChanged <- data.table::copy(dataObservedTest)
@@ -114,7 +153,10 @@ test_that("groupDataByIdentifier function test", {
   expect_true(
     length(groupedData) ==
       dataObserved %>%
-        dplyr::select(getColumnsForColumnType(dataObserved, columnTypes = "identifier")) %>%
+        dplyr::select(getColumnsForColumnType(
+          dataObserved,
+          columnTypes = "identifier"
+        )) %>%
         unique() %>%
         nrow()
   )
@@ -127,7 +169,10 @@ test_that("getColumnsForColumnType function test", {
 
   #
   expect_equal(length(columnNames), 7)
-  expect_contains(columnNames, c("studyId", "subjectId", "individualId", "group", "outputPathId"))
+  expect_contains(
+    columnNames,
+    c("studyId", "subjectId", "individualId", "group", "outputPathId")
+  )
 })
 
 # Unit tests for createDataSets function
@@ -168,8 +213,16 @@ test_that("addMetaDataToDataSet function test", {
   expect_contains(
     names(dataSetWithMeta$metaData),
     c(
-      "studyId", "subjectId", "individualId", "group", "outputPathId",
-      "age", "weight", "height", "gender", "population"
+      "studyId",
+      "subjectId",
+      "individualId",
+      "group",
+      "outputPathId",
+      "age",
+      "weight",
+      "height",
+      "gender",
+      "population"
     )
   )
 })
@@ -186,15 +239,21 @@ test_that("convertDataTableToDataCombined function test", {
 
 
 test_that("convertIdentifierColumns function works as expected", {
-  testDt <- data.table(col1 = c("a,b,c", "d,e,f"), col2 = c("x,y,z", "1,2,3"), col3 = c("1,2,3", "4,5,6"))
+  testDt <- data.table(
+    col1 = c("a,b,c", "d,e,f"),
+    col2 = c("x,y,z", "1,2,3"),
+    col3 = c("1,2,3", "4,5,6")
+  )
 
   identifierCols <- c("col1", "col2")
-  updatedDt <- suppressWarnings(convertIdentifierColumns(testDt, identifierCols))
+  updatedDt <- suppressWarnings(convertIdentifierColumns(
+    testDt,
+    identifierCols
+  ))
 
   # Check if commas were replaced by underscores
   expect_equal(updatedDt$col1[1], "a_b_c")
   expect_equal(updatedDt$col2[1], "x_y_z")
-
 
   expect_warning(updatedDt <- convertIdentifierColumns(testDt, "col1"))
 })
@@ -214,9 +273,23 @@ test_that("Aggregation with LLOQ check works", {
 
   expect_s3_class(result, "data.table")
   expect_true("group" %in% names(result))
-  expect_contains(names(result), expected = c("yValues", "yErrorValues", "yErrorType", "numberOfIndividuals", "nBelowLLOQ"))
-  expect_equal(unique(result$yErrorType), ospsuite::DataErrorType$GeometricStdDev)
-  expect_true(all(is.na(result[numberOfIndividuals * 2 / 3 < nBelowLLOQ]$yValues)))
+  expect_contains(
+    names(result),
+    expected = c(
+      "yValues",
+      "yErrorValues",
+      "yErrorType",
+      "numberOfIndividuals",
+      "nBelowLLOQ"
+    )
+  )
+  expect_equal(
+    unique(result$yErrorType),
+    ospsuite::DataErrorType$GeometricStdDev
+  )
+  expect_true(all(is.na(
+    result[numberOfIndividuals * 2 / 3 < nBelowLLOQ]$yValues
+  )))
 
   # Test with Custom Function
   customFunc <- function(y) {
@@ -228,13 +301,17 @@ test_that("Aggregation with LLOQ check works", {
     ))
   }
 
-  expect_error(result <- aggregateObservedDataGroups(dataObserved,
-    groups = grep("iv", unique(dataObserved$group), value = TRUE),
-    aggregationFlag = "Custom",
-    customFunction = customFunc
-  ))
+  expect_error(
+    result <- aggregateObservedDataGroups(
+      dataObserved,
+      groups = grep("iv", unique(dataObserved$group), value = TRUE),
+      aggregationFlag = "Custom",
+      customFunction = customFunc
+    )
+  )
 
-  result <- aggregateObservedDataGroups(dataObserved,
+  result <- aggregateObservedDataGroups(
+    dataObserved,
     groups = grep("iv", unique(dataObserved$group), value = TRUE),
     aggregationFlag = "Custom",
     customFunction = customFunc,
@@ -243,10 +320,22 @@ test_that("Aggregation with LLOQ check works", {
   )
 
   expect_s3_class(result, "data.table")
-  expect_contains(names(result), expected = c("yValues", "yMin", "yMax", "yErrorType", "numberOfIndividuals", "nBelowLLOQ"))
+  expect_contains(
+    names(result),
+    expected = c(
+      "yValues",
+      "yMin",
+      "yMax",
+      "yErrorType",
+      "numberOfIndividuals",
+      "nBelowLLOQ"
+    )
+  )
   expect_equal(unique(result$yErrorType), "Mean | range")
   expect_true(all(is.na(result[numberOfIndividuals * 1 / 2 < nBelowLLOQ]$yMin)))
-  expect_true(all(is.na(result[numberOfIndividuals * 2 / 3 < nBelowLLOQ]$yValues)))
+  expect_true(all(is.na(
+    result[numberOfIndividuals * 2 / 3 < nBelowLLOQ]$yValues
+  )))
 })
 
 
@@ -271,7 +360,10 @@ aggregatedData <- data.table(
 
 # Test for addUniqueColumns
 test_that("addUniqueColumns works correctly", {
-  result <- addUniqueColumns(dataObserved = originalData, aggregatedData = aggregatedData)
+  result <- addUniqueColumns(
+    dataObserved = originalData,
+    aggregatedData = aggregatedData
+  )
 
   # Check that the result is a data.table
   expect_s3_class(result, "data.table")

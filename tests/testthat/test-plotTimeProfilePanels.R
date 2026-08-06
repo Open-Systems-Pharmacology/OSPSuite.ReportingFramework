@@ -1,6 +1,7 @@
 # testProject was set up by setup.R
 dataObserved <- readObservedDataByDictionary(projectConfiguration)
-dataObserved <- rbind(dataObserved,
+dataObserved <- rbind(
+  dataObserved,
   aggregateObservedDataGroups(
     dataObserved = dataObserved,
     groups = "1234_adults_iv"
@@ -22,13 +23,15 @@ test_that("Default Config For Histograms", {
     overwrite = TRUE
   )
 
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+  wb <- openxlsx::loadWorkbook(projectConfiguration$addons$reportsFile)
 
   expect_contains(wb$sheet_names, "TimeProfileTest")
 })
 
 # add configuration for testcases
-mockManualEditingsPlotTimeProfileTest(projectConfiguration = projectConfiguration)
+mockManualEditingsPlotTimeProfileTest(
+  projectConfiguration = projectConfiguration
+)
 
 test_that("Time profiles of individual scenarios", {
   skip_if_not_installed("vdiffr")
@@ -111,7 +114,6 @@ test_that("Time profiles of virtual twin scenarios", {
       dataObserved = dataObserved
     )
   ))
-
 
   plotList <-
     runPlot(
@@ -327,8 +329,10 @@ test_that("QC functionality", {
       plotNames = c("Individuals_withData"),
       inputs = list(
         scenarioResults = scenarioResultsInd,
-        dataObserved = dataObserved[group == "1234_adults_iv" &
-          subjectId %in% c("13", "30", "41")],
+        dataObserved = dataObserved[
+          group == "1234_adults_iv" &
+            subjectId %in% c("13", "30", "41")
+        ],
         checkForUnusedData = TRUE
       )
     )
@@ -344,8 +348,10 @@ test_that("QC functionality", {
       plotNames = c("Individuals_withData"),
       inputs = list(
         scenarioResults = scenarioResultsInd,
-        dataObserved = dataObserved[group == "1234_adults_iv" &
-          subjectId %in% c("13", "30", "41")],
+        dataObserved = dataObserved[
+          group == "1234_adults_iv" &
+            subjectId %in% c("13", "30", "41")
+        ],
         checkForUnusedData = TRUE
       )
     )

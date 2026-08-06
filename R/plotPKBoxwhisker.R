@@ -52,14 +52,16 @@
 #' @export
 #' @family plot functions
 #' @family functions to generate box whisker plots
-plotPKBoxwhisker <- function(projectConfiguration,
-                             onePlotConfig,
-                             pkParameterDT,
-                             percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles),
-                             xAxisTextAngle = 0,
-                             colorVector = c(scenario = NA, referenceScenario = NA),
-                             facetAspectRatio = 0.5,
-                             ...) {
+plotPKBoxwhisker <- function(
+  projectConfiguration,
+  onePlotConfig,
+  pkParameterDT,
+  percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles),
+  xAxisTextAngle = 0,
+  colorVector = c(scenario = NA, referenceScenario = NA),
+  facetAspectRatio = 0.5,
+  ...
+) {
   checkmate::assertNumeric(xAxisTextAngle, any.missing = FALSE)
   checkmate::assertNumeric(facetAspectRatio, any.missing = FALSE)
 
@@ -74,7 +76,9 @@ plotPKBoxwhisker <- function(projectConfiguration,
       plotList <- c(
         plotList,
         generateBoxwhiskerPlotForPlotType(
-          onePlotConfig = onePlotConfig[as.logical(get(paste0("plot_", plotType))) == TRUE],
+          onePlotConfig = onePlotConfig[
+            as.logical(get(paste0("plot_", plotType))) == TRUE
+          ],
           pkParameterDT = pkParameterDT,
           percentiles = percentiles,
           xAxisTextAngle = xAxisTextAngle,
@@ -103,14 +107,16 @@ plotPKBoxwhisker <- function(projectConfiguration,
 #' @param ... Additional arguments passed to plotting functions.
 #' @return A list of ggplot objects generated for the specified plot type.
 #' @keywords internal
-generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
-                                              pkParameterDT,
-                                              percentiles,
-                                              xAxisTextAngle,
-                                              colorVector,
-                                              facetAspectRatio,
-                                              asRatio,
-                                              ...) {
+generateBoxwhiskerPlotForPlotType <- function(
+  onePlotConfig,
+  pkParameterDT,
+  percentiles,
+  xAxisTextAngle,
+  colorVector,
+  facetAspectRatio,
+  asRatio,
+  ...
+) {
   # initialize to avoid linter messages
   plotName <- NULL
 
@@ -128,7 +134,9 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
 
   # Determine facet columns
   nFacetColumns <- NULL
-  if (dplyr::n_distinct(plotData$plotTag) > 1) nFacetColumns <- 1
+  if (dplyr::n_distinct(plotData$plotTag) > 1) {
+    nFacetColumns <- 1
+  }
 
   # Initialize plot list
   plotList <- list()
@@ -180,7 +188,8 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
         )
       )
       # Create figure key and store plot
-      figureKey <- paste(plotNameLoop,
+      figureKey <- paste(
+        plotNameLoop,
         ifelse(yScale == "log", "log", "linear"),
         ifelse(asRatio, "ratio", "abs"),
         sep = "-"
@@ -190,7 +199,11 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
 
     # Export table
     for (plotDataSummaryTag in split(plotDataSummary, by = "plotTag")) {
-      tableKey <- paste(plotNameLoop, ifelse(asRatio, "ratio", "abs"), sep = "-")
+      tableKey <- paste(
+        plotNameLoop,
+        ifelse(asRatio, "ratio", "abs"),
+        sep = "-"
+      )
       if (uniqueN(plotDataSummary$plotTag) > 1) {
         tableKey <- paste(tableKey, plotDataSummaryTag$plotTag[1], sep = "-")
       }
@@ -216,7 +229,12 @@ generateBoxwhiskerPlotForPlotType <- function(onePlotConfig,
 #' @param asRatio boolean indicating if the plot is for ratios.
 #' @return A data.table prepared for plotting.
 #' @keywords internal
-prepareDataForPKBoxplot <- function(onePlotConfig, pkParameterDT, colorVector, asRatio) {
+prepareDataForPKBoxplot <- function(
+  onePlotConfig,
+  pkParameterDT,
+  colorVector,
+  asRatio
+) {
   # initialize to avoid linter messages
   displayNameOutput <- plotTag <- pkParameter <- plotName <- NULL
 
@@ -255,7 +273,12 @@ getSummaryTable <- function(plotDataPk, asRatio, onePlotConfig, percentiles) {
   # add names of box whisker limits to ggplot for use in function getBoxWhiskerLimits
   statFun <- function(y) {
     y <- y[!is.na(y)]
-    rQuantiles <- stats::quantile(y, probs = percentiles, names = FALSE, na.rm = TRUE)
+    rQuantiles <- stats::quantile(
+      y,
+      probs = percentiles,
+      names = FALSE,
+      na.rm = TRUE
+    )
     names(rQuantiles) <- formatPercentiles(percentiles, suffix = " percentile")
 
     r <- c(
@@ -273,8 +296,12 @@ getSummaryTable <- function(plotDataPk, asRatio, onePlotConfig, percentiles) {
   }
 
   dtExport <- plotDataPk %>%
-    .[, as.list(statFun(value)),
-      by = intersect(c("scenarioShortName", "colorIndex", "plotTag"), names(plotDataPk))
+    .[,
+      as.list(statFun(value)),
+      by = intersect(
+        c("scenarioShortName", "colorIndex", "plotTag"),
+        names(plotDataPk)
+      )
     ]
 
   return(dtExport)
@@ -292,7 +319,12 @@ getSummaryTable <- function(plotDataPk, asRatio, onePlotConfig, percentiles) {
 #'
 #' @return A data.table prepared for plotting, including merged configuration and parameter data.
 #' @keywords internal
-prepareTableForExport <- function(dtExport, asRatio, plotCaptionAddon, plotDataPk) {
+prepareTableForExport <- function(
+  dtExport,
+  asRatio,
+  plotCaptionAddon,
+  plotDataPk
+) {
   # initialize to avoid linter messages
   colorIndex <- scenarioShortName <- scenario <- NULL
 
@@ -303,13 +335,15 @@ prepareTableForExport <- function(dtExport, asRatio, plotCaptionAddon, plotDataP
     dtExport[, scenario := paste(scenarioShortName, colorIndex)]
     dtExport[, scenarioShortName := NULL]
     dtExport[, colorIndex := NULL]
-    dtExport$scenario <- factor(dtExport$scenario,
+    dtExport$scenario <- factor(
+      dtExport$scenario,
       levels = unique(dtExport$scenario),
       ordered = TRUE
     )
   } else {
     setnames(dtExport, old = "scenarioShortName", new = "scenario")
-    dtExport$scenario <- factor(dtExport$scenario,
+    dtExport$scenario <- factor(
+      dtExport$scenario,
       levels = levels(plotDataPk$scenarioShortName),
       ordered = TRUE
     )
@@ -342,12 +376,14 @@ prepareTableForExport <- function(dtExport, asRatio, plotCaptionAddon, plotDataP
 #' @param asRatio boolean indicating if the plot is for ratios.
 #' @return A character string containing the caption.
 #' @keywords internal
-getCaptionForBoxwhiskerPlot <- function(plotDataPk,
-                                        percentiles = NULL,
-                                        yScale = NULL,
-                                        plotCaptionAddon,
-                                        isPlotCaption = TRUE,
-                                        asRatio) {
+getCaptionForBoxwhiskerPlot <- function(
+  plotDataPk,
+  percentiles = NULL,
+  yScale = NULL,
+  plotCaptionAddon,
+  isPlotCaption = TRUE,
+  asRatio
+) {
   dtCaption <-
     plotDataPk[, c(
       "scenarioLongName",
@@ -355,8 +391,8 @@ getCaptionForBoxwhiskerPlot <- function(plotDataPk,
       "plotTag",
       "displayNamePKParameter",
       "displayNameOutput"
-    )] %>% unique()
-
+    )] %>%
+    unique()
 
   captiontext <- paste(
     paste0("Population summary statistics of", ifelse(asRatio, " ratios", "")),
@@ -370,8 +406,13 @@ getCaptionForBoxwhiskerPlot <- function(plotDataPk,
     captiontext <- paste(
       captiontext,
       "Shown as box-whisker plot, which indicates the",
-      paste(formatPercentiles(percentiles, suffix = "", allAsPercentiles = TRUE), collapse = ", "), "percentiles",
-      "on a", ifelse(yScale == "linear", "linear", "logarithmic"),
+      paste(
+        formatPercentiles(percentiles, suffix = "", allAsPercentiles = TRUE),
+        collapse = ", "
+      ),
+      "percentiles",
+      "on a",
+      ifelse(yScale == "linear", "linear", "logarithmic"),
       "y-scale"
     )
   }
@@ -393,14 +434,24 @@ getCaptionForBoxwhiskerPlot <- function(plotDataPk,
 #'
 #' @return A ggplot object representing the box and whisker plot.
 #' @keywords internal
-createBaseBoxWhisker <- function(plotDataPk, yScale, asRatio, colorVector, onePlotConfig, ...) {
+createBaseBoxWhisker <- function(
+  plotDataPk,
+  yScale,
+  asRatio,
+  colorVector,
+  onePlotConfig,
+  ...
+) {
   # initialize to avoid linter messages
   colorIndex <- value <- scenarioShortName <- NULL
 
   # Define the mapping for aes() based on asRatio
   aesMapping <- aes(x = scenarioShortName, y = value)
   if (!asRatio) {
-    aesMapping <- structure(utils::modifyList(aesMapping, aes(fill = colorIndex)), class = "uneval")
+    aesMapping <- structure(
+      utils::modifyList(aesMapping, aes(fill = colorIndex)),
+      class = "uneval"
+    )
   }
 
   # Create the plot object
@@ -426,8 +477,10 @@ createBaseBoxWhisker <- function(plotDataPk, yScale, asRatio, colorVector, onePl
   ylabelUnit <- if (asRatio) {
     "ratio"
   } else {
-    ifelse(plotDataPk$displayUnit[1] != "",
-      paste0("[", plotDataPk$displayUnit[1], "]"), ""
+    ifelse(
+      plotDataPk$displayUnit[1] != "",
+      paste0("[", plotDataPk$displayUnit[1], "]"),
+      ""
     )
   }
   plotObject <- plotObject +
@@ -462,7 +515,13 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
 
   validateConfigTablePlots(
     configTablePlots = configTablePlots,
-    charactersWithoutMissing = c("plotName", "scenario", "scenarioShortName", "pkParameters", "outputPathIds"),
+    charactersWithoutMissing = c(
+      "plotName",
+      "scenario",
+      "scenarioShortName",
+      "pkParameters",
+      "outputPathIds"
+    ),
     charactersWithMissing = c("plotCaptionAddon", "colorLegend"),
     logicalColumns = c("plot_Absolute", "plot_Ratio"),
     numericRangeColumns = c("ylimit_linear", "ylimit_log"),
@@ -516,20 +575,31 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
 
   validateColorLegend(dt = configTablePlots[!is.na(referenceScenario)])
 
-
-  tmp <- configTablePlots[as.logical(plot_Ratio) == FALSE & as.logical(plot_Absolute) == FALSE] %>% unique()
+  tmp <- configTablePlots[
+    as.logical(plot_Ratio) == FALSE & as.logical(plot_Absolute) == FALSE
+  ] %>%
+    unique()
   if (nrow(tmp) > 0) {
     print(tmp)
     stop("Please select either Plot_Ratio or Plot_Absolute!")
   }
 
-
   # check if reference Scenarios are there
-  validateExistenceOfReferenceForRatio(configTablePlots = configTablePlots[as.logical(plot_Ratio) == TRUE], pkParameterDT)
+  validateExistenceOfReferenceForRatio(
+    configTablePlots = configTablePlots[as.logical(plot_Ratio) == TRUE],
+    pkParameterDT
+  )
 
   # check if populations are consistent for ratio plots
-  tmp <- configTablePlots[as.logical(plot_Ratio) == TRUE & !is.na(referenceScenario), c("plotName", "scenario", "referenceScenario")] %>% unique()
-  validateIsCrossOverStudy(configTablePlots = tmp, pkParameterDT = pkParameterDT)
+  tmp <- configTablePlots[
+    as.logical(plot_Ratio) == TRUE & !is.na(referenceScenario),
+    c("plotName", "scenario", "referenceScenario")
+  ] %>%
+    unique()
+  validateIsCrossOverStudy(
+    configTablePlots = tmp,
+    pkParameterDT = pkParameterDT
+  )
 
   return(invisible())
 }
@@ -569,7 +639,9 @@ validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
   configTablePlots <- configTablePlots[populationId != populationIdReference]
   if (nrow(configTablePlots) > 0) {
     print(configTablePlots)
-    stop("Ratio plots are only available if scenario and referenceScenario is based on the same population")
+    stop(
+      "Ratio plots are only available if scenario and referenceScenario is based on the same population"
+    )
   }
 }
 #' Validate Existence of Reference for Ratio Plots
@@ -587,7 +659,10 @@ validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
 #' @return None. The function will stop execution if validation fails,
 #'         otherwise returns invisibly.
 #' @keywords internal
-validateExistenceOfReferenceForRatio <- function(configTablePlots, pkParameterDT) {
+validateExistenceOfReferenceForRatio <- function(
+  configTablePlots,
+  pkParameterDT
+) {
   # initialize to avoid linter messages
   isValid <- plotName <- referenceScenario <- NULL
 
@@ -596,7 +671,10 @@ validateExistenceOfReferenceForRatio <- function(configTablePlots, pkParameterDT
   }
 
   # check if reference Scenarios are there
-  tmp <- configTablePlots[, .(isValid = any(!is.na(referenceScenario))), by = plotName]
+  tmp <- configTablePlots[,
+    .(isValid = any(!is.na(referenceScenario))),
+    by = plotName
+  ]
   if (any(tmp$isValid == FALSE)) {
     stop(paste(
       "For ratio plots at lease one reference scenario has to be selected. Check PlotName",
@@ -614,7 +692,7 @@ validateExistenceOfReferenceForRatio <- function(configTablePlots, pkParameterDT
 #' It can either create a new sheet or overwrite an existing one based on the specified parameters.
 #'
 #' @param projectConfiguration A ProjectConfiguration class object containing configuration details, including:
-#'   - `plotsFile`: A string representing the file path to the Excel workbook containing the plot configurations.
+#'   - `addOns$reportsFile`: A string representing the file path to the Excel workbook containing the plot configurations.
 #'
 #' @param pkParameterDT A data.table containing PK parameter data.
 #'
@@ -639,21 +717,27 @@ validateExistenceOfReferenceForRatio <- function(configTablePlots, pkParameterDT
 #' @export
 #' @family plot configuration helper function
 #' @family functions to generate box whisker plots
-addDefaultConfigForPKBoxwhsikerPlots <- function(projectConfiguration,
-                                                 pkParameterDT,
-                                                 sheetName = "PKParameter_Boxplot",
-                                                 overwrite = FALSE) {
+addDefaultConfigForPKBoxwhsikerPlots <- function(
+  projectConfiguration,
+  pkParameterDT,
+  sheetName = "PKParameter_Boxplot",
+  overwrite = FALSE
+) {
   # initialize to avoid linter messages
   pkParameter <- pkParameters <- outputPathIds <- outputPathId <- scenarioName <- NULL
 
   # this function stops in valid runs
   stopHelperFunction()
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+  wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$reportsFile)
 
   scenarios <- getScenarioDefinitions(projectConfiguration$scenariosFile)
 
   if (sheetName %in% wb$sheet_names & !overwrite) {
-    dtNewHeader <- xlsxReadData(wb, sheetName = sheetName, skipDescriptionRow = TRUE)
+    dtNewHeader <- xlsxReadData(
+      wb,
+      sheetName = sheetName,
+      skipDescriptionRow = TRUE
+    )
     scenarios <- scenarios[!(scenarioName %in% unique(dtNewHeader$scenario))]
   } else {
     dtNewHeader <- data.table(
@@ -663,31 +747,42 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(projectConfiguration,
   }
 
   # Create a unique combination of parameters and outputPathId
-  dt <- pkParameterDT[, .(pkParameters = paste(unique(pkParameter), collapse = ", ")), by = outputPathId] %>%
-    .[, .(outputPathIds = paste(unique(outputPathId), collapse = ", ")), by = pkParameters]
+  dt <- pkParameterDT[,
+    .(pkParameters = paste(unique(pkParameter), collapse = ", ")),
+    by = outputPathId
+  ] %>%
+    .[,
+      .(outputPathIds = paste(unique(outputPathId), collapse = ", ")),
+      by = pkParameters
+    ]
 
   # Create a new data.table with all combinations of pkParameters and scenario names
-  dtNewConfig <- dt[, .(
-    plotName = paste(splitInputs(pkParameters), collapse = "_"),
-    scenario = scenarios$scenarioName,
-    yScale = "linear, log",
-    facetScale = "fixed",
-    plot_Absolute = 1,
-    plot_Ratio = 0
-  ),
-  by = .(outputPathIds, pkParameters)
+  dtNewConfig <- dt[,
+    .(
+      plotName = paste(splitInputs(pkParameters), collapse = "_"),
+      scenario = scenarios$scenarioName,
+      yScale = "linear, log",
+      facetScale = "fixed",
+      plot_Absolute = 1,
+      plot_Ratio = 0
+    ),
+    by = .(outputPathIds, pkParameters)
   ]
-
 
   wb <- xlsxAddDataUsingTemplate(
     wb = wb,
     templateSheet = "PKParameter_Boxplot",
     sheetName = sheetName,
-    dtNewData = rbind(dtNewHeader,
+    dtNewData = rbind(
+      dtNewHeader,
       dtNewConfig, # nolint indentation_linter
       fill = TRUE
     )
   )
 
-  openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+  openxlsx::saveWorkbook(
+    wb,
+    projectConfiguration$addOns$reportsFile,
+    overwrite = TRUE
+  )
 }

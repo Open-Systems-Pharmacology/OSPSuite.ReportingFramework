@@ -584,7 +584,7 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
   # Initialize variables used for data.tables
   studyId <- group <- NULL
 
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+  wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$reportsFile)
 
   dtDataGroupIds <- xlsxReadData(wb = wb, sheetName = "DataGroups")
   identifierCols <- intersect(c("group", "studyId", "studyArm"), names(dataDT))
@@ -615,7 +615,11 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
     )
 
     xlsxWriteData(wb = wb, sheetName = "DataGroups", dt = dtDataGroupIds)
-    openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+    openxlsx::saveWorkbook(
+      wb,
+      projectConfiguration$addOns$reportsFile,
+      overwrite = TRUE
+    )
   }
 
   return(invisible())
@@ -643,7 +647,7 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
   # Initialize variables used for data.tables
   outputPathId <- NULL
 
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+  wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$reportsFile)
   dtOutputPaths <- xlsxReadData(wb = wb, sheetName = "Outputs")
 
   dtOutputPathsNew <- dataDT[
@@ -661,7 +665,11 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
     )
 
     xlsxWriteData(wb = wb, sheetName = "Outputs", dt = dtOutputPaths)
-    openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+    openxlsx::saveWorkbook(
+      wb,
+      projectConfiguration$addOns$reportsFile,
+      overwrite = TRUE
+    )
 
     synchronizeScenariosWithPlots(projectConfiguration)
   }

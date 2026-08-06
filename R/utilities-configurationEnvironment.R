@@ -13,14 +13,17 @@ loadConfigTableEnvironment <- function(projectConfiguration) {
     configEnv <<- new.env() # Assign to the global environment
   }
 
-  wbPlots <- projectConfiguration$plotsFile
+  wbPlots <- projectConfiguration$addOns$reportsFile
   wbScenarios <- projectConfiguration$scenariosFile
 
   # Load data into the environment
   configEnv$outputPaths <- getOutputPathIds(wbPlots)
   configEnv$dataGroupIds <- getDataGroups(wbPlots)
   configEnv$timeTags <- getTimeRangeTags(wbPlots)
-  configEnv$scenarios <- getScenarioDefinitions(wbScenarios = wbScenarios, wbPlots = wbPlots)
+  configEnv$scenarios <- getScenarioDefinitions(
+    wbScenarios = wbScenarios,
+    wbPlots = wbPlots
+  )
   configEnv$modelParameter <- getModelParameterDefinitions(wbPlots)
 
   return(invisible())
@@ -42,7 +45,8 @@ getDataGroups <- function(wbPlots) {
   ) %>%
     setnames(old = "displayName", new = "displayNameData")
 
-  dtDataGroups$group <- factor(dtDataGroups$group,
+  dtDataGroups$group <- factor(
+    dtDataGroups$group,
     levels = unique(dtDataGroups$group),
     ordered = TRUE
   )
@@ -73,7 +77,8 @@ getOutputPathIds <- function(wbPlots) {
   dtOutputPaths[, displayUnit := as.character(displayUnit)]
   dtOutputPaths[is.na(displayUnit), displayUnit := ""]
 
-  dtOutputPaths$outputPathId <- factor(dtOutputPaths$outputPathId,
+  dtOutputPaths$outputPathId <- factor(
+    dtOutputPaths$outputPathId,
     levels = unique(dtOutputPaths$outputPathId),
     ordered = TRUE
   )
@@ -97,7 +102,8 @@ getTimeRangeTags <- function(wbPlots) {
     emptyAsNA = FALSE
   )
 
-  dtTimeRange$tag <- factor(dtTimeRange$tag,
+  dtTimeRange$tag <- factor(
+    dtTimeRange$tag,
     levels = unique(dtTimeRange$tag),
     ordered = TRUE
   )
@@ -126,7 +132,8 @@ getModelParameterDefinitions <- function(wbPlots) {
 
   dtParameter[is.na(displayUnit), displayUnit := ""]
 
-  dtParameter$parameterId <- factor(dtParameter$parameterId,
+  dtParameter$parameterId <- factor(
+    dtParameter$parameterId,
     levels = unique(dtParameter$parameterId),
     ordered = TRUE
   )
@@ -160,7 +167,8 @@ getScenarioDefinitions <- function(wbScenarios, wbPlots = NULL) {
   )
 
   if (nrow(pkParameter) > 0) {
-    scenarios <- merge(scenariosSc,
+    scenarios <- merge(
+      scenariosSc,
       pkParameter,
       by = "scenario_name",
       all.x = TRUE,
@@ -181,7 +189,8 @@ getScenarioDefinitions <- function(wbScenarios, wbPlots = NULL) {
     ) %>%
       setnames("scenario", "scenarioName")
 
-    scenarios <- merge(scenariosPl,
+    scenarios <- merge(
+      scenariosPl,
       scenarios,
       by = "scenarioName",
       all.y = TRUE,

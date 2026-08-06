@@ -1,0 +1,246 @@
+#' Create Scenario objects from `ScenarioConfiguration` objects
+#'
+#' wrap of `esqlabsR::createDefaultProjectConfiguration()` with `esqlabsR::createScenarios()` as input
+#'
+#' @param projectConfiguration Object of class `ProjectConfiguration` containing information on paths and file names
+#' @param scenarioNames Names of the scenarios that are defined in the excel file.
+#' If NULL (default), all scenarios specified in the excel file will be created.
+#'
+#' @return  Named list of Scenario objects.
+#' @export
+#' @family scenario management
+createScenariosWrapped <- function(
+  projectConfiguration,
+  scenarioNames = NULL
+) {
+  baseProjectConfiguration <- projectConfiguration$baseProjectconfiguration
+  scenarioList <-
+    esqlabsR::createScenarios(
+      scenarioConfigurations = esqlabsR::readScenarioConfigurationFromExcel(
+        scenarioNames = scenarioNames,
+        projectConfiguration = baseProjectConfiguration
+      )
+    )
+
+  synchronizeScenariosWithPlots(projectConfiguration)
+  synchronizeScenariosOutputsWithPlots(projectConfiguration)
+
+  return(scenarioList)
+}
+#' Load existing scenario results
+#'
+#' This function loads the results of specified scenarios. If the results do not exist,
+#' it returns an error.
+#'
+#' @param projectConfiguration Configuration for the project, containing paths and settings necessary
+#' to load the results.
+#' @param scenarioNames Character vector of the names of the scenarios whose results are to be loaded.
+#'
+#' @return A list containing the loaded scenario results, including population data if available.
+#' throws Error if the scenario results do not exist.
+#'
+#' @export
+#' @family scenario management
+loadScenarioResultsToFramework <- function(
+  projectConfiguration,
+  scenarioNames
+) {
+  outputFolder <- file.path(
+    projectConfiguration$outputFolder,
+    EXPORTDIR$simulationResult
+  )
+  resultFiles <- file.path(outputFolder, paste0(scenarioNames, ".csv"))
+
+  if (!all(file.exists(resultFiles))) {
+    stop(paste(
+      "Error: Simulation results for scenario(s)",
+      paste(scenarioNames[!file.exists(resultFiles)], collapse = ", "),
+      "do not exist."
+    ))
+  }
+
+  scenarioResults <- list()
+
+  for (sc in scenarioNames) {
+    writeToLog(type = "Info", msg = paste("Load simulation result of", sc))
+
+    scenarioResult <- esqlabsR::loadScenarioResults(
+      scenarioNames = sc,
+      resultsFolder = outputFolder
+    )[[1]]
+
+    # Load population if it exists
+    popFile <- file.path(outputFolder, paste0(sc, "_population.csv"))
+    if (file.exists(popFile)) {
+      scenarioResult[["population"]] <- ospsuite::loadPopulation(popFile)
+    }
+
+    scenarioResults[[sc]] <- scenarioResult
+  }
+
+  return(scenarioResults)
+}
+#' Run and save scenarios
+#'
+#' This function simulates a list of scenarios and saves the results.
+#' If results already exist for a scenario, it will overwrite them based on the provided options.
+#'
+#' @param projectConfiguration Configuration for the project, containing paths and settings necessary
+#' to run the simulations and save the results.
+#' @param scenarioList Named list of Scenario objects to be simulated.
+#' @param simulationRunOptions Object of type `SimulationRunOptions` that will be passed to simulation runs.
+#' If `NULL`, default options are used.
+#' @param ... Additional arguments passed to `esqlabsR::saveScenarioResults`.
+#'
+#' @return A list containing the simulation results for each scenario that was run.
+#'
+#' @examples
+#' \dontrun{
+#' runAndSaveScenarios(
+#'   projectConfiguration = myProjectConfig,
+#'   scenarioList = myScenarioList,
+#'   simulationRunOptions = myRunOptions
+#' )
+#' }
+#'
+#' @export
+#' @family scenario management
+runAndSaveScenarios <- function(
+  projectConfiguration,
+  scenarioList,
+  simulationRunOptions = NULL,
+  ...
+) {
+  outputFolder <- file.path(
+    projectConfiguration$outputFolder,
+    EXPORTDIR$simulationResult
+  )
+
+  scenarioResults <- list()
+
+  for (sc in names(scenarioList)) {
+    writeToLog(type = "Info", msg = paste("Start simulation of", sc))
+
+    # Make sure custom params are not again overwritten by population
+    scenarioList[[sc]] <- setCustomParamsToPopulation(scenarioList[[sc]])
+
+    scenarioResults[sc] <- esqlabsR::runScenarios(
+      scenarios = scenarioList[sc],
+      simulationRunOptions = simulationRunOptions
+    )
+
+    # Set scenario name as simulation name
+    scenarioResults[[sc]]$simulation$set("Name", sc)
+
+    esqlabsR::saveScenarioResults(
+      simulatedScenariosResults = scenarioResults[sc],
+      projectConfiguration = projectConfiguration$baseProjectconfiguration,
+      outputFolder = outputFolder,
+      ...
+    )
+  }
+  calculatePKParameterForScenarios(projectConfiguration, scenarioResults)
+
+  return(invisible(scenarioResults))
+}
+
+#' Run or load scenarios
+#'
+#' This function checks if the simulation results for scenarios already exist.
+#' If they do, it loads them; otherwise, it runs the scenarios and saves the results.
+#'
+#' @param projectConfiguration Configuration for the project, containing paths and settings necessary
+#' to run the simulations and load the results.
+#' @param scenarioList Named list of Scenario objects to be managed.
+#' @param simulationRunOptions Object of type `SimulationRunOptions` that will be passed to simulation runs.
+#' If `NULL`, default options are used.
+#' @param ... Additional arguments passed to `runAndSaveScenarios`.
+#'
+#' @return A list containing the simulation results for each scenario that was loaded or run.
+#'
+#' @export
+#' @family scenario management
+runOrLoadScenarios <- function(
+  projectConfiguration,
+  scenarioList,
+  simulationRunOptions = NULL,
+  ...
+) {
+  scenarioResults <- list()
+
+  for (sc in names(scenarioList)) {
+    if (
+      file.exists(file.path(
+        projectConfiguration$outputFolder,
+        EXPORTDIR$simulationResult,
+        paste0(sc, ".csv")
+      ))
+    ) {
+      scenarioResults[sc] <- loadScenarioResultsToFramework(
+        projectConfiguration,
+        sc
+      )
+    } else {
+      scenarioResults[sc] <- runAndSaveScenarios(
+        projectConfiguration,
+        scenarioList[sc],
+        simulationRunOptions,
+        ...
+      )
+    }
+  }
+
+  return(invisible(scenarioResults))
+}
+#' Read Ontogenies from Data
+#'
+#' based on esqlabsR:::.readOntongeniesFromXLS
+#'
+#' This function extracts protein ontogeny mappings from the provided data.
+#' It splits the mappings into individual protein-ontogeny pairs and validates
+#' the structure of each pair. Each valid pair is then converted into a
+#' `MoleculeOntogeny` object.
+#'
+#' @param data A data frame containing a column named "Protein Ontogenies".
+#'
+#' @return A list of `MoleculeOntogeny` objects, each representing a protein
+#' and its corresponding ontogeny. Returns NULL if the "Protein Ontogenies"
+#' field is NA.
+#'
+#' @keywords internal
+readOntongenies <- function(data) {
+  proteinOntogenyMappings <- data[["protein Ontogenies"]]
+  if (is.na(proteinOntogenyMappings)) {
+    return(NULL)
+  }
+  proteinOntogenyMappings <- as.character(proteinOntogenyMappings)
+  proteinOntogenyMappings <- unlist(strsplit(
+    x = proteinOntogenyMappings,
+    split = ",",
+    fixed = TRUE
+  ))
+  proteinOntogenyMappings <- trimws(proteinOntogenyMappings)
+  moleculeOntogenies <- vector("list", length(proteinOntogenyMappings))
+  for (i in seq_along(proteinOntogenyMappings)) {
+    ontogeny <- proteinOntogenyMappings[[i]]
+    ontogenyMapping <- unlist(strsplit(
+      x = ontogeny,
+      split = ":",
+      fixed = TRUE
+    ))
+    if (length(ontogenyMapping) != 2) {
+      stop(paste("The ontogeny has the wrong structure:", ontogeny))
+    }
+    protein <- ontogenyMapping[[1]]
+    ontogeny <- ontogenyMapping[[2]]
+    ospsuite.utils::validateEnumValue(
+      value = ontogeny,
+      enum = ospsuite::StandardOntogeny
+    )
+    moleculeOntogenies[[i]] <- ospsuite::MoleculeOntogeny$new(
+      molecule = protein,
+      ontogeny = ospsuite::StandardOntogeny[[ontogeny]]
+    )
+  }
+  return(moleculeOntogenies)
+}

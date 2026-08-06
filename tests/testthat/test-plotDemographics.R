@@ -12,7 +12,7 @@ test_that("Default Config For Histograms", {
     overwrite = TRUE
   )
 
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+  wb <- openxlsx::loadWorkbook(projectConfiguration$addons$addons$reportsFile)
 
   expect_contains(wb$sheet_names, "HistogramTest")
 })
@@ -25,7 +25,7 @@ test_that("Default Config For Rangeplots", {
     overwrite = TRUE
   )
 
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+  wb <- openxlsx::loadWorkbook(projectConfiguration$addons$addons$reportsFile)
 
   expect_contains(wb$sheet_names, "RangePlotTest")
 })

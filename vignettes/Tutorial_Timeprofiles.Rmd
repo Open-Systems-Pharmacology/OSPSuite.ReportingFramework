@@ -292,7 +292,7 @@ knitr::kable(tmp)
 
 ```{r datagroups, echo=FALSE, eval = TRUE}
 tmp <- xlsxReadData(
-  wb = projectConfiguration$plotsFile,
+  wb = projectConfiguration$addons$reportsFile,
   sheetName = "Outputs",
   skipDescriptionRow = TRUE,
   emptyAsNA = FALSE,
@@ -386,7 +386,7 @@ Check also the sheet `Scenarios`. Here you can define for each scenario a `Longn
 
 ```{r plotconfig-1, echo=FALSE, eval = TRUE}
 dtPlots <- xlsxReadData(
-  projectConfiguration$plotsFile,
+  projectConfiguration$addons$reportsFile,
   sheetName = "TimeProfiles",
   skipDescriptionRow = TRUE,
   emptyAsNA = FALSE,
@@ -738,7 +738,7 @@ In the example below, a new row for the range between 0 and 6 hours and a row fo
 
 ```{r config-TimeRange, echo=FALSE, eval = TRUE}
 tmp <- xlsxReadData(
-  wb = projectConfiguration$plotsFile,
+  wb = projectConfiguration$addons$reportsFile,
   sheetName = "TimeRange",
   skipDescriptionRow = TRUE,
   emptyAsNA = FALSE,

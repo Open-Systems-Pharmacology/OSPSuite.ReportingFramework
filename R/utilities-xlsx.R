@@ -27,7 +27,10 @@ xlsxAddSheet <- function(wb, sheetName, dt) {
   checkmate::assertDataTable(dt, null.ok = FALSE)
 
   if (sheetName %in% wb$sheet_names) {
-    warning(paste(sheetName, "already exists. Existing content will be cleared."))
+    warning(paste(
+      sheetName,
+      "already exists. Existing content will be cleared."
+    ))
     invisible(xlsxReadData(wb, sheetName))
   } else {
     openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
@@ -69,7 +72,11 @@ xlsxWriteData <- function(wb, sheetName, dt) {
   checkSheetExists(wb, sheetName)
 
   # Read existing data to determine dimensions
-  existingData <- xlsxReadData(wb, sheetName = sheetName, convertHeaders = FALSE)
+  existingData <- xlsxReadData(
+    wb,
+    sheetName = sheetName,
+    convertHeaders = FALSE
+  )
 
   # Adjust data.table to match existing dimensions
   dt <- adjustDataTableDimensions(dt, existingData)
@@ -115,7 +122,11 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
     stop(paste("Sheet", clonedSheet, "does not exist in the workbook."))
   }
   if (!(sheetName %in% wb$sheet_names)) {
-    openxlsx::cloneWorksheet(wb = wb, clonedSheet = clonedSheet, sheetName = sheetName)
+    openxlsx::cloneWorksheet(
+      wb = wb,
+      clonedSheet = clonedSheet,
+      sheetName = sheetName
+    )
   }
 
   # clear data by reading sheet
@@ -152,24 +163,34 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 #'
 #' @export
 #' @family function to read from and write to xlsx
-xlsxReadData <- function(wb, sheetName = 1,
-                         skipDescriptionRow = FALSE,
-                         alwaysCharacter = c("Group", "Id$", "Ids$"),
-                         emptyAsNA = TRUE,
-                         convertHeaders = TRUE) {
+xlsxReadData <- function(
+  wb,
+  sheetName = 1,
+  skipDescriptionRow = FALSE,
+  alwaysCharacter = c("Group", "Id$", "Ids$"),
+  emptyAsNA = TRUE,
+  convertHeaders = TRUE
+) {
   # Input validation
-  if (!any(class(wb) %in% "Workbook")) checkmate::assertFileExists(wb)
+  if (!any(class(wb) %in% "Workbook")) {
+    checkmate::assertFileExists(wb)
+  }
   checkmate::assertLogical(skipDescriptionRow, len = 1, null.ok = TRUE)
   checkmate::assertCharacter(alwaysCharacter, null.ok = TRUE)
   checkmate::assertLogical(emptyAsNA, len = 1)
   checkmate::assertLogical(convertHeaders, len = 1)
 
-
   # Read data from the specified sheet
   dt <- readSheetData(wb, sheetName)
 
   # Process the data based on the provided parameters
-  dt <- processSheetData(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA, convertHeaders)
+  dt <- processSheetData(
+    dt,
+    skipDescriptionRow,
+    alwaysCharacter,
+    emptyAsNA,
+    convertHeaders
+  )
 
   return(dt)
 }
@@ -196,7 +217,13 @@ xlsxReadData <- function(wb, sheetName = 1,
 #'
 #' @export
 #' @family function to read from and write to xlsx
-xlsxAddDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, templateXlsx = "Plots.xlsx") {
+xlsxAddDataUsingTemplate <- function(
+  wb,
+  templateSheet,
+  sheetName,
+  dtNewData,
+  templateXlsx = "Plots.xlsx"
+) {
   # Input validation
   checkmate::assertClass(wb, "Workbook", null.ok = FALSE)
   checkmate::assertCharacter(templateSheet, len = 1)
@@ -207,8 +234,11 @@ xlsxAddDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, te
   if (templateSheet %in% wb$sheet_names) {
     templateConfiguration <- xlsxReadData(wb = wb, sheetName = templateSheet)
   } else {
-    templatePath <- system.file("templates", templateXlsx,
-      package = "ospsuite.reportingframework", mustWork = FALSE
+    templatePath <- system.file(
+      "templates",
+      templateXlsx,
+      package = "ospsuite.reportingframework",
+      mustWork = FALSE
     )
 
     if (!file.exists(templatePath)) {
@@ -222,13 +252,19 @@ xlsxAddDataUsingTemplate <- function(wb, templateSheet, sheetName, dtNewData, te
     xlsxAddSheet(wb, templateSheet, templateConfiguration)
   }
 
-  dtNewData <- rbind(templateConfiguration[1, ],
+  dtNewData <- rbind(
+    templateConfiguration[1, ],
     setHeadersToLowerCase(dtNewData),
     fill = TRUE
   )
 
   if (templateSheet != sheetName) {
-    xlsxCloneAndSet(wb = wb, clonedSheet = templateSheet, sheetName = sheetName, dt = dtNewData)
+    xlsxCloneAndSet(
+      wb = wb,
+      clonedSheet = templateSheet,
+      sheetName = sheetName,
+      dt = dtNewData
+    )
   } else {
     xlsxWriteData(wb = wb, sheetName = sheetName, dt = dtNewData)
   }
@@ -266,7 +302,11 @@ checkSheetExists <- function(wb, sheetName) {
 adjustDataTableDimensions <- function(dt, existingData) {
   if (nrow(existingData) > nrow(dt)) {
     # Add NA rows if existing data has more rows than the new data
-    naRows <- data.table(matrix(NA, nrow = nrow(existingData) - nrow(dt), ncol = ncol(dt)))
+    naRows <- data.table(matrix(
+      NA,
+      nrow = nrow(existingData) - nrow(dt),
+      ncol = ncol(dt)
+    ))
     data.table::setnames(naRows, names(dt)) # Set the column names to match dt
     dt <- rbind(dt, naRows)
   }
@@ -285,7 +325,8 @@ adjustDataTableDimensions <- function(dt, existingData) {
 #' @return A data.table with aligned column names.
 #' @keywords internal
 alignColumnNames <- function(dt, existingData) {
-  data.table::setnames(dt,
+  data.table::setnames(
+    dt,
     old = names(dt),
     new = unlist(lapply(names(dt), function(x) {
       ix <- which(tolower(x) == tolower(names(existingData)))
@@ -293,7 +334,8 @@ alignColumnNames <- function(dt, existingData) {
         newName <- names(existingData)[ix]
       } else if (length(ix) > 1) {
         stop(paste(
-          "ambiguous header names in sheet", existingData,
+          "ambiguous header names in sheet",
+          existingData,
           paste(names(existingData)[ix], collapse = ",")
         ))
       } else {
@@ -337,7 +379,13 @@ readSheetData <- function(wb, sheetName) {
 #'
 #' @return A processed `data.table`.
 #' @keywords internal
-processSheetData <- function(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA, convertHeaders) {
+processSheetData <- function(
+  dt,
+  skipDescriptionRow,
+  alwaysCharacter,
+  emptyAsNA,
+  convertHeaders
+) {
   if (as.logical(skipDescriptionRow)) {
     dt <- dt[-seq_len(as.integer(skipDescriptionRow))]
     if ("Comment" %in% names(dt)) {
@@ -354,7 +402,10 @@ processSheetData <- function(dt, skipDescriptionRow, alwaysCharacter, emptyAsNA,
   # Convert specified columns to character
   alwaysCharacter <- intersect(names(dt), alwaysCharacter)
   if (length(alwaysCharacter) > 0) {
-    dt[, (alwaysCharacter) := lapply(.SD, as.character), .SDcols = alwaysCharacter]
+    dt[,
+      (alwaysCharacter) := lapply(.SD, as.character),
+      .SDcols = alwaysCharacter
+    ]
   }
 
   # Convert convertible columns to numeric
@@ -408,24 +459,30 @@ cleanCharacterColumns <- function(dt, emptyAsNA) {
     # Trim whitespace for character columns
     dt[, (characterCols) := lapply(.SD, trimws), .SDcols = characterCols]
     # Replace curly quotes with straight quotes
-    dt[, (characterCols) := lapply(.SD, function(x) {
-      if (is.character(x)) {
-        x <- gsub("\u201C", "\"", x) # Replace left double quote
-        x <- gsub("\u201D", "\"", x) # Replace right double quote
-        x <- gsub("\u2018", "'", x) # Replace left single quote
-        x <- gsub("\u2019", "'", x) # Replace right single quote
-      }
-      return(x)
-    }), .SDcols = characterCols]
+    dt[,
+      (characterCols) := lapply(.SD, function(x) {
+        if (is.character(x)) {
+          x <- gsub("\u201C", "\"", x) # Replace left double quote
+          x <- gsub("\u201D", "\"", x) # Replace right double quote
+          x <- gsub("\u2018", "'", x) # Replace left single quote
+          x <- gsub("\u2019", "'", x) # Replace right single quote
+        }
+        return(x)
+      }),
+      .SDcols = characterCols
+    ]
     # Keeps NA and empty string consistent within one table
-    dt[, (characterCols) := lapply(.SD, function(x) {
-      if (emptyAsNA) {
-        x[x == ""] <- NA_character_
-      } else {
-        x[is.na(x)] <- ""
-      }
-      return(x)
-    }), .SDcols = characterCols]
+    dt[,
+      (characterCols) := lapply(.SD, function(x) {
+        if (emptyAsNA) {
+          x[x == ""] <- NA_character_
+        } else {
+          x[is.na(x)] <- ""
+        }
+        return(x)
+      }),
+      .SDcols = characterCols
+    ]
   }
 
   return(dt)
@@ -476,11 +533,19 @@ splitInputs <- function(originalVector) {
 setHeadersToLowerCase <- function(dt) {
   checkmate::assertDataTable(dt)
 
-  data.table::setnames(dt, sapply(names(dt), function(x) {
-    paste0(tolower(substring(
-      x, 1, 1
-    )), substring(x, 2))
-  }))
+  data.table::setnames(
+    dt,
+    sapply(names(dt), function(x) {
+      paste0(
+        tolower(substring(
+          x,
+          1,
+          1
+        )),
+        substring(x, 2)
+      )
+    })
+  )
   return(dt)
 }
 
@@ -516,22 +581,20 @@ separateAndTrimColumn <- function(data, columnName) {
 
 # synchronize configuration tables ---------
 
-
-
 #' Synchronize Scenarios Between Scenario and Plot Files
 #'
 #' This function synchronizes scenarios between two Excel files: one containing
 #' scenarios for a project and the other containing scenarios related to plots.
 #' It adds any missing scenarios from the scenarios file to the plots file.
 #'
-#' @param projectConfiguration An object of class ProjectConfiguration containing the file paths for scenariosFile and plotsFile.
+#' @param projectConfiguration An object of class ProjectConfiguration containing the file paths for scenariosFile and addOns$reportsFile
 #'
 #' @return Returns invisibly.
 #' @keywords internal
 synchronizeScenariosWithPlots <- function(projectConfiguration) {
   # Load the workbooks for scenarios and plots
   wbSc <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
-  wbPl <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+  wbPl <- openxlsx::loadWorkbook(projectConfiguration$addOns$reportsFile)
 
   # Read data from the specified sheets
   scenariosSc <- xlsxReadData(wbSc, sheetName = "Scenarios")
@@ -554,7 +617,11 @@ synchronizeScenariosWithPlots <- function(projectConfiguration) {
 
     # Write the updated scenarios back to the plots workbook
     xlsxWriteData(wb = wbPl, sheetName = "Scenarios", scenariosPl)
-    openxlsx::saveWorkbook(wb = wbPl, file = projectConfiguration$plotsFile, overwrite = TRUE)
+    openxlsx::saveWorkbook(
+      wb = wbPl,
+      file = projectConfiguration$addOns$reportsFile,
+      overwrite = TRUE
+    )
   }
 
   return(invisible())
@@ -566,12 +633,15 @@ synchronizeScenariosWithPlots <- function(projectConfiguration) {
 #' scenario outputs and the other containing plot outputs. It only writes back to the
 #' Excel files if changes are detected in the output paths.
 #'
-#' @param projectConfiguration An object of class ProjectConfiguration containing the file paths for scenariosFile and plotsFile.
+#' @param projectConfiguration An object of class ProjectConfiguration containing the
+#'   file paths for scenariosFile and addOns$reportsFile.
 #'
 #' @return Returns invisibly.
 #' @keywords internal
-synchronizeScenariosOutputsWithPlots <- function(projectConfiguration,
-                                                 direction = c("bothways", "scenarioToPlot", "plotToScenario")) {
+synchronizeScenariosOutputsWithPlots <- function(
+  projectConfiguration,
+  direction = c("bothways", "scenarioToPlot", "plotToScenario")
+) {
   # initialize variable to avoid messages
   outputPath <- outputPathPl <- outputPathSc <- NULL
 
@@ -579,14 +649,16 @@ synchronizeScenariosOutputsWithPlots <- function(projectConfiguration,
 
   # Load the workbooks for scenarios and plots
   wbSc <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
-  wbPl <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+  wbPl <- openxlsx::loadWorkbook(projectConfiguration$addOns$reportsFile)
 
   # Read data from the specified sheets
   outputsSc <- xlsxReadData(wbSc, sheetName = "OutputPaths")
   outputsPl <- xlsxReadData(wbPl, sheetName = "Outputs")
 
   # Merge the outputs based on the outputPathId
-  opMerged <- merge(outputsSc, outputsPl[-1],
+  opMerged <- merge(
+    outputsSc,
+    outputsPl[-1],
     by = "outputPathId",
     all.x = direction %in% c("bothways", "scenarioToPlot"),
     all.y = direction %in% c("bothways", "plotToScenario"),
@@ -598,35 +670,72 @@ synchronizeScenariosOutputsWithPlots <- function(projectConfiguration,
   opMerged[, outputPath := ""]
 
   # Check for inconsistencies between scenario and plot output paths
-  if (nrow(opMerged[!is.na(outputPathSc) & !is.na(outputPathPl) & outputPathSc != outputPathPl]) > 0) {
-    warning("Output definition in Scenario.xlsx and Plot.xlsx is inconsistent. Please synchronize manually")
+  if (
+    nrow(opMerged[
+      !is.na(outputPathSc) & !is.na(outputPathPl) & outputPathSc != outputPathPl
+    ]) >
+      0
+  ) {
+    warning(
+      "Output definition in Scenario.xlsx and Plot.xlsx is inconsistent. Please synchronize manually"
+    )
   }
 
   # Synchronize output paths based on availability
-  opMerged[!is.na(outputPathSc) & !is.na(outputPathPl) & outputPathSc == outputPathPl, outputPath := outputPathPl]
-  opMerged[!is.na(outputPathSc) & is.na(outputPathPl), outputPath := outputPathSc]
-  opMerged[is.na(outputPathSc) & !is.na(outputPathPl), outputPath := outputPathPl]
+  opMerged[
+    !is.na(outputPathSc) & !is.na(outputPathPl) & outputPathSc == outputPathPl,
+    outputPath := outputPathPl
+  ]
+  opMerged[
+    !is.na(outputPathSc) & is.na(outputPathPl),
+    outputPath := outputPathSc
+  ]
+  opMerged[
+    is.na(outputPathSc) & !is.na(outputPathPl),
+    outputPath := outputPathPl
+  ]
 
   opMerged[, outputPathSc := NULL]
   opMerged[, outputPathPl := NULL]
-
 
   # Set column order for better readability
   data.table::setcolorder(opMerged, c("outputPathId", "outputPath"))
 
   # Write back to Scenario workbook if changes are detected
-  if (any(!(opMerged$outputPathId %in% outputsSc$outputPathId)) |
-    any(!(opMerged[!is.na(outputPath)]$outputPath %in% outputsSc[!is.na(outputPath)]$outputPath)) |
-    nrow(outputsSc) != nrow(opMerged)) {
-    xlsxWriteData(wbSc, sheetName = "OutputPaths", opMerged[, c("outputPathId", "outputPath")])
-    openxlsx::saveWorkbook(wb = wbSc, file = projectConfiguration$scenariosFile, overwrite = TRUE)
+  if (
+    any(!(opMerged$outputPathId %in% outputsSc$outputPathId)) |
+      any(
+        !(opMerged[!is.na(outputPath)]$outputPath %in%
+          outputsSc[!is.na(outputPath)]$outputPath)
+      ) |
+      nrow(outputsSc) != nrow(opMerged)
+  ) {
+    xlsxWriteData(
+      wbSc,
+      sheetName = "OutputPaths",
+      opMerged[, c("outputPathId", "outputPath")]
+    )
+    openxlsx::saveWorkbook(
+      wb = wbSc,
+      file = projectConfiguration$scenariosFile,
+      overwrite = TRUE
+    )
   }
   # Write back to Plot workbook if changes are detected
-  if (any(!(opMerged$outputPathId %in% outputsPl$outputPathId)) |
-    any(!(opMerged[!is.na(outputPath)]$outputPath %in% outputsPl[!is.na(outputPath)]$outputPath)) |
-    nrow(outputsPl) != (nrow(opMerged) + 1)) {
+  if (
+    any(!(opMerged$outputPathId %in% outputsPl$outputPathId)) |
+      any(
+        !(opMerged[!is.na(outputPath)]$outputPath %in%
+          outputsPl[!is.na(outputPath)]$outputPath)
+      ) |
+      nrow(outputsPl) != (nrow(opMerged) + 1)
+  ) {
     xlsxWriteData(wbPl, sheetName = "Outputs", rbind(outputsPl[1], opMerged))
-    openxlsx::saveWorkbook(wb = wbPl, file = projectConfiguration$plotsFile, overwrite = TRUE)
+    openxlsx::saveWorkbook(
+      wb = wbPl,
+      file = projectConfiguration$addOns$reportsFile,
+      overwrite = TRUE
+    )
   }
 
   return(invisible())

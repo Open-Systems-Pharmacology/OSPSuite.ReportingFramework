@@ -16,7 +16,7 @@ test_that("Default Config For PKForestPlots", {
     overwrite = TRUE
   )
 
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+  wb <- openxlsx::loadWorkbook(projectConfiguration$addons$reportsFile)
 
   expect_contains(wb$sheet_names, "PKParameter_ForestTest")
 })
