@@ -202,11 +202,15 @@ initProject()
 projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
   path = file.path("ProjectConfiguration.xlsx")
 )
+# For older ProjectConfiguration.xlsx files without a stored framework version,
+# use ignoreVersionCheck = TRUE (see ?createProjectConfiguration).
 
 # Initialize log file
 initLogfunction(projectConfiguration)
 ```
 
+
+When loading an existing project configuration that was created before version tracking was introduced, pass `ignoreVersionCheck = TRUE` to `createProjectConfiguration()` or update the file once with `projectConfiguration$save()`.
 
 ### Step 3: Copy the Sample Data to Your Project Structure
 

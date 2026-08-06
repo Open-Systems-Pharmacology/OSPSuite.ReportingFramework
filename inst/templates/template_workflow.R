@@ -23,12 +23,19 @@ setWorkflowOptions(isValidRun = FALSE)
 
 # Setup project structure -------------------------------------------------
 # Create project directory and initialize the structure
-# (see ?initProject and https://esqlabs.github.io/esqlabsR/articles/esqlabsR.html)
+# This script should be run from the project root directory.
+# If running from this script's location, use: setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+# and then setwd("../../..")  or use here::here() for reliable path handling.
+
+# Initialize the project (creates base structure and JSON snapshot)
+# When called from project root, defaults will place ProjectConfiguration.xlsx in Scripts/ReportingFramework
+# A JSON snapshot of the configuration is automatically created for version control
 initProject()
 
 # Get paths of all relevant project files and folders
+# The ProjectConfiguration.xlsx is now at Scripts/ReportingFramework/ProjectConfiguration.xlsx
 projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
-  path = file.path("ProjectConfiguration.xlsx")
+  path = file.path("Scripts", "ReportingFramework", "ProjectConfiguration.xlsx")
 )
 
 # Initialize log file

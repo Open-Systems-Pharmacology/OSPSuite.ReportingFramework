@@ -19,7 +19,7 @@ calculatePKParameterForScenarios <- function(projectConfiguration,
   # initialize parameter to avoid linter message
   pKParameter <- scenarioName <- NULL
 
-  checkmate::assertClass(projectConfiguration, classes = "ProjectConfiguration")
+  checkmate::assertClass(projectConfiguration, classes = "ProjectConfigurationRF")
   checkmate::assertList(scenarioResults, any.missing = FALSE, names = "named")
 
   outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$pKAnalysisResults)
@@ -190,7 +190,7 @@ loadPKParameter <- function(projectConfiguration,
   pKParameter <- scenarioName <- NULL
 
   checkmate::assertList(scenarioListOrResult, any.missing = FALSE, names = "named", null.ok = TRUE)
-  checkmate::assertClass(projectConfiguration, classes = "ProjectConfiguration")
+  checkmate::assertClass(projectConfiguration, classes = "ProjectConfigurationRF")
 
   dtScenarios <- getScenarioDefinitions(projectConfiguration$scenariosFile)
 

@@ -23,6 +23,7 @@ options(rmarkdown.html_vignette.check_title = FALSE)
 
 The **OSPSuite Reporting Framework** is a powerful R package designed to streamline the process of data analysis, visualization, and reporting in pharmacokinetic and clinical research contexts. This package offers a comprehensive set of tools that facilitate the import of data, simulation of scenarios, calculation of pharmacokinetic parameters, and generation of insightful visualizations and reports.
 The package based on `{esqlabsR}` which facilitates modeling and simulation workflows with the OSPSuite relying on a well defined project structure based on Excel files.
+Project settings are managed by `ProjectConfigurationRF`, which wraps an `{esqlabsR}` project configuration and adds reporting-framework-specific paths and files (for example PK parameter or electronic package folders).
 This package is the base for other packages such as Bayesian Multi-Level Model Optimization package `{OSPSuite.BMLM}`
 
 ## Key Features

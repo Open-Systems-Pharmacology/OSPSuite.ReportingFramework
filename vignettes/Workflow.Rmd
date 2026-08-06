@@ -64,6 +64,12 @@ The first step in the workflow is to initialize the project. This includes:
 - Setting up the project directory and configuration files using the project structure of `{esqlabsR}`.
 - Initializing the log file.
 
+`ProjectConfiguration.xlsx` stores the package versions used to create the project: `esqlabsRVersion` (managed by `{esqlabsR}`) and `ospsuiteReportingFrameworkVersion` (managed by this package).
+When you load a configuration, both versions are checked against the installed packages.
+If a version is missing or does not match, you are prompted in an interactive session to update the file and continue; in non-interactive runs (for example CI), loading stops until the version is updated.
+New projects created with `initProject()` receive the current framework version automatically.
+Saving the configuration with `projectConfiguration$save()` updates both stored versions.
+
 ## Data Import
 
 After initialization, the first step should always be data import. The input format for data is CSV files, which can be imported using a dictionary. The imported data types include individual and aggregated time profile data as well as individual and aggregated PK parameter data.
