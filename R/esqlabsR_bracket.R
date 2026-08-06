@@ -40,7 +40,7 @@
 
   addOnProperties <- trimws(as.character(dtAddOnsExisting$Property))
   any(
-    addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY &
+    addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY & # nolint: object_usage_linter.
       !is.na(dtAddOnsExisting$Value) &
       nzchar(as.character(dtAddOnsExisting$Value)),
     na.rm = TRUE
@@ -144,6 +144,30 @@
   fs::path_abs(fileValue, start = configFolder)
 }
 
+#' Copy a single filesystem entry to its target path
+#' @param srcPath Absolute source path.
+#' @param dstPath Absolute destination path.
+#' @param overwrite Logical flag controlling overwrite behavior.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.copyDirectoryEntry <- function(srcPath, dstPath, overwrite) {
+  if (dir.exists(srcPath)) {
+    if (!dir.exists(dstPath)) {
+      dir.create(dstPath, recursive = TRUE, showWarnings = FALSE)
+    }
+    return(invisible(NULL))
+  }
+  dstDir <- dirname(dstPath)
+  if (!dir.exists(dstDir)) {
+    dir.create(dstDir, recursive = TRUE, showWarnings = FALSE)
+  }
+  if (!file.exists(dstPath) || overwrite) {
+    file.copy(from = srcPath, to = dstPath, overwrite = overwrite)
+  }
+  return(invisible(NULL))
+}
+
 #' Copy directory content recursively
 #' @param sourceDir Source directory.
 #' @param targetDir Target directory.
@@ -155,7 +179,6 @@
   if (!dir.exists(sourceDir)) {
     return(invisible(NULL))
   }
-
   entries <- list.files(
     sourceDir,
     recursive = TRUE,
@@ -166,28 +189,68 @@
   if (length(entries) == 0) {
     return(invisible(NULL))
   }
-
   for (entry in entries) {
-    srcPath <- file.path(sourceDir, entry)
-    dstPath <- file.path(targetDir, entry)
-
-    if (dir.exists(srcPath)) {
-      if (!dir.exists(dstPath)) {
-        dir.create(dstPath, recursive = TRUE, showWarnings = FALSE)
-      }
-      next
-    }
-
-    dstDir <- dirname(dstPath)
-    if (!dir.exists(dstDir)) {
-      dir.create(dstDir, recursive = TRUE, showWarnings = FALSE)
-    }
-    if (!file.exists(dstPath) || overwrite) {
-      file.copy(from = srcPath, to = dstPath, overwrite = overwrite)
-    }
+    .copyDirectoryEntry(
+      srcPath = file.path(sourceDir, entry),
+      dstPath = file.path(targetDir, entry),
+      overwrite = overwrite
+    )
   }
+  return(invisible(NULL))
+}
 
-  invisible(NULL)
+#' Copy individual configuration files listed under *File properties
+#' @param dtConfigOld Original esqlabsR configuration table.
+#' @param dtConfigNew Updated RF configuration table.
+#' @param configurationDirectory Base directory of the configuration workbook.
+#' @param overwrite Logical flag controlling overwrite behavior.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.copyConfigurationFile <- function(oldFile, newFile, overwrite) {
+  if (is.na(oldFile) || is.na(newFile)) {
+    return(invisible(NULL))
+  }
+  if (identical(oldFile, newFile) || !file.exists(oldFile)) {
+    return(invisible(NULL))
+  }
+  newDir <- dirname(newFile)
+  if (!dir.exists(newDir)) {
+    dir.create(newDir, recursive = TRUE, showWarnings = FALSE)
+  }
+  if (!file.exists(newFile) || overwrite) {
+    file.copy(from = oldFile, to = newFile, overwrite = overwrite)
+  }
+  return(invisible(NULL))
+}
+
+.transferConfigurationFilesByProperty <- function(
+  dtConfigOld,
+  dtConfigNew,
+  configurationDirectory,
+  overwrite
+) {
+  fileProperties <- grep(
+    "File$",
+    intersect(dtConfigOld$Property, dtConfigNew$Property),
+    value = TRUE
+  )
+  for (prop in unique(fileProperties)) {
+    .copyConfigurationFile(
+      oldFile = .resolveConfiguredFilePath(
+        dtConfigOld,
+        configurationDirectory,
+        prop
+      ),
+      newFile = .resolveConfiguredFilePath(
+        dtConfigNew,
+        configurationDirectory,
+        prop
+      ),
+      overwrite = overwrite
+    )
+  }
+  return(invisible(NULL))
 }
 
 #' Transfer initialized esqlabsR files into RF target layout
@@ -213,52 +276,22 @@
   if (!nzchar(oldFolder) || !nzchar(newFolder)) {
     return(invisible(NULL))
   }
-
   oldFolderAbs <- fs::path_abs(oldFolder, start = configurationDirectory)
   newFolderAbs <- fs::path_abs(newFolder, start = configurationDirectory)
   if (identical(oldFolderAbs, newFolderAbs)) {
     return(invisible(NULL))
   }
-
   if (!dir.exists(newFolderAbs)) {
     dir.create(newFolderAbs, recursive = TRUE, showWarnings = FALSE)
   }
   .copyDirectoryContents(oldFolderAbs, newFolderAbs, overwrite)
-
-  fileProperties <- intersect(
-    dtConfigOld$Property,
-    dtConfigNew$Property
+  .transferConfigurationFilesByProperty(
+    dtConfigOld,
+    dtConfigNew,
+    configurationDirectory,
+    overwrite
   )
-  fileProperties <- grep("File$", fileProperties, value = TRUE)
-
-  for (prop in unique(fileProperties)) {
-    oldFile <- .resolveConfiguredFilePath(
-      dtConfigOld,
-      configurationDirectory,
-      prop
-    )
-    newFile <- .resolveConfiguredFilePath(
-      dtConfigNew,
-      configurationDirectory,
-      prop
-    )
-    if (is.na(oldFile) || is.na(newFile) || identical(oldFile, newFile)) {
-      next
-    }
-    if (!file.exists(oldFile)) {
-      next
-    }
-
-    newDir <- dirname(newFile)
-    if (!dir.exists(newDir)) {
-      dir.create(newDir, recursive = TRUE, showWarnings = FALSE)
-    }
-    if (!file.exists(newFile) || overwrite) {
-      file.copy(from = oldFile, to = newFile, overwrite = overwrite)
-    }
-  }
-
-  invisible(NULL)
+  return(invisible(NULL))
 }
 
 #' Delete all subdirectories in legacy configurations folder
@@ -402,25 +435,25 @@
 
   addOnProperties <- trimws(as.character(dtTemplateAddOns$Property))
   if (
-    any(addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY, na.rm = TRUE)
+    any(addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY, na.rm = TRUE) # nolint: object_usage_linter.
   ) {
     versionIndex <- which(
-      addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY
+      addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY # nolint: object_usage_linter.
     )[[1]]
     dtTemplateAddOns[
       versionIndex,
       c("Value", "Description")
     ] <- list(
-      .currentReportingFrameworkVersion(),
-      .reportingFrameworkVersionDescription()
+      .currentReportingFrameworkVersion(), # nolint: object_usage_linter.
+      .reportingFrameworkVersionDescription() # nolint: object_usage_linter.
     )
   } else {
     dtTemplateAddOns <- rbind(
       dtTemplateAddOns,
       data.frame(
-        Property = REPORTING_FRAMEWORK_VERSION_PROPERTY,
-        Value = .currentReportingFrameworkVersion(),
-        Description = .reportingFrameworkVersionDescription(),
+        Property = REPORTING_FRAMEWORK_VERSION_PROPERTY, # nolint: object_usage_linter.
+        Value = .currentReportingFrameworkVersion(), # nolint: object_usage_linter.
+        Description = .reportingFrameworkVersionDescription(), # nolint: object_usage_linter.
         stringsAsFactors = FALSE
       )
     )
@@ -702,7 +735,7 @@ upgradeToReportingFramework <- function(
   }
   .applyTemplateAddonsSheet(configWb, templateConfigurationWb)
   openxlsx::saveWorkbook(configWb, configXlsxDest, overwrite = TRUE)
-  stampReportingFrameworkVersion(path = configXlsxDest)
+  stampReportingFrameworkVersion(path = configXlsxDest) # nolint: object_usage_linter.
 
   oldConfigurationFolder <- .resolveConfigurationFolder(
     dtConfigurationOriginal,
@@ -805,7 +838,7 @@ initProject <- function(
     path = file.path(configurationDirectory, "ProjectConfiguration.xlsx"),
     ignoreVersionCheck = FALSE
   )
-  snapshotProjectConfigurationRF(pc, outputDir = configurationDirectory)
+  snapshotProjectConfigurationRF(pc, outputDir = configurationDirectory) # nolint: object_usage_linter.
 
   return(invisible())
 }
@@ -845,8 +878,8 @@ createProjectConfiguration <- function(
 #' @return  Named list of Scenario objects.
 #' @export
 #' @family scenario management
-createScenarios.wrapped <- function(
-  projectConfiguration, # nolint
+createScenariosWrapped <- function(
+  projectConfiguration,
   scenarioNames = NULL
 ) {
   baseProjectConfiguration <- projectConfiguration$baseProjectconfiguration
@@ -1096,7 +1129,7 @@ readOntongenies <- function(data) {
 #'
 #' @keywords internal
 extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) {
-  # nolint
+  # nolint: object_name_linter.
   ospsuite.utils::validateIsOfType(population, "Population")
   ospsuite.utils::validateIsString(XLSpath)
   ospsuite.utils::validateIsString(sheet, nullAllowed = TRUE)
@@ -1162,7 +1195,8 @@ extendPopulationFromXLS_RF <- function(population, XLSpath, sheet = NULL) {
 #' A list of supported distributions is defined in `Distributions`. Default is `"Normal"`.
 #' @keywords internal
 extendPopulationByUserDefinedParams_RF <- function(
-  population, # nolint
+  # nolint: object_name_linter.
+  population,
   parameterPaths,
   meanValues,
   sdValues,

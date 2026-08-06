@@ -4,7 +4,6 @@
 # enabling users to effectively process pharmacokinetic data, export populations,
 # run simulations, conduct sensitivity analysis, and generate output plots and reports.
 
-
 # Typically, this file is saved in <Rootdirectory>/Scripts/ReportingFramework
 
 # Initialization  ----------------------------------------------------------
@@ -13,7 +12,7 @@ library(ospsuite.reportingframework)
 
 # Set graphic defaults
 # (see vignette(package = 'ospsuite.plots', topic = 'ospsuite_plots'))
-ospsuite.plots::setDefaults()
+ggplot2::theme_set(theme_osp())
 theme_update(legend.position = 'top')
 options(knitr.kable.NA = '')
 
@@ -69,7 +68,7 @@ dataObserved <- readObservedDataByDictionary(
 
 # 3) Simulations ------------------------------------------------------
 # Set up the scenario list
-scenarioList <- createScenarios.wrapped(
+scenarioList <- createScenariosWrapped(
   projectConfiguration = projectConfiguration,
   scenarioNames = NULL
 )
@@ -120,11 +119,19 @@ mergeRmds(
   projectConfiguration = projectConfiguration,
   newName = "appendix",
   title = "Appendix",
-  sourceRmds = c("Demographics", "TimeProfile", "PKParameter", "DDIRatio", "myFigures")
+  sourceRmds = c(
+    "Demographics",
+    "TimeProfile",
+    "PKParameter",
+    "DDIRatio",
+    "myFigures"
+  )
 )
 
 # Render the report to Word format
-renderWord(fileName = file.path(projectConfiguration$outputFolder, "appendix.Rmd"))
+renderWord(
+  fileName = file.path(projectConfiguration$outputFolder, "appendix.Rmd")
+)
 
 # Finalize Workflow -----------------------------------------------------
 addMessageToLog("Finalizing workflow")
