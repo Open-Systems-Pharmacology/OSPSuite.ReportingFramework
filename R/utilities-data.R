@@ -1,4 +1,5 @@
 # Read data by dictionary ----------
+# nolint start: object_usage_linter
 
 #' Read data by dictionary
 #'
@@ -264,12 +265,6 @@ validateObservedData <- function(dataDT, dataClassType) {
       ]
       tmp <- merge(ambiguousUnits, unitSummary, by = colIdentifier)
 
-      summaryString <- paste(
-        apply(tmp[, !"nUnit", with = FALSE], 1, function(x) {
-          paste(x, collapse = " ")
-        }),
-        collapse = " | "
-      )
       warning(messages$warningutilitiesdataL3XX())
     }
   }
@@ -418,6 +413,7 @@ readDataDictionary <- function(dictionaryFile, sheet, data, dataClass) {
 #' @param dictionaryName The name of the dictionary.
 #' @return A `data.table` containing the converted data.
 #' @keywords internal
+#' @noRd
 convertDataByDictionary <- function(data, dataFilter, dict, dictionaryName) {
   # Initialize variables used for data.tables
   targetColumn <- sourceColumn <- xUnit <- filter <- type <- NULL
@@ -485,10 +481,13 @@ convertDataByDictionary <- function(data, dataFilter, dict, dictionaryName) {
 
 #' Converts biometric columns to default unit
 #'
-#' @inheritParams convertDataByDictionary
+#' @param data The input `data.table`.
+#' @param dict The dictionary used for conversion.
+#' @param dictionaryName The dictionary name used for error messages.
 #'
 #' @return A `data.table` with converted columns.
 #' @keywords internal
+#' @noRd
 convertBiometrics <- function(data, dict, dictionaryName) {
   # Initialize variables used for data.tables
   targetColumn <- gender <- NULL
@@ -645,6 +644,7 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
 #' @param projectConfiguration Object of class `ProjectConfiguration` containing information on paths and file names
 #' @param dataDT A `data.table` with observed data.
 #' @param overwrite If TRUE, existing rows will be overwritten.
+#' @return Returns invisibly.
 #' @export
 #' @family observed data processing
 addBiometricsToConfig <- function(
@@ -998,9 +998,13 @@ aggregateObservedDataGroups <- function(
 #' Prepares data for aggregation
 #'
 #' @inheritParams aggregateObservedDataGroups
+#' @param dataObserved A `data.table` with observed data to aggregate.
+#' @param groups A character vector with group names to aggregate.
+#' @param groupSuffix A suffix appended to the aggregated group name.
 #'
 #' @return Prepared data for aggregation as a `data.table`.
 #' @keywords internal
+#' @noRd
 prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
   # avoid warning for global variable
   group <- NULL
@@ -1050,10 +1054,13 @@ prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
 #' Sets values which do not match the LLOQ criteria to NA
 #'
 #' @param aggregatedData A `data.table` with aggregated data.
-#' @inheritParams aggregateObservedDataGroups
+#' @param lloqCheckColumns2of3 Columns set to NA when more than 2/3 are below LLOQ.
+#' @param lloqCheckColumns1of2 Columns set to NA when more than 1/2 are below LLOQ.
+#' @param aggregationFlag Aggregation method flag.
 #'
 #' @return Updated aggregated data `data.table`.
 #' @keywords internal
+#' @noRd
 checkLLOQ <- function(
   aggregatedData,
   lloqCheckColumns2of3,
@@ -1112,6 +1119,7 @@ checkLLOQ <- function(
 #'
 #' @return The updated aggregated data as a `data.table`.
 #' @keywords internal
+#' @noRd
 addUniqueColumns <- function(dataObserved, aggregatedData) {
   identifier <- c("group", "outputPathId")
 
@@ -1148,6 +1156,7 @@ addUniqueColumns <- function(dataObserved, aggregatedData) {
 #'
 #' @return A `data.table` with attributes.
 #' @keywords internal
+#' @noRd
 setDataTypeAttributes <- function(dataDT, dict = NULL) {
   if (is.null(dict)) {
     tmpdict <-
@@ -1198,6 +1207,7 @@ setDataTypeAttributes <- function(dataDT, dict = NULL) {
 #'
 #' @return A vector with column names.
 #' @keywords internal
+#' @noRd
 getColumnsForColumnType <- function(dt, columnTypes) {
   columnsWithAttributes <- unlist(lapply(dt, attr, "columnType"))
 
@@ -1215,6 +1225,7 @@ getColumnsForColumnType <- function(dt, columnTypes) {
 #' @param identifierCols A character vector specifying the columns to be updated.
 #' @return The updated `data.table`.
 #' @keywords internal
+#' @noRd
 convertIdentifierColumns <- function(dt, identifierCols) {
   for (col in identifierCols) {
     dt[[col]] <- as.character(dt[[col]])
@@ -1231,10 +1242,13 @@ convertIdentifierColumns <- function(dt, identifierCols) {
 #' aggregation or "Virtual Twin population" creation
 #'
 #' @inheritParams aggregateObservedDataGroups
+#' @param dataObserved A `data.table` with observed data.
+#' @param groups A character vector with group names.
 #' @param minN The minimal number needed for a group.
 #'
 #' @return A vector with suitable group Ids.
 #' @keywords internal
+#' @noRd
 getIndividualDataGroups <- function(dataObserved, groups, minN = 2) {
   # avoid warnings for global variables
   individualId <- dataClass <- dataType <- N <- NULL # nolint: object_name_linter
@@ -1264,3 +1278,5 @@ getIndividualDataGroups <- function(dataObserved, groups, minN = 2) {
 
   return(groups)
 }
+
+# nolint end

@@ -1,6 +1,72 @@
-# testProject was set up by setup.R, this provide variable projectconfiguration and test data
+# Self-contained fixture based on package tutorial data
+.makeUtilitiesDataProjectConfiguration <- function(.env = parent.frame()) {
+  projectDir <- tempfile(pattern = "rf_util_data_")
+  dir.create(projectDir, recursive = TRUE, showWarnings = FALSE)
+  tutorialDir <- system.file(
+    "extdata",
+    "Tutorial",
+    package = "ospsuite.reportingframework"
+  )
 
-dataObserved <- readObservedDataByDictionary(projectConfiguration)
+  filesToCopy <- c(
+    "DataImportConfiguration.xlsx",
+    "Individuals.xlsx",
+    "Plots.xlsx",
+    "Scenarios.xlsx"
+  )
+
+  file.copy(
+    from = file.path(tutorialDir, filesToCopy),
+    to = file.path(projectDir, filesToCopy),
+    overwrite = TRUE
+  )
+
+  dataDir <- file.path(projectDir, "Data")
+  dir.create(dataDir, recursive = TRUE, showWarnings = FALSE)
+  dataFiles <- c("timeprofiles_study1234_iv.csv", "timeprofiles_study1234_po.csv")
+  file.copy(
+    from = file.path(
+      tutorialDir,
+      dataFiles
+    ),
+    to = file.path(
+      dataDir,
+      dataFiles
+    ),
+    overwrite = TRUE
+  )
+
+  # DataImportConfiguration.xlsx references files via Data/...; stage files in common temp roots.
+  for (rootDir in unique(c(tempdir(), dirname(tempdir()), dirname(dirname(tempdir())), projectDir))) {
+    tempDataDir <- file.path(rootDir, "Data")
+    dir.create(tempDataDir, recursive = TRUE, showWarnings = FALSE)
+    srcFiles <- file.path(dataDir, dataFiles)
+    dstFiles <- file.path(tempDataDir, dataFiles)
+    if (!all(normalizePath(srcFiles, winslash = "/") == normalizePath(dstFiles, winslash = "/", mustWork = FALSE))) {
+      file.copy(
+        from = srcFiles,
+        to = dstFiles,
+        overwrite = TRUE
+      )
+    }
+  }
+
+  list(
+    dataImporterConfigurationFile = file.path(projectDir, "DataImportConfiguration.xlsx"),
+    projectConfigurationDirPath = tempdir(),
+    individualsFile = file.path(projectDir, "Individuals.xlsx"),
+    scenariosFile = file.path(projectDir, "Scenarios.xlsx"),
+    addOns = list(
+      reportsFile = file.path(projectDir, "Plots.xlsx")
+    )
+  )
+}
+
+projectConfiguration <- .makeUtilitiesDataProjectConfiguration()
+dataObserved <- suppressWarnings(readObservedDataByDictionary(
+  projectConfiguration,
+  spreadData = FALSE
+))
 
 
 test_that("It should read and process data based on the provided project configuration", {
@@ -21,7 +87,7 @@ test_that("It should read and process data based on the provided project configu
   )
   expect_gte(nrow(dtIndividualBiometrics), 6)
 
-  dtOutputPaths <- getOutputPathIds(projectConfiguration$addons$reportsFile)
+  dtOutputPaths <- getOutputPathIds(projectConfiguration$addOns$reportsFile)
   expect_contains(
     dtOutputPaths$outputPathId,
     c("Plasma", "CYP3A4total", "CYP3A4Liver")
@@ -47,10 +113,11 @@ test_that("It should filter data by fileIds parameter", {
     # Select first fileId
     selectedFileId <- availableFileIds[1]
 
-    dataObservedFiltered <- readObservedDataByDictionary(
+    dataObservedFiltered <- suppressWarnings(readObservedDataByDictionary(
       projectConfiguration,
+      spreadData = FALSE,
       fileIds = selectedFileId
-    )
+    ))
 
     # Should return a valid data.table
     expect_true(
