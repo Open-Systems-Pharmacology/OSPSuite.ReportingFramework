@@ -115,10 +115,7 @@ plotDistributionVsDemographics <- function(
   )
 
   if ("categoricValue" %in% names(plotData)) {
-    warning(paste(
-      "Categoric parameter are not suited for this kind of plot and will be ignored:",
-      concatWithAnd(unique(plotData[!is.na(categoricValue), ]$parameterId))
-    ))
+    warning(messages$warningplotDemographicsL1())
   }
 
   return(plotList)
@@ -684,10 +681,7 @@ addDemographicsToBin <- function(
     setnames(old = "parameterId", new = "parameterId_Bin")
 
   if (all(is.na(plotData$value)) & "categoricValue" %in% names(plotData)) {
-    stop(paste(
-      "Categoric Values are not allowed for x-axis on rangeplots. Check plotName",
-      onePlotConfig$plotName[1]
-    ))
+    stop(messages$errorplotDemographicsL1())
   }
 
   plotData <- plotData %>%
@@ -835,12 +829,7 @@ loadPopulationParameterForScenario <- function(
   modelPaths <- unique(onePlotConfigIdentifier$modelPath)
 
   if (!all(modelPaths %in% names(dtPop))) {
-    stop(paste(
-      "Parameter path(s)",
-      paste(setdiff(modelPaths, names(dtPop)), collapse = ", "),
-      "is not available for",
-      scenarioName
-    ))
+    stop(messages$errorplotDemographicsL1X())
   }
 
   dtPop <- dtPop[, .SD, .SDcols = c("IndividualId", modelPaths)][,
@@ -1181,7 +1170,7 @@ validateHistogramsConfig <- function(configTable, ...) {
   } else if ("pkParameterDT" %in% names(dotarg)) {
     popScenarios <- unique(dotarg$pkParameterDT$scenario)
   } else {
-    stop("Inputs are missing, please provide scenarioList and/or pkParameterDT")
+    stop(messages$errorplotDemographicsL1XX())
   }
 
   validateConfigTablePlots(
@@ -1262,11 +1251,7 @@ validateParameterID <- function(configTablePlots, ...) {
   } else {
     dotarg <- list(...)
     if (!("pkParameterDT" %in% names(dotarg))) {
-      stop(paste(
-        "The ParameterIds are no valid modelparameters!
-                 Are they PK-Parameter? But pkParameterDT is missing as input.",
-        configTablePlots$plotName[1]
-      ))
+      stop(messages$errorplotDemographicsL1XXX())
     }
 
     .validatePKParameterDT(dotarg$pkParameterDT)

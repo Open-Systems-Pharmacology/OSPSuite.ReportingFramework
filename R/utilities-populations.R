@@ -51,9 +51,7 @@ setupVirtualTwinPopConfig <- function(
         overwrite = TRUE
       )
 
-      message(
-        "shift sheet 'VirtualTwinPopulation' from 'Indvidual.xslx' to 'Population.xlsx'"
-      )
+      message(messages$infoVirtualTwinPopulationSheetShifted())
     } else {
       dtTwinPops <- xlsxReadData(
         projectConfiguration$scenariosFile,
@@ -87,7 +85,7 @@ setupVirtualTwinPopConfig <- function(
   if (length(groups) == 0) {
     writeToLog(
       type = "Info",
-      msg = "No groups available for virtual twin population creation"
+      msg = messages$infoNoGroupsForVirtualTwinPopulationCreation()
     )
     return(NULL)
   }
@@ -103,7 +101,7 @@ setupVirtualTwinPopConfig <- function(
 
   writeToLog(
     type = "Info",
-    msg = "add virtual twin population configuration in Population configuration file:"
+    msg = messages$infoAddVirtualTwinPopulationConfig()
   )
   writeTableToLog(dtTwinPopsNew[, .N, by = "populationName"])
 
@@ -179,7 +177,7 @@ exportVirtualTwinPopulations <- function(
   if (nrow(dtTwinPops) == 0) {
     writeToLog(
       type = "Info",
-      msg = "No new virtual twin populations to generate; all files already exist."
+      msg = messages$infoNoNewVirtualTwinPopulationsToGenerate()
     )
     return(invisible())
   }
@@ -267,18 +265,7 @@ exportVirtualTwinPopulations <- function(
     return(invisible(NULL))
   }
 
-  warning(paste(
-    "You have very small values for 'ProportionOfFemales' in the population configurations.\n",
-    "Unit is percent not fraction. Are you sure?\n",
-    paste(
-      paste(
-        suspiciousRows$populationName,
-        suspiciousRows$proportionOfFemales,
-        sep = ": "
-      ),
-      collapse = "; "
-    )
-  ))
+  warning(messages$warningSuspiciousProportionOfFemales(suspiciousRows))
 
   return(invisible(NULL))
 }
@@ -304,11 +291,9 @@ exportVirtualTwinPopulations <- function(
       length(customParameter$values) != 1 &&
         length(customParameter$values) != nrow(poptable)
     ) {
-      stop(paste(
-        "Inconsistent number of values for",
-        customParameter$path,
-        "in",
-        populationName
+      stop(messages$errorInconsistentCustomParameterValues(
+        parameterPath = customParameter$path,
+        populationName = populationName
       ))
     }
     poptable[[customParameter$path]] <- customParameter$values
@@ -421,7 +406,7 @@ exportRandomPopulations <- function(
   if (nrow(dtPops) == 0) {
     writeToLog(
       type = "Info",
-      msg = ("No new virtual populations to generate; all files already exist.")
+      msg = messages$infoNoNewVirtualPopulationsToGenerate()
     )
     return(invisible())
   }
@@ -742,11 +727,9 @@ exportRandomPopulations <- function(
         setdiff(names(poptable), names(popRow))
       )
       if (length(tmp) > 1) {
-        stop(paste(
-          "population parameter must be consistent within a virtual population. Check",
-          paste(tmp, collapse = ", "),
-          "for",
-          popRow$ObservedIndividualId
+        stop(messages$errorInconsistentVirtualPopulationParameters(
+          inconsistentParameters = tmp,
+          observedIndividualId = popRow$ObservedIndividualId
         ))
       }
     }

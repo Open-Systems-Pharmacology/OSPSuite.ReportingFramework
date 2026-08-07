@@ -109,7 +109,7 @@ getErrorTypeForPercentiles <- function(percentiles, legendsize) {
       yMinTxt <- formatPercentiles(percentiles[1], suffix = " percentile")
       paste(mName, "|", trimws(yMinTxt), "|", trimws(yMaxTxt))
     },
-    stop("Error: legendsize not covered. Please provide a legendsize of 2 or 3.")
+    stop(messages$errorutilitiesaggregationL1())
   )
   return(result)
 }

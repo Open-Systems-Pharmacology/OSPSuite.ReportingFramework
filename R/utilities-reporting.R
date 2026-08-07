@@ -40,7 +40,7 @@ renderWord <- function(fileName,
 
   # Check if pandoc is available before trying to render word report
   if (!rmarkdown::pandoc_available()) {
-    stop("Pandoc is not installed, word report was not created.")
+    stop(messages$errorutilitiesreportingL1())
     return(invisible())
   }
   if (is.null(wordConversionTemplate)) {

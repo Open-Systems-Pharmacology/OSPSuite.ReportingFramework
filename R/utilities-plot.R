@@ -274,14 +274,9 @@ handleConfigTable <- function(
           },
           error = function(err) {
             if (!getOption("OSPSuite.RF.skipFailingPlots", default = FALSE)) {
-              stop(err)
+              stop(messages$errorutilitiesplotL1())
             } else {
-              warning(paste0(
-                "Error during creation of plot: '",
-                onePlotConfig$plotName[1],
-                "':\n ",
-                conditionMessage(err)
-              ))
+              warning(messages$warningutilitiesplotL1())
             }
           }
         )
@@ -484,10 +479,7 @@ getScalevector <- function(namesOfScaleVector, listOfValues) {
   }
 
   if (is.null(scaleVector)) {
-    stop(paste(
-      "no valid values for scalevector for",
-      paste0(namesOfScaleVector, collapse = ", ")
-    ))
+    stop(messages$errorutilitiesplotL2())
   }
 
   names(scaleVector) <- namesOfScaleVector
@@ -526,11 +518,7 @@ getDefaultColorsForScaleVector <- function(shade = c("dark", "light"), n) {
       )
   } else {
     if (n > length(ospsuite.plots::colorMaps[["ospDefault"]])) {
-      stop(paste(
-        "To many colors for colorVector, maximal",
-        length(ospsuite.plots::colorMaps[["ospDefault"]]),
-        "allowed"
-      ))
+      stop(messages$errorutilitiesplotL2X())
     }
     colorVector <- ospsuite.plots::colorMaps[["ospDefault"]][1:n]
   }
@@ -559,13 +547,11 @@ getDefaultShapesForScaleVector <- function(n) {
     optionKey = ospsuite.plots::OptionKeys$shapeValues
   )
   if (is.null(shapes)) {
-    stop(
-      "no default shape sets for ospsuite.plots. Please use ospsuite.plots::setDefaults()"
-    )
+    stop(messages$errorutilitiesplotL2XX())
   }
 
   if (n > length(shapes)) {
-    stop("not enough shapes available")
+    stop(messages$errorutilitiesplotL2XXX())
   }
 
   return(shapes[1:n])
@@ -870,9 +856,7 @@ validateHeaders <- function(configTable) {
       )
     )
   ) {
-    stop(
-      "Invalid plot configuration table. For Rows with headers all other columns must be empty."
-    )
+    stop(messages$errorutilitiesplotL2XXXX())
   }
 
   configTablePlots <- configTable[is.na(level)]
@@ -884,7 +868,7 @@ validateHeaders <- function(configTable) {
       .SDcols = "header"
     ])
   ) {
-    stop("Invalid plot configuration table. Missing header for level")
+    stop(messages$errorutilitiesplotL2XXXXX())
   }
 
   return(configTablePlots)
@@ -996,12 +980,7 @@ validateSubsetList <- function(subsetList, data) {
     invisible(lapply(subsetCheck$cols, function(col) {
       if (any(!is.na(data[[col]]))) {
         if (is.null(subsetCheck$allowedValues)) {
-          stop(paste(
-            "Plot configuration column",
-            col,
-            "has entries but no allowed values.
-                     Did you forget some inputs e.g. observedData or pkParameterDT?"
-          ))
+          stop(messages$errorutilitiesplotL2XXXXXX())
         }
         splitAllowed <- subsetCheck$splitAllowed
         if (is.null(subsetCheck$splitAllowed)) {
@@ -1041,7 +1020,7 @@ validateNumericVectorColumns <- function(columns, data, ...) {
             x <- eval(parse(text = xcharacter))
           },
           error = function(e) {
-            stop(paste("Invalid inputs in plot configuration column", col))
+            stop(messages$errorutilitiesplotL2XXXXXXX())
           }
         )
       }
@@ -1090,12 +1069,7 @@ validateGroupConsistency <- function(
   # Check if any value column has more than one unique value within each group
   lapply(valueColumns, function(col) {
     if (any(uniqueValueCounts[[col]] > 1)) {
-      stop(paste(
-        "Values for",
-        col,
-        "should be the same within each group defined by",
-        paste(groupingColumns, collapse = ", ")
-      ))
+      stop(messages$errorutilitiesplotL2XXXXXXXX())
     }
   })
 
@@ -1116,10 +1090,7 @@ validateAtleastOneEntry <- function(configTablePlots, columnVector) {
     ]) >
       0
   ) {
-    stop(paste(
-      "Invalid configTable, each plot row needs at least one entry in one of the columns",
-      paste(columnVector, collapse = ", ")
-    ))
+    stop(messages$errorutilitiesplotL2XXXXXXXXX())
   }
 
   return(invisible())
@@ -1170,7 +1141,7 @@ validateOutputIdsForPlot <- function() {
   tmp <- lapply(uniqueColumns, function(col) {
     # nolint object_usage
     if (any(uniqueIDValues[[col]] > 1)) {
-      stop(paste("values for", col, "should be the same within outputPathId"))
+      stop(messages$errorutilitiesplotL2XXXXXXXXXX())
     }
   })
 
@@ -1183,11 +1154,7 @@ validateOutputIdsForPlot <- function() {
           suppressMessages(ospsuite::getDimensionForUnit(unit))
         },
         error = function(e) {
-          stop(paste0(
-            'Please check sheet Outputs in plotconfiguration file. Unit "',
-            unit,
-            '" is not valid'
-          ))
+          stop(messages$errorutilitiesplotL2XXXXXXXXXXX())
         }
       )
     }
@@ -1248,9 +1215,7 @@ validateColorLegend <- function(dt) {
       dt[, c("plotName", "colorLegend")] %>%
         unique()
     )
-    stop(
-      "colorLegend must be a character string concatenated from two characters separated by |."
-    )
+    stop(messages$errorutilitiesplotL2XXXXXXXXXXXX())
   }
 
   return(invisible())
@@ -1276,7 +1241,7 @@ validateColorVector <- function(colorVector) {
   })
 
   if (!all(validColors)) {
-    stop("All values in colorVector must be valid color names.")
+    stop(messages$errorutilitiesplotL2XXXXXXXXXXXXX())
   }
 
   return(invisible())

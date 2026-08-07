@@ -107,7 +107,7 @@ initLogfunction <- function(projectConfiguration,
 #' @family log file management
 addMessageToLog <- function(messageText) {
   captureLog(
-    expr = message(messageText)
+    expr = message(messages$infoutilitiesloggingL7())
   )
 }
 
@@ -134,7 +134,7 @@ captureLog <- function(expr, finallyExpression = invisible()) {
             type = "Error",
             msg = errorMessage
           )
-          stop(e)
+          stop(messages$errorutilitiesloggingL7())
         },
         warning = function(w) {
           if (!(gsub("\n", "", w$message) %in% warningsNotDisplayed)) {
@@ -166,7 +166,7 @@ captureLog <- function(expr, finallyExpression = invisible()) {
     },
     error = function(e) {
       stop(e$message, call. = FALSE)
-      stop(e)
+      stop(messages$errorutilitiesloggingL11())
     },
     finally = finallyExpression
   )
@@ -242,7 +242,7 @@ getErrorTrace <- function(e) {
 writeToLog <- function(type, msg, filename = NULL) {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
   if (is.null(logFileFolder)) {
-    warning("Logfile was not initialized")
+    warning(messages$warningutilitiesloggingL13())
     return(invisible())
   }
   if (is.null(filename)) filename <- "run.log"
@@ -270,7 +270,7 @@ writeToLog <- function(type, msg, filename = NULL) {
 writeTableToLog <- function(dt, filename = "run.log") {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
   if (is.null(logFileFolder)) {
-    warning("Logfile was not initialized")
+    warning(messages$warningutilitiesloggingL14())
     print(dt)
     return(invisible())
   }
@@ -326,7 +326,7 @@ saveSessionInfo <- function() {
   logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
 
   if (is.null(logFileFolder)) {
-    warning("Logfile was not initialized")
+    warning(messages$warningutilitiesloggingL15())
     return(invisible())
   }
 

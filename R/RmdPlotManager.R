@@ -29,7 +29,7 @@ RmdPlotManager <- R6::R6Class( # nolint
 
       if (!suppressExport) {
         if (is.null(rmdName)) {
-          stop("Please provide a valid name for the .Rmd file and its subfolder.")
+          stop(messages$errorRmdPlotManagerL1())
         }
         tools::file_path_sans_ext(rmdName)
 
@@ -46,7 +46,7 @@ RmdPlotManager <- R6::R6Class( # nolint
 
       checkmate::assertCharacter(nameOfplotFunction)
       if (!exists(nameOfplotFunction, where = globalenv(), mode = "function")) {
-        stop(paste("Function", nameOfplotFunction, "does not exist"))
+        stop(messages$errorRmdPlotManagerL1X())
       }
       self$plotFunction <- get(nameOfplotFunction)
 
@@ -58,7 +58,7 @@ RmdPlotManager <- R6::R6Class( # nolint
         self$validateConfigTableFunction <- get(nameOfValidationFunction)
       } else {
         # otherwise use default function
-        message("No specific plotconfiguration validation function available.")
+        message(messages$infoRmdPlotManagerL1())
         self$validateConfigTableFunction <- validateConfigTableForPlots
       }
 
@@ -80,7 +80,7 @@ RmdPlotManager <- R6::R6Class( # nolint
 
       checkmate::assertPathForOutput(fileName, extension = "Rmd", overwrite = TRUE)
       if (basename(fileName) != fileName) {
-        stop("Please insert fileName as basename, File will be saved in folder defined by class object")
+        stop(messages$errorRmdPlotManagerL1XX())
       }
 
       private$.closeFigureKeys()
@@ -143,7 +143,7 @@ RmdPlotManager <- R6::R6Class( # nolint
         obj <- plotList[[key]]
         caption <- attr(obj, "caption")
         if (is.null(caption)) {
-          warning(paste("Caption is missing for key", caption))
+          warning(messages$warningRmdPlotManagerL2())
           caption <- "Missing"
         }
 
@@ -399,7 +399,7 @@ RmdPlotManager <- R6::R6Class( # nolint
     # only export if key is unique
     .checkKeyIsUnique = function(key) {
       if (key %in% private$.listOfALLKeys) {
-        stop(paste0('key "', key, '" was already added. The figure and table keys must be unique'))
+        stop(messages$errorRmdPlotManagerL3())
       }
     },
     # adjust height if necessary

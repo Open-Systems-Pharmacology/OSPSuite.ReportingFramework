@@ -42,7 +42,7 @@ readObservedDataByDictionary <- function(
     ]
   )
   if (nrow(dataList) == 0) {
-    stop(paste("no datafiles defined for", dataClassType))
+    stop(messages$errorutilitiesdataL1())
   }
 
   if (!is.null(fileIds)) {
@@ -148,13 +148,7 @@ readObservedDataByDictionary <- function(
           do.call(call$func, call$args)
         },
         error = function(err) {
-          warning(paste(
-            "Error during execution of",
-            call$functionCall,
-            "\nMessage:",
-            conditionMessage(err),
-            "\nAre all relevant xlsx files closed? Retry manually."
-          ))
+          warning(messages$warningutilitiesdataL1())
         }
       )
     }
@@ -217,13 +211,7 @@ validateObservedData <- function(dataDT, dataClassType) {
       }
     ))]
   if (!all(names(dataDT) %in% columnsWithAttributes)) {
-    warning(
-      paste0(
-        'Some data columns have no attribute: "',
-        paste(setdiff(names(dataDT), columnsWithAttributes), collapse = '", "'),
-        '"'
-      )
-    )
+    warning(messages$warningutilitiesdataL3())
   }
 
   # Check data validity
@@ -233,12 +221,7 @@ validateObservedData <- function(dataDT, dataClassType) {
       names(dataDT)
     )
   if (any(duplicated(dataDT, by = colIdentifier))) {
-    stop(
-      paste(
-        "Data must be unique in columns",
-        paste(colIdentifier, collapse = ", ")
-      )
-    )
+    stop(messages$errorutilitiesdataL3())
   }
   for (col in setdiff(
     names(dataDT),
@@ -254,7 +237,7 @@ validateObservedData <- function(dataDT, dataClassType) {
     )
   )) {
     if (any(is.na(dataDT[[col]]) | dataDT[[col]] == "")) {
-      warning(paste("Data contains NAs or empty values in column", col))
+      warning(messages$warningutilitiesdataL3X())
     }
   }
 
@@ -287,11 +270,7 @@ validateObservedData <- function(dataDT, dataClassType) {
         }),
         collapse = " | "
       )
-      warning(paste(
-        "Ambiguous units:",
-        summaryString,
-        "\nPlease check if this acceptable, e.g. pkParameter as ratio and absolute values."
-      ))
+      warning(messages$warningutilitiesdataL3XX())
     }
   }
 
@@ -417,13 +396,7 @@ readDataDictionary <- function(dictionaryFile, sheet, data, dataClass) {
 
   tmp <- dict[is.na(sourceColumn) & is.na(filter), ]
   if (nrow(tmp) > 0) {
-    stop(paste0(
-      'Either sourceColumn or Filter on sourceColumn has to be filled in dictionary "',
-      sheet,
-      '" for targetColumn(s) "',
-      paste(tmp$targetColumn, collapse = '", "'),
-      '"'
-    ))
+    stop(messages$errorutilitiesdataL4())
   }
 
   checkmate::assertNames(
@@ -467,18 +440,8 @@ convertDataByDictionary <- function(data, dataFilter, dict, dictionaryName) {
           ]
         },
         error = function(err) {
-          warning(paste0(
-            "tpDictionary: '",
-            dictionaryName,
-            "'; targetColumn: '",
-            myFilter$targetColumn,
-            "'; filter: '",
-            myFilter$filter,
-            "'; filterValue: '",
-            myFilter$filterValue,
-            "'"
-          ))
-          stop(conditionMessage(err))
+          warning(messages$warningutilitiesdataL4())
+          stop(messages$errorutilitiesdataL4X())
         }
       )
     }
@@ -555,7 +518,7 @@ convertBiometrics <- function(data, dict, dictionaryName) {
     ]
 
     if (any(data$gender == "UNKNOWN")) {
-      warning(paste("Unknown gender in data set"))
+      warning(messages$warningutilitiesdataL4X())
     }
   }
 
@@ -845,32 +808,20 @@ createDataSets <- function(groupData) {
   )
 
   if (dplyr::n_distinct(groupData$yUnit) > 1) {
-    stop(paste(
-      "DataDT to combinedData: y Unit for dataset",
-      groupName,
-      "is not unique"
-    ))
+    stop(messages$errorutilitiesdataL4XX())
   }
   dataSet$yDimension <- ospsuite::getDimensionForUnit(groupData$yUnit[1])
   dataSet$yUnit <- groupData$yUnit[1]
 
   if (dplyr::n_distinct(groupData$xUnit) > 1) {
-    stop(paste(
-      "DataDT to combinedData: x Unit for dataset",
-      groupName,
-      "is not unique"
-    ))
+    stop(messages$errorutilitiesdataL4XXX())
   }
   dataSet$xUnit <- groupData$xUnit[1]
 
   if (any(!is.na(groupData$lloq))) {
     lLOQ <- groupData[!is.na(lloq)]$lloq
     if (dplyr::n_distinct(lLOQ) > 1) {
-      warning(paste(
-        "DataDT to combinedData: More than one LLOQ for dataset",
-        groupName,
-        "is set to minimal"
-      ))
+      warning(messages$warningutilitiesdataL4XX())
     }
     lLOQ <- min(lLOQ)
     dataSet$LLOQ <- lLOQ
@@ -942,7 +893,7 @@ convertDataCombinedToDataTable <- function(datacombined) {
       !("individualId" %in% names(dataDT))
   ) {
     # nolint indentation_linter
-    stop("IndividualData needs meta data individualId")
+    stop(messages$errorutilitiesdataL4XXXX())
   }
 }
 
@@ -1080,7 +1031,7 @@ prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
   groups <- getIndividualDataGroups(dataObserved, groups)
 
   if (length(groups) == 0) {
-    warning("No groups available for aggregation")
+    warning(messages$warningutilitiesdataL4XXX())
     return(NULL)
   }
 
@@ -1116,10 +1067,7 @@ checkLLOQ <- function(
     aggregationFlag != "Custom" &
       (!is.null(lloqCheckColumns2of3) | !is.null(lloqCheckColumns1of2))
   ) {
-    warning(paste(
-      "input variable lloqCheckColumns2of3 and lloqCheckColumns1of2 are not used for aggregationFlag",
-      aggregationFlag
-    ))
+    warning(messages$warningutilitiesdataL4XXXX())
     lloqCheckColumns2of3 <- NULL
     lloqCheckColumns1of2 <- NULL
   }
@@ -1130,9 +1078,7 @@ checkLLOQ <- function(
     lloqCheckColumns1of2 <- c("yValues", "yMin", "yMax")
   } else {
     if (is.null(lloqCheckColumns2of3) & is.null(lloqCheckColumns1of2)) {
-      stop(
-        "For custom aggregation please provide lloqCheckColumns2of3 or lloqCheckColumns1of2"
-      )
+      stop(messages$errorutilitiesdataL4XXXXX())
     }
   }
 
@@ -1273,7 +1219,7 @@ convertIdentifierColumns <- function(dt, identifierCols) {
   for (col in identifierCols) {
     dt[[col]] <- as.character(dt[[col]])
     if (any(grepl(",", dt[[col]]))) {
-      warning(paste("Warning: Column", col, "commas were replaced by _"))
+      warning(messages$warningutilitiesdataL4XXXXX())
     }
     dt[[col]] <- gsub(",", "_", dt[[col]])
   }
@@ -1311,16 +1257,7 @@ getIndividualDataGroups <- function(dataObserved, groups, minN = 2) {
   } else {
     unsuitableGroups <- setdiff(groups, groupsAvailable)
     if (length(unsuitableGroups) > 0) {
-      warning(paste(
-        "Groups",
-        paste(unsuitableGroups, collapse = ", "),
-        "are not suited for grouping.",
-        "Check if they are available in data, have more then",
-        minN,
-        "Individuals or
-                    if they are have data class",
-        DATACLASS$tpIndividual
-      ))
+      warning(messages$warningutilitiesdataL4XXXXXX())
     }
     groups <- intersect(groups, groupsAvailable)
   }

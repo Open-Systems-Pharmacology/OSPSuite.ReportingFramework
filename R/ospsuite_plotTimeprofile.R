@@ -529,7 +529,7 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
   }
 
   if (nrow(plotData) == 0) {
-    stop("No data for this plot available")
+    stop(messages$errorospsuiteplotTimeprofileL1())
   }
 
   return(plotData)
@@ -560,14 +560,14 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
 #' @keywords internal
 .constructMetDataForTimeProfile <- function(plotData) {
   xUnit <- unique(plotData$xUnit)
-  if (length(xUnit) > 1) stop("x Unit ambiguous")
+  if (length(xUnit) > 1) stop(messages$errorospsuiteplotTimeprofileL1X())
   if ("xDimension" %in% names(plotData)) {
     xDimension <- unique(plotData$xDimension)
   } else {
     xDimension <- ospsuite::getDimensionForUnit(xUnit)
   }
   yUnit <- unique(plotData$yUnit)
-  if (length(yUnit) > 2) stop("y Unit ambiguous")
+  if (length(yUnit) > 2) stop(messages$errorospsuiteplotTimeprofileL1XX())
   if ("yDimension" %in% names(plotData)) {
     yDimension <- unique(plotData$yDimension)
   } else {
@@ -625,7 +625,7 @@ addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
     )
 
     if (length(unique(plotData[!is.na(yErrorType)][["yErrorType"]])) > 1) {
-      stop("Please do not mix different error Types in one plot")
+      stop(messages$errorospsuiteplotTimeprofileL1XXX())
     }
 
     if (any(plotData[["yErrorType"]] == ospsuite::DataErrorType$ArithmeticStdDev, na.rm = TRUE)) {

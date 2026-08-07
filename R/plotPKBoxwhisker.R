@@ -128,7 +128,7 @@ generateBoxwhiskerPlotForPlotType <- function(
     asRatio = asRatio
   )
   if (nrow(plotData) == 0) {
-    warning(paste("No data for", onePlotConfig$plotName[1]))
+    warning(messages$warningplotPKBoxwhiskerL1())
     return(list())
   }
 
@@ -567,10 +567,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   tmp <- tmp[, c("plotName", "scenario", "outputPathId", "pkParameter")]
   if (any(duplicated(tmp))) {
     tmp <- duplicated(tmp)
-    stop(paste(
-      "Per plot only one combination of scenario, outputPathId and pkParameter is allowed. Please check plot",
-      paste(tmp$plotName %>% unique(), collapse = ", ")
-    ))
+    stop(messages$errorplotPKBoxwhiskerL1())
   }
 
   validateColorLegend(dt = configTablePlots[!is.na(referenceScenario)])
@@ -581,7 +578,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
     unique()
   if (nrow(tmp) > 0) {
     print(tmp)
-    stop("Please select either Plot_Ratio or Plot_Absolute!")
+    stop(messages$errorplotPKBoxwhiskerL1X())
   }
 
   # check if reference Scenarios are there
@@ -639,9 +636,7 @@ validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
   configTablePlots <- configTablePlots[populationId != populationIdReference]
   if (nrow(configTablePlots) > 0) {
     print(configTablePlots)
-    stop(
-      "Ratio plots are only available if scenario and referenceScenario is based on the same population"
-    )
+    stop(messages$errorplotPKBoxwhiskerL1XX())
   }
 }
 #' Validate Existence of Reference for Ratio Plots
@@ -676,10 +671,7 @@ validateExistenceOfReferenceForRatio <- function(
     by = plotName
   ]
   if (any(tmp$isValid == FALSE)) {
-    stop(paste(
-      "For ratio plots at lease one reference scenario has to be selected. Check PlotName",
-      paste(tmp[isValid == FALSE, ]$plotName, collapse = ", ")
-    ))
+    stop(messages$errorplotPKBoxwhiskerL1XXX())
   }
 
   return(invisible())

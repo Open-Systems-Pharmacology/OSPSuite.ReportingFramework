@@ -27,10 +27,7 @@ xlsxAddSheet <- function(wb, sheetName, dt) {
   checkmate::assertDataTable(dt, null.ok = FALSE)
 
   if (sheetName %in% wb$sheet_names) {
-    warning(paste(
-      sheetName,
-      "already exists. Existing content will be cleared."
-    ))
+    warning(messages$warningutilitiesxlsxL1())
     invisible(xlsxReadData(wb, sheetName))
   } else {
     openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
@@ -119,7 +116,7 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 
   # Check if the clonedSheet exists in the workbook
   if (!(clonedSheet %in% wb$sheet_names)) {
-    stop(paste("Sheet", clonedSheet, "does not exist in the workbook."))
+    stop(messages$errorutilitiesxlsxL1())
   }
   if (!(sheetName %in% wb$sheet_names)) {
     openxlsx::cloneWorksheet(
@@ -242,7 +239,7 @@ xlsxAddDataUsingTemplate <- function(
     )
 
     if (!file.exists(templatePath)) {
-      stop(paste("Template file", templatePath, "does not exist."))
+      stop(messages$errorutilitiesxlsxL1X())
     }
     templateConfiguration <-
       xlsxReadData(
@@ -285,7 +282,7 @@ xlsxAddDataUsingTemplate <- function(
 #' @keywords internal
 checkSheetExists <- function(wb, sheetName) {
   if (!(sheetName %in% wb$sheet_names)) {
-    stop(paste("Sheet", sheetName, "does not exist."))
+    stop(messages$errorutilitiesxlsxL1XX())
   }
 }
 
@@ -333,11 +330,7 @@ alignColumnNames <- function(dt, existingData) {
       if (length(ix) == 1) {
         newName <- names(existingData)[ix]
       } else if (length(ix) > 1) {
-        stop(paste(
-          "ambiguous header names in sheet",
-          existingData,
-          paste(names(existingData)[ix], collapse = ",")
-        ))
+        stop(messages$errorutilitiesxlsxL1XXX())
       } else {
         newName <- x
       }
@@ -676,9 +669,7 @@ synchronizeScenariosOutputsWithPlots <- function(
     ]) >
       0
   ) {
-    warning(
-      "Output definition in Scenario.xlsx and Plot.xlsx is inconsistent. Please synchronize manually"
-    )
+    warning(messages$warningutilitiesxlsxL1X())
   }
 
   # Synchronize output paths based on availability

@@ -376,7 +376,7 @@ addFiguresAndTables <- function(keyList,
         digitsOfSignificance = 3
       )
     } else {
-      stop(paste("No file exists for key. There should be either", figureFile, "or", tableCsv))
+      stop(messages$errorutilitiesmarkdownL4())
     }
   }
 
@@ -429,13 +429,13 @@ mergeRmds <- function(
 
   # Check for any other extensions the .Rmd
   if (any(grepl("\\.[^.Rmd]*$", sourceRmds))) {
-    stop("Error: One or more elements of sourceRmds have an extension other than .Rmd.")
+    stop(messages$errorutilitiesmarkdownL4X())
   } else {
     # Add.Rmd extension to elements that don't have it
     sourceRmds <- ifelse(grepl("\\.Rmd$", sourceRmds), sourceRmds, paste0(sourceRmds, ".Rmd"))
   }
   if (any(grepl("\\.[^.Rmd]*$", newName))) {
-    stop("Error: NewName has an extension other than .Rmd.")
+    stop(messages$errorutilitiesmarkdownL4XX())
   } else {
     # Add.Rmd extension to elements that don't have it
     newName <- ifelse(grepl("\\.Rmd$", newName), newName, paste0(newName, ".Rmd"))

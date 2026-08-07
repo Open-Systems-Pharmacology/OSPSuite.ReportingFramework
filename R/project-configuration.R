@@ -65,7 +65,7 @@
     eval(substitute(
       function(value) {
         if (!missing(value)) {
-          stop(paste0(FIELD, " is readonly"))
+          stop(messages$errorprojectconfigurationL1())
         }
         self$baseProjectconfiguration[[FIELD]]
       },
@@ -164,7 +164,7 @@ ProjectConfigurationRF <- # nolint object_name_linter
         #'   package stored in the project configuration. Read-only.
         ospsuiteReportingFrameworkVersion = function(value) {
           if (!missing(value)) {
-            stop("ospsuiteReportingFrameworkVersion is readonly")
+            stop(messages$errorprojectconfigurationL1X())
           }
           private$.reportingFrameworkVersion
         }
@@ -315,7 +315,7 @@ ProjectConfigurationRF <- # nolint object_name_linter
             choices = qs
           )
           if (out == 0L || qs[[out]] != "Yes") {
-            stop("Aborted by user.")
+            stop(messages$errorprojectconfigurationL1XX())
           }
         } else {
           stop(

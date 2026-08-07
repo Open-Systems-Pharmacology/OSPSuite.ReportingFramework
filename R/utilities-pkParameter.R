@@ -40,7 +40,7 @@ calculatePKParameterForScenarios <- function(
   )
   dtOutputPaths <- getOutputPathIds(projectConfiguration$addOns$reportsFile)
   if (nrow(dtOutputPaths) == 0) {
-    stop("Please define ouputPaths in plot configuration xlsx")
+    stop(messages$errorutilitiespkParameterL1())
   }
 
   for (sc in names(scenarioResults)) {
@@ -150,10 +150,7 @@ calculatePKParameterForScenarios <- function(
     unique = TRUE
   )
   if (any(is.na(dtUserdefPKParameter[["display Unit"]]))) {
-    stop(
-      "empty string is not possible as displayUnit in the sheet 'Userdef PK Parameter',
-    workaround: use % and set displayUnit in sheet derived from template-sheet to empty string"
-    )
+    stop(messages$errorutilitiespkParameterL1X())
   }
 
   return(dtUserdefPKParameter)
@@ -166,18 +163,10 @@ calculatePKParameterForScenarios <- function(
 #' @noRd
 .validateUserDefinedParameterIndex <- function(iRow, userPar) {
   if (length(iRow) == 0) {
-    stop(paste(
-      "pkParameter",
-      userPar,
-      'is not defined in "Userdef PK Parameter" sheet.'
-    ))
+    stop(messages$errorutilitiespkParameterL1XX())
   }
   if (length(iRow) > 1) {
-    stop(paste(
-      "pkParameter",
-      userPar,
-      'is not unique in "Userdef PK Parameter" sheet.'
-    ))
+    stop(messages$errorutilitiespkParameterL1XXX())
   }
 
   return(invisible(NULL))
@@ -268,7 +257,7 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
 
   dtOutputPaths <- getOutputPathIds(projectConfiguration$addOns$reportsFile)
   if (nrow(dtOutputPaths) == 0) {
-    stop("Please define ouputPaths in plot configuration xlsx")
+    stop(messages$errorutilitiespkParameterL1XXXX())
   }
   # Load or calculate PK analyses for all scenarios
   pkAnalysesList <- lapply(names(scenarioListOrResult), function(sc) {
@@ -403,12 +392,7 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
 
   fileName <- file.path(outputFolder, paste0(scenarioName, ".csv"))
   if (!file.exists(fileName)) {
-    stop(paste(
-      "PK Parameter for",
-      scenarioName,
-      "is not calculated!",
-      "Use function calculatePKParameterForCalculation to generate the result"
-    ))
+    stop(messages$errorutilitiespkParameterL1XXXXX())
   }
 
   writeToLog(
@@ -574,7 +558,7 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
     )
 
   if (nrow(mergedData) == 0) {
-    stop(paste("no PK-Parameter available for", onePlotConfig$plotName[1]))
+    stop(messages$errorutilitiespkParameterL1XXXXXX())
   }
 
   if (asRatio) {
@@ -700,9 +684,7 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
     unique()
 
   if (any(duplicated(tmp[, c("outputPathId", "pkParameter")]))) {
-    stop(
-      "Please check pkParameterDT. It seems that displayUnitPKParameter is not consistent for outputPathId and pkParameter"
-    )
+    stop(messages$errorutilitiespkParameterL1XXXXXXX())
   }
 
   return(invisible())

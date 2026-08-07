@@ -1471,10 +1471,7 @@ getRatioMode <- function(onePlotConfig, pkParameterDT, asRatio) {
     ratioMode <- "ratioOfPopulation"
   } else {
     print(dtPop)
-    stop(
-      "Within one plot you must either compare always scenarios with the same base population or
-             always scenarios with different base populations"
-    )
+    stop(messages$errorplotPKForestL1())
   }
 
   return(ratioMode)
@@ -1586,9 +1583,7 @@ validatePKForestConfigTable <- function(configTable, pkParameterDT, ...) {
   if (!is.null(dataObservedPK)) {
     checkmate::assertDataTable(dataObservedPK)
     if (!DATACLASS$pkAggregated %in% unique(dataObservedPK$dataClass)) {
-      stop(
-        "Please provide aggregated observed PK-Parameter data for this kind of plot "
-      )
+      stop(messages$errorplotPKForestL1X())
     }
   }
 
