@@ -1730,7 +1730,7 @@ addDefaultConfigForPKForestPlots <- function(
   scenarioName <- outputPathId <- outputPathIds <- pkParameter <- pkParameters <- NULL
 
   # this function stops in valid runs
-  stopHelperFunction()
+  .stopHelperFunction()
   wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$reportsFile)
 
   scenarios <- getScenarioDefinitions(projectConfiguration$scenariosFile)

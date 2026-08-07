@@ -18,7 +18,12 @@ options(knitr.kable.NA = '')
 
 # Set this to TRUE if you want to execute the workflow as a final valid run.
 # (see ?setWorkflowOptions)
-setWorkflowOptions(isValidRun = FALSE)
+# If isValidRun is NULL (default), setWorkflowOptions() derives the value
+# from the QCpassed environment variable.
+# Example:
+#   Sys.setenv(QCpassed = "TRUE")  # valid run
+#   Sys.setenv(QCpassed = "FALSE") # exploratory run
+setWorkflowOptions()
 
 # Setup project structure -------------------------------------------------
 # Create project directory and initialize the structure

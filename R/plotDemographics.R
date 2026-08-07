@@ -1388,7 +1388,7 @@ addDefaultDemographicPlots <- function(
   ID <- NULL # nolint
 
   # this function stops in valid runs
-  stopHelperFunction()
+  .stopHelperFunction()
   wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$reportsFile)
 
   scenarios <- getScenarioDefinitions(projectConfiguration$scenariosFile)

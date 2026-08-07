@@ -243,7 +243,7 @@ plotTimeProfiles <- function(
 
   if (checkForUnusedData) {
     # this is a QC functionality which should not done in a valid Run
-    stopHelperFunction()
+    .stopHelperFunction()
 
     if (plotData$hasObservedData()) {
       plotList[["unusedDataRows"]] <-
@@ -1342,7 +1342,7 @@ addDefaultConfigForTimeProfilePlots <- function(
   scenarioName <- NULL
 
   # this function stops in valid runs
-  stopHelperFunction()
+  .stopHelperFunction()
 
   # use data.table format for dataObserved
   if (!is.null(dataObserved)) {

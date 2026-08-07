@@ -23,11 +23,16 @@
 #'
 #' @param isValidRun A logical value indicating if the run is valid. If TRUE,
 #'        options are set for a valid run; if FALSE, options are set for an invalid run.
+#'        If NULL, the value is derived from the `QCpassed` environment variable.
+#' @return Returns invisibly.
 #'
 #' @export
 #' @family project initialization
 setWorkflowOptions <- function(isValidRun = NULL) {
-  checkmate::assertLogical(isValidRun)
+  if (is.null(isValidRun)) {
+    isValidRun <- getQCpassedEnvironmentVariable()
+  }
+  checkmate::assertLogical(isValidRun, len = 1)
 
   # set options to enable watermarks
   options(ospsuite.plots.watermark_enabled = !isValidRun)
@@ -37,7 +42,6 @@ setWorkflowOptions <- function(isValidRun = NULL) {
 
   # stop helper functions
   options(OSPSuite.RF.stopHelperFunction = isValidRun)
-
 
   return(invisible())
 }
@@ -63,12 +67,16 @@ setWorkflowOptions <- function(isValidRun = NULL) {
 #' getQCpassedEnvironmentVariable() # Should return FALSE and issue a warning
 #' }
 getQCpassedEnvironmentVariable <- function() {
-  qCpassed <- suppressWarnings(as.logical(as.double(Sys.getenv(x = "QCpassed"))))
+  qCpassed <- suppressWarnings(as.logical(as.double(Sys.getenv(
+    x = "QCpassed"
+  ))))
   # check if QCpassed was set as TRUE or FALSE
-  if (is.na(qCpassed)) qCpassed <- as.logical(Sys.getenv(x = "QCpassed"))
+  if (is.na(qCpassed)) {
+    qCpassed <- as.logical(Sys.getenv(x = "QCpassed"))
+  }
   # add warning message for unset or corrupt variable, set to default to avoid further messages
   if (is.na(qCpassed)) {
-    warning(messages$warningutilitiesworkflowL1())
+    warning(messages$warningutilitiesworkflowL1()) # nolint: object_usage_linter
     Sys.setenv(QCpassed = 0)
     qCpassed <- FALSE
   }
@@ -88,17 +96,18 @@ getQCpassedEnvironmentVariable <- function() {
 #'
 #' Stops execution with an error message if called during a valid run or if the option is not set.
 #'
+#' @return Returns invisibly.
 #' @keywords internal
-stopHelperFunction <- function() {
+#' @noRd
+.stopHelperFunction <- function() {
   stopHelperFunction <- getOption("OSPSuite.RF.stopHelperFunction")
 
   if (is.null(stopHelperFunction)) {
-    stop(messages$errorutilitiesworkflowL1())
+    stop(messages$errorutilitiesworkflowL1()) # nolint: object_usage_linter
   }
 
   if (stopHelperFunction) {
-    callingFunction <- as.character(sys.call(-1)) # Get the calling function
-    stop(messages$errorutilitiesworkflowL1X())
+    stop(messages$errorutilitiesworkflowL1X()) # nolint: object_usage_linter
   }
 
   return(invisible())
