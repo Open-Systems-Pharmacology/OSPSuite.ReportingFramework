@@ -10,19 +10,30 @@
 #'
 #' @return The modified project configuration object.
 #' @export
-addSensitivityTable <- function(projectConfiguration, scenarioList = NULL, scenarioName, sheetName = scenarioName) {
+addSensitivityTable <- function(
+  projectConfiguration,
+  scenarioList = NULL,
+  scenarioName,
+  sheetName = scenarioName
+) {
   invisible(projectConfiguration$addAddOnFileToConfiguration(
     property = "sensitivityFile",
     value = "SensitivityParameter.xlsx",
     description = "Configuration file for Sensitivity",
-    templatePath = system.file("templates", "SensitivityParameter.xlsx", package = "ospsuite.reportingframework")
+    templatePath = system.file(
+      "templates",
+      "SensitivityParameter.xlsx",
+      package = "ospsuite.reportingframework"
+    )
   ))
 
   if (!is.null(scenarioList)) {
     checkmate::assertChoice(scenarioName, choices = names(scenarioList))
     checkmate::assertString(sheetName, max.chars = 31)
 
-    parameterPaths <- ospsuite::potentialVariableParameterPathsFor(scenarioList[[scenarioName]]$simulation)
+    parameterPaths <- ospsuite::potentialVariableParameterPathsFor(
+      scenarioList[[scenarioName]]$simulation
+    )
 
     dt <- data.table(
       parameter = gsub("\\|", " ", parameterPaths),
@@ -35,7 +46,11 @@ addSensitivityTable <- function(projectConfiguration, scenarioList = NULL, scena
       sheetName = sheetName,
       dtNewData = dt
     )
-    openxlsx::saveWorkbook(wb, projectConfiguration$addOns$sensitivityFile, overwrite = TRUE)
+    openxlsx::saveWorkbook(
+      wb,
+      projectConfiguration$addOns$sensitivityFile,
+      overwrite = TRUE
+    )
   }
 
   return(projectConfiguration)
@@ -56,12 +71,16 @@ addSensitivityTable <- function(projectConfiguration, scenarioList = NULL, scena
 #' @return NULL
 #' @export
 runSensitivityAnalysisForScenarios <-
-  function(projectConfiguration,
-           scenarioList,
-           scenarioNames = NULL,
-           sensitivitysheet,
-           sensitivityAnalysisRunOptions = ospsuite::SensitivityAnalysisRunOptions$new(showProgress = TRUE),
-           overwrite = TRUE) {
+  function(
+    projectConfiguration,
+    scenarioList,
+    scenarioNames = NULL,
+    sensitivitysheet,
+    sensitivityAnalysisRunOptions = ospsuite::SensitivityAnalysisRunOptions$new(
+      showProgress = TRUE
+    ),
+    overwrite = TRUE
+  ) {
     # initialize variable to avoid messages
     pKParameter <- NULL
 
@@ -71,19 +90,34 @@ runSensitivityAnalysisForScenarios <-
       )
     }
 
-    outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$sensitivityResults)
-    if (!dir.exists(outputFolder)) dir.create(outputFolder)
+    outputFolder <- file.path(
+      projectConfiguration$outputFolder,
+      EXPORTDIR$sensitivityResults
+    )
+    if (!dir.exists(outputFolder)) {
+      dir.create(outputFolder)
+    }
 
     dtScenarios <- getScenarioDefinitions(projectConfiguration$scenariosFile)
 
-    sensitivityParameterDt <- xlsxReadData(projectConfiguration$addOns$sensitivityFile, sheetName = sensitivitysheet)
+    sensitivityParameterDt <- xlsxReadData(
+      projectConfiguration$addOns$sensitivityFile,
+      sheetName = sensitivitysheet
+    )
 
     for (scenarioName in scenarioNames) {
-      if (!file.exists(file.path(outputFolder, sensitivityAnalyisName(scenarioName, sensitivitysheet))) |
-        overwrite) {
-        pkParameterSheets <- dtScenarios[scenarioName == scenarioName & !is.na(pKParameter)]$pKParameter
+      if (
+        !file.exists(file.path(
+          outputFolder,
+          sensitivityAnalyisName(scenarioName, sensitivitysheet)
+        )) |
+          overwrite
+      ) {
+        pkParameterSheets <- dtScenarios[
+          scenarioName == scenarioName & !is.na(pKParameter)
+        ]$pKParameter
         if (length(pkParameterSheets) > 0) {
-          initializeParametersOfSheets(projectConfiguration, pkParameterSheets)
+          .initializeParametersOfSheets(projectConfiguration, pkParameterSheets)
 
           sensitivityAnalysis <- ospsuite::SensitivityAnalysis$new(
             simulation = scenarioList[[scenarioName]]$simulation,
@@ -98,7 +132,10 @@ runSensitivityAnalysisForScenarios <-
 
           ospsuite::exportSensitivityAnalysisResultsToCSV(
             results = sensitivityResults,
-            filePath = file.path(outputFolder, sensitivityAnalyisName(scenarioName, sensitivitysheet))
+            filePath = file.path(
+              outputFolder,
+              sensitivityAnalyisName(scenarioName, sensitivitysheet)
+            )
           )
         }
       }

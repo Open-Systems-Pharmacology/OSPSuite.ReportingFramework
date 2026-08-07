@@ -69,7 +69,7 @@ upgradeToReportingFramework <- function(
   }
   .applyTemplateAddonsSheet(configWb, templateConfigurationWb)
   openxlsx::saveWorkbook(configWb, configXlsxDest, overwrite = TRUE)
-  stampReportingFrameworkVersion(path = configXlsxDest) # nolint: object_usage_linter.
+  .stampReportingFrameworkVersion(path = configXlsxDest) # nolint: object_usage_linter.
 
   oldConfigurationFolder <- .resolveConfigurationFolder(
     dtConfigurationOriginal,
@@ -218,7 +218,7 @@ createProjectConfiguration <- function(
       call. = FALSE
     )
   }
-  configXlsxDest
+  return(configXlsxDest)
 }
 
 #' Check if project is already a ReportingFramework project
@@ -242,12 +242,14 @@ createProjectConfiguration <- function(
   }
 
   addOnProperties <- trimws(as.character(dtAddOnsExisting$Property))
-  any(
+  isReportingFramework <- any(
     addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY & # nolint: object_usage_linter.
       !is.na(dtAddOnsExisting$Value) &
       nzchar(as.character(dtAddOnsExisting$Value)),
     na.rm = TRUE
   )
+
+  return(isReportingFramework)
 }
 
 #' Get single non-addons configuration sheet name
@@ -264,7 +266,7 @@ createProjectConfiguration <- function(
       call. = FALSE
     )
   }
-  configSheetName[[1]]
+  return(configSheetName[[1]])
 }
 
 #' Ensure configuration sheet is named esqlabsR
@@ -282,7 +284,7 @@ createProjectConfiguration <- function(
     )
     openxlsx::removeWorksheet(wb = configWb, sheet = configSheetName)
   }
-  invisible(NULL)
+  return(invisible(NULL))
 }
 
 #' Resolve template esqlabsR sheet name
@@ -294,7 +296,8 @@ createProjectConfiguration <- function(
   if ("esqlabsR" %in% templateConfigurationWb$sheet_names) {
     return("esqlabsR")
   }
-  setdiff(templateConfigurationWb$sheet_names, "addons")[[1]]
+
+  return(setdiff(templateConfigurationWb$sheet_names, "addons")[[1]])
 }
 
 #' Read configuration sheet without header conversion
@@ -304,12 +307,12 @@ createProjectConfiguration <- function(
 #' @keywords internal
 #' @noRd
 .readConfigSheet <- function(wb, sheetName) {
-  xlsxReadData(
+  return(xlsxReadData(
     wb = wb,
     sheetName = sheetName,
     convertHeaders = FALSE,
     emptyAsNA = FALSE
-  )
+  ))
 }
 
 #' Normalize configuration value
@@ -321,7 +324,8 @@ createProjectConfiguration <- function(
   if (length(x) == 0 || is.na(x[[1]])) {
     return("")
   }
-  trimws(as.character(x[[1]]))
+
+  return(trimws(as.character(x[[1]])))
 }
 
 #' Resolve file path from configuration row
@@ -344,7 +348,36 @@ createProjectConfiguration <- function(
   }
 
   configFolder <- .resolveConfigurationFolder(dtConfig, configurationDirectory)
-  fs::path_abs(fileValue, start = configFolder)
+  return(fs::path_abs(fileValue, start = configFolder))
+}
+
+#' Determine whether configuration file copy can be skipped
+#' @param oldFile Resolved source file path.
+#' @param newFile Resolved destination file path.
+#' @return `TRUE` if no copy should be attempted.
+#' @keywords internal
+#' @noRd
+.skipConfigurationFileCopy <- function(oldFile, newFile) {
+  return(
+    is.na(oldFile) ||
+      is.na(newFile) ||
+      identical(oldFile, newFile) ||
+      !file.exists(oldFile)
+  )
+}
+
+#' Ensure the destination directory for a copied file exists
+#' @param filePath Destination file path.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.ensureDestinationDirectory <- function(filePath) {
+  destinationDirectory <- dirname(filePath)
+  if (!dir.exists(destinationDirectory)) {
+    dir.create(destinationDirectory, recursive = TRUE, showWarnings = FALSE)
+  }
+
+  return(invisible(NULL))
 }
 
 #' Copy a single filesystem entry to its target path
@@ -403,6 +436,28 @@ createProjectConfiguration <- function(
 }
 
 #' Copy individual configuration files listed under *File properties
+#' @param oldFile Absolute path to the original file.
+#' @param newFile Absolute path to the target file.
+#' @param overwrite Logical flag controlling overwrite behavior.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @details Copy preconditions and destination directory preparation are split
+#'   into helper functions so this routine only decides whether a copy should be
+#'   attempted and performs it.
+#' @noRd
+.copyConfigurationFile <- function(oldFile, newFile, overwrite) {
+  if (.skipConfigurationFileCopy(oldFile, newFile)) {
+    return(invisible(NULL))
+  }
+
+  .ensureDestinationDirectory(newFile)
+  if (!file.exists(newFile) || overwrite) {
+    file.copy(from = oldFile, to = newFile, overwrite = overwrite)
+  }
+  return(invisible(NULL))
+}
+
+#' Transfer configuration files referenced by shared *File properties
 #' @param dtConfigOld Original esqlabsR configuration table.
 #' @param dtConfigNew Updated RF configuration table.
 #' @param configurationDirectory Base directory of the configuration workbook.
@@ -410,23 +465,6 @@ createProjectConfiguration <- function(
 #' @return Invisible `NULL`.
 #' @keywords internal
 #' @noRd
-.copyConfigurationFile <- function(oldFile, newFile, overwrite) {
-  if (is.na(oldFile) || is.na(newFile)) {
-    return(invisible(NULL))
-  }
-  if (identical(oldFile, newFile) || !file.exists(oldFile)) {
-    return(invisible(NULL))
-  }
-  newDir <- dirname(newFile)
-  if (!dir.exists(newDir)) {
-    dir.create(newDir, recursive = TRUE, showWarnings = FALSE)
-  }
-  if (!file.exists(newFile) || overwrite) {
-    file.copy(from = oldFile, to = newFile, overwrite = overwrite)
-  }
-  return(invisible(NULL))
-}
-
 .transferConfigurationFilesByProperty <- function(
   dtConfigOld,
   dtConfigNew,
@@ -530,12 +568,16 @@ createProjectConfiguration <- function(
     unlink(dirsToDelete, recursive = TRUE, force = TRUE)
   }
 
-  invisible(NULL)
+  return(invisible(NULL))
 }
 
 #' Apply template values to esqlabsR sheet
 #' @param configWb Workbook object for project configuration.
 #' @param templateConfigurationWb Workbook object for template configuration.
+#' @param configurationDirectory Base directory of the configuration workbook.
+#' @param overwrite Logical flag controlling overwrite behavior.
+#' @param transferInitializedFiles Logical flag indicating whether initialized
+#'   files should be copied into the RF layout.
 #' @return Updated `esqlabsR` configuration table.
 #' @keywords internal
 #' @noRd
@@ -611,7 +653,7 @@ createProjectConfiguration <- function(
   }
 
   xlsxWriteData(wb = configWb, sheetName = "esqlabsR", dt = dtConfiguration)
-  dtConfiguration
+  return(dtConfiguration)
 }
 
 #' Apply template addons sheet
@@ -663,7 +705,7 @@ createProjectConfiguration <- function(
   }
 
   openxlsx::writeData(wb = configWb, sheet = "addons", x = dtTemplateAddOns)
-  invisible(NULL)
+  return(invisible(NULL))
 }
 
 #' Resolve configuration folder from configuration table
@@ -680,7 +722,8 @@ createProjectConfiguration <- function(
   if (!nzchar(configFolderValue)) {
     return(configurationDirectory)
   }
-  fs::path_abs(configFolderValue, start = configurationDirectory)
+
+  return(fs::path_abs(configFolderValue, start = configurationDirectory))
 }
 
 #' Resolve scenarios workbook path from configuration table
@@ -695,7 +738,8 @@ createProjectConfiguration <- function(
   if (nzchar(scenarioFileValue)) {
     return(fs::path_abs(scenarioFileValue, start = configFolderPath))
   }
-  NA_character_
+
+  return(NA_character_)
 }
 
 #' Create project directories defined in the configuration
@@ -727,7 +771,7 @@ createProjectConfiguration <- function(
     }
   }
 
-  invisible(NULL)
+  return(invisible(NULL))
 }
 
 #' Copy RF configuration workbooks into destination folder
@@ -757,7 +801,7 @@ createProjectConfiguration <- function(
     )
   }
 
-  invisible(NULL)
+  return(invisible(NULL))
 }
 
 #' Find existing scenarios workbook candidate
@@ -789,7 +833,23 @@ createProjectConfiguration <- function(
   if (length(existingScenarioCandidates) > 0) {
     return(existingScenarioCandidates[[1]])
   }
-  NA_character_
+
+  return(NA_character_)
+}
+
+#' Determine whether the scenarios workbook should be copied
+#' @param scenariosXlsxNew Preferred scenarios workbook path.
+#' @param scenariosXlsx Existing scenarios workbook path.
+#' @return `TRUE` if a copy attempt should be performed.
+#' @keywords internal
+#' @noRd
+.shouldCopyScenariosWorkbook <- function(scenariosXlsxNew, scenariosXlsx) {
+  return(
+    !is.na(scenariosXlsxNew) &&
+      !file.exists(scenariosXlsxNew) &&
+      !is.na(scenariosXlsx) &&
+      file.exists(scenariosXlsx)
+  )
 }
 
 #' Copy scenarios workbook to target location if needed
@@ -798,18 +858,15 @@ createProjectConfiguration <- function(
 #' @param overwrite Logical flag controlling overwrite behavior.
 #' @return Path to scenarios workbook after copy attempt.
 #' @keywords internal
+#' @details The copy precondition is delegated to `.shouldCopyScenariosWorkbook()`
+#'   so this helper only performs the copy and resolves the resulting path.
 #' @noRd
 .copyScenariosWorkbookIfNeeded <- function(
   scenariosXlsxNew,
   scenariosXlsx,
   overwrite
 ) {
-  if (
-    !is.na(scenariosXlsxNew) &&
-      !file.exists(scenariosXlsxNew) &&
-      !is.na(scenariosXlsx) &&
-      file.exists(scenariosXlsx)
-  ) {
+  if (.shouldCopyScenariosWorkbook(scenariosXlsxNew, scenariosXlsx)) {
     file.copy(
       from = scenariosXlsx,
       to = scenariosXlsxNew,
@@ -819,7 +876,8 @@ createProjectConfiguration <- function(
       return(scenariosXlsxNew)
     }
   }
-  scenariosXlsx
+
+  return(scenariosXlsx)
 }
 
 #' Add PKParameter sheet to scenarios workbook
@@ -864,5 +922,5 @@ createProjectConfiguration <- function(
     x = dtTemplatePkParameter
   )
   openxlsx::saveWorkbook(wbScenarios, scenariosXlsx, overwrite = TRUE)
-  invisible(NULL)
+  return(invisible(NULL))
 }

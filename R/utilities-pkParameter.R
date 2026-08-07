@@ -47,7 +47,7 @@ calculatePKParameterForScenarios <- function(
     pkParameterSheets <- dtScenarios[
       scenarioName == sc & !is.na(pKParameter)
     ]$pKParameter
-    initializeParametersOfSheets(projectConfiguration, pkParameterSheets)
+    .initializeParametersOfSheets(projectConfiguration, pkParameterSheets)
 
     if (length(pkParameterSheets) > 0) {
       # Load or calculate PK analyses
@@ -82,7 +82,8 @@ calculatePKParameterForScenarios <- function(
 #'
 #' @return NULL. The function updates parameters in-place and does not return a value.
 #' @keywords internal
-initializeParametersOfSheets <- function(
+#' @noRd
+.initializeParametersOfSheets <- function(
   projectConfiguration,
   pkParameterSheets
 ) {
@@ -93,7 +94,7 @@ initializeParametersOfSheets <- function(
   ospsuite::removeAllUserDefinedPKParameters()
 
   # Read user-defined PK parameters and clean the names
-  dtUserdefPKParameter <- readUserDefinedPKParameters(
+  dtUserdefPKParameter <- .readUserDefinedPKParameters(
     projectConfiguration$addOns$pKParameterFile
   )
 
@@ -110,7 +111,7 @@ initializeParametersOfSheets <- function(
       dtPkParameterDefinition$name,
       ospsuite::allPKParameterNames()
     )
-    addUserDefinedParameters(userdefinedParameters, dtUserdefPKParameter)
+    .addUserDefinedParameters(userdefinedParameters, dtUserdefPKParameter)
   }
 
   # Update PK parameters in the specified sheets
@@ -134,7 +135,8 @@ initializeParametersOfSheets <- function(
 #' @return A data frame of validated user-defined PK parameters.
 #' throws Error if validation fails or if required fields are missing.
 #' @keywords internal
-readUserDefinedPKParameters <- function(file) {
+#' @noRd
+.readUserDefinedPKParameters <- function(file) {
   dtUserdefPKParameter <- xlsxReadData(
     wb = file,
     sheetName = "Userdef PK Parameter",
@@ -156,6 +158,31 @@ readUserDefinedPKParameters <- function(file) {
 
   return(dtUserdefPKParameter)
 }
+#' Validate a user-defined PK parameter lookup result
+#' @param iRow Integer indices matching the user-defined parameter table.
+#' @param userPar PK parameter name being resolved.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.validateUserDefinedParameterIndex <- function(iRow, userPar) {
+  if (length(iRow) == 0) {
+    stop(paste(
+      "pkParameter",
+      userPar,
+      'is not defined in "Userdef PK Parameter" sheet.'
+    ))
+  }
+  if (length(iRow) > 1) {
+    stop(paste(
+      "pkParameter",
+      userPar,
+      'is not unique in "Userdef PK Parameter" sheet.'
+    ))
+  }
+
+  return(invisible(NULL))
+}
+
 #' Add User-Defined PK Parameters to OSP-Suite
 #'
 #' This function adds user-defined pharmacokinetic (PK) parameters to OSP-Suite
@@ -168,27 +195,17 @@ readUserDefinedPKParameters <- function(file) {
 #' @return NULL. The function updates the OSPSuite environment and does not return a value.
 #' throws Error if user-defined parameters are not defined or are not unique.
 #' @keywords internal
-addUserDefinedParameters <- function(
+#' @details Validation of the parameter lookup index is delegated to
+#'   `.validateUserDefinedParameterIndex()` so registration only handles object
+#'   creation and optional field updates.
+#' @noRd
+.addUserDefinedParameters <- function(
   userdefinedParameters,
   dtUserdefPKParameter
 ) {
   for (userPar in userdefinedParameters) {
     iRow <- which(dtUserdefPKParameter$name == userPar)
-
-    if (length(iRow) == 0) {
-      stop(paste(
-        "pkParameter",
-        userPar,
-        'is not defined in "Userdef PK Parameter" sheet.'
-      ))
-    }
-    if (length(iRow) > 1) {
-      stop(paste(
-        "pkParameter",
-        userPar,
-        'is not unique in "Userdef PK Parameter" sheet.'
-      ))
-    }
+    .validateUserDefinedParameterIndex(iRow, userPar)
 
     myPK <- ospsuite::addUserDefinedPKParameter(
       name = dtUserdefPKParameter$name[iRow],
@@ -259,7 +276,7 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
       scenarioName == sc & !is.na(pKParameter)
     ]$pKParameter
 
-    loadPKAnalysisPerScenario(
+    .loadPKAnalysisPerScenario(
       scenarioName = sc,
       scenarioSimulation = scenarioListOrResult[[sc]]$simulation,
       pkParameterSheets = pkParameterSheets,
@@ -287,7 +304,8 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
 #'
 #' @return A data.table containing the processed PK analyses for the specified scenario.
 #' @keywords internal
-loadPKAnalysisPerScenario <- function(
+#' @noRd
+.loadPKAnalysisPerScenario <- function(
   scenarioName,
   scenarioSimulation,
   pkParameterSheets,
@@ -296,7 +314,7 @@ loadPKAnalysisPerScenario <- function(
   # initialize variable to avoid messages
   unitFactor <- value <- NULL
 
-  dtPkAnalyses <- loadPkAnalysisRawData(
+  dtPkAnalyses <- .loadPkAnalysisRawData(
     projectConfiguration = projectConfiguration,
     scenarioName = scenarioName,
     scenarioSimulation = scenarioSimulation
@@ -314,7 +332,7 @@ loadPKAnalysisPerScenario <- function(
       skipDescriptionRow = TRUE
     )
 
-    dtPkParameterDefinition <- addUnitFactorsToPKDefinition(
+    dtPkParameterDefinition <- .addUnitFactorsToPKDefinition(
       scenarioSimulation = scenarioSimulation,
       dtOutputPaths = dtOutputPaths,
       dtPkAnalyses = dtPkAnalyses,
@@ -366,7 +384,8 @@ loadPKAnalysisPerScenario <- function(
 #'
 #' @return A data.table containing the PK analyses loaded from the CSV file.
 #' @keywords internal
-loadPkAnalysisRawData <- function(
+#' @noRd
+.loadPkAnalysisRawData <- function(
   projectConfiguration,
   scenarioName,
   scenarioSimulation
@@ -423,7 +442,8 @@ loadPkAnalysisRawData <- function(
 #'
 #' @return A data.table containing processed PK parameter definitions for the scenario.
 #' @keywords internal
-addUnitFactorsToPKDefinition <- function(
+#' @noRd
+.addUnitFactorsToPKDefinition <- function(
   scenarioSimulation,
   dtOutputPaths,
   dtPkAnalyses,
@@ -516,7 +536,8 @@ addUnitFactorsToPKDefinition <- function(
 #'         settings, including any calculated ratios if `asRatio` is TRUE.
 #'
 #' @keywords internal
-mergePKParameterWithConfigTable <- function(
+#' @noRd
+.mergePKParameterWithConfigTable <- function(
   onePlotConfig,
   pkParameterDT,
   colorVector = NULL,
@@ -557,7 +578,7 @@ mergePKParameterWithConfigTable <- function(
   }
 
   if (asRatio) {
-    mergedData <- setValueToRatio(mergedData, pkParameterDT)
+    mergedData <- .setValueToRatio(mergedData, pkParameterDT)
   } else if (!is.null(colorVector)) {
     mergedData[,
       isReference := scenario %in% referenceScenario,
@@ -613,7 +634,8 @@ mergePKParameterWithConfigTable <- function(
 #' @return A data.table containing the merged data with a new column `value`
 #'         representing the ratio of base to reference values.
 #' @keywords internal
-setValueToRatio <- function(mergedData, pkParameterDT) {
+#' @noRd
+.setValueToRatio <- function(mergedData, pkParameterDT) {
   # initialize variable to avoid messages
   valueBase <- valueReference <- value <- NULL
 
@@ -654,7 +676,8 @@ setValueToRatio <- function(mergedData, pkParameterDT) {
 #' @return NULL. The function will stop execution if validation fails,
 #'         otherwise returns invisibly.
 #' @keywords internal
-validatePKParameterDT <- function(pkParameterDT) {
+#' @noRd
+.validatePKParameterDT <- function(pkParameterDT) {
   checkmate::assertDataTable(pkParameterDT)
   checkmate::assertNames(
     names(pkParameterDT),

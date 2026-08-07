@@ -672,7 +672,7 @@ filterParameterSimulated <- function(
   asPointeEstimate
 ) {
   if (ratioMode != "ratioOfPopulation") {
-    pkParameterFiltered <- mergePKParameterWithConfigTable(
+    pkParameterFiltered <- .mergePKParameterWithConfigTable(
       onePlotConfig = onePlotConfig[, c(
         "pkParameter",
         "outputPathId",
@@ -685,7 +685,7 @@ filterParameterSimulated <- function(
     )
   } else {
     pkParameterFiltered <- list(
-      base = mergePKParameterWithConfigTable(
+      base = .mergePKParameterWithConfigTable(
         onePlotConfig = onePlotConfig[, c(
           "pkParameter",
           "outputPathId",
@@ -694,7 +694,7 @@ filterParameterSimulated <- function(
           unique(),
         pkParameterDT = pkParameterDT
       ),
-      reference = mergePKParameterWithConfigTable(
+      reference = .mergePKParameterWithConfigTable(
         onePlotConfig = onePlotConfig[, c(
           "pkParameter",
           "outputPathId",

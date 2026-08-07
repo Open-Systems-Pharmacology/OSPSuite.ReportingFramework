@@ -208,7 +208,8 @@ runOrLoadScenarios <- function(
 #' field is NA.
 #'
 #' @keywords internal
-readOntongenies <- function(data) {
+#' @noRd
+.readOntongenies <- function(data) {
   proteinOntogenyMappings <- data[["protein Ontogenies"]]
   if (is.na(proteinOntogenyMappings)) {
     return(NULL)

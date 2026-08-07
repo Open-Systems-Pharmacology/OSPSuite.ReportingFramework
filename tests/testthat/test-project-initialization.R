@@ -225,7 +225,7 @@ test_that("createProjectConfiguration returns the expected classes", {
   )
 
   file.copy(sourceConfiguration, targetConfiguration)
-  stampReportingFrameworkVersion(targetConfiguration)
+  .stampReportingFrameworkVersion(targetConfiguration)
 
   projectConfiguration <- createProjectConfiguration(
     path = targetConfiguration,

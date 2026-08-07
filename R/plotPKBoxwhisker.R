@@ -238,7 +238,7 @@ prepareDataForPKBoxplot <- function(
   # initialize to avoid linter messages
   displayNameOutput <- plotTag <- pkParameter <- plotName <- NULL
 
-  plotData <- mergePKParameterWithConfigTable(
+  plotData <- .mergePKParameterWithConfigTable(
     onePlotConfig = onePlotConfig,
     pkParameterDT = pkParameterDT,
     colorVector = colorVector,
@@ -511,7 +511,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   configTablePlots <- validateHeaders(configTable)
   validateOutputIdsForPlot()
   validateDataGroupIdsForPlot()
-  validatePKParameterDT(pkParameterDT)
+  .validatePKParameterDT(pkParameterDT)
 
   validateConfigTablePlots(
     configTablePlots = configTablePlots,

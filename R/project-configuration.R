@@ -1,16 +1,28 @@
 # auxiliaries ------------
+#' Reporting framework version description
+#' @return Description text for the stored reporting framework version.
+#' @keywords internal
+#' @noRd
 .reportingFrameworkVersionDescription <- function() {
-  "Version of the ospsuite.reportingframework package used to create this configuration"
+  return(
+    "Version of the ospsuite.reportingframework package used to create this configuration"
+  )
 }
 
+#' Current reporting framework version
+#' @return Installed ospsuite.reportingframework package version as a character string.
+#' @keywords internal
+#' @noRd
 .currentReportingFrameworkVersion <- function() {
-  as.character(utils::packageVersion("ospsuite.reportingframework"))
+  return(as.character(utils::packageVersion("ospsuite.reportingframework")))
 }
 
 #' Stamp reporting framework version into ProjectConfiguration.xlsx
 #' @param path Path to ProjectConfiguration.xlsx
+#' @return Invisible `NULL`.
 #' @keywords internal
-stampReportingFrameworkVersion <- function(path) {
+#' @noRd
+.stampReportingFrameworkVersion <- function(path) {
   if (!file.exists(path)) {
     return(invisible(NULL))
   }
@@ -23,26 +35,33 @@ stampReportingFrameworkVersion <- function(path) {
   }
   dtConfiguration <- xlsxReadData(wb = wb, sheetName = targetSheet)
   if (REPORTING_FRAMEWORK_VERSION_PROPERTY %in% dtConfiguration$property) {
+    # nolint: object_usage_linter.
     return(invisible(NULL))
   }
 
   dtConfiguration <- rbind(
     dtConfiguration,
     data.table(
-      property = REPORTING_FRAMEWORK_VERSION_PROPERTY,
+      property = REPORTING_FRAMEWORK_VERSION_PROPERTY, # nolint: object_usage_linter.
       value = .currentReportingFrameworkVersion(),
       description = .reportingFrameworkVersionDescription()
     )
   )
   xlsxWriteData(wb = wb, sheetName = targetSheet, dt = dtConfiguration)
   openxlsx::saveWorkbook(wb, path, overwrite = TRUE)
-  invisible(NULL)
+  return(invisible(NULL))
 }
 
+#' Delegate active binding to the base project configuration
+#' @param field Name of the delegated field.
+#' @param readonly Logical flag indicating whether the binding is read-only.
+#' @return A function implementing the active binding.
+#' @keywords internal
+#' @noRd
 .delegateProjectConfigurationBinding <- function(field, readonly = FALSE) {
   checkmate::assertString(field)
 
-  if (readonly) {
+  binding <- if (readonly) {
     eval(substitute(
       function(value) {
         if (!missing(value)) {
@@ -65,6 +84,8 @@ stampReportingFrameworkVersion <- function(path) {
       list(FIELD = field)
     ))
   }
+
+  return(binding)
 }
 
 .readonlyProjectConfigurationFields <- c(

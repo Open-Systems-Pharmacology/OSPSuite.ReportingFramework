@@ -533,7 +533,7 @@ setCustomParamsToPopulation <- function(scenario) {
 #' @keywords internal
 .createIndividualCharacteristics <- function(biomForInd) {
   # ! Attention esqlabsR uses Columns starting with upperCase
-  moleculeOntogenies <- readOntongenies(biomForInd[, c("protein Ontogenies")])
+  moleculeOntogenies <- .readOntongenies(biomForInd[, c("protein Ontogenies")])
 
   ospsuite::createIndividualCharacteristics(
     species = biomForInd$species,

@@ -84,7 +84,7 @@ plotDistributionVsDemographics <- function(
 
   checkmate::assertList(scenarioList, types = "Scenario", null.ok = FALSE)
   if (usePKParameter) {
-    validatePKParameterDT(pkParameterDT)
+    .validatePKParameterDT(pkParameterDT)
   }
 
   plotData <- prepareDemographicPlotData(
@@ -195,7 +195,7 @@ plotHistograms <- function(
     null.ok = usePKParameter
   )
   if (usePKParameter) {
-    validatePKParameterDT(pkParameterDT)
+    .validatePKParameterDT(pkParameterDT)
   }
 
   plotData <- prepareDemographicPlotData(
@@ -256,7 +256,7 @@ prepareDemographicPlotData <- function(
     ) %>%
       unique()
 
-    plotData <- mergePKParameterWithConfigTable(
+    plotData <- .mergePKParameterWithConfigTable(
       onePlotConfig = onePlotConfigIdentifier,
       pkParameterDT = pkParameterDT,
       colorVector = colorVector,
@@ -1269,7 +1269,7 @@ validateParameterID <- function(configTablePlots, ...) {
       ))
     }
 
-    validatePKParameterDT(dotarg$pkParameterDT)
+    .validatePKParameterDT(dotarg$pkParameterDT)
     validateOutputIdsForPlot()
 
     validateConfigTablePlots(

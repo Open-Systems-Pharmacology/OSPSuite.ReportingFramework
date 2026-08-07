@@ -38,30 +38,60 @@
   ))
 }
 
+#' Normalize one stored snapshot cell value
+#' @param value Stored JSON cell value.
+#' @return Character scalar or `NA_character_`.
+#' @keywords internal
+#' @noRd
+.rfSnapshotCellValue <- function(value) {
+  if (is.null(value) || identical(value, "NA")) {
+    return(NA_character_)
+  }
+
+  return(as.character(value))
+}
+
+#' Reconstruct a data frame row from a JSON list row structure
+#' @param rowData Named list containing row values.
+#' @param columnNames Character vector of target column names.
+#' @return Character vector for one row.
+#' @keywords internal
+#' @noRd
+.rfListRowToCharacterVector <- function(rowData, columnNames) {
+  return(vapply(
+    seq_along(columnNames),
+    function(idx) .rfSnapshotCellValue(rowData[[idx]]),
+    character(1)
+  ))
+}
+
 #' Reconstruct a data frame from a JSON list structure
 #' @param listStructure Named list with `column_names` and `rows`.
 #' @return A `data.frame`.
 #' @keywords internal
+#' @details Cell normalization is delegated to `.rfSnapshotCellValue()` so this
+#'   helper only rebuilds the tabular shape of the stored JSON representation.
 #' @noRd
 .rfListStructureToDataFrame <- function(listStructure) {
   columnNames <- listStructure$column_names
   rows <- listStructure$rows
-  df <- data.frame(
-    matrix(ncol = length(columnNames), nrow = length(rows)),
+  if (length(rows) == 0) {
+    emptyData <- as.data.frame(
+      matrix(ncol = length(columnNames), nrow = 0),
+      stringsAsFactors = FALSE
+    )
+    colnames(emptyData) <- columnNames
+    return(emptyData)
+  }
+
+  df <- as.data.frame(
+    do.call(
+      rbind,
+      lapply(rows, .rfListRowToCharacterVector, columnNames = columnNames)
+    ),
     stringsAsFactors = FALSE
   )
   colnames(df) <- columnNames
-  for (i in seq_along(rows)) {
-    rowData <- rows[[i]]
-    for (j in seq_along(columnNames)) {
-      val <- rowData[[j]]
-      df[i, j] <- if (is.null(val) || identical(val, "NA")) {
-        NA_character_
-      } else {
-        as.character(val)
-      }
-    }
-  }
   return(df)
 }
 
@@ -76,41 +106,114 @@
   return(file.path(dir, sub("\\.xlsx$", ".json", basename(xlsxPath))))
 }
 
+#' Check whether an add-on workbook entry should be restored
+#' @param prop Add-on property name.
+#' @param val Stored add-on value.
+#' @param configData Full JSON config list.
+#' @return `TRUE` if the add-on points to a restorable workbook.
+#' @keywords internal
+#' @noRd
+.rfShouldRestoreAddonWorkbook <- function(prop, val, configData) {
+  return(
+    !is.na(val) &&
+      grepl("\\.xlsx$", val, ignore.case = TRUE) &&
+      prop %in% names(configData)
+  )
+}
+
+#' Write one restored add-on workbook from snapshot content
+#' @param workbookData Named list of sheet snapshot structures.
+#' @param xlsxFilePath Output workbook path.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.rfWriteAddonWorkbook <- function(workbookData, xlsxFilePath) {
+  destinationDir <- dirname(xlsxFilePath)
+  if (!dir.exists(destinationDir)) {
+    dir.create(destinationDir, recursive = TRUE, showWarnings = FALSE)
+  }
+
+  wbOut <- openxlsx::createWorkbook()
+  for (sheetName in names(workbookData)) {
+    sheetDf <- .rfListStructureToDataFrame(workbookData[[sheetName]])
+    openxlsx::addWorksheet(wbOut, sheetName)
+    openxlsx::writeData(wbOut, sheet = sheetName, x = sheetDf)
+  }
+  openxlsx::saveWorkbook(wbOut, xlsxFilePath, overwrite = TRUE)
+
+  return(invisible(NULL))
+}
+
 #' Write all addon .xlsx files captured in a JSON snapshot back to disk.
 #' @param addonsDf data.frame of the addons sheet (Property/Value columns).
 #' @param configData Full JSON config list (contains per-addon sheet data).
 #' @param outputDir Directory to write xlsx files into.
+#' @return Invisible `NULL`.
 #' @keywords internal
+#' @details Workbook eligibility and workbook writing are delegated to helpers so
+#'   this function only coordinates restoring referenced add-on workbooks.
 #' @noRd
 .rfRestoreAddonXlsxFiles <- function(addonsDf, configData, outputDir) {
   for (i in seq_len(nrow(addonsDf))) {
     prop <- addonsDf$Property[i]
     val <- addonsDf$Value[i]
-    if (
-      !is.na(val) &&
-        grepl("\\.xlsx$", val, ignore.case = TRUE) &&
-        prop %in% names(configData)
-    ) {
-      xlsxFilePath <- file.path(outputDir, val)
-      if (!dir.exists(dirname(xlsxFilePath))) {
-        dir.create(
-          dirname(xlsxFilePath),
-          recursive = TRUE,
-          showWarnings = FALSE
-        )
-      }
-      wbOut <- openxlsx::createWorkbook()
-      for (sheetName in names(configData[[prop]])) {
-        sheetDf <- .rfListStructureToDataFrame(configData[[prop]][[
-          sheetName
-        ]])
-        openxlsx::addWorksheet(wbOut, sheetName)
-        openxlsx::writeData(wbOut, sheet = sheetName, x = sheetDf)
-      }
-      openxlsx::saveWorkbook(wbOut, xlsxFilePath, overwrite = TRUE)
+    if (.rfShouldRestoreAddonWorkbook(prop, val, configData)) {
+      .rfWriteAddonWorkbook(
+        workbookData = configData[[prop]],
+        xlsxFilePath = file.path(outputDir, val)
+      )
     }
   }
   return(invisible(NULL))
+}
+
+#' Attach one referenced add-on workbook to snapshot data
+#' @param configData Snapshot list being assembled.
+#' @param row One row from `projectConfigurationAddons`.
+#' @param configurationsFolder Base folder used to resolve relative add-on paths.
+#' @return Updated snapshot list.
+#' @keywords internal
+#' @noRd
+.rfAddReferencedAddonWorkbook <- function(
+  configData,
+  row,
+  configurationsFolder
+) {
+  prop <- row[["Property"]]
+  val <- row[["Value"]]
+  if (
+    is.null(val) || is.na(val) || !grepl("\\.xlsx$", val, ignore.case = TRUE)
+  ) {
+    return(configData)
+  }
+
+  absPath <- fs::path_abs(val, start = configurationsFolder)
+  if (!file.exists(absPath)) {
+    return(configData)
+  }
+
+  configData[[prop]] <- .rfExcelFileToListStructure(absPath)
+  return(configData)
+}
+
+#' Add referenced add-on workbooks to snapshot data
+#' @param configData Snapshot list augmented with `projectConfigurationAddons`.
+#' @param configurationsFolder Base folder used to resolve relative add-on paths.
+#' @return Snapshot list with referenced workbook content attached.
+#' @keywords internal
+#' @details Per-row workbook attachment is delegated to
+#'   `.rfAddReferencedAddonWorkbook()` to keep this wrapper linear.
+#' @noRd
+.rfAddReferencedAddonWorkbooks <- function(configData, configurationsFolder) {
+  for (row in configData$projectConfigurationAddons$rows) {
+    configData <- .rfAddReferencedAddonWorkbook(
+      configData = configData,
+      row = row,
+      configurationsFolder = configurationsFolder
+    )
+  }
+
+  return(configData)
 }
 
 # public functions --------------------------------------------------------
@@ -131,6 +234,8 @@
 #'   \code{esqlabsR::snapshotProjectConfiguration()}.
 #'
 #' @return Invisible named list with the full snapshot data (including base esqlabsR content and RF-specific metadata).
+#' @details Referenced add-on workbooks are attached through
+#'   `.rfAddReferencedAddonWorkbooks()` after the base esqlabsR snapshot is created.
 #' @export
 #' @family project initialization
 snapshotProjectConfigurationRF <- function(
@@ -162,22 +267,11 @@ snapshotProjectConfigurationRF <- function(
     "addons"
   )
 
-  # include all .xlsx files referenced in addons rows
   configurationsFolder <- projectConfig$baseProjectconfiguration$configurationsFolder
-  for (row in configData$projectConfigurationAddons$rows) {
-    prop <- row[["Property"]]
-    val <- row[["Value"]]
-    if (
-      !is.null(val) &&
-        !is.na(val) &&
-        grepl("\\.xlsx$", val, ignore.case = TRUE)
-    ) {
-      absPath <- fs::path_abs(val, start = configurationsFolder)
-      if (file.exists(absPath)) {
-        configData[[prop]] <- .rfExcelFileToListStructure(absPath)
-      }
-    }
-  }
+  configData <- .rfAddReferencedAddonWorkbooks(
+    configData = configData,
+    configurationsFolder = configurationsFolder
+  )
 
   jsonData <- jsonlite::toJSON(
     configData,
