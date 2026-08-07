@@ -75,7 +75,7 @@ readObservedDataByDictionary <- function(
     dataDT <- rbind(
       dataDT,
       convertDataByDictionary(
-        # nolint indentation_linter
+        # nolint: indentation_linter
         data = tmpData,
         dataFilter = d$dataFilter,
         dict = tmpdict,
@@ -573,7 +573,7 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
   if (nrow(dtDataGroupIdsNew) > 0) {
     dtDataGroupIds <- rbind(
       dtDataGroupIds,
-      dtDataGroupIdsNew, # nolint indentation_linter
+      dtDataGroupIdsNew, # nolint: indentation_linter
       fill = TRUE
     )
 
@@ -623,7 +623,7 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
   if (nrow(dtOutputPathsNew) > 0) {
     dtOutputPaths <- rbind(
       dtOutputPaths,
-      dtOutputPathsNew, # nolint indentation_linter
+      dtOutputPathsNew, # nolint: indentation_linter
       fill = TRUE
     )
 
@@ -634,7 +634,7 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
       overwrite = TRUE
     )
 
-    synchronizeScenariosWithPlots(projectConfiguration)
+    .synchronizeScenariosWithPlots(projectConfiguration)
   }
 
   return(invisible())
@@ -700,7 +700,7 @@ addBiometricsToConfig <- function(
   dtIndividualBiometrics <-
     rbind(
       dtIndividualBiometrics,
-      biometrics, # nolint indentation_linter
+      biometrics, # nolint: indentation_linter
       fill = TRUE
     )
 
@@ -886,13 +886,13 @@ convertDataCombinedToDataTable <- function(datacombined) {
       DATACLASS$tpIndividual
     ),
     by = "group"
-  ] # nolint indentation_linter
+  ] # nolint: indentation_linter
 
   if (
     any(dataDT$dataClass == DATACLASS$tpIndividual) &&
       !("individualId" %in% names(dataDT))
   ) {
-    # nolint indentation_linter
+    # nolint: indentation_linter
     stop(messages$errorutilitiesdataL4XXXX())
   }
 }
@@ -1040,7 +1040,7 @@ prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
 
   checkmate::assertNames(
     unique(dataToAggregate$group),
-    disjunct.from = unique(dataObserved$group), # nolint indentation_linter
+    disjunct.from = unique(dataObserved$group), # nolint: indentation_linter
     .var.name = "new group names"
   )
 
@@ -1118,7 +1118,7 @@ addUniqueColumns <- function(dataObserved, aggregatedData) {
   colsToCheck <- setdiff(names(dataObserved), identifier)
   columnISUnique <- dataObserved[,
     lapply(.SD, function(x) length(unique(x))),
-    by = identifier, # nolint indentation_linter
+    by = identifier, # nolint: indentation_linter
     .SDcols = colsToCheck
   ] %>%
     .[, lapply(.SD, function(x) all(x == 1)), .SDcols = colsToCheck] %>%
@@ -1130,7 +1130,7 @@ addUniqueColumns <- function(dataObserved, aggregatedData) {
 
   aggregatedData <- merge(
     aggregatedData,
-    tmp, # nolint indentation_linter
+    tmp, # nolint: indentation_linter
     by = identifier,
     all.x = TRUE
   )
@@ -1237,13 +1237,13 @@ convertIdentifierColumns <- function(dt, identifierCols) {
 #' @keywords internal
 getIndividualDataGroups <- function(dataObserved, groups, minN = 2) {
   # avoid warnings for global variables
-  individualId <- dataClass <- dataType <- N <- NULL # nolint object_name_linter
+  individualId <- dataClass <- dataType <- N <- NULL # nolint: object_name_linter
 
   tmp <-
     dataObserved[,
       .(N = dplyr::n_distinct(individualId)),
       by = c("group", "dataClass", "dataType")
-    ] # nolint indentation_linter
+    ] # nolint: indentation_linter
   groupsAvailable <- unique(
     tmp[
       dataClass == DATACLASS$tpIndividual &

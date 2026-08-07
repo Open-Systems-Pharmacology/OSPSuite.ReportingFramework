@@ -123,7 +123,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       }
 
       checkmate::assertTRUE(dplyr::n_distinct(observedDataForPlot$dataClass) == 1,
-        .var.name = 'Use only one "dataClass" per dataType in one plot' # nolint indentation_linter
+        .var.name = 'Use only one "dataClass" per dataType in one plot' # nolint: indentation_linter
       )
 
       private$.dataObserved <- observedDataForPlot
@@ -563,7 +563,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
               timeprofile = timeprofile,
               targetTimeUnit = configList$timeUnit,
               timeOffset = ifelse(ScenarioField == "scenario",
-                as.double(configList$timeOffset_Reference), # nolint indentation_linter
+                as.double(configList$timeOffset_Reference), # nolint: indentation_linter
                 0
               ) +
                 as.double(configList$timeOffset)
@@ -597,7 +597,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
           private[[fieldName]][, colorIndex := outputPathId]
           private[[fieldName]]$colorIndex <-
             factor(private[[fieldName]]$colorIndex,
-              levels = private$.dtOutputPaths$outputPathId, # nolint indentation_linter
+              levels = private$.dtOutputPaths$outputPathId, # nolint: indentation_linter
               labels = private$.dtOutputPaths$displayNameOutput,
               ordered = TRUE
             )
@@ -738,7 +738,7 @@ PlotDataTimeProfile <- R6::R6Class( # nolint
       private$.dataObserved[, shapeIndex := group]
       private$.dataObserved$shapeIndex <-
         factor(private$.dataObserved$shapeIndex,
-          levels = private$.dtDataGroups$group, # nolint indentation_linter
+          levels = private$.dtDataGroups$group, # nolint: indentation_linter
           labels = private$.dtDataGroups$displayName,
           ordered = FALSE
         )
@@ -807,7 +807,7 @@ splitCaptionByIndividuals <- function(configTable, individualIdVector, dtCaption
   tmp <- data.table::copy(configTable) %>%
     data.table::setDT()
   tmp[, individualIds := gsub("\\*", paste(individualIdVector, collapse = ","), individualIds),
-    by = "individualIds" # nolint indentation_linter
+    by = "individualIds" # nolint: indentation_linter
   ]
 
   dtCaptionInd <- getPlotIdForColumns(configTable = tmp, col = "individualIds")
@@ -977,7 +977,7 @@ getObservedUnitConversionDT <- function(dataObserved, dtUnit) {
     dplyr::select(c("outputPathId", "yUnit")) %>%
     unique() %>%
     merge(dtUnit %>% dplyr::select(-c("unitFactor", "yUnit")),
-      by = "outputPathId" # nolint indentation_linter
+      by = "outputPathId" # nolint: indentation_linter
     )
   dtUnitObserved[, unitFactor := apply(dtUnitObserved, 1, function(row) {
     ospsuite::toUnit(
@@ -1121,7 +1121,7 @@ finalizeCaptionTable <- function(dtCaption, timeTags, dtOutputPaths, nFacetColum
 #' @keywords internal
 updateDtCaption <- function(dtCaption, configTable) {
   # avoid warning for global variable
-  individualIds <- scenarioIndex <- individualId <- NULL # nolint object_name_linter
+  individualIds <- scenarioIndex <- individualId <- NULL # nolint: object_name_linter
 
   if (!any(configTable[!is.na(individualIds)]$individualIds == "(*)")) {
     return(dtCaption)

@@ -1311,11 +1311,11 @@ importWorkflow <- function(
 
   importWorkflowFiles(projectConfigurationNew, ePackageFolder, wfIdentifier)
 
-  synchronizeScenariosOutputsWithPlots(
+  .synchronizeScenariosOutputsWithPlots(
     projectConfiguration = projectConfigurationNew,
     direction = directionOfSynchronisation
   )
-  synchronizeScenariosWithPlots(projectConfigurationNew)
+  .synchronizeScenariosWithPlots(projectConfigurationNew)
 
   return(projectConfigurationNew)
 }

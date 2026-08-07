@@ -35,14 +35,14 @@
   }
   dtConfiguration <- xlsxReadData(wb = wb, sheetName = targetSheet)
   if (REPORTING_FRAMEWORK_VERSION_PROPERTY %in% dtConfiguration$property) {
-    # nolint: object_usage_linter.
+    # nolint: object_usage_linter
     return(invisible(NULL))
   }
 
   dtConfiguration <- rbind(
     dtConfiguration,
     data.table(
-      property = REPORTING_FRAMEWORK_VERSION_PROPERTY, # nolint: object_usage_linter.
+      property = REPORTING_FRAMEWORK_VERSION_PROPERTY, # nolint: object_usage_linter
       value = .currentReportingFrameworkVersion(),
       description = .reportingFrameworkVersionDescription()
     )
@@ -119,7 +119,7 @@
 #' @format NULL
 #' @export
 #' @family project initialization
-ProjectConfigurationRF <- # nolint object_name_linter
+ProjectConfigurationRF <- # nolint: object_name_linter
   R6::R6Class(
     "ProjectConfigurationRF",
     cloneable = FALSE,

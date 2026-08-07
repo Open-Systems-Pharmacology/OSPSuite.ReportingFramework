@@ -69,7 +69,7 @@ upgradeToReportingFramework <- function(
   }
   .applyTemplateAddonsSheet(configWb, templateConfigurationWb)
   openxlsx::saveWorkbook(configWb, configXlsxDest, overwrite = TRUE)
-  .stampReportingFrameworkVersion(path = configXlsxDest) # nolint: object_usage_linter.
+  .stampReportingFrameworkVersion(path = configXlsxDest) # nolint: object_usage_linter
 
   oldConfigurationFolder <- .resolveConfigurationFolder(
     dtConfigurationOriginal,
@@ -172,7 +172,7 @@ initProject <- function(
     path = file.path(configurationDirectory, "ProjectConfiguration.xlsx"),
     ignoreVersionCheck = FALSE
   )
-  snapshotProjectConfigurationRF(pc, outputDir = configurationDirectory) # nolint: object_usage_linter.
+  snapshotProjectConfigurationRF(pc, outputDir = configurationDirectory) # nolint: object_usage_linter
 
   return(invisible())
 }
@@ -243,7 +243,7 @@ createProjectConfiguration <- function(
 
   addOnProperties <- trimws(as.character(dtAddOnsExisting$Property))
   isReportingFramework <- any(
-    addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY & # nolint: object_usage_linter.
+    addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY & # nolint: object_usage_linter
       !is.na(dtAddOnsExisting$Value) &
       nzchar(as.character(dtAddOnsExisting$Value)),
     na.rm = TRUE
@@ -680,25 +680,25 @@ createProjectConfiguration <- function(
 
   addOnProperties <- trimws(as.character(dtTemplateAddOns$Property))
   if (
-    any(addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY, na.rm = TRUE) # nolint: object_usage_linter.
+    any(addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY, na.rm = TRUE) # nolint: object_usage_linter
   ) {
     versionIndex <- which(
-      addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY # nolint: object_usage_linter.
+      addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY # nolint: object_usage_linter
     )[[1]]
     dtTemplateAddOns[
       versionIndex,
       c("Value", "Description")
     ] <- list(
-      .currentReportingFrameworkVersion(), # nolint: object_usage_linter.
-      .reportingFrameworkVersionDescription() # nolint: object_usage_linter.
+      .currentReportingFrameworkVersion(), # nolint: object_usage_linter
+      .reportingFrameworkVersionDescription() # nolint: object_usage_linter
     )
   } else {
     dtTemplateAddOns <- rbind(
       dtTemplateAddOns,
       data.frame(
-        Property = REPORTING_FRAMEWORK_VERSION_PROPERTY, # nolint: object_usage_linter.
-        Value = .currentReportingFrameworkVersion(), # nolint: object_usage_linter.
-        Description = .reportingFrameworkVersionDescription(), # nolint: object_usage_linter.
+        Property = REPORTING_FRAMEWORK_VERSION_PROPERTY, # nolint: object_usage_linter
+        Value = .currentReportingFrameworkVersion(), # nolint: object_usage_linter
+        Description = .reportingFrameworkVersionDescription(), # nolint: object_usage_linter
         stringsAsFactors = FALSE
       )
     )

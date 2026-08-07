@@ -66,7 +66,7 @@ xlsxWriteData <- function(wb, sheetName, dt) {
   dt <- data.table::copy(dt)
 
   # Check if the sheet exists
-  checkSheetExists(wb, sheetName)
+  .checkSheetExists(wb, sheetName)
 
   # Read existing data to determine dimensions
   existingData <- xlsxReadData(
@@ -76,10 +76,10 @@ xlsxWriteData <- function(wb, sheetName, dt) {
   )
 
   # Adjust data.table to match existing dimensions
-  dt <- adjustDataTableDimensions(dt, existingData)
+  dt <- .adjustDataTableDimensions(dt, existingData)
 
   # Align column names
-  dt <- alignColumnNames(dt, existingData)
+  dt <- .alignColumnNames(dt, existingData)
 
   # Write new data to the specified sheet
   openxlsx::writeData(wb = wb, sheet = sheetName, x = dt)
@@ -149,6 +149,9 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 #' If FALSE NA is returned as empty string. Numeric columns Return always NA
 #' @param convertHeaders A logical value. If TRUE, column names are converted to start with a lowercase letter.
 #'
+#' @details The function accepts `skipDescriptionRow` either as a flag (`TRUE`/`FALSE`) or
+#'   as a non-negative integer indicating exactly how many leading rows to skip.
+#'
 #' @return A `data.table` containing the sheet data.
 #'
 #' @examples
@@ -160,6 +163,7 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 #'
 #' @export
 #' @family function to read from and write to xlsx
+# nolint start: cyclocomp_linter
 xlsxReadData <- function(
   wb,
   sheetName = 1,
@@ -172,16 +176,24 @@ xlsxReadData <- function(
   if (!any(class(wb) %in% "Workbook")) {
     checkmate::assertFileExists(wb)
   }
-  checkmate::assertLogical(skipDescriptionRow, len = 1, null.ok = TRUE)
+  skipIsLogical <- is.logical(skipDescriptionRow) &&
+    length(skipDescriptionRow) == 1 &&
+    !is.na(skipDescriptionRow)
+  skipIsCount <- is.numeric(skipDescriptionRow) &&
+    length(skipDescriptionRow) == 1 &&
+    !is.na(skipDescriptionRow) &&
+    skipDescriptionRow >= 0 &&
+    skipDescriptionRow == as.integer(skipDescriptionRow)
+  checkmate::assertTRUE(skipIsLogical || skipIsCount)
   checkmate::assertCharacter(alwaysCharacter, null.ok = TRUE)
   checkmate::assertLogical(emptyAsNA, len = 1)
   checkmate::assertLogical(convertHeaders, len = 1)
 
   # Read data from the specified sheet
-  dt <- readSheetData(wb, sheetName)
+  dt <- .readSheetData(wb, sheetName)
 
   # Process the data based on the provided parameters
-  dt <- processSheetData(
+  dt <- .processSheetData(
     dt,
     skipDescriptionRow,
     alwaysCharacter,
@@ -191,6 +203,7 @@ xlsxReadData <- function(
 
   return(dt)
 }
+# nolint end
 #' Add new data to a config file using a template sheet
 #'
 #' If the template does not exist in the configuration file in the project directory,
@@ -201,7 +214,7 @@ xlsxReadData <- function(
 #' @param templateSheet Name of the template sheet.
 #' @param sheetName Name of the new sheet.
 #' @param dtNewData A `data.table` with new data.
-#' @param templateXlsx A character string specifying the template xlsx file name (default is "Plots.xlsx").
+#' @param templateXlsx A character string specifying the template xlsx file name (default is "Reports.xlsx").
 #'
 #' @return The current configuration file with the added sheet.
 #'
@@ -219,7 +232,7 @@ xlsxAddDataUsingTemplate <- function(
   templateSheet,
   sheetName,
   dtNewData,
-  templateXlsx = "Plots.xlsx"
+  templateXlsx = "Reports.xlsx"
 ) {
   # Input validation
   checkmate::assertClass(wb, "Workbook", null.ok = FALSE)
@@ -280,10 +293,12 @@ xlsxAddDataUsingTemplate <- function(
 #'
 #' @return NULL. If the sheet does not exist, an error is thrown.
 #' @keywords internal
-checkSheetExists <- function(wb, sheetName) {
+#' @noRd
+.checkSheetExists <- function(wb, sheetName) {
   if (!(sheetName %in% wb$sheet_names)) {
     stop(messages$errorutilitiesxlsxL1XX())
   }
+  return(invisible(NULL))
 }
 
 #' Adjust the dimensions of a data.table to match existing data
@@ -296,7 +311,8 @@ checkSheetExists <- function(wb, sheetName) {
 #'
 #' @return A data.table with adjusted dimensions.
 #' @keywords internal
-adjustDataTableDimensions <- function(dt, existingData) {
+#' @noRd
+.adjustDataTableDimensions <- function(dt, existingData) {
   if (nrow(existingData) > nrow(dt)) {
     # Add NA rows if existing data has more rows than the new data
     naRows <- data.table(matrix(
@@ -321,7 +337,8 @@ adjustDataTableDimensions <- function(dt, existingData) {
 #'
 #' @return A data.table with aligned column names.
 #' @keywords internal
-alignColumnNames <- function(dt, existingData) {
+#' @noRd
+.alignColumnNames <- function(dt, existingData) {
   data.table::setnames(
     dt,
     old = names(dt),
@@ -348,7 +365,8 @@ alignColumnNames <- function(dt, existingData) {
 #'
 #' @return A `data.table` containing the raw data from the sheet.
 #' @keywords internal
-readSheetData <- function(wb, sheetName) {
+#' @noRd
+.readSheetData <- function(wb, sheetName) {
   dt <- data.table::setDT(openxlsx::read.xlsx(
     xlsxFile = wb,
     sheet = sheetName,
@@ -372,7 +390,8 @@ readSheetData <- function(wb, sheetName) {
 #'
 #' @return A processed `data.table`.
 #' @keywords internal
-processSheetData <- function(
+#' @noRd
+.processSheetData <- function(
   dt,
   skipDescriptionRow,
   alwaysCharacter,
@@ -402,10 +421,10 @@ processSheetData <- function(
   }
 
   # Convert convertible columns to numeric
-  dt <- convertColumnsToNumeric(dt, alwaysCharacter)
+  dt <- .convertColumnsToNumeric(dt, alwaysCharacter)
 
   # Trim whitespace for character columns and replace curly quotes
-  dt <- cleanCharacterColumns(dt, emptyAsNA)
+  dt <- .cleanCharacterColumns(dt, emptyAsNA)
 
   # Convert column names to start with a lowercase letter
   if (convertHeaders) {
@@ -424,7 +443,8 @@ processSheetData <- function(
 #'
 #' @return A `data.table` with numeric conversions applied where appropriate.
 #' @keywords internal
-convertColumnsToNumeric <- function(dt, alwaysCharacter) {
+#' @noRd
+.convertColumnsToNumeric <- function(dt, alwaysCharacter) {
   convertibleCols <- suppressWarnings(names(dt)[sapply(dt, function(x) {
     xWithoutNA <- x[!is.na(x) & x != ""]
     return(length(xWithoutNA) == 0 || !any(is.na(as.numeric(xWithoutNA))))
@@ -446,7 +466,8 @@ convertColumnsToNumeric <- function(dt, alwaysCharacter) {
 #'
 #' @return A `data.table` with cleaned character columns.
 #' @keywords internal
-cleanCharacterColumns <- function(dt, emptyAsNA) {
+#' @noRd
+.cleanCharacterColumns <- function(dt, emptyAsNA) {
   characterCols <- setdiff(names(dt), names(dt)[sapply(dt, is.numeric)])
   if (length(characterCols) > 0) {
     # Trim whitespace for character columns
@@ -555,7 +576,8 @@ setHeadersToLowerCase <- function(dt) {
 #' @return A data.table with the specified column separated into multiple rows,
 #'         trimmed of whitespace, and renamed to remove the plural 's'.
 #' @keywords internal
-separateAndTrimColumn <- function(data, columnName) {
+#' @noRd
+.separateAndTrimColumn <- function(data, columnName) {
   # Create a copy of the data.table to avoid modifying the original
   separatedData <- copy(data)
 
@@ -584,7 +606,8 @@ separateAndTrimColumn <- function(data, columnName) {
 #'
 #' @return Returns invisibly.
 #' @keywords internal
-synchronizeScenariosWithPlots <- function(projectConfiguration) {
+#' @noRd
+.synchronizeScenariosWithPlots <- function(projectConfiguration) {
   # Load the workbooks for scenarios and plots
   wbSc <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
   wbPl <- openxlsx::loadWorkbook(projectConfiguration$addOns$reportsFile)
@@ -628,10 +651,12 @@ synchronizeScenariosWithPlots <- function(projectConfiguration) {
 #'
 #' @param projectConfiguration An object of class ProjectConfiguration containing the
 #'   file paths for scenariosFile and addOns$reportsFile.
+#' @param direction Direction of synchronization: `"bothways"`, `"scenarioToPlot"`, or `"plotToScenario"`.
 #'
 #' @return Returns invisibly.
 #' @keywords internal
-synchronizeScenariosOutputsWithPlots <- function(
+#' @noRd
+.synchronizeScenariosOutputsWithPlots <- function(
   projectConfiguration,
   direction = c("bothways", "scenarioToPlot", "plotToScenario")
 ) {

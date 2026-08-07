@@ -3,13 +3,21 @@ wb <- openxlsx::createWorkbook()
 
 # Create a sample sheet and write initial data
 openxlsx::addWorksheet(wb, "ExistingSheet")
-openxlsx::writeData(wb, "ExistingSheet", data.table(Name = c("Alice", "Bob"), Age = c(30, 25)))
+openxlsx::writeData(
+  wb,
+  "ExistingSheet",
+  data.table(Name = c("Alice", "Bob"), Age = c(30, 25))
+)
 openxlsx::addWorksheet(wb, "TestSheet")
-openxlsx::writeData(wb, "TestSheet", data.frame(
-  Name = c("Alice", "Bob", "Charlie", ""),
-  Age = c(30, 25, NA, ""),
-  Comment = c("Good", "Average", "Excellent", "N/A")
-))
+openxlsx::writeData(
+  wb,
+  "TestSheet",
+  data.frame(
+    Name = c("Alice", "Bob", "Charlie", ""),
+    Age = c(30, 25, NA, ""),
+    Comment = c("Good", "Average", "Excellent", "N/A")
+  )
+)
 testxlsx <- file.path(tempdir(), "test_workbook.xlsx")
 openxlsx::saveWorkbook(wb, testxlsx, overwrite = TRUE)
 
@@ -71,6 +79,14 @@ test_that("xlsxReadData works correctly", {
   expected <- data.table(
     name = c("Bob", "Charlie", NA),
     age = c(25, NA, NA)
+  )
+  expect_equal(result, expected)
+
+  # Test case 2b: Reading data and skipping the first two rows
+  result <- xlsxReadData(wb, "TestSheet", skipDescriptionRow = 2)
+  expected <- data.table(
+    name = c("Charlie", NA),
+    age = c(NA_real_, NA_real_)
   )
   expect_equal(result, expected)
 
@@ -167,7 +183,12 @@ test_that("xlsxAddDataUsingTemplate works correctly", {
 
   # Test case 2: Attempting to add data using a non-existent template sheet
   expect_error(
-    xlsxAddDataUsingTemplate(wb, "NonExistentTemplate", "AnotherSheet", newData),
+    xlsxAddDataUsingTemplate(
+      wb,
+      "NonExistentTemplate",
+      "AnotherSheet",
+      newData
+    ),
     'Cannot find sheet named "NonExistentTemplate"'
   )
 
@@ -202,39 +223,119 @@ test_that("Splits vectors is working", {
 test_that("separateAndTrimColumn works correctly", {
   # Test case 1: Basic functionality
   dt <- data.table(ID = 1:3, Comments = c("a, b, c", "d, e", "f"))
-  result <- separateAndTrimColumn(dt, "Comments")
-  expected <- data.table(ID = c(1, 1, 1, 2, 2, 3), Comment = c("a", "b", "c", "d", "e", "f"))
+  result <- .separateAndTrimColumn(dt, "Comments")
+  expected <- data.table(
+    ID = c(1, 1, 1, 2, 2, 3),
+    Comment = c("a", "b", "c", "d", "e", "f")
+  )
   expect_equal(result, expected)
 
   # Test case 2: Handling whitespace
   dt <- data.table(ID = 1, Comments = c(" a , b , c "))
-  result <- separateAndTrimColumn(dt, "Comments")
+  result <- .separateAndTrimColumn(dt, "Comments")
   expected <- data.table(ID = 1, Comment = c("a", "b", "c"))
   expect_equal(result, expected)
 
   # Test case 3: Single value without separator
   dt <- data.table(ID = 1, Comments = c("single_value"))
-  result <- separateAndTrimColumn(dt, "Comments")
+  result <- .separateAndTrimColumn(dt, "Comments")
   expected <- data.table(ID = 1, Comment = c("single_value"))
   expect_equal(result, expected)
 
   # Test case 4: Empty string
   dt <- data.table(ID = 1, Comments = c(""))
-  result <- separateAndTrimColumn(dt, "Comments")
+  result <- .separateAndTrimColumn(dt, "Comments")
   expected <- data.table(ID = 1, Comment = c(""))
   expect_equal(result, expected)
 
   # Test case 5: Multiple rows with empty comments
   dt <- data.table(ID = 1:3, Comments = c("a, b", "", "c, d"))
-  result <- separateAndTrimColumn(dt, "Comments")
-  expected <- data.table(ID = c(1, 1, 2, 3, 3), Comment = c("a", "b", "", "c", "d"))
+  result <- .separateAndTrimColumn(dt, "Comments")
+  expected <- data.table(
+    ID = c(1, 1, 2, 3, 3),
+    Comment = c("a", "b", "", "c", "d")
+  )
   expect_equal(result, expected)
 
   # Test case 6: Check for plural removal
   dt <- data.table(ID = 1, Comments = c("a, b, c"))
-  result <- separateAndTrimColumn(dt, "Comments")
+  result <- .separateAndTrimColumn(dt, "Comments")
   expect_true("Comments" %in% names(result) == FALSE) # Ensure the plural 's' is removed
   expect_true("Comment" %in% names(result)) # Ensure the singular 'Comment' exists
+})
+
+test_that("synchronizeScenariosWithPlots adds missing scenarios to reports", {
+  td <- withr::local_tempdir()
+  scFile <- file.path(td, "Scenarios.xlsx")
+  rpFile <- file.path(td, "Reports.xlsx")
+
+  wbSc <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbSc, "Scenarios")
+  openxlsx::writeData(
+    wbSc,
+    "Scenarios",
+    data.table(scenario_name = c("sc_a", "sc_b"))
+  )
+  openxlsx::saveWorkbook(wbSc, scFile, overwrite = TRUE)
+
+  wbRp <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbRp, "Scenarios")
+  openxlsx::writeData(
+    wbRp,
+    "Scenarios",
+    data.table(scenario = "sc_a", longName = "sc a", shortName = "sc a")
+  )
+  openxlsx::saveWorkbook(wbRp, rpFile, overwrite = TRUE)
+
+  projectConfiguration <- list(
+    scenariosFile = scFile,
+    addOns = list(reportsFile = rpFile)
+  )
+
+  .synchronizeScenariosWithPlots(projectConfiguration)
+
+  result <- xlsxReadData(wb = rpFile, sheetName = "Scenarios")
+  expect_true(all(c("sc_a", "sc_b") %in% result$scenario))
+})
+
+test_that("synchronizeScenariosOutputsWithPlots syncs missing outputPath rows", {
+  td <- withr::local_tempdir()
+  scFile <- file.path(td, "Scenarios.xlsx")
+  rpFile <- file.path(td, "Reports.xlsx")
+
+  wbSc <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbSc, "OutputPaths")
+  openxlsx::writeData(
+    wbSc,
+    "OutputPaths",
+    data.table(outputPathId = c("op_1", "op_2"), outputPath = c("A", "B"))
+  )
+  openxlsx::saveWorkbook(wbSc, scFile, overwrite = TRUE)
+
+  wbRp <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbRp, "Outputs")
+  openxlsx::writeData(
+    wbRp,
+    "Outputs",
+    data.table(
+      outputPathId = c("template", "op_1"),
+      outputPath = c("template", "A")
+    )
+  )
+  openxlsx::saveWorkbook(wbRp, rpFile, overwrite = TRUE)
+
+  projectConfiguration <- list(
+    scenariosFile = scFile,
+    addOns = list(reportsFile = rpFile)
+  )
+
+  .synchronizeScenariosOutputsWithPlots(projectConfiguration)
+
+  outputsScenario <- xlsxReadData(wb = scFile, sheetName = "OutputPaths")
+  outputsReports <- xlsxReadData(wb = rpFile, sheetName = "Outputs")
+
+  expect_true(all(c("op_1", "op_2") %in% outputsScenario$outputPathId))
+  expect_true(all(c("op_1", "op_2") %in% outputsReports$outputPathId))
 })
 
 # Clean up

@@ -456,7 +456,7 @@ exportRandomPopulations <- function(
     scenario$scenarioType != "Population" ||
       is.null(scenario$finalCustomParams$paths)
   ) {
-    # nolint indentation_linter
+    # nolint: indentation_linter
     return(scenario)
   }
 
@@ -615,7 +615,7 @@ exportRandomPopulations <- function(
 #' @noRd
 .createIndividualCharacteristics <- function(biomForInd) {
   # ! Attention esqlabsR uses Columns starting with upperCase
-  moleculeOntogenies <- .readOntongenies(biomForInd[, c("protein Ontogenies")]) # nolint: object_usage_linter.
+  moleculeOntogenies <- .readOntongenies(biomForInd[, c("protein Ontogenies")]) # nolint: object_usage_linter
 
   return(ospsuite::createIndividualCharacteristics(
     species = biomForInd$species,

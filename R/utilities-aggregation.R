@@ -131,7 +131,7 @@ performAggregation <- function(dataToAggregate,
                                aggregationFun,
                                aggrCriteria) {
   # avoid warning for global variable
-  lloq <- LLOQFlag <- yValues <- NULL # nolint object_name_linter
+  lloq <- LLOQFlag <- yValues <- NULL # nolint: object_name_linter
 
   checkmate::assertNames(aggrCriteria, subset.of = names(dataToAggregate))
 

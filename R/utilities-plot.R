@@ -332,7 +332,7 @@ readConfigTableForPlot <- function(
   }
   # add scenario names
   if ("scenarios" %in% names(configTable)) {
-    configTable <- separateAndTrimColumn(
+    configTable <- .separateAndTrimColumn(
       data = configTable,
       columnName = "scenarios"
     )
@@ -513,7 +513,7 @@ getDefaultColorsForScaleVector <- function(shade = c("dark", "light"), n) {
     colorVector <-
       switch(
         shade,
-        dark = ggsci::pal_d3("category20c")(20)[1:n], # nolint indentation_linter
+        dark = ggsci::pal_d3("category20c")(20)[1:n], # nolint: indentation_linter
         light = ggsci::pal_d3("category20c")(20)[(10 + 1):(10 + n)]
       )
   } else {
@@ -864,7 +864,7 @@ validateHeaders <- function(configTable) {
     !all(configTablePlots[,
       lapply(.SD, function(x) {
         all(is.na(x))
-      }), # nolint indentation_linter
+      }), # nolint: indentation_linter
       .SDcols = "header"
     ])
   ) {
@@ -1138,12 +1138,12 @@ validateOutputIdsForPlot <- function() {
       by = outputPathId,
       .SDcols = uniqueColumns
     ]
-  tmp <- lapply(uniqueColumns, function(col) {
-    # nolint object_usage
+  for (col in uniqueColumns) {
+    # nolint: object_usage_linter
     if (any(uniqueIDValues[[col]] > 1)) {
       stop(messages$errorutilitiesplotL2XXXXXXXXXX())
     }
-  })
+  }
 
   # check validity of units
   invisible(lapply(

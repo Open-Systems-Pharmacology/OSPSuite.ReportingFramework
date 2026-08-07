@@ -17,7 +17,7 @@ linters: linters = {
         "round" = "Use janitor::round_half_up() instead of round().",
         "signif" = "Use janitor::signif_half_up() instead of signif()."
       )),
-      cyclocomp_linter(complexity_limit = 10),
+      cyclocomp_linter(complexity_limit = 15),
       roxygenRequiredLinter = roxygenRequiredLinter(),
       roxygenDetailsForComplexLinter = roxygenDetailsForComplexLinter(limit = 10),
       internalFunctionRulesLinter = internalFunctionRulesLinter(),

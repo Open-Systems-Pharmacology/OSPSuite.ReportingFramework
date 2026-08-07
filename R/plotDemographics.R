@@ -590,7 +590,7 @@ loadDemographicParameters <- function(onePlotConfig, scenarioList) {
     "scenarioShortName",
     "scenarioLongName"
   )] %>%
-    separateAndTrimColumn(columnName = "parameterIds") %>%
+    .separateAndTrimColumn(columnName = "parameterIds") %>%
     merge(configEnv$modelParameter, by = "parameterId")
 
   # load parameter_id values
@@ -1426,7 +1426,7 @@ addDefaultDemographicPlots <- function(
       yScale = "linear"
     )]
   } else {
-    dtNewConfig <- separateAndTrimColumn(dtNewConfig, columnName = "scenarios")
+    dtNewConfig <- .separateAndTrimColumn(dtNewConfig, columnName = "scenarios")
     dtNewConfig[, xScale := "linear"]
   }
 
@@ -1464,7 +1464,7 @@ addDefaultDemographicPlots <- function(
         yScale = "linear, log"
       )]
     } else {
-      dtNewConfigPK <- separateAndTrimColumn(
+      dtNewConfigPK <- .separateAndTrimColumn(
         dtNewConfigPK,
         columnName = "scenarios"
       )
@@ -1479,7 +1479,7 @@ addDefaultDemographicPlots <- function(
     sheetName = sheetName,
     dtNewData = rbind(
       dtNewHeader,
-      dtNewConfig, # nolint indentation_linter
+      dtNewConfig, # nolint: indentation_linter
       fill = TRUE
     )
   )

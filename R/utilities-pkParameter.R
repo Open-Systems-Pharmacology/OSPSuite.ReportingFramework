@@ -535,7 +535,7 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
     names(onePlotConfig),
     c("scenarios", "pkParameters", "outputPathIds")
   )) {
-    onePlotConfig <- separateAndTrimColumn(onePlotConfig, col)
+    onePlotConfig <- .separateAndTrimColumn(onePlotConfig, col)
   }
   mergedData <- onePlotConfig %>%
     dplyr::select(dplyr::any_of(c(

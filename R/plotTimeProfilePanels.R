@@ -379,7 +379,7 @@ generatePlotForPlotType <- function(plotData, facetAspectRatio, plotType, ...) {
           facetScale = plotData$configTable$facetScale[1],
           facetAspectRatio = ifelse(
             plotType %in% c("PvO", "QQ "),
-            1, # nolint indentation_linter
+            1, # nolint: indentation_linter
             facetAspectRatio
           )
         )
@@ -397,7 +397,7 @@ generatePlotForPlotType <- function(plotData, facetAspectRatio, plotType, ...) {
           object = plotObject,
           caption = getCaptionForPlot(
             plotData,
-            yScale = yScale, # nolint indentation_linter
+            yScale = yScale, # nolint: indentation_linter
             timeRangeFilter = timeRangeFilter,
             plotType = plotType,
             plotCounter = plotCounter
@@ -415,7 +415,7 @@ generatePlotForPlotType <- function(plotData, facetAspectRatio, plotType, ...) {
         figureKey <- paste0(
           paste(
             plotData$plotName,
-            plotType, # nolint indentation_linter
+            plotType, # nolint: indentation_linter
             ifelse(yScale == "log", "log", "linear"),
             timeRangeFilter,
             sep = "-"
@@ -461,7 +461,7 @@ isPlotTypeNeededAndPossible <- function(plotType, plotData) {
     return(
       as.logical(plotData$configTable[[configColumn]][1]) &
         plotData$hasObservedData()
-    ) # warning is thrown during data preparation # nolint indentation_linter
+    ) # warning is thrown during data preparation # nolint: indentation_linter
   }
 }
 
@@ -547,9 +547,9 @@ checkAndAdjustYlimits <- function(
   # make sure no observed data are missed by setting y limits
   if (!is.null(ylimits) & nrow(observedData) > 0) {
     if (
-      any(observedData$yValues <= ylimits[1]) | # nolint indentation_linter
+      any(observedData$yValues <= ylimits[1]) | # nolint: indentation_linter
         any(
-          observedData$yValues >= # nolint indentation_linter
+          observedData$yValues >= # nolint: indentation_linter
             ylimits[2],
           na.rm = TRUE
         )
@@ -575,7 +575,7 @@ checkAndAdjustYlimits <- function(
     tmp <- simulatedData[
       xValues >= timeRangeSim[1] &
         xValues <= timeRangeSim[2]
-    ] # nolint indentation_linter
+    ] # nolint: indentation_linter
     if (simulatedData$dataClass[1] == DATACLASS$tpAggregated) {
       if (
         simulatedData$yErrorType[1] == ospsuite::DataErrorType$ArithmeticStdDev
@@ -768,13 +768,13 @@ setManualScalevectors <- function(plotObject, plotData, plotType) {
 
     if (
       plotType != "TP" &
-        !plotData$useColorIndex() & # nolint indentation_linter
+        !plotData$useColorIndex() & # nolint: indentation_linter
         !plotData$useShapeIndex()
     ) {
       labels <- "Observed data"
     } else if (
       plotType != "TP" &
-        !plotData$useColorIndex() & # nolint indentation_linter
+        !plotData$useColorIndex() & # nolint: indentation_linter
         plotData$useShapeIndex() &
         aesthetic != "shape"
     ) {
@@ -791,7 +791,7 @@ setManualScalevectors <- function(plotObject, plotData, plotType) {
     plotObject <- plotObject +
       ggplot2::scale_discrete_manual(
         aesthetic,
-        values = scaleVector, # nolint indentation_linter
+        values = scaleVector, # nolint: indentation_linter
         labels = labels
       )
   }
@@ -822,11 +822,11 @@ getCaptionForPlot <- function(
     plotData$dtCaption[
       eval(parse(text = plotData$timeRangeTagFilter[[timeRangeFilter]])) &
         counter == plotCounter
-    ] # nolint indentation_linter
+    ] # nolint: indentation_linter
 
   plotTypeTxt <- switch(
     plotType,
-    TP = "Concentration-time profiles", # nolint indentation_linter
+    TP = "Concentration-time profiles", # nolint: indentation_linter
     PvO = "Predicted vs Observed",
     ResvT = "Residuals vs time values",
     ResvO = "Residuals vs observed values",
@@ -926,7 +926,7 @@ getFootNoteLines <- function(dataObserved, dtDataReference) {
 getFoldDistanceForPvO <- function(plotData) {
   foldDistance <- ifelse(
     !is.na(plotData$configTable$foldDistance_PvO[1]),
-    as.double(plotData$configTable$foldDistance_PvO[1]), # nolint indentation_linter
+    as.double(plotData$configTable$foldDistance_PvO[1]), # nolint: indentation_linter
     2
   )
 
@@ -1168,7 +1168,7 @@ validateTimeRangeColumns <- function(configTablePlots) {
 
   validateConfigTablePlots(
     configTablePlots,
-    charactersWithMissing = timeRangeColumns # nolint indentation_linter
+    charactersWithMissing = timeRangeColumns # nolint: indentation_linter
   )
 
   tryCatch(
@@ -1383,7 +1383,7 @@ addDefaultConfigForTimeProfilePlots <- function(
     sheetName = sheetName,
     dtNewData = rbind(
       dtNewHeader,
-      dtNewConfig, # nolint indentation_linter
+      dtNewConfig, # nolint: indentation_linter
       fill = TRUE
     )
   )

@@ -138,11 +138,11 @@ plotPKForest <- function(
   scenarioGroup <- referenceScenario <- NULL
 
   # separates the comma separate inputs to rows
-  onePlotConfig <- separateAndTrimColumn(
+  onePlotConfig <- .separateAndTrimColumn(
     data = onePlotConfig,
     columnName = "outputPathIds"
   ) %>%
-    separateAndTrimColumn(columnName = "pkParameters")
+    .separateAndTrimColumn(columnName = "pkParameters")
   # use empty string for grouping
   onePlotConfig[is.na(scenarioGroup), scenarioGroup := ""]
   # scenarios without referenceScenario  are ignored in ratio mode
@@ -264,7 +264,7 @@ plotPKForest <- function(
           height = 20
           # heightToWidth = plotDataGroup[[groupName]][, uniqueN(.SD),
           #                                            .SDcols = c(
-          #                                              columnList$yColumn, # nolint identation
+          #                                              columnList$yColumn, # nolint: indentation_linter
           #                                              columnList$yFacetColumns
           #                                            )
           # ] / 15
@@ -1772,7 +1772,7 @@ addDefaultConfigForPKForestPlots <- function(
     sheetName = sheetName,
     dtNewData = rbind(
       dtNewHeader,
-      dtNewConfig, # nolint indentation_linter
+      dtNewConfig, # nolint: indentation_linter
       fill = TRUE
     )
   )

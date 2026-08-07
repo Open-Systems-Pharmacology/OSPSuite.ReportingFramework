@@ -9,7 +9,7 @@ xlsxAddDataUsingTemplate(
   templateSheet,
   sheetName,
   dtNewData,
-  templateXlsx = "Plots.xlsx"
+  templateXlsx = "Reports.xlsx"
 )
 }
 \arguments{
@@ -21,7 +21,7 @@ xlsxAddDataUsingTemplate(
 
 \item{dtNewData}{A `data.table` with new data.}
 
-\item{templateXlsx}{A character string specifying the template xlsx file name (default is "Plots.xlsx").}
+\item{templateXlsx}{A character string specifying the template xlsx file name (default is "Reports.xlsx").}
 }
 \value{
 The current configuration file with the added sheet.

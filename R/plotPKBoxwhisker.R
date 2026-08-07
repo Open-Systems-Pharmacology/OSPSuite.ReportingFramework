@@ -562,8 +562,8 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
     )
   )
 
-  tmp <- separateAndTrimColumn(configTablePlots, "outputPathIds")
-  tmp <- separateAndTrimColumn(tmp, "pkParameters")
+  tmp <- .separateAndTrimColumn(configTablePlots, "outputPathIds")
+  tmp <- .separateAndTrimColumn(tmp, "pkParameters")
   tmp <- tmp[, c("plotName", "scenario", "outputPathId", "pkParameter")]
   if (any(duplicated(tmp))) {
     tmp <- duplicated(tmp)
@@ -659,7 +659,7 @@ validateExistenceOfReferenceForRatio <- function(
   pkParameterDT
 ) {
   # initialize to avoid linter messages
-  isValid <- plotName <- referenceScenario <- NULL
+  plotName <- referenceScenario <- NULL
 
   if (nrow(configTablePlots) == 0) {
     return(invisible())
@@ -667,10 +667,10 @@ validateExistenceOfReferenceForRatio <- function(
 
   # check if reference Scenarios are there
   tmp <- configTablePlots[,
-    .(isValid = any(!is.na(referenceScenario))),
+    .(any(!is.na(referenceScenario))),
     by = plotName
   ]
-  if (any(tmp$isValid == FALSE)) {
+  if (any(tmp[[2]] == FALSE)) {
     stop(messages$errorplotPKBoxwhiskerL1XXX())
   }
 
@@ -767,7 +767,7 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(
     sheetName = sheetName,
     dtNewData = rbind(
       dtNewHeader,
-      dtNewConfig, # nolint indentation_linter
+      dtNewConfig, # nolint: indentation_linter
       fill = TRUE
     )
   )

@@ -337,7 +337,7 @@ restoreProjectConfigurationRF <- function(jsonPath, outputDir = NULL, ...) {
   }
 
   pcRF <- createProjectConfiguration(
-    # nolint: object_usage_linter.
+    # nolint: object_usage_linter
     path = xlsxPath,
     ignoreVersionCheck = TRUE
   )

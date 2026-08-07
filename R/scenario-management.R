@@ -22,8 +22,8 @@ createScenariosWrapped <- function(
       )
     )
 
-  synchronizeScenariosWithPlots(projectConfiguration)
-  synchronizeScenariosOutputsWithPlots(projectConfiguration)
+  .synchronizeScenariosWithPlots(projectConfiguration)
+  .synchronizeScenariosOutputsWithPlots(projectConfiguration)
 
   return(scenarioList)
 }
@@ -118,7 +118,7 @@ runAndSaveScenarios <- function(
     writeToLog(type = "Info", msg = paste("Start simulation of", sc))
 
     # Make sure custom params are not again overwritten by population
-    scenarioList[[sc]] <- .setCustomParamsToPopulation(scenarioList[[sc]]) # nolint: object_usage_linter.
+    scenarioList[[sc]] <- .setCustomParamsToPopulation(scenarioList[[sc]]) # nolint: object_usage_linter
 
     scenarioResults[sc] <- esqlabsR::runScenarios(
       scenarios = scenarioList[sc],
