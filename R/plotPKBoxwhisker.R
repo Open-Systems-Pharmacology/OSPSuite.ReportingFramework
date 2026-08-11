@@ -266,7 +266,7 @@ prepareDataForPKBoxplot <- function(
 #' @param percentiles A vector of percentiles to calculate.
 #' @return A data.table summarizing the plot data.
 #' @keywords internal
-getSummaryTable <- function(plotDataPk, asRatio, onePlotConfig, percentiles) {
+getSummaryTable <- function(plotDataPk, onePlotConfig, percentiles) {
   # initialize to avoid linter messages
   value <- NULL
 
@@ -306,11 +306,9 @@ getSummaryTable <- function(plotDataPk, asRatio, onePlotConfig, percentiles) {
 
   return(dtExport)
 }
-#' Prepare Data for PK Boxplot
+#' Prepare Table for Export
 #'
-#' Prepares and cleans data for box-and-whisker plotting by merging the PK parameter data
-#' with the configuration settings. This function ensures that the data is structured
-#' correctly for plotting.
+#' Prepares and formats a summary data.table for export, including caption.
 #'
 #' @param dtExport A data.table containing the data to be exported for plotting.
 #' @param asRatio A logical indicating if the plot is for ratios.
@@ -389,8 +387,7 @@ getCaptionForBoxwhiskerPlot <- function(
       "scenarioLongName",
       "displayNameOutput",
       "plotTag",
-      "displayNamePKParameter",
-      "displayNameOutput"
+      "displayNamePKParameter"
     )] %>%
     unique()
 
@@ -539,7 +536,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
         allowedValues = unique(pkParameterDT$outputPathId)
       ),
       yscale = list(
-        cols = c("yscale"),
+        cols = c("yScale"),
         allowedValues = c("linear", "log")
       ),
       facetScale = list(
@@ -566,7 +563,6 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   tmp <- .separateAndTrimColumn(tmp, "pkParameters")
   tmp <- tmp[, c("plotName", "scenario", "outputPathId", "pkParameter")]
   if (any(duplicated(tmp))) {
-    tmp <- duplicated(tmp)
     stop(messages$errorplotPKBoxwhiskerL1())
   }
 
@@ -697,7 +693,7 @@ validateExistenceOfReferenceForRatio <- function(
 #' @details
 #' The function retrieves scenario definitions, output path IDs, and data groups from the project configuration.
 #' It checks if the specified sheet already exists and whether to overwrite it. If not, it creates a new header
-#' and fills in the default configuration values for the time profile plots.
+#' and fills in the default configuration values for the box-and-whisker plots.
 #'
 #' Additionally, the function performs a validity check to ensure that it is not executed during a context
 #' where helper functions are prohibited (`validRun`). If such a context is detected, an error is raised to prevent execution.
