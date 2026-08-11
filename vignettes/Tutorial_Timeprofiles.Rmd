@@ -20,9 +20,8 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup, echo=FALSE, warnineval=TRUE}
-#library(ospsuite.reportingframework)
-devtools::load_all()
+```{r setup, echo=FALSE, eval=TRUE}
+library(ospsuite.reportingframework)
 library(tidyr)
 library(data.table)
 options(rmarkdown.html_vignette.check_title = FALSE)

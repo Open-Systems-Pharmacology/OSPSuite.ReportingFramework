@@ -287,12 +287,12 @@ generatePlotForPlotType <- function(plotData, facetAspectRatio, plotType, ...) {
         plotObject <-
           switch(
             plotType,
-            TP = ospsuite_plotTimeProfile(
-              plotData = plotData$getDataForTimeRange(
+            TP = ospsuite::plotTimeProfile(
+              plotData = .addDimensionColumns(plotData$getDataForTimeRange(
                 timeRangeFilter,
                 plotCounter = plotCounter,
                 yScale = yScale
-              ),
+              )),
               yScale = yScale,
               mapping = getGroupbyMapping(plotData, plotType),
               groupAesthetics = getGroupAesthetics(plotData),
@@ -301,64 +301,64 @@ generatePlotForPlotType <- function(plotData, facetAspectRatio, plotType, ...) {
               geomLLOQAttributes = getGeomLLOQAttributesForTP(plotData),
               ...
             ),
-            PvO = ospsuite_plotPredictedVsObserved(
-              plotData = plotData$getDataForTimeRange(
+            PvO = ospsuite::plotPredictedVsObserved(
+              plotData = .addDimensionColumns(plotData$getDataForTimeRange(
                 timeRangeFilter,
                 typeFilter = "observed",
                 plotCounter = plotCounter,
                 yScale = yScale
-              ),
+              )),
               xyScale = yScale,
               mapping = getGroupbyMapping(plotData, plotType),
               groupAesthetics = getGroupAesthetics(plotData),
               comparisonLineVector = getFoldDistanceForPvO(plotData),
               ...
             ),
-            ResvT = ospsuite_plotResidualsVsCovariate(
-              plotData = plotData$getDataForTimeRange(
+            ResvT = ospsuite::plotResidualsVsCovariate(
+              plotData = .addDimensionColumns(plotData$getDataForTimeRange(
                 timeRangeFilter,
                 typeFilter = "observed",
                 plotCounter = plotCounter,
                 yScale = yScale
-              ),
+              )),
               residualScale = yScale,
               xAxis = "time",
               mapping = getGroupbyMapping(plotData, plotType),
               groupAesthetics = getGroupAesthetics(plotData),
               ...
             ),
-            ResvO = ospsuite_plotResidualsVsCovariate(
-              plotData = plotData$getDataForTimeRange(
+            ResvO = ospsuite::plotResidualsVsCovariate(
+              plotData = .addDimensionColumns(plotData$getDataForTimeRange(
                 timeRangeFilter,
                 typeFilter = "observed",
                 plotCounter = plotCounter,
                 yScale = yScale
-              ),
+              )),
               residualScale = yScale,
               xAxis = "observed",
               mapping = getGroupbyMapping(plotData, plotType),
               groupAesthetics = getGroupAesthetics(plotData),
               ...
             ),
-            ResH = ospsuite_plotResidualsAsHistogram(
-              plotData = plotData$getDataForTimeRange(
+            ResH = ospsuite::plotResidualsAsHistogram(
+              plotData = .addDimensionColumns(plotData$getDataForTimeRange(
                 timeRangeFilter,
                 typeFilter = "observed",
                 plotCounter = plotCounter,
                 yScale = yScale
-              ),
+              )),
               residualScale = yScale,
               mapping = getGroupbyMapping(plotData, plotType),
               distribution = "normal",
               ...
             ),
-            QQ = ospsuite_plotQuantileQuantilePlot(
-              plotData = plotData$getDataForTimeRange(
+            QQ = ospsuite::plotQuantileQuantilePlot(
+              plotData = .addDimensionColumns(plotData$getDataForTimeRange(
                 timeRangeFilter,
                 typeFilter = "observed",
                 plotCounter = plotCounter,
                 yScale = yScale
-              ),
+              )),
               residualScale = yScale,
               mapping = getGroupbyMapping(plotData, plotType),
               groupAesthetics = getGroupAesthetics(plotData),
@@ -983,6 +983,29 @@ getGeomLLOQAttributesForTP <- function(plotData) {
 }
 
 # validation ----------------
+
+#' Add xDimension and yDimension columns required by ospsuite::plotTimeProfile.
+#' @param dt A data.table with at least `xUnit` and `yUnit` columns.
+#' @return The same data.table with `xDimension` and `yDimension` added in-place.
+#' @keywords internal
+.addDimensionColumns <- function(dt) {
+  yUnit <- xDimension <- yDimension <- NULL
+  if (!("xDimension" %in% names(dt)) && "xUnit" %in% names(dt)) {
+    xUnitVal <- unique(dt$xUnit)[[1]]
+    dt[, xDimension := ospsuite::getDimensionForUnit(xUnitVal)]
+  }
+  if (!("yDimension" %in% names(dt)) && "yUnit" %in% names(dt)) {
+    dt[, yDimension := ""]
+    for (yUnitLoop in unique(dt$yUnit)) {
+      dt[
+        yUnit == yUnitLoop,
+        yDimension := ospsuite::getDimensionForUnit(yUnitLoop)
+      ]
+    }
+  }
+  return(dt)
+}
+
 
 #' Validation of config table for time profiles plots
 #'

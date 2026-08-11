@@ -1299,3 +1299,84 @@ updateDtCaption <- function(dtCaption, configTable) {
 
   return(dtCaption)
 }
+
+#' Interpolates observed data based on simulated data.
+#'
+#' Performs linear interpolation for increasing yValues and logarithmic
+#' interpolation for decreasing yValues, grouped by `identifier` columns.
+#'
+#' @param dtObserved A data.table with columns `xValues` and grouping identifiers.
+#' @param dtSimulated A data.table with columns `xValues`, `yValues`, and grouping identifiers.
+#' @param identifier A character vector of column names used for grouping.
+#'
+#' @return `dtObserved` with an additional `predicted` column.
+#' @keywords internal
+addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
+  # initialize variables used for data.table to avoid messages during checks
+  xValues <- predicted <- yValues <- diffY <- y <- NULL
+
+  checkmate::assertCharacter(identifier, any.missing = FALSE)
+  checkmate::assertDataTable(dtObserved)
+  checkmate::assertNames(
+    names(dtObserved),
+    must.include = c("xValues", identifier)
+  )
+  checkmate::assertDataTable(dtSimulated)
+  checkmate::assertNames(
+    names(dtSimulated),
+    must.include = c("xValues", "yValues", identifier)
+  )
+  # make sure to exclude nas and sorting is correct
+  dtSimulated <- data.table::copy(dtSimulated) %>%
+    dplyr::select(dplyr::all_of(c("xValues", "yValues", identifier))) %>%
+    data.table::setorderv(c("xValues", identifier))
+  dtSimulated <- dtSimulated[!is.nan(xValues) & !is.nan(yValues)]
+
+  dtObserved[, predicted := NA_real_]
+
+  for (iRow in seq_len(nrow(dtObserved))) {
+    dtSimulatedGroup <- dtSimulated %>%
+      merge(dtObserved[iRow, .SD, .SDcols = identifier], by = identifier)
+
+    if (nrow(dtSimulatedGroup) == 0) {
+      next
+    }
+
+    if (nrow(dtSimulatedGroup) > 2) {
+      dtSimulatedGroup[, diffY := c(NA, diff(yValues))]
+      dtSimulatedGroup$diffY[1] <- dtSimulatedGroup$diffY[2]
+      dtSimulatedGroup[yValues <= 0, diffY := 0]
+      dtSimulatedGroup[data.table::shift(yValues, -1) <= 0, diffY := 0]
+
+      maxX <- max(dtSimulatedGroup$xValues)
+      xVal <- dtObserved$xValues[iRow]
+      closestIdx <- which(dtSimulatedGroup$xValues >= xVal)[1]
+      x <- dtSimulatedGroup$xValues
+      y <- dtSimulatedGroup$yValues
+
+      if (length(closestIdx) == 0 || xVal > maxX) {
+        dtObserved$predicted[iRow] <- NA_real_
+      } else {
+        if (dtSimulatedGroup$diffY[closestIdx] >= 0) {
+          dtObserved$predicted[iRow] <- stats::approx(
+            x = x,
+            y = y,
+            xout = xVal,
+            rule = 1
+          )$y
+        } else {
+          dtObserved$predicted[iRow] <- exp(
+            stats::approx(
+              x = x[y > 0],
+              y = log(y[y > 0]),
+              xout = xVal,
+              rule = 1
+            )$y
+          )
+        }
+      }
+    }
+  }
+
+  return(dtObserved)
+}

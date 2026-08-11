@@ -166,6 +166,12 @@ getSimulatedTimeprofile <- function(
     quantitiesOrPaths = outputPaths
   ) %>%
     data.table::setDT()
+
+  # Add molWeight column if not present (ospsuite may not provide it)
+  if (!("molWeight" %in% names(dt))) {
+    dt[, molWeight := NA_real_]
+  }
+
   # Rename columns
   data.table::setnames(
     x = dt,

@@ -105,8 +105,3 @@ reference:
     desc: "Functions that supports writing of a murkdown document"
     contents:
       - has_concept("markdown helper function")
-  - title: "Temporary functions"
-    desc: "Functions that will be moved to ospsuite.utils"
-    contents:
-      - matches("^ospsuite_")
-      - matches("addPredictedValues")

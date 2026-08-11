@@ -92,7 +92,7 @@ getQCpassedEnvironmentVariable <- function() {
 #' @details
 #' The function retrieves the option `OSPSuite.RF.stopHelperFunction` to determine if helper functions
 #' are allowed during a valid run. If the option is not initialized, it prompts the user to call
-#' `executeAsValidRun(isValidRun)`.
+#' `setWorkflowOptions(isValidRun)`.
 #'
 #' Stops execution with an error message if called during a valid run or if the option is not set.
 #'
