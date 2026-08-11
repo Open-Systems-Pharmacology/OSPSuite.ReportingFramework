@@ -253,7 +253,7 @@ plotPKForest <- function(
           plotCaptionAddon = onePlotConfig$plotCaptionAddon[1],
           ratioMode = ratioMode
         ),
-        footNoteLines = getFootnoteLinesForForrestPlots(
+        footNoteLines = getFootnoteLinesForForestPlots(
           plotData = plotDataGroup[[groupName]],
           ratioMode = ratioMode,
           asPointeEstimate = asPointeEstimate,
@@ -668,7 +668,6 @@ filterParameterSimulated <- function(
   pkParameterDT,
   onePlotConfig,
   ratioMode,
-  coefficientOfVariation,
   asPointeEstimate
 ) {
   if (ratioMode != "ratioOfPopulation") {
@@ -955,7 +954,7 @@ checkPrecision <- function(dt) {
   dt[, precision := (xMax - xMin) / xValues]
 
   precisionThreshold <- getOption(
-    "OSPSuite.RF.RequiredPrecisison",
+    "OSPSuite.RF.RequiredPrecision",
     default = 0.01
   )
 
@@ -964,7 +963,7 @@ checkPrecision <- function(dt) {
   if (any(!is.na(dt$xMin))) {
     writeToLog(
       type = "Info",
-      msg = "Required presicison was not reached, please rerurn simulations with larger N"
+      msg = "Required precision was not reached, please rerun simulations with larger N"
     )
     writeTableToLog(dt[!is.na(xMin)])
   }
@@ -1056,7 +1055,7 @@ addDescriptions <- function(plotData, onePlotConfig, pkParameterDT) {
     ordered = TRUE
   )
 
-  #' Add Output Path Details to Plot Data
+  # add output path details
   plotData <- merge(
     plotData,
     configEnv$outputPaths[, c(
@@ -1068,7 +1067,7 @@ addDescriptions <- function(plotData, onePlotConfig, pkParameterDT) {
     by = "outputPathId"
   )
 
-  #' Add PK Parameter Details to Plot Data
+  # add PK parameter details
   plotData <- plotData %>%
     merge(
       pkParameterDT[, c(
@@ -1351,7 +1350,7 @@ getCaptionForForestPlot <- function(
 
   captiontxt <- paste0(
     "Simulated ",
-    ifelse("observed" %in% unique(plotData$type), " and observed ", ""),
+    ifelse("observed" %in% unique(plotData$dataType), " and observed ", ""),
     pktext,
     " of ",
     pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"),
@@ -1403,7 +1402,7 @@ getCaptionForForestPlot <- function(
 #' @param dtDataReference Optional data reference.
 #' @return A character vector containing footnote lines.
 #' @keywords internal
-getFootnoteLinesForForrestPlots <- function(
+getFootnoteLinesForForestPlots <- function(
   plotData,
   ratioMode,
   asPointeEstimate,
@@ -1414,7 +1413,7 @@ getFootnoteLinesForForrestPlots <- function(
   footnoteLines <-
     paste0(
       "Simulated ",
-      ifelse("observed" %in% unique(plotData$type), " and observed ", ""),
+      ifelse("observed" %in% unique(plotData$dataType), " and observed ", ""),
       "data is displayed as ",
       concatWithAnd(errorLabels),
       "."
@@ -1465,7 +1464,7 @@ getRatioMode <- function(onePlotConfig, pkParameterDT, asRatio) {
       suffixes = c("", "Reference")
     )
 
-  if (all(dtPop$populationId == dtPop$populationId.reference)) {
+  if (all(dtPop$populationId == dtPop$populationIdReference)) {
     ratioMode <- "individualRatios"
   } else if (all(dtPop$populationId != dtPop$populationIdReference)) {
     ratioMode <- "ratioOfPopulation"
