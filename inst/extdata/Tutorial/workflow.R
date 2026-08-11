@@ -15,28 +15,28 @@ if (interactive() && rstudioapi::isAvailable()) {
 # load libraries and source project specific code
 library(ospsuite.reportingframework)
 
-# set graphic
-# (see vignette(package = 'ospsuite.plots',topic = 'ospsuite_plots'))
-ospsuite.plots::setDefaults()
+# Set graphic defaults
+# (see vignette(package = 'ospsuite.plots', topic = 'ospsuite_plots'))
+ggplot2::theme_set(theme_osp())
 theme_update(legend.position = 'top')
 options(knitr.kable.NA = '')
 
 # Set this to TRUE if you want to execute the workflow as a final valid run.
-# It then won't set watermarks to figures and does not skip failing plot generations
-# (see vignette OSPSuite_ReportingFramework)
+# (see ?setWorkflowOptions)
 setWorkflowOptions(isValidRun = FALSE)
 
 # Setup project structure
-# creates project directory
-# (see help initProject and https://esqlabs.github.io/esqlabsR/articles/esqlabsR.html)
-# if you go with the default structure
-# this workflow file should be saved in Scripts/ReportingFramework,
-initProject()
+# This workflow file is saved in Scripts/ReportingFramework (the configurationDirectory).
+# initProject() is called with configurationDirectory = "." so the structure is
+# created relative to the current working directory.
+# (see ?initProject)
+initProject(configurationDirectory = ".")
 
 # get paths of all relevant project files
 projectConfiguration <-
   ospsuite.reportingframework::createProjectConfiguration(
-    path =  file.path("ProjectConfiguration.xlsx"))
+    path = "ProjectConfiguration.xlsx"
+  )
 
 initLogfunction(projectConfiguration)
 
@@ -45,26 +45,29 @@ initLogfunction(projectConfiguration)
 # (see vignette(package = 'ospsuite.reportingframework',topic = 'Data_import_by_dictionary'))
 
 # read data as data.table
-dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration)
+dataObserved <- readObservedDataByDictionary(
+  projectConfiguration = projectConfiguration
+)
 
 # add aggregated  groups of data
-dataObserved <- rbind(dataObserved,
-                      aggregateObservedDataGroups(
-                        dataObserved = dataObserved,
-                        groups = c("1234_iv","1234_po")
-                      ),
-                      fill = TRUE
+dataObserved <- rbind(
+  dataObserved,
+  aggregateObservedDataGroups(
+    dataObserved = dataObserved,
+    groups = c("1234_iv", "1234_po")
+  ),
+  fill = TRUE
 )
-# for the manually added groups the configuration sheet in Plot.xlsx has to be updated
+# for the manually added groups the configuration sheet in Reports.xlsx has to be updated
 updateDataGroupId(projectConfiguration, dataObserved)
 
-# 2) Export populations -------------------------------------------------------
-# (see vignette Simulation_setup)
+# 2) Export Populations -------------------------------------------------------
+# (see vignette(package = 'ospsuite.reportingframework', topic = 'Population'))
 
 exportVirtualTwinPopulations(
   projectConfiguration = projectConfiguration,
   populationNames = NULL,
-  modelFile = "po 3 mg (solution).pkml",
+  modelFile = "po_3_mg_solution.pkml",
   overwrite = FALSE
 )
 
@@ -76,9 +79,9 @@ exportRandomPopulations(
 
 
 # 3) Simulations ------------------------------------------------------
-# (see  vignette Simulation_setup)
+# (see vignette(package = 'ospsuite.reportingframework', topic = 'Tutorial_Timeprofiles'))
 scenarioList <-
-  createScenarios.wrapped(
+  createScenariosWrapped(
     projectConfiguration = projectConfiguration,
     scenarioNames = NULL
   )
@@ -91,8 +94,8 @@ scenarioResults <- runAndSaveScenarios(
   )
 )
 
-# 5) Create Output Plots -----------------------------------------------------
-# (see vignette OSPSuite_ReportingFramework.Rmd  section  Plot Functionality)
+# 4) Create Output Plots -----------------------------------------------------
+# (see vignette(package = 'ospsuite.reportingframework', topic = 'Tutorial_Timeprofiles'))
 
 addDefaultConfigForTimeProfilePlots(
   projectConfiguration = projectConfiguration,
@@ -109,11 +112,11 @@ runPlot(
     dataObserved = dataObserved,
     scenarioResults = scenarioResults,
     referenceScaleVector = list('1mg iv simulation' = 'grey'),
-    xScaleArgs = list(limits = c(NA,NA))
+    xScaleArgs = list(limits = c(NA, NA))
   )
 )
 
-# 6) Create Report document --------------------------------------------------
+# 5) Create Report document --------------------------------------------------
 mergeRmds(
   projectConfiguration = projectConfiguration,
   newName = "TutorialPlots",
@@ -121,7 +124,9 @@ mergeRmds(
   sourceRmds = c("TimeProfiles")
 )
 
-renderWord(fileName = file.path(projectConfiguration$outputFolder, "TutorialPlots.Rmd"))
+renderWord(
+  fileName = file.path(projectConfiguration$outputFolder, "TutorialPlots.Rmd")
+)
 
 # finalize workflow---------------------
 addMessageToLog("finalize workflow")

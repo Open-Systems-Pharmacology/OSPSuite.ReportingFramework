@@ -9,16 +9,30 @@
 #'
 #' @return A data.table containing the aggregated simulated time profiles for all scenarios.
 #' @keywords internal
-loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, outputPathsPerScenario, aggregationFun) {
+loadScenarioTimeProfiles <- function(
+  projectConfiguration,
+  simulatedResults,
+  outputPathsPerScenario,
+  aggregationFun
+) {
   dtSimulated <- data.table()
   for (scenarioName in names(outputPathsPerScenario)) {
     individualMatch <- NULL
-    if ("Population" %in% class(simulatedResults[[scenarioName]]$population) &&
-      "ObservedIndividualId" %in% simulatedResults[[scenarioName]]$population$allCovariateNames) {
+    if (
+      "Population" %in%
+        class(simulatedResults[[scenarioName]]$population) &&
+        !is.null(simulatedResults[[scenarioName]]$population) &&
+        "ObservedIndividualId" %in%
+          simulatedResults[[scenarioName]]$population$allCovariateNames
+    ) {
       individualMatch <-
         data.table(
-          individualId = simulatedResults[[scenarioName]]$population$allIndividualIds,
-          observedIndividualId = simulatedResults[[scenarioName]]$population$getCovariateValues("ObservedIndividualId")
+          individualId = simulatedResults[[
+            scenarioName
+          ]]$population$allIndividualIds,
+          observedIndividualId = simulatedResults[[
+            scenarioName
+          ]]$population$getCovariateValues("ObservedIndividualId")
         )
     }
     dtSimulated <- rbind(
@@ -37,16 +51,17 @@ loadScenarioTimeProfiles <- function(projectConfiguration, simulatedResults, out
 }
 
 
-
 #' Get Unit Conversion Data Table
 #'
 #' This function creates a data table for unit conversion based on simulated data and output specifications.
 #'
 #' @param dtSimulated A data.table containing simulated results.
 #' @param dtOutputs A data.table containing output specifications.
-#' @return A data.table with unit conversion factors and unique paths.
+#' @return A data.table with unit conversion factors per output path, ready for merging with time profile data.
 #' @keywords internal
 getUnitConversionDT <- function(dtSimulated, dtOutputs) {
+  checkmate::assertDataTable(dtSimulated)
+  checkmate::assertDataTable(dtOutputs)
   # avoid warning for global variable
   unitFactor <- NULL
   dtUnit <- dtSimulated %>%
@@ -59,16 +74,24 @@ getUnitConversionDT <- function(dtSimulated, dtOutputs) {
       by.y = "outputPath"
     )
 
-  dtUnit[, unitFactor := apply(dtUnit, 1, function(row) {
-    ospsuite::toUnit(
-      quantityOrDimension = row["dimension"],
-      values = 1,
-      sourceUnit = row["yUnit"],
-      targetUnit = row["displayUnit"],
-      molWeight = as.numeric(row["molWeight"]),
-      molWeightUnit = "g/mol"
+  dtUnit[,
+    unitFactor := mapply(
+      function(dimension, yUnit, displayUnit, molWeight) {
+        ospsuite::toUnit(
+          quantityOrDimension = dimension,
+          values = 1,
+          sourceUnit = yUnit,
+          targetUnit = displayUnit,
+          molWeight = as.numeric(molWeight),
+          molWeightUnit = "g/mol"
+        )
+      },
+      dtUnit$dimension,
+      dtUnit$yUnit,
+      dtUnit$displayUnit,
+      dtUnit$molWeight
     )
-  })]
+  ]
 
   return(dtUnit)
 }
@@ -85,15 +108,18 @@ getApplicationTimes <- function(outputPathsPerScenario, simulatedResults) {
   applicationTimes <- list()
 
   for (scenarioName in names(outputPathsPerScenario)) {
-    applicationStartTimes <- lapply(outputPathsPerScenario[[scenarioName]], function(pts) {
-      lapply(
-        simulatedResults[[scenarioName]]$simulation$allApplicationsFor(pts),
-        function(x) {
-          x$startTime$value
-        }
-      ) %>%
-        unlist()
-    }) %>%
+    applicationStartTimes <- lapply(
+      outputPathsPerScenario[[scenarioName]],
+      function(pts) {
+        lapply(
+          simulatedResults[[scenarioName]]$simulation$allApplicationsFor(pts),
+          function(x) {
+            x$startTime$value
+          }
+        ) %>%
+          unlist()
+      }
+    ) %>%
       unlist() %>%
       unique() %>%
       sort()
@@ -102,8 +128,11 @@ getApplicationTimes <- function(outputPathsPerScenario, simulatedResults) {
       list(
         startOfFirstApplication = applicationStartTimes[1],
         startOfLastApplication = utils::tail(applicationStartTimes, 1),
-        endOfFirstApplication =
-          ifelse(length(applicationStartTimes) > 1, applicationStartTimes[2], Inf) # nolint: line_length
+        endOfFirstApplication = ifelse(
+          length(applicationStartTimes) > 1,
+          applicationStartTimes[2],
+          Inf
+        ) # nolint: line_length
       )
   }
   return(applicationTimes)
@@ -121,7 +150,12 @@ getApplicationTimes <- function(outputPathsPerScenario, simulatedResults) {
 #'
 #' @return A data.table with the processed time profile data.
 #' @keywords internal
-getSimulatedTimeprofile <- function(simulatedResult, outputPaths, aggregationFun, individualMatch) {
+getSimulatedTimeprofile <- function(
+  simulatedResult,
+  outputPaths,
+  aggregationFun,
+  individualMatch
+) {
   # reduce list of outputPaths to available paths
   outputPaths <- intersect(
     outputPaths,
@@ -141,10 +175,21 @@ getSimulatedTimeprofile <- function(simulatedResult, outputPaths, aggregationFun
   # Aggregate if needed
   if (!is.null(individualMatch)) {
     dt <- dt %>%
-      dplyr::select(c("IndividualId", "xValues", "yValues", "paths", "dimension", "yUnit", "molWeight")) %>%
+      dplyr::select(c(
+        "IndividualId",
+        "xValues",
+        "yValues",
+        "paths",
+        "dimension",
+        "yUnit",
+        "molWeight"
+      )) %>%
       merge(individualMatch, by.x = "IndividualId", by.y = "individualId") %>%
       dplyr::mutate(IndividualId = NULL) %>%
-      data.table::setnames(old = "observedIndividualId", new = "individualId") %>%
+      data.table::setnames(
+        old = "observedIndividualId",
+        new = "individualId"
+      ) %>%
       dplyr::mutate(dataClass = DATACLASS$tpTwinPop)
   } else if (dplyr::n_distinct(dt$IndividualId) > 1) {
     dt <- performAggregation(
@@ -155,13 +200,19 @@ getSimulatedTimeprofile <- function(simulatedResult, outputPaths, aggregationFun
       dplyr::mutate(dataClass = DATACLASS$tpAggregated)
   } else {
     dt <- dt %>%
-      dplyr::select(c("xValues", "yValues", "paths", "dimension", "yUnit", "molWeight")) %>%
+      dplyr::select(c(
+        "xValues",
+        "yValues",
+        "paths",
+        "dimension",
+        "yUnit",
+        "molWeight"
+      )) %>%
       dplyr::mutate(dataClass = DATACLASS$tpIndividual)
   }
 
   dt <- dt %>%
     dplyr::mutate(dataType = "simulated")
-
 
   return(dt)
 }
@@ -172,7 +223,7 @@ getSimulatedTimeprofile <- function(simulatedResult, outputPaths, aggregationFun
 #'
 #' @param timeprofile A data.table containing time profile data.
 #' @param dtUnit A data.table with unit conversion factors.
-#' @return A data.table with the y-values converted to the target unit.
+#' @return A data.table with y-columns scaled to the display unit.
 #' @keywords internal
 convertYunit <- function(timeprofile, dtUnit) {
   # Initialize variables used for data.tables
@@ -180,7 +231,14 @@ convertYunit <- function(timeprofile, dtUnit) {
 
   identifier <- intersect(names(dtUnit), names(timeprofile))
   timeprofile <- timeprofile %>%
-    merge(dtUnit %>% dplyr::select(unique(c(identifier, "outputPathId", "unitFactor", "displayUnit"))),
+    merge(
+      dtUnit %>%
+        dplyr::select(unique(c(
+          identifier,
+          "outputPathId",
+          "unitFactor",
+          "displayUnit"
+        ))),
       by = identifier
     )
 
@@ -189,19 +247,31 @@ convertYunit <- function(timeprofile, dtUnit) {
     names(timeprofile)
   )
   yErrorType <- timeprofile$yErrorType[1]
-  if (!is.null(yErrorType) &&
-    !is.na(yErrorType) && # nolint: line_length
-    yErrorType == ospsuite::DataErrorType$ArithmeticStdDev) {
-    columnsToScale <- c(columnsToScale, yErrorValues)
+  if (
+    !is.null(yErrorType) &&
+      !is.na(yErrorType) && # nolint: line_length
+      yErrorType == ospsuite::DataErrorType$ArithmeticStdDev
+  ) {
+    columnsToScale <- c(columnsToScale, "yErrorValues")
   }
-  timeprofile[, (columnsToScale) := lapply(.SD, function(x) x * unitFactor), .SDcols = columnsToScale]
+  timeprofile[,
+    (columnsToScale) := lapply(.SD, function(x) x * unitFactor),
+    .SDcols = columnsToScale
+  ]
 
   # delete columns not needed any more
   timeprofile <- timeprofile %>%
-    dplyr::select(-dplyr::any_of(c("paths", "dimension", "molWeight", "unitFactor", "yUnit")))
+    dplyr::select(
+      -dplyr::any_of(c(
+        "paths",
+        "dimension",
+        "molWeight",
+        "unitFactor",
+        "yUnit"
+      ))
+    )
 
   data.table::setnames(timeprofile, old = "displayUnit", new = "yUnit")
-
 
   return(timeprofile)
 }
@@ -215,18 +285,26 @@ convertYunit <- function(timeprofile, dtUnit) {
 #' @param timeOffset An optional time offset to be applied after conversion (default is 0).
 #' @return A data.table with the time values converted and shifted.
 #' @keywords internal
-convertAndShiftTimeUnits <- function(timeprofile, targetTimeUnit, timeOffset = 0) {
+convertAndShiftTimeUnits <- function(
+  timeprofile,
+  targetTimeUnit,
+  timeOffset = 0
+) {
+  checkmate::assertString(targetTimeUnit)
+  checkmate::assertNumber(timeOffset)
   # avoid warnings during check
   xValues <- xUnit <- NULL
 
   sourceTimeUnit <- unique(timeprofile$xUnit)
 
-  timeprofile[, xValues := ospsuite::toUnit(
-    quantityOrDimension = "Time",
-    sourceUnit = sourceTimeUnit,
-    values = as.double(xValues),
-    targetUnit = targetTimeUnit
-  )]
+  timeprofile[,
+    xValues := ospsuite::toUnit(
+      quantityOrDimension = "Time",
+      sourceUnit = sourceTimeUnit,
+      values = as.double(xValues),
+      targetUnit = targetTimeUnit
+    )
+  ]
   timeprofile[, xUnit := targetTimeUnit]
 
   timeprofile[, xValues := xValues - timeOffset]
@@ -242,8 +320,7 @@ convertAndShiftTimeUnits <- function(timeprofile, targetTimeUnit, timeOffset = 0
 #' or the time profile has no column "individualId" the original time profile is returned.
 #'
 #' @param timeprofile A data frame containing time profile data with an `individualId` column.
-#' @param individualList A character string of individual IDs to filter by. If the string
-#'                       contains '*', all individuals will be included.
+#' @param individualList A character string or `NA`. If the string contains '*', all individuals are included.
 #'
 #' @return A data frame containing only the rows from `timeprofile` that match the specified
 #'         individual IDs. If no IDs are provided, the original `timeprofile` is returned.
@@ -253,9 +330,11 @@ filterIndividualID <- function(timeprofile, individualList) {
   # Initialize variables used for data.tables
   individualId <- NULL
 
-  if (!is.na(individualList) &&
-    "individualId" %in% names(timeprofile) &&
-    any(!is.na(timeprofile$individualId))) {
+  if (
+    !is.na(individualList) &&
+      "individualId" %in% names(timeprofile) &&
+      any(!is.na(timeprofile$individualId))
+  ) {
     individualIds <- gsub("[()]", "", splitInputs(individualList))
     if (any(individualIds != "*")) {
       timeprofile <- timeprofile[individualId %in% individualIds, ]

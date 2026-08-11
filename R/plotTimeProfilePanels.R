@@ -266,6 +266,10 @@ plotTimeProfiles <- function(
 #' @return Updated `rmdPlotManager` with the generated plot.
 #' @keywords internal
 generatePlotForPlotType <- function(plotData, facetAspectRatio, plotType, ...) {
+  checkmate::assertChoice(
+    plotType,
+    choices = c("TP", "PvO", "ResvT", "ResvO", "ResH", "QQ")
+  )
   plotList <- list()
   if (!isPlotTypeNeededAndPossible(plotType, plotData)) {
     return(plotList)
@@ -310,7 +314,7 @@ generatePlotForPlotType <- function(plotData, facetAspectRatio, plotType, ...) {
               comparisonLineVector = getFoldDistanceForPvO(plotData),
               ...
             ),
-            ResvT = ospsuite_plotResidualsVsTime(
+            ResvT = ospsuite_plotResidualsVsCovariate(
               plotData = plotData$getDataForTimeRange(
                 timeRangeFilter,
                 typeFilter = "observed",
@@ -318,11 +322,12 @@ generatePlotForPlotType <- function(plotData, facetAspectRatio, plotType, ...) {
                 yScale = yScale
               ),
               residualScale = yScale,
+              xAxis = "time",
               mapping = getGroupbyMapping(plotData, plotType),
               groupAesthetics = getGroupAesthetics(plotData),
               ...
             ),
-            ResvO = ospsuite_plotResidualsVsObserved(
+            ResvO = ospsuite_plotResidualsVsCovariate(
               plotData = plotData$getDataForTimeRange(
                 timeRangeFilter,
                 typeFilter = "observed",
@@ -330,7 +335,7 @@ generatePlotForPlotType <- function(plotData, facetAspectRatio, plotType, ...) {
                 yScale = yScale
               ),
               residualScale = yScale,
-              xScale = yScale,
+              xAxis = "observed",
               mapping = getGroupbyMapping(plotData, plotType),
               groupAesthetics = getGroupAesthetics(plotData),
               ...
@@ -361,7 +366,7 @@ generatePlotForPlotType <- function(plotData, facetAspectRatio, plotType, ...) {
             )
           )
 
-        plotObject <- setManualScalevectors(
+        plotObject <- setManualScaleVectors(
           plotObject = plotObject,
           plotData = plotData,
           plotType = plotType
@@ -378,14 +383,14 @@ generatePlotForPlotType <- function(plotData, facetAspectRatio, plotType, ...) {
           nFacetColumns = plotData$nFacetColumns,
           facetScale = plotData$configTable$facetScale[1],
           facetAspectRatio = ifelse(
-            plotType %in% c("PvO", "QQ "),
+            plotType %in% c("PvO", "QQ"),
             1, # nolint: indentation_linter
             facetAspectRatio
           )
         )
 
         # adjust time labels
-        if (plotType %in% c("TP", "ResvT ")) {
+        if (plotType %in% c("TP", "ResvT")) {
           plotObject <- plotObject +
             ggplot2::labs(
               x = plotData$getTimeLabelForTimeRange(timeRangeFilter)
@@ -459,7 +464,7 @@ isPlotTypeNeededAndPossible <- function(plotType, plotData) {
     return(as.logical(plotData$configTable[[configColumn]][1]))
   } else {
     return(
-      as.logical(plotData$configTable[[configColumn]][1]) &
+      as.logical(plotData$configTable[[configColumn]][1]) &&
         plotData$hasObservedData()
     ) # warning is thrown during data preparation # nolint: indentation_linter
   }
@@ -524,7 +529,17 @@ checkAndAdjustYlimits <- function(
   if (is.na(ylimits) || trimws(ylimits) == "") {
     ylimits <- NULL
   } else {
-    ylimits <- eval(parse(text = ylimits))
+    ylimits <- tryCatch(
+      eval(parse(text = ylimits)),
+      error = function(e) {
+        stop(paste0(
+          "Invalid ylimit expression '",
+          ylimits,
+          "': ",
+          conditionMessage(e)
+        ))
+      }
+    )
   }
 
   simulatedData <- plotData$getDataForTimeRange(
@@ -545,9 +560,9 @@ checkAndAdjustYlimits <- function(
   }
 
   # make sure no observed data are missed by setting y limits
-  if (!is.null(ylimits) & nrow(observedData) > 0) {
+  if (!is.null(ylimits) && nrow(observedData) > 0) {
     if (
-      any(observedData$yValues <= ylimits[1]) | # nolint: indentation_linter
+      any(observedData$yValues <= ylimits[1]) || # nolint: indentation_linter
         any(
           observedData$yValues >= # nolint: indentation_linter
             ylimits[2],
@@ -559,7 +574,7 @@ checkAndAdjustYlimits <- function(
   }
 
   # for log scale set always limit to cut very low simulated values at the beginning
-  if (is.null(ylimits) & yScale == "log") {
+  if (is.null(ylimits) && yScale == "log") {
     # replace Inf and omit first 10% of time range
     timeRangeSim <- range(simulatedData$xValues)
     timeRangeSim[1] <- timeRangeSim[1] + 0.1 * diff(timeRangeSim)
@@ -615,6 +630,10 @@ checkAndAdjustYlimits <- function(
 #' @return Aesthetic mappings for grouping.
 #' @keywords internal
 getGroupbyMapping <- function(plotData, plotType) {
+  checkmate::assertChoice(
+    plotType,
+    choices = c("TP", "PvO", "ResvT", "ResvO", "ResH", "QQ")
+  )
   # avoid warning for global variable
   colorIndex <- shapeIndex <- NULL
 
@@ -625,7 +644,7 @@ getGroupbyMapping <- function(plotData, plotType) {
       mapping <- ggplot2::aes(groupby = colorIndex, shape = "Observed data")
     }
   } else {
-    if (plotData$useColorIndex() & plotData$useShapeIndex()) {
+    if (plotData$useColorIndex() && plotData$useShapeIndex()) {
       mapping <- ggplot2::aes(groupby = colorIndex, shape = shapeIndex)
     } else if (plotData$useShapeIndex()) {
       mapping <- ggplot2::aes(groupby = shapeIndex, shape = shapeIndex)
@@ -659,7 +678,6 @@ getGroupAesthetics <- function(plotData) {
 #' @return Updated ggplot object with guides.
 #' @keywords internal
 updateGuides <- function(plotData, plotObject, plotType) {
-  # nolint
   # Initialize legend titles
   legendTitleObservedData <- "Observed data"
   legendTitleColor <- ""
@@ -761,7 +779,7 @@ updateGuides <- function(plotData, plotObject, plotType) {
 #'
 #' @return Updated ggplot object with manual scale vectors.
 #' @keywords internal
-setManualScalevectors <- function(plotObject, plotData, plotType) {
+setManualScaleVectors <- function(plotObject, plotData, plotType) {
   for (aesthetic in names(plotData$scaleVectors)) {
     scaleVector <- plotData$scaleVectors[[aesthetic]]
     labels <- waiver()
@@ -816,6 +834,10 @@ getCaptionForPlot <- function(
   plotType,
   plotCounter
 ) {
+  checkmate::assertChoice(
+    plotType,
+    choices = c("TP", "PvO", "ResvT", "ResvO", "ResH", "QQ")
+  )
   # avoid warning for global variable
   counter <- NULL
   dtCaption <-
@@ -948,7 +970,7 @@ getGeomLineAttributesForTP <- function(plotData) {
 
 #' get additional inputs for `TP` plotType to enable lines in shape legend
 #'
-#' @param plotData
+#' @param plotData A `PlotDataTimeProfile` object.
 #'
 #' @return list with additional attributes for lloq line
 #' @keywords internal
@@ -1180,9 +1202,13 @@ validateTimeRangeColumns <- function(configTablePlots) {
           function(x) {
             valid <- x %in%
               c(NA, "total", "firstApplication", "lastApplication")
-            if (!all(valid)) {
-              tmp <- eval(parse(text = x[!valid]))
-              valid <-
+            for (entry in x[!valid]) {
+              tmp <- tryCatch(
+                eval(parse(text = entry)),
+                error = function(e) NULL
+              )
+              valid[x == entry] <-
+                !is.null(tmp) &&
                 is.numeric(tmp) &&
                 length(tmp) == 2 &&
                 all(!is.na(tmp))
@@ -1195,7 +1221,11 @@ validateTimeRangeColumns <- function(configTablePlots) {
       }
     },
     error = function(err) {
-      stop(messages$errorplotTimeProfilePanelsL2XXXXX())
+      stop(paste0(
+        messages$errorplotTimeProfilePanelsL2XXXXX(),
+        ": ",
+        conditionMessage(err)
+      ))
     }
   )
 
@@ -1326,9 +1356,16 @@ validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
 #' where helper functions are prohibited (`validRun`). If such a context is detected, an error is raised to prevent execution.
 #'
 #'
-#' @return NULL This function updates the Excel workbook in place and does not return a value.
-#' It is called for its side effects.
+#' @return invisible(NULL). Updates the Excel workbook in place.
 #'
+#' @examples
+#' \dontrun{
+#' addDefaultConfigForTimeProfilePlots(
+#'   projectConfiguration = projectConfiguration,
+#'   dataObserved = dataObserved,
+#'   sheetName = "TimeProfiles"
+#' )
+#' }
 #' @export
 #' @family plot functions
 #' @family plot configuration helper function
