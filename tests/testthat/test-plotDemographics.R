@@ -1,160 +1,215 @@
-# testProject was set up by setup.R
-pkParameterDT <- loadPKParameter(
-  projectConfiguration = projectConfiguration,
-  scenarioListOrResult = scenarioList
-)
+# Unit tests for pure helper functions in plotDemographics.R.
+# Integration tests (runPlot, vdiffr, real project setup) belong in the
+# integration-test package.
 
-test_that("Default Config For Histograms", {
-  addDefaultConfigForHistograms(
-    projectConfiguration = projectConfiguration,
-    sheetName = "HistogramTest",
-    pkParameterDT = pkParameterDT,
-    overwrite = TRUE
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+makeCaptionData <- function(
+  scenarioLongName = "Adults",
+  plotTag = "A",
+  displayNameOutput = NULL
+) {
+  dt <- data.table::data.table(
+    scenarioLongName = scenarioLongName,
+    plotTag = plotTag
   )
+  if (!is.null(displayNameOutput)) {
+    dt[, displayNameOutput := displayNameOutput]
+  }
+  dt
+}
 
-  wb <- openxlsx::loadWorkbook(projectConfiguration$addons$addons$reportsFile)
+# ---------------------------------------------------------------------------
+# getCaptionForDemographicPlot
+# ---------------------------------------------------------------------------
 
-  expect_contains(wb$sheet_names, "HistogramTest")
+test_that("getCaptionForDemographicPlot builds histogram caption", {
+  result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
+    idData = makeCaptionData(),
+    valueLabel = "Weight",
+    binLabel = NULL,
+    valueScale = "linear",
+    plotCaptionAddon = NA
+  )
+  expect_match(result, "Weight")
+  expect_match(result, "linear")
+  expect_match(result, "Adults")
+  expect_false(grepl("dependency", result))
 })
 
-test_that("Default Config For Rangeplots", {
-  addDefaultConfigForDistributionsVsDemographics(
-    projectConfiguration = projectConfiguration,
-    sheetName = "RangePlotTest",
-    pkParameterDT = pkParameterDT,
-    overwrite = TRUE
+test_that("getCaptionForDemographicPlot builds range plot caption with bin", {
+  result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
+    idData = makeCaptionData(),
+    valueLabel = "Weight",
+    binLabel = "Age",
+    valueScale = "log",
+    plotCaptionAddon = NA
   )
-
-  wb <- openxlsx::loadWorkbook(projectConfiguration$addons$addons$reportsFile)
-
-  expect_contains(wb$sheet_names, "RangePlotTest")
+  expect_match(result, "Weight dependency")
+  expect_match(result, "vs Age")
+  expect_match(result, "logarithmic")
 })
 
-# prepare configtable
-mockManualEditingsPlotDemographicsTest(projectConfiguration)
+test_that("getCaptionForDemographicPlot appends plotCaptionAddon", {
+  result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
+    idData = makeCaptionData(),
+    valueLabel = "Weight",
+    binLabel = NULL,
+    valueScale = NULL,
+    plotCaptionAddon = "See study protocol"
+  )
+  expect_match(result, "See study protocol")
+})
 
-test_that("PK histograms plots", {
-  skip_if_not_installed("vdiffr")
-  skip_if(getRversion() < "4.1")
+test_that("getCaptionForDemographicPlot omits scale text when valueScale is NULL", {
+  result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
+    idData = makeCaptionData(),
+    valueLabel = "Weight",
+    binLabel = NULL,
+    valueScale = NULL,
+    plotCaptionAddon = NA
+  )
+  expect_false(grepl("scale", result))
+})
 
-  # createPlots
-  plotList <- runPlot(
-    nameOfplotFunction = "plotHistograms",
-    projectConfiguration = projectConfiguration,
-    configTableSheet = "HistogramTest",
-    suppressExport = TRUE,
-    plotNames = "pkparameter2",
-    inputs = list(
-      scenarioList = scenarioList,
-      pkParameterDT = pkParameterDT,
-      colorVector = c(
-        "PO application" = "red",
-        "IV application" = "green"
-      ),
-      plotAsFrequency = TRUE
+test_that("getCaptionForDemographicPlot includes output name when present", {
+  result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
+    idData = makeCaptionData(displayNameOutput = "AUC"),
+    valueLabel = "PK",
+    binLabel = "Age",
+    valueScale = "linear",
+    plotCaptionAddon = NA
+  )
+  expect_match(result, "AUC")
+})
+
+# ---------------------------------------------------------------------------
+# getFootnoteLinesForRangePlots
+# ---------------------------------------------------------------------------
+
+test_that("getFootnoteLinesForRangePlots formats single label", {
+  result <- ospsuite.reportingframework:::getFootnoteLinesForRangePlots("mean")
+  expect_match(result, "mean")
+  expect_match(result, "\\.")
+})
+
+test_that("getFootnoteLinesForRangePlots formats two labels with 'and'", {
+  result <- ospsuite.reportingframework:::getFootnoteLinesForRangePlots(c(
+    "mean",
+    "SD"
+  ))
+  expect_match(result, "mean and SD")
+})
+
+test_that("getFootnoteLinesForRangePlots formats three labels", {
+  result <- ospsuite.reportingframework:::getFootnoteLinesForRangePlots(c(
+    "5th",
+    "50th",
+    "95th"
+  ))
+  expect_match(result, "5th, 50th and 95th")
+})
+
+# ---------------------------------------------------------------------------
+# getNFacetsForDemographics
+# ---------------------------------------------------------------------------
+
+makeFacetData <- function(plotTags, scenarios, outputNames = NULL) {
+  dt <- data.table::data.table(plotTag = plotTags, scenario = scenarios)
+  if (!is.null(outputNames)) {
+    dt[, displayNameOutput := outputNames]
+  }
+  dt
+}
+
+test_that("getNFacetsForDemographics returns NULL for single plotTag", {
+  dt <- makeFacetData(rep("A", 4), rep("sc1", 4))
+  expect_null(
+    ospsuite.reportingframework:::getNFacetsForDemographics(
+      dt,
+      isRangePlot = FALSE
     )
   )
-
-  expect_equal(length(plotList), 2)
-
-  vdiffr::expect_doppelganger(
-    title = "pkhistograms_F_tEnd_linear",
-    fig = plotList$pkparameter2_F_tEnd_linear
-  )
-  rm(plotList)
 })
 
-
-test_that("demographic histograms plots", {
-  skip_if_not_installed("vdiffr")
-  skip_if(getRversion() < "4.1")
-
-  # createPlots
-  plotList <- runPlot(
-    nameOfplotFunction = "plotHistograms",
-    projectConfiguration = projectConfiguration,
-    configTableSheet = "HistogramTest",
-    suppressExport = TRUE,
-    plotNames = "demographics",
-    inputs = list(
-      scenarioList = scenarioList,
-      pkParameterDT = pkParameterDT,
-      colorVector = c(adults = "grey")
-    )
+test_that("getNFacetsForDemographics returns 1 for range plot with multiple tags", {
+  dt <- makeFacetData(c("A", "B"), c("sc1", "sc2"))
+  expect_equal(
+    ospsuite.reportingframework:::getNFacetsForDemographics(
+      dt,
+      isRangePlot = TRUE
+    ),
+    1
   )
-
-  expect_equal(length(plotList), 2)
-
-  vdiffr::expect_doppelganger(
-    title = "dmhistograms_gender_linear",
-    fig = plotList$demographics_gender_linear
-  )
-  rm(plotList)
 })
 
-test_that("demographic range plots", {
-  skip_if_not_installed("vdiffr")
-  skip_if(getRversion() < "4.1")
-
-  # createPlots
-  plotList <- runPlot(
-    nameOfplotFunction = "plotDistributionVsDemographics",
-    projectConfiguration = projectConfiguration,
-    configTableSheet = "RangePlotTest",
-    suppressExport = TRUE,
-    plotNames = "demographics",
-    inputs = list(
-      scenarioList = scenarioList,
-      asStepPlot = FALSE,
-      facetAspectRatio = 0.3,
-      colorVector = c(
-        pediatrics = ospsuite.plots::colorMaps[[1]][[1]],
-        adults = "grey"
-      )
-    )
+test_that("getNFacetsForDemographics uses nMaxFacetRows for histogram", {
+  dt <- makeFacetData(c("A", "B", "C", "D"), c("s1", "s2", "s3", "s4"))
+  expect_equal(
+    ospsuite.reportingframework:::getNFacetsForDemographics(
+      dt,
+      isRangePlot = FALSE,
+      nMaxFacetRows = 2
+    ),
+    2
   )
-
-  expect_equal(length(plotList), 6)
-  expect_equal(nrow(plotList[["demographics_weight"]]), 19)
-
-  set.seed(123)
-  vdiffr::expect_doppelganger(
-    title = "demographics_weight_linear",
-    fig = plotList$demographics_weight_linear
-  )
-  rm(plotList)
 })
 
-test_that("PK range plots", {
-  skip_if_not_installed("vdiffr")
-  skip_if(getRversion() < "4.1")
-
-  plotList <- runPlot(
-    nameOfplotFunction = "plotDistributionVsDemographics",
-    projectConfiguration = projectConfiguration,
-    configTableSheet = "RangePlotTest",
-    suppressExport = TRUE,
-    plotNames = "pkparameter2",
-    inputs = list(
-      scenarioList = scenarioList,
-      pkParameterDT = pkParameterDT,
-      asStepPlot = TRUE,
-      aggregationFlag = "GeometricStdDev",
-      colorVector = c(
-        pediatrics = ospsuite.plots::colorMaps[[1]][[1]],
-        adults = "grey"
-      )
-    )
+test_that("getNFacetsForDemographics uses output count with multiple outputs and scenarios", {
+  dt <- makeFacetData(
+    c("A", "B", "C", "D"),
+    c("s1", "s1", "s2", "s2"),
+    outputNames = c("out1", "out2", "out1", "out2")
   )
-
-  expect_equal(length(plotList), 4)
-
-  expect_equal(nrow(plotList$pkparameter2_F_tEnd_A), 21)
-
-  set.seed(123)
-  vdiffr::expect_doppelganger(
-    title = "pkparameter2_F_tEnd_log",
-    fig = plotList$pkparameter2_F_tEnd_log
+  expect_equal(
+    ospsuite.reportingframework:::getNFacetsForDemographics(
+      dt,
+      isRangePlot = FALSE,
+      nMaxFacetRows = 2
+    ),
+    2
   )
-  rm(plotList)
+})
+
+# ---------------------------------------------------------------------------
+# setPlotTag
+# ---------------------------------------------------------------------------
+
+test_that("setPlotTag assigns 'A' when no faceting identifier present", {
+  dt <- data.table::data.table(scenario = c("s1", "s1"), value = c(1, 2))
+  result <- ospsuite.reportingframework:::setPlotTag(
+    dt,
+    asRangePlot = TRUE,
+    usePKParameter = FALSE
+  )
+  expect_true("plotTag" %in% names(result))
+  expect_equal(unique(result$plotTag), "A")
+})
+
+test_that("setPlotTag creates one tag per scenario for histograms", {
+  dt <- data.table::data.table(
+    scenario = c("s1", "s1", "s2", "s2"),
+    value = 1:4
+  )
+  result <- ospsuite.reportingframework:::setPlotTag(
+    dt,
+    asRangePlot = FALSE,
+    usePKParameter = FALSE
+  )
+  expect_equal(data.table::uniqueN(result$plotTag), 2)
+})
+
+test_that("setPlotTag creates one tag per output when usePKParameter and range plot", {
+  dt <- data.table::data.table(
+    displayNameOutput = c("AUC", "AUC", "Cmax", "Cmax"),
+    value = 1:4
+  )
+  result <- ospsuite.reportingframework:::setPlotTag(
+    dt,
+    asRangePlot = TRUE,
+    usePKParameter = TRUE
+  )
+  expect_equal(data.table::uniqueN(result$plotTag), 2)
 })

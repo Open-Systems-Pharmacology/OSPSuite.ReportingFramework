@@ -237,7 +237,7 @@ prepareDemographicPlotData <- function(
   colorVector
 ) {
   # initialize to avoid linter messages
-  scenarioType <- referenceScenario <- scenarioType <- scenario <- NULL
+  scenarioType <- referenceScenario <- scenario <- NULL
 
   if (usePKParameter) {
     onePlotConfigIdentifier <- copy(onePlotConfig) %>%
@@ -439,7 +439,7 @@ generateRangePlots <- function(
   # initialize to avoid linter messages
   plotTag <- scenarioType <- value <- value.bin <- parameterId <- NULL # nolint
 
-  # convert the aggreagtion function so that it suited as input for plotRange
+  # convert aggregation function to the form expected by plotRangeDistribution
   statFun <- function(y) {
     l <- aggregationFun(y)
     if (l$yErrorType == ospsuite::DataErrorType$ArithmeticStdDev) {
@@ -655,9 +655,9 @@ loadDemographicParameters <- function(onePlotConfig, scenarioList) {
 #' @return A data.table containing the updated plot data with demographic bins.
 #' @keywords internal
 addDemographicsToBin <- function(
-  plotData = plotData,
-  onePlotConfig = onePlotConfig,
-  scenarioList = scenarioList
+  plotData,
+  onePlotConfig,
+  scenarioList
 ) {
   onePlotConfigIdentifier <- onePlotConfig[, c(
     "scenario",
@@ -803,7 +803,7 @@ getExportTableForRanges <- function(plotObject, aggregationFun, xLabel) {
 
   setattr(dtExport, "errorLabels", errorLabels)
 
-  return(dtExport = dtExport)
+  return(dtExport)
 }
 #' Load Population Parameter for Scenario
 #'
@@ -1052,7 +1052,7 @@ validateDistributionVsDemographicsConfig <- function(
     scenarioList,
     function(scenario) {
       (!is.null(scenario$population) &&
-        "Population" %in% class(scenario$population))
+        inherits(scenario$population, "Population"))
     }
   ))])
 
@@ -1130,8 +1130,6 @@ validateDistributionVsDemographicsConfig <- function(
       "outputPathIds",
       "colorLegend",
       "parameterIds",
-      "outputPathIds",
-      "plotCaptionAddon",
       "facetScale",
       "parameterId_Bin",
       "modeOfBinning",
@@ -1164,7 +1162,7 @@ validateHistogramsConfig <- function(configTable, ...) {
         dotarg$scenarioList,
         function(scenario) {
           (!is.null(scenario$population) &&
-            "Population" %in% class(scenario$population))
+            inherits(scenario$population, "Population"))
         }
       ))])
   } else if ("pkParameterDT" %in% names(dotarg)) {
@@ -1210,8 +1208,6 @@ validateHistogramsConfig <- function(configTable, ...) {
       "outputPathIds",
       "colorLegend",
       "parameterIds",
-      "outputPathIds",
-      "plotCaptionAddon",
       "xScale",
       "xlimit_linear",
       "xlimit_log",
@@ -1299,10 +1295,7 @@ validateParameterID <- function(configTablePlots, ...) {
 #' Additionally, the function performs a validity check to ensure that it is not executed during a context
 #' where helper functions are prohibited (validRun). If such a context is detected, an error is raised to prevent execution.
 #'
-#'
 #' @return NULL This function updates the Excel workbook in place and does not return a value.
-#' It is called for its side effects.
-#' Add Default Configuration for Histograms
 #' @export
 #' @family plot configuration helper function
 #' @family functions to generate plots displaying distribution vs demographics
