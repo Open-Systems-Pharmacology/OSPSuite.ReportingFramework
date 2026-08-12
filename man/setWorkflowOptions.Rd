@@ -8,7 +8,11 @@ setWorkflowOptions(isValidRun = NULL)
 }
 \arguments{
 \item{isValidRun}{A logical value indicating if the run is valid. If TRUE,
-options are set for a valid run; if FALSE, options are set for an invalid run.}
+options are set for a valid run; if FALSE, options are set for an invalid run.
+If NULL, the value is derived from the `QCpassed` environment variable.}
+}
+\value{
+Returns invisibly.
 }
 \description{
 Sets options for a reporting frame work workflow.
@@ -34,10 +38,13 @@ Relevant Options:
 - `OSPSuite.RF.stopHelperFunction`: Set to TRUE when `isValidRun` is TRUE to stop the execution of helper functions during valid runs.
 }
 \seealso{
-Other project initialization: 
+Other project initialization:
 \code{\link{ProjectConfigurationRF}},
-\code{\link{createProjectConfiguration}()},
-\code{\link{getQCpassedEnvironmentVariable}()},
-\code{\link{initProject}()}
+\code{\link[=createProjectConfiguration]{createProjectConfiguration()}},
+\code{\link[=getQCpassedEnvironmentVariable]{getQCpassedEnvironmentVariable()}},
+\code{\link[=initProject]{initProject()}},
+\code{\link[=restoreProjectConfigurationRF]{restoreProjectConfigurationRF()}},
+\code{\link[=snapshotProjectConfigurationRF]{snapshotProjectConfigurationRF()}},
+\code{\link[=upgradeToReportingFramework]{upgradeToReportingFramework()}}
 }
 \concept{project initialization}

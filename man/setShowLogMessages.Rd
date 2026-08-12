@@ -2,23 +2,22 @@
 % Please edit documentation in R/utilities-logging.R
 \name{setShowLogMessages}
 \alias{setShowLogMessages}
-\title{Function to switch the display of log messages on the console on and off}
+\title{Toggle display of log messages on the console}
 \usage{
 setShowLogMessages(verbose = TRUE)
 }
 \arguments{
-\item{verbose}{boolean, if true log message will be shown}
+\item{verbose}{boolean, if true log messages will be shown}
 }
 \description{
-Function to switch the display of log messages on the console on and off
+Toggle display of log messages on the console
 }
 \seealso{
-Other log file management: 
-\code{\link{addMessageToLog}()},
-\code{\link{captureLog}()},
-\code{\link{initLogfunction}()},
-\code{\link{saveSessionInfo}()},
-\code{\link{writeTableToLog}()},
-\code{\link{writeToLog}()}
+Other log file management:
+\code{\link[=addMessageToLog]{addMessageToLog()}},
+\code{\link[=captureLog]{captureLog()}},
+\code{\link[=initLogfunction]{initLogfunction()}},
+\code{\link[=saveSessionInfo]{saveSessionInfo()}},
+\code{\link[=writeTableToLog]{writeTableToLog()}}
 }
 \concept{log file management}

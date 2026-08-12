@@ -27,10 +27,13 @@ getQCpassedEnvironmentVariable() # Should return FALSE and issue a warning
 }
 }
 \seealso{
-Other project initialization: 
+Other project initialization:
 \code{\link{ProjectConfigurationRF}},
-\code{\link{createProjectConfiguration}()},
-\code{\link{initProject}()},
-\code{\link{setWorkflowOptions}()}
+\code{\link[=createProjectConfiguration]{createProjectConfiguration()}},
+\code{\link[=initProject]{initProject()}},
+\code{\link[=restoreProjectConfigurationRF]{restoreProjectConfigurationRF()}},
+\code{\link[=setWorkflowOptions]{setWorkflowOptions()}},
+\code{\link[=snapshotProjectConfigurationRF]{snapshotProjectConfigurationRF()}},
+\code{\link[=upgradeToReportingFramework]{upgradeToReportingFramework()}}
 }
 \concept{project initialization}

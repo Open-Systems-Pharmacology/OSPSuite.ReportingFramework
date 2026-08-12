@@ -13,17 +13,20 @@ addBiometricsToConfig(projectConfiguration, dataDT, overwrite = FALSE)
 
 \item{overwrite}{If TRUE, existing rows will be overwritten.}
 }
+\value{
+Returns invisibly.
+}
 \description{
 Add biometrics information to config
 }
 \seealso{
-Other observed data processing: 
-\code{\link{aggregateObservedDataGroups}()},
-\code{\link{convertDataCombinedToDataTable}()},
-\code{\link{convertDataTableToDataCombined}()},
-\code{\link{readObservedDataByDictionary}()},
-\code{\link{updateDataGroupId}()},
-\code{\link{updateOutputPathId}()},
-\code{\link{validateObservedData}()}
+Other observed data processing:
+\code{\link[=aggregateObservedDataGroups]{aggregateObservedDataGroups()}},
+\code{\link[=convertDataCombinedToDataTable]{convertDataCombinedToDataTable()}},
+\code{\link[=convertDataTableToDataCombined]{convertDataTableToDataCombined()}},
+\code{\link[=readObservedDataByDictionary]{readObservedDataByDictionary()}},
+\code{\link[=updateDataGroupId]{updateDataGroupId()}},
+\code{\link[=updateOutputPathId]{updateOutputPathId()}},
+\code{\link[=validateObservedData]{validateObservedData()}}
 }
 \concept{observed data processing}

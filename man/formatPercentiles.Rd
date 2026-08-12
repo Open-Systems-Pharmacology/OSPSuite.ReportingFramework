@@ -22,3 +22,8 @@ A vector containing the mapped labels for specific percentiles and formatted str
 This function takes a numeric vector of percentiles and maps specific values to their corresponding labels.
 It also formats other numeric values based on whether they are integers or not.
 }
+\examples{
+formatPercentiles(c(0, 0.5, 1))
+formatPercentiles(c(0.05, 0.25, 0.75, 0.95), suffix = " CI")
+
+}

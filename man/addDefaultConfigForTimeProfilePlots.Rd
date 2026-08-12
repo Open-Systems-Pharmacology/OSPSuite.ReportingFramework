@@ -13,7 +13,7 @@ addDefaultConfigForTimeProfilePlots(
 }
 \arguments{
 \item{projectConfiguration}{A `ProjectConfiguration` class object containing configuration details, including:
-- `plotsFile`: A string representing the file path to the Excel workbook containing the plot configurations.}
+- `addOns$reportsFile`: A string representing the file path to the Excel workbook containing the plot configurations.}
 
 \item{dataObserved}{Optional. A data object containing observed data, if available.}
 
@@ -24,8 +24,7 @@ Default is `TimeProfiles`.}
 Default is FALSE.}
 }
 \value{
-NULL This function updates the Excel workbook in place and does not return a value.
-It is called for its side effects.
+invisible(NULL). Updates the Excel workbook in place.
 }
 \description{
 This function adds a default configuration sheet for time profile plots to the plot configuration table.
@@ -39,24 +38,33 @@ and fills in the default configuration values for the time profile plots.
 Additionally, the function performs a validity check to ensure that it is not executed during a context
 where helper functions are prohibited (`validRun`). If such a context is detected, an error is raised to prevent execution.
 }
+\examples{
+\dontrun{
+addDefaultConfigForTimeProfilePlots(
+  projectConfiguration = projectConfiguration,
+  dataObserved = dataObserved,
+  sheetName = "TimeProfiles"
+)
+}
+}
 \seealso{
-Other plot functions: 
-\code{\link{addDefaultConfigForPKForestPlots}()},
-\code{\link{plotDistributionVsDemographics}()},
-\code{\link{plotHistograms}()},
-\code{\link{plotPKBoxwhisker}()},
-\code{\link{plotPKForestAggregatedAbsoluteValues}()},
-\code{\link{plotPKForestAggregatedRatios}()},
-\code{\link{plotPKForestPointEstimateOfAbsoluteValues}()},
-\code{\link{plotPKForestPointEstimateOfRatios}()},
-\code{\link{plotSensitivity}()},
-\code{\link{plotTimeProfiles}()}
+Other plot functions:
+\code{\link[=addDefaultConfigForPKForestPlots]{addDefaultConfigForPKForestPlots()}},
+\code{\link[=plotDistributionVsDemographics]{plotDistributionVsDemographics()}},
+\code{\link[=plotHistograms]{plotHistograms()}},
+\code{\link[=plotPKBoxwhisker]{plotPKBoxwhisker()}},
+\code{\link[=plotPKForestAggregatedAbsoluteValues]{plotPKForestAggregatedAbsoluteValues()}},
+\code{\link[=plotPKForestAggregatedRatios]{plotPKForestAggregatedRatios()}},
+\code{\link[=plotPKForestPointEstimateOfAbsoluteValues]{plotPKForestPointEstimateOfAbsoluteValues()}},
+\code{\link[=plotPKForestPointEstimateOfRatios]{plotPKForestPointEstimateOfRatios()}},
+\code{\link[=plotSensitivity]{plotSensitivity()}},
+\code{\link[=plotTimeProfiles]{plotTimeProfiles()}}
 
-Other plot configuration helper function: 
-\code{\link{addDefaultConfigForDistributionsVsDemographics}()},
-\code{\link{addDefaultConfigForHistograms}()},
-\code{\link{addDefaultConfigForPKBoxwhsikerPlots}()},
-\code{\link{addDefaultConfigForPKForestPlots}()}
+Other plot configuration helper function:
+\code{\link[=addDefaultConfigForDistributionsVsDemographics]{addDefaultConfigForDistributionsVsDemographics()}},
+\code{\link[=addDefaultConfigForHistograms]{addDefaultConfigForHistograms()}},
+\code{\link[=addDefaultConfigForPKBoxwhsikerPlots]{addDefaultConfigForPKBoxwhsikerPlots()}},
+\code{\link[=addDefaultConfigForPKForestPlots]{addDefaultConfigForPKForestPlots()}}
 }
 \concept{plot configuration helper function}
 \concept{plot functions}

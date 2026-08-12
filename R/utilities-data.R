@@ -156,7 +156,7 @@ readObservedDataByDictionary <- function(
   }
 
   # Logging
-  writeToLog(type = "Info", "Observed Data:")
+  ospsuite.utils::logInfo("Observed Data:")
   writeTableToLog(dataDT[,
     .(
       "No of data points" = .N,

@@ -51,10 +51,7 @@ calculatePKParameterForScenarios <- function(
 
     if (length(pkParameterSheets) > 0) {
       # Load or calculate PK analyses
-      writeToLog(
-        type = "Info",
-        msg = paste("Calculate  PK analysis result of", sc)
-      )
+      ospsuite.utils::logInfo(paste("Calculate PK analysis result of", sc))
 
       pkAnalyses <- ospsuite::calculatePKAnalyses(
         results = scenarioResults[[sc]]$results
@@ -395,10 +392,7 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
     stop(messages$errorutilitiespkParameterL1XXXXX())
   }
 
-  writeToLog(
-    type = "Info",
-    msg = paste("Load PK analysis result of", scenarioName)
-  )
+  ospsuite.utils::logInfo(paste("Load PK analysis result of", scenarioName))
 
   pkAnalyses <- ospsuite::importPKAnalysesFromCSV(
     filePath = fileName,

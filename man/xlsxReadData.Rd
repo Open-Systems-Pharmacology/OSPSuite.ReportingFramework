@@ -36,6 +36,10 @@ A `data.table` containing the sheet data.
 \description{
 This function wraps `openxlsx::read.xlsx` and returns the data as a `data.table`.
 }
+\details{
+The function accepts `skipDescriptionRow` either as a flag (`TRUE`/`FALSE`) or
+  as a non-negative integer indicating exactly how many leading rows to skip.
+}
 \examples{
 \dontrun{
 wb <- loadWorkbook("example.xlsx")
@@ -45,12 +49,12 @@ print(data)
 
 }
 \seealso{
-Other function to read from and write to xlsx: 
-\code{\link{setHeadersToLowerCase}()},
-\code{\link{splitInputs}()},
-\code{\link{xlsxAddDataUsingTemplate}()},
-\code{\link{xlsxAddSheet}()},
-\code{\link{xlsxCloneAndSet}()},
-\code{\link{xlsxWriteData}()}
+Other function to read from and write to xlsx:
+\code{\link[=setHeadersToLowerCase]{setHeadersToLowerCase()}},
+\code{\link[=splitInputs]{splitInputs()}},
+\code{\link[=xlsxAddDataUsingTemplate]{xlsxAddDataUsingTemplate()}},
+\code{\link[=xlsxAddSheet]{xlsxAddSheet()}},
+\code{\link[=xlsxCloneAndSet]{xlsxCloneAndSet()}},
+\code{\link[=xlsxWriteData]{xlsxWriteData()}}
 }
 \concept{function to read from and write to xlsx}

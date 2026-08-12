@@ -2,10 +2,7 @@
 % Please edit documentation in R/utilities-plot.R
 \name{validateColorLegend}
 \alias{validateColorLegend}
-\title{This function checks if the `colorLegend` column in a data.table contains
-valid entries. Each entry must be a character string concatenated from
-two characters separated by a pipe (`|`). If any entry does not meet this
-requirement, the function will print the invalid entries and stop execution.}
+\title{Validate Color Legend}
 \usage{
 validateColorLegend(dt)
 }

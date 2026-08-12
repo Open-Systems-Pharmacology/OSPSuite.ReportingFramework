@@ -10,18 +10,18 @@ mdNewpage()
 Insert a page break and a newline.
 }
 \seealso{
-Other markdown helper function: 
-\code{\link{addFiguresAndTables}()},
-\code{\link{mdBullet}()},
-\code{\link{mdBullet0}()},
-\code{\link{mdCaption}()},
-\code{\link{mdFigure}()},
-\code{\link{mdFootNote}()},
-\code{\link{mdHeading}()},
-\code{\link{mdLink}()},
-\code{\link{mdNewline}()},
-\code{\link{mdPaste}()},
-\code{\link{mdPaste0}()},
-\code{\link{mdTable}()}
+Other markdown helper function:
+\code{\link[=addFiguresAndTables]{addFiguresAndTables()}},
+\code{\link[=mdBullet]{mdBullet()}},
+\code{\link[=mdBullet0]{mdBullet0()}},
+\code{\link[=mdCaption]{mdCaption()}},
+\code{\link[=mdFigure]{mdFigure()}},
+\code{\link[=mdFootNote]{mdFootNote()}},
+\code{\link[=mdHeading]{mdHeading()}},
+\code{\link[=mdLink]{mdLink()}},
+\code{\link[=mdNewline]{mdNewline()}},
+\code{\link[=mdPaste]{mdPaste()}},
+\code{\link[=mdPaste0]{mdPaste0()}},
+\code{\link[=mdTable]{mdTable()}}
 }
 \concept{markdown helper function}

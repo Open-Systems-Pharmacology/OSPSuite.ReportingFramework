@@ -40,13 +40,13 @@ The function performs several checks, including:
 - Validating the presence of necessary columns based on the Y error type.
 }
 \seealso{
-Other observed data processing: 
-\code{\link{addBiometricsToConfig}()},
-\code{\link{aggregateObservedDataGroups}()},
-\code{\link{convertDataCombinedToDataTable}()},
-\code{\link{convertDataTableToDataCombined}()},
-\code{\link{readObservedDataByDictionary}()},
-\code{\link{updateDataGroupId}()},
-\code{\link{updateOutputPathId}()}
+Other observed data processing:
+\code{\link[=addBiometricsToConfig]{addBiometricsToConfig()}},
+\code{\link[=aggregateObservedDataGroups]{aggregateObservedDataGroups()}},
+\code{\link[=convertDataCombinedToDataTable]{convertDataCombinedToDataTable()}},
+\code{\link[=convertDataTableToDataCombined]{convertDataTableToDataCombined()}},
+\code{\link[=readObservedDataByDictionary]{readObservedDataByDictionary()}},
+\code{\link[=updateDataGroupId]{updateDataGroupId()}},
+\code{\link[=updateOutputPathId]{updateOutputPathId()}}
 }
 \concept{observed data processing}

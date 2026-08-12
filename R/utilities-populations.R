@@ -83,10 +83,7 @@ setupVirtualTwinPopConfig <- function(
 
   # Check if any groups are available for virtual twin population creation
   if (length(groups) == 0) {
-    writeToLog(
-      type = "Info",
-      msg = messages$infoNoGroupsForVirtualTwinPopulationCreation()
-    )
+    ospsuite.utils::logInfo(messages$infoNoGroupsForVirtualTwinPopulationCreation())
     return(NULL)
   }
 
@@ -99,10 +96,7 @@ setupVirtualTwinPopConfig <- function(
     .[, .(dataGroups = paste(group, collapse = ", ")), by = "individualId"] %>%
     .[, populationName := gsub(", ", "_", dataGroups)]
 
-  writeToLog(
-    type = "Info",
-    msg = messages$infoAddVirtualTwinPopulationConfig()
-  )
+  ospsuite.utils::logInfo(messages$infoAddVirtualTwinPopulationConfig())
   writeTableToLog(dtTwinPopsNew[, .N, by = "populationName"])
 
   # Combine the existing and new virtual twin population data
@@ -175,10 +169,7 @@ exportVirtualTwinPopulations <- function(
   }
   # If no populations left to generate, return with a message
   if (nrow(dtTwinPops) == 0) {
-    writeToLog(
-      type = "Info",
-      msg = messages$infoNoNewVirtualTwinPopulationsToGenerate()
-    )
+    ospsuite.utils::logInfo(messages$infoNoNewVirtualTwinPopulationsToGenerate())
     return(invisible())
   }
 
@@ -404,10 +395,7 @@ exportRandomPopulations <- function(
   }
   # If no populations left to generate, return with a message
   if (nrow(dtPops) == 0) {
-    writeToLog(
-      type = "Info",
-      msg = messages$infoNoNewVirtualPopulationsToGenerate()
-    )
+    ospsuite.utils::logInfo(messages$infoNoNewVirtualPopulationsToGenerate())
     return(invisible())
   }
 

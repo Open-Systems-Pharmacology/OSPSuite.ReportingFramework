@@ -13,7 +13,7 @@ addDefaultConfigForPKBoxwhsikerPlots(
 }
 \arguments{
 \item{projectConfiguration}{A ProjectConfiguration class object containing configuration details, including:
-- `plotsFile`: A string representing the file path to the Excel workbook containing the plot configurations.}
+- `addOns$reportsFile`: A string representing the file path to the Excel workbook containing the plot configurations.}
 
 \item{pkParameterDT}{A data.table containing PK parameter data.}
 
@@ -34,21 +34,21 @@ It can either create a new sheet or overwrite an existing one based on the speci
 \details{
 The function retrieves scenario definitions, output path IDs, and data groups from the project configuration.
 It checks if the specified sheet already exists and whether to overwrite it. If not, it creates a new header
-and fills in the default configuration values for the time profile plots.
+and fills in the default configuration values for the box-and-whisker plots.
 
 Additionally, the function performs a validity check to ensure that it is not executed during a context
 where helper functions are prohibited (`validRun`). If such a context is detected, an error is raised to prevent execution.
 }
 \seealso{
-Other plot configuration helper function: 
-\code{\link{addDefaultConfigForDistributionsVsDemographics}()},
-\code{\link{addDefaultConfigForHistograms}()},
-\code{\link{addDefaultConfigForPKForestPlots}()},
-\code{\link{addDefaultConfigForTimeProfilePlots}()}
+Other plot configuration helper function:
+\code{\link[=addDefaultConfigForDistributionsVsDemographics]{addDefaultConfigForDistributionsVsDemographics()}},
+\code{\link[=addDefaultConfigForHistograms]{addDefaultConfigForHistograms()}},
+\code{\link[=addDefaultConfigForPKForestPlots]{addDefaultConfigForPKForestPlots()}},
+\code{\link[=addDefaultConfigForTimeProfilePlots]{addDefaultConfigForTimeProfilePlots()}}
 
-Other functions to generate box whisker plots: 
-\code{\link{plotPKBoxwhisker}()},
-\code{\link{validatePKBoxwhiskerConfig}()}
+Other functions to generate box whisker plots:
+\code{\link[=plotPKBoxwhisker]{plotPKBoxwhisker()}},
+\code{\link[=validatePKBoxwhiskerConfig]{validatePKBoxwhiskerConfig()}}
 }
 \concept{functions to generate box whisker plots}
 \concept{plot configuration helper function}

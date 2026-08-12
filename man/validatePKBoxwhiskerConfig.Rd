@@ -20,19 +20,19 @@ NULL (invisible).
 Validates the configuration table for PK box-and-whisker plots.
 }
 \seealso{
-Other plot configuration validation function: 
-\code{\link{validateDistributionVsDemographicsConfig}()},
-\code{\link{validateHistogramsConfig}()},
-\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
-\code{\link{validatePKForestAggregatedRatiosConfig}()},
-\code{\link{validatePKForestPointEstimateOfAbsoluteValuesConfig}()},
-\code{\link{validatePKForestPointEstimateOfRatiosConfig}()},
-\code{\link{validateSensitivityConfig}()},
-\code{\link{validateTimeProfilesConfig}()}
+Other plot configuration validation function:
+\code{\link[=validateDistributionVsDemographicsConfig]{validateDistributionVsDemographicsConfig()}},
+\code{\link[=validateHistogramsConfig]{validateHistogramsConfig()}},
+\code{\link[=validatePKForestAggregatedAbsoluteValuesConfig]{validatePKForestAggregatedAbsoluteValuesConfig()}},
+\code{\link[=validatePKForestAggregatedRatiosConfig]{validatePKForestAggregatedRatiosConfig()}},
+\code{\link[=validatePKForestPointEstimateOfAbsoluteValuesConfig]{validatePKForestPointEstimateOfAbsoluteValuesConfig()}},
+\code{\link[=validatePKForestPointEstimateOfRatiosConfig]{validatePKForestPointEstimateOfRatiosConfig()}},
+\code{\link[=validateSensitivityConfig]{validateSensitivityConfig()}},
+\code{\link[=validateTimeProfilesConfig]{validateTimeProfilesConfig()}}
 
-Other functions to generate box whisker plots: 
-\code{\link{addDefaultConfigForPKBoxwhsikerPlots}()},
-\code{\link{plotPKBoxwhisker}()}
+Other functions to generate box whisker plots:
+\code{\link[=addDefaultConfigForPKBoxwhsikerPlots]{addDefaultConfigForPKBoxwhsikerPlots()}},
+\code{\link[=plotPKBoxwhisker]{plotPKBoxwhisker()}}
 }
 \concept{functions to generate box whisker plots}
 \concept{plot configuration validation function}

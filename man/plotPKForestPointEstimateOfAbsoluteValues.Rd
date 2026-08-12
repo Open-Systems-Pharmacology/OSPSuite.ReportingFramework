@@ -139,27 +139,27 @@ To support the creation of the configuration table a support function
 \code{addDefaultConfigForPKForestPlots} is available
 }
 \seealso{
-Other plot functions: 
-\code{\link{addDefaultConfigForPKForestPlots}()},
-\code{\link{addDefaultConfigForTimeProfilePlots}()},
-\code{\link{plotDistributionVsDemographics}()},
-\code{\link{plotHistograms}()},
-\code{\link{plotPKBoxwhisker}()},
-\code{\link{plotPKForestAggregatedAbsoluteValues}()},
-\code{\link{plotPKForestAggregatedRatios}()},
-\code{\link{plotPKForestPointEstimateOfRatios}()},
-\code{\link{plotSensitivity}()},
-\code{\link{plotTimeProfiles}()}
+Other plot functions:
+\code{\link[=addDefaultConfigForPKForestPlots]{addDefaultConfigForPKForestPlots()}},
+\code{\link[=addDefaultConfigForTimeProfilePlots]{addDefaultConfigForTimeProfilePlots()}},
+\code{\link[=plotDistributionVsDemographics]{plotDistributionVsDemographics()}},
+\code{\link[=plotHistograms]{plotHistograms()}},
+\code{\link[=plotPKBoxwhisker]{plotPKBoxwhisker()}},
+\code{\link[=plotPKForestAggregatedAbsoluteValues]{plotPKForestAggregatedAbsoluteValues()}},
+\code{\link[=plotPKForestAggregatedRatios]{plotPKForestAggregatedRatios()}},
+\code{\link[=plotPKForestPointEstimateOfRatios]{plotPKForestPointEstimateOfRatios()}},
+\code{\link[=plotSensitivity]{plotSensitivity()}},
+\code{\link[=plotTimeProfiles]{plotTimeProfiles()}}
 
-Other functions to generate forest plots: 
-\code{\link{addDefaultConfigForPKForestPlots}()},
-\code{\link{plotPKForestAggregatedAbsoluteValues}()},
-\code{\link{plotPKForestAggregatedRatios}()},
-\code{\link{plotPKForestPointEstimateOfRatios}()},
-\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
-\code{\link{validatePKForestAggregatedRatiosConfig}()},
-\code{\link{validatePKForestPointEstimateOfAbsoluteValuesConfig}()},
-\code{\link{validatePKForestPointEstimateOfRatiosConfig}()}
+Other functions to generate forest plots:
+\code{\link[=addDefaultConfigForPKForestPlots]{addDefaultConfigForPKForestPlots()}},
+\code{\link[=plotPKForestAggregatedAbsoluteValues]{plotPKForestAggregatedAbsoluteValues()}},
+\code{\link[=plotPKForestAggregatedRatios]{plotPKForestAggregatedRatios()}},
+\code{\link[=plotPKForestPointEstimateOfRatios]{plotPKForestPointEstimateOfRatios()}},
+\code{\link[=validatePKForestAggregatedAbsoluteValuesConfig]{validatePKForestAggregatedAbsoluteValuesConfig()}},
+\code{\link[=validatePKForestAggregatedRatiosConfig]{validatePKForestAggregatedRatiosConfig()}},
+\code{\link[=validatePKForestPointEstimateOfAbsoluteValuesConfig]{validatePKForestPointEstimateOfAbsoluteValuesConfig()}},
+\code{\link[=validatePKForestPointEstimateOfRatiosConfig]{validatePKForestPointEstimateOfRatiosConfig()}}
 }
 \concept{functions to generate forest plots}
 \concept{plot functions}

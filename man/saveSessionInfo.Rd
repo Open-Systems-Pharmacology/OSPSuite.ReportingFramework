@@ -2,29 +2,25 @@
 % Please edit documentation in R/utilities-logging.R
 \name{saveSessionInfo}
 \alias{saveSessionInfo}
-\title{Save Session Info}
+\title{Save session information to the log}
 \usage{
 saveSessionInfo()
 }
 \description{
-This function can be called at the end of your script to save the session information,
-including the loaded packages and R version, into a log file.
-The path for the log file has to be initialized by  the `initLogfunction`
+Save session information to the log
 }
 \examples{
 \dontrun{
-# Save session info to log file
 saveSessionInfo()
 }
 
 }
 \seealso{
-Other log file management: 
-\code{\link{addMessageToLog}()},
-\code{\link{captureLog}()},
-\code{\link{initLogfunction}()},
-\code{\link{setShowLogMessages}()},
-\code{\link{writeTableToLog}()},
-\code{\link{writeToLog}()}
+Other log file management:
+\code{\link[=addMessageToLog]{addMessageToLog()}},
+\code{\link[=captureLog]{captureLog()}},
+\code{\link[=initLogfunction]{initLogfunction()}},
+\code{\link[=setShowLogMessages]{setShowLogMessages()}},
+\code{\link[=writeTableToLog]{writeTableToLog()}}
 }
 \concept{log file management}

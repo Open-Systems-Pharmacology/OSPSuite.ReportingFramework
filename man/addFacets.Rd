@@ -11,7 +11,7 @@ addFacets(plotObject, facetScale, facetAspectRatio = 0.5, nFacetColumns)
 
 \item{facetScale}{A character string indicating the scale of the facets. Options are "free", "fixed", "free_x", or "free_y".}
 
-\item{facetAspectRatio}{A numeric value specifying the aspect ratio of the facets. Default is 0.5.}
+\item{facetAspectRatio}{A numeric value specifying the aspect ratio of the facets. Default is 0.5 (landscape half-height).}
 
 \item{nFacetColumns}{An integer specifying the number of columns to use for the facet layout. If NULL, no faceting is done.}
 }

@@ -40,12 +40,9 @@ export(initLogfunction)
 export(initProject)
 export(loadConfigTableEnvironment)
 export(loadPKParameter)
-export(loadSensitivityPKValues)
 export(loadScenarioResultsToFramework)
+export(loadSensitivityPKValues)
 export(mdBullet)
-export(upgradeToReportingFramework)
-export(snapshotProjectConfigurationRF)
-export(restoreProjectConfigurationRF)
 export(mdBullet0)
 export(mdCaption)
 export(mdFigure)
@@ -72,6 +69,7 @@ export(plotTimeProfiles)
 export(prepareSensitivityPopulation)
 export(readObservedDataByDictionary)
 export(renderWord)
+export(restoreProjectConfigurationRF)
 export(runAndSaveScenarios)
 export(runOrLoadScenarios)
 export(runPlot)
@@ -82,9 +80,11 @@ export(setHeadersToLowerCase)
 export(setShowLogMessages)
 export(setWorkflowOptions)
 export(setupVirtualTwinPopConfig)
+export(snapshotProjectConfigurationRF)
 export(splitInputs)
 export(updateDataGroupId)
 export(updateOutputPathId)
+export(upgradeToReportingFramework)
 export(validateAtleastOneEntry)
 export(validateConfigTablePlots)
 export(validateDistributionVsDemographicsConfig)
@@ -101,7 +101,6 @@ export(validatePKForestPointEstimateOfRatiosConfig)
 export(validateSensitivityConfig)
 export(validateTimeProfilesConfig)
 export(writeTableToLog)
-export(writeToLog)
 export(xlsxAddDataUsingTemplate)
 export(xlsxAddSheet)
 export(xlsxCloneAndSet)
@@ -111,16 +110,35 @@ import(data.table)
 import(esqlabsR)
 import(ggplot2)
 import(ospsuite.plots)
-importFrom(data.table,":=")
-importFrom(data.table,.BY)
-importFrom(data.table,.EACHI)
-importFrom(data.table,.GRP)
-importFrom(data.table,.I)
-importFrom(data.table,.N)
-importFrom(data.table,.NGRP)
-importFrom(data.table,.SD)
-importFrom(data.table,data.table)
+importFrom(data.table,
+  ":=",
+  .BY,
+  .EACHI,
+  .GRP,
+  .I,
+  .N,
+  .NGRP,
+  .SD,
+  data.table
+)
 importFrom(foreach,"%dopar%")
-importFrom(rlang,"%||%")
-importFrom(rlang,sym)
+importFrom(logger,
+  INFO,
+  WARN,
+  log_threshold
+)
+importFrom(ospsuite.utils,
+  logCatch,
+  logDebug,
+  logError,
+  logInfo,
+  logWarning,
+  setInfoMasking,
+  setLogFolder,
+  setWarningMasking
+)
+importFrom(rlang,
+  "%||%",
+  sym
+)
 importFrom(tidyr,"%>%")

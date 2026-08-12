@@ -40,12 +40,12 @@ xlsxAddDataUsingTemplate(wb, "TemplateSheet", "NewDataSheet", newData)
 
 }
 \seealso{
-Other function to read from and write to xlsx: 
-\code{\link{setHeadersToLowerCase}()},
-\code{\link{splitInputs}()},
-\code{\link{xlsxAddSheet}()},
-\code{\link{xlsxCloneAndSet}()},
-\code{\link{xlsxReadData}()},
-\code{\link{xlsxWriteData}()}
+Other function to read from and write to xlsx:
+\code{\link[=setHeadersToLowerCase]{setHeadersToLowerCase()}},
+\code{\link[=splitInputs]{splitInputs()}},
+\code{\link[=xlsxAddSheet]{xlsxAddSheet()}},
+\code{\link[=xlsxCloneAndSet]{xlsxCloneAndSet()}},
+\code{\link[=xlsxReadData]{xlsxReadData()}},
+\code{\link[=xlsxWriteData]{xlsxWriteData()}}
 }
 \concept{function to read from and write to xlsx}

@@ -30,12 +30,12 @@ xlsxCloneAndSet(wb, "ExistingSheet", "ClonedSheet", data)
 
 }
 \seealso{
-Other function to read from and write to xlsx: 
-\code{\link{setHeadersToLowerCase}()},
-\code{\link{splitInputs}()},
-\code{\link{xlsxAddDataUsingTemplate}()},
-\code{\link{xlsxAddSheet}()},
-\code{\link{xlsxReadData}()},
-\code{\link{xlsxWriteData}()}
+Other function to read from and write to xlsx:
+\code{\link[=setHeadersToLowerCase]{setHeadersToLowerCase()}},
+\code{\link[=splitInputs]{splitInputs()}},
+\code{\link[=xlsxAddDataUsingTemplate]{xlsxAddDataUsingTemplate()}},
+\code{\link[=xlsxAddSheet]{xlsxAddSheet()}},
+\code{\link[=xlsxReadData]{xlsxReadData()}},
+\code{\link[=xlsxWriteData]{xlsxWriteData()}}
 }
 \concept{function to read from and write to xlsx}

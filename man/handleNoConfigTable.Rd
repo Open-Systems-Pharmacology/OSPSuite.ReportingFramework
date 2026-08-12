@@ -17,8 +17,9 @@ handleNoConfigTable(
 \item{projectConfiguration}{A ProjectConfiguration object containing the project configuration settings.}
 
 \item{inputs}{A list of additional inputs for the plot function.}
-
-\item{suppressExport}{A logical value indicating whether to suppress the export of the Rmd file.}
+}
+\value{
+A list of plot objects, or an empty list when export is active.
 }
 \description{
 This helper function processes the plotfunctions where no configuration table is provided,

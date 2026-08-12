@@ -13,7 +13,7 @@ addDefaultConfigForHistograms(
 }
 \arguments{
 \item{projectConfiguration}{A ProjectConfiguration class object containing configuration details, including:
-- `plotsFile`: A string representing the file path to the Excel workbook containing the plot configurations.}
+- `addOns$reportsFile`: A string representing the file path to the Excel workbook containing the plot configurations.}
 
 \item{pkParameterDT}{Optional. A data object containing pkParameter.}
 
@@ -25,8 +25,6 @@ Default is FALSE.}
 }
 \value{
 NULL This function updates the Excel workbook in place and does not return a value.
-It is called for its side effects.
-Add Default Configuration for Histograms
 }
 \description{
 This function adds a default configuration sheet for histograms to the plot configuration table.
@@ -41,15 +39,15 @@ Additionally, the function performs a validity check to ensure that it is not ex
 where helper functions are prohibited (validRun). If such a context is detected, an error is raised to prevent execution.
 }
 \seealso{
-Other plot configuration helper function: 
-\code{\link{addDefaultConfigForDistributionsVsDemographics}()},
-\code{\link{addDefaultConfigForPKBoxwhsikerPlots}()},
-\code{\link{addDefaultConfigForPKForestPlots}()},
-\code{\link{addDefaultConfigForTimeProfilePlots}()}
+Other plot configuration helper function:
+\code{\link[=addDefaultConfigForDistributionsVsDemographics]{addDefaultConfigForDistributionsVsDemographics()}},
+\code{\link[=addDefaultConfigForPKBoxwhsikerPlots]{addDefaultConfigForPKBoxwhsikerPlots()}},
+\code{\link[=addDefaultConfigForPKForestPlots]{addDefaultConfigForPKForestPlots()}},
+\code{\link[=addDefaultConfigForTimeProfilePlots]{addDefaultConfigForTimeProfilePlots()}}
 
-Other functions to generate plots displaying distribution vs demographics: 
-\code{\link{plotDistributionVsDemographics}()},
-\code{\link{validateDistributionVsDemographicsConfig}()}
+Other functions to generate plots displaying distribution vs demographics:
+\code{\link[=plotDistributionVsDemographics]{plotDistributionVsDemographics()}},
+\code{\link[=validateDistributionVsDemographicsConfig]{validateDistributionVsDemographicsConfig()}}
 }
 \concept{functions to generate plots displaying distribution vs demographics}
 \concept{plot configuration helper function}

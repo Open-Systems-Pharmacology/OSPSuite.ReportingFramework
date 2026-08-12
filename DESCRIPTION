@@ -31,6 +31,7 @@ Imports:
     fs,
     ospsuite,
     ospsuite.utils,
+    logger,
     ggplot2,
     ggsci,
     scales,
@@ -58,9 +59,9 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-RoxygenNote: 7.3.1
-Remotes:  
+Remotes: 
     ospsuite.utils=Open-Systems-Pharmacology/OSPSuite.RUtils,
     ospsuite.plots=Open-Systems-Pharmacology/OSPSuite.Plots,
     ospsuite=Open-Systems-Pharmacology/OSPSuite-R,
     esqlabsR=esqLABS/esqlabsR
+Config/roxygen2/version: 8.1.0

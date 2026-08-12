@@ -76,21 +76,21 @@ plotList <- plotPKBoxwhisker(
 }
 }
 \seealso{
-Other plot functions: 
-\code{\link{addDefaultConfigForPKForestPlots}()},
-\code{\link{addDefaultConfigForTimeProfilePlots}()},
-\code{\link{plotDistributionVsDemographics}()},
-\code{\link{plotHistograms}()},
-\code{\link{plotPKForestAggregatedAbsoluteValues}()},
-\code{\link{plotPKForestAggregatedRatios}()},
-\code{\link{plotPKForestPointEstimateOfAbsoluteValues}()},
-\code{\link{plotPKForestPointEstimateOfRatios}()},
-\code{\link{plotSensitivity}()},
-\code{\link{plotTimeProfiles}()}
+Other plot functions:
+\code{\link[=addDefaultConfigForPKForestPlots]{addDefaultConfigForPKForestPlots()}},
+\code{\link[=addDefaultConfigForTimeProfilePlots]{addDefaultConfigForTimeProfilePlots()}},
+\code{\link[=plotDistributionVsDemographics]{plotDistributionVsDemographics()}},
+\code{\link[=plotHistograms]{plotHistograms()}},
+\code{\link[=plotPKForestAggregatedAbsoluteValues]{plotPKForestAggregatedAbsoluteValues()}},
+\code{\link[=plotPKForestAggregatedRatios]{plotPKForestAggregatedRatios()}},
+\code{\link[=plotPKForestPointEstimateOfAbsoluteValues]{plotPKForestPointEstimateOfAbsoluteValues()}},
+\code{\link[=plotPKForestPointEstimateOfRatios]{plotPKForestPointEstimateOfRatios()}},
+\code{\link[=plotSensitivity]{plotSensitivity()}},
+\code{\link[=plotTimeProfiles]{plotTimeProfiles()}}
 
-Other functions to generate box whisker plots: 
-\code{\link{addDefaultConfigForPKBoxwhsikerPlots}()},
-\code{\link{validatePKBoxwhiskerConfig}()}
+Other functions to generate box whisker plots:
+\code{\link[=addDefaultConfigForPKBoxwhsikerPlots]{addDefaultConfigForPKBoxwhsikerPlots()}},
+\code{\link[=validatePKBoxwhiskerConfig]{validatePKBoxwhiskerConfig()}}
 }
 \concept{functions to generate box whisker plots}
 \concept{plot functions}

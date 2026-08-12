@@ -16,13 +16,13 @@ An object of class `DataCombined`.
 The `data.table` must be formatted like a table produced by `readObservedDataByDictionary`.
 }
 \seealso{
-Other observed data processing: 
-\code{\link{addBiometricsToConfig}()},
-\code{\link{aggregateObservedDataGroups}()},
-\code{\link{convertDataCombinedToDataTable}()},
-\code{\link{readObservedDataByDictionary}()},
-\code{\link{updateDataGroupId}()},
-\code{\link{updateOutputPathId}()},
-\code{\link{validateObservedData}()}
+Other observed data processing:
+\code{\link[=addBiometricsToConfig]{addBiometricsToConfig()}},
+\code{\link[=aggregateObservedDataGroups]{aggregateObservedDataGroups()}},
+\code{\link[=convertDataCombinedToDataTable]{convertDataCombinedToDataTable()}},
+\code{\link[=readObservedDataByDictionary]{readObservedDataByDictionary()}},
+\code{\link[=updateDataGroupId]{updateDataGroupId()}},
+\code{\link[=updateOutputPathId]{updateOutputPathId()}},
+\code{\link[=validateObservedData]{validateObservedData()}}
 }
 \concept{observed data processing}

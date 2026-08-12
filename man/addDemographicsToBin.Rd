@@ -4,11 +4,7 @@
 \alias{addDemographicsToBin}
 \title{Add Demographics to Bin}
 \usage{
-addDemographicsToBin(
-  plotData = plotData,
-  onePlotConfig = onePlotConfig,
-  scenarioList = scenarioList
-)
+addDemographicsToBin(plotData, onePlotConfig, scenarioList)
 }
 \arguments{
 \item{plotData}{A data.table containing the plot data.}

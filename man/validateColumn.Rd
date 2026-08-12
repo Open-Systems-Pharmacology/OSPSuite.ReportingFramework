@@ -18,7 +18,7 @@ Options are "character", "numeric", or "logical".}
 Default is FALSE.}
 }
 \value{
-NULL. The function will throw an error if the validation fails.
+invisible(NULL). Throws an error if validation fails.
 }
 \description{
 This function validates a specified column in a data frame based on the

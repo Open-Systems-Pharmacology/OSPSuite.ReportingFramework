@@ -19,15 +19,15 @@ This function checks the headers of the configuration table, validates output ID
 and ensures the configuration adheres to specified criteria. It also checks for file existence in the output folder.
 }
 \seealso{
-Other plot configuration validation function: 
-\code{\link{validateDistributionVsDemographicsConfig}()},
-\code{\link{validateHistogramsConfig}()},
-\code{\link{validatePKBoxwhiskerConfig}()},
-\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
-\code{\link{validatePKForestAggregatedRatiosConfig}()},
-\code{\link{validatePKForestPointEstimateOfAbsoluteValuesConfig}()},
-\code{\link{validatePKForestPointEstimateOfRatiosConfig}()},
-\code{\link{validateTimeProfilesConfig}()}
+Other plot configuration validation function:
+\code{\link[=validateDistributionVsDemographicsConfig]{validateDistributionVsDemographicsConfig()}},
+\code{\link[=validateHistogramsConfig]{validateHistogramsConfig()}},
+\code{\link[=validatePKBoxwhiskerConfig]{validatePKBoxwhiskerConfig()}},
+\code{\link[=validatePKForestAggregatedAbsoluteValuesConfig]{validatePKForestAggregatedAbsoluteValuesConfig()}},
+\code{\link[=validatePKForestAggregatedRatiosConfig]{validatePKForestAggregatedRatiosConfig()}},
+\code{\link[=validatePKForestPointEstimateOfAbsoluteValuesConfig]{validatePKForestPointEstimateOfAbsoluteValuesConfig()}},
+\code{\link[=validatePKForestPointEstimateOfRatiosConfig]{validatePKForestPointEstimateOfRatiosConfig()}},
+\code{\link[=validateTimeProfilesConfig]{validateTimeProfilesConfig()}}
 }
 \concept{functions to generate sensitivity plots}
 \concept{plot configuration validation function}

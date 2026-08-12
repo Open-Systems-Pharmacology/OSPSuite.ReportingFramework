@@ -616,30 +616,6 @@ messages$warningutilitiesdataL4XXXXXX <- function(env = parent.frame()) {
   )
 }
 
-messages$errorutilitiesloggingL7 <- function(env = parent.frame()) {
-  eval(quote(e), envir = env)
-}
-
-messages$errorutilitiesloggingL11 <- function(env = parent.frame()) {
-  eval(quote(e), envir = env)
-}
-
-messages$warningutilitiesloggingL13 <- function(env = parent.frame()) {
-  eval(quote("Logfile was not initialized"), envir = env)
-}
-
-messages$warningutilitiesloggingL14 <- function(env = parent.frame()) {
-  eval(quote("Logfile was not initialized"), envir = env)
-}
-
-messages$warningutilitiesloggingL15 <- function(env = parent.frame()) {
-  eval(quote("Logfile was not initialized"), envir = env)
-}
-
-messages$infoutilitiesloggingL7 <- function(env = parent.frame()) {
-  eval(quote(messageText), envir = env)
-}
-
 messages$errorutilitiesmarkdownL4 <- function(env = parent.frame()) {
   eval(
     quote(paste(

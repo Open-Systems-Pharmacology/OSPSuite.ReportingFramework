@@ -25,13 +25,13 @@ The function loads the existing Data Groups from the specified Excel workbook, s
 and appends new entries while maintaining the uniqueness of the identifiers. The updated data is then written back to the workbook.
 }
 \seealso{
-Other observed data processing: 
-\code{\link{addBiometricsToConfig}()},
-\code{\link{aggregateObservedDataGroups}()},
-\code{\link{convertDataCombinedToDataTable}()},
-\code{\link{convertDataTableToDataCombined}()},
-\code{\link{readObservedDataByDictionary}()},
-\code{\link{updateOutputPathId}()},
-\code{\link{validateObservedData}()}
+Other observed data processing:
+\code{\link[=addBiometricsToConfig]{addBiometricsToConfig()}},
+\code{\link[=aggregateObservedDataGroups]{aggregateObservedDataGroups()}},
+\code{\link[=convertDataCombinedToDataTable]{convertDataCombinedToDataTable()}},
+\code{\link[=convertDataTableToDataCombined]{convertDataTableToDataCombined()}},
+\code{\link[=readObservedDataByDictionary]{readObservedDataByDictionary()}},
+\code{\link[=updateOutputPathId]{updateOutputPathId()}},
+\code{\link[=validateObservedData]{validateObservedData()}}
 }
 \concept{observed data processing}

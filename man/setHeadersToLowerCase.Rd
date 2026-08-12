@@ -22,12 +22,12 @@ print(names(dtLower)) # Result: c("firstname", "lastname")
 
 }
 \seealso{
-Other function to read from and write to xlsx: 
-\code{\link{splitInputs}()},
-\code{\link{xlsxAddDataUsingTemplate}()},
-\code{\link{xlsxAddSheet}()},
-\code{\link{xlsxCloneAndSet}()},
-\code{\link{xlsxReadData}()},
-\code{\link{xlsxWriteData}()}
+Other function to read from and write to xlsx:
+\code{\link[=splitInputs]{splitInputs()}},
+\code{\link[=xlsxAddDataUsingTemplate]{xlsxAddDataUsingTemplate()}},
+\code{\link[=xlsxAddSheet]{xlsxAddSheet()}},
+\code{\link[=xlsxCloneAndSet]{xlsxCloneAndSet()}},
+\code{\link[=xlsxReadData]{xlsxReadData()}},
+\code{\link[=xlsxWriteData]{xlsxWriteData()}}
 }
 \concept{function to read from and write to xlsx}

@@ -19,13 +19,4 @@ Updated plot data with descriptions added.
 \description{
 This function adds descriptions to the plot data.
 }
-\keyword{Add}
-\keyword{Data}
-\keyword{Details}
-\keyword{Output}
-\keyword{PK}
-\keyword{Parameter}
-\keyword{Path}
-\keyword{Plot}
 \keyword{internal}
-\keyword{to}

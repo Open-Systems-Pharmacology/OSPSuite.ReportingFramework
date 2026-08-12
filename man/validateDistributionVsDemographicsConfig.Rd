@@ -20,19 +20,19 @@ NULL (invisible).
 Validates the configuration table for distribution vs demographics plots.
 }
 \seealso{
-Other plot configuration validation function: 
-\code{\link{validateHistogramsConfig}()},
-\code{\link{validatePKBoxwhiskerConfig}()},
-\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
-\code{\link{validatePKForestAggregatedRatiosConfig}()},
-\code{\link{validatePKForestPointEstimateOfAbsoluteValuesConfig}()},
-\code{\link{validatePKForestPointEstimateOfRatiosConfig}()},
-\code{\link{validateSensitivityConfig}()},
-\code{\link{validateTimeProfilesConfig}()}
+Other plot configuration validation function:
+\code{\link[=validateHistogramsConfig]{validateHistogramsConfig()}},
+\code{\link[=validatePKBoxwhiskerConfig]{validatePKBoxwhiskerConfig()}},
+\code{\link[=validatePKForestAggregatedAbsoluteValuesConfig]{validatePKForestAggregatedAbsoluteValuesConfig()}},
+\code{\link[=validatePKForestAggregatedRatiosConfig]{validatePKForestAggregatedRatiosConfig()}},
+\code{\link[=validatePKForestPointEstimateOfAbsoluteValuesConfig]{validatePKForestPointEstimateOfAbsoluteValuesConfig()}},
+\code{\link[=validatePKForestPointEstimateOfRatiosConfig]{validatePKForestPointEstimateOfRatiosConfig()}},
+\code{\link[=validateSensitivityConfig]{validateSensitivityConfig()}},
+\code{\link[=validateTimeProfilesConfig]{validateTimeProfilesConfig()}}
 
-Other functions to generate plots displaying distribution vs demographics: 
-\code{\link{addDefaultConfigForHistograms}()},
-\code{\link{plotDistributionVsDemographics}()}
+Other functions to generate plots displaying distribution vs demographics:
+\code{\link[=addDefaultConfigForHistograms]{addDefaultConfigForHistograms()}},
+\code{\link[=plotDistributionVsDemographics]{plotDistributionVsDemographics()}}
 }
 \concept{functions to generate plots displaying distribution vs demographics}
 \concept{plot configuration validation function}

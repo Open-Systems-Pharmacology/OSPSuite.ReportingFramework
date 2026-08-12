@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotPKBoxwhisker.R
 \name{prepareTableForExport}
 \alias{prepareTableForExport}
-\title{Prepare Data for PK Boxplot}
+\title{Prepare Table for Export}
 \usage{
 prepareTableForExport(dtExport, asRatio, plotCaptionAddon, plotDataPk)
 }
@@ -19,8 +19,6 @@ prepareTableForExport(dtExport, asRatio, plotCaptionAddon, plotDataPk)
 A data.table prepared for plotting, including merged configuration and parameter data.
 }
 \description{
-Prepares and cleans data for box-and-whisker plotting by merging the PK parameter data
-with the configuration settings. This function ensures that the data is structured
-correctly for plotting.
+Prepares and formats a summary data.table for export, including caption.
 }
 \keyword{internal}

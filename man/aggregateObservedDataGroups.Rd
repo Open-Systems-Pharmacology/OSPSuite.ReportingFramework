@@ -64,13 +64,13 @@ It must be a concatenation of the descriptor of yValues and the descriptor of yM
 separated by "|" (e.g., "mean | standard deviation" or "median | 5th - 95th percentile").
 }
 \seealso{
-Other observed data processing: 
-\code{\link{addBiometricsToConfig}()},
-\code{\link{convertDataCombinedToDataTable}()},
-\code{\link{convertDataTableToDataCombined}()},
-\code{\link{readObservedDataByDictionary}()},
-\code{\link{updateDataGroupId}()},
-\code{\link{updateOutputPathId}()},
-\code{\link{validateObservedData}()}
+Other observed data processing:
+\code{\link[=addBiometricsToConfig]{addBiometricsToConfig()}},
+\code{\link[=convertDataCombinedToDataTable]{convertDataCombinedToDataTable()}},
+\code{\link[=convertDataTableToDataCombined]{convertDataTableToDataCombined()}},
+\code{\link[=readObservedDataByDictionary]{readObservedDataByDictionary()}},
+\code{\link[=updateDataGroupId]{updateDataGroupId()}},
+\code{\link[=updateOutputPathId]{updateOutputPathId()}},
+\code{\link[=validateObservedData]{validateObservedData()}}
 }
 \concept{observed data processing}

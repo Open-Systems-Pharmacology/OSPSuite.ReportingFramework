@@ -13,7 +13,7 @@ addDefaultConfigForDistributionsVsDemographics(
 }
 \arguments{
 \item{projectConfiguration}{A ProjectConfiguration class object containing configuration details, including:
-- `plotsFile`: A string representing the file path to the Excel workbook containing the plot configurations.}
+- `addOns$reportsFile`: A string representing the file path to the Excel workbook containing the plot configurations.}
 
 \item{pkParameterDT}{Optional. A data object containing pkParameter.}
 
@@ -39,15 +39,15 @@ Additionally, the function performs a validity check to ensure that it is not ex
 where helper functions are prohibited (validRun). If such a context is detected, an error is raised to prevent execution.
 }
 \seealso{
-Other plot configuration helper function: 
-\code{\link{addDefaultConfigForHistograms}()},
-\code{\link{addDefaultConfigForPKBoxwhsikerPlots}()},
-\code{\link{addDefaultConfigForPKForestPlots}()},
-\code{\link{addDefaultConfigForTimeProfilePlots}()}
+Other plot configuration helper function:
+\code{\link[=addDefaultConfigForHistograms]{addDefaultConfigForHistograms()}},
+\code{\link[=addDefaultConfigForPKBoxwhsikerPlots]{addDefaultConfigForPKBoxwhsikerPlots()}},
+\code{\link[=addDefaultConfigForPKForestPlots]{addDefaultConfigForPKForestPlots()}},
+\code{\link[=addDefaultConfigForTimeProfilePlots]{addDefaultConfigForTimeProfilePlots()}}
 
-Other functions to generate histograms: 
-\code{\link{plotHistograms}()},
-\code{\link{validateHistogramsConfig}()}
+Other functions to generate histograms:
+\code{\link[=plotHistograms]{plotHistograms()}},
+\code{\link[=validateHistogramsConfig]{validateHistogramsConfig()}}
 }
 \concept{functions to generate histograms}
 \concept{plot configuration helper function}

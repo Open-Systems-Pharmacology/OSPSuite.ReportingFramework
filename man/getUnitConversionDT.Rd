@@ -12,7 +12,7 @@ getUnitConversionDT(dtSimulated, dtOutputs)
 \item{dtOutputs}{A data.table containing output specifications.}
 }
 \value{
-A data.table with unit conversion factors and unique paths.
+A data.table with unit conversion factors per output path, ready for merging with time profile data.
 }
 \description{
 This function creates a data table for unit conversion based on simulated data and output specifications.

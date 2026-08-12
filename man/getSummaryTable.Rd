@@ -4,16 +4,16 @@
 \alias{getSummaryTable}
 \title{Add Summary Table from Plot Data}
 \usage{
-getSummaryTable(plotDataPk, asRatio, onePlotConfig, percentiles)
+getSummaryTable(plotDataPk, onePlotConfig, percentiles)
 }
 \arguments{
 \item{plotDataPk}{A data.table containing plot data.}
 
-\item{asRatio}{boolean indicating if the plot is for ratios.}
-
 \item{onePlotConfig}{Configuration for a single plot.}
 
 \item{percentiles}{A vector of percentiles to calculate.}
+
+\item{asRatio}{boolean indicating if the plot is for ratios.}
 }
 \value{
 A data.table summarizing the plot data.

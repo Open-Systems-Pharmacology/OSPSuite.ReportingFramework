@@ -20,8 +20,8 @@ Returns NULL invisibly if no groups are available for virtual twin population cr
 This function sets up a configuration sheet for virtual twin populations based on the provided project configuration and observed data.
 }
 \seealso{
-Other population export: 
-\code{\link{exportRandomPopulations}()},
-\code{\link{exportVirtualTwinPopulations}()}
+Other population export:
+\code{\link[=exportRandomPopulations]{exportRandomPopulations()}},
+\code{\link[=exportVirtualTwinPopulations]{exportVirtualTwinPopulations()}}
 }
 \concept{population export}

@@ -2,27 +2,25 @@
 % Please edit documentation in R/utilities-logging.R
 \name{captureLog}
 \alias{captureLog}
-\title{function that catches messages, warnings, and errors.
-This function has to be initialized by  `initLogfunction` function}
+\title{Catch messages, warnings, and errors and route them to the log}
 \usage{
 captureLog(expr, finallyExpression = invisible())
 }
 \arguments{
 \item{expr}{The expression to evaluate.}
 
-\item{finallyExpression}{The expression to evaluate finally}
+\item{finallyExpression}{The expression to evaluate finally.}
 }
 \description{
-function that catches messages, warnings, and errors.
-This function has to be initialized by  `initLogfunction` function
+Wraps `ospsuite.utils::logCatch` and preserves an optional `finally` expression
+for backwards compatibility.
 }
 \seealso{
-Other log file management: 
-\code{\link{addMessageToLog}()},
-\code{\link{initLogfunction}()},
-\code{\link{saveSessionInfo}()},
-\code{\link{setShowLogMessages}()},
-\code{\link{writeTableToLog}()},
-\code{\link{writeToLog}()}
+Other log file management:
+\code{\link[=addMessageToLog]{addMessageToLog()}},
+\code{\link[=initLogfunction]{initLogfunction()}},
+\code{\link[=saveSessionInfo]{saveSessionInfo()}},
+\code{\link[=setShowLogMessages]{setShowLogMessages()}},
+\code{\link[=writeTableToLog]{writeTableToLog()}}
 }
 \concept{log file management}

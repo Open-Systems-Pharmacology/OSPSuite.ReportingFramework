@@ -961,10 +961,7 @@ checkPrecision <- function(dt) {
   dt[precision <= precisionThreshold, `:=`(xMin = NA, xMax = NA)]
 
   if (any(!is.na(dt$xMin))) {
-    writeToLog(
-      type = "Info",
-      msg = "Required precision was not reached, please rerun simulations with larger N"
-    )
+    ospsuite.utils::logInfo("Required precision was not reached, please rerun simulations with larger N")
     writeTableToLog(dt[!is.na(xMin)])
   }
 

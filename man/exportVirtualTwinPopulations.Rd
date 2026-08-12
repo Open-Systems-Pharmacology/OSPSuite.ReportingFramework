@@ -20,12 +20,15 @@ exportVirtualTwinPopulations(
 
 \item{populationNames}{a character vector defining the population which should be exported. If NULL (default) all will be exported}
 }
+\value{
+Invisible `NULL`.
+}
 \description{
 This function generates virtual twin populations based on the provided model and project configuration.
 }
 \seealso{
-Other population export: 
-\code{\link{exportRandomPopulations}()},
-\code{\link{setupVirtualTwinPopConfig}()}
+Other population export:
+\code{\link[=exportRandomPopulations]{exportRandomPopulations()}},
+\code{\link[=setupVirtualTwinPopConfig]{setupVirtualTwinPopConfig()}}
 }
 \concept{population export}

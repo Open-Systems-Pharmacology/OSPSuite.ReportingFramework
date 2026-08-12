@@ -2,25 +2,24 @@
 % Please edit documentation in R/utilities-logging.R
 \name{writeTableToLog}
 \alias{writeTableToLog}
-\title{write a table to the logfile}
+\title{Write a data frame to the log}
 \usage{
-writeTableToLog(dt, filename = "run.log")
+writeTableToLog(dt, filename = NULL)
 }
 \arguments{
 \item{dt}{table to log}
 
-\item{filename}{filename of log}
+\item{filename}{Ignored; kept for backwards compatibility.}
 }
 \description{
-write a table to the logfile
+Write a data frame to the log
 }
 \seealso{
-Other log file management: 
-\code{\link{addMessageToLog}()},
-\code{\link{captureLog}()},
-\code{\link{initLogfunction}()},
-\code{\link{saveSessionInfo}()},
-\code{\link{setShowLogMessages}()},
-\code{\link{writeToLog}()}
+Other log file management:
+\code{\link[=addMessageToLog]{addMessageToLog()}},
+\code{\link[=captureLog]{captureLog()}},
+\code{\link[=initLogfunction]{initLogfunction()}},
+\code{\link[=saveSessionInfo]{saveSessionInfo()}},
+\code{\link[=setShowLogMessages]{setShowLogMessages()}}
 }
 \concept{log file management}

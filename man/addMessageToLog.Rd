@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-logging.R
 \name{addMessageToLog}
 \alias{addMessageToLog}
-\title{Used to add message to log file}
+\title{Add a message to the log file}
 \usage{
 addMessageToLog(messageText)
 }
@@ -10,16 +10,14 @@ addMessageToLog(messageText)
 \item{messageText}{character with message text}
 }
 \description{
-This function is for the usage outside a `captureLog` bracket.
-Inside the bracket `message("my message Text")` can be used
+Add a message to the log file
 }
 \seealso{
-Other log file management: 
-\code{\link{captureLog}()},
-\code{\link{initLogfunction}()},
-\code{\link{saveSessionInfo}()},
-\code{\link{setShowLogMessages}()},
-\code{\link{writeTableToLog}()},
-\code{\link{writeToLog}()}
+Other log file management:
+\code{\link[=captureLog]{captureLog()}},
+\code{\link[=initLogfunction]{initLogfunction()}},
+\code{\link[=saveSessionInfo]{saveSessionInfo()}},
+\code{\link[=setShowLogMessages]{setShowLogMessages()}},
+\code{\link[=writeTableToLog]{writeTableToLog()}}
 }
 \concept{log file management}

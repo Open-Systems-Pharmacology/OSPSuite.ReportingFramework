@@ -1,7 +1,12 @@
+#' @importFrom ospsuite.utils logInfo logWarning logError logDebug logCatch
+#' @importFrom ospsuite.utils setLogFolder setWarningMasking setInfoMasking
+#' @importFrom logger log_threshold INFO WARN
+NULL
+
 #' Initializing a Log Function
 #'
-#' This function initializes the logging during a workflow. It is called at the start of the workflow script.
-#' It is used to configure options for the log file folder, warnings which should not be logged, and messages which should not be logged.
+#' Initializes logging for a workflow run. Creates a timestamped subfolder under the log
+#' directory and configures warning/message masking via `ospsuite.utils`.
 #'
 #' @param projectConfiguration Object of class `ProjectConfiguration` containing information on paths and file names
 #' @param warningsNotDisplayed A list of warnings that should not be logged.
@@ -11,329 +16,163 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Initialize the log function
-#' logFunction <- initLogfunction(rootDirectory = "path/to/project")
+#' initLogfunction(projectConfiguration = myProjectConfig)
 #' }
 #'
 #' @export
 #' @family log file management
-initLogfunction <- function(projectConfiguration,
-                            warningsNotDisplayed = c(
-                              "introduced infinite values",
-                              "Each group consists of only one observation",
-                              "rows containing non-finite values",
-                              "rows containing missing values",
-                              "Ignoring unknown parameters",
-                              "was deprecated in ggplot2",
-                              "font family not found in Windows font database",
-                              # warning thrown because of non-ASCII unicode characters
-                              "mbcsToSbcs"
-                            ),
-                            messagesNotDisplayed = c(
-                              "Each group consists of only one observation"
-                            ),
-                            verbose = TRUE,
-                            loggingFolder = NULL) {
+initLogfunction <- function(
+  projectConfiguration,
+  warningsNotDisplayed = c(
+    "introduced infinite values",
+    "Each group consists of only one observation",
+    "rows containing non-finite values",
+    "rows containing missing values",
+    "Ignoring unknown parameters",
+    "was deprecated in ggplot2",
+    "font family not found in Windows font database",
+    # warning thrown because of non-ASCII unicode characters
+    "mbcsToSbcs"
+  ),
+  messagesNotDisplayed = c(
+    "Each group consists of only one observation"
+  ),
+  verbose = TRUE,
+  loggingFolder = NULL
+) {
   checkmate::assertCharacter(warningsNotDisplayed)
   checkmate::assertCharacter(messagesNotDisplayed)
 
   if (is.null(loggingFolder)) {
     loggingFolder <- file.path(projectConfiguration$outputFolder, "Logs")
   }
-  if (!dir.exists(loggingFolder)) dir.create(loggingFolder, recursive = TRUE)
+  if (!dir.exists(loggingFolder)) {
+    dir.create(loggingFolder, recursive = TRUE)
+  }
 
-  # Create the log file sub-folder with a time stamp
-
-  # Get the name of the original script
   scriptName <- tryCatch(
     {
       script <- sys.frame(1)$ofile
       sub(".R$", "", basename(script))
     },
-    error = function(e) {
-      return(NULL)
-    }
+    error = function(e) NULL
   )
 
   timestamp <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
-  logFileSubFolder <- paste(scriptName, timestamp, sep = "_")
-
-
-  logFileFolder <- file.path(loggingFolder, logFileSubFolder)
-
-  # Create the log file sub-folder if it doesn't exist
+  logFileFolder <- file.path(
+    loggingFolder,
+    paste(scriptName, timestamp, sep = "_")
+  )
   if (!dir.exists(logFileFolder)) {
     dir.create(logFileFolder, recursive = TRUE)
   }
 
-  # set inputs to options for use in `captureLog` function and `writeToLog`
-  options(list(
-    OSPSuite.RF.logFileFolder = logFileFolder,
-    OSPSuite.RF.warningsNotDisplayed = warningsNotDisplayed,
-    OSPSuite.RF.messagesNotDisplayed = messagesNotDisplayed,
-    OSPSuite.RF.verbose = verbose
-  ))
+  ospsuite.utils::setWarningMasking(warningsNotDisplayed)
+  ospsuite.utils::setInfoMasking(messagesNotDisplayed)
+  ospsuite.utils::setLogFolder(logFileFolder)
 
+  if (!verbose) {
+    logger::log_threshold(logger::WARN, index = 1)
+  }
 
-  # startlogfile
-  addMessageToLog("Start run of workflow")
+  ospsuite.utils::logInfo("Start run of workflow")
 
-  optionstxt <- paste(
-    "\n\n",
-    "Options for workflow:\n",
-    "OSPSuite.plots.watermark_enabled:", ospsuite.plots::getOspsuite.plots.option(
+  optionstxt <- paste0(
+    "\nOptions for workflow:\n",
+    "OSPSuite.plots.watermark_enabled: ",
+    ospsuite.plots::getOspsuite.plots.option(
       ospsuite.plots::OptionKeys$watermark_enabled
-    ), "\n",
-    "OSPSuite.RF.skipFailingPlots:", ifelse(getOption("OSPSuite.RF.skipFailingPlots", default = FALSE),
+    ),
+    "\n",
+    "OSPSuite.RF.skipFailingPlots: ",
+    ifelse(
+      getOption("OSPSuite.RF.skipFailingPlots", default = FALSE),
       "Failing Plots are skipped with warning",
       "Failing Plots throw errors"
-    ), "\n",
-    "OSPSuite.RF.stopHelperFunction:", ifelse(getOption("OSPSuite.RF.stopHelperFunction", default = FALSE),
+    ),
+    "\n",
+    "OSPSuite.RF.stopHelperFunction: ",
+    ifelse(
+      getOption("OSPSuite.RF.stopHelperFunction", default = FALSE),
       "Stops in helper functions",
       "Workflow executes helper functions"
-    ), "\n"
+    )
   )
-  addMessageToLog(optionstxt)
+  ospsuite.utils::logInfo(optionstxt)
 }
 
-#' Used to add message to log file
-#'
-#' This function is for the usage outside a `captureLog` bracket.
-#' Inside the bracket `message("my message Text")` can be used
+#' Add a message to the log file
 #'
 #' @param messageText character with message text
 #'
 #' @export
 #' @family log file management
 addMessageToLog <- function(messageText) {
-  captureLog(
-    expr = message(messages$infoutilitiesloggingL7())
-  )
+  ospsuite.utils::logInfo(messageText)
 }
 
-#' function that catches messages, warnings, and errors.
-#' This function has to be initialized by  `initLogfunction` function
+#' Catch messages, warnings, and errors and route them to the log
+#'
+#' Wraps `ospsuite.utils::logCatch` and preserves an optional `finally` expression
+#' for backwards compatibility.
 #'
 #' @param expr The expression to evaluate.
-#' @param finallyExpression The expression to evaluate finally
+#' @param finallyExpression The expression to evaluate finally.
 #'
 #' @export
 #' @family log file management
 captureLog <- function(expr, finallyExpression = invisible()) {
-  warningsNotDisplayed <- getOption("OSPSuite.RF.warningsNotDisplayed", default = c())
-  messagesNotDisplayed <- getOption("OSPSuite.RF.messagesNotDisplayed", default = c())
-  verbose <- getOption("OSPSuite.RF.verbose", default = TRUE)
-
   tryCatch(
-    {
-      withCallingHandlers(
-        expr,
-        error = function(e) {
-          errorMessage <- getErrorTrace(e)
-          writeToLog(
-            type = "Error",
-            msg = errorMessage
-          )
-          stop(messages$errorutilitiesloggingL7())
-        },
-        warning = function(w) {
-          if (!(gsub("\n", "", w$message) %in% warningsNotDisplayed)) {
-            warningMessage <- paste0(paste(c(
-              w$message
-            ), collapse = "\n"), "\n")
-
-            writeToLog(
-              type = "Warning",
-              msg = warningMessage
-            )
-          }
-          if (!verbose) {
-            tryInvokeRestart("muffleWarning")
-          }
-        },
-        message = function(m) {
-          if (!(gsub("\n", "", m$message) %in% messagesNotDisplayed)) {
-            writeToLog(
-              type = "Info",
-              msg = m$message
-            )
-          }
-          if (!verbose) {
-            tryInvokeRestart("muffleMessage")
-          }
-        }
-      )
-    },
-    error = function(e) {
-      stop(e$message, call. = FALSE)
-      stop(messages$errorutilitiesloggingL11())
-    },
+    ospsuite.utils::logCatch(expr),
+    error = function(e) stop(e$message, call. = FALSE),
     finally = finallyExpression
   )
-
-  return(invisible())
-}
-#' Get Error Trace
-#'
-#' This function captures and formats the call stack leading up to an error.
-#' It filters out specific function calls that are not relevant to the error
-#' trace, providing a concise overview of the sequence of function calls
-#' that led to the error.
-#'
-#' @param e An error object, typically generated by the `tryCatch` mechanism.
-#'
-#' @return A character string containing the error message along with the
-#'         formatted error trace, showing the relevant function calls.
-#'
-#' @examples
-#' # Example usage
-#' tryCatch(
-#'   {
-#'     # Some code that may produce an error
-#'   },
-#'   error = function(e) {
-#'     errorTrace <- getErrorTrace(e)
-#'     cat(errorTrace)
-#'   }
-#' )
-#'
-#' @keywords internal
-getErrorTrace <- function(e) {
-  calls <- sys.calls()
-  errorTrace <- "Error Trace:"
-  for (call in calls) {
-    textCall <- deparse(call, nlines = 1)
-    callNotDisplayed <- any(sapply(
-      c("captureLog", "qualificationCatch", "stop", "tryCatch", "withCallingHandlers", "simpleError", "eval\\(ei, envir\\)"),
-      FUN = function(pattern) {
-        grepl(textCall, pattern = pattern, ignore.case = TRUE)
-      }
-    ))
-    if (callNotDisplayed) {
-      next
-    }
-    errorTrace <- c(errorTrace, textCall)
-  }
-  errorMessage <- paste0(paste(c(
-    e$message,
-    errorTrace
-  ), collapse = "\n"), "\n")
-
-  return(errorMessage)
-}
-
-#'
-#' Writing to Log
-#'
-#' The `writeToLog` function is used to append log messages to a log file.
-#' The path for the logfile has to be initialized by the function initLogfile
-#'
-#' @param type The type of message (e.g., Error, Info).
-#' @param msg The message to be logged.
-#' @param filename The name of the log file.
-#'
-#' @examples
-#' \dontrun{
-#' # Write a log message
-#' writeToLog(type = "Info", msg = "This is an information message", filename = "run.log")
-#' }
-#' @export
-#' @family log file management
-writeToLog <- function(type, msg, filename = NULL) {
-  logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
-  if (is.null(logFileFolder)) {
-    warning(messages$warningutilitiesloggingL13())
-    return(invisible())
-  }
-  if (is.null(filename)) filename <- "run.log"
-  checkmate::assertCharacter(type, len = 1, any.missing = FALSE)
-  checkmate::assertCharacter(msg)
-  checkmate::assertDirectoryExists(logFileFolder)
-  checkmate::assertCharacter(filename, len = 1, any.missing = FALSE)
-
-  cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
-    paste0(type, ":"),
-    paste(msg, collapse = "\n"),
-    file = file.path(logFileFolder, filename),
-    append = TRUE
-  )
   return(invisible())
 }
 
-#' write a table to the logfile
+#' Write a data frame to the log
 #'
 #' @param dt table to log
-#' @param filename filename of log
+#' @param filename Ignored; kept for backwards compatibility.
 #'
 #' @export
 #' @family log file management
-writeTableToLog <- function(dt, filename = "run.log") {
-  logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
-  if (is.null(logFileFolder)) {
-    warning(messages$warningutilitiesloggingL14())
-    print(dt)
-    return(invisible())
-  }
-  verbose <- getOption("OSPSuite.RF.verbose", default = TRUE)
-
+writeTableToLog <- function(dt, filename = NULL) {
   checkmate::assertDataFrame(dt)
-  checkmate::assertDirectoryExists(logFileFolder)
-  checkmate::assertCharacter(filename, len = 1, any.missing = FALSE)
-
-  sink(file.path(logFileFolder, filename), append = TRUE, split = FALSE)
-  print(dt)
-  sink()
-
-  if (verbose) {
-    print(dt)
-  }
-
+  ospsuite.utils::logInfo(paste(
+    utils::capture.output(print(dt)),
+    collapse = "\n"
+  ))
   return(invisible())
 }
 
-
-#' Function to switch the display of log messages on the console on and off
+#' Toggle display of log messages on the console
 #'
-#' @param verbose boolean, if true log message will be shown
+#' @param verbose boolean, if true log messages will be shown
 #'
 #' @export
 #' @family log file management
 setShowLogMessages <- function(verbose = TRUE) {
-  options(OSPSuite.RF.verbose = verbose)
+  if (verbose) {
+    logger::log_threshold(logger::INFO, index = 1)
+  } else {
+    logger::log_threshold(logger::WARN, index = 1)
+  }
 }
 
-
-
-#'
-#' Save Session Info
-#'
-#' This function can be called at the end of your script to save the session information,
-#' including the loaded packages and R version, into a log file.
-#' The path for the log file has to be initialized by  the `initLogfunction`
-#'
+#' Save session information to the log
 #'
 #' @examples
 #' \dontrun{
-#' # Save session info to log file
 #' saveSessionInfo()
 #' }
 #'
 #' @export
 #' @family log file management
 saveSessionInfo <- function() {
-  sessionInfo <- paste(utils::capture.output(sessionInfo()), collapse = "\n")
-
-  logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
-
-  if (is.null(logFileFolder)) {
-    warning(messages$warningutilitiesloggingL15())
-    return(invisible())
-  }
-
-  # Write session info to log file
-  writeToLog(
-    type = "Session Info",
-    msg = sessionInfo,
-    filename = "SessionInfo.log"
+  sessionInfoText <- paste(
+    utils::capture.output(sessionInfo()),
+    collapse = "\n"
   )
+  ospsuite.utils::logInfo(paste("Session Info:\n", sessionInfoText))
 }

@@ -186,7 +186,7 @@ plotTimeProfiles <- function(
     stop(messages$errorplotTimeProfilePanelsL1())
   }
 
-  writeToLog(type = "Info", paste("Create Plot", onePlotConfig$plotName[1]))
+  ospsuite.utils::logInfo(paste("Create Plot", onePlotConfig$plotName[1]))
   plotData <- PlotDataTimeProfile$new(
     projectConfiguration = projectConfiguration,
     onePlotConfig = onePlotConfig

@@ -34,8 +34,8 @@ scenarios with plots. The function ensures that the necessary directories exist 
 configuration is set up correctly for further processing.
 }
 \seealso{
-Other electronic package: 
-\code{\link{exportSimulationWorkflowToEPackage}()},
-\code{\link{exportTLFWorkflowToEPackage}()}
+Other electronic package:
+\code{\link[=exportSimulationWorkflowToEPackage]{exportSimulationWorkflowToEPackage()}},
+\code{\link[=exportTLFWorkflowToEPackage]{exportTLFWorkflowToEPackage()}}
 }
 \concept{electronic package}

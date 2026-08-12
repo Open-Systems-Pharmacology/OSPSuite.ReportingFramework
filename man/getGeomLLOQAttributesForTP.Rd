@@ -7,7 +7,7 @@
 getGeomLLOQAttributesForTP(plotData)
 }
 \arguments{
-\item{plotData}{}
+\item{plotData}{A `PlotDataTimeProfile` object.}
 }
 \value{
 list with additional attributes for lloq line

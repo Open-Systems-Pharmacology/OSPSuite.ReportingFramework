@@ -9,7 +9,6 @@ filterParameterSimulated(
   pkParameterDT,
   onePlotConfig,
   ratioMode,
-  coefficientOfVariation,
   asPointeEstimate
 )
 }

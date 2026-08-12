@@ -12,7 +12,7 @@ convertYunit(timeprofile, dtUnit)
 \item{dtUnit}{A data.table with unit conversion factors.}
 }
 \value{
-A data.table with the y-values converted to the target unit.
+A data.table with y-columns scaled to the display unit.
 }
 \description{
 This function converts the y-values of a time profile based on unit conversion factors.

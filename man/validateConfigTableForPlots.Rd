@@ -10,7 +10,7 @@ validateConfigTableForPlots(configTable, ...)
 \item{configTable}{A data.table containing the plot configuration to be validated.}
 }
 \value{
-NULL. The function will throw an error if the validation fails.
+invisible(NULL). Throws an error if validation fails.
 }
 \description{
 This function validates the structure and content of the configuration table for plots.

@@ -9,8 +9,7 @@ filterIndividualID(timeprofile, individualList)
 \arguments{
 \item{timeprofile}{A data frame containing time profile data with an `individualId` column.}
 
-\item{individualList}{A character string of individual IDs to filter by. If the string
-contains '*', all individuals will be included.}
+\item{individualList}{A character string or `NA`. If the string contains '*', all individuals are included.}
 }
 \value{
 A data frame containing only the rows from `timeprofile` that match the specified

@@ -23,6 +23,9 @@ handleConfigTable(
 
 \item{suppressExport}{A logical value indicating whether to suppress the export of the Rmd file.}
 }
+\value{
+A named list of generated plot objects.
+}
 \description{
 This helper function processes the configuration table, generating plots according to the specified configurations.
 }

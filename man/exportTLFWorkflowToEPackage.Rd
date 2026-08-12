@@ -52,8 +52,8 @@ exportTLFWorkflowToEPackage(
 }
 }
 \seealso{
-Other electronic package: 
-\code{\link{exportSimulationWorkflowToEPackage}()},
-\code{\link{importWorkflow}()}
+Other electronic package:
+\code{\link[=exportSimulationWorkflowToEPackage]{exportSimulationWorkflowToEPackage()}},
+\code{\link[=importWorkflow]{importWorkflow()}}
 }
 \concept{electronic package}

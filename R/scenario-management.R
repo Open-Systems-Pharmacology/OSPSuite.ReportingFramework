@@ -58,7 +58,7 @@ loadScenarioResultsToFramework <- function(
   scenarioResults <- list()
 
   for (sc in scenarioNames) {
-    writeToLog(type = "Info", msg = paste("Load simulation result of", sc))
+    ospsuite.utils::logInfo(paste("Load simulation result of", sc))
 
     scenarioResult <- esqlabsR::loadScenarioResults(
       scenarioNames = sc,
@@ -115,7 +115,7 @@ runAndSaveScenarios <- function(
   scenarioResults <- list()
 
   for (sc in names(scenarioList)) {
-    writeToLog(type = "Info", msg = paste("Start simulation of", sc))
+    ospsuite.utils::logInfo(paste("Start simulation of", sc))
 
     # Make sure custom params are not again overwritten by population
     scenarioList[[sc]] <- .setCustomParamsToPopulation(scenarioList[[sc]]) # nolint: object_usage_linter
