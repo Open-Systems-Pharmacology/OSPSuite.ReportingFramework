@@ -1,3 +1,8 @@
+# INTEGRATION TEST FILE
+# This test file requires external setup (projectConfiguration, scenarioList objects)
+# and depends on integration test infrastructure (full project setup with PKML models).
+# These tests should be executed in a separate integration test repository.
+#
 # testProject was set up by setup.R
 # that provides projectConfiguration,scenarioList
 
@@ -55,7 +60,10 @@ test_that("exportWorkflowText creates the correct output file", {
 
   exporter$exportWorkflowText(projectConfiguration)
 
-  outputFile <- file.path(projectConfiguration$addOns$electronicPackageFolder, "w1_workflow_r.txt")
+  outputFile <- file.path(
+    projectConfiguration$addOns$electronicPackageFolder,
+    "w1_workflow_r.txt"
+  )
   expect_true(file.exists(outputFile))
 
   outputContent <- readLines(outputFile)
@@ -76,7 +84,9 @@ test_that("getEPackageInputfiles populates inputFiles correctly", {
     workflowRmd = NULL
   )
 
-  expect_warning(exporter$addEPackageInputfilesForScenarioNames(projectConfiguration))
+  expect_warning(exporter$addEPackageInputfilesForScenarioNames(
+    projectConfiguration
+  ))
 
   expect_equal(nrow(exporter$inputFiles), 5) # Expecting 5 input files (4 population, 1 model)
   expect_equal(unique(exporter$inputFiles$fileType), c("population", "model"))
@@ -93,14 +103,22 @@ test_that("exportInputFiles fails with duplicate or non existing file names", {
   )
 
   # Export duplicate files names
-  exporter$inputFiles <- data.table(source = c("file1.csv", "file1.csv"), fileName = c("file1.csv", "file1.csv"), fileType = c("population2", "population"))
+  exporter$inputFiles <- data.table(
+    source = c("file1.csv", "file1.csv"),
+    fileName = c("file1.csv", "file1.csv"),
+    fileType = c("population2", "population")
+  )
 
   expect_error(
     exporter$exportInputFiles()
   )
 
   # Export non existing files names
-  exporter$inputFiles <- data.table(source = c("file1.csv", "file2.csv"), fileName = c("file1.csv", "file1.csv"), fileType = c("population", "population"))
+  exporter$inputFiles <- data.table(
+    source = c("file1.csv", "file2.csv"),
+    fileName = c("file1.csv", "file1.csv"),
+    fileType = c("population", "population")
+  )
 
   expect_error(
     exporter$exportInputFiles()
@@ -111,7 +129,12 @@ test_that("exportInputFiles fails with duplicate or non existing file names", {
 
 test_that("fileNameReplacements are applied correctly", {
   # Define file name replacements
-  fileNameReplacements <- c("adults.csv", "population1.csv", "iv_1_mg_5_min.pkml", "model1_updated.pkml")
+  fileNameReplacements <- c(
+    "adults.csv",
+    "population1.csv",
+    "iv_1_mg_5_min.pkml",
+    "model1_updated.pkml"
+  )
 
   # Initialize the WorkflowScriptExporter with fileNameReplacements
   exporter <- WorkflowScriptExporter$new(
@@ -154,9 +177,14 @@ test_that("fileNameReplacements are invalid", {
   )
 
   # Add input files for the scenario names
-  expect_error(exporter$addEPackageInputfilesForScenarioNames(projectConfiguration))
+  expect_error(exporter$addEPackageInputfilesForScenarioNames(
+    projectConfiguration
+  ))
 
-  fileNameReplacements <- c("iv_1_mg_5_min.pkml", "veeeeeeeeeerrrrrrrrrrrrrrrryyyyyyyyyyyyyyyyyyyyyyyloooooooooooooooooooooooongmodel.pkml")
+  fileNameReplacements <- c(
+    "iv_1_mg_5_min.pkml",
+    "veeeeeeeeeerrrrrrrrrrrrrrrryyyyyyyyyyyyyyyyyyyyyyyloooooooooooooooooooooooongmodel.pkml"
+  )
 
   # Initialize the WorkflowScriptExporter with fileNameReplacements
   exporter <- WorkflowScriptExporter$new(
@@ -168,7 +196,9 @@ test_that("fileNameReplacements are invalid", {
   )
 
   # Add input files for the scenario names
-  expect_error(exporter$addEPackageInputfilesForScenarioNames(projectConfiguration))
+  expect_error(exporter$addEPackageInputfilesForScenarioNames(
+    projectConfiguration
+  ))
 
   cleanupElectronicPackage(projectConfiguration)
 })
@@ -189,7 +219,13 @@ test_that("addEPackageConfigurationForScenarioNames populates configurationSheet
   # Check that configuration sheets are populated
   expect_contains(
     names(exporter$configurationSheets),
-    c("ProjectConfiguration", "Scenarios", "Individuals", "ModelParameters", "Applications")
+    c(
+      "ProjectConfiguration",
+      "Scenarios",
+      "Individuals",
+      "ModelParameters",
+      "Applications"
+    )
   )
 
   expect_contains(
@@ -205,7 +241,10 @@ test_that("addEPackageConfigurationForScenarioNames populates configurationSheet
     c("IndividualBiometrics")
   )
 
-  expect_length(exporter$configurationSheets$Individuals$IndividualBiometrics$rows, 1)
+  expect_length(
+    exporter$configurationSheets$Individuals$IndividualBiometrics$rows,
+    1
+  )
 
   cleanupElectronicPackage(projectConfiguration)
 })
@@ -226,7 +265,10 @@ test_that("exportConfigSheets creates the correct output file", {
   exporter$exportConfigSheets()
 
   # Define the expected output file path
-  outputFile <- file.path(projectConfiguration$addOns$electronicPackageFolder, "w1_config_json.txt")
+  outputFile <- file.path(
+    projectConfiguration$addOns$electronicPackageFolder,
+    "w1_config_json.txt"
+  )
 
   # Check if the output file exists
   expect_true(file.exists(outputFile))
@@ -256,7 +298,10 @@ test_that("Full workflow test for WorkflowScriptExporter simulation export", {
   ))
 
   # Check if the workflow text file is created
-  outputWorkflowFile <- file.path(projectConfiguration$addOns$electronicPackageFolder, "w1_workflow_r.txt")
+  outputWorkflowFile <- file.path(
+    projectConfiguration$addOns$electronicPackageFolder,
+    "w1_workflow_r.txt"
+  )
   expect_true(file.exists(outputWorkflowFile))
 
   # Check the content of the workflow text file
@@ -265,25 +310,38 @@ test_that("Full workflow test for WorkflowScriptExporter simulation export", {
   expect_false(any(grepl("XXscenarioNamesXX", outputWorkflowContent))) # Placeholder should be replaced
 
   # Check if input files are exported correctly
-  expect_true(file.exists(file.path(projectConfiguration$addOns$electronicPackageFolder, "w1_input_files.csv")))
-  inputFiles <- data.table::fread(file = file.path(
+  expect_true(file.exists(file.path(
     projectConfiguration$addOns$electronicPackageFolder,
     "w1_input_files.csv"
-  ))
+  )))
+  inputFiles <- data.table::fread(
+    file = file.path(
+      projectConfiguration$addOns$electronicPackageFolder,
+      "w1_input_files.csv"
+    )
+  )
   expect_equal(nrow(inputFiles), expected = 5)
   for (f in inputFiles$fileName) {
-    expect_true(file.exists(file.path(projectConfiguration$addOns$electronicPackageFolder, f)))
+    expect_true(file.exists(file.path(
+      projectConfiguration$addOns$electronicPackageFolder,
+      f
+    )))
   }
 
   # Check if the configuration sheets file is created
-  outputconfigFile <- file.path(projectConfiguration$addOns$electronicPackageFolder, "w1_config_json.txt")
+  outputconfigFile <- file.path(
+    projectConfiguration$addOns$electronicPackageFolder,
+    "w1_config_json.txt"
+  )
   expect_true(file.exists(outputconfigFile))
 
   cleanupElectronicPackage(projectConfiguration)
 })
 test_that("extracts default code chunks correctly", {
   # Step 1: Initialize the WorkflowScriptExporter with a valid workflowRmd
-  workflowRmdPath <- system.file("templates", "template_ePackageWorkflow.Rmd",
+  workflowRmdPath <- system.file(
+    "templates",
+    "template_ePackageWorkflow.Rmd",
     package = "ospsuite.reportingframework"
   )
 
@@ -311,7 +369,8 @@ test_that("evaluates default chuncs correctly", {
     "myWorkflow.Rmd"
   )
 
-  generateMockRmd(projectConfiguration,
+  generateMockRmd(
+    projectConfiguration,
     codeChunkList = list(),
     filename = workflowRmdPath
   )
@@ -338,7 +397,8 @@ test_that("evaluates chunk for custom functions correctly", {
     "myWorkflow.Rmd"
   )
 
-  generateMockRmd(projectConfiguration,
+  generateMockRmd(
+    projectConfiguration,
     codeChunkList = list(
       "pathsCustomfunctions-eval" = c(
         "# Create two test custom function files",
@@ -377,7 +437,10 @@ test_that("evaluates chunk for custom functions correctly", {
   exporter$evalCodeChunks()
 
   # should have two lines which sources the custom functions
-  expect_length(grep("custom_function", exporter$codeChunks$`pathsCustomfunctions-copy`), n = 2)
+  expect_length(
+    grep("custom_function", exporter$codeChunks$`pathsCustomfunctions-copy`),
+    n = 2
+  )
 
   # export input files
   exporter$exportInputFiles()
@@ -399,7 +462,8 @@ test_that("throw error for invalid custom functions", {
   )
 
   # Case 1: Prepare workflowRmd no pathsCustomfunctions
-  generateMockRmd(projectConfiguration,
+  generateMockRmd(
+    projectConfiguration,
     codeChunkList = list(
       "pathsCustomfunctions-eval" = c(
         "# Returns no pathsCustomfunctions"
@@ -419,7 +483,8 @@ test_that("throw error for invalid custom functions", {
   expect_error(exporter$evalCodeChunks())
 
   # Case 2: Prepare workflowRmd with invalid pathsCustomfunctions
-  generateMockRmd(projectConfiguration,
+  generateMockRmd(
+    projectConfiguration,
     codeChunkList = list(
       "pathsCustomfunctions-eval" = c(
         "pathsCustomfunctions = c(1,2,3)"
@@ -438,7 +503,8 @@ test_that("throw error for invalid custom functions", {
   expect_error(exporter$evalCodeChunks())
 
   # Case 3: Prepare workflowRmd with  pathsCustomfunctions containing non existing files
-  generateMockRmd(projectConfiguration,
+  generateMockRmd(
+    projectConfiguration,
     codeChunkList = list(
       "pathsCustomfunctions-eval" = c(
         "pathsCustomfunctions = c('file_which_does_not_exist.R')"
@@ -465,7 +531,8 @@ test_that("evaluates chunk for scenarioNames chunk correctly", {
     "myWorkflow.Rmd"
   )
 
-  generateMockRmd(projectConfiguration,
+  generateMockRmd(
+    projectConfiguration,
     codeChunkList = list(
       "scenarioNames-eval" = c(
         paste0(
@@ -490,13 +557,15 @@ test_that("evaluates chunk for scenarioNames chunk correctly", {
 
   expect_true(all(exporter$scenarioNames %in% names(scenarioList)))
 
-  expect_true(all(lapply(
-    exporter$scenarioNames,
-    function(x) {
-      length(grep(x, exporter$codeChunks[["scenarioNames-copy"]])) > 0
-    }
-  ) %>%
-    unlist()))
+  expect_true(all(
+    lapply(
+      exporter$scenarioNames,
+      function(x) {
+        length(grep(x, exporter$codeChunks[["scenarioNames-copy"]])) > 0
+      }
+    ) %>%
+      unlist()
+  ))
 
   cleanupElectronicPackage(projectConfiguration)
 })
@@ -507,10 +576,10 @@ test_that("throw error for invalid or missing scenarioNames chunk", {
     "myWorkflow.Rmd"
   )
 
-  generateMockRmd(projectConfiguration,
+  generateMockRmd(
+    projectConfiguration,
     codeChunkList = list(
-      "scenarioNames-eval" =
-        "scenarioNames = c(1,2,3)"
+      "scenarioNames-eval" = "scenarioNames = c(1,2,3)"
     ),
     filename = workflowRmdPath
   )
@@ -525,10 +594,10 @@ test_that("throw error for invalid or missing scenarioNames chunk", {
 
   expect_error(exporter$evalCodeChunks())
 
-  generateMockRmd(projectConfiguration,
+  generateMockRmd(
+    projectConfiguration,
     codeChunkList = list(
-      "scenarioNames-eval" =
-        "#Does not evaluate to scenarioNames"
+      "scenarioNames-eval" = "#Does not evaluate to scenarioNames"
     ),
     filename = workflowRmdPath
   )
@@ -542,7 +611,6 @@ test_that("throw error for invalid or missing scenarioNames chunk", {
   exporter$extractCodeChunks()
 
   expect_error(exporter$evalCodeChunks())
-
 
   cleanupElectronicPackage(projectConfiguration)
 })
@@ -553,7 +621,8 @@ test_that("evaluates chunk for dataImport chunk correctly", {
     "myWorkflow.Rmd"
   )
 
-  generateMockRmd(projectConfiguration,
+  generateMockRmd(
+    projectConfiguration,
     codeChunkList = list(
       "dataObserved-eval" = c(
         "dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,",
@@ -584,13 +653,25 @@ test_that("evaluates chunk for dataImport chunk correctly", {
 
   expect_contains(
     names(exporter$configurationSheets$DataImportConfiguration),
-    c("DataFiles", "tpIndividualDictionary", "tpAggregatedDictionary", "pkAggregatedDictionary")
+    c(
+      "DataFiles",
+      "tpIndividualDictionary",
+      "tpAggregatedDictionary",
+      "pkAggregatedDictionary"
+    )
   )
-  expect_length(exporter$configurationSheets$DataImportConfiguration$DataFiles$rows, n = 4)
+  expect_length(
+    exporter$configurationSheets$DataImportConfiguration$DataFiles$rows,
+    n = 4
+  )
 
-  expect_length(list.files(file.path(projectConfiguration$addOns$electronicPackageFolder),
-    pattern = "data*"
-  ), n = 3)
+  expect_length(
+    list.files(
+      file.path(projectConfiguration$addOns$electronicPackageFolder),
+      pattern = "data*"
+    ),
+    n = 3
+  )
 
   expect_contains(names(exporter$codeChunks), "dataObserved-copy")
   expect_contains(names(exporter$codeChunks), "dataObservedPK-copy")
@@ -600,14 +681,17 @@ test_that("evaluates chunk for dataImport chunk correctly", {
 
 test_that("throws error for invalid dataImport", {
   # for this test dataObserved must not exist
-  if (exists("dataObserved")) rm(dataObserved)
+  if (exists("dataObserved")) {
+    rm(dataObserved)
+  }
 
   workflowRmdPath <- file.path(
     projectConfiguration$configurationsFolder,
     "myWorkflow.Rmd"
   )
 
-  generateMockRmd(projectConfiguration,
+  generateMockRmd(
+    projectConfiguration,
     codeChunkList = list(
       "dataObserved-eval" = "#does not evaluate to dataobserved"
     ),
@@ -624,7 +708,8 @@ test_that("throws error for invalid dataImport", {
 
   expect_error(exporter$evalCodeChunks())
 
-  generateMockRmd(projectConfiguration,
+  generateMockRmd(
+    projectConfiguration,
     codeChunkList = list(
       "dataObserved-eval" = "dataObserved <- c(1,2,3)"
     ),
@@ -641,7 +726,6 @@ test_that("throws error for invalid dataImport", {
 
   expect_error(exporter$evalCodeChunks())
 
-
   cleanupElectronicPackage(projectConfiguration)
 })
 
@@ -651,7 +735,8 @@ test_that("extract sheetNames for plotting correctly", {
     "myWorkflow.Rmd"
   )
 
-  generateMockRmd(projectConfiguration,
+  generateMockRmd(
+    projectConfiguration,
     codeChunkList = list(
       "runPlot-copy" = c(
         "runPlot(",
@@ -680,14 +765,21 @@ test_that("extract sheetNames for plotting correctly", {
 
   exporter$extractCodeChunks()
 
-  exporter$addEPackageConfigurationForPlotting(projectConfiguration = projectConfiguration)
+  exporter$addEPackageConfigurationForPlotting(
+    projectConfiguration = projectConfiguration
+  )
 
   expect_contains(names(exporter$configurationSheets), "Plots")
   expect_equal(
     names(exporter$configurationSheets$Plots),
     c(
-      "TimeProfiles", "PKParameter_Boxplot", "PKParameter_Forest", "Histograms",
-      "DistributionVsRange", "SensitivityPlots", "TimeRange"
+      "TimeProfiles",
+      "PKParameter_Boxplot",
+      "PKParameter_Forest",
+      "Histograms",
+      "DistributionVsRange",
+      "SensitivityPlots",
+      "TimeRange"
     )
   )
 
@@ -700,7 +792,8 @@ test_that("Full workflow test for WorkflowScriptExporter TLF export", {
     "myWorkflow.Rmd"
   )
 
-  generateMockRmd(projectConfiguration,
+  generateMockRmd(
+    projectConfiguration,
     codeChunkList = list(
       "pathsCustomfunctions-eval" = c(
         "# Create two test custom function files",
@@ -749,7 +842,10 @@ test_that("Full workflow test for WorkflowScriptExporter TLF export", {
   ))
 
   # Check if the workflow text file is created
-  outputWorkflowFile <- file.path(projectConfiguration$addOns$electronicPackageFolder, "w1_workflow_r.txt")
+  outputWorkflowFile <- file.path(
+    projectConfiguration$addOns$electronicPackageFolder,
+    "w1_workflow_r.txt"
+  )
   expect_true(file.exists(outputWorkflowFile))
 
   # Check the content of the workflow text file
@@ -759,18 +855,29 @@ test_that("Full workflow test for WorkflowScriptExporter TLF export", {
   expect_false(any(grepl("^XXX", outputWorkflowContent))) # Placeholder should be replaced
 
   # Check if input files are exported correctly
-  expect_true(file.exists(file.path(projectConfiguration$addOns$electronicPackageFolder, "w1_input_files.csv")))
-  inputFiles <- data.table::fread(file = file.path(
+  expect_true(file.exists(file.path(
     projectConfiguration$addOns$electronicPackageFolder,
     "w1_input_files.csv"
-  ))
+  )))
+  inputFiles <- data.table::fread(
+    file = file.path(
+      projectConfiguration$addOns$electronicPackageFolder,
+      "w1_input_files.csv"
+    )
+  )
   expect_equal(nrow(inputFiles), expected = 7)
   for (f in inputFiles$fileName) {
-    expect_true(file.exists(file.path(projectConfiguration$addOns$electronicPackageFolder, f)))
+    expect_true(file.exists(file.path(
+      projectConfiguration$addOns$electronicPackageFolder,
+      f
+    )))
   }
 
   # Check if the configuration sheets file is created
-  outputconfigFile <- file.path(projectConfiguration$addOns$electronicPackageFolder, "w1_config_json.txt")
+  outputconfigFile <- file.path(
+    projectConfiguration$addOns$electronicPackageFolder,
+    "w1_config_json.txt"
+  )
   expect_true(file.exists(outputconfigFile))
 
   cleanupElectronicPackage(projectConfiguration)
@@ -793,7 +900,9 @@ test_that("Import workflow generated by WorkflowScriptExporter Simulation export
   parentPath <- fs::path_dir(commonPath)
   projectDirectory <- fs::path_abs(fs::path(parentPath, "testproject2"))
 
-  if (!dir.exists(projectDirectory)) dir.create(projectDirectory)
+  if (!dir.exists(projectDirectory)) {
+    dir.create(projectDirectory)
+  }
 
   projectConfigurationNew <-
     suppressMessages(importWorkflow(

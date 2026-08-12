@@ -5,16 +5,15 @@
 \title{Loop on figure keys, add figure or table}
 \usage{
 addFiguresAndTables(
-  keyList,
+  keyTypes = NULL,
   subfolder,
   numbersOf,
   customStyles = list(),
-  digitsOfSignificance = 3
+  digitsOfSignificance = 3,
+  keyList = NULL
 )
 }
 \arguments{
-\item{keyList}{list of keys}
-
 \item{subfolder}{sub-folder of relative to .Rmd file where figures are saved}
 
 \item{numbersOf}{list with numbers of tables and figures in rmd}
@@ -22,6 +21,8 @@ addFiguresAndTables(
 \item{customStyles}{custom-styles to render word document}
 
 \item{digitsOfSignificance}{significance digits for tables}
+
+\item{keyList}{list of keys}
 }
 \value{
 list of numbers and figures after loop

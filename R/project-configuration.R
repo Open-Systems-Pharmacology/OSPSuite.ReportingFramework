@@ -712,6 +712,96 @@ ProjectConfigurationRF <- # nolint: object_name_linter
 
         invisible(self)
       },
+      #' @description Get a configuration sheet as a JSON-friendly list structure.
+      #' Reads an xlsx sheet and converts it to a list with column names and rows.
+      #'
+      #' @param filePath A string representing the path to the xlsx file.
+      #' @param sheetName A string representing the sheet name to read.
+      #' @param convertHeaders Logical flag to convert header names (default: TRUE).
+      #' @param skipDescriptionRow Logical flag to skip the description row (default: FALSE).
+      #'
+      #' @return A named list with:
+      #'   - `column_names`: Character vector of column names
+      #'   - `rows`: List of rows, where each row is a list of character values
+      getConfigSheetAsJson = function(
+        filePath,
+        sheetName,
+        convertHeaders = TRUE,
+        skipDescriptionRow = FALSE
+      ) {
+        checkmate::assertString(filePath)
+        checkmate::assertString(sheetName)
+        checkmate::assertLogical(convertHeaders, len = 1)
+        checkmate::assertLogical(skipDescriptionRow, len = 1)
+
+        # Read the sheet data
+        df <- xlsxReadData(
+          wb = filePath,
+          sheetName = sheetName,
+          convertHeaders = convertHeaders,
+          skipDescriptionRow = skipDescriptionRow,
+          emptyAsNA = FALSE
+        )
+
+        # Convert to JSON-friendly list structure
+        sheetData <- list(column_names = names(df), rows = list())
+        if (nrow(df) > 0) {
+          for (i in seq_len(nrow(df))) {
+            sheetData$rows[[i]] <- as.list(sapply(
+              df[i, , drop = FALSE],
+              as.character
+            ))
+          }
+        }
+
+        return(sheetData)
+      },
+      #' @description Get multiple configuration sheets as JSON-friendly list structures.
+      #' Reads multiple xlsx sheets and converts them to named list format.
+      #'
+      #' @param filePath A string representing the path to the xlsx file.
+      #' @param sheetNames A character vector of sheet names to read. If NULL, reads all sheets.
+      #' @param convertHeaders Logical flag to convert header names (default: TRUE).
+      #' @param skipDescriptionRow Logical flag to skip the description row (default: FALSE).
+      #'
+      #' @return A named list where each element corresponds to a sheet and contains
+      #'   the structure returned by `getConfigSheetAsJson()`.
+      getConfigSheetsAsJson = function(
+        filePath,
+        sheetNames = NULL,
+        convertHeaders = TRUE,
+        skipDescriptionRow = FALSE
+      ) {
+        checkmate::assertString(filePath)
+        if (!is.null(sheetNames)) {
+          checkmate::assertCharacter(sheetNames, min.len = 1)
+        }
+        checkmate::assertLogical(convertHeaders, len = 1)
+        checkmate::assertLogical(skipDescriptionRow, len = 1)
+
+        # If sheetNames is NULL, get all sheets
+        if (is.null(sheetNames)) {
+          sheetNames <- readxl::excel_sheets(filePath)
+        }
+
+        # Read each sheet and convert
+        result <- stats::setNames(
+          lapply(
+            sheetNames,
+            function(sheetName) {
+              self$getConfigSheetAsJson(
+                filePath = filePath,
+                sheetName = sheetName,
+                convertHeaders = convertHeaders,
+                skipDescriptionRow = skipDescriptionRow
+              )
+            }
+          ),
+          sheetNames
+        )
+
+        return(result)
+      },
       #' @description Creates a copy of this object.
       #' @param deep Whether to make a deep clone.
       copy = function(deep = FALSE) {

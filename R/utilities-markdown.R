@@ -277,6 +277,7 @@ mdTable <- function(
 #'
 #' @inheritParams mdFigure
 #' @param footNoteCustomStyle a character describing custom style footnotes
+#' @export
 #' @family markdown helper function
 mdFootNote <- function(subfolder, footNoteFile, footNoteCustomStyle = NULL) {
   if (file.exists(file.path(subfolder, footNoteFile))) {
@@ -449,20 +450,23 @@ addFiguresAndTables <- function(
 #'
 #' @return character with startlines
 #' @keywords internal
-startRmd <- function(title = "Report") {
+startQmd <- function(title = "Report") {
   return(c(
     "---",
     paste0('title: "', title, '"'),
-    "output:",
-    "  word_document",
+    "format: docx",
     "params:",
     "  customStyles:",
-    "    value:",
-    "      FigureCaption: NULL",
-    "      FigureFootnote: NULL",
-    "      TableCaption: NULL",
-    "      TableFootnote: NULL",
+    "    FigureCaption: ~",
+    "    FigureFootnote: ~",
+    "    TableCaption: ~",
+    "    TableFootnote: ~",
     "---",
+    " ",
+    "```{r}",
+    "#| include: false",
+    'knitr::opts_chunk$set(echo = FALSE, warning = FALSE, results = "asis", error = FALSE, message = FALSE)',
+    "```",
     " "
   ))
 }
@@ -494,24 +498,22 @@ mergeRmds <- function(
   checkmate::assertCharacter(sourceRmds, min.len = 1, unique = TRUE)
 
   # Check for any other extensions the .Rmd
-  if (any(grepl("\\.[^.Rmd]*$", sourceRmds))) {
+  if (any(grepl("\\.[^.qmd]*$", sourceRmds))) {
     stop(messages$errorutilitiesmarkdownL4X())
   } else {
-    # Add.Rmd extension to elements that don't have it
     sourceRmds <- ifelse(
-      grepl("\\.Rmd$", sourceRmds),
+      grepl("\\.qmd$", sourceRmds),
       sourceRmds,
-      paste0(sourceRmds, ".Rmd")
+      paste0(sourceRmds, ".qmd")
     )
   }
-  if (any(grepl("\\.[^.Rmd]*$", newName))) {
+  if (any(grepl("\\.[^.qmd]*$", newName))) {
     stop(messages$errorutilitiesmarkdownL4XX())
   } else {
-    # Add.Rmd extension to elements that don't have it
     newName <- ifelse(
-      grepl("\\.Rmd$", newName),
+      grepl("\\.qmd$", newName),
       newName,
-      paste0(newName, ".Rmd")
+      paste0(newName, ".qmd")
     )
   }
   checkmate::assertFileExists(file.path(
@@ -519,22 +521,13 @@ mergeRmds <- function(
     sourceRmds
   ))
 
-  rmdTxt <- c(
-    startRmd(title = title),
-    "  ",
-    "```{r setup, include=FALSE}",
-    'knitr::opts_chunk$set(echo = FALSE,warning = FALSE,results = "asis",error = FALSE,message = FALSE)',
-    "setupDone <<- TRUE",
-    "```",
-    "  "
-  )
+  rmdTxt <- startQmd(title = title)
 
   for (sourceRmd in sourceRmds) {
     rmdTxt <- c(
       rmdTxt,
       " ",
-      paste0('```{r child="', sourceRmd, '"}'),
-      " "
+      paste0("{{< include ", sourceRmd, " >}}")
     )
   }
 

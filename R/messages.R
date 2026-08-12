@@ -865,7 +865,7 @@ messages$warningutilitiesplotL1 <- function(env = parent.frame()) {
 
 messages$errorutilitiesreportingL1 <- function(env = parent.frame()) {
   eval(
-    quote("Pandoc is not installed, word report was not created."),
+    quote("Quarto is not installed, word report was not created."),
     envir = env
   )
 }

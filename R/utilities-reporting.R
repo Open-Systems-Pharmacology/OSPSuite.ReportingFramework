@@ -27,7 +27,7 @@ renderWord <- function(fileName,
                          TableFootnote = NULL
                        ),
                        ...) {
-  checkmate::assertFileExists(fileName, extension = ".Rmd")
+  checkmate::assertFileExists(fileName, extension = ".qmd")
   checkmate::assertList(customStyles)
   if (length(customStyles) > 0) {
     checkmate::assertNames(names(customStyles),
@@ -43,7 +43,7 @@ renderWord <- function(fileName,
   }
 
   # Check if pandoc is available before trying to render word report
-  if (!rmarkdown::pandoc_available()) {
+  if (!nzchar(quarto::quarto_path())) {
     stop(messages$errorutilitiesreportingL1())
     return(invisible())
   }
@@ -53,10 +53,10 @@ renderWord <- function(fileName,
   }
   checkmate::assertFileExists(wordConversionTemplate)
 
-  rmarkdown::render(fileName,
-    output_format = "word_document",
-    output_options = list(reference_docx = wordConversionTemplate),
-    params = list(customStyles = customStyles),
+  quarto::quarto_render(
+    input = fileName,
+    execute_params = list(customStyles = customStyles),
+    pandoc_args = c("--reference-doc", wordConversionTemplate),
     ...
   )
 

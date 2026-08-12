@@ -188,21 +188,24 @@ WorkflowScriptExporter <- R6::R6Class(
         return(invisible())
       }
 
-      # check if plotSheets exist and collect entries of common sheets,
-      wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$reportsFile)
-      checkmate::assertNames(plotSheets, subset.of = wb$sheet_names)
+      # Get plot sheets as JSON-friendly list structures from projectConfiguration
+      reportsFile <- projectConfiguration$addOns$reportsFile
 
+      # Validate sheet names exist
+      availableSheets <- readxl::excel_sheets(reportsFile)
+      checkmate::assertNames(plotSheets, subset.of = availableSheets)
+
+      # Read plot sheets and convert to JSON format using projectConfiguration
       configurationSheets <- list()
-      for (sheet in plotSheets) {
-        configurationSheets[["Plots"]][[sheet]] <-
-          excelToListStructure(xlsxReadData(
-            wb = wb,
-            sheetName = sheet,
-            convertHeaders = FALSE,
-            skipDescriptionRow = FALSE
-          ))
-      }
+      plotSheetsJson <- projectConfiguration$getConfigSheetsAsJson(
+        filePath = reportsFile,
+        sheetNames = plotSheets,
+        convertHeaders = FALSE,
+        skipDescriptionRow = FALSE
+      )
+      configurationSheets[["Plots"]] <- plotSheetsJson
 
+      # For filtering common configs, we still need to read as data.tables
       commonConfigs <- list(
         Scenarios = list(
           idcol = "Scenario",
@@ -228,7 +231,7 @@ WorkflowScriptExporter <- R6::R6Class(
 
         for (sheet in plotSheets) {
           dt <- xlsxReadData(
-            wb = wb,
+            wb = reportsFile,
             sheetName = sheet,
             skipDescriptionRow = TRUE
           )
@@ -259,7 +262,7 @@ WorkflowScriptExporter <- R6::R6Class(
         }
         if (length(entries) > 1) {
           dtConfig <- xlsxReadData(
-            wb = wb,
+            wb = reportsFile,
             sheetName = commonConfigTable,
             skipDescriptionRow = FALSE,
             convertHeaders = FALSE
@@ -270,8 +273,9 @@ WorkflowScriptExporter <- R6::R6Class(
               get(commonConfigs[[commonConfigTable]][["idcol"]]) %in% entries
             ]
           )
+          # Convert filtered config to JSON format using the shared logic
           configurationSheets[["Plots"]][[commonConfigTable]] <-
-            excelToListStructure(dtConfig)
+            private$excelDataTableToListStructure(dtConfig)
         }
       }
 
@@ -417,8 +421,9 @@ WorkflowScriptExporter <- R6::R6Class(
           selectedSheets = dtIndividuals$IndividualId
         )
 
+        # Convert filtered individuals to JSON format
         self$configurationSheets[["Individuals"]][["IndividualBiometrics"]] <-
-          excelToListStructure(dtIndividuals)
+          private$excelDataTableToListStructure(dtIndividuals)
       }
 
       private$addSelectedSheets(
@@ -435,10 +440,6 @@ WorkflowScriptExporter <- R6::R6Class(
 
       return(invisible())
     },
-    #' @description
-    #' Export input files to the electronic package folder.
-    #' @return Invisible NULL.
-    exportInputFiles = function() {
       inputFiles <- self$inputFiles
 
       if (any(duplicated(inputFiles$fileName))) {
@@ -630,6 +631,25 @@ WorkflowScriptExporter <- R6::R6Class(
     .configurationSheets = NA,
     # list with code read in from workflowRmd
     .codeChunks = NA,
+    # Convert a data.table to JSON-friendly list structure (column_names + rows)
+    excelDataTableToListStructure = function(df) {
+      # Convert to simple list format
+      sheetData <- list(
+        column_names = names(df),
+        rows = list()
+      )
+
+      # Store each row
+      if (nrow(df) > 0) {
+        for (i in seq_len(nrow(df))) {
+          # Extract row as a character vector to avoid type issues during serialization
+          rowValues <- sapply(df[i, ], as.character)
+          sheetData$rows[[i]] <- as.list(rowValues)
+        }
+      }
+
+      return(sheetData)
+    },
     # Function to add validated filenames to the list of input files
     addValidFileNames = function(inputFiles) {
       inputFiles[, fileName := basename(source)]
@@ -737,13 +757,13 @@ WorkflowScriptExporter <- R6::R6Class(
         on = .(PopulationId = source)
       ]
       configurationSheets[["Scenarios"]] <-
-        list(Scenarios = excelToListStructure(dtScenarios))
+        list(Scenarios = private$excelDataTableToListStructure(dtScenarios))
 
       dtPKarameter <- xlsxReadData(wb, "PKParameter", convertHeaders = FALSE)
       dtPKarameter <- dtPKarameter[Scenario_name %in% self$scenarioNames]
       if (nrow(dtPKarameter) > 0) {
         configurationSheets[["Scenarios"]][["PKParameter"]] <-
-          excelToListStructure(dtPKarameter)
+          private$excelDataTableToListStructure(dtPKarameter)
 
         private$addSelectedSheets(
           xlsfile = projectConfiguration$addOns$pKParameterFile,
@@ -753,7 +773,7 @@ WorkflowScriptExporter <- R6::R6Class(
 
       dtOutputPaths <- xlsxReadData(wb, "OutputPaths", convertHeaders = FALSE)
       configurationSheets[["Scenarios"]][["OutputPaths"]] <-
-        excelToListStructure(dtOutputPaths)
+        private$excelDataTableToListStructure(dtOutputPaths)
 
       self$configurationSheets <- configurationSheets
 
@@ -771,7 +791,7 @@ WorkflowScriptExporter <- R6::R6Class(
 
       for (sheet in intersect(wb$sheet_names, selectedSheets)) {
         configurationSheets[[xlsLabel]][[sheet]] <-
-          excelToListStructure(xlsxReadData(wb, sheet, convertHeaders = FALSE))
+          private$excelDataTableToListStructure(xlsxReadData(wb, sheet, convertHeaders = FALSE))
       }
 
       self$configurationSheets <- configurationSheets
@@ -815,11 +835,30 @@ WorkflowScriptExporter <- R6::R6Class(
     },
     # Evaluate a chunk and validate the expected variable
     evalChunkAndValidate = function(chunkName, expectedVarName) {
-      eval(parse(text = self$codeChunks[[chunkName]]))
+      tryCatch(
+        expr = {
+          eval(parse(text = self$codeChunks[[chunkName]]))
+        },
+        error = function(e) {
+          stop(
+            sprintf(
+              "Error evaluating chunk '%s': %s",
+              chunkName,
+              conditionMessage(e)
+            )
+          )
+        }
+      )
 
       # Check if the expected variable exists
       if (!exists(expectedVarName)) {
-        stop(messages$errorWorkflowScriptExporterL6())
+        stop(
+          sprintf(
+            "Expected variable '%s' not found after evaluating chunk '%s'",
+            expectedVarName,
+            chunkName
+          )
+        )
       }
 
       # Check if the variable is NULL or empty
@@ -886,17 +925,27 @@ WorkflowScriptExporter <- R6::R6Class(
         return(invisible())
       }
 
+      # Ensure AnalysisData folder exists
+      analysisDataFolder <- file.path(private$electronicPackageFolder, "..","AnalysisData")
+      if (!dir.exists(analysisDataFolder)) {
+        dir.create(analysisDataFolder, recursive = TRUE)
+      }
+
       for (dt in split(dataObserved, by = "dataClass")) {
         dataClass <- dt$dataClass[1]
         xUnit <- dt$xUnit[1]
         dt <- dt[, !c("dataClass", "dataType", "xUnit"), with = FALSE]
 
-        filename <- paste0("data_", tolower(gsub(" ", "", dataClass)), ".csv")
+        # Data files in electronic package use _csv.txt ending and are stored in AnalysisData subfolder
+        baseName <- paste0("data_", tolower(gsub(" ", "", dataClass)))
+        fileName <- paste0(baseName, "_csv.txt")
+        # Store relative path for the manifest file
+        relativeFileName <- file.path("AnalysisData", fileName)
         dictionaryName <- paste0(gsub(" ", "", dataClass), "Dictionary")
 
         private$addDataFilesConfig(
           dataClass = dataClass,
-          filename = filename,
+          filename = relativeFileName,
           dictionaryName = dictionaryName
         )
 
@@ -909,7 +958,7 @@ WorkflowScriptExporter <- R6::R6Class(
 
         write.csv(
           dt,
-          file = file.path(private$electronicPackageFolder, filename),
+          file = file.path(analysisDataFolder, fileName),
           na = "",
           row.names = FALSE,
           fileEncoding = "UTF-8"
@@ -994,7 +1043,7 @@ WorkflowScriptExporter <- R6::R6Class(
 
       private$.configurationSheets[[xlsLabel]][[
         sheetName
-      ]] <- excelToListStructure(configSheet)
+      ]] <- private$excelDataTableToListStructure(configSheet)
 
       return(invisible())
     },
@@ -1046,7 +1095,7 @@ WorkflowScriptExporter <- R6::R6Class(
 
       self$configurationSheets <- setNames(
         list(
-          setNames(list(excelToListStructure(dict)), dictionaryName)
+          setNames(list(private$excelDataTableToListStructure(dict)), dictionaryName)
         ),
         "DataImportConfiguration"
       )
@@ -1099,7 +1148,7 @@ WorkflowScriptExporter <- R6::R6Class(
 
       configurationSheets <- list(
         "ProjectConfiguration" = list(
-          Scenarios = excelToListStructure(dtConfig)
+          Scenarios = private$excelDataTableToListStructure(dtConfig)
         )
       )
       self$configurationSheets <- configurationSheets
@@ -1368,30 +1417,6 @@ validateAndAdjustFilenames <- function(fileName, fileType) {
 
   return(fileName)
 }
-#' @title Convert Excel file to List Structure
-#' @description
-#' This function converts the content of an Excel sheet into a list structure suitable for JSON serialization.
-#'
-#' @param df A data frame representing the content of an Excel sheet.
-#' @return A list structure ready for JSON serialization, containing column names and rows.
-#' @keywords internal
-excelToListStructure <- function(df) {
-  # Convert to simple list format
-  sheetData <- list(
-    column_names = names(df),
-    rows = list()
-  )
-
-  # Store each row
-  if (nrow(df) > 0) {
-    for (i in seq_len(nrow(df))) {
-      # Extract row as a character vector to avoid type issues during serialization
-      rowValues <- sapply(df[i, ], as.character)
-      sheetData$rows[[i]] <- as.list(rowValues)
-    }
-  }
-
-  return(sheetData)
 }
 #' @title Import Project Configuration
 #' @description

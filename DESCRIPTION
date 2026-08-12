@@ -27,11 +27,11 @@ Imports:
     checkmate,
     utils,
     knitr,
-    rmarkdown,
     fs,
     ospsuite,
     ospsuite.utils,
     logger,
+    quarto,
     ggplot2,
     ggsci,
     scales,
@@ -49,6 +49,7 @@ Depends:
     ospsuite.plots,
     R (>= 2.10)
 Suggests: 
+    rmarkdown,
     rstudioapi,
     styler,
     cowplot,

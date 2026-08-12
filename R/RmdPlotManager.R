@@ -76,9 +76,9 @@ RmdPlotManager <- R6::R6Class( # nolint
         return(invisible())
       }
 
-      if (is.null(fileName)) fileName <- paste0(private$.rmdName, ".Rmd")
+      if (is.null(fileName)) fileName <- paste0(private$.rmdName, ".qmd")
 
-      checkmate::assertPathForOutput(fileName, extension = "Rmd", overwrite = TRUE)
+      checkmate::assertPathForOutput(fileName, extension = "qmd", overwrite = TRUE)
       if (basename(fileName) != fileName) {
         stop(messages$errorRmdPlotManagerL1XX())
       }
@@ -318,19 +318,7 @@ RmdPlotManager <- R6::R6Class( # nolint
     .validateConfigTableFunction = NULL,
     # function to initialize rmdLines
     .startRMD = function(rmdfolder) {
-      return(c(
-        startRmd(),
-        "  ",
-        paste0("```{r setup_", private$.rmdName, ", include=FALSE}"),
-        'if (!exists("setupDone"))',
-        '   knitr::opts_chunk$set(echo = FALSE,warning = FALSE,results = "asis",error = FALSE,message = FALSE)',
-        "```",
-        "  ",
-        "```{r}",
-        "numbersOf <- list(figures = 0,",
-        "         tables = 0)",
-        "```"
-      ))
+      return(startQmd())
     },
     # switches keyCollectionIsOpen to FALSE, and call functions for figure settings
     .closeFigureKeys = function() {
@@ -338,25 +326,56 @@ RmdPlotManager <- R6::R6Class( # nolint
         return()
       }
 
-      keyEntries <- paste0('"', names(private$.listOfKeys), '" = "', private$.listOfKeys, '"')
-      tmp <- c(
-        "  ",
-        "```{r}",
-        paste0("keyTypes <- c(", paste(keyEntries, collapse = ",\n"), ")"),
-        " ",
-        "numbersOf <- addFiguresAndTables(keyTypes = keyTypes,",
-        paste0('            subfolder = "', private$.rmdName, '",'),
-        "            numbersOf = numbersOf,",
-        "            customStyles = params$customStyles,",
-        paste0("            digitsOfSignificance = ", self$digitsOfSignificance, ")"),
-        "```",
-        "  "
-      )
-      private$.rmdLines <- append(
-        private$.rmdLines,
-        tmp
-      )
+      dev <- ospsuite.plots::getOspsuite.plots.option(optionKey = ospsuite.plots::OptionKeys$export.device)
+      chunks <- c("  ")
 
+      for (key in names(private$.listOfKeys)) {
+        type <- private$.listOfKeys[[key]]
+        captionPath <- file.path(private$.rmdfolder, private$.rmdName, paste0(key, ".caption"))
+        caption <- if (file.exists(captionPath)) {
+          gsub('"', '\\\\"', paste(readLines(captionPath, warn = FALSE), collapse = " "))
+        } else {
+          ""
+        }
+        sanitizedKey <- gsub("[^a-zA-Z0-9_-]", "-", key)
+
+        if (type == "figure") {
+          chunks <- c(
+            chunks,
+            "```{r}",
+            paste0("#| label: fig-", sanitizedKey),
+            paste0('#| fig-cap: "', caption, '"'),
+            paste0('knitr::include_graphics("', private$.rmdName, "/", key, ".", dev, '")'),
+            "```",
+            "```{r}",
+            "#| output: asis",
+            paste0('mdFootNote(subfolder = "', private$.rmdName, '", footNoteFile = "', key, '.footnote", footNoteCustomStyle = params$customStyles$FigureFootnote)'),
+            "```",
+            "\\newpage",
+            "  "
+          )
+        } else {
+          chunks <- c(
+            chunks,
+            "```{r}",
+            paste0("#| label: tbl-", sanitizedKey),
+            paste0('#| tbl-cap: "', caption, '"'),
+            paste0('dt <- data.table::fread("', private$.rmdName, "/", key, '.csv")'),
+            'numeric_cols <- names(dt)[sapply(dt, function(x) is.numeric(x) & !is.integer(x))]',
+            paste0('if (length(numeric_cols) > 0) dt[, (numeric_cols) := signif(.SD, ', self$digitsOfSignificance, '), .SDcols = numeric_cols]'),
+            'knitr::kable(dt)',
+            "```",
+            "```{r}",
+            "#| output: asis",
+            paste0('mdFootNote(subfolder = "', private$.rmdName, '", footNoteFile = "', key, '.footnote", footNoteCustomStyle = params$customStyles$TableFootnote)'),
+            "```",
+            "\\newpage",
+            "  "
+          )
+        }
+      }
+
+      private$.rmdLines <- append(private$.rmdLines, chunks)
       private$.keyCollectionIsOpen <- FALSE
       private$.listOfKeys <- c()
 

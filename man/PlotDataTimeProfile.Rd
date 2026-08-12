@@ -9,7 +9,7 @@ An object to collect plot Data and other information to create a time profile pl
 }
 \keyword{internal}
 \section{Super class}{
-\code{\link[ospsuite.utils:Printable]{ospsuite.utils::Printable}} -> \code{RmdPlotManager}
+\code{\link[ospsuite.utils:Printable]{ospsuite.utils::Printable}} -> \code{PlotDataTimeProfile}
 }
 \section{Active bindings}{
   \if{html}{\out{<div class="r6-active-bindings">}}
@@ -45,33 +45,33 @@ An object to collect plot Data and other information to create a time profile pl
 \section{Methods}{
 \subsection{Public methods}{
   \itemize{
-    \item \href{#method-RmdPlotManager-initialize}{\code{RmdPlotManager$new()}}
-    \item \href{#method-RmdPlotManager-loadSimulatedResults}{\code{RmdPlotManager$loadSimulatedResults()}}
-    \item \href{#method-RmdPlotManager-filterObservedDataForPlot}{\code{RmdPlotManager$filterObservedDataForPlot()}}
-    \item \href{#method-RmdPlotManager-addTimeRangeTags}{\code{RmdPlotManager$addTimeRangeTags()}}
-    \item \href{#method-RmdPlotManager-splitDataToPanels}{\code{RmdPlotManager$splitDataToPanels()}}
-    \item \href{#method-RmdPlotManager-setOrderAndFactors}{\code{RmdPlotManager$setOrderAndFactors()}}
-    \item \href{#method-RmdPlotManager-setIndexColumns}{\code{RmdPlotManager$setIndexColumns()}}
-    \item \href{#method-RmdPlotManager-getTimeLabelForTimeRange}{\code{RmdPlotManager$getTimeLabelForTimeRange()}}
-    \item \href{#method-RmdPlotManager-addPredictedForObserved}{\code{RmdPlotManager$addPredictedForObserved()}}
-    \item \href{#method-RmdPlotManager-getDataForTimeRange}{\code{RmdPlotManager$getDataForTimeRange()}}
-    \item \href{#method-RmdPlotManager-useColorIndex}{\code{RmdPlotManager$useColorIndex()}}
-    \item \href{#method-RmdPlotManager-useShapeIndex}{\code{RmdPlotManager$useShapeIndex()}}
-    \item \href{#method-RmdPlotManager-hasSimulatedPop}{\code{RmdPlotManager$hasSimulatedPop()}}
-    \item \href{#method-RmdPlotManager-hasObservedData}{\code{RmdPlotManager$hasObservedData()}}
-    \item \href{#method-RmdPlotManager-hasObservedDataRange}{\code{RmdPlotManager$hasObservedDataRange()}}
-    \item \href{#method-RmdPlotManager-hasReferenceComparison}{\code{RmdPlotManager$hasReferenceComparison()}}
-    \item \href{#method-RmdPlotManager-clone}{\code{RmdPlotManager$clone()}}
+    \item \href{#method-PlotDataTimeProfile-initialize}{\code{PlotDataTimeProfile$new()}}
+    \item \href{#method-PlotDataTimeProfile-loadSimulatedResults}{\code{PlotDataTimeProfile$loadSimulatedResults()}}
+    \item \href{#method-PlotDataTimeProfile-filterObservedDataForPlot}{\code{PlotDataTimeProfile$filterObservedDataForPlot()}}
+    \item \href{#method-PlotDataTimeProfile-addTimeRangeTags}{\code{PlotDataTimeProfile$addTimeRangeTags()}}
+    \item \href{#method-PlotDataTimeProfile-splitDataToPanels}{\code{PlotDataTimeProfile$splitDataToPanels()}}
+    \item \href{#method-PlotDataTimeProfile-setOrderAndFactors}{\code{PlotDataTimeProfile$setOrderAndFactors()}}
+    \item \href{#method-PlotDataTimeProfile-setIndexColumns}{\code{PlotDataTimeProfile$setIndexColumns()}}
+    \item \href{#method-PlotDataTimeProfile-getTimeLabelForTimeRange}{\code{PlotDataTimeProfile$getTimeLabelForTimeRange()}}
+    \item \href{#method-PlotDataTimeProfile-addPredictedForObserved}{\code{PlotDataTimeProfile$addPredictedForObserved()}}
+    \item \href{#method-PlotDataTimeProfile-getDataForTimeRange}{\code{PlotDataTimeProfile$getDataForTimeRange()}}
+    \item \href{#method-PlotDataTimeProfile-useColorIndex}{\code{PlotDataTimeProfile$useColorIndex()}}
+    \item \href{#method-PlotDataTimeProfile-useShapeIndex}{\code{PlotDataTimeProfile$useShapeIndex()}}
+    \item \href{#method-PlotDataTimeProfile-hasSimulatedPop}{\code{PlotDataTimeProfile$hasSimulatedPop()}}
+    \item \href{#method-PlotDataTimeProfile-hasObservedData}{\code{PlotDataTimeProfile$hasObservedData()}}
+    \item \href{#method-PlotDataTimeProfile-hasObservedDataRange}{\code{PlotDataTimeProfile$hasObservedDataRange()}}
+    \item \href{#method-PlotDataTimeProfile-hasReferenceComparison}{\code{PlotDataTimeProfile$hasReferenceComparison()}}
+    \item \href{#method-PlotDataTimeProfile-clone}{\code{PlotDataTimeProfile$clone()}}
   }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-initialize"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-initialize}{}}}
-\subsection{\code{RmdPlotManager$new()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-initialize}{}}}
+\subsection{\code{PlotDataTimeProfile$new()}}{
   Initialize a new instance of the class
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$new(
+    \preformatted{PlotDataTimeProfile$new(
   projectConfiguration = projectConfiguration,
   onePlotConfig = onePlotConfig
 )}
@@ -94,12 +94,12 @@ Load simulated results for the specified project configuration
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-loadSimulatedResults"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-loadSimulatedResults}{}}}
-\subsection{\code{RmdPlotManager$loadSimulatedResults()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-loadSimulatedResults"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-loadSimulatedResults}{}}}
+\subsection{\code{PlotDataTimeProfile$loadSimulatedResults()}}{
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$loadSimulatedResults(
+    \preformatted{PlotDataTimeProfile$loadSimulatedResults(
   projectConfiguration,
   aggregationFun,
   scenarioResults
@@ -119,12 +119,12 @@ Filter observed data for plotting}
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-filterObservedDataForPlot"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-filterObservedDataForPlot}{}}}
-\subsection{\code{RmdPlotManager$filterObservedDataForPlot()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-filterObservedDataForPlot"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-filterObservedDataForPlot}{}}}
+\subsection{\code{PlotDataTimeProfile$filterObservedDataForPlot()}}{
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$filterObservedDataForPlot(dataObserved)}
+    \preformatted{PlotDataTimeProfile$filterObservedDataForPlot(dataObserved)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -141,12 +141,12 @@ Replicates data for each time tag
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-addTimeRangeTags"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-addTimeRangeTags}{}}}
-\subsection{\code{RmdPlotManager$addTimeRangeTags()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-addTimeRangeTags"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-addTimeRangeTags}{}}}
+\subsection{\code{PlotDataTimeProfile$addTimeRangeTags()}}{
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$addTimeRangeTags()}
+    \preformatted{PlotDataTimeProfile$addTimeRangeTags()}
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
@@ -156,12 +156,12 @@ Creates plotId for each scenario outputs group
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-splitDataToPanels"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-splitDataToPanels}{}}}
-\subsection{\code{RmdPlotManager$splitDataToPanels()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-splitDataToPanels"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-splitDataToPanels}{}}}
+\subsection{\code{PlotDataTimeProfile$splitDataToPanels()}}{
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$splitDataToPanels(nMaxFacetRows)}
+    \preformatted{PlotDataTimeProfile$splitDataToPanels(nMaxFacetRows)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -175,12 +175,12 @@ Creates plotId for each scenario outputs group
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-setOrderAndFactors"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-setOrderAndFactors}{}}}
-\subsection{\code{RmdPlotManager$setOrderAndFactors()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-setOrderAndFactors"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-setOrderAndFactors}{}}}
+\subsection{\code{PlotDataTimeProfile$setOrderAndFactors()}}{
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$setOrderAndFactors()}
+    \preformatted{PlotDataTimeProfile$setOrderAndFactors()}
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
@@ -190,12 +190,12 @@ set columns for aesthetics
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-setIndexColumns"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-setIndexColumns}{}}}
-\subsection{\code{RmdPlotManager$setIndexColumns()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-setIndexColumns"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-setIndexColumns}{}}}
+\subsection{\code{PlotDataTimeProfile$setIndexColumns()}}{
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$setIndexColumns(referenceScaleVector)}
+    \preformatted{PlotDataTimeProfile$setIndexColumns(referenceScaleVector)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -209,12 +209,12 @@ Get the time label for the filtered time range}
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-getTimeLabelForTimeRange"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-getTimeLabelForTimeRange}{}}}
-\subsection{\code{RmdPlotManager$getTimeLabelForTimeRange()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-getTimeLabelForTimeRange"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-getTimeLabelForTimeRange}{}}}
+\subsection{\code{PlotDataTimeProfile$getTimeLabelForTimeRange()}}{
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$getTimeLabelForTimeRange(filterName)}
+    \preformatted{PlotDataTimeProfile$getTimeLabelForTimeRange(filterName)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
@@ -228,12 +228,12 @@ Get the time label for the filtered time range}
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-addPredictedForObserved"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-addPredictedForObserved}{}}}
-\subsection{\code{RmdPlotManager$addPredictedForObserved()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-addPredictedForObserved"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-addPredictedForObserved}{}}}
+\subsection{\code{PlotDataTimeProfile$addPredictedForObserved()}}{
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$addPredictedForObserved()}
+    \preformatted{PlotDataTimeProfile$addPredictedForObserved()}
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
@@ -243,12 +243,12 @@ Get the data for the filtered time range
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-getDataForTimeRange"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-getDataForTimeRange}{}}}
-\subsection{\code{RmdPlotManager$getDataForTimeRange()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-getDataForTimeRange"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-getDataForTimeRange}{}}}
+\subsection{\code{PlotDataTimeProfile$getDataForTimeRange()}}{
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$getDataForTimeRange(
+    \preformatted{PlotDataTimeProfile$getDataForTimeRange(
   filterName,
   plotCounter,
   yScale,
@@ -273,12 +273,12 @@ Function to determine if color legend is needed
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-useColorIndex"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-useColorIndex}{}}}
-\subsection{\code{RmdPlotManager$useColorIndex()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-useColorIndex"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-useColorIndex}{}}}
+\subsection{\code{PlotDataTimeProfile$useColorIndex()}}{
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$useColorIndex()}
+    \preformatted{PlotDataTimeProfile$useColorIndex()}
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
@@ -288,12 +288,12 @@ Function to determine if shape legend is needed
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-useShapeIndex"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-useShapeIndex}{}}}
-\subsection{\code{RmdPlotManager$useShapeIndex()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-useShapeIndex"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-useShapeIndex}{}}}
+\subsection{\code{PlotDataTimeProfile$useShapeIndex()}}{
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$useShapeIndex()}
+    \preformatted{PlotDataTimeProfile$useShapeIndex()}
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
@@ -303,12 +303,12 @@ Function to determine if simulation is aggregated
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-hasSimulatedPop"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-hasSimulatedPop}{}}}
-\subsection{\code{RmdPlotManager$hasSimulatedPop()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-hasSimulatedPop"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-hasSimulatedPop}{}}}
+\subsection{\code{PlotDataTimeProfile$hasSimulatedPop()}}{
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$hasSimulatedPop()}
+    \preformatted{PlotDataTimeProfile$hasSimulatedPop()}
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
@@ -318,12 +318,12 @@ Function to determine if data contains observed data
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-hasObservedData"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-hasObservedData}{}}}
-\subsection{\code{RmdPlotManager$hasObservedData()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-hasObservedData"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-hasObservedData}{}}}
+\subsection{\code{PlotDataTimeProfile$hasObservedData()}}{
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$hasObservedData()}
+    \preformatted{PlotDataTimeProfile$hasObservedData()}
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
@@ -333,12 +333,12 @@ Function to determine if data contains observed data range
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-hasObservedDataRange"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-hasObservedDataRange}{}}}
-\subsection{\code{RmdPlotManager$hasObservedDataRange()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-hasObservedDataRange"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-hasObservedDataRange}{}}}
+\subsection{\code{PlotDataTimeProfile$hasObservedDataRange()}}{
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$hasObservedDataRange()}
+    \preformatted{PlotDataTimeProfile$hasObservedDataRange()}
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
@@ -348,12 +348,12 @@ Function to determine if a reference population should be plotted
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-hasReferenceComparison"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-hasReferenceComparison}{}}}
-\subsection{\code{RmdPlotManager$hasReferenceComparison()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-hasReferenceComparison"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-hasReferenceComparison}{}}}
+\subsection{\code{PlotDataTimeProfile$hasReferenceComparison()}}{
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$hasReferenceComparison()}
+    \preformatted{PlotDataTimeProfile$hasReferenceComparison()}
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
@@ -362,13 +362,13 @@ Function to determine if a reference population should be plotted
 }
 
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-RmdPlotManager-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-RmdPlotManager-clone}{}}}
-\subsection{\code{RmdPlotManager$clone()}}{
+\if{html}{\out{<a id="method-PlotDataTimeProfile-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-PlotDataTimeProfile-clone}{}}}
+\subsection{\code{PlotDataTimeProfile$clone()}}{
   The objects of this class are cloneable with this method.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{RmdPlotManager$clone(deep = FALSE)}
+    \preformatted{PlotDataTimeProfile$clone(deep = FALSE)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
