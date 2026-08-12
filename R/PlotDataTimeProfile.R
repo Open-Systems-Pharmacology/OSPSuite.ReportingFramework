@@ -4,7 +4,7 @@
 #' @keywords internal
 PlotDataTimeProfile <- R6::R6Class(
   # nolint
-  "RmdPlotManager",
+  "PlotDataTimeProfile",
   inherit = ospsuite.utils::Printable,
   cloneable = TRUE,
   public = list(

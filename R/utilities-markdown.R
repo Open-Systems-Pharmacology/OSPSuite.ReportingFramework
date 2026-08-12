@@ -141,13 +141,14 @@ mdBullet0 <- function(..., bullet = "-", level = 1) {
 #' @export
 #' @family markdown helper function
 mdFigure <- function(
-    figureNumber,
-    figureFile,
-    captionFile,
-    footNoteFile = NULL,
-    subfolder,
-    addNewPage = TRUE,
-    customStyles = list()) {
+  figureNumber,
+  figureFile,
+  captionFile,
+  footNoteFile = NULL,
+  subfolder,
+  addNewPage = TRUE,
+  customStyles = list()
+) {
   validateMdFigureTableInputs(
     subfolder = subfolder,
     importFile = figureFile,
@@ -156,7 +157,12 @@ mdFigure <- function(
   )
   # add figure link
   mdNewline()
-  mdLink(label = "", filename = utils::URLencode(figureFile), folder = subfolder, prefix = "!")
+  mdLink(
+    label = "",
+    filename = utils::URLencode(figureFile),
+    folder = subfolder,
+    prefix = "!"
+  )
   mdNewline()
 
   # figure footnote
@@ -174,7 +180,9 @@ mdFigure <- function(
     captionStyle = customStyles$FigureCaption
   )
 
-  if (addNewPage) mdNewpage()
+  if (addNewPage) {
+    mdNewpage()
+  }
 
   return(invisible())
 }
@@ -209,15 +217,17 @@ mdLink <- function(label, filename, folder, prefix = "") {
 #' @return `x`, invisibly
 #' @export
 #' @family markdown helper function
-mdTable <- function(tableNumber,
-                    tableCsv,
-                    captionFile,
-                    footNoteFile,
-                    subfolder,
-                    customStyles,
-                    digitsOfSignificance = 3,
-                    addNewPage = TRUE,
-                    ...) {
+mdTable <- function(
+  tableNumber,
+  tableCsv,
+  captionFile,
+  footNoteFile,
+  subfolder,
+  customStyles,
+  digitsOfSignificance = 3,
+  addNewPage = TRUE,
+  ...
+) {
   validateMdFigureTableInputs(
     subfolder = subfolder,
     importFile = tableCsv,
@@ -239,7 +249,10 @@ mdTable <- function(tableNumber,
       names(dt)[unlist(lapply(names(dt), function(col) {
         is.numeric(dt[[col]]) & !is.integer(dt[[col]])
       }))]
-    dt[, (colsToConvert) := signif(.SD, digits = digitsOfSignificance), .SDcols = colsToConvert]
+    dt[,
+      (colsToConvert) := signif(.SD, digits = digitsOfSignificance),
+      .SDcols = colsToConvert
+    ]
   }
 
   mdNewline()
@@ -253,7 +266,9 @@ mdTable <- function(tableNumber,
     footNoteCustomStyle = customStyles$FigureFootnote
   )
 
-  if (addNewPage) mdNewpage()
+  if (addNewPage) {
+    mdNewpage()
+  }
 
   return(invisible())
 }
@@ -292,7 +307,12 @@ mdFootNote <- function(subfolder, footNoteFile, footNoteCustomStyle = NULL) {
 #' @param captionStyle 'custom-style for captions'
 #' @export
 #' @family markdown helper function
-mdCaption <- function(subfolder, captionFile, captionPrefix, captionStyle = NULL) {
+mdCaption <- function(
+  subfolder,
+  captionFile,
+  captionPrefix,
+  captionStyle = NULL
+) {
   caption <- paste(
     captionPrefix,
     paste(readLines(file.path(subfolder, captionFile)), collapse = "\n")
@@ -315,15 +335,23 @@ mdCaption <- function(subfolder, captionFile, captionPrefix, captionStyle = NULL
 #' @inherit mdFigure
 #' @param importFile figure file or table .csv file
 #' @keywords internal
-validateMdFigureTableInputs <- function(subfolder, importFile, captionFile, customStyles) {
+validateMdFigureTableInputs <- function(
+  subfolder,
+  importFile,
+  captionFile,
+  customStyles
+) {
   checkmate::assertFileExists(file.path(subfolder, importFile))
   checkmate::assertFileExists(file.path(subfolder, captionFile))
   checkmate::assertList(customStyles)
   if (length(customStyles) > 0) {
-    checkmate::assertNames(names(customStyles),
+    checkmate::assertNames(
+      names(customStyles),
       subset.of = c(
-        "FigureCaption", "FigureFootnote",
-        "TableCaption", "TableFootnote"
+        "FigureCaption",
+        "FigureFootnote",
+        "TableCaption",
+        "TableFootnote"
       )
     )
   }
@@ -341,42 +369,73 @@ validateMdFigureTableInputs <- function(subfolder, importFile, captionFile, cust
 #' @return list of numbers and figures after loop
 #' @export
 #' @family markdown helper function
-addFiguresAndTables <- function(keyList,
-                                subfolder,
-                                numbersOf,
-                                customStyles = list(),
-                                digitsOfSignificance = 3) {
-  folderFiles <- list.files(subfolder)
+addFiguresAndTables <- function(
+  keyTypes = NULL,
+  subfolder,
+  numbersOf,
+  customStyles = list(),
+  digitsOfSignificance = 3,
+  keyList = NULL
+) {
+  dev <- ospsuite.plots::getOspsuite.plots.option(
+    optionKey = ospsuite.plots::OptionKeys$export.device
+  )
 
-  dev <- ospsuite.plots::getOspsuite.plots.option(optionKey = ospsuite.plots::OptionKeys$export.device)
-
-  for (key in keyList) {
-    figureFile <- paste(key, dev, sep = ".")
-    tableCsv <- paste(key, "csv", sep = ".")
-    if (figureFile %in% folderFiles) {
-      numbersOf$figures <- numbersOf$figures + 1
-
-      mdFigure(
-        figureNumber = numbersOf$figures,
-        figureFile = figureFile,
-        captionFile = paste(key, "caption", sep = "."),
-        footNoteFile = paste(key, "footnote", sep = "."),
-        subfolder = subfolder,
-        customStyles = customStyles
-      )
-    } else if (tableCsv %in% folderFiles) {
-      numbersOf$tables <- numbersOf$tables + 1
-      mdTable(
-        tableNumber = numbersOf$tables,
-        tableCsv = tableCsv,
-        captionFile = paste(key, "caption", sep = "."),
-        footNoteFile = paste(key, "footnote", sep = "."),
-        subfolder = subfolder,
-        customStyles = customStyles,
-        digitsOfSignificance = 3
-      )
-    } else {
-      stop(messages$errorutilitiesmarkdownL4())
+  if (!is.null(keyTypes)) {
+    for (key in names(keyTypes)) {
+      if (keyTypes[[key]] == "figure") {
+        numbersOf$figures <- numbersOf$figures + 1
+        mdFigure(
+          figureNumber = numbersOf$figures,
+          figureFile = paste(key, dev, sep = "."),
+          captionFile = paste(key, "caption", sep = "."),
+          footNoteFile = paste(key, "footnote", sep = "."),
+          subfolder = subfolder,
+          customStyles = customStyles
+        )
+      } else {
+        numbersOf$tables <- numbersOf$tables + 1
+        mdTable(
+          tableNumber = numbersOf$tables,
+          tableCsv = paste(key, "csv", sep = "."),
+          captionFile = paste(key, "caption", sep = "."),
+          footNoteFile = paste(key, "footnote", sep = "."),
+          subfolder = subfolder,
+          customStyles = customStyles,
+          digitsOfSignificance = digitsOfSignificance
+        )
+      }
+    }
+  } else {
+    # fallback: filesystem probing for .Rmd files generated before keyTypes was introduced
+    folderFiles <- list.files(subfolder)
+    for (key in keyList) {
+      figureFile <- paste(key, dev, sep = ".")
+      tableCsv <- paste(key, "csv", sep = ".")
+      if (figureFile %in% folderFiles) {
+        numbersOf$figures <- numbersOf$figures + 1
+        mdFigure(
+          figureNumber = numbersOf$figures,
+          figureFile = figureFile,
+          captionFile = paste(key, "caption", sep = "."),
+          footNoteFile = paste(key, "footnote", sep = "."),
+          subfolder = subfolder,
+          customStyles = customStyles
+        )
+      } else if (tableCsv %in% folderFiles) {
+        numbersOf$tables <- numbersOf$tables + 1
+        mdTable(
+          tableNumber = numbersOf$tables,
+          tableCsv = tableCsv,
+          captionFile = paste(key, "caption", sep = "."),
+          footNoteFile = paste(key, "footnote", sep = "."),
+          subfolder = subfolder,
+          customStyles = customStyles,
+          digitsOfSignificance = digitsOfSignificance
+        )
+      } else {
+        stop(messages$errorutilitiesmarkdownL4())
+      }
     }
   }
 
@@ -419,10 +478,17 @@ startRmd <- function(title = "Report") {
 #' @export
 #' @family functions called by workflow script
 mergeRmds <- function(
-    newName = "appendix",
-    title = "Appendix",
-    sourceRmds = c("Demographics", "TimeProfile", "PKParameter", "DDIRatio", "myFigures"),
-    projectConfiguration) {
+  newName = "appendix",
+  title = "Appendix",
+  sourceRmds = c(
+    "Demographics",
+    "TimeProfile",
+    "PKParameter",
+    "DDIRatio",
+    "myFigures"
+  ),
+  projectConfiguration
+) {
   checkmate::assertCharacter(newName, len = 1)
   checkmate::assertCharacter(title, len = 1)
   checkmate::assertCharacter(sourceRmds, min.len = 1, unique = TRUE)
@@ -432,15 +498,26 @@ mergeRmds <- function(
     stop(messages$errorutilitiesmarkdownL4X())
   } else {
     # Add.Rmd extension to elements that don't have it
-    sourceRmds <- ifelse(grepl("\\.Rmd$", sourceRmds), sourceRmds, paste0(sourceRmds, ".Rmd"))
+    sourceRmds <- ifelse(
+      grepl("\\.Rmd$", sourceRmds),
+      sourceRmds,
+      paste0(sourceRmds, ".Rmd")
+    )
   }
   if (any(grepl("\\.[^.Rmd]*$", newName))) {
     stop(messages$errorutilitiesmarkdownL4XX())
   } else {
     # Add.Rmd extension to elements that don't have it
-    newName <- ifelse(grepl("\\.Rmd$", newName), newName, paste0(newName, ".Rmd"))
+    newName <- ifelse(
+      grepl("\\.Rmd$", newName),
+      newName,
+      paste0(newName, ".Rmd")
+    )
   }
-  checkmate::assertFileExists(file.path(projectConfiguration$outputFolder, sourceRmds))
+  checkmate::assertFileExists(file.path(
+    projectConfiguration$outputFolder,
+    sourceRmds
+  ))
 
   rmdTxt <- c(
     startRmd(title = title),
@@ -451,7 +528,6 @@ mergeRmds <- function(
     "```",
     "  "
   )
-
 
   for (sourceRmd in sourceRmds) {
     rmdTxt <- c(

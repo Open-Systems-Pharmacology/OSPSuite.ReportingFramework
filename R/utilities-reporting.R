@@ -36,6 +36,10 @@ renderWord <- function(fileName,
         "TableCaption", "TableFootnote"
       )
     )
+    nonNullStyles <- Filter(Negate(is.null), customStyles)
+    if (length(nonNullStyles) > 0) {
+      checkmate::assertList(nonNullStyles, types = "character")
+    }
   }
 
   # Check if pandoc is available before trying to render word report

@@ -99,37 +99,20 @@ RmdPlotManager <- R6::R6Class( # nolint
     #' @param newlines The number of newlines inserted after the heading. Defaults to 2.
     #' @return NULL. The function modifies the internal Rmd lines.
     addHeader = function(..., level = 1, newlines = 2) {
-      private$.closeFigureKeys()
-      tmp <- utils::capture.output(mdHeading(..., level = level, newlines = newlines))
-      private$.rmdLines <- append(
-        private$.rmdLines,
-        tmp
-      )
+      private$.appendStructural(utils::capture.output(mdHeading(..., level = level, newlines = newlines)))
     },
     #' @description
     #' Insert line endings and start a new line.
     #' @param n Number of new lines. Defaults to 1.
     #' @return NULL. The function modifies the internal Rmd lines.
     addNewline = function(n = 1) {
-      private$.closeFigureKeys()
-
-      tmp <- utils::capture.output(mdNewline(n = n))
-      private$.rmdLines <- append(
-        private$.rmdLines,
-        tmp
-      )
+      private$.appendStructural(utils::capture.output(mdNewline(n = n)))
     },
     #' @description
     #' Insert a page break and a newline.
     #' @return NULL. The function modifies the internal Rmd lines.
     addNewpage = function() {
-      private$.closeFigureKeys()
-
-      tmp <- utils::capture.output(mdNewpage())
-      private$.rmdLines <- append(
-        private$.rmdLines,
-        tmp
-      )
+      private$.appendStructural(utils::capture.output(mdNewpage()))
     },
     #' @description
     #' Export a list of plots.
@@ -209,7 +192,7 @@ RmdPlotManager <- R6::R6Class( # nolint
         extension = ".footnote"
       )
 
-      private$.addKeyToList(key = figureKey)
+      private$.addKeyToList(key = figureKey, type = "figure")
     },
     #' @description
     #' Add and export tables with caption and footnote.
@@ -253,7 +236,7 @@ RmdPlotManager <- R6::R6Class( # nolint
         extension = ".footnote"
       )
 
-      private$.addKeyToList(key = tableKey)
+      private$.addKeyToList(key = tableKey, type = "table")
     }
   ),
   # active ----
@@ -355,12 +338,13 @@ RmdPlotManager <- R6::R6Class( # nolint
         return()
       }
 
+      keyEntries <- paste0('"', names(private$.listOfKeys), '" = "', private$.listOfKeys, '"')
       tmp <- c(
         "  ",
         "```{r}",
-        paste0('keyList <- c("', paste(private$.listOfKeys, collapse = '",\n"'), '")'),
+        paste0("keyTypes <- c(", paste(keyEntries, collapse = ",\n"), ")"),
         " ",
-        "numbersOf <- addFiguresAndTables(keyList = keyList,",
+        "numbersOf <- addFiguresAndTables(keyTypes = keyTypes,",
         paste0('            subfolder = "', private$.rmdName, '",'),
         "            numbersOf = numbersOf,",
         "            customStyles = params$customStyles,",
@@ -378,6 +362,11 @@ RmdPlotManager <- R6::R6Class( # nolint
 
       return(invisible())
     },
+    # ensures .closeFigureKeys invariant is maintained for all structural append operations
+    .appendStructural = function(lines) {
+      private$.closeFigureKeys()
+      private$.rmdLines <- append(private$.rmdLines, lines)
+    },
     # writes caption and footnotes
     .exportLines = function(textLines, key, extension) {
       if (is.null(textLines)) {
@@ -391,10 +380,10 @@ RmdPlotManager <- R6::R6Class( # nolint
       return(invisible())
     },
     # add key to lists
-    .addKeyToList = function(key) {
+    .addKeyToList = function(key, type) {
       private$.keyCollectionIsOpen <- TRUE
-      private$.listOfKeys <- append(private$.listOfKeys, key)
-      private$.listOfALLKeys <- append(private$.listOfKeys, key)
+      private$.listOfKeys <- c(private$.listOfKeys, stats::setNames(type, key))
+      private$.listOfALLKeys <- c(private$.listOfALLKeys, key)
     },
     # only export if key is unique
     .checkKeyIsUnique = function(key) {
