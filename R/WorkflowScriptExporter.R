@@ -795,7 +795,11 @@ WorkflowScriptExporter <- R6::R6Class(
 
       for (sheet in intersect(wb$sheet_names, selectedSheets)) {
         configurationSheets[[xlsLabel]][[sheet]] <-
-          private$excelDataTableToListStructure(xlsxReadData(wb, sheet, convertHeaders = FALSE))
+          private$excelDataTableToListStructure(xlsxReadData(
+            wb,
+            sheet,
+            convertHeaders = FALSE
+          ))
       }
 
       self$configurationSheets <- configurationSheets
@@ -930,7 +934,11 @@ WorkflowScriptExporter <- R6::R6Class(
       }
 
       # Ensure AnalysisData folder exists
-      analysisDataFolder <- file.path(private$electronicPackageFolder, "..","AnalysisData")
+      analysisDataFolder <- file.path(
+        private$electronicPackageFolder,
+        "..",
+        "AnalysisData"
+      )
       if (!dir.exists(analysisDataFolder)) {
         dir.create(analysisDataFolder, recursive = TRUE)
       }
@@ -1099,7 +1107,10 @@ WorkflowScriptExporter <- R6::R6Class(
 
       self$configurationSheets <- setNames(
         list(
-          setNames(list(private$excelDataTableToListStructure(dict)), dictionaryName)
+          setNames(
+            list(private$excelDataTableToListStructure(dict)),
+            dictionaryName
+          )
         ),
         "DataImportConfiguration"
       )
