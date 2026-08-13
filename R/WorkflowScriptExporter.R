@@ -440,6 +440,10 @@ WorkflowScriptExporter <- R6::R6Class(
 
       return(invisible())
     },
+    #' @description
+    #' Export input files to the electronic package folder.
+    #' @return Invisible NULL.
+    exportInputFiles = function() {
       inputFiles <- self$inputFiles
 
       if (any(duplicated(inputFiles$fileName))) {
@@ -1416,7 +1420,6 @@ validateAndAdjustFilenames <- function(fileName, fileType) {
   }
 
   return(fileName)
-}
 }
 #' @title Import Project Configuration
 #' @description

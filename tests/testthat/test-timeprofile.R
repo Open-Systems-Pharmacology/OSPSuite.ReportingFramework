@@ -33,6 +33,13 @@ makeCombinedDT <- function(group = "grp1") {
   rbind(makeSimDT(group), makeObsDT(group))
 }
 
+# data with a `predicted` column (as produced by addPredictedValues)
+makeObsWithPredicted <- function(group = "grp1") {
+  dt <- makeObsDT(group)
+  dt[, predicted := c(0.74, 0.39, 0.21, 0.11)]
+  dt
+}
+
 # ---------------------------------------------------------------------------
 # addPredictedValues
 # ---------------------------------------------------------------------------
@@ -130,6 +137,159 @@ test_that("addPredictedValues handles multiple identifier columns", {
 
   expect_true("predicted" %in% names(result))
   expect_equal(result$predicted, 6, tolerance = 1e-6)
+})
+
+# ---------------------------------------------------------------------------
+# .validateAndConvertData (tested through addPredictedValues side-effects)
+# ---------------------------------------------------------------------------
+
+test_that(".validateAndConvertData rejects missing required columns", {
+  bad <- data.table::data.table(x = 1:3, y = 1:3)
+  expect_error(
+    ospsuite.reportingframework:::.validateAndConvertData(
+      bad,
+      predictedIsNeeded = FALSE
+    )
+  )
+})
+
+test_that(".validateAndConvertData rejects empty data", {
+  empty <- data.table::data.table(
+    xValues = numeric(0),
+    yValues = numeric(0),
+    group = character(0),
+    dataType = character(0)
+  )
+  expect_error(
+    ospsuite.reportingframework:::.validateAndConvertData(
+      empty,
+      predictedIsNeeded = FALSE
+    )
+  )
+})
+
+test_that(".validateAndConvertData uses existing predicted column without recalculating", {
+  dt <- makeObsWithPredicted()
+  result <- ospsuite.reportingframework:::.validateAndConvertData(
+    dt,
+    predictedIsNeeded = TRUE
+  )
+  expect_equal(result$predicted, dt$predicted)
+})
+
+# ---------------------------------------------------------------------------
+# ospsuite_plotResidualsVsCovariate
+# ---------------------------------------------------------------------------
+
+makeResidualsInput <- function(group = "grp1") {
+  obs <- makeObsWithPredicted(group)
+  obs[, xUnit := "h"]
+  obs[, yUnit := "mg/l"]
+  obs
+}
+
+test_that("ospsuite_plotResidualsVsCovariate returns a ggplot for xAxis=time", {
+  skip_if_not_installed("ggplot2")
+  plotData <- makeResidualsInput()
+
+  p <- ospsuite_plotResidualsVsCovariate(
+    plotData = plotData,
+    residualScale = "log",
+    xAxis = "time"
+  )
+
+  expect_s3_class(p, "gg")
+})
+
+test_that("ospsuite_plotResidualsVsCovariate returns a ggplot for xAxis=observed", {
+  skip_if_not_installed("ggplot2")
+  p <- ospsuite_plotResidualsVsCovariate(
+    plotData = makeResidualsInput(),
+    residualScale = "log",
+    xAxis = "observed"
+  )
+  expect_s3_class(p, "gg")
+})
+
+test_that("ospsuite_plotResidualsVsCovariate returns a ggplot for xAxis=predicted", {
+  skip_if_not_installed("ggplot2")
+  p <- ospsuite_plotResidualsVsCovariate(
+    plotData = makeResidualsInput(),
+    residualScale = "linear",
+    xAxis = "predicted"
+  )
+  expect_s3_class(p, "gg")
+})
+
+test_that("ospsuite_plotResidualsVsCovariate uses ospsuite::addResidualColumn (residualValues present in data)", {
+  skip_if_not_installed("ggplot2")
+  # If addResidualColumn is called correctly, the plot object should be produced
+  # without error even with ratio scale
+  p <- ospsuite_plotResidualsVsCovariate(
+    plotData = makeResidualsInput(),
+    residualScale = "ratio",
+    xAxis = "time"
+  )
+  expect_s3_class(p, "gg")
+})
+
+test_that("ospsuite_plotResidualsVsTime is deprecated wrapper around ospsuite_plotResidualsVsCovariate", {
+  skip_if_not_installed("ggplot2")
+  expect_warning(
+    p <- ospsuite_plotResidualsVsTime(
+      plotData = makeResidualsInput(),
+      residualScale = "log"
+    ),
+    regexp = "Deprecated"
+  )
+  expect_s3_class(p, "gg")
+})
+
+test_that("ospsuite_plotResidualsVsObserved is deprecated wrapper around ospsuite_plotResidualsVsCovariate", {
+  skip_if_not_installed("ggplot2")
+  expect_warning(
+    p <- ospsuite_plotResidualsVsObserved(
+      plotData = makeResidualsInput(),
+      residualScale = "log"
+    ),
+    regexp = "Deprecated"
+  )
+  expect_s3_class(p, "gg")
+})
+
+# ---------------------------------------------------------------------------
+# ospsuite_plotResidualsAsHistogram
+# ---------------------------------------------------------------------------
+
+test_that("ospsuite_plotResidualsAsHistogram returns a ggplot", {
+  skip_if_not_installed("ggplot2")
+  p <- ospsuite_plotResidualsAsHistogram(
+    plotData = makeResidualsInput(),
+    residualScale = "log"
+  )
+  expect_s3_class(p, "gg")
+})
+
+test_that("ospsuite_plotResidualsAsHistogram works with linear scale", {
+  skip_if_not_installed("ggplot2")
+  p <- ospsuite_plotResidualsAsHistogram(
+    plotData = makeResidualsInput(),
+    residualScale = "linear"
+  )
+  expect_s3_class(p, "gg")
+})
+
+# ---------------------------------------------------------------------------
+# ospsuite_plotQuantileQuantilePlot
+# ---------------------------------------------------------------------------
+
+test_that("ospsuite_plotQuantileQuantilePlot returns a ggplot", {
+  skip_if_not_installed("ggplot2")
+  p <- ospsuite_plotQuantileQuantilePlot(
+    plotData = makeResidualsInput(),
+    residualScale = "log"
+  )
+  expect_s3_class(p, "gg")
 })
 
 # ---------------------------------------------------------------------------
@@ -233,4 +393,48 @@ test_that("getObservedUnitConversionDT returns unitFactor column", {
   result <- getObservedUnitConversionDT(dataObserved, dtUnit)
   expect_true("unitFactor" %in% names(result))
   expect_equal(nrow(result), 2)
+})
+
+# ---------------------------------------------------------------------------
+# ospsuite_plotTimeProfile — smoke test (no vdiffr, just class check)
+# ---------------------------------------------------------------------------
+
+makeTimeProfileInput <- function(group = "grp1") {
+  rbind(
+    data.table::data.table(
+      xValues = seq(0, 10, by = 1),
+      yValues = exp(-0.3 * seq(0, 10, by = 1)),
+      group = group,
+      dataType = "simulated",
+      xUnit = "h",
+      yUnit = "mg/l"
+    ),
+    data.table::data.table(
+      xValues = c(2, 5, 8),
+      yValues = c(0.55, 0.22, 0.09),
+      group = group,
+      dataType = "observed",
+      xUnit = "h",
+      yUnit = "mg/l"
+    )
+  )
+}
+
+test_that("ospsuite_plotTimeProfile returns a ggplot", {
+  skip_if_not_installed("ggplot2")
+  p <- ospsuite_plotTimeProfile(plotData = makeTimeProfileInput())
+  expect_s3_class(p, "gg")
+})
+
+test_that("ospsuite_plotTimeProfile accepts a pre-built metaData list", {
+  skip_if_not_installed("ggplot2")
+  meta <- list(
+    xValues = list(dimension = "Time", unit = "h"),
+    yValues = list(dimension = "Concentration (mass)", unit = "mg/l")
+  )
+  p <- ospsuite_plotTimeProfile(
+    plotData = makeTimeProfileInput(),
+    metaData = meta
+  )
+  expect_s3_class(p, "gg")
 })
