@@ -110,6 +110,10 @@ upgradeToReportingFramework <- function(
   )
   .addPkParameterSheetToScenarios(templatePath, scenariosXlsx, overwrite)
   .createProjectDirectories(dtConfiguration, configurationDirectory)
+  .ensureConfigurationGitignore(c(
+    configurationDirectory,
+    newConfigurationFolder
+  ))
 
   return(invisible())
 }
@@ -173,6 +177,10 @@ initProject <- function(
     ignoreVersionCheck = FALSE
   )
   snapshotProjectConfigurationRF(pc, outputDir = configurationDirectory) # nolint: object_usage_linter
+  .ensureConfigurationGitignore(c(
+    configurationDirectory,
+    pc$configurationsFolder
+  ))
 
   return(invisible())
 }
@@ -770,6 +778,55 @@ createProjectConfiguration <- function(
       dir.create(dirPath, recursive = TRUE, showWarnings = FALSE)
     }
   }
+
+  return(invisible(NULL))
+}
+
+#' Ensure .gitignore excludes xlsx files in configuration folders
+#' @param configurationFolders Character vector of folder paths.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.ensureConfigurationGitignore <- function(configurationFolders) {
+  configurationFolders <- unique(configurationFolders)
+  configurationFolders <- configurationFolders[
+    !is.na(configurationFolders) & nzchar(configurationFolders)
+  ]
+
+  for (folder in configurationFolders) {
+    if (!dir.exists(folder)) {
+      next
+    }
+    .ensureGitignoreXlsxRule(folder)
+  }
+
+  return(invisible(NULL))
+}
+
+#' Ensure a folder .gitignore contains the *.xlsx rule
+#' @param folder Path to a directory.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.ensureGitignoreXlsxRule <- function(folder) {
+  gitignorePath <- file.path(folder, ".gitignore")
+  gitignoreRule <- "*.xlsx"
+
+  if (!file.exists(gitignorePath)) {
+    writeLines(gitignoreRule, con = gitignorePath, useBytes = TRUE)
+    return(invisible(NULL))
+  }
+
+  lines <- readLines(gitignorePath, warn = FALSE, encoding = "UTF-8")
+  if (gitignoreRule %in% trimws(lines)) {
+    return(invisible(NULL))
+  }
+
+  if (length(lines) > 0 && nzchar(lines[[length(lines)]])) {
+    lines <- c(lines, "")
+  }
+  lines <- c(lines, gitignoreRule)
+  writeLines(lines, con = gitignorePath, useBytes = TRUE)
 
   return(invisible(NULL))
 }

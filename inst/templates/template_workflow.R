@@ -36,11 +36,31 @@ setWorkflowOptions()
 # A JSON snapshot of the configuration is automatically created for version control
 initProject()
 
+# Configuration in Git ------------------------------------------------------
+# *.xlsx configuration files are local working files and should not be versioned.
+# In configuration folders, initProject() creates/updates .gitignore to ignore *.xlsx.
+# Commit ProjectConfiguration.json to Git and use it as the source of truth.
+
 # Get paths of all relevant project files and folders
 # The ProjectConfiguration.xlsx is now at Scripts/ReportingFramework/ProjectConfiguration.xlsx
 projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
   path = file.path("Scripts", "ReportingFramework", "ProjectConfiguration.xlsx")
 )
+
+# After editing configuration tables, refresh the JSON snapshot.
+# Commit Scripts/ReportingFramework/ProjectConfiguration.json.
+# snapshotProjectConfigurationRF(
+#   projectConfiguration,
+#   outputDir = file.path("Scripts", "ReportingFramework")
+# )
+
+# To recreate configuration from JSON (e.g., CI/new machine), use:
+# projectConfiguration <- restoreProjectConfigurationRF(
+#   snapshotFilePath = file.path(
+#     "Scripts", "ReportingFramework", "ProjectConfiguration.json"
+#   ),
+#   outputDir = file.path("Scripts", "ReportingFramework")
+# )
 
 # Initialize log file
 initLogfunction(projectConfiguration)

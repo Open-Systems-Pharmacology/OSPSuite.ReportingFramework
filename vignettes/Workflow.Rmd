@@ -62,6 +62,7 @@ The first step in the workflow is to initialize the project. This includes:
 - Loading necessary libraries.
 - Setting the workflow options.
 - Setting up the project directory and configuration files using the project structure of `{esqlabsR}`.
+- Creating or updating `.gitignore` files in configuration folders so `*.xlsx` configuration files are ignored by Git.
 - Initializing the log file.
 
 Set workflow behavior with `setWorkflowOptions(isValidRun)`. This controls whether exploratory outputs are allowed (`isValidRun = FALSE`) or a QC-passed run is enforced (`isValidRun = TRUE`). If `isValidRun` is omitted, `getQCpassedEnvironmentVariable()` reads `QCpassed` from the environment.
@@ -85,6 +86,34 @@ projectConfiguration <- createProjectConfiguration(
 
 `ProjectConfiguration.xlsx` stores the package versions used to create the project: `esqlabsRVersion` (managed by `{esqlabsR}`) and `ospsuiteReportingFrameworkVersion` (managed by this package).
 When you load a configuration, both versions are checked against installed packages; mismatches prompt for update in interactive sessions and stop execution in non-interactive runs (for example CI) until resolved. New projects created with `initProject()` receive the current framework version automatically, and `projectConfiguration$save()` updates stored version values.
+
+### Configuration in Git: Use JSON Snapshots
+
+Configuration workbooks (`*.xlsx`) are generated working files and are ignored by Git in configuration folders. The versioned source of truth is the JSON snapshot created from the configuration.
+
+Save current configuration to JSON:
+
+```{r, echo=TRUE, eval=FALSE}
+projectConfiguration <- createProjectConfiguration(
+  path = file.path(configurationDirectory, "ProjectConfiguration.xlsx")
+)
+
+snapshotProjectConfigurationRF(
+  projectConfiguration,
+  outputDir = configurationDirectory
+)
+```
+
+This writes `ProjectConfiguration.json` in `configurationDirectory`. Commit this JSON file to Git.
+
+Restore configuration from JSON (for example on another machine or in CI):
+
+```{r, echo=TRUE, eval=FALSE}
+projectConfiguration <- restoreProjectConfigurationRF(
+  snapshotFilePath = file.path(configurationDirectory, "ProjectConfiguration.json"),
+  outputDir = configurationDirectory
+)
+```
 
 ## Data Import
 

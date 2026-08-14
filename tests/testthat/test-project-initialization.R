@@ -63,6 +63,14 @@ test_that("upgradeToReportingFramework keeps esqlabsR structure by default", {
   for (f in expectedFiles) {
     expect_true(file.exists(file.path(configFolder, f)))
   }
+
+  rootGitignore <- file.path(configurationDirectory, ".gitignore")
+  expect_true(file.exists(rootGitignore))
+  expect_true(any(trimws(readLines(rootGitignore, warn = FALSE)) == "*.xlsx"))
+
+  configGitignore <- file.path(configFolder, ".gitignore")
+  expect_true(file.exists(configGitignore))
+  expect_true(any(trimws(readLines(configGitignore, warn = FALSE)) == "*.xlsx"))
 })
 
 
@@ -123,6 +131,13 @@ test_that("upgradeToReportingFramework applies RF defaults when requested", {
     configurationDirectory,
     "PKParameter.xlsx"
   )))
+  expect_true(file.exists(file.path(configurationDirectory, ".gitignore")))
+  expect_true(any(
+    trimws(readLines(
+      file.path(configurationDirectory, ".gitignore"),
+      warn = FALSE
+    )) == "*.xlsx"
+  ))
 
   remainingLegacyDirs <- list.dirs(
     file.path(configurationDirectory, "Configurations"),
@@ -160,6 +175,37 @@ test_that("upgradeToReportingFramework is idempotent", {
       configurationDirectory = configurationDirectory
     )
   )
+})
+
+
+test_that("upgradeToReportingFramework updates existing gitignore", {
+  rootDirectory <- withr::local_tempdir()
+  configurationDirectory <- file.path(
+    rootDirectory,
+    "Root",
+    "Scripts",
+    "ReportingFramework"
+  )
+  dir.create(configurationDirectory, recursive = TRUE)
+
+  writeLines("/Outputs", file.path(configurationDirectory, ".gitignore"))
+
+  esqlabsR::initProject(
+    destination = configurationDirectory,
+    overwrite = TRUE
+  )
+  upgradeToReportingFramework(
+    configurationDirectory = configurationDirectory,
+    overwrite = TRUE,
+    keepEsqlabsRStructure = FALSE
+  )
+
+  gitignoreLines <- readLines(
+    file.path(configurationDirectory, ".gitignore"),
+    warn = FALSE
+  )
+  expect_true("/Outputs" %in% gitignoreLines)
+  expect_true(any(trimws(gitignoreLines) == "*.xlsx"))
 })
 
 
@@ -209,6 +255,10 @@ test_that("initProject initializes and upgrades project in one call", {
     "Outputs",
     "ReportingFramework"
   )))
+
+  gitignoreFile <- file.path(configurationDirectory, ".gitignore")
+  expect_true(file.exists(gitignoreFile))
+  expect_true(any(trimws(readLines(gitignoreFile, warn = FALSE)) == "*.xlsx"))
 })
 
 

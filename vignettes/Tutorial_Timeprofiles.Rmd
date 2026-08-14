@@ -190,6 +190,7 @@ Execute the first lines (listed below) of your workflow. This will:
 - Set some graphic defaults.
 - Set some options to switch between final valid runs and preliminary runs, such as watermarks.
 - Initialize the project directory.
+- Create or update `.gitignore` files in configuration folders so `*.xlsx` files are ignored by Git.
 - Load the project configuration.
 - Set up a logfile to catch messages.
 
@@ -226,6 +227,34 @@ initLogfunction(projectConfiguration)
 
 
 When loading an existing project configuration that was created before version tracking was introduced, pass `ignoreVersionCheck = TRUE` to `createProjectConfiguration()` or update the file once with `projectConfiguration$save()`.
+
+### Configuration in Git: Save JSON Snapshot
+
+Configuration Excel files are intended as editable working files and are ignored by Git in configuration folders. The shareable/versioned representation is `ProjectConfiguration.json`.
+
+After changing configuration tables, create or refresh the JSON snapshot:
+
+```{r save-config-json, eval = FALSE}
+projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
+  path = file.path(configurationDirectory, "ProjectConfiguration.xlsx")
+)
+
+ospsuite.reportingframework::snapshotProjectConfigurationRF(
+  projectConfiguration,
+  outputDir = configurationDirectory
+)
+```
+
+Commit `ProjectConfiguration.json` to Git.
+
+To recreate the configuration from JSON:
+
+```{r restore-config-json, eval = FALSE}
+projectConfiguration <- ospsuite.reportingframework::restoreProjectConfigurationRF(
+  snapshotFilePath = file.path(configurationDirectory, "ProjectConfiguration.json"),
+  outputDir = configurationDirectory
+)
+```
 
 ### Step 3: Copy the Sample Data to Your Project Structure
 
