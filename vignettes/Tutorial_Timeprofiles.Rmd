@@ -22,7 +22,6 @@ knitr::opts_chunk$set(
 
 ```{r setup, echo=FALSE, eval=TRUE}
 library(ospsuite.reportingframework)
-library(tidyr)
 library(data.table)
 options(rmarkdown.html_vignette.check_title = FALSE)
 ```
@@ -235,7 +234,7 @@ You have now the complete project structure with all configuration files. Copy t
 
 ### Step 4: Read Observed Data
 
-(See **[Data Import by Dictionary](Data_import_by_dictionary.html)**)
+(See **[Data Import by Dictionary](DataImport_by_Dictionary.html)**)
 
 Open the `<configurationDirectory>/DataImportConfiguration.xlsx`.
 
@@ -438,7 +437,7 @@ print(attr(plotList[["one_individual-TP-log-total"]], "caption"))
 
 ## 2) Adding Virtual Twin Populations
 
-(See **[Population](Population)**).
+(See **[Population](Population.html)**).
 
 ### Step 1: Edit Population Configuration
 
@@ -848,6 +847,6 @@ This tutorial covered the core time profile plotting workflow:
 
 For next steps, see the other vignettes in this package:
 
-- **[Data Import by Dictionary](Data_import_by_dictionary.html)** — detailed data import and dictionary configuration
+- **[Data Import by Dictionary](DataImport_by_Dictionary.html)** — detailed data import and dictionary configuration
 - **[Population](Population.html)** — population configuration and export options
 - **[Workflow](Workflow.html)** — the full workflow script structure and options

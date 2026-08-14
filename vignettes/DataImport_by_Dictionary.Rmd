@@ -17,7 +17,6 @@ knitr::opts_chunk$set(
 ```{r setup, echo=FALSE, warning=FALSE, error=FALSE, message=FALSE}
 library(ospsuite.reportingframework)
 library(data.table)
-library(tidyr)
 options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
@@ -35,9 +34,9 @@ This vignette provides a detailed guide to the data import process within the OS
   - A `DataFiles` sheet listing all files to be imported.
   - Dictionary sheets that outline the import specifications and rules.
 
-- **Output**: The import process generates two data.tables:
-  - `dataObserved`: Contains time profile data.
-  - `dataObservedPK`: Contains PK parameter data.
+- **Output**: `readObservedDataByDictionary` returns one data.table per call, based on `dataClassType`.
+  - Use `dataClassType = "timeprofile"` to import observed time profile data.
+  - Use `dataClassType = "pkParameter"` to import observed PK parameter data.
 
 - **Data Transfer**: The import function also facilitates the transfer of additional data to other configuration sheets:
   - It populates the `IndividualBiometrics` sheet in `Individuals.xlsx` with all available data.
@@ -49,18 +48,34 @@ This vignette provides a detailed guide to the data import process within the OS
 
 # Using the `readObservedDataByDictionary` Function
 
-The `readObservedDataByDictionary` function plays a pivotal role in the data import process within our package. It is designed to read and process observed data based on the provided project configuration and the data dictionary defined in an Excel template. Here's how to use the function and fill the Excel table for effective data import:
+The `readObservedDataByDictionary` function reads and processes observed data based on the project configuration and data dictionary. Use these arguments to control import behavior:
 
-1. **Provide Project Configuration**: The function requires the project configuration data to be passed as an argument. This configuration should include the necessary information for data import, such as the data importer configuration file and project configuration directory path.
+- `projectConfiguration`: Project configuration object.
+- `spreadData`: If `TRUE`, imported metadata is propagated to configuration tables.
+- `dataClassType`: Data class to import (`"timeprofile"` or `"pkParameter"`).
+- `fileIds`: Optional subset of file identifiers from the `DataFiles` sheet.
 
-2. **Data Importer Configuration File**: Ensure that the Excel template containing the data dictionary and data file information is available and accessible to the function. The data dictionary in the Excel template defines the mapping and conversion rules for the observed data.
-
-3. **Invoke the Function**: Call the `readObservedDataByDictionary` function, passing the project configuration as an argument. The function will read the data files and process the observed data based on the provided dictionary and configuration. It will return the observed data as a data.table, ready for further analysis.
+Typical usage pattern:
 
 ```{r readObservedDataByDictionary, eval = FALSE, echo = TRUE}
-# Call the readObservedDataByDictionary function
-observedData <- readObservedDataByDictionary(projectConfiguration)
+# Import observed time profiles
+dataObserved <- readObservedDataByDictionary(
+  projectConfiguration = projectConfiguration,
+  dataClassType = "timeprofile",
+  fileIds = NULL,
+  spreadData = TRUE
+)
+
+# Import observed PK parameters
+dataObservedPK <- readObservedDataByDictionary(
+  projectConfiguration = projectConfiguration,
+  dataClassType = "pkParameter",
+  fileIds = NULL,
+  spreadData = TRUE
+)
 ```
+
+In most workflows, `dataObserved` and `dataObservedPK` are imported with separate calls as shown above.
 
 # Filling the Excel Table
 
@@ -98,6 +113,8 @@ In the "DataFiles" sheet of the Excel template, provide the following informatio
 - **`Dictionary`**: The sheet name for the data dictionary.
 - **`DataFilter`**: An R executable expression that filters relevant data for the study. If empty, no filter is applied.
 - **`DataClass`**: Differentiate between time profiles and PK parameters, as well as aggregated and individual data.
+
+`DATACLASS` provides standard values for `DataClass` (for example `DATACLASS$tpIndividual`, `DATACLASS$tpAggregated`, `DATACLASS$pkIndividual`, `DATACLASS$pkAggregated`) and should be used in scripts to avoid typos.
 
 ### Example
 
@@ -192,8 +209,6 @@ The configuration sheet provides two templates for dictionaries: "tpDictionary" 
 - **filter**: An R executable expression that filters the source rows. Filters are executed in the order of this table.    
 - **filterValue**: An R executable expression to set a value for the filtered rows.  
 
-By filling out the Excel table with the required information, you can ensure that the `readObservedDataByDictionary` function can effectively read and process the observed data based on the provided data dictionary and configuration.  
-
 **!!! ATTENTION: Do not use single quotes (' ') to capture strings. At the beginning of an Excel cell, single quotes will be ignored. Use double quotes (" ").**
 
 ### Example
@@ -210,8 +225,7 @@ Values defined by filters are set sequentially in the order of the dictionary, s
 The data contains the covariate `country` in the column "COUNTRY". Additionally, the metadata `dose` is available.
 
 ```{r, echo=FALSE}
-tpDictionaryInd <- tpDictionary %>%
-  dplyr::filter(!(TargetColumn %in% c("yErrorValues", "yErrorType", "nBelowLLOQ", "numberOfIndividuals", "yMin", "yMax", "route")))
+tpDictionaryInd <- tpDictionary[!(TargetColumn %in% c("yErrorValues", "yErrorType", "nBelowLLOQ", "numberOfIndividuals", "yMin", "yMax", "route"))]
 
 tpDictionaryInd[TargetColumn == "group"]$FilterValue <- 'paste(STUD, GRPNAME, "individual", sep = "_")'
 tpDictionaryInd[TargetColumn == "dose"]$SourceColumn <- "DOSE"
