@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{mergeRmds}
 \alias{mergeRmds}
-\title{Creates Rmd file which include specified  .Rmd s}
+\title{Merge multiple Qmd files into one.}
 \usage{
 mergeRmds(
   newName = "appendix",
@@ -12,15 +12,15 @@ mergeRmds(
 )
 }
 \arguments{
-\item{newName}{new Name of .Rmd}
+\item{newName}{Output file name (default "appendix").}
 
-\item{title}{Title of new Rmd}
+\item{title}{Output title (default "Appendix").}
 
-\item{sourceRmds}{list of .rmds to include}
+\item{sourceRmds}{Source Qmd files to include.}
 
-\item{projectConfiguration}{Object of class `ProjectConfiguration` containing information on paths and file names}
+\item{projectConfiguration}{ProjectConfiguration object.}
 }
 \description{
-Creates Rmd file which include specified  .Rmd s
+Merge multiple Qmd files into one.
 }
 \concept{functions called by workflow script}

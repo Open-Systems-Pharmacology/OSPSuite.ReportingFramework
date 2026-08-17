@@ -2,17 +2,17 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{startQmd}
 \alias{startQmd}
-\title{creates startlines of Rmd file}
+\title{Create standard Qmd header with params.}
 \usage{
 startQmd(title = "Report")
 }
 \arguments{
-\item{title}{title of report}
+\item{title}{Report title (default "Report").}
 }
 \value{
-character with startlines
+Character vector of header lines.
 }
 \description{
-creates startlines of Rmd file
+Create standard Qmd header with params.
 }
 \keyword{internal}

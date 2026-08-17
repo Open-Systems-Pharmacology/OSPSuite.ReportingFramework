@@ -119,6 +119,24 @@
 #' @format NULL
 #' @export
 #' @family project initialization
+#'
+#' @field modelFolder Path to the folder containing model files. Delegated to the base `esqlabsR::ProjectConfiguration`.
+#' @field configurationsFolder Path to the folder containing configuration files. Delegated to the base `esqlabsR::ProjectConfiguration`.
+#' @field modelParamsFile Path to the model parameters file. Delegated to the base `esqlabsR::ProjectConfiguration`.
+#' @field individualsFile Path to the individuals file. Delegated to the base `esqlabsR::ProjectConfiguration`.
+#' @field populationsFile Path to the populations file. Delegated to the base `esqlabsR::ProjectConfiguration`.
+#' @field populationsFolder Path to the folder containing population files. Delegated to the base `esqlabsR::ProjectConfiguration`.
+#' @field scenariosFile Path to the scenarios file. Delegated to the base `esqlabsR::ProjectConfiguration`.
+#' @field applicationsFile Path to the applications file. Delegated to the base `esqlabsR::ProjectConfiguration`.
+#' @field plotsFile Path to the plots configuration file. Delegated to the base `esqlabsR::ProjectConfiguration`.
+#' @field parameterIdentificationFile Path to the parameter identification file. Delegated to the base `esqlabsR::ProjectConfiguration`.
+#' @field dataFolder Path to the folder containing observed data files. Delegated to the base `esqlabsR::ProjectConfiguration`.
+#' @field dataFile Path to the observed data file. Delegated to the base `esqlabsR::ProjectConfiguration`.
+#' @field dataImporterConfigurationFile Path to the data importer configuration file. Delegated to the base `esqlabsR::ProjectConfiguration`.
+#' @field outputFolder Path to the folder where outputs are written. Delegated to the base `esqlabsR::ProjectConfiguration`.
+#' @field esqlabsRVersion Version of the `esqlabsR` package stored in the project configuration. Read-only; delegated to the base `esqlabsR::ProjectConfiguration`.
+#' @field projectConfigurationDirPath Absolute path to the directory containing the project configuration file. Read-only; delegated to the base `esqlabsR::ProjectConfiguration`.
+#' @field modified Logical flag indicating whether the project configuration has been modified since it was last saved. Read-only; delegated to the base `esqlabsR::ProjectConfiguration`.
 ProjectConfigurationRF <- # nolint: object_name_linter
   R6::R6Class(
     "ProjectConfigurationRF",

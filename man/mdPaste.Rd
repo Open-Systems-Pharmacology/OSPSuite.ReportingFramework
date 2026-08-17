@@ -9,20 +9,19 @@ mdPaste(..., sep = " ", collapse = NULL, newlines = 1)
 \arguments{
 \item{...}{Elements to be `paste`d.}
 
-\item{sep}{Passed to `paste`. Defaults to `" "`.}
+\item{sep}{Separator (default `" "`).}
 
-\item{collapse}{Passed to `paste`. Defaults to `NULL`.}
+\item{collapse}{Collapse argument.}
 
-\item{newlines}{Number of newlines to insert afterwards. Defaults to 1.}
+\item{newlines}{Newlines afterwards (default 1).}
 }
 \description{
-`cat` text using `paste` and optionally end with newlines.
+mdPaste
 }
 \seealso{
 Other markdown helper function:
 \code{\link[=addFiguresAndTables]{addFiguresAndTables()}},
 \code{\link[=mdBullet]{mdBullet()}},
-\code{\link[=mdBullet0]{mdBullet0()}},
 \code{\link[=mdCaption]{mdCaption()}},
 \code{\link[=mdFigure]{mdFigure()}},
 \code{\link[=mdFootNote]{mdFootNote()}},

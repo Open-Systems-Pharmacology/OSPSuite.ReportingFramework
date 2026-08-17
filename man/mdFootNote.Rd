@@ -2,25 +2,24 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{mdFootNote}
 \alias{mdFootNote}
-\title{add footnote lines}
+\title{Add footnote lines from file.}
 \usage{
 mdFootNote(subfolder, footNoteFile, footNoteCustomStyle = NULL)
 }
 \arguments{
-\item{subfolder}{The folder where the file is located relative to Rmd}
+\item{subfolder}{Folder location.}
 
-\item{footNoteFile}{file containing footnotes}
+\item{footNoteFile}{Footnote file.}
 
-\item{footNoteCustomStyle}{a character describing custom style footnotes}
+\item{footNoteCustomStyle}{Custom style (optional).}
 }
 \description{
-add footnote lines
+Add footnote lines from file.
 }
 \seealso{
 Other markdown helper function:
 \code{\link[=addFiguresAndTables]{addFiguresAndTables()}},
 \code{\link[=mdBullet]{mdBullet()}},
-\code{\link[=mdBullet0]{mdBullet0()}},
 \code{\link[=mdCaption]{mdCaption()}},
 \code{\link[=mdFigure]{mdFigure()}},
 \code{\link[=mdHeading]{mdHeading()}},

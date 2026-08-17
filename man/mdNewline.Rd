@@ -7,16 +7,15 @@
 mdNewline(n = 1)
 }
 \arguments{
-\item{n}{Number of new lines. Defaults to 1.}
+\item{n}{Number of new lines (default 1).}
 }
 \description{
-`cat` a line end and start a new line.
+mdNewline
 }
 \seealso{
 Other markdown helper function:
 \code{\link[=addFiguresAndTables]{addFiguresAndTables()}},
 \code{\link[=mdBullet]{mdBullet()}},
-\code{\link[=mdBullet0]{mdBullet0()}},
 \code{\link[=mdCaption]{mdCaption()}},
 \code{\link[=mdFigure]{mdFigure()}},
 \code{\link[=mdFootNote]{mdFootNote()}},

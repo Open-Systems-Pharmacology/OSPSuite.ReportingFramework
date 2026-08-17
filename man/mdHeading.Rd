@@ -2,25 +2,26 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{mdHeading}
 \alias{mdHeading}
-\title{mdHeading}
+\title{mdHeading
+Insert heading with specified level (1-6).}
 \usage{
 mdHeading(..., level = 1, newlines = 2)
 }
 \arguments{
-\item{...}{passed to mdPaste}
+\item{...}{Content passed to mdPaste.}
 
-\item{level}{The header level, i.e. the number of `#`s. Defaults to 1.}
+\item{level}{Header level (default 1).}
 
-\item{newlines}{The number of newlines inserted after the heading. Defaults to 2.}
+\item{newlines}{Newlines after heading (default 2).}
 }
 \description{
-Insert a heading with a specified level.
+mdHeading
+Insert heading with specified level (1-6).
 }
 \seealso{
 Other markdown helper function:
 \code{\link[=addFiguresAndTables]{addFiguresAndTables()}},
 \code{\link[=mdBullet]{mdBullet()}},
-\code{\link[=mdBullet0]{mdBullet0()}},
 \code{\link[=mdCaption]{mdCaption()}},
 \code{\link[=mdFigure]{mdFigure()}},
 \code{\link[=mdFootNote]{mdFootNote()}},

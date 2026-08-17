@@ -30,6 +30,40 @@ Initialize}
 \section{Active bindings}{
   \if{html}{\out{<div class="r6-active-bindings">}}
   \describe{
+    \item{\code{modelFolder}}{Path to the folder containing model files. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{configurationsFolder}}{Path to the folder containing configuration files. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{modelParamsFile}}{Path to the model parameters file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{individualsFile}}{Path to the individuals file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{populationsFile}}{Path to the populations file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{populationsFolder}}{Path to the folder containing population files. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{scenariosFile}}{Path to the scenarios file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{applicationsFile}}{Path to the applications file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{plotsFile}}{Path to the plots configuration file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{parameterIdentificationFile}}{Path to the parameter identification file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{dataFolder}}{Path to the folder containing observed data files. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{dataFile}}{Path to the observed data file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{dataImporterConfigurationFile}}{Path to the data importer configuration file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{outputFolder}}{Path to the folder where outputs are written. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{esqlabsRVersion}}{Version of the `esqlabsR` package stored in the project configuration. Read-only; delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{projectConfigurationDirPath}}{Absolute path to the directory containing the project configuration file. Read-only; delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{modified}}{Logical flag indicating whether the project configuration has been modified since it was last saved. Read-only; delegated to the base `esqlabsR::ProjectConfiguration`.}
+
     \item{\code{projectConfigurationFilePath}}{Path to the project configuration file.}
 
     \item{\code{addOns}}{list with non default configurations}
@@ -47,6 +81,8 @@ package stored in the project configuration. Read-only.}
     \item \href{#method-ProjectConfigurationRF-save}{\code{ProjectConfigurationRF$save()}}
     \item \href{#method-ProjectConfigurationRF-addAddOnFileToConfiguration}{\code{ProjectConfigurationRF$addAddOnFileToConfiguration()}}
     \item \href{#method-ProjectConfigurationRF-addAddOnFolderToConfiguration}{\code{ProjectConfigurationRF$addAddOnFolderToConfiguration()}}
+    \item \href{#method-ProjectConfigurationRF-getConfigSheetAsJson}{\code{ProjectConfigurationRF$getConfigSheetAsJson()}}
+    \item \href{#method-ProjectConfigurationRF-getConfigSheetsAsJson}{\code{ProjectConfigurationRF$getConfigSheetsAsJson()}}
     \item \href{#method-ProjectConfigurationRF-copy}{\code{ProjectConfigurationRF$copy()}}
   }
 }
@@ -162,6 +198,71 @@ Print}
       \item{\code{description}}{A string providing a description of the property.}
     }
     \if{html}{\out{</div>}}
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ProjectConfigurationRF-getConfigSheetAsJson"></a>}}
+\if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-getConfigSheetAsJson}{}}}
+\subsection{\code{ProjectConfigurationRF$getConfigSheetAsJson()}}{
+  Get a configuration sheet as a JSON-friendly list structure.
+Reads an xlsx sheet and converts it to a list with column names and rows.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{ProjectConfigurationRF$getConfigSheetAsJson(
+  filePath,
+  sheetName,
+  convertHeaders = TRUE,
+  skipDescriptionRow = FALSE
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{filePath}}{A string representing the path to the xlsx file.}
+      \item{\code{sheetName}}{A string representing the sheet name to read.}
+      \item{\code{convertHeaders}}{Logical flag to convert header names (default: TRUE).}
+      \item{\code{skipDescriptionRow}}{Logical flag to skip the description row (default: FALSE).}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A named list with:
+  - `column_names`: Character vector of column names
+  - `rows`: List of rows, where each row is a list of character values
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ProjectConfigurationRF-getConfigSheetsAsJson"></a>}}
+\if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-getConfigSheetsAsJson}{}}}
+\subsection{\code{ProjectConfigurationRF$getConfigSheetsAsJson()}}{
+  Get multiple configuration sheets as JSON-friendly list structures.
+Reads multiple xlsx sheets and converts them to named list format.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{ProjectConfigurationRF$getConfigSheetsAsJson(
+  filePath,
+  sheetNames = NULL,
+  convertHeaders = TRUE,
+  skipDescriptionRow = FALSE
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{filePath}}{A string representing the path to the xlsx file.}
+      \item{\code{sheetNames}}{A character vector of sheet names to read. If NULL, reads all sheets.}
+      \item{\code{convertHeaders}}{Logical flag to convert header names (default: TRUE).}
+      \item{\code{skipDescriptionRow}}{Logical flag to skip the description row (default: FALSE).}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A named list where each element corresponds to a sheet and contains
+  the structure returned by `getConfigSheetAsJson()`.
   }
 }
 

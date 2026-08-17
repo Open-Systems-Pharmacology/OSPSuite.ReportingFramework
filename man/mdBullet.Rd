@@ -2,24 +2,28 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{mdBullet}
 \alias{mdBullet}
-\title{Insert a bulleted item, making sure that there are sufficient newlines to build a bulleted list}
+\alias{mdBullet0}
+\title{Insert bulleted item with indentation.}
 \usage{
 mdBullet(..., bullet = "-", level = 1)
+
+mdBullet0(..., bullet = "-", level = 1)
 }
 \arguments{
-\item{...}{passed to `mdPaste`}
+\item{...}{Bullet content.}
 
-\item{bullet}{`character` type of bullet}
+\item{bullet}{Bullet character (default "-").}
 
-\item{level}{`integer`, specifies the indentation level. `level=1` has no indentation}
+\item{level}{Indentation level (default 1).}
 }
 \description{
-Insert a bulleted item, making sure that there are sufficient newlines to build a bulleted list
+Insert bulleted item with indentation.
+
+Insert bulleted item using paste0.
 }
 \seealso{
 Other markdown helper function:
 \code{\link[=addFiguresAndTables]{addFiguresAndTables()}},
-\code{\link[=mdBullet0]{mdBullet0()}},
 \code{\link[=mdCaption]{mdCaption()}},
 \code{\link[=mdFigure]{mdFigure()}},
 \code{\link[=mdFootNote]{mdFootNote()}},

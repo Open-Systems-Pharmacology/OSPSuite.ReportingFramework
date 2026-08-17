@@ -9,18 +9,17 @@ mdPaste0(..., collapse = NULL, newlines = 1)
 \arguments{
 \item{...}{Elements to be `paste0`d.}
 
-\item{collapse}{Passed to `paste0`. Defaults to `NULL`.}
+\item{collapse}{Collapse argument.}
 
-\item{newlines}{Number of newlines to insert afterwards. Defaults to 1.}
+\item{newlines}{Newlines afterwards (default 1).}
 }
 \description{
-`cat` text using `paste0` and optionally end with newlines.
+mdPaste0
 }
 \seealso{
 Other markdown helper function:
 \code{\link[=addFiguresAndTables]{addFiguresAndTables()}},
 \code{\link[=mdBullet]{mdBullet()}},
-\code{\link[=mdBullet0]{mdBullet0()}},
 \code{\link[=mdCaption]{mdCaption()}},
 \code{\link[=mdFigure]{mdFigure()}},
 \code{\link[=mdFootNote]{mdFootNote()}},

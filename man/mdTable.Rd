@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{mdTable}
 \alias{mdTable}
-\title{mdTable}
+\title{Insert table from CSV with caption.}
 \usage{
 mdTable(
   tableNumber,
@@ -17,35 +17,31 @@ mdTable(
 )
 }
 \arguments{
-\item{tableNumber}{number of table for caption prefix}
+\item{tableNumber}{Table number for prefix.}
 
-\item{tableCsv}{path of .csv file}
+\item{tableCsv}{CSV file path.}
 
-\item{captionFile}{file containing caption}
+\item{captionFile}{Caption file.}
 
-\item{footNoteFile}{file containing footnotes}
+\item{footNoteFile}{Footnote file.}
 
-\item{subfolder}{The folder where the file is located relative to Rmd}
+\item{subfolder}{Folder location.}
 
-\item{customStyles}{list of custom styles usable for figure and table captions and footnotes}
+\item{customStyles}{Custom styles list.}
 
-\item{digitsOfSignificance}{significance digits to display (default 3)}
+\item{digitsOfSignificance}{Significant digits (default 3).}
 
-\item{addNewPage}{boolean if TRUE (default) new page is added after}
+\item{addNewPage}{Add page break after (default TRUE).}
 
-\item{...}{passed to `knitr::kable`}
-}
-\value{
-`x`, invisibly
+\item{...}{Passed to `knitr::kable`.}
 }
 \description{
-Insert a table into a markdown document. Essentially a wrapper for `knitr::kable` with `format = "markdown"` and newlines.
+Insert table from CSV with caption.
 }
 \seealso{
 Other markdown helper function:
 \code{\link[=addFiguresAndTables]{addFiguresAndTables()}},
 \code{\link[=mdBullet]{mdBullet()}},
-\code{\link[=mdBullet0]{mdBullet0()}},
 \code{\link[=mdCaption]{mdCaption()}},
 \code{\link[=mdFigure]{mdFigure()}},
 \code{\link[=mdFootNote]{mdFootNote()}},

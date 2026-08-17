@@ -2,27 +2,26 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{mdLink}
 \alias{mdLink}
-\title{mdLink}
+\title{Insert markdown link.}
 \usage{
 mdLink(label, filename, folder, prefix = "")
 }
 \arguments{
-\item{label}{The text to display as the link.}
+\item{label}{Link display text.}
 
-\item{filename}{The file to link to.}
+\item{filename}{File to link to.}
 
-\item{folder}{The folder where the file is located.}
+\item{folder}{Folder location.}
 
-\item{prefix}{An optional prefix to place in front of the link. Defaults to "".}
+\item{prefix}{Optional prefix (default "").}
 }
 \description{
-Insert a link to another file, and a newline.
+Insert markdown link.
 }
 \seealso{
 Other markdown helper function:
 \code{\link[=addFiguresAndTables]{addFiguresAndTables()}},
 \code{\link[=mdBullet]{mdBullet()}},
-\code{\link[=mdBullet0]{mdBullet0()}},
 \code{\link[=mdCaption]{mdCaption()}},
 \code{\link[=mdFigure]{mdFigure()}},
 \code{\link[=mdFootNote]{mdFootNote()}},

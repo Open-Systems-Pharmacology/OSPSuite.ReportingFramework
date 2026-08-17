@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{mdFigure}
 \alias{mdFigure}
-\title{mdFigure}
+\title{Include figure with caption and footnote.}
 \usage{
 mdFigure(
   figureNumber,
@@ -15,28 +15,27 @@ mdFigure(
 )
 }
 \arguments{
-\item{figureNumber}{number of figure used in caption prefix}
+\item{figureNumber}{Figure number for caption prefix.}
 
-\item{figureFile}{file of Figure}
+\item{figureFile}{Figure file name.}
 
-\item{captionFile}{file containing caption}
+\item{captionFile}{Caption file.}
 
-\item{footNoteFile}{file containing footnotes}
+\item{footNoteFile}{Footnote file (optional).}
 
-\item{subfolder}{The folder where the file is located relative to Rmd}
+\item{subfolder}{Folder relative to Rmd.}
 
-\item{addNewPage}{boolean if TRUE (default) new page is added after}
+\item{addNewPage}{Add page break after (default TRUE).}
 
-\item{customStyles}{list of custom styles usable for figure and table captions and footnotes}
+\item{customStyles}{Custom styles list.}
 }
 \description{
-Include a figure file with caption
+Include figure with caption and footnote.
 }
 \seealso{
 Other markdown helper function:
 \code{\link[=addFiguresAndTables]{addFiguresAndTables()}},
 \code{\link[=mdBullet]{mdBullet()}},
-\code{\link[=mdBullet0]{mdBullet0()}},
 \code{\link[=mdCaption]{mdCaption()}},
 \code{\link[=mdFootNote]{mdFootNote()}},
 \code{\link[=mdHeading]{mdHeading()}},

@@ -2,35 +2,20 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{validateMdFigureTableInputs}
 \alias{validateMdFigureTableInputs}
-\title{validates common inputs for `mdFigure` and `mdTable`}
+\title{Validate figure/table input files and styles.}
 \usage{
 validateMdFigureTableInputs(subfolder, importFile, captionFile, customStyles)
 }
 \arguments{
-\item{subfolder}{The folder where the file is located relative to Rmd}
+\item{subfolder}{Folder location.}
 
-\item{importFile}{figure file or table .csv file}
+\item{importFile}{Figure/table file.}
 
-\item{captionFile}{file containing caption}
+\item{captionFile}{Caption file.}
 
-\item{customStyles}{list of custom styles usable for figure and table captions and footnotes}
+\item{customStyles}{Custom styles list.}
 }
 \description{
-Include a figure file with caption
-}
-\seealso{
-Other markdown helper function:
-\code{\link[=addFiguresAndTables]{addFiguresAndTables()}},
-\code{\link[=mdBullet]{mdBullet()}},
-\code{\link[=mdBullet0]{mdBullet0()}},
-\code{\link[=mdCaption]{mdCaption()}},
-\code{\link[=mdFootNote]{mdFootNote()}},
-\code{\link[=mdHeading]{mdHeading()}},
-\code{\link[=mdLink]{mdLink()}},
-\code{\link[=mdNewline]{mdNewline()}},
-\code{\link[=mdNewpage]{mdNewpage()}},
-\code{\link[=mdPaste]{mdPaste()}},
-\code{\link[=mdPaste0]{mdPaste0()}},
-\code{\link[=mdTable]{mdTable()}}
+Validate figure/table input files and styles.
 }
 \keyword{internal}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{addFiguresAndTables}
 \alias{addFiguresAndTables}
-\title{Loop on figure keys, add figure or table}
+\title{Add figures and tables from keyTypes or keyList.}
 \usage{
 addFiguresAndTables(
   keyTypes = NULL,
@@ -14,26 +14,27 @@ addFiguresAndTables(
 )
 }
 \arguments{
-\item{subfolder}{sub-folder of relative to .Rmd file where figures are saved}
+\item{keyTypes}{Named list of figure/table types.}
 
-\item{numbersOf}{list with numbers of tables and figures in rmd}
+\item{subfolder}{Subfolder relative to Rmd.}
 
-\item{customStyles}{custom-styles to render word document}
+\item{numbersOf}{List with figure/table counts.}
 
-\item{digitsOfSignificance}{significance digits for tables}
+\item{customStyles}{Custom styles list.}
 
-\item{keyList}{list of keys}
+\item{digitsOfSignificance}{Digits for tables (default 3).}
+
+\item{keyList}{Fallback list of keys.}
 }
 \value{
-list of numbers and figures after loop
+Updated numbersOf list.
 }
 \description{
-Loop on figure keys, add figure or table
+Add figures and tables from keyTypes or keyList.
 }
 \seealso{
 Other markdown helper function:
 \code{\link[=mdBullet]{mdBullet()}},
-\code{\link[=mdBullet0]{mdBullet0()}},
 \code{\link[=mdCaption]{mdCaption()}},
 \code{\link[=mdFigure]{mdFigure()}},
 \code{\link[=mdFootNote]{mdFootNote()}},

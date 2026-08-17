@@ -2,27 +2,26 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{mdCaption}
 \alias{mdCaption}
-\title{add Caption to .Rmd}
+\title{Add caption with optional custom style.}
 \usage{
 mdCaption(subfolder, captionFile, captionPrefix, captionStyle = NULL)
 }
 \arguments{
-\item{subfolder}{The folder where the file is located relative to Rmd}
+\item{subfolder}{Folder location.}
 
-\item{captionFile}{file containing caption}
+\item{captionFile}{Caption file.}
 
-\item{captionPrefix}{'a character which starts the caption like 'Figure 1:'}
+\item{captionPrefix}{Prefix (e.g., "Figure 1:").}
 
-\item{captionStyle}{'custom-style for captions'}
+\item{captionStyle}{Custom style (optional).}
 }
 \description{
-add Caption to .Rmd
+Add caption with optional custom style.
 }
 \seealso{
 Other markdown helper function:
 \code{\link[=addFiguresAndTables]{addFiguresAndTables()}},
 \code{\link[=mdBullet]{mdBullet()}},
-\code{\link[=mdBullet0]{mdBullet0()}},
 \code{\link[=mdFigure]{mdFigure()}},
 \code{\link[=mdFootNote]{mdFootNote()}},
 \code{\link[=mdHeading]{mdHeading()}},

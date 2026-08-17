@@ -2,18 +2,19 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{mdNewpage}
 \alias{mdNewpage}
-\title{mdNewpage}
+\title{mdNewpage
+Insert page break and newline.}
 \usage{
 mdNewpage()
 }
 \description{
-Insert a page break and a newline.
+mdNewpage
+Insert page break and newline.
 }
 \seealso{
 Other markdown helper function:
 \code{\link[=addFiguresAndTables]{addFiguresAndTables()}},
 \code{\link[=mdBullet]{mdBullet()}},
-\code{\link[=mdBullet0]{mdBullet0()}},
 \code{\link[=mdCaption]{mdCaption()}},
 \code{\link[=mdFigure]{mdFigure()}},
 \code{\link[=mdFootNote]{mdFootNote()}},
