@@ -2,7 +2,8 @@
 #' @docType class
 #' @description Manages the creation and writing of .Rmd files for plots.
 #' @keywords internal
-RmdPlotManager <- R6::R6Class( # nolint
+RmdPlotManager <- R6::R6Class(
+  # nolint
   "RmdPlotManager",
   inherit = ospsuite.utils::Printable,
   cloneable = TRUE,
@@ -17,11 +18,13 @@ RmdPlotManager <- R6::R6Class( # nolint
     #' @param digitsOfSignificance Number of significant digits to display in tables.
     #'     #'
     #' @return An instance of the RmdPlotManager object.
-    initialize = function(rmdfolder,
-                          rmdName,
-                          nameOfplotFunction,
-                          suppressExport = FALSE,
-                          digitsOfSignificance = 3) {
+    initialize = function(
+      rmdfolder,
+      rmdName,
+      nameOfplotFunction,
+      suppressExport = FALSE,
+      digitsOfSignificance = 3
+    ) {
       private$.rmdfolder <- rmdfolder
       self$suppressExport <- suppressExport
       self$validateConfigTableFunction <- validateConfigTableForPlots
@@ -35,12 +38,16 @@ RmdPlotManager <- R6::R6Class( # nolint
 
         private$.rmdName <- rmdName
 
-        checkmate::assert_path_for_output(file.path(private$.rmdfolder, private$.rmdName),
+        checkmate::assert_path_for_output(
+          file.path(private$.rmdfolder, private$.rmdName),
           overwrite = TRUE
         )
 
         if (!dir.exists(file.path(private$.rmdfolder, private$.rmdName))) {
-          dir.create(file.path(private$.rmdfolder, private$.rmdName), recursive = TRUE)
+          dir.create(
+            file.path(private$.rmdfolder, private$.rmdName),
+            recursive = TRUE
+          )
         }
       }
 
@@ -51,10 +58,15 @@ RmdPlotManager <- R6::R6Class( # nolint
       self$plotFunction <- get(nameOfplotFunction)
 
       # Generate the name of the validation function based on the string name of plotFunction
-      nameOfValidationFunction <- paste0(gsub("^plot", "validate", nameOfplotFunction), "Config")
+      nameOfValidationFunction <- paste0(
+        gsub("^plot", "validate", nameOfplotFunction),
+        "Config"
+      )
 
       # Check if the validation function exists
-      if (exists(nameOfValidationFunction, where = globalenv(), mode = "function")) {
+      if (
+        exists(nameOfValidationFunction, where = globalenv(), mode = "function")
+      ) {
         self$validateConfigTableFunction <- get(nameOfValidationFunction)
       } else {
         # otherwise use default function
@@ -76,9 +88,15 @@ RmdPlotManager <- R6::R6Class( # nolint
         return(invisible())
       }
 
-      if (is.null(fileName)) fileName <- paste0(private$.rmdName, ".qmd")
+      if (is.null(fileName)) {
+        fileName <- paste0(private$.rmdName, ".qmd")
+      }
 
-      checkmate::assertPathForOutput(fileName, extension = "qmd", overwrite = TRUE)
+      checkmate::assertPathForOutput(
+        fileName,
+        extension = "qmd",
+        overwrite = TRUE
+      )
       if (basename(fileName) != fileName) {
         stop(messages$errorRmdPlotManagerL1XX())
       }
@@ -99,7 +117,11 @@ RmdPlotManager <- R6::R6Class( # nolint
     #' @param newlines The number of newlines inserted after the heading. Defaults to 2.
     #' @return NULL. The function modifies the internal Rmd lines.
     addHeader = function(..., level = 1, newlines = 2) {
-      private$.appendStructural(utils::capture.output(mdHeading(..., level = level, newlines = newlines)))
+      private$.appendStructural(utils::capture.output(mdHeading(
+        ...,
+        level = level,
+        newlines = newlines
+      )))
     },
     #' @description
     #' Insert line endings and start a new line.
@@ -157,17 +179,22 @@ RmdPlotManager <- R6::R6Class( # nolint
     #' @param exportArguments additional arguments passed on to ospsuite.plots::export
     #' @param ... Additional parameters passed to `ospsuite.plots::exportPlot()`.
     #' @return NULL. The function exports the figure and its metadata.
-    addAndExportFigure = function(plotObject,
-                                  caption,
-                                  figureKey,
-                                  footNoteLines = NULL,
-                                  exportArguments = NULL) {
+    addAndExportFigure = function(
+      plotObject,
+      caption,
+      figureKey,
+      footNoteLines = NULL,
+      exportArguments = NULL
+    ) {
       private$.checkKeyIsUnique(key = figureKey)
 
       if (private$.suppressExport) {
         return(invisible())
       }
-      exportArguments <- private$.checkAndAdjustExportArguments(plotObject, exportArguments)
+      exportArguments <- private$.checkAndAdjustExportArguments(
+        plotObject,
+        exportArguments
+      )
       do.call(
         what = ospsuite.plots::exportPlot,
         args = c(
@@ -201,10 +228,12 @@ RmdPlotManager <- R6::R6Class( # nolint
     #' @param caption A character string for the caption text.
     #' @param footNoteLines A character string for table footnotes.
     #' @return NULL. The function exports the table and its metadata.
-    addAndExportTable = function(table,
-                                 caption,
-                                 tableKey,
-                                 footNoteLines = NULL) {
+    addAndExportTable = function(
+      table,
+      caption,
+      tableKey,
+      footNoteLines = NULL
+    ) {
       private$.checkKeyIsUnique(key = tableKey)
       checkmate::assertCharacter(names(table), unique = TRUE)
 
@@ -326,14 +355,24 @@ RmdPlotManager <- R6::R6Class( # nolint
         return()
       }
 
-      dev <- ospsuite.plots::getOspsuite.plots.option(optionKey = ospsuite.plots::OptionKeys$export.device)
+      dev <- ospsuite.plots::getOspsuite.plots.option(
+        optionKey = ospsuite.plots::OptionKeys$exportDevice
+      )
       chunks <- c("  ")
 
       for (key in names(private$.listOfKeys)) {
         type <- private$.listOfKeys[[key]]
-        captionPath <- file.path(private$.rmdfolder, private$.rmdName, paste0(key, ".caption"))
+        captionPath <- file.path(
+          private$.rmdfolder,
+          private$.rmdName,
+          paste0(key, ".caption")
+        )
         caption <- if (file.exists(captionPath)) {
-          gsub('"', '\\\\"', paste(readLines(captionPath, warn = FALSE), collapse = " "))
+          gsub(
+            '"',
+            '\\\\"',
+            paste(readLines(captionPath, warn = FALSE), collapse = " ")
+          )
         } else {
           ""
         }
@@ -345,11 +384,25 @@ RmdPlotManager <- R6::R6Class( # nolint
             "```{r}",
             paste0("#| label: fig-", sanitizedKey),
             paste0('#| fig-cap: "', caption, '"'),
-            paste0('knitr::include_graphics("', private$.rmdName, "/", key, ".", dev, '")'),
+            paste0(
+              'knitr::include_graphics("',
+              private$.rmdName,
+              "/",
+              key,
+              ".",
+              dev,
+              '")'
+            ),
             "```",
             "```{r}",
             "#| output: asis",
-            paste0('mdFootNote(subfolder = "', private$.rmdName, '", footNoteFile = "', key, '.footnote", footNoteCustomStyle = params$customStyles$FigureFootnote)'),
+            paste0(
+              'mdFootNote(subfolder = "',
+              private$.rmdName,
+              '", footNoteFile = "',
+              key,
+              '.footnote", footNoteCustomStyle = params$customStyles$FigureFootnote)'
+            ),
             "```",
             "\\newpage",
             "  "
@@ -360,14 +413,30 @@ RmdPlotManager <- R6::R6Class( # nolint
             "```{r}",
             paste0("#| label: tbl-", sanitizedKey),
             paste0('#| tbl-cap: "', caption, '"'),
-            paste0('dt <- data.table::fread("', private$.rmdName, "/", key, '.csv")'),
+            paste0(
+              'dt <- data.table::fread("',
+              private$.rmdName,
+              "/",
+              key,
+              '.csv")'
+            ),
             'numeric_cols <- names(dt)[sapply(dt, function(x) is.numeric(x) & !is.integer(x))]',
-            paste0('if (length(numeric_cols) > 0) dt[, (numeric_cols) := signif(.SD, ', self$digitsOfSignificance, '), .SDcols = numeric_cols]'),
+            paste0(
+              'if (length(numeric_cols) > 0) dt[, (numeric_cols) := signif(.SD, ',
+              self$digitsOfSignificance,
+              '), .SDcols = numeric_cols]'
+            ),
             'knitr::kable(dt)',
             "```",
             "```{r}",
             "#| output: asis",
-            paste0('mdFootNote(subfolder = "', private$.rmdName, '", footNoteFile = "', key, '.footnote", footNoteCustomStyle = params$customStyles$TableFootnote)'),
+            paste0(
+              'mdFootNote(subfolder = "',
+              private$.rmdName,
+              '", footNoteFile = "',
+              key,
+              '.footnote", footNoteCustomStyle = params$customStyles$TableFootnote)'
+            ),
             "```",
             "\\newpage",
             "  "
@@ -393,7 +462,11 @@ RmdPlotManager <- R6::R6Class( # nolint
       }
       writeLines(
         text = textLines,
-        con = file.path(private$.rmdfolder, private$.rmdName, paste0(key, extension))
+        con = file.path(
+          private$.rmdfolder,
+          private$.rmdName,
+          paste0(key, extension)
+        )
       )
 
       return(invisible())

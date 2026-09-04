@@ -395,10 +395,17 @@ addFacets <- function(
   # avoid warnings for global variables during check
   plotTag <- NULL
 
+  facetValues <- NULL
+  if (!is.null(plotObject$data) && "plotTag" %in% names(plotObject$data)) {
+    facetValues <- plotObject$data$plotTag
+    facetValues <- facetValues[!is.na(facetValues) & facetValues != ""]
+  }
+  nFacets <- length(unique(facetValues))
+
   plotObject <- plotObject +
     ggplot2::theme(aspect.ratio = facetAspectRatio)
 
-  if (!is.null(nFacetColumns)) {
+  if (!is.null(nFacetColumns) && nFacets > 1) {
     plotObject <- plotObject +
       ggplot2::facet_wrap(
         facets = ggplot2::vars(plotTag),
@@ -412,6 +419,42 @@ addFacets <- function(
   }
 
   return(plotObject)
+}
+
+
+#' Adjust concentration labels for x and y axes
+#'
+#' Replaces case-insensitive occurrences of "Concentration (mass)" and
+#' "Concentration (molar)" in x/y axis labels with "Concentration", while
+#' preserving all remaining label text.
+#'
+#' @param object A ggplot object or any other object.
+#'
+#' @return The updated object.
+#' @keywords internal
+#' @noRd
+adjustConcentrationLabels <- function(object) {
+  if (!inherits(object, "gg")) {
+    return(object)
+  }
+
+  replaceConcentrationQualifier <- function(label) {
+    if (!is.character(label) || length(label) != 1) {
+      return(label)
+    }
+
+    gsub(
+      pattern = "concentration\\s*\\(\\s*(mass|molar)\\s*\\)",
+      replacement = "Concentration",
+      x = label,
+      ignore.case = TRUE
+    )
+  }
+
+  object$labels$x <- replaceConcentrationQualifier(object$labels$x)
+  object$labels$y <- replaceConcentrationQualifier(object$labels$y)
+
+  return(object)
 }
 
 
@@ -450,6 +493,8 @@ setExportAttributes <- function(
       setattr(object, attrName, attributesToSet[[attrName]])
     }
   }
+
+  object <- adjustConcentrationLabels(object)
 
   return(object)
 }
@@ -553,9 +598,7 @@ getDefaultColorsForScaleVector <- function(shade = c("dark", "light"), n) {
 #' @keywords internal
 #' @noRd
 getDefaultShapesForScaleVector <- function(n) {
-  shapes <- ospsuite.plots::getOspsuite.plots.option(
-    optionKey = ospsuite.plots::OptionKeys$shapeValues
-  )
+  shapes <- ospShapeNames
   if (is.null(shapes)) {
     stop(messages$errorutilitiesplotL2XX())
   }

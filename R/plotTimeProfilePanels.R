@@ -145,11 +145,9 @@ plotTimeProfiles <- function(
     "Percentiles",
     "Custom"
   ),
-  percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(
-    1,
-    3,
-    5
-  )],
+  percentiles = getOspsuite.plots.option(
+    optionKey = OptionKeys$defaultPercentiles
+  ),
   customFunction = NULL,
   checkForUnusedData = FALSE,
   referenceScaleVector = list(),
@@ -158,7 +156,6 @@ plotTimeProfiles <- function(
   # initialize data.table variables
   dataType <- yErrorType <- dataClass <- NULL
   .Id <- NULL # nolint
-
   checkmate::assertIntegerish(nMaxFacetRows, lower = 1, len = 1)
   checkmate::assertDouble(facetAspectRatio, lower = 0, len = 1)
 
@@ -224,7 +221,6 @@ plotTimeProfiles <- function(
 
   # add columns for indices
   plotData$setIndexColumns(referenceScaleVector = referenceScaleVector)
-
   # add predicted observed
   plotData$addPredictedForObserved()
 
@@ -288,84 +284,96 @@ generatePlotForPlotType <- function(plotData, facetAspectRatio, plotType, ...) {
           switch(
             plotType,
             TP = ospsuite::plotTimeProfile(
-              plotData = .addDimensionColumns(plotData$getDataForTimeRange(
+              plotData = plotData$getDataForTimeRange(
                 timeRangeFilter,
                 plotCounter = plotCounter,
                 yScale = yScale
-              )),
+              ),
               yScale = yScale,
-              mapping = getGroupbyMapping(plotData, plotType),
+              mapping = getGroupbyMapping(
+                plotData,
+                plotType,
+                dataType = 'simulated'
+              ),
+              observedMapping = getGroupbyMapping(
+                plotData,
+                plotType,
+                dataType = 'observed'
+              ),
               groupAesthetics = getGroupAesthetics(plotData),
               yScaleArgs = list(limits = yLimits),
               geomLineAttributes = getGeomLineAttributesForTP(plotData),
               geomLLOQAttributes = getGeomLLOQAttributesForTP(plotData),
+              showLegendPerDataset = 'none',
               ...
             ),
             PvO = ospsuite::plotPredictedVsObserved(
-              plotData = .addDimensionColumns(plotData$getDataForTimeRange(
+              plotData = plotData$getDataForTimeRange(
                 timeRangeFilter,
                 typeFilter = "observed",
                 plotCounter = plotCounter,
                 yScale = yScale
-              )),
+              ),
               xyScale = yScale,
               mapping = getGroupbyMapping(plotData, plotType),
               groupAesthetics = getGroupAesthetics(plotData),
               comparisonLineVector = getFoldDistanceForPvO(plotData),
+              showLegendPerDataset = 'none',
               ...
             ),
             ResvT = ospsuite::plotResidualsVsCovariate(
-              plotData = .addDimensionColumns(plotData$getDataForTimeRange(
+              plotData = plotData$getDataForTimeRange(
                 timeRangeFilter,
                 typeFilter = "observed",
                 plotCounter = plotCounter,
                 yScale = yScale
-              )),
+              ),
               residualScale = yScale,
               xAxis = "time",
               mapping = getGroupbyMapping(plotData, plotType),
               groupAesthetics = getGroupAesthetics(plotData),
+              showLegendPerDataset = 'none',
               ...
             ),
             ResvO = ospsuite::plotResidualsVsCovariate(
-              plotData = .addDimensionColumns(plotData$getDataForTimeRange(
+              plotData = plotData$getDataForTimeRange(
                 timeRangeFilter,
                 typeFilter = "observed",
                 plotCounter = plotCounter,
                 yScale = yScale
-              )),
+              ),
               residualScale = yScale,
               xAxis = "observed",
               mapping = getGroupbyMapping(plotData, plotType),
               groupAesthetics = getGroupAesthetics(plotData),
+              showLegendPerDataset = 'none',
               ...
             ),
             ResH = ospsuite::plotResidualsAsHistogram(
-              plotData = .addDimensionColumns(plotData$getDataForTimeRange(
+              plotData = plotData$getDataForTimeRange(
                 timeRangeFilter,
                 typeFilter = "observed",
                 plotCounter = plotCounter,
                 yScale = yScale
-              )),
+              ),
               residualScale = yScale,
               mapping = getGroupbyMapping(plotData, plotType),
               distribution = "normal",
               ...
             ),
             QQ = ospsuite::plotQuantileQuantilePlot(
-              plotData = .addDimensionColumns(plotData$getDataForTimeRange(
+              plotData = plotData$getDataForTimeRange(
                 timeRangeFilter,
                 typeFilter = "observed",
                 plotCounter = plotCounter,
                 yScale = yScale
-              )),
+              ),
               residualScale = yScale,
               mapping = getGroupbyMapping(plotData, plotType),
               groupAesthetics = getGroupAesthetics(plotData),
               ...
             )
           )
-
         plotObject <- setManualScaleVectors(
           plotObject = plotObject,
           plotData = plotData,
@@ -626,30 +634,48 @@ checkAndAdjustYlimits <- function(
 #'
 #' @param plotData Object containing the data for the plot.
 #' @param plotType Type of the plot.
+#' @param dataType Type of the data, either "observed" or "simulated".
 #'
 #' @return Aesthetic mappings for grouping.
 #' @keywords internal
-getGroupbyMapping <- function(plotData, plotType) {
+getGroupbyMapping <- function(plotData, plotType, dataType = 'observed') {
   checkmate::assertChoice(
     plotType,
     choices = c("TP", "PvO", "ResvT", "ResvO", "ResH", "QQ")
   )
+  checkmate::assertChoice(
+    dataType,
+    choices = c("observed", "simulated")
+  )
+
   # avoid warning for global variable
   colorIndex <- shapeIndex <- NULL
 
-  if (plotType == "TP") {
-    if (plotData$useShapeIndex()) {
-      mapping <- ggplot2::aes(groupby = colorIndex, shape = shapeIndex)
-    } else {
-      mapping <- ggplot2::aes(groupby = colorIndex, shape = "Observed data")
-    }
+  # Base (groupby) mapping — this is all that "simulated" ever needs
+  if (
+    plotType != "TP" && plotData$useShapeIndex() && !plotData$useColorIndex()
+  ) {
+    mapping <- ggplot2::aes(groupby = shapeIndex)
   } else {
-    if (plotData$useColorIndex() && plotData$useShapeIndex()) {
-      mapping <- ggplot2::aes(groupby = colorIndex, shape = shapeIndex)
+    mapping <- ggplot2::aes(groupby = colorIndex)
+  }
+
+  # Only "observed" data gets a shape aesthetic added on top
+  if (dataType == "observed") {
+    if (plotType == "TP") {
+      shapeMapping <- if (plotData$useShapeIndex()) {
+        ggplot2::aes(shape = shapeIndex)
+      } else {
+        ggplot2::aes(shape = "Observed data")
+      }
     } else if (plotData$useShapeIndex()) {
-      mapping <- ggplot2::aes(groupby = shapeIndex, shape = shapeIndex)
+      shapeMapping <- ggplot2::aes(shape = shapeIndex)
     } else {
-      mapping <- ggplot2::aes(groupby = colorIndex)
+      shapeMapping <- NULL
+    }
+
+    if (!is.null(shapeMapping)) {
+      mapping <- utils::modifyList(mapping, shapeMapping)
     }
   }
 
@@ -983,29 +1009,6 @@ getGeomLLOQAttributesForTP <- function(plotData) {
 }
 
 # validation ----------------
-
-#' Add xDimension and yDimension columns required by ospsuite::plotTimeProfile.
-#' @param dt A data.table with at least `xUnit` and `yUnit` columns.
-#' @return The same data.table with `xDimension` and `yDimension` added in-place.
-#' @keywords internal
-.addDimensionColumns <- function(dt) {
-  yUnit <- xDimension <- yDimension <- NULL
-  if (!("xDimension" %in% names(dt)) && "xUnit" %in% names(dt)) {
-    xUnitVal <- unique(dt$xUnit)[[1]]
-    dt[, xDimension := ospsuite::getDimensionForUnit(xUnitVal)]
-  }
-  if (!("yDimension" %in% names(dt)) && "yUnit" %in% names(dt)) {
-    dt[, yDimension := ""]
-    for (yUnitLoop in unique(dt$yUnit)) {
-      dt[
-        yUnit == yUnitLoop,
-        yDimension := ospsuite::getDimensionForUnit(yUnitLoop)
-      ]
-    }
-  }
-  return(dt)
-}
-
 
 #' Validation of config table for time profiles plots
 #'

@@ -61,8 +61,8 @@ plotDistributionVsDemographics <- function(
   ),
   customFunction = NULL,
   percentiles = ospsuite.plots::getOspsuite.plots.option(
-    optionKey = OptionKeys$Percentiles
-  )[c(1, 3, 5)],
+    optionKey = OptionKeys$defaultPercentiles
+  ),
   facetAspectRatio = 0.5,
   colorVector = c(scenario = NA, referenceScenario = NA),
   ...

@@ -79,9 +79,9 @@ initLogfunction <- function(
 
   optionstxt <- paste0(
     "\nOptions for workflow:\n",
-    "OSPSuite.plots.watermark_enabled: ",
+    "OSPSuite.plots.watermarkEnabled: ",
     ospsuite.plots::getOspsuite.plots.option(
-      ospsuite.plots::OptionKeys$watermark_enabled
+      ospsuite.plots::OptionKeys$watermarkEnabled
     ),
     "\n",
     "OSPSuite.RF.skipFailingPlots: ",

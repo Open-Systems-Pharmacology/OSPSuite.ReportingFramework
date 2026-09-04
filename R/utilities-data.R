@@ -948,11 +948,9 @@ aggregateObservedDataGroups <- function(
     "Percentiles",
     "Custom"
   ),
-  percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(
-    1,
-    3,
-    5
-  )],
+  percentiles = getOspsuite.plots.option(
+    optionKey = OptionKeys$defaultPercentiles
+  ),
   groupSuffix = "aggregated",
   customFunction = NULL,
   lloqCheckColumns2of3 = NULL,

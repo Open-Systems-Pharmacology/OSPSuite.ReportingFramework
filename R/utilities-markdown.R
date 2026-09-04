@@ -291,7 +291,7 @@ addFiguresAndTables <- function(
   keyList = NULL
 ) {
   dev <- ospsuite.plots::getOspsuite.plots.option(
-    optionKey = ospsuite.plots::OptionKeys$export.device
+    optionKey = ospsuite.plots::OptionKeys$exportDevice
   )
 
   if (!is.null(keyTypes)) {

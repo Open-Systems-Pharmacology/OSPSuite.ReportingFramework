@@ -311,11 +311,9 @@ plotPKForestAggregatedAbsoluteValues <- function(
     "Percentiles",
     "Custom"
   ),
-  percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(
-    1,
-    3,
-    5
-  )],
+  percentiles = getOspsuite.plots.option(
+    optionKey = OptionKeys$defaultPercentiles
+  ),
   customFunction = NULL,
   scaleVectors = list(),
   labelWrapWidth = 10,
@@ -450,11 +448,9 @@ plotPKForestAggregatedRatios <- function(
     "Percentiles",
     "Custom"
   ),
-  percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(
-    1,
-    3,
-    5
-  )],
+  percentiles = getOspsuite.plots.option(
+    optionKey = OptionKeys$defaultPercentiles
+  ),
   customFunction = NULL,
   scaleVectors = list(),
   labelWrapWidth = 10,
@@ -961,7 +957,9 @@ checkPrecision <- function(dt) {
   dt[precision <= precisionThreshold, `:=`(xMin = NA, xMax = NA)]
 
   if (any(!is.na(dt$xMin))) {
-    ospsuite.utils::logInfo("Required precision was not reached, please rerun simulations with larger N")
+    ospsuite.utils::logInfo(
+      "Required precision was not reached, please rerun simulations with larger N"
+    )
     writeTableToLog(dt[!is.na(xMin)])
   }
 

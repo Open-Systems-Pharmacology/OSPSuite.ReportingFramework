@@ -140,156 +140,104 @@ test_that("addPredictedValues handles multiple identifier columns", {
 })
 
 # ---------------------------------------------------------------------------
-# .validateAndConvertData (tested through addPredictedValues side-effects)
+# utilities-timeprofile helper functions
 # ---------------------------------------------------------------------------
 
-test_that(".validateAndConvertData rejects missing required columns", {
-  bad <- data.table::data.table(x = 1:3, y = 1:3)
+test_that("convertAndShiftTimeUnits converts from hour to minute and applies offset", {
+  dt <- data.table::data.table(
+    xValues = c(1, 2),
+    xUnit = "h"
+  )
+
+  result <- convertAndShiftTimeUnits(
+    timeprofile = dt,
+    targetTimeUnit = "min",
+    timeOffset = 30
+  )
+
+  expect_equal(result$xUnit, c("min", "min"))
+  expect_equal(result$xValues, c(30, 90), tolerance = 1e-8)
+})
+
+test_that("convertAndShiftTimeUnits validates timeOffset", {
+  dt <- data.table::data.table(
+    xValues = c(1, 2),
+    xUnit = "h"
+  )
+
   expect_error(
-    ospsuite.reportingframework:::.validateAndConvertData(
-      bad,
-      predictedIsNeeded = FALSE
+    convertAndShiftTimeUnits(
+      timeprofile = dt,
+      targetTimeUnit = "min",
+      timeOffset = "a"
     )
   )
 })
 
-test_that(".validateAndConvertData rejects empty data", {
-  empty <- data.table::data.table(
-    xValues = numeric(0),
-    yValues = numeric(0),
-    group = character(0),
-    dataType = character(0)
+test_that("filterIndividualID filters selected IDs and keeps all for wildcard", {
+  dt <- data.table::data.table(
+    individualId = c("1", "2", "3"),
+    xValues = c(1, 2, 3)
   )
-  expect_error(
-    ospsuite.reportingframework:::.validateAndConvertData(
-      empty,
-      predictedIsNeeded = FALSE
-    )
-  )
+
+  filtered <- filterIndividualID(dt, "(1, 3)")
+  expect_equal(filtered$individualId, c("1", "3"))
+
+  allRows <- filterIndividualID(dt, "(*)")
+  expect_equal(nrow(allRows), nrow(dt))
 })
 
-test_that(".validateAndConvertData uses existing predicted column without recalculating", {
-  dt <- makeObsWithPredicted()
-  result <- ospsuite.reportingframework:::.validateAndConvertData(
-    dt,
-    predictedIsNeeded = TRUE
-  )
-  expect_equal(result$predicted, dt$predicted)
+test_that("filterIndividualID returns input unchanged when individualId column is absent", {
+  dt <- data.table::data.table(xValues = c(1, 2, 3))
+  result <- filterIndividualID(dt, "(1, 2)")
+  expect_equal(result, dt)
 })
 
-# ---------------------------------------------------------------------------
-# ospsuite_plotResidualsVsCovariate
-# ---------------------------------------------------------------------------
-
-makeResidualsInput <- function(group = "grp1") {
-  obs <- makeObsWithPredicted(group)
-  obs[, xUnit := "h"]
-  obs[, yUnit := "mg/l"]
-  obs
-}
-
-test_that("ospsuite_plotResidualsVsCovariate returns a ggplot for xAxis=time", {
-  skip_if_not_installed("ggplot2")
-  plotData <- makeResidualsInput()
-
-  p <- ospsuite_plotResidualsVsCovariate(
-    plotData = plotData,
-    residualScale = "log",
-    xAxis = "time"
+test_that("getUnitConversionDT returns expected unit factors for matching paths", {
+  dtSimulated <- data.table::data.table(
+    paths = c("A|B", "A|B"),
+    dimension = c("Concentration (mass)", "Concentration (mass)"),
+    yUnit = c("mg/l", "mg/l"),
+    molWeight = c(NA_real_, NA_real_)
+  )
+  dtOutputs <- data.table::data.table(
+    outputPathId = "op1",
+    displayUnit = "mg/l",
+    outputPath = "A|B"
   )
 
-  expect_s3_class(p, "gg")
+  result <- getUnitConversionDT(dtSimulated, dtOutputs)
+
+  expect_true("unitFactor" %in% names(result))
+  expect_equal(nrow(result), 1)
+  expect_equal(result$unitFactor[1], 1, tolerance = 1e-8)
 })
 
-test_that("ospsuite_plotResidualsVsCovariate returns a ggplot for xAxis=observed", {
-  skip_if_not_installed("ggplot2")
-  p <- ospsuite_plotResidualsVsCovariate(
-    plotData = makeResidualsInput(),
-    residualScale = "log",
-    xAxis = "observed"
+test_that("convertYunit scales y-values and replaces yUnit with displayUnit", {
+  timeprofile <- data.table::data.table(
+    outputPathId = "op1",
+    paths = "A|B",
+    dimension = "Concentration (mass)",
+    molWeight = NA_real_,
+    xValues = c(0, 1),
+    yValues = c(2, 4),
+    yUnit = c("mg/l", "mg/l")
   )
-  expect_s3_class(p, "gg")
-})
-
-test_that("ospsuite_plotResidualsVsCovariate returns a ggplot for xAxis=predicted", {
-  skip_if_not_installed("ggplot2")
-  p <- ospsuite_plotResidualsVsCovariate(
-    plotData = makeResidualsInput(),
-    residualScale = "linear",
-    xAxis = "predicted"
+  dtUnit <- data.table::data.table(
+    outputPathId = "op1",
+    paths = "A|B",
+    dimension = "Concentration (mass)",
+    yUnit = "mg/l",
+    displayUnit = "ng/ml",
+    molWeight = NA_real_,
+    unitFactor = 1000
   )
-  expect_s3_class(p, "gg")
-})
 
-test_that("ospsuite_plotResidualsVsCovariate uses ospsuite::addResidualColumn (residualValues present in data)", {
-  skip_if_not_installed("ggplot2")
-  # If addResidualColumn is called correctly, the plot object should be produced
-  # without error even with ratio scale
-  p <- ospsuite_plotResidualsVsCovariate(
-    plotData = makeResidualsInput(),
-    residualScale = "ratio",
-    xAxis = "time"
-  )
-  expect_s3_class(p, "gg")
-})
+  result <- convertYunit(timeprofile, dtUnit)
 
-test_that("ospsuite_plotResidualsVsTime is deprecated wrapper around ospsuite_plotResidualsVsCovariate", {
-  skip_if_not_installed("ggplot2")
-  expect_warning(
-    p <- ospsuite_plotResidualsVsTime(
-      plotData = makeResidualsInput(),
-      residualScale = "log"
-    ),
-    regexp = "Deprecated"
-  )
-  expect_s3_class(p, "gg")
-})
-
-test_that("ospsuite_plotResidualsVsObserved is deprecated wrapper around ospsuite_plotResidualsVsCovariate", {
-  skip_if_not_installed("ggplot2")
-  expect_warning(
-    p <- ospsuite_plotResidualsVsObserved(
-      plotData = makeResidualsInput(),
-      residualScale = "log"
-    ),
-    regexp = "Deprecated"
-  )
-  expect_s3_class(p, "gg")
-})
-
-# ---------------------------------------------------------------------------
-# ospsuite_plotResidualsAsHistogram
-# ---------------------------------------------------------------------------
-
-test_that("ospsuite_plotResidualsAsHistogram returns a ggplot", {
-  skip_if_not_installed("ggplot2")
-  p <- ospsuite_plotResidualsAsHistogram(
-    plotData = makeResidualsInput(),
-    residualScale = "log"
-  )
-  expect_s3_class(p, "gg")
-})
-
-test_that("ospsuite_plotResidualsAsHistogram works with linear scale", {
-  skip_if_not_installed("ggplot2")
-  p <- ospsuite_plotResidualsAsHistogram(
-    plotData = makeResidualsInput(),
-    residualScale = "linear"
-  )
-  expect_s3_class(p, "gg")
-})
-
-# ---------------------------------------------------------------------------
-# ospsuite_plotQuantileQuantilePlot
-# ---------------------------------------------------------------------------
-
-test_that("ospsuite_plotQuantileQuantilePlot returns a ggplot", {
-  skip_if_not_installed("ggplot2")
-  p <- ospsuite_plotQuantileQuantilePlot(
-    plotData = makeResidualsInput(),
-    residualScale = "log"
-  )
-  expect_s3_class(p, "gg")
+  expect_equal(result$yValues, c(2000, 4000))
+  expect_true(all(result$yUnit == "ng/ml"))
+  expect_false("unitFactor" %in% names(result))
 })
 
 # ---------------------------------------------------------------------------
@@ -393,48 +341,4 @@ test_that("getObservedUnitConversionDT returns unitFactor column", {
   result <- getObservedUnitConversionDT(dataObserved, dtUnit)
   expect_true("unitFactor" %in% names(result))
   expect_equal(nrow(result), 2)
-})
-
-# ---------------------------------------------------------------------------
-# ospsuite_plotTimeProfile — smoke test (no vdiffr, just class check)
-# ---------------------------------------------------------------------------
-
-makeTimeProfileInput <- function(group = "grp1") {
-  rbind(
-    data.table::data.table(
-      xValues = seq(0, 10, by = 1),
-      yValues = exp(-0.3 * seq(0, 10, by = 1)),
-      group = group,
-      dataType = "simulated",
-      xUnit = "h",
-      yUnit = "mg/l"
-    ),
-    data.table::data.table(
-      xValues = c(2, 5, 8),
-      yValues = c(0.55, 0.22, 0.09),
-      group = group,
-      dataType = "observed",
-      xUnit = "h",
-      yUnit = "mg/l"
-    )
-  )
-}
-
-test_that("ospsuite_plotTimeProfile returns a ggplot", {
-  skip_if_not_installed("ggplot2")
-  p <- ospsuite_plotTimeProfile(plotData = makeTimeProfileInput())
-  expect_s3_class(p, "gg")
-})
-
-test_that("ospsuite_plotTimeProfile accepts a pre-built metaData list", {
-  skip_if_not_installed("ggplot2")
-  meta <- list(
-    xValues = list(dimension = "Time", unit = "h"),
-    yValues = list(dimension = "Concentration (mass)", unit = "mg/l")
-  )
-  p <- ospsuite_plotTimeProfile(
-    plotData = makeTimeProfileInput(),
-    metaData = meta
-  )
-  expect_s3_class(p, "gg")
 })

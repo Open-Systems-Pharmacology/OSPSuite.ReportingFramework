@@ -42,7 +42,6 @@ PlotDataTimeProfile <- R6::R6Class(
         private$.configTable$scenario,
         private$.configTable[!is.na(referenceScenario)]$referenceScenario
       )
-
       # Process simulated results
       outputPathsPerScenario <- getOutputPathsPerScenario(
         configTable = self$configTable,
@@ -390,6 +389,20 @@ PlotDataTimeProfile <- R6::R6Class(
             dtSimulated = private$.dataSimulated,
             identifier = identifier
           )
+        private$.dataObserved <- ospsuite::addResidualColumn(
+          pairedData = private$.dataObserved,
+          observed = "yValues",
+          predicted = "predicted",
+          residuals = "residualValuesLin",
+          scaling = "lin"
+        )
+        private$.dataObserved <- ospsuite::addResidualColumn(
+          pairedData = private$.dataObserved,
+          observed = "yValues",
+          predicted = "predicted",
+          residuals = "residualValuesLog",
+          scaling = "log"
+        )
       }
     },
     #' Get the data for the filtered time range
@@ -416,6 +429,17 @@ PlotDataTimeProfile <- R6::R6Class(
       if (yScale == "log") {
         tmp <- tmp[yValues > 0]
       }
+      residualColumn <- switch(
+        yScale,
+        log = "residualValuesLog",
+        lin = "residualValuesLin",
+        linear = "residualValuesLin",
+        NULL
+      )
+      if (!is.null(residualColumn) && residualColumn %in% names(tmp)) {
+        tmp[, residualValues := .SD[[1]], .SDcols = residualColumn]
+      }
+      tmp <- private$addDimensionColumns(tmp)
       return(tmp)
     },
 
@@ -863,6 +887,37 @@ PlotDataTimeProfile <- R6::R6Class(
           )
         )
       )
+    },
+    # Add columns required by ospsuite plotting functions
+    addDimensionColumns = function(dt) {
+      yUnit <- xDimension <- yDimension <- molWeight <- NULL
+
+      if (
+        !("xDimension" %in% names(dt)) &&
+          "xUnit" %in% names(dt) &&
+          nrow(dt) > 0
+      ) {
+        xUnitVal <- unique(dt$xUnit)[[1]]
+        dt[, xDimension := ospsuite::getDimensionForUnit(xUnitVal)]
+      }
+
+      if (!("yDimension" %in% names(dt)) && "yUnit" %in% names(dt)) {
+        dt[, yDimension := ""]
+        for (yUnitLoop in unique(dt$yUnit)) {
+          dt[
+            yUnit == yUnitLoop,
+            yDimension := ospsuite::getDimensionForUnit(yUnitLoop)
+          ]
+        }
+      }
+
+      # Add name column if missing (required by ospsuite::plotTimeProfile for dataset identification)
+      if (!("name" %in% names(dt))) {
+        dt[dataType == 'simulated', name := colorIndex]
+        dt[dataType == 'observed', name := shapeIndex]
+      }
+
+      return(dt)
     }
   )
 )

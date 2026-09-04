@@ -12,13 +12,22 @@ test_that("concatWithAnd works correctly", {
   expect_equal(concatWithAnd(c("apple", "banana")), "apple and banana")
 
   # Test with three elements
-  expect_equal(concatWithAnd(c("apple", "banana", "cherry")), "apple, banana and cherry")
+  expect_equal(
+    concatWithAnd(c("apple", "banana", "cherry")),
+    "apple, banana and cherry"
+  )
 
   # Test with four elements
-  expect_equal(concatWithAnd(c("apple", "banana", "cherry", "date")), "apple, banana, cherry and date")
+  expect_equal(
+    concatWithAnd(c("apple", "banana", "cherry", "date")),
+    "apple, banana, cherry and date"
+  )
 
   # Test with special characters
-  expect_equal(concatWithAnd(c("apple!", "banana@", "cherry#")), "apple!, banana@ and cherry#")
+  expect_equal(
+    concatWithAnd(c("apple!", "banana@", "cherry#")),
+    "apple!, banana@ and cherry#"
+  )
 
   # Test with empty strings
   expect_equal(concatWithAnd(c("", "banana")), "banana")
@@ -68,7 +77,16 @@ test_that("formatPercentiles handles mixed input correctly when allAsPercentiles
   suffix <- " percentile"
 
   result <- formatPercentiles(c(0, 50, 100, 25.5, 75) / 100, suffix, TRUE)
-  expect_equal(result, c("0th percentile", "50th percentile", "100th percentile", "25.5th percentile", "75th percentile"))
+  expect_equal(
+    result,
+    c(
+      "0th percentile",
+      "50th percentile",
+      "100th percentile",
+      "25.5th percentile",
+      "75th percentile"
+    )
+  )
 })
 
 
@@ -109,7 +127,8 @@ configTablePlots <- data.table(
 )
 
 test_that("validateConfigTablePlots function test", {
-  expect_no_error(validateConfigTablePlots(configTablePlots,
+  expect_no_error(validateConfigTablePlots(
+    configTablePlots,
     charactersWithoutMissing = c("CharacterColumn1"),
     charactersWithMissing = c("CharacterColumn2"),
     numericColumns = "NumericColumn1",
@@ -121,27 +140,33 @@ test_that("validateConfigTablePlots function test", {
     ))
   ))
 
-
   # Test if the function correctly validates character columns without missing values
-  expect_error(validateConfigTablePlots(configTablePlots,
+  expect_error(validateConfigTablePlots(
+    configTablePlots,
     charactersWithoutMissing = c("CharacterColumn2")
   ))
 
   # Test if the function correctly validates numeric columns
-  expect_error(validateConfigTablePlots(configTablePlots,
+  expect_error(validateConfigTablePlots(
+    configTablePlots,
     numericColumns = c("CharacterColumn2")
   ))
 
   # Test if the function correctly validates logical columns
-  expect_error(validateConfigTablePlots(configTablePlots,
+  expect_error(validateConfigTablePlots(
+    configTablePlots,
     logicalColumns = "CharacterColumn1"
   ))
 
   # Test if the function correctly validates numeric range columns
-  expect_error(validateConfigTablePlots(configTablePlots, numericRangeColumns = "NumericColumn1"))
+  expect_error(validateConfigTablePlots(
+    configTablePlots,
+    numericRangeColumns = "NumericColumn1"
+  ))
 
   # Test if the function correctly validates subset list
-  expect_error(validateConfigTablePlots(configTablePlots,
+  expect_error(validateConfigTablePlots(
+    configTablePlots,
     subsetList = list(list(
       cols = c("CharacterColumn2"),
       allowedValues = c("A", "B", "C", "D")
@@ -159,7 +184,10 @@ configTablePlots <- data.table(
 
 test_that("validateAtleastOneEntry function test", {
   # Test if the function correctly validates that each plot row needs at least one entry in specified columns
-  expect_error(validateAtleastOneEntry(configTablePlots, c("Column1", "Column2", "Column3")))
+  expect_error(validateAtleastOneEntry(
+    configTablePlots,
+    c("Column1", "Column2", "Column3")
+  ))
 })
 
 
@@ -231,9 +259,11 @@ configTablePlots <- data.table(
 
 test_that("validateGroupConsistency function test", {
   # Test if the function correctly checks for unique values of panel columns for each PlotName
-  expect_error(validateGroupConsistency(configTablePlots, c("column1", "column2")))
+  expect_error(validateGroupConsistency(
+    configTablePlots,
+    c("column1", "column2")
+  ))
 })
-
 
 
 # Create example data for testing
@@ -242,9 +272,24 @@ configTablePlots <- data.table(
   value2 = c("A", "B", "C", "D"),
   timeRange_Valid1 = c(NA, "total", "firstApplication", "lastApplication"),
   timeRange_Valid2 = c("c(0,30)", NA, "c(0,40)", "lastApplication"),
-  timeRange_invalid1 = c("total", "invalid", "firstApplication", "lastApplication"),
-  timeRange_invalid1 = c("c(0,30,50)", "total", "firstApplication", "lastApplication"),
-  timeRange_invalid1 = c("c(0,NA)", "total", "firstApplication", "lastApplication")
+  timeRange_invalid1 = c(
+    "total",
+    "invalid",
+    "firstApplication",
+    "lastApplication"
+  ),
+  timeRange_invalid1 = c(
+    "c(0,30,50)",
+    "total",
+    "firstApplication",
+    "lastApplication"
+  ),
+  timeRange_invalid1 = c(
+    "c(0,NA)",
+    "total",
+    "firstApplication",
+    "lastApplication"
+  )
 )
 
 # Write unit tests for the function
@@ -263,4 +308,152 @@ test_that("validateTimeRangeColumns function test", {
 
   # Test if the function correctly validates the inputs in the TimeRange columns
   expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 7)]))
+})
+
+
+test_that("setExportAttributes adjusts concentration labels in x and y axes", {
+  plotObject <- ggplot2::ggplot(
+    data.frame(x = 1:3, y = 1:3),
+    ggplot2::aes(x = x, y = y)
+  ) +
+    ggplot2::geom_point() +
+    ggplot2::labs(
+      x = "Plasma ConCentratioN (mass) [mg/L]",
+      y = "Concentration (MOLAR)"
+    )
+
+  updatedPlot <- setExportAttributes(plotObject)
+
+  expect_equal(updatedPlot$labels$x, "Plasma Concentration [mg/L]")
+  expect_equal(updatedPlot$labels$y, "Concentration")
+})
+
+
+test_that("setExportAttributes leaves non-matching labels unchanged", {
+  plotObject <- ggplot2::ggplot(
+    data.frame(x = 1:3, y = 1:3),
+    ggplot2::aes(x = x, y = y)
+  ) +
+    ggplot2::geom_point() +
+    ggplot2::labs(
+      x = "Time [h]",
+      y = "Response"
+    )
+
+  updatedPlot <- setExportAttributes(plotObject)
+
+  expect_equal(updatedPlot$labels$x, "Time [h]")
+  expect_equal(updatedPlot$labels$y, "Response")
+})
+
+
+test_that("setExportAttributes keeps non-ggplot objects unchanged except attributes", {
+  object <- data.table::data.table(a = 1)
+  updatedObject <- setExportAttributes(object, caption = "my  caption")
+
+  expect_equal(updatedObject, object)
+  expect_equal(attr(updatedObject, "caption"), "my caption")
+})
+
+
+test_that("addFacets only adds facet wrap when requested and useful", {
+  plotData <- data.frame(
+    x = 1:4,
+    y = 1:4,
+    plotTag = c("A", "A", "B", "B")
+  )
+  plotObject <- ggplot2::ggplot(plotData, ggplot2::aes(x = x, y = y)) +
+    ggplot2::geom_point()
+
+  noFacetPlot <- addFacets(
+    plotObject = plotObject,
+    facetScale = "free",
+    nFacetColumns = NULL
+  )
+  facetedPlot <- addFacets(
+    plotObject = plotObject,
+    facetScale = "free",
+    nFacetColumns = 2
+  )
+
+  expect_true(inherits(noFacetPlot$facet, "FacetNull"))
+  expect_true(inherits(facetedPlot$facet, "FacetWrap"))
+})
+
+
+test_that("getScaleVector selects first complete entry and errors otherwise", {
+  scaleVector <- getScaleVector(
+    namesOfScaleVector = c("a", "b"),
+    listOfValues = list(
+      c(NA, 2),
+      c("x", "y")
+    )
+  )
+
+  expect_equal(scaleVector, c(a = "x", b = "y"))
+
+  expect_error(getScaleVector(
+    namesOfScaleVector = c("a", "b"),
+    listOfValues = list(NULL, c(NA, NA))
+  ))
+})
+
+
+test_that("getDefaultColorsForScaleVector returns expected sizes and errors for too-large n", {
+  darkColors <- getDefaultColorsForScaleVector(shade = "dark", n = 3)
+  lightColors <- getDefaultColorsForScaleVector(shade = "light", n = 3)
+  defaultPaletteLength <- length(ospsuite.plots::colorMaps[["ospDefault"]])
+
+  expect_length(darkColors, 3)
+  expect_length(lightColors, 3)
+  expect_false(identical(darkColors, lightColors))
+
+  expect_error(getDefaultColorsForScaleVector(n = defaultPaletteLength + 1))
+})
+
+
+test_that("getDefaultShapesForScaleVector returns prefix and errors when n is too large", {
+  skip_if(length(ospShapeNames) < 2)
+
+  shapes <- getDefaultShapesForScaleVector(2)
+  expect_equal(shapes, ospShapeNames[1:2])
+
+  expect_error(getDefaultShapesForScaleVector(length(ospShapeNames) + 1))
+})
+
+
+test_that("getXorYlimits parses configured limits and preserves existing scale args", {
+  onePlotConfig <- data.table::data.table(
+    ylimit_linear = "c(1, 10)",
+    limit_log = "c(0.1, 100)"
+  )
+
+  yScale <- getXorYlimits(
+    onePlotConfig = onePlotConfig,
+    xOryScale = "linear",
+    direction = "y",
+    yScaleArgs = list(trans = "identity")
+  )
+
+  fallbackScale <- getXorYlimits(
+    onePlotConfig = onePlotConfig,
+    xOryScale = "log",
+    direction = "x",
+    xScaleArgs = list(expand = ggplot2::expansion(mult = 0))
+  )
+
+  expect_equal(yScale$limits, c(1, 10))
+  expect_equal(yScale$trans, "identity")
+  expect_equal(fallbackScale$limits, c(0.1, 100))
+  expect_true("expand" %in% names(fallbackScale))
+})
+
+
+test_that("getXorYlimits errors for invalid limit expressions", {
+  onePlotConfig <- data.table::data.table(ylimit_linear = "c(1,)")
+
+  expect_error(
+    getXorYlimits(onePlotConfig, xOryScale = "linear", direction = "y"),
+    "Invalid limit expression"
+  )
 })
