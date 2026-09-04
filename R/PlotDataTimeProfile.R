@@ -914,7 +914,10 @@ PlotDataTimeProfile <- R6::R6Class(
       # Add name column if missing (required by ospsuite::plotTimeProfile for dataset identification)
       if (!("name" %in% names(dt))) {
         dt[dataType == 'simulated', name := colorIndex]
-        dt[dataType == 'observed', name := shapeIndex]
+        dt[
+          dataType == 'observed',
+          name := ifelse(self$useShapeIndex(), shapeIndex, colorIndex)
+        ]
       }
 
       return(dt)

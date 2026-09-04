@@ -457,3 +457,72 @@ test_that("getXorYlimits errors for invalid limit expressions", {
     "Invalid limit expression"
   )
 })
+
+
+test_that("applyThemeToPlotList adds theme only to ggplot objects", {
+  basePlot <- ggplot2::ggplot(
+    data.frame(x = 1:2, y = 1:2),
+    ggplot2::aes(x = x, y = y)
+  ) +
+    ggplot2::geom_point()
+
+  themeToAdd <- ggplot2::theme(
+    plot.background = ggplot2::element_rect(fill = "grey90")
+  )
+  inputList <- list(plot = basePlot, meta = data.table::data.table(a = 1))
+
+  updatedList <- applyThemeToPlotList(inputList, theme = themeToAdd)
+
+  expect_equal(updatedList$plot$theme$plot.background$fill, "grey90")
+  expect_equal(updatedList$meta, inputList$meta)
+})
+
+
+test_that("applyThemeToPlotList returns input unchanged when theme is NULL", {
+  basePlot <- ggplot2::ggplot(
+    data.frame(x = 1:2, y = 1:2),
+    ggplot2::aes(x = x, y = y)
+  ) +
+    ggplot2::geom_point()
+
+  inputList <- list(plot = basePlot)
+  updatedList <- applyThemeToPlotList(inputList, theme = NULL)
+
+  expect_equal(updatedList, inputList)
+})
+
+
+test_that("applyThemeToPlotList adds theme to CombinedPlot objects", {
+  basePlot <- ggplot2::ggplot(
+    data.frame(x = 1:2, y = 1:2),
+    ggplot2::aes(x = x, y = y)
+  ) +
+    ggplot2::geom_point()
+  tablePlot <- ggplot2::ggplot(
+    data.frame(x = 1:2, y = 1:2),
+    ggplot2::aes(x = x, y = y)
+  ) +
+    ggplot2::geom_point()
+
+  combinedPlot <- ospsuite.plots::CombinedPlot$new(
+    plotObject = basePlot,
+    tableObject = tablePlot
+  )
+  themeToAdd <- ggplot2::theme(
+    plot.background = ggplot2::element_rect(fill = "grey85")
+  )
+
+  updatedList <- applyThemeToPlotList(
+    list(combined = combinedPlot),
+    theme = themeToAdd
+  )
+
+  expect_equal(
+    updatedList$combined$plotObject$theme$plot.background$fill,
+    "grey85"
+  )
+  expect_equal(
+    updatedList$combined$tableObject$theme$plot.background$fill,
+    "grey85"
+  )
+})

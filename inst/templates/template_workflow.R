@@ -13,8 +13,12 @@ library(ospsuite.reportingframework)
 # Set graphic defaults
 # (see vignette(package = 'ospsuite.plots', topic = 'ospsuite_plots'))
 ggplot2::theme_set(theme_osp())
-theme_update(legend.position = 'top')
 options(knitr.kable.NA = '')
+
+runPlotTheme <- ggplot2::theme(
+  legend.position = "top",
+  legend.title = ggplot2::element_blank()
+)
 
 # Set this to TRUE if you want to execute the workflow as a final valid run.
 # (see ?setWorkflowOptions)
@@ -131,6 +135,7 @@ runPlot(
   nameOfplotFunction = "plotTimeProfiles",
   projectConfiguration = projectConfiguration,
   configTableSheet = "TimeProfiles",
+  theme = runPlotTheme,
   inputs = list(
     dataObserved = dataObserved,
     scenarioResults = scenarioResults

@@ -170,13 +170,18 @@ The script will search in the chunk text for expressions configTableSheet = "?" 
 ```{r runPlot-copy}
 # set graphic
 ospsuite.plots::setDefaults()
-theme_update(legend.position = 'top')
 options(knitr.kable.NA = '')
+
+runPlotTheme <- ggplot2::theme(
+  legend.position = "top",
+  legend.title = ggplot2::element_blank()
+)
 
 # timeprofiles
 runPlot(
   nameOfplotFunction = "plotTimeProfiles",
   projectConfiguration = projectConfiguration,
+  theme = runPlotTheme,
   inputs = list(
     configTableSheet = "TimeProfiles",
     dataObserved = dataObserved,
@@ -198,6 +203,7 @@ plotList <-
       configTableSheet = "plotTimeProfiles",
       projectConfiguration = projectConfiguration,
       checkForUnusedData = TRUE,
+      theme = runPlotTheme,
       inputs = list(
         scenarioResults = scenarioResults,
         dataObserved = dataObserved

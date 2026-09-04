@@ -29,8 +29,12 @@ options(rmarkdown.html_vignette.check_title = FALSE)
 
 ```{r loadProject, echo=FALSE, eval=TRUE}
 ggplot2::theme_set(theme_osp())
-theme_update(legend.position = 'top')
 options(knitr.kable.NA = '')
+
+runPlotTheme <- ggplot2::theme(
+  legend.position = "top",
+  legend.title = ggplot2::element_blank()
+)
 
 
 rootDirectory <- file.path(tempdir(), "testProject")
@@ -202,8 +206,12 @@ library(ospsuite.reportingframework)
 # Set graphic defaults
 # (see vignette(package = 'ospsuite.plots', topic = 'ospsuite_plots'))
 ggplot2::theme_set(theme_osp())
-theme_update(legend.position = "top")
 options(knitr.kable.NA = "")
+
+runPlotTheme <- ggplot2::theme(
+  legend.position = "top",
+  legend.title = ggplot2::element_blank()
+)
 
 # Set this to TRUE if you want to execute the workflow as a final valid run.
 # (see ?setWorkflowOptions)
@@ -450,6 +458,7 @@ plotList <- runPlot(
   projectConfiguration = projectConfiguration,
   configTableSheet = "TimeProfiles",
   plotNames = c("one_individual", "one_individual-gof"),
+  theme = runPlotTheme,
   inputs = list(
     dataObserved = dataObserved,
     scenarioResults = scenarioResults
@@ -574,6 +583,7 @@ plotList <- runPlot(
   projectConfiguration = projectConfiguration,
   configTableSheet = "TimeProfiles",
   plotNames = c("selected_individuals-1", "selected_individuals-2", "all_individuals", "all_individuals-gof"),
+  theme = runPlotTheme,
   inputs = list(
     dataObserved = dataObserved,
     scenarioResults = scenarioResults
@@ -700,6 +710,7 @@ plotList <- runPlot(
   projectConfiguration = projectConfiguration,
   configTableSheet = "TimeProfiles",
   plotNames = c("random_population"),
+  theme = runPlotTheme,
   inputs = list(
     dataObserved = dataObserved,
     scenarioResults = scenarioResults
@@ -739,6 +750,7 @@ plotList <- runPlot(
   projectConfiguration = projectConfiguration,
   configTableSheet = "TimeProfiles",
   plotNames = c("reference"),
+  theme = runPlotTheme,
   inputs = list(
     dataObserved = dataObserved,
     scenarioResults = scenarioResults,
@@ -815,6 +827,7 @@ plotList <- runPlot(
   projectConfiguration = projectConfiguration,
   configTableSheet = "TimeProfiles",
   plotNames = c("timeranges", "timeranges-split"),
+  theme = runPlotTheme,
   inputs = list(
     dataObserved = dataObserved,
     scenarioResults = scenarioResults,
@@ -842,6 +855,7 @@ runPlot(
   nameOfplotFunction = "plotTimeProfiles",
   projectConfiguration = projectConfiguration,
   configTableSheet = "TimeProfiles",
+  theme = runPlotTheme,
   inputs = list(
     dataObserved = dataObserved,
     scenarioResults = scenarioResults,
