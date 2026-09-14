@@ -24,9 +24,9 @@ options(rmarkdown.html_vignette.check_title = FALSE)
 
 This vignette provides a detailed guide to the data import process within the OSPSuite Reporting Framework package. The key aspects of the data import functionality are as follows:
 
-- **Data Types**: The package supports importing both observed time profiles and pharmacokinetic (PK) parameters, which can be processed as either aggregated or individual datasets.
+- **Data Types**: The package supports importing observed time profiles, pharmacokinetic (PK) parameters, and scalar numeric values.
 
-- **File Format**: Source files must be formatted as CSV tables.
+- **File Format**: Time profile and PK parameter source files are read from CSV tables. Scalar numeric values can be read from a dedicated sheet in the same Excel configuration workbook.
 
 - **Import Function**: The primary function used for data import is `readObservedDataByDictionary`.
 
@@ -37,6 +37,7 @@ This vignette provides a detailed guide to the data import process within the OS
 - **Output**: `readObservedDataByDictionary` returns one data.table per call, based on `dataClassType`.
   - Use `dataClassType = "timeprofile"` to import observed time profile data.
   - Use `dataClassType = "pkParameter"` to import observed PK parameter data.
+  - Use `dataClassType = "numericValues"` to import scalar numeric values.
 
 - **Data Transfer**: The import function also facilitates the transfer of additional data to other configuration sheets:
   - It populates the `IndividualBiometrics` sheet in `Individuals.xlsx` with all available data.
@@ -52,7 +53,7 @@ The `readObservedDataByDictionary` function reads and processes observed data ba
 
 - `projectConfiguration`: Project configuration object.
 - `spreadData`: If `TRUE`, imported metadata is propagated to configuration tables.
-- `dataClassType`: Data class to import (`"timeprofile"` or `"pkParameter"`).
+- `dataClassType`: Data class to import (`"timeprofile"`, `"pkParameter"`, or `"numericValues"`).
 - `fileIds`: Optional subset of file identifiers from the `DataFiles` sheet.
 
 Typical usage pattern:
@@ -72,6 +73,14 @@ dataObservedPK <- readObservedDataByDictionary(
   dataClassType = "pkParameter",
   fileIds = NULL,
   spreadData = TRUE
+)
+
+# Import scalar numeric values
+numericValues <- readObservedDataByDictionary(
+  projectConfiguration = projectConfiguration,
+  dataClassType = "numericValues",
+  fileIds = NULL,
+  spreadData = FALSE
 )
 ```
 
@@ -114,7 +123,7 @@ In the "DataFiles" sheet of the Excel template, provide the following informatio
 - **`DataFilter`**: An R executable expression that filters relevant data for the study. If empty, no filter is applied.
 - **`DataClass`**: Differentiate between time profiles and PK parameters, as well as aggregated and individual data.
 
-`DATACLASS` provides standard values for `DataClass` (for example `DATACLASS$tpIndividual`, `DATACLASS$tpAggregated`, `DATACLASS$pkIndividual`, `DATACLASS$pkAggregated`) and should be used in scripts to avoid typos.
+`DATACLASS` provides standard values for `DataClass` (for example `DATACLASS$tpIndividual`, `DATACLASS$tpAggregated`, `DATACLASS$pkIndividual`, `DATACLASS$pkAggregated`, `DATACLASS$numericValues`) and should be used in scripts to avoid typos.
 
 ### Example
 
@@ -144,6 +153,40 @@ dataFilesSheet <- rbind(
 )
 
 knitr::kable(dataFilesSheet)
+```
+
+## `NumericValues` Sheet
+
+Use this sheet when numeric values should be maintained in configuration instead of hard-coded in scripts.
+
+- Required columns in the sheet: `VariableName`, `Value`, `Unit`, `Reference`, `Description`.
+- Returned table columns after import: `variableName`, `value`, `unit`, `reference`.
+- The `Description` column is metadata and is not returned.
+- Variable names must be unique across imported numeric-value sheets.
+
+Add a row in `DataFiles` with `DataClass = DATACLASS$numericValues` and `Dictionary = "NumericValues"` (or another sheet name if configured).
+
+```{r echo=FALSE, eval=TRUE}
+numericValuesSheet <- data.table(
+  VariableName = c("Dose", "InfusionDuration", "LowerLimit"),
+  Value = c(100, 1.5, 0.05),
+  Unit = c("mg", "h", "mg/L"),
+  Reference = c("Study 1234", "Protocol", "Bioanalytical report"),
+  Description = c(
+    "Single dose amount",
+    "Infusion duration used in protocol",
+    "Lower quantification limit"
+  )
+)
+
+knitr::kable(numericValuesSheet)
+```
+
+Retrieve one scalar with optional unit validation:
+
+```{r eval=FALSE}
+dose <- getNumericValue(numericValues, "Dose", expectedUnit = "mg")
+halfLife <- getNumericValue(numericValues, "InfusionDuration", expectedUnit = "h")
 ```
 
 The first line of the sheet is not shown above; it contains descriptions for the columns. The information for the data import starts at line 2.

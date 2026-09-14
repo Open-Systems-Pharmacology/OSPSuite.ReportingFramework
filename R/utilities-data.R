@@ -7,7 +7,7 @@
 #'
 #' @param projectConfiguration An object containing project configuration details, including the path to the data importer configuration file.
 #' @param spreadData If TRUE, information derived from observed data, such as identifiers and biometrics, is spread to other tables.
-#' @param dataClassType A character string indicating the type of data class to process. Options are "timeprofile" or "pkParameter".
+#' @param dataClassType A character string indicating the type of data class to process. Options are "timeprofile", "pkParameter", or "numericValues".
 #' @param fileIds A character vector with file identifiers to be selected, if NULL (default) all are selected.
 #'
 #' @return A `data.table` containing the processed data based on the dictionary. The structure includes relevant columns defined in the data dictionary.
@@ -16,7 +16,7 @@
 readObservedDataByDictionary <- function(
   projectConfiguration,
   spreadData = TRUE,
-  dataClassType = c("timeprofile", "pkParameter"),
+  dataClassType = c("timeprofile", "pkParameter", "numericValues"),
   fileIds = NULL
 ) {
   # avoid warning for global variable
@@ -40,6 +40,9 @@ readObservedDataByDictionary <- function(
     ],
     pkParameter = dataList[
       dataClass %in% grep("^pk", unlist(DATACLASS), value = TRUE)
+    ],
+    numericValues = dataList[
+      dataClass %in% DATACLASS[["numericValues"]]
     ]
   )
   if (nrow(dataList) == 0) {
@@ -49,6 +52,10 @@ readObservedDataByDictionary <- function(
   if (!is.null(fileIds)) {
     checkmate::assertNames(fileIds, subset.of = dataList$fileIdentifier)
     dataList <- dataList[fileIdentifier %in% fileIds]
+  }
+
+  if (dataClassType == "numericValues") {
+    return(.readNumericValuesFromDataFiles(wb = wb, dataList = dataList))
   }
 
   checkmate::assertFileExists(fs::path_abs(
@@ -167,6 +174,156 @@ readObservedDataByDictionary <- function(
   ])
 
   return(dataDT)
+}
+
+#' Read scalar numeric values from sheets configured in DataFiles
+#'
+#' @param wb Workbook object containing DataFiles and numeric values sheets.
+#' @param dataList DataFiles subset containing rows with numeric values data class.
+#'
+#' @return A `data.table` with columns `variableName`, `value`, `unit`, and `reference`.
+#' @keywords internal
+#' @noRd
+.readNumericValuesFromDataFiles <- function(wb, dataList) {
+  # initialize variable to avoid messages
+  variableName <- NULL
+
+  defaultSheetName <- "NumericValues"
+  numericValues <- data.table::data.table(
+    variableName = character(),
+    value = numeric(),
+    unit = character(),
+    reference = character()
+  )
+
+  for (d in split(dataList, seq_len(nrow(dataList)))) {
+    sheetName <- defaultSheetName
+    if (
+      "dictionary" %in% names(d) && !is.na(d$dictionary) && nzchar(d$dictionary)
+    ) {
+      sheetName <- d$dictionary
+    }
+
+    if (!(sheetName %in% wb$sheet_names)) {
+      stop(messages$errorutilitiesdataL2())
+    }
+
+    numericValues <- rbind(
+      numericValues,
+      .readNumericValuesSheet(wb = wb, sheetName = sheetName),
+      fill = TRUE
+    )
+  }
+
+  if (any(duplicated(numericValues$variableName))) {
+    stop(messages$errorutilitiesdataL5())
+  }
+
+  return(numericValues)
+}
+
+#' Read scalar numeric values from one sheet
+#'
+#' @param wb Workbook object.
+#' @param sheetName Name of the sheet to import.
+#'
+#' @return A `data.table` with normalized scalar values.
+#' @keywords internal
+#' @noRd
+.readNumericValuesSheet <- function(wb, sheetName) {
+  tmpData <- xlsxReadData(
+    wb = wb,
+    sheetName = sheetName,
+    skipDescriptionRow = TRUE
+  )
+
+  checkmate::assertNames(
+    names(tmpData),
+    must.include = c("variableName", "value", "unit", "reference"),
+    .var.name = paste("Numeric values sheet", sheetName)
+  )
+
+  tmpData <- tmpData[,
+    c("variableName", "value", "unit", "reference"),
+    with = FALSE
+  ]
+
+  tmpData[, variableName := trimws(as.character(variableName))]
+  tmpData[, value := suppressWarnings(as.numeric(value))]
+  tmpData[, unit := as.character(unit)]
+  tmpData[, reference := as.character(reference)]
+
+  tmpData <- tmpData[
+    !((is.na(variableName) | variableName == "") &
+      is.na(value) &
+      is.na(unit) &
+      is.na(reference))
+  ]
+
+  if (any(is.na(tmpData$variableName) | tmpData$variableName == "")) {
+    stop(messages$errorutilitiesdataL6())
+  }
+  if (any(is.na(tmpData$value))) {
+    stop(messages$errorutilitiesdataL7())
+  }
+
+  return(tmpData[])
+}
+
+#' Get one numeric value by variable name
+#'
+#' Retrieves one numeric scalar from a table imported with
+#' `readObservedDataByDictionary(dataClassType = "numericValues")`.
+#'
+#' @param numericValues A `data.table` with at least columns
+#'   `variableName` and `value`.
+#' @param variableName Name of the variable to retrieve.
+#' @param expectedUnit Optional expected unit. If provided, the function checks
+#'   that the imported unit matches this value.
+#'
+#' @return A numeric scalar.
+#' @export
+#' @family observed data processing
+getNumericValue <- function(numericValues, variableName, expectedUnit = NULL) {
+  checkmate::assertDataTable(numericValues)
+  checkmate::assertNames(
+    names(numericValues),
+    must.include = c("variableName", "value")
+  )
+  checkmate::assertString(variableName, min.chars = 1)
+  checkmate::assertString(expectedUnit, null.ok = TRUE)
+
+  variableNameInput <- variableName
+  selectedRows <- numericValues[variableName == variableNameInput]
+  if (nrow(selectedRows) == 0) {
+    stop(paste("numericValues does not contain variableName", variableName))
+  }
+  if (nrow(selectedRows) > 1) {
+    stop(paste("Multiple entries found for variableName", variableName))
+  }
+
+  if (!is.null(expectedUnit)) {
+    checkmate::assertNames(names(selectedRows), must.include = c("unit"))
+    if (
+      is.na(selectedRows$unit[[1]]) || selectedRows$unit[[1]] != expectedUnit
+    ) {
+      stop(paste(
+        "Unit mismatch for",
+        variableName,
+        ": expected",
+        expectedUnit,
+        "but got",
+        selectedRows$unit[[1]]
+      ))
+    }
+  }
+
+  value <- suppressWarnings(as.numeric(selectedRows$value[[1]]))
+  if (is.na(value)) {
+    stop(paste("Value for", variableName, "is missing or non-numeric"))
+  }
+
+  return(value)
 }
 #' Validate Observed Data
 #'

@@ -23,7 +23,10 @@
 
   dataDir <- file.path(projectDir, "Data")
   dir.create(dataDir, recursive = TRUE, showWarnings = FALSE)
-  dataFiles <- c("timeprofiles_study1234_iv.csv", "timeprofiles_study1234_po.csv")
+  dataFiles <- c(
+    "timeprofiles_study1234_iv.csv",
+    "timeprofiles_study1234_po.csv"
+  )
   file.copy(
     from = file.path(
       tutorialDir,
@@ -37,12 +40,22 @@
   )
 
   # DataImportConfiguration.xlsx references files via Data/...; stage files in common temp roots.
-  for (rootDir in unique(c(tempdir(), dirname(tempdir()), dirname(dirname(tempdir())), projectDir))) {
+  for (rootDir in unique(c(
+    tempdir(),
+    dirname(tempdir()),
+    dirname(dirname(tempdir())),
+    projectDir
+  ))) {
     tempDataDir <- file.path(rootDir, "Data")
     dir.create(tempDataDir, recursive = TRUE, showWarnings = FALSE)
     srcFiles <- file.path(dataDir, dataFiles)
     dstFiles <- file.path(tempDataDir, dataFiles)
-    if (!all(normalizePath(srcFiles, winslash = "/") == normalizePath(dstFiles, winslash = "/", mustWork = FALSE))) {
+    if (
+      !all(
+        normalizePath(srcFiles, winslash = "/") ==
+          normalizePath(dstFiles, winslash = "/", mustWork = FALSE)
+      )
+    ) {
       file.copy(
         from = srcFiles,
         to = dstFiles,
@@ -52,7 +65,10 @@
   }
 
   list(
-    dataImporterConfigurationFile = file.path(projectDir, "DataImportConfiguration.xlsx"),
+    dataImporterConfigurationFile = file.path(
+      projectDir,
+      "DataImportConfiguration.xlsx"
+    ),
     projectConfigurationDirPath = tempdir(),
     individualsFile = file.path(projectDir, "Individuals.xlsx"),
     scenariosFile = file.path(projectDir, "Scenarios.xlsx"),
@@ -67,6 +83,54 @@ dataObserved <- suppressWarnings(readObservedDataByDictionary(
   projectConfiguration,
   spreadData = FALSE
 ))
+
+.makeNumericValuesProjectConfiguration <- function(
+  duplicateVariable = FALSE,
+  nonNumericValue = FALSE
+) {
+  projectDir <- tempfile(pattern = "rf_numeric_values_")
+  dir.create(projectDir, recursive = TRUE, showWarnings = FALSE)
+  dataImportFile <- file.path(projectDir, "DataImportConfiguration.xlsx")
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "DataFiles")
+  openxlsx::addWorksheet(wb, "NumericValues")
+
+  dataFiles <- data.table(
+    FileIdentifier = c("description", "numeric-values"),
+    DataFile = c("description", NA_character_),
+    Dictionary = c("description", "NumericValues"),
+    DataFilter = c("description", NA_character_),
+    DataClass = c("description", DATACLASS[["numericValues"]])
+  )
+
+  valueCol <- c("description", "100", "3.5")
+  if (nonNumericValue) {
+    valueCol[[2]] <- "abc"
+  }
+
+  variableNames <- c("description", "Dose", "HalfLife")
+  if (duplicateVariable) {
+    variableNames[[3]] <- "Dose"
+  }
+
+  numericValues <- data.table(
+    VariableName = variableNames,
+    Value = valueCol,
+    Unit = c("description", "mg", "h"),
+    Reference = c("description", "Study A", "Study A"),
+    Description = c("description", "single dose", "terminal half life")
+  )
+
+  openxlsx::writeData(wb = wb, sheet = "DataFiles", x = dataFiles)
+  openxlsx::writeData(wb = wb, sheet = "NumericValues", x = numericValues)
+  openxlsx::saveWorkbook(wb = wb, file = dataImportFile, overwrite = TRUE)
+
+  list(
+    dataImporterConfigurationFile = dataImportFile,
+    projectConfigurationDirPath = projectDir
+  )
+}
 
 
 test_that("It should read and process data based on the provided project configuration", {
@@ -140,6 +204,88 @@ test_that("It should filter data by fileIds parameter", {
       fileIds = "nonexistent_file_id"
     ),
     "subset"
+  )
+})
+
+test_that("It should import numeric values sheet as data.table", {
+  projectConfigurationNumeric <- .makeNumericValuesProjectConfiguration()
+
+  numericValues <- readObservedDataByDictionary(
+    projectConfiguration = projectConfigurationNumeric,
+    spreadData = FALSE,
+    dataClassType = "numericValues"
+  )
+
+  expect_s3_class(numericValues, "data.table")
+  expect_equal(
+    names(numericValues),
+    c("variableName", "value", "unit", "reference")
+  )
+  expect_equal(nrow(numericValues), 2)
+  expect_equal(numericValues$variableName, c("Dose", "HalfLife"))
+  expect_equal(numericValues$value, c(100, 3.5))
+})
+
+test_that("It should error for duplicated variableName in numeric values", {
+  projectConfigurationNumeric <- .makeNumericValuesProjectConfiguration(
+    duplicateVariable = TRUE
+  )
+
+  expect_error(
+    readObservedDataByDictionary(
+      projectConfiguration = projectConfigurationNumeric,
+      spreadData = FALSE,
+      dataClassType = "numericValues"
+    ),
+    "Duplicate variableName"
+  )
+})
+
+test_that("It should error for non-numeric values in numeric sheet", {
+  projectConfigurationNumeric <- .makeNumericValuesProjectConfiguration(
+    nonNumericValue = TRUE
+  )
+
+  expect_error(
+    readObservedDataByDictionary(
+      projectConfiguration = projectConfigurationNumeric,
+      spreadData = FALSE,
+      dataClassType = "numericValues"
+    ),
+    "non-numeric"
+  )
+})
+
+test_that("getNumericValue returns one numeric scalar", {
+  projectConfigurationNumeric <- .makeNumericValuesProjectConfiguration()
+  numericValues <- readObservedDataByDictionary(
+    projectConfiguration = projectConfigurationNumeric,
+    spreadData = FALSE,
+    dataClassType = "numericValues"
+  )
+
+  expect_equal(getNumericValue(numericValues, "Dose"), 100)
+  expect_equal(
+    getNumericValue(numericValues, "HalfLife", expectedUnit = "h"),
+    3.5
+  )
+})
+
+test_that("getNumericValue errors for unknown variable and wrong unit", {
+  projectConfigurationNumeric <- .makeNumericValuesProjectConfiguration()
+  numericValues <- readObservedDataByDictionary(
+    projectConfiguration = projectConfigurationNumeric,
+    spreadData = FALSE,
+    dataClassType = "numericValues"
+  )
+
+  expect_error(
+    getNumericValue(numericValues, "UnknownVariable"),
+    "does not contain"
+  )
+  expect_error(
+    getNumericValue(numericValues, "Dose", expectedUnit = "g"),
+    "Unit mismatch"
   )
 })
 

@@ -436,6 +436,13 @@ messages$errorutilitiesdataL1 <- function(env = parent.frame()) {
   eval(quote(paste("no datafiles defined for", dataClassType)), envir = env)
 }
 
+messages$errorutilitiesdataL2 <- function(env = parent.frame()) {
+  eval(
+    quote(paste("Numeric values sheet not found:", sheetName)),
+    envir = env
+  )
+}
+
 messages$errorutilitiesdataL3 <- function(env = parent.frame()) {
   eval(
     quote(
@@ -496,6 +503,27 @@ messages$errorutilitiesdataL4XXXXX <- function(env = parent.frame()) {
     quote(
       "For custom aggregation please provide lloqCheckColumns2of3 or lloqCheckColumns1of2"
     ),
+    envir = env
+  )
+}
+
+messages$errorutilitiesdataL5 <- function(env = parent.frame()) {
+  eval(
+    quote("Duplicate variableName entries found in numeric values sheets"),
+    envir = env
+  )
+}
+
+messages$errorutilitiesdataL6 <- function(env = parent.frame()) {
+  eval(
+    quote("Numeric values sheet contains missing or empty variableName"),
+    envir = env
+  )
+}
+
+messages$errorutilitiesdataL7 <- function(env = parent.frame()) {
+  eval(
+    quote("Numeric values sheet contains non-numeric or missing values"),
     envir = env
   )
 }
