@@ -7,7 +7,10 @@
 #' @export
 #' @family Addins Support
 openWorkflowTemplate <- function() {
-  rstudioapi::callFun("sendToConsole", "ospsuite.reportingframework::createWorkflowTemplate()")
+  rstudioapi::callFun(
+    "sendToConsole",
+    "ospsuite.reportingframework::createWorkflowTemplate()"
+  )
 }
 
 #' Opens the  template for figure creation as new document
@@ -32,6 +35,51 @@ openEPackageTemplate <- function() {
   )
 }
 
+#' Creates an AI-ready workflow prompt in the console
+#'
+#' @export
+#' @family Addins Support
+openAIWorkflowPrompt <- function() {
+  .openAIPromptFromTask(task = "create-workflow")
+}
+
+#' Creates an AI-ready import-data prompt in the console
+#'
+#' @export
+#' @family Addins Support
+openAIImportDataPrompt <- function() {
+  .openAIPromptFromTask(task = "import-data")
+}
+
+#' Creates an AI-ready build-plots prompt in the console
+#'
+#' @export
+#' @family Addins Support
+openAIBuildPlotsPrompt <- function() {
+  .openAIPromptFromTask(task = "build-plots")
+}
+
+#' Creates an AI-ready debug prompt in the console
+#'
+#' @export
+#' @family Addins Support
+openAIDebugRunPrompt <- function() {
+  .openAIPromptFromTask(task = "debug-run")
+}
+
+.openAIPromptFromTask <- function(task) {
+  rstudioapi::callFun(
+    "sendToConsole",
+    paste0(
+      "cat(ospsuite.reportingframework::createAIPromptFromTask(",
+      "projectConfiguration = ospsuite.reportingframework::createProjectConfiguration(), ",
+      "task = '",
+      task,
+      "'), sep='\\n')"
+    )
+  )
+}
+
 
 #' Opens the workflow template as new document
 #'
@@ -42,7 +90,10 @@ createWorkflowTemplate <- function() {
     template = "template_workflow.R",
     templatePath = getOption(
       "OSPSuite.RF.PathForWorkflowTemplate",
-      default = system.file("templates", package = "ospsuite.reportingframework")
+      default = system.file(
+        "templates",
+        package = "ospsuite.reportingframework"
+      )
     )
   )
 }
@@ -55,16 +106,18 @@ createWorkflowTemplate <- function() {
 #'
 #' @export
 #' @family Addins Support
-createDocumentFromTemplate <- function(template = "template_workflow",
-                                       templatePath = system.file("templates", package = "ospsuite.reportingframework")) {
+createDocumentFromTemplate <- function(
+  template = "template_workflow",
+  templatePath = system.file(
+    "templates",
+    package = "ospsuite.reportingframework"
+  )
+) {
   templateFile <- file.path(
     templatePath,
     template
   )
-  type <- switch(fs::path_ext(template),
-    "R" = "r",
-    "Rmd" = "rmarkdown"
-  )
+  type <- switch(fs::path_ext(template), "R" = "r", "Rmd" = "rmarkdown")
   templateContent <-
     readLines(templateFile) # Read the content of the template file
   templateText <-

@@ -4,6 +4,9 @@
 - Extended `readObservedDataByDictionary()` with `dataClassType = "numericValues"`.
 - Added support for `NumericValues` sheets with columns `VariableName`, `Value`, `Unit`, `Reference`, and `Description` (`Description` is metadata only and is not returned).
 - Added `getNumericValue()` helper to retrieve one typed scalar value with optional unit checking.
+- Added AI-assistance helpers: `exportWorkflowContext()`, `createAIWorkflowPrompt()`, `createAIPromptFromTask()`, and `validateWorkflowForAI()`.
+- Added AI-focused RStudio addins for workflow generation, data import setup, and debug-run prompting.
+- Added a dedicated AI addin for build-plots prompting.
 
 # ospsuite.reportingframework 1.0.1
 

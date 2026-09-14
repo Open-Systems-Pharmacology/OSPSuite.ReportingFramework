@@ -13,3 +13,23 @@ Description: Open a template function for a user-defined plotfunction
 Binding: openFigureTemplate
 Interactive: false
 
+Name: Open AI Workflow Prompt
+Description: Print an AI-ready prompt for creating or refining a workflow
+Binding: openAIWorkflowPrompt
+Interactive: false
+
+Name: Open AI Import Data Prompt
+Description: Print an AI-ready prompt focused on data import and dictionaries
+Binding: openAIImportDataPrompt
+Interactive: false
+
+Name: Open AI Build Plots Prompt
+Description: Print an AI-ready prompt focused on plot setup and generation
+Binding: openAIBuildPlotsPrompt
+Interactive: false
+
+Name: Open AI Debug Run Prompt
+Description: Print an AI-ready prompt focused on troubleshooting workflow runs
+Binding: openAIDebugRunPrompt
+Interactive: false
+

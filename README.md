@@ -111,6 +111,65 @@ install.packages("rstudioapi")
 install.packages("cowplot")
 ```
 
+## AI-assisted workflow support
+
+The package includes helper functions and RStudio Addins to support users working with AI assistants.
+
+### Generate AI-ready prompts
+
+```r
+# Create project configuration first
+projectConfiguration <- createProjectConfiguration(
+  path = file.path("ProjectConfiguration.xlsx")
+)
+
+# Generic workflow prompt
+prompt <- createAIWorkflowPrompt(
+  projectConfiguration = projectConfiguration,
+  task = "create-workflow"
+)
+
+# Task-specific prompt presets
+promptImport <- createAIPromptFromTask(
+  projectConfiguration = projectConfiguration,
+  task = "import-data"
+)
+```
+
+Supported task presets in `createAIPromptFromTask()`:
+
+- `"create-workflow"`
+- `"import-data"`
+- `"build-plots"`
+- `"debug-run"`
+
+### Export compact context for AI tools
+
+```r
+exportWorkflowContext(
+  projectConfiguration = projectConfiguration,
+  file = "workflow-context.json"
+)
+```
+
+### Validate configuration before running AI-generated code
+
+```r
+validation <- validateWorkflowForAI(projectConfiguration)
+validation$ok
+validation$errors
+validation$warnings
+```
+
+### RStudio Addins
+
+If `rstudioapi` is installed, the following Addins are available:
+
+- `openAIWorkflowPrompt()`
+- `openAIImportDataPrompt()`
+- `openAIBuildPlotsPrompt()`
+- `openAIDebugRunPrompt()`
+
 ## MS-Word reports
 
 It is possible to convert markdown reports to MS-Word (`.docx` format) from the `{ospsuite.reportingframework}` package.

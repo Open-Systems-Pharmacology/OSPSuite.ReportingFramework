@@ -86,6 +86,33 @@ numericValues <- readObservedDataByDictionary(
 
 In most workflows, `dataObserved` and `dataObservedPK` are imported with separate calls as shown above.
 
+## AI-Assisted Data Import Setup
+
+To prepare data-import requests for an AI assistant, generate a task-specific prompt that includes your current project context:
+
+```{r, echo=TRUE, eval=FALSE}
+prompt <- createAIPromptFromTask(
+  projectConfiguration = projectConfiguration,
+  task = "import-data"
+)
+
+cat(prompt, sep = "\n")
+```
+
+Before applying AI-suggested changes, validate the configuration:
+
+```{r, echo=TRUE, eval=FALSE}
+validation <- validateWorkflowForAI(projectConfiguration)
+validation$ok
+validation$errors
+```
+
+RStudio Addin shortcut for this prompt:
+
+```{r, echo=TRUE, eval=FALSE}
+openAIImportDataPrompt()
+```
+
 # Filling the Excel Table
 
 ```{r load-template, eval=TRUE, echo=FALSE}

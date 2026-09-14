@@ -41,6 +41,50 @@ This function opens the workflow template as a new document in your RStudio envi
 
 You can also access the workflow template through an RStudio Addin. To use the Addins, simply navigate to the Addins menu in RStudio and select "Open Template Workflow." This will execute the `openWorkflowTemplate()` function and open the template in a new document.
 
+### AI-Assisted Workflow Setup
+
+If you use an AI assistant to create or refine workflow scripts, you can generate project-specific prompts directly from the package.
+
+```{r, echo=TRUE, eval=FALSE}
+prompt <- createAIPromptFromTask(
+  projectConfiguration = projectConfiguration,
+  task = "create-workflow"
+)
+
+cat(prompt, sep = "\n")
+```
+
+Available task presets are:
+
+- `"create-workflow"`
+- `"import-data"`
+- `"build-plots"`
+- `"debug-run"`
+
+You can also export compact context data for other AI tools:
+
+```{r, echo=TRUE, eval=FALSE}
+exportWorkflowContext(
+  projectConfiguration = projectConfiguration,
+  file = "workflow-context.json"
+)
+```
+
+Before running AI-generated code, validate the configuration:
+
+```{r, echo=TRUE, eval=FALSE}
+validation <- validateWorkflowForAI(projectConfiguration)
+validation$ok
+validation$errors
+```
+
+RStudio Addins for AI prompting:
+
+- `openAIWorkflowPrompt()`
+- `openAIImportDataPrompt()`
+- `openAIBuildPlotsPrompt()`
+- `openAIDebugRunPrompt()`
+
 #### Customizing the Workflow Template
 
 By default, the workflow template is loaded from the package's internal templates. If you wish to customize this template, follow these steps:

@@ -32,6 +32,23 @@ Project settings are managed by `ProjectConfigurationRF`, which wraps an `{esqla
 - **Plotting Capabilities**: Generate a variety of plots to visualize data and results effectively.
 - **Report Generation**: Compile results into well-structured reports for regulatory submissions.
 - **Constants**: Use shared constants such as `DATACLASS`, `TIMERANGE`, `EXPORTDIR`, and `BIOMETRICUNITS` for consistent workflow configuration.
+- **AI Support**: Generate AI-ready prompts and context exports to assist workflow authoring, data-import setup, and troubleshooting.
+
+## AI-Assisted Usage
+
+The package now includes helper functions and RStudio Addins for AI-assisted workflows.
+
+- `createAIWorkflowPrompt(projectConfiguration, task = "create-workflow")`: Creates a project-specific prompt.
+- `createAIPromptFromTask(projectConfiguration, task = "import-data")`: Creates prompts from predefined task presets.
+- `exportWorkflowContext(projectConfiguration)`: Exports compact workflow context for AI tools.
+- `validateWorkflowForAI(projectConfiguration)`: Performs lightweight preflight checks.
+
+For one-click usage in RStudio Addins, use:
+
+- `openAIWorkflowPrompt()`
+- `openAIImportDataPrompt()`
+- `openAIBuildPlotsPrompt()`
+- `openAIDebugRunPrompt()`
 
 ## Available Vignettes
 
