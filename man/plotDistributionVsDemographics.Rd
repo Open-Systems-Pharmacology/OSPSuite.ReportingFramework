@@ -13,7 +13,7 @@ plotDistributionVsDemographics(
   aggregationFlag = c("Percentiles", "GeometricStdDev", "ArithmeticStdDev", "Custom"),
   customFunction = NULL,
   percentiles = ospsuite.plots::getOspsuite.plots.option(optionKey =
-    OptionKeys$Percentiles)[c(1, 3, 5)],
+    OptionKeys$defaultPercentiles),
   facetAspectRatio = 0.5,
   colorVector = c(scenario = NA, referenceScenario = NA),
   ...

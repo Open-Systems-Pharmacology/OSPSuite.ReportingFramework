@@ -20,6 +20,10 @@ Opens a template file a new document
 \seealso{
 Other Addins Support:
 \code{\link[=createWorkflowTemplate]{createWorkflowTemplate()}},
+\code{\link[=openAIBuildPlotsPrompt]{openAIBuildPlotsPrompt()}},
+\code{\link[=openAIDebugRunPrompt]{openAIDebugRunPrompt()}},
+\code{\link[=openAIImportDataPrompt]{openAIImportDataPrompt()}},
+\code{\link[=openAIWorkflowPrompt]{openAIWorkflowPrompt()}},
 \code{\link[=openEPackageTemplate]{openEPackageTemplate()}},
 \code{\link[=openFigureTemplate]{openFigureTemplate()}},
 \code{\link[=openWorkflowTemplate]{openWorkflowTemplate()}}

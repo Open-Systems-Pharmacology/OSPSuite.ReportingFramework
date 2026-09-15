@@ -10,13 +10,17 @@ An object storing configuration used project-wide, composed of
 }
 \seealso{
 Other project initialization:
+\code{\link[=createAIPromptFromTask]{createAIPromptFromTask()}},
+\code{\link[=createAIWorkflowPrompt]{createAIWorkflowPrompt()}},
 \code{\link[=createProjectConfiguration]{createProjectConfiguration()}},
+\code{\link[=exportWorkflowContext]{exportWorkflowContext()}},
 \code{\link[=getQCpassedEnvironmentVariable]{getQCpassedEnvironmentVariable()}},
 \code{\link[=initProject]{initProject()}},
 \code{\link[=restoreProjectConfigurationRF]{restoreProjectConfigurationRF()}},
 \code{\link[=setWorkflowOptions]{setWorkflowOptions()}},
 \code{\link[=snapshotProjectConfigurationRF]{snapshotProjectConfigurationRF()}},
-\code{\link[=upgradeToReportingFramework]{upgradeToReportingFramework()}}
+\code{\link[=upgradeToReportingFramework]{upgradeToReportingFramework()}},
+\code{\link[=validateWorkflowForAI]{validateWorkflowForAI()}}
 }
 \concept{project initialization}
 \section{Public fields}{

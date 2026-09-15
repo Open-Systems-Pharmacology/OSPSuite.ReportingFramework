@@ -8,7 +8,8 @@ handleNoConfigTable(
   rmdPlotManager,
   projectConfiguration,
   inputs,
-  suppressExport
+  suppressExport,
+  theme
 )
 }
 \arguments{

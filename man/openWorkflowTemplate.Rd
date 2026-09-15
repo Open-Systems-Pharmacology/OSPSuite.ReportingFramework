@@ -15,6 +15,10 @@ set the path to the template via option `options(OSPSuite.RF.PathForWorkflowTemp
 Other Addins Support:
 \code{\link[=createDocumentFromTemplate]{createDocumentFromTemplate()}},
 \code{\link[=createWorkflowTemplate]{createWorkflowTemplate()}},
+\code{\link[=openAIBuildPlotsPrompt]{openAIBuildPlotsPrompt()}},
+\code{\link[=openAIDebugRunPrompt]{openAIDebugRunPrompt()}},
+\code{\link[=openAIImportDataPrompt]{openAIImportDataPrompt()}},
+\code{\link[=openAIWorkflowPrompt]{openAIWorkflowPrompt()}},
 \code{\link[=openEPackageTemplate]{openEPackageTemplate()}},
 \code{\link[=openFigureTemplate]{openFigureTemplate()}}
 }

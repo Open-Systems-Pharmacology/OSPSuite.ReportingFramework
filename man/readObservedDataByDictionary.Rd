@@ -7,7 +7,7 @@
 readObservedDataByDictionary(
   projectConfiguration,
   spreadData = TRUE,
-  dataClassType = c("timeprofile", "pkParameter"),
+  dataClassType = c("timeprofile", "pkParameter", "numericValues"),
   fileIds = NULL
 )
 }
@@ -16,7 +16,7 @@ readObservedDataByDictionary(
 
 \item{spreadData}{If TRUE, information derived from observed data, such as identifiers and biometrics, is spread to other tables.}
 
-\item{dataClassType}{A character string indicating the type of data class to process. Options are "timeprofile" or "pkParameter".}
+\item{dataClassType}{A character string indicating the type of data class to process. Options are "timeprofile", "pkParameter", or "numericValues".}
 
 \item{fileIds}{A character vector with file identifiers to be selected, if NULL (default) all are selected.}
 }
@@ -32,6 +32,7 @@ Other observed data processing:
 \code{\link[=aggregateObservedDataGroups]{aggregateObservedDataGroups()}},
 \code{\link[=convertDataCombinedToDataTable]{convertDataCombinedToDataTable()}},
 \code{\link[=convertDataTableToDataCombined]{convertDataTableToDataCombined()}},
+\code{\link[=getNumericValue]{getNumericValue()}},
 \code{\link[=updateDataGroupId]{updateDataGroupId()}},
 \code{\link[=updateOutputPathId]{updateOutputPathId()}},
 \code{\link[=validateObservedData]{validateObservedData()}}

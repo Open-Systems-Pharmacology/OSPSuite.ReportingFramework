@@ -12,7 +12,7 @@ plotTimeProfiles(
   nMaxFacetRows = 4,
   facetAspectRatio = 0.5,
   aggregationFlag = c("GeometricStdDev", "ArithmeticStdDev", "Percentiles", "Custom"),
-  percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1, 3, 5)],
+  percentiles = getOspsuite.plots.option(optionKey = OptionKeys$defaultPercentiles),
   customFunction = NULL,
   checkForUnusedData = FALSE,
   referenceScaleVector = list(),

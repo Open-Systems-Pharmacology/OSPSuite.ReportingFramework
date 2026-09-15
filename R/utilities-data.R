@@ -421,7 +421,10 @@ validateObservedData <- function(dataDT, dataClassType) {
         by = colIdentifier
       ]
       tmp <- merge(ambiguousUnits, unitSummary, by = colIdentifier)
-
+      summaryString <- paste(
+        apply(tmp, 1, function(row) paste(row, collapse = " ")),
+        collapse = "; "
+      )
       warning(messages$warningutilitiesdataL3XX())
     }
   }

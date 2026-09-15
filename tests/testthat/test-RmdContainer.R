@@ -1,4 +1,5 @@
-# testproject with variable projectconfiguration is set up by the setup.R for all tests simulataneously
+# Create a minimal projectConfiguration for testing
+projectConfiguration <- list(outputFolder = tempdir())
 
 test_that("Creation and print of startlines", {
   rmdfolder <- projectConfiguration$outputFolder
@@ -15,7 +16,7 @@ test_that("Creation and print of startlines", {
   )
   expect_s3_class(rmdPlotManager, "RmdPlotManager")
 
-  testPath <- file.path(projectConfiguration$outputFolder, "Test.Rmd")
+  testPath <- file.path(projectConfiguration$outputFolder, "Test.qmd")
   expect_error(rmdPlotManager$writeRmd(projectConfiguration$outputFolder))
 
   rmdPlotManager$writeRmd(basename(testPath))
@@ -24,10 +25,26 @@ test_that("Creation and print of startlines", {
 
 
 test_that("Initialization with invalid parameters", {
-  expect_error(RmdPlotManager$new(rmdName = NULL, rmdfolder = projectConfiguration$outputFolder, nameOfplotFunction = "plotTimeProfiles"))
-  expect_error(RmdPlotManager$new(rmdName = "test", rmdfolder = NULL, nameOfplotFunction = "plotTimeProfiles"))
-  expect_error(RmdPlotManager$new(rmdName = "test", rmdfolder = projectConfiguration$outputFolder, nameOfplotFunction = 123))
-  expect_error(RmdPlotManager$new(rmdName = "test", rmdfolder = projectConfiguration$outputFolder, nameOfplotFunction = "nonExistentFunction"))
+  expect_error(RmdPlotManager$new(
+    rmdName = NULL,
+    rmdfolder = projectConfiguration$outputFolder,
+    nameOfplotFunction = "plotTimeProfiles"
+  ))
+  expect_error(RmdPlotManager$new(
+    rmdName = "test",
+    rmdfolder = NULL,
+    nameOfplotFunction = "plotTimeProfiles"
+  ))
+  expect_error(RmdPlotManager$new(
+    rmdName = "test",
+    rmdfolder = projectConfiguration$outputFolder,
+    nameOfplotFunction = 123
+  ))
+  expect_error(RmdPlotManager$new(
+    rmdName = "test",
+    rmdfolder = projectConfiguration$outputFolder,
+    nameOfplotFunction = "nonExistentFunction"
+  ))
 })
 
 test_that("Headers, newlines", {
@@ -42,7 +59,7 @@ test_that("Headers, newlines", {
   rmdPlotManager$addNewline()
   rmdPlotManager$addNewpage()
 
-  testPath <- file.path(projectConfiguration$outputFolder, "Test.Rmd")
+  testPath <- file.path(projectConfiguration$outputFolder, "Test.qmd")
   rmdPlotManager$writeRmd(basename(testPath))
 
   tmp <- readLines(testPath)
@@ -71,9 +88,21 @@ test_that("Figure export", {
   )
 
   # files are exported
-  expect_true(file.exists(file.path(projectConfiguration$outputFolder, "test", "Fig1.png")))
-  expect_true(file.exists(file.path(projectConfiguration$outputFolder, "test", "Fig1.caption")))
-  expect_true(file.exists(file.path(projectConfiguration$outputFolder, "test", "Fig1.footnote")))
+  expect_true(file.exists(file.path(
+    projectConfiguration$outputFolder,
+    "test",
+    "Fig1.png"
+  )))
+  expect_true(file.exists(file.path(
+    projectConfiguration$outputFolder,
+    "test",
+    "Fig1.caption"
+  )))
+  expect_true(file.exists(file.path(
+    projectConfiguration$outputFolder,
+    "test",
+    "Fig1.footnote"
+  )))
 
   # it should not be possible to add the same key twice
   expect_error(
@@ -95,7 +124,7 @@ test_that("Figure export", {
     )
   }
 
-  testPath <- file.path(projectConfiguration$outputFolder, "Test.Rmd")
+  testPath <- file.path(projectConfiguration$outputFolder, "Test.qmd")
   expect_no_error(rmdPlotManager$writeRmd(basename(testPath)))
 })
 
@@ -147,6 +176,6 @@ test_that("Table export export", {
     tableKey = "myTabledetailed"
   )
 
-  testPath <- file.path(projectConfiguration$outputFolder, "Test.Rmd")
+  testPath <- file.path(projectConfiguration$outputFolder, "Test.qmd")
   expect_no_error(rmdPlotManager$writeRmd(basename(testPath)))
 })

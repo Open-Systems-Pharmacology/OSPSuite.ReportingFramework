@@ -12,6 +12,7 @@ runPlot(
   plotNames = NULL,
   suppressExport = FALSE,
   digitsOfSignificanceCSVDisplay = 3,
+  theme = NULL,
   inputs = list()
 )
 }
@@ -42,6 +43,8 @@ If provided, `suppressExport` is set to TRUE, all plots specified in the configu
 If TRUE, the function will return the generated plots as a list without creating the Rmd file}
 
 \item{digitsOfSignificanceCSVDisplay}{digits Of significance used for the display in the .Rmd for tables, which are exported as .csv}
+
+\item{theme}{Optional ggplot2 theme object added to all generated ggplot objects.}
 
 \item{inputs}{A list of additional inputs for the plot function. This can include any parameters that the selected plot function requires.}
 }

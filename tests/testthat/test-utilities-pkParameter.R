@@ -18,10 +18,10 @@
   system.file("extdata", "PKAnalyses.csv", package = "ospsuite")
 }
 
-# readUserDefinedPKParameters -----------------------------------------------
+# .readUserDefinedPKParameters -----------------------------------------------
 
-test_that("readUserDefinedPKParameters returns a data.table with required columns", {
-  dt <- readUserDefinedPKParameters(.pkParameterFile())
+test_that(".readUserDefinedPKParameters returns a data.table with required columns", {
+  dt <- .readUserDefinedPKParameters(.pkParameterFile())
 
   expect_s3_class(dt, "data.table")
   expect_true(all(
@@ -29,13 +29,13 @@ test_that("readUserDefinedPKParameters returns a data.table with required column
   ))
 })
 
-test_that("readUserDefinedPKParameters removes unit brackets from column names", {
-  dt <- readUserDefinedPKParameters(.pkParameterFile())
+test_that(".readUserDefinedPKParameters removes unit brackets from column names", {
+  dt <- .readUserDefinedPKParameters(.pkParameterFile())
 
   expect_false(any(grepl("\\[", names(dt))))
 })
 
-test_that("readUserDefinedPKParameters errors on missing displayUnit", {
+test_that(".readUserDefinedPKParameters errors on missing displayUnit", {
   d <- withr::local_tempdir()
   brokenFile <- file.path(d, "broken.xlsx")
 
@@ -53,43 +53,12 @@ test_that("readUserDefinedPKParameters errors on missing displayUnit", {
   openxlsx::writeData(wb, "Userdef PK Parameter", df)
   openxlsx::saveWorkbook(wb, brokenFile, overwrite = TRUE)
 
-  expect_error(readUserDefinedPKParameters(brokenFile))
-})
-
-# addUserDefinedParameters --------------------------------------------------
-
-test_that("addUserDefinedParameters adds a user-defined PK parameter to ospsuite", {
-  ospsuite::removeAllUserDefinedPKParameters()
-  dt <- readUserDefinedPKParameters(.pkParameterFile())
-
-  addUserDefinedParameters("F_tEnd", dt)
-
-  expect_true("F_tEnd" %in% ospsuite::allPKParameterNames())
-  ospsuite::removeAllUserDefinedPKParameters()
-})
-
-test_that("addUserDefinedParameters errors when name is not in definition table", {
-  dt <- readUserDefinedPKParameters(.pkParameterFile())
-
-  expect_error(
-    addUserDefinedParameters("NonExistentParam", dt),
-    "is not defined"
-  )
-})
-
-test_that("addUserDefinedParameters errors when name appears more than once", {
-  dt <- readUserDefinedPKParameters(.pkParameterFile())
-  dtDup <- rbind(dt[1], dt[1])
-
-  expect_error(
-    addUserDefinedParameters(dt$name[1], dtDup),
-    "not unique"
-  )
+  expect_error(.readUserDefinedPKParameters(brokenFile))
 })
 
 # validatePKParameterDT -----------------------------------------------------
 
-test_that("validatePKParameterDT passes for a correctly structured data.table", {
+test_that(".validatePKParameterDT passes for a correctly structured data.table", {
   dt <- data.table::data.table(
     scenario = "S1",
     pkParameter = "AUC_tEnd",
@@ -100,16 +69,16 @@ test_that("validatePKParameterDT passes for a correctly structured data.table", 
     displayUnitPKParameter = "µmol*min/l"
   )
 
-  expect_invisible(validatePKParameterDT(dt))
+  expect_invisible(.validatePKParameterDT(dt))
 })
 
-test_that("validatePKParameterDT errors when required columns are missing", {
+test_that(".validatePKParameterDT errors when required columns are missing", {
   dt <- data.table::data.table(scenario = "S1", value = 1)
 
-  expect_error(validatePKParameterDT(dt))
+  expect_error(.validatePKParameterDT(dt))
 })
 
-test_that("validatePKParameterDT errors on inconsistent displayUnitPKParameter", {
+test_that(".validatePKParameterDT errors on inconsistent displayUnitPKParameter", {
   dt <- data.table::data.table(
     scenario = c("S1", "S2"),
     pkParameter = c("AUC_tEnd", "AUC_tEnd"),
@@ -120,7 +89,7 @@ test_that("validatePKParameterDT errors on inconsistent displayUnitPKParameter",
     displayUnitPKParameter = c("µmol*min/l", "mg*min/l")
   )
 
-  expect_error(validatePKParameterDT(dt), "not consistent")
+  expect_error(.validatePKParameterDT(dt), "not consistent")
 })
 
 # setValueToRatio -----------------------------------------------------------
@@ -144,14 +113,14 @@ test_that("setValueToRatio divides base values by reference values", {
     populationId = NA_character_
   )
 
-  result <- setValueToRatio(base, ref)
+  result <- .setValueToRatio(base, ref)
 
   expect_equal(result$value, 2)
 })
 
-# loadPkAnalysisRawData -----------------------------------------------------
+# .loadPkAnalysisRawData -----------------------------------------------------
 
-test_that("loadPkAnalysisRawData returns a data.table with 14 PK parameters", {
+test_that(".loadPkAnalysisRawData returns a data.table with 14 PK parameters", {
   d <- withr::local_tempdir()
   outputFolder <- file.path(d, EXPORTDIR$pKAnalysisResults)
   dir.create(outputFolder, recursive = TRUE)
@@ -160,7 +129,7 @@ test_that("loadPkAnalysisRawData returns a data.table with 14 PK parameters", {
   pc <- list(outputFolder = d)
   sim <- .aciclovirSimulation()
 
-  result <- suppressWarnings(loadPkAnalysisRawData(pc, "ScenarioA", sim))
+  result <- suppressWarnings(.loadPkAnalysisRawData(pc, "ScenarioA", sim))
 
   expect_s3_class(result, "data.table")
   expect_equal(nrow(result), 14L)
@@ -170,14 +139,14 @@ test_that("loadPkAnalysisRawData returns a data.table with 14 PK parameters", {
   ))
 })
 
-test_that("loadPkAnalysisRawData column names start with a lowercase letter", {
+test_that(".loadPkAnalysisRawData column names start with a lowercase letter", {
   d <- withr::local_tempdir()
   outputFolder <- file.path(d, EXPORTDIR$pKAnalysisResults)
   dir.create(outputFolder, recursive = TRUE)
   file.copy(.pkAnalysesCsvPath(), file.path(outputFolder, "ScenarioA.csv"))
 
   result <- suppressWarnings(
-    loadPkAnalysisRawData(
+    .loadPkAnalysisRawData(
       list(outputFolder = d),
       "ScenarioA",
       .aciclovirSimulation()
@@ -189,24 +158,24 @@ test_that("loadPkAnalysisRawData column names start with a lowercase letter", {
   ))
 })
 
-test_that("loadPkAnalysisRawData errors when CSV does not exist", {
+test_that(".loadPkAnalysisRawData errors when CSV does not exist", {
   pc <- list(outputFolder = withr::local_tempdir())
   sim <- .aciclovirSimulation()
 
   expect_error(
-    loadPkAnalysisRawData(pc, "NonExistentScenario", sim),
+    .loadPkAnalysisRawData(pc, "NonExistentScenario", sim),
     "is not calculated"
   )
 })
 
-test_that("loadPkAnalysisRawData fills empty unit with empty string", {
+test_that(".loadPkAnalysisRawData fills empty unit with empty string", {
   d <- withr::local_tempdir()
   outputFolder <- file.path(d, EXPORTDIR$pKAnalysisResults)
   dir.create(outputFolder, recursive = TRUE)
   file.copy(.pkAnalysesCsvPath(), file.path(outputFolder, "ScenarioA.csv"))
 
   result <- suppressWarnings(
-    loadPkAnalysisRawData(
+    .loadPkAnalysisRawData(
       list(outputFolder = d),
       "ScenarioA",
       .aciclovirSimulation()

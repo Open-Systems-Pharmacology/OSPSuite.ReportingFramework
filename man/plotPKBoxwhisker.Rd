@@ -8,7 +8,7 @@ plotPKBoxwhisker(
   projectConfiguration,
   onePlotConfig,
   pkParameterDT,
-  percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles),
+  percentiles = getOspsuite.plots.option(optionKey = OptionKeys$percentiles),
   xAxisTextAngle = 0,
   colorVector = c(scenario = NA, referenceScenario = NA),
   facetAspectRatio = 0.5,

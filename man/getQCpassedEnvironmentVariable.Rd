@@ -29,11 +29,15 @@ getQCpassedEnvironmentVariable() # Should return FALSE and issue a warning
 \seealso{
 Other project initialization:
 \code{\link{ProjectConfigurationRF}},
+\code{\link[=createAIPromptFromTask]{createAIPromptFromTask()}},
+\code{\link[=createAIWorkflowPrompt]{createAIWorkflowPrompt()}},
 \code{\link[=createProjectConfiguration]{createProjectConfiguration()}},
+\code{\link[=exportWorkflowContext]{exportWorkflowContext()}},
 \code{\link[=initProject]{initProject()}},
 \code{\link[=restoreProjectConfigurationRF]{restoreProjectConfigurationRF()}},
 \code{\link[=setWorkflowOptions]{setWorkflowOptions()}},
 \code{\link[=snapshotProjectConfigurationRF]{snapshotProjectConfigurationRF()}},
-\code{\link[=upgradeToReportingFramework]{upgradeToReportingFramework()}}
+\code{\link[=upgradeToReportingFramework]{upgradeToReportingFramework()}},
+\code{\link[=validateWorkflowForAI]{validateWorkflowForAI()}}
 }
 \concept{project initialization}

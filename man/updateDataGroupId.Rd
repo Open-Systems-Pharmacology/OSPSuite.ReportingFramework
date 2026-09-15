@@ -30,6 +30,7 @@ Other observed data processing:
 \code{\link[=aggregateObservedDataGroups]{aggregateObservedDataGroups()}},
 \code{\link[=convertDataCombinedToDataTable]{convertDataCombinedToDataTable()}},
 \code{\link[=convertDataTableToDataCombined]{convertDataTableToDataCombined()}},
+\code{\link[=getNumericValue]{getNumericValue()}},
 \code{\link[=readObservedDataByDictionary]{readObservedDataByDictionary()}},
 \code{\link[=updateOutputPathId]{updateOutputPathId()}},
 \code{\link[=validateObservedData]{validateObservedData()}}

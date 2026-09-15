@@ -9,7 +9,8 @@ handleConfigTable(
   configTable,
   projectConfiguration,
   inputs,
-  suppressExport
+  suppressExport,
+  theme
 )
 }
 \arguments{

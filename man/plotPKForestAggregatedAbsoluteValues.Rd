@@ -10,7 +10,7 @@ plotPKForestAggregatedAbsoluteValues(
   pkParameterDT,
   dataObservedPK = NULL,
   aggregationFlag = c("GeometricStdDev", "ArithmeticStdDev", "Percentiles", "Custom"),
-  percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1, 3, 5)],
+  percentiles = getOspsuite.plots.option(optionKey = OptionKeys$defaultPercentiles),
   customFunction = NULL,
   scaleVectors = list(),
   labelWrapWidth = 10,

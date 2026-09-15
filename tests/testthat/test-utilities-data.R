@@ -11,7 +11,7 @@
   filesToCopy <- c(
     "DataImportConfiguration.xlsx",
     "Individuals.xlsx",
-    "Plots.xlsx",
+    "Reports.xlsx",
     "Scenarios.xlsx"
   )
 
@@ -73,7 +73,7 @@
     individualsFile = file.path(projectDir, "Individuals.xlsx"),
     scenariosFile = file.path(projectDir, "Scenarios.xlsx"),
     addOns = list(
-      reportsFile = file.path(projectDir, "Plots.xlsx")
+      reportsFile = file.path(projectDir, "Reports.xlsx")
     )
   )
 }

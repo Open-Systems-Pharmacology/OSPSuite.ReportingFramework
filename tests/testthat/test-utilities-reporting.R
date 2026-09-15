@@ -1,6 +1,16 @@
 # testProject was set up by setup.R
 
+# Create a mock projectConfiguration for testing
+projectConfiguration <- list(
+  outputFolder = tempdir()
+)
+
 test_that("Rendering", {
+  skip_if(
+    length(quarto::quarto_path()) == 0 || !nzchar(quarto::quarto_path()),
+    "Quarto not available in this environment"
+  )
+
   rmdPlotManager <- RmdPlotManager$new(
     rmdName = "test",
     rmdfolder = projectConfiguration$outputFolder,
@@ -32,9 +42,12 @@ test_that("Rendering", {
     tableKey = "myTable"
   )
 
-  testPath <- file.path(projectConfiguration$outputFolder, "Test.Rmd")
+  testPath <- file.path(projectConfiguration$outputFolder, "Test.qmd")
   rmdPlotManager$writeRmd(basename(testPath))
 
   renderWord(testPath, quiet = TRUE)
-  expect_true(file.exists(file.path(projectConfiguration$outputFolder, "Test.docx")))
+  expect_true(file.exists(file.path(
+    projectConfiguration$outputFolder,
+    "Test.docx"
+  )))
 })

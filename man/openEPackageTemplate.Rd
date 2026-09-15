@@ -13,6 +13,10 @@ Opens the  template for figure creation as new document
 Other Addins Support:
 \code{\link[=createDocumentFromTemplate]{createDocumentFromTemplate()}},
 \code{\link[=createWorkflowTemplate]{createWorkflowTemplate()}},
+\code{\link[=openAIBuildPlotsPrompt]{openAIBuildPlotsPrompt()}},
+\code{\link[=openAIDebugRunPrompt]{openAIDebugRunPrompt()}},
+\code{\link[=openAIImportDataPrompt]{openAIImportDataPrompt()}},
+\code{\link[=openAIWorkflowPrompt]{openAIWorkflowPrompt()}},
 \code{\link[=openFigureTemplate]{openFigureTemplate()}},
 \code{\link[=openWorkflowTemplate]{openWorkflowTemplate()}}
 }

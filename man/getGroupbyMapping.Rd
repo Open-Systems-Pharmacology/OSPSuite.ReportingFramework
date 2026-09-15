@@ -4,12 +4,14 @@
 \alias{getGroupbyMapping}
 \title{Get mapping for "groupby" aesthetics}
 \usage{
-getGroupbyMapping(plotData, plotType)
+getGroupbyMapping(plotData, plotType, dataType = "observed")
 }
 \arguments{
 \item{plotData}{Object containing the data for the plot.}
 
 \item{plotType}{Type of the plot.}
+
+\item{dataType}{Type of the data, either "observed" or "simulated".}
 }
 \value{
 Aesthetic mappings for grouping.
