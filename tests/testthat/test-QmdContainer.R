@@ -4,63 +4,63 @@ projectConfiguration <- list(outputFolder = tempdir())
 test_that("Creation and print of startlines", {
   rmdfolder <- projectConfiguration$outputFolder
   expect_error(QmdPlotManager$new(
-    rmdName = NULL,
-    rmdfolder = projectConfiguration$outputFolder,
+    qmdName = NULL,
+    qmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "plotTimeProfiles"
   ))
 
-  rmdPlotManager <- QmdPlotManager$new(
-    rmdName = "test",
-    rmdfolder = projectConfiguration$outputFolder,
+  qmdPlotManager <- QmdPlotManager$new(
+    qmdName = "test",
+    qmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "plotTimeProfiles"
   )
-  expect_s3_class(rmdPlotManager, "QmdPlotManager")
+  expect_s3_class(qmdPlotManager, "QmdPlotManager")
 
   testPath <- file.path(projectConfiguration$outputFolder, "Test.qmd")
-  expect_error(rmdPlotManager$writeQmd(projectConfiguration$outputFolder))
+  expect_error(qmdPlotManager$writeQmd(projectConfiguration$outputFolder))
 
-  rmdPlotManager$writeQmd(basename(testPath))
+  qmdPlotManager$writeQmd(basename(testPath))
   expect_true(file.exists(testPath))
 })
 
 
 test_that("Initialization with invalid parameters", {
   expect_error(QmdPlotManager$new(
-    rmdName = NULL,
-    rmdfolder = projectConfiguration$outputFolder,
+    qmdName = NULL,
+    qmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "plotTimeProfiles"
   ))
   expect_error(QmdPlotManager$new(
-    rmdName = "test",
-    rmdfolder = NULL,
+    qmdName = "test",
+    qmdfolder = NULL,
     nameOfplotFunction = "plotTimeProfiles"
   ))
   expect_error(QmdPlotManager$new(
-    rmdName = "test",
-    rmdfolder = projectConfiguration$outputFolder,
+    qmdName = "test",
+    qmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = 123
   ))
   expect_error(QmdPlotManager$new(
-    rmdName = "test",
-    rmdfolder = projectConfiguration$outputFolder,
+    qmdName = "test",
+    qmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "nonExistentFunction"
   ))
 })
 
 test_that("Headers, newlines", {
-  rmdPlotManager <- QmdPlotManager$new(
-    rmdName = "test",
-    rmdfolder = projectConfiguration$outputFolder,
+  qmdPlotManager <- QmdPlotManager$new(
+    qmdName = "test",
+    qmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "plotTimeProfiles"
   )
 
-  rmdPlotManager$addHeader("Level 1")
-  rmdPlotManager$addHeader("Level 2", level = 2)
-  rmdPlotManager$addNewline()
-  rmdPlotManager$addNewpage()
+  qmdPlotManager$addHeader("Level 1")
+  qmdPlotManager$addHeader("Level 2", level = 2)
+  qmdPlotManager$addNewline()
+  qmdPlotManager$addNewpage()
 
   testPath <- file.path(projectConfiguration$outputFolder, "Test.qmd")
-  rmdPlotManager$writeQmd(basename(testPath))
+  qmdPlotManager$writeQmd(basename(testPath))
 
   tmp <- readLines(testPath)
 
@@ -69,18 +69,18 @@ test_that("Headers, newlines", {
 })
 
 test_that("Figure export", {
-  rmdPlotManager <- QmdPlotManager$new(
-    rmdName = "test",
-    rmdfolder = projectConfiguration$outputFolder,
+  qmdPlotManager <- QmdPlotManager$new(
+    qmdName = "test",
+    qmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "plotTimeProfiles"
   )
 
-  rmdPlotManager$addHeader("Section 1")
+  qmdPlotManager$addHeader("Section 1")
 
   plotObject <- ggplot2::ggplot(data.frame(x = seq(1:3), y = seq(2:4))) +
     ggplot2::geom_point(ggplot2::aes(x = x, y = y))
 
-  rmdPlotManager$addAndExportFigure(
+  qmdPlotManager$addAndExportFigure(
     plotObject = plotObject,
     caption = "My First Figure with footnotes",
     footNoteLines = c("footnote 1", "footnote 2"),
@@ -106,7 +106,7 @@ test_that("Figure export", {
 
   # it should not be possible to add the same key twice
   expect_error(
-    rmdPlotManager$addAndExportFigure(
+    qmdPlotManager$addAndExportFigure(
       plotObject = plotObject,
       caption = "My First Figure with footnotes",
       footNoteLines = c("footnote 1", "footnote 2"),
@@ -114,10 +114,10 @@ test_that("Figure export", {
     )
   )
 
-  rmdPlotManager$addHeader("Section 2")
+  qmdPlotManager$addHeader("Section 2")
 
   for (i in seq(1, 3)) {
-    rmdPlotManager$addAndExportFigure(
+    qmdPlotManager$addAndExportFigure(
       plotObject = plotObject,
       caption = paste("Figure in Loop", i),
       figureKey = paste0("LoopFig", i)
@@ -125,18 +125,18 @@ test_that("Figure export", {
   }
 
   testPath <- file.path(projectConfiguration$outputFolder, "Test.qmd")
-  expect_no_error(rmdPlotManager$writeQmd(basename(testPath)))
+  expect_no_error(qmdPlotManager$writeQmd(basename(testPath)))
 })
 
 
 test_that("Table export export", {
-  rmdPlotManager <- QmdPlotManager$new(
-    rmdName = "test",
-    rmdfolder = projectConfiguration$outputFolder,
+  qmdPlotManager <- QmdPlotManager$new(
+    qmdName = "test",
+    qmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "plotTimeProfiles"
   )
 
-  rmdPlotManager$addHeader("Section 1")
+  qmdPlotManager$addHeader("Section 1")
 
   tableKey <- "quantiles"
   dt <- data.table(
@@ -145,7 +145,7 @@ test_that("Table export export", {
   ) %>%
     .[, as.list(quantile(x)), by = "class"]
 
-  rmdPlotManager$addAndExportTable(
+  qmdPlotManager$addAndExportTable(
     table = dt,
     caption = "my Table",
     tableKey = "myTable"
@@ -158,24 +158,24 @@ test_that("Table export export", {
     i = seq(1, 3)
   )
 
-  rmdPlotManager$addAndExportTable(
+  qmdPlotManager$addAndExportTable(
     table = dt,
     caption = "my Table",
     tableKey = "myTable2"
   )
 
   # change digits of significance from 3 (default) to not allowed number
-  expect_error(rmdPlotManager$digitsOfSignificance <- -1)
+  expect_error(qmdPlotManager$digitsOfSignificance <- -1)
 
   # change digits of significance from 3 (default) to 4
-  rmdPlotManager$digitsOfSignificance <- 4
+  qmdPlotManager$digitsOfSignificance <- 4
 
-  rmdPlotManager$addAndExportTable(
+  qmdPlotManager$addAndExportTable(
     table = dt,
     caption = "my Table",
     tableKey = "myTabledetailed"
   )
 
   testPath <- file.path(projectConfiguration$outputFolder, "Test.qmd")
-  expect_no_error(rmdPlotManager$writeQmd(basename(testPath)))
+  expect_no_error(qmdPlotManager$writeQmd(basename(testPath)))
 })

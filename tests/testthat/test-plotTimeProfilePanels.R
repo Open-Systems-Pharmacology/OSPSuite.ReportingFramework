@@ -452,3 +452,164 @@ test_that("getCaptionForPlot creates TP caption with subject and scale text", {
   expect_true(grepl("for subject", caption, fixed = TRUE))
   expect_true(grepl("linear", caption, fixed = TRUE))
 })
+
+# Edge case tests for plotTimeProfilePanels functions
+test_that("isPlotTypeNeededAndPossible handles both FALSE conditions", {
+  plotDataNeither <- list(
+    configTable = data.table::data.table(
+      plot_TimeProfiles = FALSE,
+      plot_PredictedVsObserved = FALSE
+    ),
+    hasObservedData = function() FALSE
+  )
+  expect_false(isPlotTypeNeededAndPossible("TP", plotDataNeither))
+  expect_false(isPlotTypeNeededAndPossible("PvO", plotDataNeither))
+})
+
+test_that("checkAndAdjustYlimits handles empty expression string", {
+  plotData <- list(
+    configTable = data.table::data.table(ylimit_linear = "")
+  )
+  # Function should handle empty string gracefully
+  expect_null(checkAndAdjustYlimits(
+    plotData = plotData,
+    yScale = "linear",
+    timeRangeFilter = "allTimeRanges",
+    plotType = "PvO",
+    plotCounter = 1
+  ))
+})
+
+test_that("getGroupbyMapping handles missing color and shape index methods", {
+  minimalPlotData <- list(
+    useColorIndex = function() FALSE,
+    useShapeIndex = function() FALSE
+  )
+  mapping <- getGroupbyMapping(
+    plotData = minimalPlotData,
+    plotType = "TP",
+    dataType = "simulated"
+  )
+  expect_true(is.list(mapping))
+})
+
+test_that("getGroupAesthetics handles empty scaleVectors", {
+  plotData <- list(scaleVectors = list())
+  aesthetics <- getGroupAesthetics(plotData)
+  expect_true(is.character(aesthetics) || length(aesthetics) == 0)
+})
+
+test_that("getGroupAesthetics handles only size in scaleVectors", {
+  plotData <- list(
+    scaleVectors = list(size = c("size1" = 2, "size2" = 3))
+  )
+  aesthetics <- getGroupAesthetics(plotData)
+  expect_false("colour" %in% aesthetics)
+  expect_false("fill" %in% aesthetics)
+})
+
+test_that("getFoldDistanceForPvO handles minimum valid value", {
+  plotDataMin <- list(
+    configTable = data.table::data.table(foldDistance_PvO = 1.5)
+  )
+  result <- getFoldDistanceForPvO(plotDataMin)
+  expect_true(is.list(result))
+})
+
+test_that("getFoldDistanceForPvO handles large custom values", {
+  plotDataLarge <- list(
+    configTable = data.table::data.table(foldDistance_PvO = 100)
+  )
+  result <- getFoldDistanceForPvO(plotDataLarge)
+  expect_true(is.list(result))
+})
+
+test_that("getGeomLineAttributesForTP works with hasObservedDataRange method", {
+  withMethod <- list(
+    hasObservedDataRange = function() TRUE
+  )
+  result <- getGeomLineAttributesForTP(withMethod)
+  expect_true(is.list(result))
+  expect_true("linetype" %in% names(result))
+})
+
+test_that("getFootNoteLines handles empty reference data", {
+  dataObserved <- data.table::data.table(
+    dataClass = "individual",
+    yErrorType = NA_character_
+  )
+  dtDataReference <- data.table::data.table(reference = character(0))
+  lines <- getFootNoteLines(dataObserved, dtDataReference)
+  # Function may return NULL or character vector
+  expect_true(is.null(lines) || is.character(lines))
+})
+
+test_that("getFootNoteLines handles single unique reference", {
+  dataObserved <- data.table::data.table(
+    dataClass = "individual",
+    yErrorType = NA_character_
+  )
+  dtDataReference <- data.table::data.table(reference = c("SourceA", "SourceA"))
+  lines <- getFootNoteLines(dataObserved, dtDataReference)
+  expect_true(any(grepl("SourceA", lines, fixed = TRUE)))
+})
+
+test_that("getMapSimulatedAndObserved handles single data type only", {
+  plotDataSingleType <- list(
+    hasObservedData = function() TRUE,
+    data = data.table::data.table(
+      dataType = c("simulated", "simulated"),
+      colorIndex = c("Sim", "Sim")
+    ),
+    scaleVectors = list(colour = c("black"), fill = c("grey"))
+  )
+  result <- getMapSimulatedAndObserved(plotDataSingleType)
+  expect_true(is.data.table(result) || is.null(result))
+})
+
+test_that("getCaptionForPlot handles NA plotCaptionAddon", {
+  plotData <- list(
+    dtCaption = data.table::data.table(
+      timeRangeTag = "all",
+      counter = 1,
+      displayNameOutput = "Concentration",
+      scenarioLongName = "Test Scenario",
+      timeRangeCaption = "",
+      individualId = NA_character_
+    ),
+    timeRangeTagFilter = list(allTimeRanges = 'timeRangeTag == "all"'),
+    configTable = data.table::data.table(plotCaptionAddon = NA_character_)
+  )
+  caption <- getCaptionForPlot(
+    plotData = plotData,
+    yScale = "linear",
+    timeRangeFilter = "allTimeRanges",
+    plotType = "TP",
+    plotCounter = 1
+  )
+  expect_true(is.character(caption))
+  expect_true(nchar(caption) > 0)
+})
+
+test_that("getCaptionForPlot handles empty displayNameOutput", {
+  plotData <- list(
+    dtCaption = data.table::data.table(
+      timeRangeTag = "all",
+      counter = 1,
+      displayNameOutput = "",
+      scenarioLongName = "Scenario",
+      timeRangeCaption = "Total",
+      individualId = "1"
+    ),
+    timeRangeTagFilter = list(allTimeRanges = 'timeRangeTag == "all"'),
+    configTable = data.table::data.table(plotCaptionAddon = "")
+  )
+  caption <- getCaptionForPlot(
+    plotData = plotData,
+    yScale = "linear",
+    timeRangeFilter = "allTimeRanges",
+    plotType = "TP",
+    plotCounter = 1
+  )
+  expect_true(is.character(caption))
+})

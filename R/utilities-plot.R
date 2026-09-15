@@ -166,9 +166,9 @@ initializePlotManager <- function(
   suppressExport
 ) {
   return(QmdPlotManager$new(
-    rmdfolder = file.path(projectConfiguration$outputFolder),
+    qmdName = rmdName,
+    qmdfolder = file.path(projectConfiguration$outputFolder),
     suppressExport = suppressExport,
-    rmdName = rmdName,
     nameOfplotFunction = nameOfplotFunction,
     digitsOfSignificance = digitsOfSignificanceCSVDisplay
   ))

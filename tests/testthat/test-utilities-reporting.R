@@ -11,18 +11,18 @@ test_that("Rendering", {
     "Quarto not available in this environment"
   )
 
-  rmdPlotManager <- QmdPlotManager$new(
-    rmdName = "test",
-    rmdfolder = projectConfiguration$outputFolder,
+  qmdPlotManager <- QmdPlotManager$new(
+    qmdName = "test",
+    qmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "plotTimeProfiles"
   )
 
-  rmdPlotManager$addHeader("Section 1")
+  qmdPlotManager$addHeader("Section 1")
 
   plotObject <- ggplot2::ggplot(data.frame(x = seq(1:3), y = seq(2:4))) +
     ggplot2::geom_point(ggplot2::aes(x = x, y = y))
 
-  rmdPlotManager$addAndExportFigure(
+  qmdPlotManager$addAndExportFigure(
     plotObject = plotObject,
     caption = "My First Figure with footnotes",
     footNoteLines = c("footnote 1", "footnote 2"),
@@ -36,14 +36,14 @@ test_that("Rendering", {
   ) %>%
     .[, as.list(quantile(x)), by = "class"]
 
-  rmdPlotManager$addAndExportTable(
+  qmdPlotManager$addAndExportTable(
     table = dt,
     caption = "my Table",
     tableKey = "myTable"
   )
 
   testPath <- file.path(projectConfiguration$outputFolder, "Test.qmd")
-  rmdPlotManager$writeQmd(basename(testPath))
+  qmdPlotManager$writeQmd(basename(testPath))
 
   renderWord(testPath, quiet = TRUE)
   expect_true(file.exists(file.path(

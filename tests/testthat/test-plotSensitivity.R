@@ -233,3 +233,198 @@ test_that("validateCommonInputs errors on non-numeric variationRange", {
     )
   )
 })
+
+# ---------------------------------------------------------------------------
+# sensitivityAnalysisName — edge cases
+# ---------------------------------------------------------------------------
+
+test_that("sensitivityAnalysisName handles special characters in scenario names", {
+  result <- ospsuite.reportingframework:::sensitivityAnalysisName(
+    "scenario-with-dashes",
+    "sheet_with_underscores"
+  )
+  expect_equal(result, "scenario-with-dashes_sheet_with_underscores.csv")
+})
+
+test_that("sensitivityAnalysisName handles numeric scenario names", {
+  result <- ospsuite.reportingframework:::sensitivityAnalysisName(
+    "123",
+    "456"
+  )
+  expect_equal(result, "123_456.csv")
+})
+
+test_that("sensitivityAnalysisName handles spaces in input", {
+  result <- ospsuite.reportingframework:::sensitivityAnalysisName(
+    "scenario name",
+    "sheet name"
+  )
+  expect_equal(result, "scenario name_sheet name.csv")
+})
+
+test_that("sensitivityAnalysisName handles empty string scenario", {
+  result <- ospsuite.reportingframework:::sensitivityAnalysisName(
+    "",
+    "sheet"
+  )
+  expect_equal(result, "_sheet.csv")
+})
+
+# ---------------------------------------------------------------------------
+# loadSensitivityPKValues — edge cases
+# ---------------------------------------------------------------------------
+
+test_that("loadSensitivityPKValues handles multiple output paths", {
+  tmp <- tempdir()
+  dt <- data.table::rbindlist(list(
+    data.table::data.table(
+      IndividualId = 0:1,
+      QuantityPath = "Plasma",
+      Parameter = "AUC",
+      Value = c(10, 20)
+    ),
+    data.table::data.table(
+      IndividualId = 0:1,
+      QuantityPath = "Liver",
+      Parameter = "AUC",
+      Value = c(5, 10)
+    )
+  ))
+  data.table::fwrite(
+    dt,
+    file.path(tmp, "multi-PKAnalysisResults.csv")
+  )
+  result <- loadSensitivityPKValues(
+    scenarioFiles = c(multi = "dummy"),
+    outputPaths = c("Plasma", "Liver"),
+    pkParameter = "AUC",
+    outFolder = tmp
+  )
+  expect_true(all(c("Plasma", "Liver") %in% result$QuantityPath))
+})
+
+test_that("loadSensitivityPKValues handles different parameters", {
+  tmp <- tempdir()
+  dt <- data.table::rbindlist(list(
+    data.table::data.table(
+      IndividualId = 0:2,
+      QuantityPath = "Plasma",
+      Parameter = "AUC",
+      Value = c(10, 20, 30)
+    ),
+    data.table::data.table(
+      IndividualId = 0:2,
+      QuantityPath = "Plasma",
+      Parameter = "Cmax",
+      Value = c(5, 10, 15)
+    )
+  ))
+  data.table::fwrite(
+    dt,
+    file.path(tmp, "multi_param-PKAnalysisResults.csv")
+  )
+  result <- loadSensitivityPKValues(
+    scenarioFiles = c(multi_param = "dummy"),
+    outputPaths = "Plasma",
+    pkParameter = "AUC",
+    outFolder = tmp
+  )
+  expect_true(all(result$Parameter == "AUC"))
+})
+
+test_that("loadSensitivityPKValues computes correct ratio for multiple individuals", {
+  tmp <- tempdir()
+  writeMockPKCsv(tmp, "base", makePKCsv(values = c(100, 200, 300)))
+  writeMockPKCsv(tmp, "alt", makePKCsv(values = c(150, 300, 450)))
+  result <- loadSensitivityPKValues(
+    scenarioFiles = c(base = "dummy1", alt = "dummy2"),
+    outputPaths = "Plasma",
+    pkParameter = "AUC",
+    outFolder = tmp
+  )
+  expect_equal(result$Value, c(1.5, 1.5, 1.5))
+})
+
+# ---------------------------------------------------------------------------
+# getCaptionForSensitivityPlot — edge cases
+# ---------------------------------------------------------------------------
+
+test_that("getCaptionForSensitivityPlot handles single plot tag", {
+  plotData <- data.table::data.table(
+    outputPathId = "Plasma",
+    pKParameter = "AUC",
+    scenarioLongName = "Adult",
+    displayNameOutput = "Plasma",
+    plotTag = "A"
+  )
+
+  configEnv <- get0("configEnv", envir = .GlobalEnv, inherits = FALSE)
+  mockEnv <- if (is.null(configEnv)) new.env(parent = emptyenv()) else configEnv
+  oldOutputPaths <- mockEnv$outputPaths
+  on.exit(mockEnv$outputPaths <- oldOutputPaths, add = TRUE)
+  mockEnv$outputPaths <- data.table::data.table(
+    outputPathId = "Plasma",
+    displayNameOutput = "Plasma"
+  )
+  assign("configEnv", mockEnv, envir = .GlobalEnv)
+
+  result <- ospsuite.reportingframework:::getCaptionForSensitivityPlot(
+    plotData = plotData,
+    projectConfiguration = NULL,
+    plotCaptionAddon = NA
+  )
+
+  expect_true(nchar(result) > 0)
+  expect_match(result, "Sensitivity")
+})
+
+test_that("getCaptionForSensitivityPlot handles NA plotCaptionAddon", {
+  plotData <- makeSensitivityPlotData()
+
+  configEnv <- get0("configEnv", envir = .GlobalEnv, inherits = FALSE)
+  mockEnv <- if (is.null(configEnv)) new.env(parent = emptyenv()) else configEnv
+  oldOutputPaths <- mockEnv$outputPaths
+  on.exit(mockEnv$outputPaths <- oldOutputPaths, add = TRUE)
+  mockEnv$outputPaths <- data.table::data.table(
+    outputPathId = "Plasma",
+    displayNameOutput = "Plasma concentration"
+  )
+  assign("configEnv", mockEnv, envir = .GlobalEnv)
+
+  result <- ospsuite.reportingframework:::getCaptionForSensitivityPlot(
+    plotData = plotData,
+    projectConfiguration = NULL,
+    plotCaptionAddon = NA
+  )
+
+  expect_false(grepl("NA", result))
+})
+
+# ---------------------------------------------------------------------------
+# Factors generation — additional edge cases
+# ---------------------------------------------------------------------------
+
+test_that("factors vector with numberOfSteps = 1", {
+  r <- 0.1
+  p <- 1 + r * (seq_len(1) / 1)
+  factors <- sort(unique(c(p, 1 / p, 1)))
+
+  expect_true(1 %in% factors)
+  expect_true(length(factors) > 1)
+  expect_true(all(factors > 0))
+})
+
+test_that("factors vector is symmetric around 1", {
+  r <- 0.2
+  steps <- 3L
+  p <- 1 + r * (seq_len(steps) / steps)
+  factors <- sort(unique(c(p, 1 / p, 1)))
+
+  # For each factor > 1, there should be a corresponding factor < 1
+  factors_gt_1 <- factors[factors > 1]
+  factors_lt_1 <- factors[factors < 1]
+
+  for (f in factors_gt_1) {
+    expect_true(any(abs(factors_lt_1 - (1 / f)) < 1e-10))
+  }
+})

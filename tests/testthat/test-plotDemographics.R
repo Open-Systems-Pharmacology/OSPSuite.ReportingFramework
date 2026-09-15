@@ -213,3 +213,128 @@ test_that("setPlotTag creates one tag per output when usePKParameter and range p
   )
   expect_equal(data.table::uniqueN(result$plotTag), 2)
 })
+
+# ---------------------------------------------------------------------------
+# Additional edge case tests
+# ---------------------------------------------------------------------------
+
+test_that("getCaptionForDemographicPlot handles multiple scenarios", {
+  idData <- rbind(
+    makeCaptionData(scenarioLongName = "Adults", plotTag = "A"),
+    makeCaptionData(scenarioLongName = "Children", plotTag = "B")
+  )
+  result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
+    idData = idData,
+    valueLabel = "Weight",
+    binLabel = NULL,
+    valueScale = "linear",
+    plotCaptionAddon = NA
+  )
+  expect_match(result, "Weight")
+  expect_match(result, "linear")
+})
+
+test_that("getCaptionForDemographicPlot handles special characters in labels", {
+  result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
+    idData = makeCaptionData(),
+    valueLabel = "Weight (kg)",
+    binLabel = "Age (years)",
+    valueScale = "log",
+    plotCaptionAddon = NA
+  )
+  expect_match(result, "Weight \\(kg\\)")
+  expect_match(result, "Age \\(years\\)")
+})
+
+test_that("getCaptionForDemographicPlot handles empty plotCaptionAddon", {
+  result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
+    idData = makeCaptionData(),
+    valueLabel = "Weight",
+    binLabel = NULL,
+    valueScale = NULL,
+    plotCaptionAddon = ""
+  )
+  expect_false(grepl("NA", result))
+})
+
+test_that("getFootnoteLinesForRangePlots handles single item with period", {
+  result <- ospsuite.reportingframework:::getFootnoteLinesForRangePlots(
+    "median"
+  )
+  expect_true(grepl("\\.", result))
+  expect_match(result, "median")
+})
+
+test_that("getFootnoteLinesForRangePlots handles multiple items formatting", {
+  result <- ospsuite.reportingframework:::getFootnoteLinesForRangePlots(c(
+    "Min",
+    "Max"
+  ))
+  expect_match(result, "Min and Max")
+  expect_true(grepl("\\.", result))
+})
+
+test_that("getFootnoteLinesForRangePlots handles four items", {
+  result <- ospsuite.reportingframework:::getFootnoteLinesForRangePlots(c(
+    "p1",
+    "p2",
+    "p3",
+    "p4"
+  ))
+  expect_match(result, "p1, p2, p3 and p4")
+})
+
+test_that("getNFacetsForDemographics returns NULL for single facet", {
+  dt <- makeFacetData("A", "scenario1")
+  result <- ospsuite.reportingframework:::getNFacetsForDemographics(
+    dt,
+    isRangePlot = FALSE
+  )
+  expect_null(result)
+})
+
+test_that("getNFacetsForDemographics respects nMaxFacetRows parameter", {
+  dt <- makeFacetData(
+    c("A", "B", "C"),
+    c("s1", "s2", "s3")
+  )
+  result <- ospsuite.reportingframework:::getNFacetsForDemographics(
+    dt,
+    isRangePlot = FALSE,
+    nMaxFacetRows = 1
+  )
+  expect_equal(result, 3)
+})
+
+test_that("setPlotTag preserves all columns in data", {
+  dt <- data.table::data.table(
+    scenario = c("s1", "s1"),
+    value = c(1, 2),
+    group = c("A", "B")
+  )
+  result <- ospsuite.reportingframework:::setPlotTag(
+    dt,
+    asRangePlot = TRUE,
+    usePKParameter = FALSE
+  )
+  expect_true(all(
+    c("scenario", "value", "group", "plotTag") %in% names(result)
+  ))
+})
+
+test_that("setPlotTag generates sequential plot tags", {
+  dt <- data.table::data.table(
+    scenario = c("s1", "s2", "s3", "s4"),
+    value = 1:4
+  )
+  result <- ospsuite.reportingframework:::setPlotTag(
+    dt,
+    asRangePlot = FALSE,
+    usePKParameter = FALSE
+  )
+  tags <- unique(result$plotTag)
+  expect_true(length(tags) <= 4)
+  expect_true(all(
+    tags %in% c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
+  ))
+})
