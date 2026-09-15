@@ -120,7 +120,7 @@ runPlot <- function(
     )
   }
 
-  rmdPlotManager$writeRmd()
+  rmdPlotManager$writeQmd()
   return(invisible(plotList))
 }
 #' Determine if Export Should be Suppressed
@@ -143,18 +143,18 @@ shouldSuppressExport <- function(suppressExport, plotNames, inputs) {
 }
 #' Initialize the Plot Manager
 #'
-#' This helper function creates an instance of the RmdPlotManager for managing Rmd file generation and plot exports.
+#' This helper function creates an instance of the QmdPlotManager for managing Qmd file generation and plot exports.
 #'
 #' @param projectConfiguration A ProjectConfiguration object containing the project configuration settings.
-#' @param rmdName A character string specifying the name of the resulting Rmd and the subfolder where results will be saved.
+#' @param rmdName A character string specifying the name of the resulting Qmd and the subfolder where results will be saved.
 #' @param nameOfplotFunction The name of the plot function as character, indicating which plotting function to use.
-#' @param digitsOfSignificanceCSVDisplay digits Of significance used for the display in the .Rmd for tables, which are exported as .csv
-#' @param suppressExport A logical value indicating whether to suppress the export of the Rmd file.
+#' @param digitsOfSignificanceCSVDisplay digits Of significance used for the display in the .qmd for tables, which are exported as .csv
+#' @param suppressExport A logical value indicating whether to suppress the export of the Qmd file.
 #'
-#' @return An RmdPlotManager object initialized with the specified parameters.
+#' @return A QmdPlotManager object initialized with the specified parameters.
 #'
 #' @details
-#' The `initializePlotManager` function sets up the RmdPlotManager, which is responsible for generating the Rmd files
+#' The `initializePlotManager` function sets up the QmdPlotManager, which is responsible for generating the Qmd files
 #' and managing the export of plots. It takes various parameters to configure the manager according to user needs.
 #'
 #' @keywords internal
@@ -165,7 +165,7 @@ initializePlotManager <- function(
   digitsOfSignificanceCSVDisplay,
   suppressExport
 ) {
-  return(RmdPlotManager$new(
+  return(QmdPlotManager$new(
     rmdfolder = file.path(projectConfiguration$outputFolder),
     suppressExport = suppressExport,
     rmdName = rmdName,
@@ -178,7 +178,7 @@ initializePlotManager <- function(
 #' This helper function processes the plotfunctions where no configuration table is provided,
 #' generating plots based on default settings and exporting them.
 #'
-#' @param rmdPlotManager An RmdPlotManager object responsible for managing Rmd file generation and plot exports.
+#' @param rmdPlotManager A QmdPlotManager object responsible for managing Qmd file generation and plot exports.
 #' @param projectConfiguration A ProjectConfiguration object containing the project configuration settings.
 #' @param inputs A list of additional inputs for the plot function.
 #'
@@ -210,11 +210,11 @@ handleNoConfigTable <- function(
 #'
 #' This helper function processes the configuration table, generating plots according to the specified configurations.
 #'
-#' @param rmdPlotManager An RmdPlotManager object responsible for managing Rmd file generation and plot exports.
+#' @param rmdPlotManager A QmdPlotManager object responsible for managing Qmd file generation and plot exports.
 #' @param configTable A data frame containing the configuration settings for the plots.
 #' @param projectConfiguration A ProjectConfiguration object containing the project configuration settings.
 #' @param inputs A list of additional inputs for the plot function.
-#' @param suppressExport A logical value indicating whether to suppress the export of the Rmd file.
+#' @param suppressExport A logical value indicating whether to suppress the export of the Qmd file.
 #'
 #' @return A named list of generated plot objects.
 #'

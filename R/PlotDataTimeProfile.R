@@ -14,7 +14,7 @@ PlotDataTimeProfile <- R6::R6Class(
     #' @param onePlotConfig plot configuration for one plot
     #' @param dataObserved `data.table` with observed data
     #' @param aggregationFun function to aggregate simulated data
-    #' @returns RmdPlotManager object
+    #' @returns QmdPlotManager object
     initialize = function(
       projectConfiguration = projectConfiguration,
       onePlotConfig = onePlotConfig

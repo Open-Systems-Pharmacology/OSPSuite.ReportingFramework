@@ -11,7 +11,7 @@ test_that("Rendering", {
     "Quarto not available in this environment"
   )
 
-  rmdPlotManager <- RmdPlotManager$new(
+  rmdPlotManager <- QmdPlotManager$new(
     rmdName = "test",
     rmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "plotTimeProfiles"
@@ -43,7 +43,7 @@ test_that("Rendering", {
   )
 
   testPath <- file.path(projectConfiguration$outputFolder, "Test.qmd")
-  rmdPlotManager$writeRmd(basename(testPath))
+  rmdPlotManager$writeQmd(basename(testPath))
 
   renderWord(testPath, quiet = TRUE)
   expect_true(file.exists(file.path(

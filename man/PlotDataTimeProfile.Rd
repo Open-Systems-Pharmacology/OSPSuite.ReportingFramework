@@ -88,7 +88,7 @@ An object to collect plot Data and other information to create a time profile pl
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    RmdPlotManager object
+    QmdPlotManager object
 Load simulated results for the specified project configuration
   }
 }

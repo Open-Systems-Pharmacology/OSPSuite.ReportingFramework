@@ -13,7 +13,7 @@ handleNoConfigTable(
 )
 }
 \arguments{
-\item{rmdPlotManager}{An RmdPlotManager object responsible for managing Rmd file generation and plot exports.}
+\item{rmdPlotManager}{A QmdPlotManager object responsible for managing Qmd file generation and plot exports.}
 
 \item{projectConfiguration}{A ProjectConfiguration object containing the project configuration settings.}
 

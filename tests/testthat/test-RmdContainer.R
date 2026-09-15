@@ -3,44 +3,44 @@ projectConfiguration <- list(outputFolder = tempdir())
 
 test_that("Creation and print of startlines", {
   rmdfolder <- projectConfiguration$outputFolder
-  expect_error(RmdPlotManager$new(
+  expect_error(QmdPlotManager$new(
     rmdName = NULL,
     rmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "plotTimeProfiles"
   ))
 
-  rmdPlotManager <- RmdPlotManager$new(
+  rmdPlotManager <- QmdPlotManager$new(
     rmdName = "test",
     rmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "plotTimeProfiles"
   )
-  expect_s3_class(rmdPlotManager, "RmdPlotManager")
+  expect_s3_class(rmdPlotManager, "QmdPlotManager")
 
   testPath <- file.path(projectConfiguration$outputFolder, "Test.qmd")
-  expect_error(rmdPlotManager$writeRmd(projectConfiguration$outputFolder))
+  expect_error(rmdPlotManager$writeQmd(projectConfiguration$outputFolder))
 
-  rmdPlotManager$writeRmd(basename(testPath))
+  rmdPlotManager$writeQmd(basename(testPath))
   expect_true(file.exists(testPath))
 })
 
 
 test_that("Initialization with invalid parameters", {
-  expect_error(RmdPlotManager$new(
+  expect_error(QmdPlotManager$new(
     rmdName = NULL,
     rmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "plotTimeProfiles"
   ))
-  expect_error(RmdPlotManager$new(
+  expect_error(QmdPlotManager$new(
     rmdName = "test",
     rmdfolder = NULL,
     nameOfplotFunction = "plotTimeProfiles"
   ))
-  expect_error(RmdPlotManager$new(
+  expect_error(QmdPlotManager$new(
     rmdName = "test",
     rmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = 123
   ))
-  expect_error(RmdPlotManager$new(
+  expect_error(QmdPlotManager$new(
     rmdName = "test",
     rmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "nonExistentFunction"
@@ -48,7 +48,7 @@ test_that("Initialization with invalid parameters", {
 })
 
 test_that("Headers, newlines", {
-  rmdPlotManager <- RmdPlotManager$new(
+  rmdPlotManager <- QmdPlotManager$new(
     rmdName = "test",
     rmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "plotTimeProfiles"
@@ -60,7 +60,7 @@ test_that("Headers, newlines", {
   rmdPlotManager$addNewpage()
 
   testPath <- file.path(projectConfiguration$outputFolder, "Test.qmd")
-  rmdPlotManager$writeRmd(basename(testPath))
+  rmdPlotManager$writeQmd(basename(testPath))
 
   tmp <- readLines(testPath)
 
@@ -69,7 +69,7 @@ test_that("Headers, newlines", {
 })
 
 test_that("Figure export", {
-  rmdPlotManager <- RmdPlotManager$new(
+  rmdPlotManager <- QmdPlotManager$new(
     rmdName = "test",
     rmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "plotTimeProfiles"
@@ -125,12 +125,12 @@ test_that("Figure export", {
   }
 
   testPath <- file.path(projectConfiguration$outputFolder, "Test.qmd")
-  expect_no_error(rmdPlotManager$writeRmd(basename(testPath)))
+  expect_no_error(rmdPlotManager$writeQmd(basename(testPath)))
 })
 
 
 test_that("Table export export", {
-  rmdPlotManager <- RmdPlotManager$new(
+  rmdPlotManager <- QmdPlotManager$new(
     rmdName = "test",
     rmdfolder = projectConfiguration$outputFolder,
     nameOfplotFunction = "plotTimeProfiles"
@@ -177,5 +177,5 @@ test_that("Table export export", {
   )
 
   testPath <- file.path(projectConfiguration$outputFolder, "Test.qmd")
-  expect_no_error(rmdPlotManager$writeRmd(basename(testPath)))
+  expect_no_error(rmdPlotManager$writeQmd(basename(testPath)))
 })

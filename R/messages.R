@@ -358,23 +358,23 @@ messages$errorprojectconfigurationL1XX <- function(env = parent.frame()) {
   eval(quote("Aborted by user."), envir = env)
 }
 
-messages$errorRmdPlotManagerL1 <- function(env = parent.frame()) {
+messages$errorQmdPlotManagerL1 <- function(env = parent.frame()) {
   eval(
     quote(
-      "Please provide a valid name for the .Rmd file and its subfolder."
+      "Please provide a valid name for the .qmd file and its subfolder."
     ),
     envir = env
   )
 }
 
-messages$errorRmdPlotManagerL1X <- function(env = parent.frame()) {
+messages$errorQmdPlotManagerL1X <- function(env = parent.frame()) {
   eval(
     quote(paste("Function", nameOfplotFunction, "does not exist")),
     envir = env
   )
 }
 
-messages$errorRmdPlotManagerL1XX <- function(env = parent.frame()) {
+messages$errorQmdPlotManagerL1XX <- function(env = parent.frame()) {
   eval(
     quote(
       "Please insert fileName as basename, File will be saved in folder defined by class object"
@@ -383,7 +383,7 @@ messages$errorRmdPlotManagerL1XX <- function(env = parent.frame()) {
   )
 }
 
-messages$errorRmdPlotManagerL3 <- function(env = parent.frame()) {
+messages$errorQmdPlotManagerL3 <- function(env = parent.frame()) {
   eval(
     quote(paste0(
       'key "',
@@ -394,11 +394,11 @@ messages$errorRmdPlotManagerL3 <- function(env = parent.frame()) {
   )
 }
 
-messages$warningRmdPlotManagerL2 <- function(env = parent.frame()) {
+messages$warningQmdPlotManagerL2 <- function(env = parent.frame()) {
   eval(quote(paste("Caption is missing for key", caption)), envir = env)
 }
 
-messages$infoRmdPlotManagerL1 <- function(env = parent.frame()) {
+messages$infoQmdPlotManagerL1 <- function(env = parent.frame()) {
   eval(
     quote("No specific plotconfiguration validation function available."),
     envir = env

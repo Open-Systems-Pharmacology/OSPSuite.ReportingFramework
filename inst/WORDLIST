@@ -43,7 +43,7 @@ ReadPopulationFromCSV
 ReportingFramework
 RequiredPrecisison
 Rmd
-RmdPlotManager
+QmdPlotManager
 Rprofile
 ScenarioConfiguration
 SensitivityAnalysisRunOptions

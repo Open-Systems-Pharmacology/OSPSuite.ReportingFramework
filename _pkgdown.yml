@@ -69,7 +69,7 @@ reference:
       - has_concept("plot configuration validation function")
   - title: "Report generation"
     contents:
-      - matches("mergeRmds")
+      - matches("mergeQmds")
       - matches("renderWord")
       - matches("runPlot")
       - matches("setExportAttributes")

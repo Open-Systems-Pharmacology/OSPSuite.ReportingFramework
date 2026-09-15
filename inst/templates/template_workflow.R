@@ -145,7 +145,7 @@ runPlot(
 # 6) Create Report Document --------------------------------------------------
 # (see vignette(package = 'ospsuite.reportingframework', topic = 'Plot_and_Report_Generation'))
 # Adjust the input variables as necessary
-mergeRmds(
+mergeQmds(
   projectConfiguration = projectConfiguration,
   newName = "appendix",
   title = "Appendix",

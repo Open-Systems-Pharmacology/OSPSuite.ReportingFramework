@@ -14,7 +14,7 @@ handleConfigTable(
 )
 }
 \arguments{
-\item{rmdPlotManager}{An RmdPlotManager object responsible for managing Rmd file generation and plot exports.}
+\item{rmdPlotManager}{A QmdPlotManager object responsible for managing Qmd file generation and plot exports.}
 
 \item{configTable}{A data frame containing the configuration settings for the plots.}
 
@@ -22,7 +22,7 @@ handleConfigTable(
 
 \item{inputs}{A list of additional inputs for the plot function.}
 
-\item{suppressExport}{A logical value indicating whether to suppress the export of the Rmd file.}
+\item{suppressExport}{A logical value indicating whether to suppress the export of the Qmd file.}
 }
 \value{
 A named list of generated plot objects.

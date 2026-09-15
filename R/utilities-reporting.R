@@ -18,22 +18,27 @@
 #'   customStyles = list(FigureFootnote = "myFootnoteFormat", TableFootnote = "myFootnoteFormat")
 #' )
 #' }
-renderWord <- function(fileName,
-                       wordConversionTemplate = NULL,
-                       customStyles = list(
-                         FigureCaption = NULL,
-                         FigureFootnote = NULL,
-                         TableCaption = NULL,
-                         TableFootnote = NULL
-                       ),
-                       ...) {
+renderWord <- function(
+  fileName,
+  wordConversionTemplate = NULL,
+  customStyles = list(
+    FigureCaption = NULL,
+    FigureFootnote = NULL,
+    TableCaption = NULL,
+    TableFootnote = NULL
+  ),
+  ...
+) {
   checkmate::assertFileExists(fileName, extension = ".qmd")
   checkmate::assertList(customStyles)
   if (length(customStyles) > 0) {
-    checkmate::assertNames(names(customStyles),
+    checkmate::assertNames(
+      names(customStyles),
       subset.of = c(
-        "FigureCaption", "FigureFootnote",
-        "TableCaption", "TableFootnote"
+        "FigureCaption",
+        "FigureFootnote",
+        "TableCaption",
+        "TableFootnote"
       )
     )
     nonNullStyles <- Filter(Negate(is.null), customStyles)
@@ -49,7 +54,11 @@ renderWord <- function(fileName,
   }
   if (is.null(wordConversionTemplate)) {
     wordConversionTemplate <-
-      system.file("extdata", "reference.docx", package = "ospsuite.reportingframework")
+      system.file(
+        "extdata",
+        "reference.docx",
+        package = "ospsuite.reportingframework"
+      )
   }
   checkmate::assertFileExists(wordConversionTemplate)
 

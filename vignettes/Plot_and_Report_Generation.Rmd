@@ -161,10 +161,10 @@ The `runPlot` function provides `projectConfiguration`, `onePlotConfig`, and all
 
 # Report Generation
 
-The first step of the report generation is typically handled by the `mergeRmds` function, which combines multiple `.Rmd` files into a single report document. This allows users to compile results from different plot functions into one cohesive document.
+The first step of the report generation is typically handled by the `mergeQmds` function, which combines multiple `.qmd` files into a single report document. This allows users to compile results from different plot functions into one cohesive document.
 
-```{r mergeRmds,echo=TRUE,eval=FALSE}
-mergeRmds(
+```{r mergeQmds,echo=TRUE,eval=FALSE}
+mergeQmds(
   projectConfiguration = projectConfiguration,
   newName = "appendix",
   title = "Appendix",

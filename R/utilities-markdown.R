@@ -367,10 +367,11 @@ startQmd <- function(title = "Report") {
     "format: docx",
     "params:",
     "  customStyles:",
-    "    FigureCaption: ~",
-    "    FigureFootnote: ~",
-    "    TableCaption: ~",
-    "    TableFootnote: ~",
+    "    value:",
+    "      FigureCaption: null",
+    "      FigureFootnote: null",
+    "      TableCaption: null",
+    "      TableFootnote: null",
     "---",
     " ",
     "```{r}",
@@ -389,7 +390,7 @@ startQmd <- function(title = "Report") {
 #' @param projectConfiguration ProjectConfiguration object.
 #' @export
 #' @family functions called by workflow script
-mergeRmds <- function(
+mergeQmds <- function(
   newName = "appendix",
   title = "Appendix",
   sourceRmds = c(

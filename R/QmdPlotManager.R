@@ -1,59 +1,65 @@
-#' @title RmdPlotManager
+#' @title QmdPlotManager
 #' @docType class
-#' @description Manages the creation and writing of .Rmd files for plots.
+#' @description Manages the creation and writing of .qmd files for plots.
 #' @keywords internal
-RmdPlotManager <- R6::R6Class(
+QmdPlotManager <- R6::R6Class(
   # nolint
-  "RmdPlotManager",
+  "QmdPlotManager",
   inherit = ospsuite.utils::Printable,
   cloneable = TRUE,
   # public ----
   public = list(
     #' @description
     #' Initialize a new instance of the class.
-    #' @param rmdfolder Folder where the .Rmd file should be saved.
-    #' @param rmdName A character string for the name of the .Rmd file (without extension).
+    #' @param qmdfolder Folder where the .qmd file should be saved.
+    #' @param qmdName A character string for the name of the .qmd file (without extension).
     #' @param suppressExport A logical value indicating whether to suppress export. Default is FALSE.
     #' @param nameOfplotFunction The name of the plot-function as character.
     #' @param digitsOfSignificance Number of significant digits to display in tables.
     #'     #'
-    #' @return An instance of the RmdPlotManager object.
+    #' @return An instance of the QmdPlotManager object.
     initialize = function(
-      rmdfolder,
-      rmdName,
+      qmdfolder,
+      qmdName,
       nameOfplotFunction,
       suppressExport = FALSE,
       digitsOfSignificance = 3
     ) {
-      private$.rmdfolder <- rmdfolder
+      private$.qmdfolder <- qmdfolder
       self$suppressExport <- suppressExport
       self$validateConfigTableFunction <- validateConfigTableForPlots
       self$digitsOfSignificance <- digitsOfSignificance
 
       if (!suppressExport) {
-        if (is.null(rmdName)) {
-          stop(messages$errorRmdPlotManagerL1())
+        if (is.null(qmdName)) {
+          stop(messages$errorQmdPlotManagerL1())
         }
-        tools::file_path_sans_ext(rmdName)
+        tools::file_path_sans_ext(qmdName)
 
-        private$.rmdName <- rmdName
+        private$.qmdName <- qmdName
 
         checkmate::assert_path_for_output(
-          file.path(private$.rmdfolder, private$.rmdName),
+          file.path(private$.qmdfolder, private$.qmdName),
           overwrite = TRUE
         )
 
-        if (!dir.exists(file.path(private$.rmdfolder, private$.rmdName))) {
+        if (!dir.exists(file.path(private$.qmdfolder, private$.qmdName))) {
           dir.create(
-            file.path(private$.rmdfolder, private$.rmdName),
+            file.path(private$.qmdfolder, private$.qmdName),
             recursive = TRUE
           )
         }
       }
 
       checkmate::assertCharacter(nameOfplotFunction)
-      if (!exists(nameOfplotFunction, where = globalenv(), mode = "function")) {
-        stop(messages$errorRmdPlotManagerL1X())
+      if (
+        !exists(
+          nameOfplotFunction,
+          where = globalenv(),
+          mode = "function"
+        )
+      ) {
+        stop(messages$errorQmdPlotManagerL1X())
       }
       self$plotFunction <- get(nameOfplotFunction)
 
@@ -65,31 +71,37 @@ RmdPlotManager <- R6::R6Class(
 
       # Check if the validation function exists
       if (
-        exists(nameOfValidationFunction, where = globalenv(), mode = "function")
+        exists(
+          nameOfValidationFunction,
+          where = globalenv(),
+          mode = "function"
+        )
       ) {
-        self$validateConfigTableFunction <- get(nameOfValidationFunction)
+        self$validateConfigTableFunction <- get(
+          nameOfValidationFunction
+        )
       } else {
         # otherwise use default function
-        message(messages$infoRmdPlotManagerL1())
+        message(messages$infoQmdPlotManagerL1())
         self$validateConfigTableFunction <- validateConfigTableForPlots
       }
 
-      # add start of rmd
-      private$.rmdLines <- private$.startRMD(rmdfolder)
+      # add start of qmd
+      private$.qmdLines <- private$.startQmd(qmdfolder)
 
       return(self)
     },
     #' @description
-    #' Write the .Rmd file.
-    #' @param fileName Name of the .Rmd file. If NULL, the file name will default to the subfolder name.
-    #' @return NULL. This function writes the .Rmd file to the specified location and returns nothing.
-    writeRmd = function(fileName = NULL) {
+    #' Write the .qmd file.
+    #' @param fileName Name of the .qmd file. If NULL, the file name will default to the subfolder name.
+    #' @return NULL. This function writes the .qmd file to the specified location and returns nothing.
+    writeQmd = function(fileName = NULL) {
       if (private$.suppressExport) {
         return(invisible())
       }
 
       if (is.null(fileName)) {
-        fileName <- paste0(private$.rmdName, ".qmd")
+        fileName <- paste0(private$.qmdName, ".qmd")
       }
 
       checkmate::assertPathForOutput(
@@ -98,13 +110,13 @@ RmdPlotManager <- R6::R6Class(
         overwrite = TRUE
       )
       if (basename(fileName) != fileName) {
-        stop(messages$errorRmdPlotManagerL1XX())
+        stop(messages$errorQmdPlotManagerL1XX())
       }
 
       private$.closeFigureKeys()
       writeLines(
-        text = private$.rmdLines,
-        con = file.path(private$.rmdfolder, fileName),
+        text = private$.qmdLines,
+        con = file.path(private$.qmdfolder, fileName),
         sep = "\n"
       )
 
@@ -115,7 +127,7 @@ RmdPlotManager <- R6::R6Class(
     #' @param ... Arguments passed to `mdPaste`.
     #' @param level The header level, i.e., the number of `#`s. Defaults to 1.
     #' @param newlines The number of newlines inserted after the heading. Defaults to 2.
-    #' @return NULL. The function modifies the internal Rmd lines.
+    #' @return NULL. The function modifies the internal qmd lines.
     addHeader = function(..., level = 1, newlines = 2) {
       private$.appendStructural(utils::capture.output(mdHeading(
         ...,
@@ -126,13 +138,13 @@ RmdPlotManager <- R6::R6Class(
     #' @description
     #' Insert line endings and start a new line.
     #' @param n Number of new lines. Defaults to 1.
-    #' @return NULL. The function modifies the internal Rmd lines.
+    #' @return NULL. The function modifies the internal qmd lines.
     addNewline = function(n = 1) {
       private$.appendStructural(utils::capture.output(mdNewline(n = n)))
     },
     #' @description
     #' Insert a page break and a newline.
-    #' @return NULL. The function modifies the internal Rmd lines.
+    #' @return NULL. The function modifies the internal qmd lines.
     addNewpage = function() {
       private$.appendStructural(utils::capture.output(mdNewpage()))
     },
@@ -148,7 +160,7 @@ RmdPlotManager <- R6::R6Class(
         obj <- plotList[[key]]
         caption <- attr(obj, "caption")
         if (is.null(caption)) {
-          warning(messages$warningRmdPlotManagerL2())
+          warning(messages$warningQmdPlotManagerL2())
           caption <- "Missing"
         }
 
@@ -200,7 +212,10 @@ RmdPlotManager <- R6::R6Class(
         args = c(
           list(
             plotObject = plotObject,
-            filepath = file.path(private$.rmdfolder, private$.rmdName),
+            filepath = file.path(
+              private$.qmdfolder,
+              private$.qmdName
+            ),
             filename = figureKey
           ),
           exportArguments
@@ -244,8 +259,8 @@ RmdPlotManager <- R6::R6Class(
       utils::write.csv(
         x = table,
         file = file.path(
-          private$.rmdfolder,
-          private$.rmdName,
+          private$.qmdfolder,
+          private$.qmdName,
           paste0(gsub("[<>:\"/\\\\|?*]", "_", tableKey), ".csv")
         ),
         na = "",
@@ -275,7 +290,11 @@ RmdPlotManager <- R6::R6Class(
       if (missing(value)) {
         value <- private$.digitsOfSignificance
       } else {
-        checkmate::assertInt(value, lower = 1, .var.name = digitsOfSignificance)
+        checkmate::assertInt(
+          value,
+          lower = 1,
+          .var.name = digitsOfSignificance
+        )
         if (private$.digitsOfSignificance != value) {
           private$.closeFigureKeys()
         }
@@ -321,12 +340,12 @@ RmdPlotManager <- R6::R6Class(
   ),
   # private ----
   private = list(
-    # the final rmds in lines
-    .rmdLines = c(),
-    # folder where .Rmd is saved
-    .rmdfolder = NULL,
-    # subfolder of rmdfolder where figures are saved
-    .rmdName = NULL,
+    # the final qmds in lines
+    .qmdLines = c(),
+    # folder where .qmd is saved
+    .qmdfolder = NULL,
+    # subfolder of qmdfolder where figures are saved
+    .qmdName = NULL,
     # digits for table display
     .digitsOfSignificance = 3,
     # boolean to tell, if last entry was a Key
@@ -345,8 +364,8 @@ RmdPlotManager <- R6::R6Class(
     .plotFunction = NULL,
     # function to readConfigtable
     .validateConfigTableFunction = NULL,
-    # function to initialize rmdLines
-    .startRMD = function(rmdfolder) {
+    # function to initialize qmdLines
+    .startQmd = function(qmdfolder) {
       return(startQmd())
     },
     # switches keyCollectionIsOpen to FALSE, and call functions for figure settings
@@ -363,15 +382,18 @@ RmdPlotManager <- R6::R6Class(
       for (key in names(private$.listOfKeys)) {
         type <- private$.listOfKeys[[key]]
         captionPath <- file.path(
-          private$.rmdfolder,
-          private$.rmdName,
+          private$.qmdfolder,
+          private$.qmdName,
           paste0(key, ".caption")
         )
         caption <- if (file.exists(captionPath)) {
           gsub(
             '"',
             '\\\\"',
-            paste(readLines(captionPath, warn = FALSE), collapse = " ")
+            paste(
+              readLines(captionPath, warn = FALSE),
+              collapse = " "
+            )
           )
         } else {
           ""
@@ -386,7 +408,7 @@ RmdPlotManager <- R6::R6Class(
             paste0('#| fig-cap: "', caption, '"'),
             paste0(
               'knitr::include_graphics("',
-              private$.rmdName,
+              private$.qmdName,
               "/",
               key,
               ".",
@@ -397,8 +419,8 @@ RmdPlotManager <- R6::R6Class(
             "```{r}",
             "#| output: asis",
             paste0(
-              'mdFootNote(subfolder = "',
-              private$.rmdName,
+              'ospsuite.reportingframework::mdFootNote(subfolder = "',
+              private$.qmdName,
               '", footNoteFile = "',
               key,
               '.footnote", footNoteCustomStyle = params$customStyles$FigureFootnote)'
@@ -415,7 +437,7 @@ RmdPlotManager <- R6::R6Class(
             paste0('#| tbl-cap: "', caption, '"'),
             paste0(
               'dt <- data.table::fread("',
-              private$.rmdName,
+              private$.qmdName,
               "/",
               key,
               '.csv")'
@@ -431,8 +453,8 @@ RmdPlotManager <- R6::R6Class(
             "```{r}",
             "#| output: asis",
             paste0(
-              'mdFootNote(subfolder = "',
-              private$.rmdName,
+              'ospsuite.reportingframework::mdFootNote(subfolder = "',
+              private$.qmdName,
               '", footNoteFile = "',
               key,
               '.footnote", footNoteCustomStyle = params$customStyles$TableFootnote)'
@@ -444,7 +466,7 @@ RmdPlotManager <- R6::R6Class(
         }
       }
 
-      private$.rmdLines <- append(private$.rmdLines, chunks)
+      private$.qmdLines <- append(private$.qmdLines, chunks)
       private$.keyCollectionIsOpen <- FALSE
       private$.listOfKeys <- c()
 
@@ -453,7 +475,7 @@ RmdPlotManager <- R6::R6Class(
     # ensures .closeFigureKeys invariant is maintained for all structural append operations
     .appendStructural = function(lines) {
       private$.closeFigureKeys()
-      private$.rmdLines <- append(private$.rmdLines, lines)
+      private$.qmdLines <- append(private$.qmdLines, lines)
     },
     # writes caption and footnotes
     .exportLines = function(textLines, key, extension) {
@@ -463,8 +485,8 @@ RmdPlotManager <- R6::R6Class(
       writeLines(
         text = textLines,
         con = file.path(
-          private$.rmdfolder,
-          private$.rmdName,
+          private$.qmdfolder,
+          private$.qmdName,
           paste0(key, extension)
         )
       )
@@ -474,13 +496,16 @@ RmdPlotManager <- R6::R6Class(
     # add key to lists
     .addKeyToList = function(key, type) {
       private$.keyCollectionIsOpen <- TRUE
-      private$.listOfKeys <- c(private$.listOfKeys, stats::setNames(type, key))
+      private$.listOfKeys <- c(
+        private$.listOfKeys,
+        stats::setNames(type, key)
+      )
       private$.listOfALLKeys <- c(private$.listOfALLKeys, key)
     },
     # only export if key is unique
     .checkKeyIsUnique = function(key) {
       if (key %in% private$.listOfALLKeys) {
-        stop(messages$errorRmdPlotManagerL3())
+        stop(messages$errorQmdPlotManagerL3())
       }
     },
     # adjust height if necessary
