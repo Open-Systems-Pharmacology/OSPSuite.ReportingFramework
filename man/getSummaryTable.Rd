@@ -12,8 +12,6 @@ getSummaryTable(plotDataPk, onePlotConfig, percentiles)
 \item{onePlotConfig}{Configuration for a single plot.}
 
 \item{percentiles}{A vector of percentiles to calculate.}
-
-\item{asRatio}{boolean indicating if the plot is for ratios.}
 }
 \value{
 A data.table summarizing the plot data.

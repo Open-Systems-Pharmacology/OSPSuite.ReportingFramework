@@ -12,87 +12,87 @@
 #' @export
 #' @family project initialization
 exportWorkflowContext <- function(
-    projectConfiguration,
-    file = "workflow-context.json",
-    includeNumericValues = TRUE
+  projectConfiguration,
+  file = "workflow-context.json",
+  includeNumericValues = TRUE
 ) {
-    checkmate::assertFlag(includeNumericValues)
+  checkmate::assertFlag(includeNumericValues)
 
-    dataImporterConfigurationFile <- projectConfiguration$dataImporterConfigurationFile
-    scenariosFile <- projectConfiguration$scenariosFile
-    reportsFile <- projectConfiguration$addOns$reportsFile
+  dataImporterConfigurationFile <- projectConfiguration$dataImporterConfigurationFile
+  scenariosFile <- projectConfiguration$scenariosFile
+  reportsFile <- projectConfiguration$addOns$reportsFile
 
-    checkmate::assertFileExists(dataImporterConfigurationFile)
-    checkmate::assertFileExists(scenariosFile)
-    checkmate::assertFileExists(reportsFile)
+  checkmate::assertFileExists(dataImporterConfigurationFile)
+  checkmate::assertFileExists(scenariosFile)
+  checkmate::assertFileExists(reportsFile)
 
-    dataImportWb <- openxlsx::loadWorkbook(dataImporterConfigurationFile)
-    dataFiles <- xlsxReadData(
-        wb = dataImportWb,
-        sheetName = "DataFiles",
-        skipDescriptionRow = TRUE
+  dataImportWb <- openxlsx::loadWorkbook(dataImporterConfigurationFile)
+  dataFiles <- xlsxReadData(
+    wb = dataImportWb,
+    sheetName = "DataFiles",
+    skipDescriptionRow = TRUE
+  )
+
+  context <- list(
+    generatedAt = as.character(Sys.time()),
+    packageVersion = as.character(utils::packageVersion(
+      "ospsuite.reportingframework"
+    )),
+    configurationFiles = list(
+      dataImporterConfigurationFile = dataImporterConfigurationFile,
+      scenariosFile = scenariosFile,
+      reportsFile = reportsFile
+    ),
+    dataClassValues = unname(unlist(DATACLASS)),
+    dataFiles = list(
+      fileIdentifiers = unique(dataFiles$fileIdentifier),
+      dataClasses = unique(dataFiles$dataClass),
+      dictionaries = unique(stats::na.omit(dataFiles$dictionary))
+    )
+  )
+
+  context$outputPathIds <- .safeUniqueValues(
+    getOutputPathIds(reportsFile),
+    "outputPathId"
+  )
+  context$dataGroups <- .safeUniqueValues(getDataGroups(reportsFile), "group")
+  context$scenarioNames <- .safeUniqueValues(
+    getScenarioDefinitions(
+      wbScenarios = scenariosFile,
+      wbPlots = reportsFile
+    ),
+    "scenarioName"
+  )
+
+  if (includeNumericValues) {
+    numericValues <- tryCatch(
+      readObservedDataByDictionary(
+        projectConfiguration = projectConfiguration,
+        spreadData = FALSE,
+        dataClassType = "numericValues"
+      ),
+      error = function(err) {
+        return(NULL)
+      }
     )
 
-    context <- list(
-        generatedAt = as.character(Sys.time()),
-        packageVersion = as.character(utils::packageVersion(
-            "ospsuite.reportingframework"
-        )),
-        configurationFiles = list(
-            dataImporterConfigurationFile = dataImporterConfigurationFile,
-            scenariosFile = scenariosFile,
-            reportsFile = reportsFile
-        ),
-        dataClassValues = unname(unlist(DATACLASS)),
-        dataFiles = list(
-            fileIdentifiers = unique(dataFiles$fileIdentifier),
-            dataClasses = unique(dataFiles$dataClass),
-            dictionaries = unique(stats::na.omit(dataFiles$dictionary))
-        )
-    )
-
-    context$outputPathIds <- .safeUniqueValues(
-        getOutputPathIds(reportsFile),
-        "outputPathId"
-    )
-    context$dataGroups <- .safeUniqueValues(getDataGroups(reportsFile), "group")
-    context$scenarioNames <- .safeUniqueValues(
-        getScenarioDefinitions(
-            wbScenarios = scenariosFile,
-            wbPlots = reportsFile
-        ),
-        "scenarioName"
-    )
-
-    if (includeNumericValues) {
-        numericValues <- tryCatch(
-            readObservedDataByDictionary(
-                projectConfiguration = projectConfiguration,
-                spreadData = FALSE,
-                dataClassType = "numericValues"
-            ),
-            error = function(err) {
-                return(NULL)
-            }
-        )
-
-        if (!is.null(numericValues)) {
-            context$numericValues <- numericValues
-        }
+    if (!is.null(numericValues)) {
+      context$numericValues <- numericValues
     }
+  }
 
-    if (!is.null(file)) {
-        checkmate::assertString(file, min.chars = 1)
-        jsonData <- jsonlite::toJSON(
-            context,
-            pretty = TRUE,
-            auto_unbox = TRUE,
-            digits = NA
-        )
-        writeLines(jsonData, file)
-    }
+  if (!is.null(file)) {
+    checkmate::assertString(file, min.chars = 1)
+    jsonData <- jsonlite::toJSON(
+      context,
+      pretty = TRUE,
+      auto_unbox = TRUE,
+      digits = NA
+    )
+    writeLines(jsonData, file)
+  }
 
-    return(context)
+  return(context)
 }
 
 #' Create an AI-ready workflow prompt
@@ -109,105 +109,105 @@ exportWorkflowContext <- function(
 #' @export
 #' @family project initialization
 createAIWorkflowPrompt <- function(
-    projectConfiguration,
-    task = "create-workflow",
-    includeExamples = TRUE,
-    maxItemsPerSection = 30
+  projectConfiguration,
+  task = "create-workflow",
+  includeExamples = TRUE,
+  maxItemsPerSection = 30
 ) {
-    checkmate::assertString(task, min.chars = 1)
-    checkmate::assertFlag(includeExamples)
-    checkmate::assertCount(maxItemsPerSection, positive = TRUE)
+  checkmate::assertString(task, min.chars = 1)
+  checkmate::assertFlag(includeExamples)
+  checkmate::assertCount(maxItemsPerSection, positive = TRUE)
 
-    context <- exportWorkflowContext(
-        projectConfiguration = projectConfiguration,
-        file = NULL,
-        includeNumericValues = TRUE
-    )
+  context <- exportWorkflowContext(
+    projectConfiguration = projectConfiguration,
+    file = NULL,
+    includeNumericValues = TRUE
+  )
 
-    outputPathIds <- .truncateValues(context$outputPathIds, maxItemsPerSection)
-    dataGroups <- .truncateValues(context$dataGroups, maxItemsPerSection)
-    scenarioNames <- .truncateValues(context$scenarioNames, maxItemsPerSection)
-    fileIdentifiers <- .truncateValues(
-        context$dataFiles$fileIdentifiers,
-        maxItemsPerSection
-    )
+  outputPathIds <- .truncateValues(context$outputPathIds, maxItemsPerSection)
+  dataGroups <- .truncateValues(context$dataGroups, maxItemsPerSection)
+  scenarioNames <- .truncateValues(context$scenarioNames, maxItemsPerSection)
+  fileIdentifiers <- .truncateValues(
+    context$dataFiles$fileIdentifiers,
+    maxItemsPerSection
+  )
+
+  lines <- c(
+    "You are assisting with an OSPSuite ReportingFramework workflow.",
+    "",
+    paste("Task:", task),
+    "",
+    "Project context:",
+    paste(
+      "- Data importer configuration:",
+      context$configurationFiles$dataImporterConfigurationFile
+    ),
+    paste(
+      "- Scenarios workbook:",
+      context$configurationFiles$scenariosFile
+    ),
+    paste("- Reports workbook:", context$configurationFiles$reportsFile),
+    "",
+    "Available file identifiers:",
+    .toBulletLines(fileIdentifiers),
+    "",
+    "Available scenarios:",
+    .toBulletLines(scenarioNames),
+    "",
+    "Available outputPathIds:",
+    .toBulletLines(outputPathIds),
+    "",
+    "Available data groups:",
+    .toBulletLines(dataGroups),
+    "",
+    "Allowed DataClass values:",
+    .toBulletLines(context$dataClassValues),
+    "",
+    "Requirements:",
+    "- Do not hard code numerical datasets in scripts.",
+    "- Prefer values imported from configuration workbooks and dictionaries.",
+    "- Keep workflow reproducible and validate units before use."
+  )
+
+  if (!is.null(context$numericValues)) {
+    numericPreview <- context$numericValues[,
+      c("variableName", "value", "unit"),
+      with = FALSE
+    ]
+    numericPreview <- utils::head(numericPreview, maxItemsPerSection)
 
     lines <- c(
-        "You are assisting with an OSPSuite ReportingFramework workflow.",
-        "",
-        paste("Task:", task),
-        "",
-        "Project context:",
+      lines,
+      "",
+      "Available numeric values:",
+      .toBulletLines(apply(numericPreview, 1, function(row) {
         paste(
-            "- Data importer configuration:",
-            context$configurationFiles$dataImporterConfigurationFile
-        ),
-        paste(
-            "- Scenarios workbook:",
-            context$configurationFiles$scenariosFile
-        ),
-        paste("- Reports workbook:", context$configurationFiles$reportsFile),
-        "",
-        "Available file identifiers:",
-        .toBulletLines(fileIdentifiers),
-        "",
-        "Available scenarios:",
-        .toBulletLines(scenarioNames),
-        "",
-        "Available outputPathIds:",
-        .toBulletLines(outputPathIds),
-        "",
-        "Available data groups:",
-        .toBulletLines(dataGroups),
-        "",
-        "Allowed DataClass values:",
-        .toBulletLines(context$dataClassValues),
-        "",
-        "Requirements:",
-        "- Do not hard code numerical datasets in scripts.",
-        "- Prefer values imported from configuration workbooks and dictionaries.",
-        "- Keep workflow reproducible and validate units before use."
+          row[[1]],
+          "=",
+          row[[2]],
+          ifelse(
+            is.na(row[[3]]) || row[[3]] == "",
+            "",
+            paste0(" ", row[[3]])
+          )
+        )
+      }))
     )
+  }
 
-    if (!is.null(context$numericValues)) {
-        numericPreview <- context$numericValues[,
-            c("variableName", "value", "unit"),
-            with = FALSE
-        ]
-        numericPreview <- head(numericPreview, maxItemsPerSection)
+  if (includeExamples) {
+    lines <- c(
+      lines,
+      "",
+      "Example commands:",
+      "- dataObserved <- readObservedDataByDictionary(projectConfiguration, dataClassType = \"timeprofile\")",
+      "- dataObservedPK <- readObservedDataByDictionary(projectConfiguration, dataClassType = \"pkParameter\")",
+      "- numericValues <- readObservedDataByDictionary(projectConfiguration, dataClassType = \"numericValues\")",
+      "- dose <- getNumericValue(numericValues, \"Dose\", expectedUnit = \"mg\")"
+    )
+  }
 
-        lines <- c(
-            lines,
-            "",
-            "Available numeric values:",
-            .toBulletLines(apply(numericPreview, 1, function(row) {
-                paste(
-                    row[[1]],
-                    "=",
-                    row[[2]],
-                    ifelse(
-                        is.na(row[[3]]) || row[[3]] == "",
-                        "",
-                        paste0(" ", row[[3]])
-                    )
-                )
-            }))
-        )
-    }
-
-    if (includeExamples) {
-        lines <- c(
-            lines,
-            "",
-            "Example commands:",
-            "- dataObserved <- readObservedDataByDictionary(projectConfiguration, dataClassType = \"timeprofile\")",
-            "- dataObservedPK <- readObservedDataByDictionary(projectConfiguration, dataClassType = \"pkParameter\")",
-            "- numericValues <- readObservedDataByDictionary(projectConfiguration, dataClassType = \"numericValues\")",
-            "- dose <- getNumericValue(numericValues, \"Dose\", expectedUnit = \"mg\")"
-        )
-    }
-
-    return(paste(lines, collapse = "\n"))
+  return(paste(lines, collapse = "\n"))
 }
 
 #' Create an AI workflow prompt from a predefined task
@@ -225,35 +225,35 @@ createAIWorkflowPrompt <- function(
 #' @export
 #' @family project initialization
 createAIPromptFromTask <- function(
-    projectConfiguration,
-    task = c("create-workflow", "import-data", "build-plots", "debug-run"),
-    includeExamples = TRUE,
-    maxItemsPerSection = 30
+  projectConfiguration,
+  task = c("create-workflow", "import-data", "build-plots", "debug-run"),
+  includeExamples = TRUE,
+  maxItemsPerSection = 30
 ) {
-    task <- match.arg(task)
+  task <- match.arg(task)
 
-    taskInstruction <- switch(
-        task,
-        "create-workflow" = "Create or refine a complete reproducible RF workflow script.",
-        "import-data" = "Focus on data import setup, dictionaries, and numeric values definitions.",
-        "build-plots" = "Focus on selecting outputs and generating plot configuration and plot calls.",
-        "debug-run" = "Focus on troubleshooting workflow execution, missing sheets, and data mismatches."
-    )
+  taskInstruction <- switch(
+    task,
+    "create-workflow" = "Create or refine a complete reproducible RF workflow script.",
+    "import-data" = "Focus on data import setup, dictionaries, and numeric values definitions.",
+    "build-plots" = "Focus on selecting outputs and generating plot configuration and plot calls.",
+    "debug-run" = "Focus on troubleshooting workflow execution, missing sheets, and data mismatches."
+  )
 
-    prompt <- createAIWorkflowPrompt(
-        projectConfiguration = projectConfiguration,
-        task = task,
-        includeExamples = includeExamples,
-        maxItemsPerSection = maxItemsPerSection
-    )
+  prompt <- createAIWorkflowPrompt(
+    projectConfiguration = projectConfiguration,
+    task = task,
+    includeExamples = includeExamples,
+    maxItemsPerSection = maxItemsPerSection
+  )
 
-    return(paste(
-        prompt,
-        "",
-        "Task-specific guidance:",
-        paste("-", taskInstruction),
-        sep = "\n"
-    ))
+  return(paste(
+    prompt,
+    "",
+    "Task-specific guidance:",
+    paste("-", taskInstruction),
+    sep = "\n"
+  ))
 }
 
 #' Validate workflow configuration for AI-assisted usage
@@ -269,141 +269,141 @@ createAIPromptFromTask <- function(
 #' @export
 #' @family project initialization
 validateWorkflowForAI <- function(projectConfiguration, strict = FALSE) {
-    checkmate::assertFlag(strict)
+  checkmate::assertFlag(strict)
 
-    errors <- character()
-    warnings <- character()
-    suggestions <- character()
+  errors <- character()
+  warnings <- character()
+  suggestions <- character()
 
-    dataImporterConfigurationFile <- projectConfiguration$dataImporterConfigurationFile
-    scenariosFile <- projectConfiguration$scenariosFile
-    reportsFile <- projectConfiguration$addOns$reportsFile
+  dataImporterConfigurationFile <- projectConfiguration$dataImporterConfigurationFile
+  scenariosFile <- projectConfiguration$scenariosFile
+  reportsFile <- projectConfiguration$addOns$reportsFile
 
-    for (p in c(dataImporterConfigurationFile, scenariosFile, reportsFile)) {
-        if (!file.exists(p)) {
-            errors <- c(errors, paste("Missing configuration file:", p))
-        }
+  for (p in c(dataImporterConfigurationFile, scenariosFile, reportsFile)) {
+    if (!file.exists(p)) {
+      errors <- c(errors, paste("Missing configuration file:", p))
+    }
+  }
+
+  if (length(errors) == 0) {
+    wb <- openxlsx::loadWorkbook(dataImporterConfigurationFile)
+    requiredSheets <- c("DataFiles")
+    missingSheets <- setdiff(requiredSheets, wb$sheet_names)
+    if (length(missingSheets) > 0) {
+      errors <- c(
+        errors,
+        paste(
+          "Missing required sheets in DataImportConfiguration:",
+          paste(missingSheets, collapse = ", ")
+        )
+      )
     }
 
-    if (length(errors) == 0) {
-        wb <- openxlsx::loadWorkbook(dataImporterConfigurationFile)
-        requiredSheets <- c("DataFiles")
-        missingSheets <- setdiff(requiredSheets, wb$sheet_names)
-        if (length(missingSheets) > 0) {
+    if ("DataFiles" %in% wb$sheet_names) {
+      dataFiles <- xlsxReadData(
+        wb = wb,
+        sheetName = "DataFiles",
+        skipDescriptionRow = TRUE
+      )
+
+      if (!all(c("fileIdentifier", "dataClass") %in% names(dataFiles))) {
+        errors <- c(
+          errors,
+          "DataFiles sheet must contain columns fileIdentifier and dataClass"
+        )
+      } else {
+        unknownDataClass <- setdiff(
+          unique(dataFiles$dataClass),
+          unname(unlist(DATACLASS))
+        )
+        unknownDataClass <- unknownDataClass[!is.na(unknownDataClass)]
+        if (length(unknownDataClass) > 0) {
+          errors <- c(
+            errors,
+            paste(
+              "Unknown DataClass values:",
+              paste(unknownDataClass, collapse = ", ")
+            )
+          )
+        }
+      }
+
+      numericRows <- dataFiles[
+        dataFiles$dataClass == DATACLASS[["numericValues"]]
+      ]
+      if (nrow(numericRows) > 0) {
+        if (!("dictionary" %in% names(dataFiles))) {
+          warnings <- c(
+            warnings,
+            "DataFiles has numericValues rows but no dictionary column"
+          )
+        } else {
+          dictionaryValues <- unique(stats::na.omit(
+            numericRows$dictionary
+          ))
+          missingNumericSheets <- setdiff(
+            dictionaryValues,
+            wb$sheet_names
+          )
+          if (length(missingNumericSheets) > 0) {
             errors <- c(
-                errors,
-                paste(
-                    "Missing required sheets in DataImportConfiguration:",
-                    paste(missingSheets, collapse = ", ")
-                )
+              errors,
+              paste(
+                "Missing numeric values sheets:",
+                paste(missingNumericSheets, collapse = ", ")
+              )
             )
+          }
         }
-
-        if ("DataFiles" %in% wb$sheet_names) {
-            dataFiles <- xlsxReadData(
-                wb = wb,
-                sheetName = "DataFiles",
-                skipDescriptionRow = TRUE
-            )
-
-            if (!all(c("fileIdentifier", "dataClass") %in% names(dataFiles))) {
-                errors <- c(
-                    errors,
-                    "DataFiles sheet must contain columns fileIdentifier and dataClass"
-                )
-            } else {
-                unknownDataClass <- setdiff(
-                    unique(dataFiles$dataClass),
-                    unname(unlist(DATACLASS))
-                )
-                unknownDataClass <- unknownDataClass[!is.na(unknownDataClass)]
-                if (length(unknownDataClass) > 0) {
-                    errors <- c(
-                        errors,
-                        paste(
-                            "Unknown DataClass values:",
-                            paste(unknownDataClass, collapse = ", ")
-                        )
-                    )
-                }
-            }
-
-            numericRows <- dataFiles[
-                dataFiles$dataClass == DATACLASS[["numericValues"]]
-            ]
-            if (nrow(numericRows) > 0) {
-                if (!("dictionary" %in% names(dataFiles))) {
-                    warnings <- c(
-                        warnings,
-                        "DataFiles has numericValues rows but no dictionary column"
-                    )
-                } else {
-                    dictionaryValues <- unique(stats::na.omit(
-                        numericRows$dictionary
-                    ))
-                    missingNumericSheets <- setdiff(
-                        dictionaryValues,
-                        wb$sheet_names
-                    )
-                    if (length(missingNumericSheets) > 0) {
-                        errors <- c(
-                            errors,
-                            paste(
-                                "Missing numeric values sheets:",
-                                paste(missingNumericSheets, collapse = ", ")
-                            )
-                        )
-                    }
-                }
-            }
-        }
+      }
     }
+  }
 
-    if (length(errors) == 0 && length(warnings) == 0) {
-        suggestions <- c(
-            suggestions,
-            "Configuration looks ready for AI-assisted workflow generation"
-        )
-    } else {
-        suggestions <- c(
-            suggestions,
-            "Run readObservedDataByDictionary for each dataClassType to confirm import behavior",
-            "Ensure numericValues entries are unique and units are explicit"
-        )
-    }
+  if (length(errors) == 0 && length(warnings) == 0) {
+    suggestions <- c(
+      suggestions,
+      "Configuration looks ready for AI-assisted workflow generation"
+    )
+  } else {
+    suggestions <- c(
+      suggestions,
+      "Run readObservedDataByDictionary for each dataClassType to confirm import behavior",
+      "Ensure numericValues entries are unique and units are explicit"
+    )
+  }
 
-    ok <- length(errors) == 0 && (!strict || length(warnings) == 0)
+  ok <- length(errors) == 0 && (!strict || length(warnings) == 0)
 
-    return(list(
-        ok = ok,
-        errors = unique(errors),
-        warnings = unique(warnings),
-        suggestions = unique(suggestions)
-    ))
+  return(list(
+    ok = ok,
+    errors = unique(errors),
+    warnings = unique(warnings),
+    suggestions = unique(suggestions)
+  ))
 }
 
 .safeUniqueValues <- function(dt, columnName) {
-    if (!(columnName %in% names(dt))) {
-        return(character())
-    }
+  if (!(columnName %in% names(dt))) {
+    return(character())
+  }
 
-    return(unique(as.character(stats::na.omit(dt[[columnName]]))))
+  return(unique(as.character(stats::na.omit(dt[[columnName]]))))
 }
 
 .truncateValues <- function(x, maxItemsPerSection) {
-    x <- as.character(stats::na.omit(x))
-    if (length(x) <= maxItemsPerSection) {
-        return(x)
-    }
+  x <- as.character(stats::na.omit(x))
+  if (length(x) <= maxItemsPerSection) {
+    return(x)
+  }
 
-    c(x[seq_len(maxItemsPerSection)], "...")
+  c(x[seq_len(maxItemsPerSection)], "...")
 }
 
 .toBulletLines <- function(values) {
-    values <- as.character(values)
-    if (length(values) == 0) {
-        return("- none")
-    }
+  values <- as.character(values)
+  if (length(values) == 0) {
+    return("- none")
+  }
 
-    paste("-", values)
+  paste("-", values)
 }

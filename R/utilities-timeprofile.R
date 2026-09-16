@@ -156,6 +156,9 @@ getSimulatedTimeprofile <- function(
   aggregationFun,
   individualMatch
 ) {
+  # avoid warnings for global variables during check
+  molWeight <- NULL
+
   # reduce list of outputPaths to available paths
   outputPaths <- intersect(
     outputPaths,

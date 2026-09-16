@@ -1466,8 +1466,7 @@ importProjectConfiguration <- function(
   openxlsx::write.xlsx(excelSheets[[1]], file = excelPath)
 
   initProject(
-    configurationDirectory = configurationDirectory,
-    sourceConfigurationXlsx = excelPath
+    configurationDirectory = configurationDirectory
   )
 
   for (name in setdiff(names(configData), "ProjectConfiguration")) {

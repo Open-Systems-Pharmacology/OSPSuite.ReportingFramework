@@ -261,7 +261,6 @@ prepareDataForPKBoxplot <- function(
 #' Generates a summary table from the box-and-whisker plot data.
 #'
 #' @param plotDataPk A data.table containing plot data.
-#' @param asRatio boolean indicating if the plot is for ratios.
 #' @param onePlotConfig Configuration for a single plot.
 #' @param percentiles A vector of percentiles to calculate.
 #' @return A data.table summarizing the plot data.

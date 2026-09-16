@@ -171,7 +171,7 @@ setShowLogMessages <- function(verbose = TRUE) {
 #' @family log file management
 saveSessionInfo <- function() {
   sessionInfoText <- paste(
-    utils::capture.output(sessionInfo()),
+    utils::capture.output(utils::sessionInfo()),
     collapse = "\n"
   )
   ospsuite.utils::logInfo(paste("Session Info:\n", sessionInfoText))

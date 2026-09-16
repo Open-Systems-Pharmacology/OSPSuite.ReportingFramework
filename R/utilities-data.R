@@ -231,6 +231,9 @@ readObservedDataByDictionary <- function(
 #' @keywords internal
 #' @noRd
 .readNumericValuesSheet <- function(wb, sheetName) {
+  # avoid warnings for global variables during check
+  variableName <- value <- unit <- reference <- NULL
+
   tmpData <- xlsxReadData(
     wb = wb,
     sheetName = sheetName,

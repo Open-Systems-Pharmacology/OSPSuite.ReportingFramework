@@ -1668,7 +1668,7 @@ validateCommonInputs <- function(
   labelWrapWidth,
   vlineIntercept
 ) {
-  validatePKParameterDT(pkParameterDT)
+  .validatePKParameterDT(pkParameterDT)
   # Check if scaleVectors is a list
   checkmate::assertList(scaleVectors)
   if (length(scaleVectors) > 0) {

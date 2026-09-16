@@ -19,7 +19,7 @@ calculateSensitivities(
 \item{scenarioFiles}{Named character vector (length 1 or 2) of PKML file paths.
 Names become output file prefixes.}
 
-\item{outputPaths}{Character vector of `QuantityPath` values to keep.}
+\item{outputPaths}{Character vector of \code{QuantityPath} values to keep.}
 
 \item{pkParameter}{Character vector of PK parameter names to use.}
 
@@ -27,28 +27,30 @@ Names become output file prefixes.}
 label and each element is a character vector of model parameter paths
 to vary for that label.}
 
-\item{variationRange}{Numeric fraction variation range (default `0.1` = ±10%).}
+\item{variationRange}{Numeric fraction variation range (default \code{0.1} = +/- 10\%).}
 
-\item{numberOfSteps}{Integer number of positive perturbation steps (default `2`).}
+\item{numberOfSteps}{Integer number of positive perturbation steps (default \code{2}).}
 
-\item{outFolder}{Base output folder; a `SensitivityResults/` subfolder is created.}
+\item{outFolder}{Base output folder; a \code{SensitivityResults/} subfolder is created.}
 
-\item{simulationRunOptions}{Optional `SimulationRunOptions` passed to ospsuite.}
+\item{simulationRunOptions}{Optional \code{SimulationRunOptions} passed to ospsuite.}
 }
 \value{
 Invisibly returns a data.table with columns
-  `SensitivityParameter`, `QuantityPath`, `PKParameter`, `sens`.
+  \code{SensitivityParameter}, \code{QuantityPath}, \code{PKParameter},
+  and \code{sens}.
 }
 \description{
-Extends the built-in ospsuite sensitivity analysis to support:
-- **DDI ratio mode**: when two scenarios are supplied, sensitivities are
-  computed on the ratio scenario2 / scenario1 (e.g. treatment / control).
-- **Many-to-one mappings**: a single sensitivity label can map to multiple
-  model parameter paths that are varied simultaneously.
+Extends the built-in ospsuite sensitivity analysis to support DDI ratio mode
+and many-to-one parameter mappings. When two scenarios are supplied,
+sensitivities are computed on the ratio \code{scenario2 / scenario1}
+such as treatment over control. A single sensitivity label can also map to
+multiple model parameter paths that are varied simultaneously.
 }
 \details{
-Writes one `<scenarioName>-PKAnalysisResults.csv` per scenario and a final
-`<lastScenarioName>-sensitivity.csv` into `<outFolder>/SensitivityResults/`.
+Writes one \code{<scenarioName>-PKAnalysisResults.csv} per scenario and a final
+\code{<lastScenarioName>-sensitivity.csv} into
+\code{<outFolder>/SensitivityResults/}.
 }
 \seealso{
 Other sensitivity functions:

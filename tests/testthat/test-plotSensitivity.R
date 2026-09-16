@@ -230,7 +230,8 @@ test_that("validateCommonInputs errors on non-numeric variationRange", {
       sensitivityParameter = list(CL = "path"),
       variationRange = "bad",
       numberOfSteps = 2L
-    )
+    ),
+    'variationRange'
   )
 })
 

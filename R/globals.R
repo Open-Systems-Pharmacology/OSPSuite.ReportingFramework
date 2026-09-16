@@ -2,7 +2,23 @@
 
 utils::globalVariables(
   names = c(
-    "configEnv"
+    "..keepCols",
+    "configEnv",
+    "dP",
+    "dPK",
+    "IndividualId",
+    "molWeight",
+    "Parameter",
+    "PKParameter",
+    "QuantityPath",
+    "reference",
+    "SensitivityParameter",
+    "value",
+    "Value",
+    "Value.base",
+    "Value.numerator",
+    "Value.reference",
+    "variableName"
   ),
   package = "ospsuite.reportingframework",
   add = FALSE

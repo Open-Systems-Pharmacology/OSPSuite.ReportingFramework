@@ -156,29 +156,33 @@ sensitivityAnalysisName <- function(scenarioName, sensitivitysheet) {
 
 #' Calculate sensitivities of PK parameters with optional DDI ratio mode
 #'
-#' Extends the built-in ospsuite sensitivity analysis to support:
-#' - **DDI ratio mode**: when two scenarios are supplied, sensitivities are
-#'   computed on the ratio scenario2 / scenario1 (e.g. treatment / control).
-#' - **Many-to-one mappings**: a single sensitivity label can map to multiple
-#'   model parameter paths that are varied simultaneously.
+#' @description
+#' Extends the built-in ospsuite sensitivity analysis to support DDI ratio mode
+#' and many-to-one parameter mappings. When two scenarios are supplied,
+#' sensitivities are computed on the ratio \code{scenario2 / scenario1}
+#' such as treatment over control. A single sensitivity label can also map to
+#' multiple model parameter paths that are varied simultaneously.
 #'
-#' Writes one `<scenarioName>-PKAnalysisResults.csv` per scenario and a final
-#' `<lastScenarioName>-sensitivity.csv` into `<outFolder>/SensitivityResults/`.
+#' @details
+#' Writes one \code{<scenarioName>-PKAnalysisResults.csv} per scenario and a final
+#' \code{<lastScenarioName>-sensitivity.csv} into
+#' \code{<outFolder>/SensitivityResults/}.
 #'
 #' @param scenarioFiles Named character vector (length 1 or 2) of PKML file paths.
 #'   Names become output file prefixes.
-#' @param outputPaths Character vector of `QuantityPath` values to keep.
+#' @param outputPaths Character vector of \code{QuantityPath} values to keep.
 #' @param pkParameter Character vector of PK parameter names to use.
 #' @param sensitivityParameter Named list; each element name is a sensitivity
 #'   label and each element is a character vector of model parameter paths
 #'   to vary for that label.
-#' @param variationRange Numeric fraction variation range (default `0.1` = ±10%).
-#' @param numberOfSteps Integer number of positive perturbation steps (default `2`).
-#' @param outFolder Base output folder; a `SensitivityResults/` subfolder is created.
-#' @param simulationRunOptions Optional `SimulationRunOptions` passed to ospsuite.
+#' @param variationRange Numeric fraction variation range (default \code{0.1} = +/- 10\%).
+#' @param numberOfSteps Integer number of positive perturbation steps (default \code{2}).
+#' @param outFolder Base output folder; a \code{SensitivityResults/} subfolder is created.
+#' @param simulationRunOptions Optional \code{SimulationRunOptions} passed to ospsuite.
 #'
 #' @return Invisibly returns a data.table with columns
-#'   `SensitivityParameter`, `QuantityPath`, `PKParameter`, `sens`.
+#'   \code{SensitivityParameter}, \code{QuantityPath}, \code{PKParameter},
+#'   and \code{sens}.
 #' @export
 #' @family sensitivity functions
 calculateSensitivities <- function(
@@ -191,6 +195,10 @@ calculateSensitivities <- function(
   outFolder = tempdir(),
   simulationRunOptions = NULL
 ) {
+  # avoid warnings for global variables during check
+  IndividualId <- factor <- SensitivityParameter <- QuantityPath <- NULL
+  PKParameter <- Value <- Value.base <- dPK <- dP <- sens <- NULL
+
   checkmate::assertCharacter(
     scenarioFiles,
     min.len = 1,
@@ -315,6 +323,10 @@ loadSensitivityPKValues <- function(
   pkParameter,
   outFolder
 ) {
+  # avoid warnings for global variables during check
+  Value <- Value.numerator <- Value.reference <- QuantityPath <- NULL
+  Parameter <- IndividualId <- ..keepCols <- NULL
+
   checkmate::assertCharacter(scenarioFiles, min.len = 1, max.len = 2)
   checkmate::assertCharacter(outputPaths, any.missing = FALSE)
   checkmate::assertCharacter(pkParameter, any.missing = FALSE)
@@ -411,6 +423,9 @@ prepareSensitivityPopulation <- function(
   variationRange = 0.1,
   numberOfSteps = 2
 ) {
+  # avoid warnings for global variables during check
+  factor <- SensitivityParameter <- IndividualId <- NULL
+
   checkmate::assertCharacter(scenarioFiles, min.len = 1, max.len = 2)
   checkmate::assertList(sensitivityParameter, min.len = 1)
   checkmate::assertNumber(variationRange, lower = 0)
