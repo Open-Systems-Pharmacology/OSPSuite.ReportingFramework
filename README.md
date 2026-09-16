@@ -198,6 +198,8 @@ guidelines](https://github.com/Open-Systems-Pharmacology/Suite/blob/master/CONTR
 If you are contributing code, please be familiar with the [coding
 standards](https://github.com/Open-Systems-Pharmacology/Suite/blob/master/CODING_STANDARDS_R.md).
 
+Integration tests for this package are maintained separately at [ReportingFramework-Test-Reports](https://github.com/Open-Systems-Pharmacology/ReportingFramework-Test-Reports).
+
 ## License
 
 OSPSuite.ReportingFramework Library is released under the [GPLv2 License](LICENSE).
