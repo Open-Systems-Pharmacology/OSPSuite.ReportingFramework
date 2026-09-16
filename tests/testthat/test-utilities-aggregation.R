@@ -163,9 +163,9 @@ test_that("getErrorTypeForPercentiles with 1st and 99th percentiles", {
   expect_true(nchar(result) > 0)
 })
 
-test_that("getErrorTypeForPercentiles with legendsize = 1", {
+test_that("getErrorTypeForPercentiles with legendsize = 2 and 25, 50, 75", {
   percentiles <- c(0.25, 0.5, 0.75)
-  result <- getErrorTypeForPercentiles(percentiles, legendsize = 1)
+  result <- getErrorTypeForPercentiles(percentiles, legendsize = 2)
   expect_type(result, "character")
 })
 

@@ -222,3 +222,79 @@ test_that("validateIsCrossOverStudy errors when populations differ", {
     )
   )
 })
+
+# Edge case tests for getCaptionForBoxwhiskerPlot
+test_that("getCaptionForBoxwhiskerPlot handles special characters in names", {
+  plotDataPk <- makeBoxwhiskerCaptionData(
+    displayNameOutput = "Liver-Kidney",
+    displayNamePKParameter = "AUC dose"
+  )
+  result <- ospsuite.reportingframework:::getCaptionForBoxwhiskerPlot(
+    plotDataPk = plotDataPk,
+    plotCaptionAddon = NA,
+    isPlotCaption = FALSE,
+    asRatio = FALSE
+  )
+  expect_type(result, "character")
+  expect_true(nchar(result) > 0)
+})
+
+test_that("getCaptionForBoxwhiskerPlot handles empty plotCaptionAddon", {
+  plotDataPk <- makeBoxwhiskerCaptionData()
+  result <- ospsuite.reportingframework:::getCaptionForBoxwhiskerPlot(
+    plotDataPk = plotDataPk,
+    plotCaptionAddon = "",
+    isPlotCaption = FALSE,
+    asRatio = FALSE
+  )
+  expect_type(result, "character")
+  expect_true(nchar(result) > 0)
+})
+
+test_that("getCaptionForBoxwhiskerPlot handles multiple values in data", {
+  plotDataPk <- makeBoxwhiskerCaptionData(displayUnit = "µmol/l")
+  result <- ospsuite.reportingframework:::getCaptionForBoxwhiskerPlot(
+    plotDataPk = plotDataPk,
+    plotCaptionAddon = NA,
+    isPlotCaption = FALSE,
+    asRatio = FALSE
+  )
+  # Verify caption is created and contains expected content
+  expect_type(result, "character")
+  expect_true(nchar(result) > 0)
+  expect_true(grepl("summary statistics", result, fixed = TRUE))
+})
+
+# Edge case tests for makeBoxwhiskerPlotData
+test_that("makeBoxwhiskerPlotData handles single value", {
+  result <- makeBoxwhiskerPlotData(
+    scenarios = "s1",
+    values = 1.0,
+    colorIndex = factor("A"),
+    plotTag = "A"
+  )
+  expect_equal(nrow(result), 1)
+  expect_equal(result$value, 1.0)
+})
+
+test_that("makeBoxwhiskerPlotData handles many scenarios", {
+  scenarios <- paste0("s", 1:10)
+  values <- seq(0.5, 1.5, length.out = 10)
+  result <- makeBoxwhiskerPlotData(
+    scenarios = scenarios,
+    values = values,
+    plotTag = "A"
+  )
+  expect_equal(nrow(result), 10)
+  expect_equal(length(unique(result$scenarioShortName)), 10)
+})
+
+test_that("makeBoxwhiskerPlotData handles zero and negative values", {
+  result <- makeBoxwhiskerPlotData(
+    scenarios = c("s1", "s2"),
+    values = c(0, -0.5),
+    plotTag = "A"
+  )
+  expect_equal(result$value[1], 0)
+  expect_equal(result$value[2], -0.5)
+})

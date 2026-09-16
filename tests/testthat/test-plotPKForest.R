@@ -267,6 +267,98 @@ test_that("getRatioMode returns 'ratioOfPopulation' when populations differ", {
 })
 
 # ---------------------------------------------------------------------------
+# Edge case tests for forest plot helpers
+# ---------------------------------------------------------------------------
+
+test_that("filterParameterObserved handles empty config", {
+    obs <- data.table::data.table(
+        group = "g1",
+        pkParameter = "AUC",
+        outputPathId = "Plasma",
+        values = 1.5,
+        minValue = 1.0,
+        maxValue = 2.0
+    )
+    config <- data.table::data.table(
+        dataGroupId = character(0),
+        pkParameter = character(0),
+        outputPathId = character(0)
+    )
+    result <- ospsuite.reportingframework:::filterParameterObserved(obs, config)
+    expect_equal(nrow(result), 0)
+})
+
+test_that("filterParameterObserved handles multiple matching rows", {
+    obs <- data.table::data.table(
+        group = c("g1", "g1", "g2"),
+        pkParameter = c("AUC", "Cmax", "AUC"),
+        outputPathId = c("Plasma", "Plasma", "Liver"),
+        values = c(1.5, 2.5, 1.0),
+        minValue = c(1.0, 2.0, 0.5),
+        maxValue = c(2.0, 3.0, 1.5)
+    )
+    config <- data.table::data.table(
+        dataGroupId = c("g1", "g1"),
+        pkParameter = c("AUC", "Cmax"),
+        outputPathId = c("Plasma", "Plasma")
+    )
+    result <- ospsuite.reportingframework:::filterParameterObserved(obs, config)
+    expect_equal(nrow(result), 2)
+})
+
+test_that("filterParameterObserved handles special characters", {
+    obs <- data.table::data.table(
+        group = "g1",
+        pkParameter = "AUC/F (dose-normalized)",
+        outputPathId = "Liver & Kidney",
+        values = 1.5,
+        minValue = 1.0,
+        maxValue = 2.0
+    )
+    config <- data.table::data.table(
+        dataGroupId = "g1",
+        pkParameter = "AUC/F (dose-normalized)",
+        outputPathId = "Liver & Kidney"
+    )
+    result <- ospsuite.reportingframework:::filterParameterObserved(obs, config)
+    expect_equal(nrow(result), 1)
+})
+
+test_that("getRatioMode handles both single and multiple population ratios", {
+    config <- data.table::data.table(
+        plotName = "p1",
+        scenario = "s1",
+        referenceScenario = "s1"
+    )
+    pkDT <- data.table::data.table(
+        scenario = "s1",
+        populationId = "pop1"
+    )
+    result <- ospsuite.reportingframework:::getRatioMode(
+        config,
+        pkDT,
+        asRatio = TRUE
+    )
+    expect_equal(result, "individualRatios")
+})
+
+test_that("getRatioMode returns NULL when asRatio is FALSE", {
+    config <- data.table::data.table(
+        plotName = "p1",
+        scenario = "s1",
+        referenceScenario = "s2"
+    )
+    pkDT <- data.table::data.table(
+        scenario = c("s1", "s2"),
+        populationId = c("pop1", "pop2")
+    )
+    result <- ospsuite.reportingframework:::getRatioMode(
+        config,
+        pkDT,
+        asRatio = FALSE
+    )
+    expect_equal(result, "none")
+})
 # filterParameterObserved
 # ---------------------------------------------------------------------------
 

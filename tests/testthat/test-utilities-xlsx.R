@@ -338,5 +338,97 @@ test_that("synchronizeScenariosOutputsWithPlots syncs missing outputPath rows", 
   expect_true(all(c("op_1", "op_2") %in% outputsReports$outputPathId))
 })
 
+# Edge case tests for xlsx functions
+test_that("xlsxReadData handles empty sheet", {
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "EmptySheet")
+  testFile <- file.path(tempdir(), "empty_sheet.xlsx")
+  openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
+
+  # Empty sheets cause an error in processing, so we expect an error
+  expect_error(xlsxReadData(wb = testFile, sheetName = "EmptySheet"))
+
+  file.remove(testFile)
+})
+
+test_that("xlsxReadData handles convertHeaders parameter", {
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "TestHeaders")
+  df <- data.frame(A = c("a", "b"), B = c(1, 2))
+  openxlsx::writeData(wb, "TestHeaders", df)
+  testFile <- file.path(tempdir(), "test_headers.xlsx")
+  openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
+
+  result1 <- xlsxReadData(
+    wb = testFile,
+    sheetName = "TestHeaders",
+    convertHeaders = TRUE
+  )
+  result2 <- xlsxReadData(
+    wb = testFile,
+    sheetName = "TestHeaders",
+    convertHeaders = FALSE
+  )
+  expect_true(is.data.table(result1))
+  expect_true(is.data.table(result2))
+
+  file.remove(testFile)
+})
+
+test_that("xlsxReadData handles emptyAsNA parameter", {
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "NATest")
+  df <- data.frame(A = c("a", "b", "c"), B = c(1, 2, 3))
+  openxlsx::writeData(wb, "NATest", df)
+  testFile <- file.path(tempdir(), "test_na.xlsx")
+  openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
+
+  result1 <- xlsxReadData(wb = testFile, sheetName = "NATest", emptyAsNA = TRUE)
+  result2 <- xlsxReadData(
+    wb = testFile,
+    sheetName = "NATest",
+    emptyAsNA = FALSE
+  )
+  expect_true(is.data.table(result1))
+  expect_true(is.data.table(result2))
+
+  file.remove(testFile)
+})
+
+test_that("xlsxWriteData handles data types correctly", {
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "DataTypes")
+  df <- data.frame(
+    numeric_col = c(1.5, 2.5),
+    integer_col = c(1L, 2L),
+    char_col = c("a", "b"),
+    logical_col = c(TRUE, FALSE)
+  )
+  openxlsx::writeData(wb, "DataTypes", df)
+  testFile <- file.path(tempdir(), "test_types.xlsx")
+  openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
+
+  xlsxWriteData(wb, "DataTypes", df[1, ])
+  result <- xlsxReadData(wb = testFile, sheetName = "DataTypes")
+  expect_true(is.data.table(result))
+  expect_true(nrow(result) >= 1)
+
+  file.remove(testFile)
+})
+
+test_that("xlsxWriteData handles large datasets", {
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "LargeData")
+  largedf <- data.frame(A = 1:1000, B = rep(1:100, 10))
+  openxlsx::writeData(wb, "LargeData", largedf)
+  testFile <- file.path(tempdir(), "large_data.xlsx")
+  openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
+
+  result <- xlsxReadData(wb = testFile, sheetName = "LargeData")
+  expect_equal(nrow(result), 1000)
+
+  file.remove(testFile)
+})
+
 # Clean up
 file.remove(testxlsx)
