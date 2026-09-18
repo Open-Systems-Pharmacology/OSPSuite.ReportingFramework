@@ -12,7 +12,7 @@
   )
   modelSrcDir <- system.file(
     "extdata",
-    "Models",
+    "Tutorial",
     package = "ospsuite.reportingframework"
   )
   modelDir <- pc$modelFolder

@@ -73,7 +73,7 @@ invisible(lapply(dataFiles, function(f) {
 }))
 
 invisible(file.copy(
-  from = file.path(instDirectory, "Populations", "adults.csv"),
+  from = file.path(instDirectory, "Tutorial", "adults.csv"),
   to = file.path(projectConfiguration$populationsFolder, "random_population.csv"), overwrite = TRUE
 ))
 
@@ -82,7 +82,7 @@ invisible(file.copy(
   to = file.path(projectConfiguration$populationsFolder, "study_1234_population.csv"), overwrite = TRUE
 ))
 
-modelFiles <- list.files(file.path(instDirectory, "Models"), full.names = TRUE)
+modelFiles <- list.files(file.path(instDirectory, "Tutorial"), pattern = "\\.(pkml|PKML)$", full.names = TRUE)
 invisible(lapply(modelFiles, function(f) {
   file.copy(from = f, to = file.path(projectConfiguration$modelFolder, basename(f)), overwrite = TRUE)
 }))
@@ -146,11 +146,11 @@ print(system.file(
   mustWork = TRUE
 ))
 ```
-You can access the folder containing the models used in the tutorial ("iv_1_mg_5_min.pkml" and "po_3_mg_solution.pkml") using the command below:
+The models used in the tutorial ("iv_1_mg_5_min.pkml" and "po_3_mg_solution.pkml") are included in the Tutorial materials.
 
 ```{r model-path, eval = TRUE}
 print(system.file(
-  "extdata", "Models",
+  "extdata", "Tutorial",
   package = "ospsuite.reportingframework",
   mustWork = TRUE
 ))
