@@ -6,7 +6,7 @@
 \usage{
 initializePlotManager(
   projectConfiguration,
-  rmdName,
+  qmdName,
   nameOfplotFunction,
   digitsOfSignificanceCSVDisplay,
   suppressExport
@@ -15,7 +15,7 @@ initializePlotManager(
 \arguments{
 \item{projectConfiguration}{A ProjectConfiguration object containing the project configuration settings.}
 
-\item{rmdName}{A character string specifying the name of the resulting Qmd and the subfolder where results will be saved.}
+\item{qmdName}{A character string specifying the name of the resulting Qmd and the subfolder where results will be saved.}
 
 \item{nameOfplotFunction}{The name of the plot function as character, indicating which plotting function to use.}
 

@@ -65,9 +65,13 @@ plotPKBoxwhisker <- function(
   checkmate::assertNumeric(xAxisTextAngle, any.missing = FALSE)
   checkmate::assertNumeric(facetAspectRatio, any.missing = FALSE)
 
+  colorLegend <- onePlotConfig[["colorLegend"]][1]
+  if (is.na(colorLegend)) {
+    colorLegend <- 'scenario|referenceScenario'
+  }
   colorVector <- getColorVectorForLegend(
     colorVector = colorVector,
-    colorLegend = onePlotConfig[["colorLegend"]][1]
+    colorLegend = colorLegend
   )
 
   plotList <- list()

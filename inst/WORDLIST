@@ -205,7 +205,7 @@ referenceScenario
 reportingframework
 reproducibility
 rmd
-rmdName
+qmdName
 rmdPlotManager
 rmds
 runAndSaveScenarios

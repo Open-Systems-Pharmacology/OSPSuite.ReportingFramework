@@ -8,7 +8,7 @@ runPlot(
   projectConfiguration,
   nameOfplotFunction,
   configTableSheet = NULL,
-  rmdName = configTableSheet,
+  qmdName = configTableSheet,
   plotNames = NULL,
   suppressExport = FALSE,
   digitsOfSignificanceCSVDisplay = 3,
@@ -33,7 +33,7 @@ for more details check the help of these functions}
 \item{configTableSheet}{A character string representing the name of the sheet in the `Plots` configuration table
 from which to read plot configurations. It should have at least the columns `Header`,`Levels` and `PlotName`}
 
-\item{rmdName}{A character string specifying the name of the resulting rmd and the sub-folder where results will be saved.
+\item{qmdName}{A character string specifying the name of the resulting qmd and the sub-folder where results will be saved.
 The default value will be the sheet name of the plot configuration.}
 
 \item{plotNames}{A character vector of plot names to filter which plots should be generated. Default is NULL.
@@ -61,7 +61,7 @@ The `runPlot` function is designed to facilitate the generation of plots based o
 - Load the configuration table for plots based on the specified sheet name.
 - Validate the configuration and ensure that all required parameters are provided.
 - Execute the designated plot function.
-- Save the generated plots in the specified subfolder named  rmdName, if export is not suppressed.
+- Save the generated plots in the specified subfolder named qmdName, if export is not suppressed.
 
 If the `plotNames` parameter is set, the function will suppress the Rmd export and return a list of plots generated instead.
 This is useful when you want to generate specific plots without creating an accompanying .Rmd file for fast check in the daily work.

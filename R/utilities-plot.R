@@ -17,7 +17,7 @@
 #'  for more details check the help of these functions
 #' @param configTableSheet A character string representing the name of the sheet in the `Plots` configuration table
 #'  from which to read plot configurations. It should have at least the columns `Header`,`Levels` and `PlotName`
-#' @param rmdName A character string specifying the name of the resulting rmd and the sub-folder where results will be saved.
+#' @param qmdName A character string specifying the name of the resulting qmd and the sub-folder where results will be saved.
 #'  The default value will be the sheet name of the plot configuration.
 #' @param digitsOfSignificanceCSVDisplay digits Of significance used for the display in the .Rmd for tables, which are exported as .csv
 #' @param suppressExport A logical value indicating whether to suppress the export of the Rmd file.
@@ -34,7 +34,7 @@
 #' - Load the configuration table for plots based on the specified sheet name.
 #' - Validate the configuration and ensure that all required parameters are provided.
 #' - Execute the designated plot function.
-#' - Save the generated plots in the specified subfolder named  rmdName, if export is not suppressed.
+#' - Save the generated plots in the specified subfolder named qmdName, if export is not suppressed.
 #'
 #' If the `plotNames` parameter is set, the function will suppress the Rmd export and return a list of plots generated instead.
 #' This is useful when you want to generate specific plots without creating an accompanying .Rmd file for fast check in the daily work.
@@ -70,7 +70,7 @@ runPlot <- function(
   projectConfiguration,
   nameOfplotFunction,
   configTableSheet = NULL,
-  rmdName = configTableSheet,
+  qmdName = configTableSheet,
   plotNames = NULL,
   suppressExport = FALSE,
   digitsOfSignificanceCSVDisplay = 3,
@@ -87,7 +87,7 @@ runPlot <- function(
 
   rmdPlotManager <- initializePlotManager(
     projectConfiguration = projectConfiguration,
-    rmdName = rmdName,
+    qmdName = qmdName,
     nameOfplotFunction = nameOfplotFunction,
     digitsOfSignificanceCSVDisplay = digitsOfSignificanceCSVDisplay,
     suppressExport = suppressExport
@@ -146,7 +146,7 @@ shouldSuppressExport <- function(suppressExport, plotNames, inputs) {
 #' This helper function creates an instance of the QmdPlotManager for managing Qmd file generation and plot exports.
 #'
 #' @param projectConfiguration A ProjectConfiguration object containing the project configuration settings.
-#' @param rmdName A character string specifying the name of the resulting Qmd and the subfolder where results will be saved.
+#' @param qmdName A character string specifying the name of the resulting Qmd and the subfolder where results will be saved.
 #' @param nameOfplotFunction The name of the plot function as character, indicating which plotting function to use.
 #' @param digitsOfSignificanceCSVDisplay digits Of significance used for the display in the .qmd for tables, which are exported as .csv
 #' @param suppressExport A logical value indicating whether to suppress the export of the Qmd file.
@@ -160,13 +160,13 @@ shouldSuppressExport <- function(suppressExport, plotNames, inputs) {
 #' @keywords internal
 initializePlotManager <- function(
   projectConfiguration,
-  rmdName,
+  qmdName,
   nameOfplotFunction,
   digitsOfSignificanceCSVDisplay,
   suppressExport
 ) {
   return(QmdPlotManager$new(
-    qmdName = rmdName,
+    qmdName = qmdName,
     qmdfolder = file.path(projectConfiguration$outputFolder),
     suppressExport = suppressExport,
     nameOfplotFunction = nameOfplotFunction,

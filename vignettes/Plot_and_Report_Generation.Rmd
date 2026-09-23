@@ -58,12 +58,12 @@ The `runPlot` function executes several steps to generate the plots:
 
 1. Evaluates `nameOfplotFunction` to check for its availability.
 2. Checks if a validation function for the plot configuration table is available; if not, the default validation function is used.
-3. Creates a subfolder in the `projectConfiguration$outputFolder`, named according to the input variable `rmdName`, which defaults to the config table sheet name.
+3. Creates a subfolder in the `projectConfiguration$outputFolder`, named according to the input variable `qmdName`, which defaults to the config table sheet name.
 4. Reads and validates the configuration table defined by `configTableSheet`.
 5. Iterates over the rows of the configuration table:
    - If the 'Level' and 'Header' columns are filled, a header is created in the Rmd cache.
-   - If the 'PlotName' is filled, all rows with the same plot name are filtered, and this sub-table serves as input for the plot function. The return value is a list of ggplot objects or tables, which are exported to the subfolder 'rmdName', with references made in the Rmd cache.
-6. Finally, the Rmd cache is written as a markdown document to the `projectConfiguration$outputFolder`, named `<rmdName>.Rmd`, which can be used for report generation.
+  - If the 'PlotName' is filled, all rows with the same plot name are filtered, and this sub-table serves as input for the plot function. The return value is a list of ggplot objects or tables, which are exported to the subfolder `qmdName`, with references made in the Rmd cache.
+6. Finally, the Rmd cache is written as a markdown document to the `projectConfiguration$outputFolder`, named `<qmdName>.qmd`, which can be used for report generation.
 
 Refer to the function help for additional details on `runPlot`.
 
@@ -77,7 +77,7 @@ Below is an example call to create time profiles using the `plotTimeProfiles` fu
 runPlot(
   nameOfplotFunction = "plotTimeProfiles",
   configTableSheet = "myTimeProfile",
-  rmdName = "myTimeProfile",
+  qmdName = "myTimeProfile",
   digitsOfSignificanceCSVDisplay = 3,
   projectConfiguration = projectConfiguration,
   inputs = list(
