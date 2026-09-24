@@ -1125,15 +1125,7 @@ validateSubsetList <- function(subsetList, data) {
 #' @param data A data frame containing the columns to validate.
 #' @param ... additionally parameters parsed to checkmate::assertNumeric
 #' @export
-validateNumericVectorColumns <- function(
-  columns,
-  data,
-  ...
-) {
-  dotArgs <- list(...)
-  strictlySorted <- isTRUE(dotArgs$strictlySorted)
-  dotArgs$strictlySorted <- NULL
-
+validateNumericVectorColumns <- function(columns, data, ...) {
   for (col in columns) {
     if (any(!is.na(data[[col]]))) {
       rangeStrings <- data[!is.na(get(col)), ][[col]]
@@ -1144,20 +1136,11 @@ validateNumericVectorColumns <- function(
             stop(messages$errorutilitiesplotL2XXXXXXX())
           }
         )
-        do.call(checkmate::assertNumeric, c(
-          list(
-            x = x,
-            .var.name = paste("Plot configuration column", col)
-          ),
-          dotArgs
-        ))
-        if (strictlySorted && is.unsorted(x, strictly = TRUE)) {
-          stop(paste(
-            "Plot configuration column",
-            col,
-            "must be strictly sorted."
-          ))
-        }
+        checkmate::assertNumeric(
+          x = x,
+          .var.name = paste("Plot configuration column", col),
+          ...
+        )
       }
     }
   }
