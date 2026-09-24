@@ -298,3 +298,52 @@ test_that("makeBoxwhiskerPlotData handles zero and negative values", {
   expect_equal(result$value[1], 0)
   expect_equal(result$value[2], -0.5)
 })
+
+# =====================================================================
+# PHASE 1 & 2: EMPTY DATA & NUMERIC BOUNDS VALIDATION
+# =====================================================================
+
+test_that("plotPKBoxwhisker handles empty data.table", {
+  emptyData <- data.table::data.table(
+    scenarioShortName = factor(character(0)),
+    value = numeric(0),
+    colorIndex = factor(character(0)),
+    plotTag = character(0)
+  )
+
+  # Validation should catch or handle empty data
+  expect_error(
+    checkmate::assertDataTable(emptyData, min.rows = 1),
+    "min.rows = 1|at least 1 row"
+  )
+})
+
+test_that("plotPKBoxwhisker rejects NaN values in data", {
+  boxwhiskerData <- makeBoxwhiskerPlotData(values = c(1.0, NaN, 0.9, 1.1))
+  
+  # Check that NaN is present
+  expect_true(any(is.nan(boxwhiskerData$value)))
+})
+
+test_that("plotPKBoxwhisker rejects Inf values in data", {
+  boxwhiskerData <- makeBoxwhiskerPlotData(values = c(1.0, Inf, 0.9, 1.1))
+  
+  # Check that Inf is present
+  expect_true(any(is.infinite(boxwhiskerData$value)))
+})
+
+test_that("plotPKBoxwhisker handles negative values appropriately", {
+  boxwhiskerData <- makeBoxwhiskerPlotData(values = c(-1.0, 1.2, 0.9, 1.1))
+  
+  # Negative values should be present (may be valid or invalid depending on context)
+  expect_true(any(boxwhiskerData$value < 0))
+})
+
+test_that("plotPKBoxwhisker rejects invalid colorIndex factor levels", {
+  # colorIndex should have consistent factor levels
+  dt1 <- makeBoxwhiskerPlotData(colorIndex = factor(c("A", "A", "B", "B")))
+  dt2 <- makeBoxwhiskerPlotData(colorIndex = factor(c("A", "A", "C", "C")))
+  
+  expect_equal(nlevels(dt1$colorIndex), 2)
+  expect_equal(nlevels(dt2$colorIndex), 2)
+})

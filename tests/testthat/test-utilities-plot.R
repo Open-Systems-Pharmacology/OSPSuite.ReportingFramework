@@ -238,14 +238,32 @@ test_that("validateNumericVectorColumns handles nuemric vactor validation", {
     myValidCol = c("c(1,2,3)", "c(4,5,6)"),
     myRangeCol = c("c(1,2)", "c(NA,5)"),
     myInvalidCol1 = c("c(1,2,3)", "c(4,5,6"),
-    myInvalidCol2 = c("c(1,2,3)", "c(4,5,6s)")
+    myInvalidCol2 = c("c(1,2,3)", "c(4,5,6s)"),
+    myUnsortedCol = c("c(1,3,2)", "c(4,5,6)"),
+    myDuplicateCol = c("c(1,2,2)", "c(4,5,6)")
   )
 
   expect_no_error(validateNumericVectorColumns("myValidCol", dt))
   expect_no_error(validateNumericVectorColumns("myRangeCol", dt, len = 2))
+  expect_no_error(validateNumericVectorColumns(
+    "myValidCol",
+    dt,
+    sorted = TRUE,
+    unique = TRUE
+  ))
   expect_error(validateNumericVectorColumns("myValidCol", dt, len = 2))
   expect_error(validateNumericVectorColumns("myInvalidCol1", dt))
   expect_error(validateNumericVectorColumns("myInvalidCol2", dt))
+  expect_error(validateNumericVectorColumns(
+    "myUnsortedCol",
+    dt,
+    sorted = TRUE
+  ))
+  expect_error(validateNumericVectorColumns(
+    "myDuplicateCol",
+    dt,
+    unique = TRUE
+  ))
 })
 
 

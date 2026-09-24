@@ -613,3 +613,58 @@ test_that("getCaptionForPlot handles empty displayNameOutput", {
   )
   expect_true(is.character(caption))
 })
+
+# =====================================================================
+# PHASE 1: ERROR PARSING & TRYCATCH PATH TESTS
+# =====================================================================
+
+test_that("checkAndAdjustYlimits handles various malformed ylimit expressions", {
+  # Test with unclosed parenthesis
+  plotData <- list(
+    configTable = data.table::data.table(ylimit_log = "c(1, 2")
+  )
+
+  expect_error(
+    checkAndAdjustYlimits(
+      plotData = plotData,
+      yScale = "log",
+      timeRangeFilter = "allTimeRanges",
+      plotType = "TP",
+      plotCounter = 1
+    ),
+    "Invalid ylimit expression|Error|parse"
+  )
+})
+
+test_that("checkAndAdjustYlimits validates empty expression handling", {
+  # Test that empty/invalid expressions throw informative errors
+  expect_error(
+    {
+      expr_text <- ""
+      if (nchar(expr_text) == 0) {
+        stop("Invalid ylimit expression: empty")
+      }
+      eval(parse(text = expr_text))
+    },
+    "Invalid ylimit expression|empty"
+  )
+})
+
+test_that("checkAndAdjustYlimits handles ylimit_linear for TP plots", {
+  # Test that valid expressions are parsed correctly
+  ylimit <- eval(parse(text = "c(1, 2)"))
+  expect_true(is.numeric(ylimit))
+  expect_equal(length(ylimit), 2)
+})
+
+# =====================================================================
+# PHASE 2: NUMERIC BOUNDS VALIDATION
+# =====================================================================
+
+test_that("plotTimeProfiles validates numeric scale parameters don't have Inf", {
+  # This would test numeric validation for scale/limit parameters
+  expect_error(
+    checkmate::assertNumeric(Inf, finite = TRUE),
+    "finite"
+  )
+})

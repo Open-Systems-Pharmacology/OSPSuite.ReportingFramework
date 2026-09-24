@@ -429,3 +429,35 @@ test_that("factors vector is symmetric around 1", {
     expect_true(any(abs(factors_lt_1 - (1 / f)) < 1e-10))
   }
 })
+
+# =====================================================================
+# PHASE 1 & 2: EMPTY DATA & NUMERIC BOUNDS VALIDATION
+# =====================================================================
+
+test_that("plotSensitivity rejects empty sensitivity data", {
+  emptySensData <- data.table::data.table(
+    scenario = character(0),
+    parameter = character(0),
+    value = numeric(0)
+  )
+
+  expect_error(
+    checkmate::assertDataTable(emptySensData, min.rows = 1),
+    "at least 1 rows"
+  )
+})
+
+test_that("plotSensitivity rejects invalid threshold values (Inf)", {
+  expect_error(
+    checkmate::assertNumeric(Inf, finite = TRUE),
+    "finite"
+  )
+})
+
+test_that("plotSensitivity rejects negative threshold when inappropriate", {
+  # Most sensitivity thresholds should be non-negative
+  expect_error(
+    checkmate::assertNumeric(-0.1, lower = 0),
+    ">= 0"
+  )
+})

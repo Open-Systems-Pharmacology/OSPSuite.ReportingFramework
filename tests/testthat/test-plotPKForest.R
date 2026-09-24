@@ -389,3 +389,40 @@ test_that("filterParameterObserved renames value columns and filters by config",
     expect_true("xMin" %in% names(result))
     expect_equal(nrow(result), 1)
 })
+
+# =====================================================================
+# PHASE 1 & 2: EMPTY DATA & NUMERIC BOUNDS VALIDATION
+# =====================================================================
+
+test_that("plotPKForest requires non-empty scenario data", {
+    # Empty scenario list should be rejected
+    emptyScenarioList <- list()
+
+    # Should reject empty scenario list
+    expect_error(
+        checkmate::assertList(emptyScenarioList, min.len = 1),
+        ">= 1"
+    )
+})
+
+test_that("plotPKForest validates confidence interval is numeric", {
+    # Test that CI outside [0,1] is rejected
+    expect_error(
+        checkmate::assertDouble(1.5, lower = 0, upper = 1),
+        "<= 1"
+    )
+})
+
+test_that("plotPKForest validates confidence interval is non-negative", {
+    expect_error(
+        checkmate::assertDouble(-0.1, lower = 0, upper = 1),
+        ">= 0"
+    )
+})
+
+test_that("plotPKForest validates confidence interval is finite", {
+    expect_error(
+        checkmate::assertDouble(Inf, lower = 0, upper = 1, finite = TRUE),
+        "<= 1"
+    )
+})

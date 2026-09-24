@@ -21,9 +21,463 @@ makeCaptionData <- function(
   dt
 }
 
+makeDistributionVsDemographicsConfig <- function(
+  parameterIds = "age",
+  parameterId_Bin = "weight",
+  modeOfBinning = "Equal Width Binning",
+  numberOfBins = "10"
+) {
+  data.table::data.table(
+    level = c(1, NA),
+    header = c("Plot configuration", NA),
+    plotName = c(NA, "Plot1"),
+    parameterIds = c(NA, parameterIds),
+    scenario = c(NA, "scenario1"),
+    parameterId_Bin = c(NA, parameterId_Bin),
+    modeOfBinning = c(NA, modeOfBinning),
+    plotCaptionAddon = c(NA, NA),
+    colorLegend = c(NA, NA),
+    referenceScenario = c(NA, NA),
+    ylimit_linear = c(NA, NA),
+    ylimit_log = c(NA, NA),
+    facetScale = c(NA, "fixed"),
+    numberOfBins = c(NA, numberOfBins),
+    outputPathIds = c(NA, NA),
+    yScale = c(NA, "linear")
+  )
+}
+
+mockDistributionVsDemographicsEnv <- function() {
+  configEnv <- get0("configEnv", envir = .GlobalEnv, inherits = FALSE)
+  mockEnv <- if (is.null(configEnv)) new.env(parent = emptyenv()) else configEnv
+  oldModelParameter <- mockEnv$modelParameter
+  oldOutputPaths <- mockEnv$outputPaths
+  mockEnv$modelParameter <- data.table::data.table(
+    parameterId = factor(
+      c("age", "sex", "weight", "height", "BMI"),
+      levels = c("age", "sex", "weight", "height", "BMI"),
+      ordered = TRUE
+    ),
+    modelPath = c("Age", "Sex", "Weight", "Height", "BMI"),
+    displayNameModelParameter = c("Age", "Sex", "Weight", "Height", "BMI"),
+    displayUnit = c("year", "", "kg", "cm", "kg/m^2")
+  )
+  mockEnv$outputPaths <- data.table::data.table(
+    outputPathId = factor("path|A", levels = "path|A", ordered = TRUE),
+    outputPath = "Organism|Plasma|A",
+    displayNameOutput = "Plasma concentration",
+    displayUnit = "mg/l"
+  )
+  assign("configEnv", mockEnv, envir = .GlobalEnv)
+
+  list(
+    mockEnv = mockEnv,
+    oldModelParameter = oldModelParameter,
+    oldOutputPaths = oldOutputPaths
+  )
+}
+
+makePopulationScenarioList <- function() {
+  list(scenario1 = list(population = structure(list(), class = "Population")))
+}
+
+makePkParameterDT <- function() {
+  data.table::data.table(
+    scenario = "scenario1",
+    pkParameter = "AUC_tEnd",
+    individualId = 1L,
+    value = 100,
+    outputPathId = "path|A",
+    displayNamePKParameter = "AUC",
+    displayUnitPKParameter = "mg*h/l"
+  )
+}
+
 # ---------------------------------------------------------------------------
 # getCaptionForDemographicPlot
 # ---------------------------------------------------------------------------
+
+test_that("validateDistributionVsDemographicsConfig rejects categorical ParameterIds", {
+  envState <- mockDistributionVsDemographicsEnv()
+  on.exit(
+    {
+      envState$mockEnv$modelParameter <- envState$oldModelParameter
+      envState$mockEnv$outputPaths <- envState$oldOutputPaths
+    },
+    add = TRUE
+  )
+  local_mocked_bindings(
+    populationToDataFrame = function(population) {
+      data.frame(
+        IndividualId = 1:2,
+        Age = c(30, 40),
+        Sex = c("M", "F"),
+        Weight = c(70, 80)
+      )
+    },
+    .package = "ospsuite"
+  )
+
+  expect_error(
+    ospsuite.reportingframework:::validateDistributionVsDemographicsConfig(
+      configTable = makeDistributionVsDemographicsConfig(
+        parameterIds = "sex",
+        parameterId_Bin = "age"
+      ),
+      scenarioList = makePopulationScenarioList()
+    ),
+    "ParameterIds: sex"
+  )
+})
+
+test_that("validateDistributionVsDemographicsConfig rejects categorical parameterId_Bin", {
+  envState <- mockDistributionVsDemographicsEnv()
+  on.exit(
+    {
+      envState$mockEnv$modelParameter <- envState$oldModelParameter
+      envState$mockEnv$outputPaths <- envState$oldOutputPaths
+    },
+    add = TRUE
+  )
+  local_mocked_bindings(
+    populationToDataFrame = function(population) {
+      data.frame(
+        IndividualId = 1:2,
+        Age = c(30, 40),
+        Sex = c("M", "F"),
+        Weight = c(70, 80)
+      )
+    },
+    .package = "ospsuite"
+  )
+
+  expect_error(
+    ospsuite.reportingframework:::validateDistributionVsDemographicsConfig(
+      configTable = makeDistributionVsDemographicsConfig(
+        parameterIds = "weight",
+        parameterId_Bin = "sex"
+      ),
+      scenarioList = makePopulationScenarioList()
+    ),
+    "parameterId_Bin: sex"
+  )
+})
+
+test_that("validateDistributionVsDemographicsConfig rejects missing ParameterIds", {
+  envState <- mockDistributionVsDemographicsEnv()
+  on.exit(
+    {
+      envState$mockEnv$modelParameter <- envState$oldModelParameter
+      envState$mockEnv$outputPaths <- envState$oldOutputPaths
+    },
+    add = TRUE
+  )
+  local_mocked_bindings(
+    populationToDataFrame = function(population) {
+      data.frame(
+        IndividualId = 1:2,
+        Age = c(30, 40),
+        Weight = c(70, 80)
+      )
+    },
+    .package = "ospsuite"
+  )
+
+  expect_error(
+    ospsuite.reportingframework:::validateDistributionVsDemographicsConfig(
+      configTable = makeDistributionVsDemographicsConfig(
+        parameterIds = "sex",
+        parameterId_Bin = "age"
+      ),
+      scenarioList = makePopulationScenarioList()
+    ),
+    "ParameterIds: sex"
+  )
+})
+
+test_that("validateDistributionVsDemographicsConfig rejects missing parameterId_Bin", {
+  envState <- mockDistributionVsDemographicsEnv()
+  on.exit(
+    {
+      envState$mockEnv$modelParameter <- envState$oldModelParameter
+      envState$mockEnv$outputPaths <- envState$oldOutputPaths
+    },
+    add = TRUE
+  )
+  local_mocked_bindings(
+    populationToDataFrame = function(population) {
+      data.frame(
+        IndividualId = 1:2,
+        Age = c(30, 40),
+        Weight = c(70, 80)
+      )
+    },
+    .package = "ospsuite"
+  )
+
+  expect_error(
+    ospsuite.reportingframework:::validateDistributionVsDemographicsConfig(
+      configTable = makeDistributionVsDemographicsConfig(
+        parameterIds = "weight",
+        parameterId_Bin = "sex"
+      ),
+      scenarioList = makePopulationScenarioList()
+    ),
+    "parameterId_Bin: sex"
+  )
+})
+
+test_that("validateDistributionVsDemographicsConfig requires all model ParameterIds to be in ParameterDefinitions", {
+  envState <- mockDistributionVsDemographicsEnv()
+  on.exit(
+    {
+      envState$mockEnv$modelParameter <- envState$oldModelParameter
+      envState$mockEnv$outputPaths <- envState$oldOutputPaths
+    },
+    add = TRUE
+  )
+  local_mocked_bindings(
+    populationToDataFrame = function(population) {
+      data.frame(
+        IndividualId = 1:2,
+        Age = c(30, 40),
+        Weight = c(70, 80)
+      )
+    },
+    .package = "ospsuite"
+  )
+
+  expect_error(
+    ospsuite.reportingframework:::validateDistributionVsDemographicsConfig(
+      configTable = makeDistributionVsDemographicsConfig(
+        parameterIds = "height,bmi",
+        parameterId_Bin = "weight"
+      ),
+      scenarioList = makePopulationScenarioList()
+    ),
+    "parameterIds"
+  )
+})
+
+test_that("validateDistributionVsDemographicsConfig rejects custom binning with fewer than two breaks", {
+  envState <- mockDistributionVsDemographicsEnv()
+  on.exit(
+    {
+      envState$mockEnv$modelParameter <- envState$oldModelParameter
+      envState$mockEnv$outputPaths <- envState$oldOutputPaths
+    },
+    add = TRUE
+  )
+  local_mocked_bindings(
+    populationToDataFrame = function(population) {
+      data.frame(
+        IndividualId = 1:2,
+        Age = c(30, 40),
+        Weight = c(70, 80)
+      )
+    },
+    .package = "ospsuite"
+  )
+
+  expect_error(
+    ospsuite.reportingframework:::validateDistributionVsDemographicsConfig(
+      configTable = makeDistributionVsDemographicsConfig(
+        parameterIds = "age",
+        parameterId_Bin = "weight",
+        modeOfBinning = "Custom Binning",
+        numberOfBins = "seq(0,3,18)"
+      ),
+      scenarioList = makePopulationScenarioList()
+    ),
+    "numberOfBins"
+  )
+})
+
+test_that("validateDistributionVsDemographicsConfig rejects custom binning with missing breaks", {
+  envState <- mockDistributionVsDemographicsEnv()
+  on.exit(
+    {
+      envState$mockEnv$modelParameter <- envState$oldModelParameter
+      envState$mockEnv$outputPaths <- envState$oldOutputPaths
+    },
+    add = TRUE
+  )
+  local_mocked_bindings(
+    populationToDataFrame = function(population) {
+      data.frame(
+        IndividualId = 1:2,
+        Age = c(30, 40),
+        Weight = c(70, 80)
+      )
+    },
+    .package = "ospsuite"
+  )
+
+  expect_error(
+    ospsuite.reportingframework:::validateDistributionVsDemographicsConfig(
+      configTable = makeDistributionVsDemographicsConfig(
+        parameterIds = "age",
+        parameterId_Bin = "weight",
+        modeOfBinning = "Custom Binning",
+        numberOfBins = "c(NA,NA)"
+      ),
+      scenarioList = makePopulationScenarioList()
+    ),
+    "numberOfBins"
+  )
+})
+
+test_that("validateDistributionVsDemographicsConfig rejects unsorted custom breaks", {
+  envState <- mockDistributionVsDemographicsEnv()
+  on.exit(
+    {
+      envState$mockEnv$modelParameter <- envState$oldModelParameter
+      envState$mockEnv$outputPaths <- envState$oldOutputPaths
+    },
+    add = TRUE
+  )
+  local_mocked_bindings(
+    populationToDataFrame = function(population) {
+      data.frame(
+        IndividualId = 1:2,
+        Age = c(30, 40),
+        Weight = c(70, 80)
+      )
+    },
+    .package = "ospsuite"
+  )
+
+  expect_error(
+    ospsuite.reportingframework:::validateDistributionVsDemographicsConfig(
+      configTable = makeDistributionVsDemographicsConfig(
+        parameterIds = "age",
+        parameterId_Bin = "weight",
+        modeOfBinning = "Custom Binning",
+        numberOfBins = "c(0, 2, 1)"
+      ),
+      scenarioList = makePopulationScenarioList()
+    ),
+    "numberOfBins"
+  )
+})
+
+test_that("validateDistributionVsDemographicsConfig rejects duplicated custom breaks", {
+  envState <- mockDistributionVsDemographicsEnv()
+  on.exit(
+    {
+      envState$mockEnv$modelParameter <- envState$oldModelParameter
+      envState$mockEnv$outputPaths <- envState$oldOutputPaths
+    },
+    add = TRUE
+  )
+
+  test_that("validateParameterID rejects mixed model and PK parameters within one plotName", {
+    envState <- mockDistributionVsDemographicsEnv()
+    on.exit(
+      {
+        envState$mockEnv$modelParameter <- envState$oldModelParameter
+        envState$mockEnv$outputPaths <- envState$oldOutputPaths
+      },
+      add = TRUE
+    )
+
+    configTablePlots <- data.table::data.table(
+      plotName = c("Plot1", "Plot1"),
+      parameterIds = c("age", "AUC_tEnd"),
+      outputPathIds = c(NA, "path|A")
+    )
+
+    expect_error(
+      ospsuite.reportingframework:::validateParameterID(
+        configTablePlots = configTablePlots,
+        pkParameterDT = makePkParameterDT()
+      ),
+      "either model parameters or PK parameters"
+    )
+  })
+
+  test_that("validateParameterID allows model and PK parameters in different plotNames", {
+    envState <- mockDistributionVsDemographicsEnv()
+    on.exit(
+      {
+        envState$mockEnv$modelParameter <- envState$oldModelParameter
+        envState$mockEnv$outputPaths <- envState$oldOutputPaths
+      },
+      add = TRUE
+    )
+
+    configTablePlots <- data.table::data.table(
+      plotName = c("Plot1", "Plot2"),
+      parameterIds = c("age", "AUC_tEnd"),
+      outputPathIds = c(NA, "path|A")
+    )
+
+    expect_no_error(
+      ospsuite.reportingframework:::validateParameterID(
+        configTablePlots = configTablePlots,
+        pkParameterDT = makePkParameterDT()
+      )
+    )
+  })
+  local_mocked_bindings(
+    populationToDataFrame = function(population) {
+      data.frame(
+        IndividualId = 1:2,
+        Age = c(30, 40),
+        Weight = c(70, 80)
+      )
+    },
+    .package = "ospsuite"
+  )
+
+  expect_error(
+    ospsuite.reportingframework:::validateDistributionVsDemographicsConfig(
+      configTable = makeDistributionVsDemographicsConfig(
+        parameterIds = "age",
+        parameterId_Bin = "weight",
+        modeOfBinning = "Custom Binning",
+        numberOfBins = "c(0, 1, 1, 2)"
+      ),
+      scenarioList = makePopulationScenarioList()
+    ),
+    "numberOfBins"
+  )
+})
+
+test_that("getExportTableForRanges handles plot data without scenarioType", {
+  plotObject <- list(
+    data = data.table::data.table(
+      .bin = c(1, 1, 2, 2),
+      plotTag = c("A", "A", "A", "A"),
+      value = c(10, 20, 30, 40),
+      individualId = 1:4
+    ),
+    border = data.table::data.table(
+      .bin = c(1, 2),
+      breaks = c(0, 10),
+      medianX = c(5, 15)
+    )
+  )
+
+  aggregationFun <- function(values) {
+    list(
+      yValues = mean(values),
+      yErrorValues = stats::sd(values),
+      yErrorType = ospsuite::DataErrorType$ArithmeticStdDev
+    )
+  }
+
+  result <- ospsuite.reportingframework:::getExportTableForRanges(
+    plotObject = plotObject,
+    aggregationFun = aggregationFun,
+    xLabel = "Age"
+  )
+
+  expect_true("Age range" %in% names(result))
+  expect_true("Age median" %in% names(result))
+  expect_equal(result[["Age median"]], c(5, 15))
+  expect_true("plotTag" %in% names(result))
+})
 
 test_that("getCaptionForDemographicPlot builds histogram caption", {
   result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
@@ -117,6 +571,8 @@ test_that("getFootnoteLinesForRangePlots formats three labels", {
 # ---------------------------------------------------------------------------
 
 makeFacetData <- function(plotTags, scenarios, outputNames = NULL) {
+  displayNameOutput <- NULL
+
   dt <- data.table::data.table(plotTag = plotTags, scenario = scenarios)
   if (!is.null(outputNames)) {
     dt[, displayNameOutput := outputNames]
@@ -337,4 +793,233 @@ test_that("setPlotTag generates sequential plot tags", {
   expect_true(all(
     tags %in% c("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
   ))
+})
+
+# =====================================================================
+# PHASE 1: CUSTOM FUNCTION VALIDATION & EMPTY DATA HANDLING
+# =====================================================================
+
+# ---------------------------------------------------------------------------
+# Custom Function Validation Tests (plotDistributionVsDemographics)
+# ---------------------------------------------------------------------------
+
+test_that("plotDistributionVsDemographics rejects customFunction that is not a function", {
+  expect_error(
+    getAggregationFunction(
+      aggregationFlag = "Custom",
+      percentiles = c(0.05, 0.5, 0.95),
+      customFunction = "not a function",
+      legendsize = 2
+    ),
+    "Must be a function"
+  )
+})
+
+test_that("plotDistributionVsDemographics rejects NULL customFunction when aggregationFlag is Custom", {
+  expect_error(
+    getAggregationFunction(
+      aggregationFlag = "Custom",
+      percentiles = c(0.05, 0.5, 0.95),
+      customFunction = NULL,
+      legendsize = 2
+    ),
+    "Must be a function"
+  )
+})
+
+test_that("getAggregationFunction accepts valid custom function returning required fields", {
+  customFun <- function(y) {
+    list(
+      yValues = mean(y),
+      yMin = quantile(y, 0.05),
+      yMax = quantile(y, 0.95),
+      yErrorType = "mean | 5th - 95th percentile"
+    )
+  }
+
+  result <- getAggregationFunction(
+    aggregationFlag = "Custom",
+    percentiles = c(0.05, 0.5, 0.95),
+    customFunction = customFun,
+    legendsize = 2
+  )
+
+  expect_true(is.function(result))
+  testData <- c(1, 2, 3, 4, 5)
+  aggregated <- result(testData)
+  expect_true("yValues" %in% names(aggregated))
+  expect_true("yErrorType" %in% names(aggregated))
+})
+
+# ---------------------------------------------------------------------------
+# Empty Data Handling Tests (Phase 1)
+# ---------------------------------------------------------------------------
+
+test_that("plotDistributionVsDemographics validates pkParameterDT structure", {
+  # Test that validator checks for required columns
+  invalidPkDT <- data.table::data.table(
+    scenario = "scenario1"
+    # Missing required columns: pkParameter, value, etc.
+  )
+
+  # Verify validation catches invalid data structure
+  expect_error(
+    ospsuite.reportingframework:::.validatePKParameterDT(invalidPkDT),
+    "not found|missing"
+  )
+})
+
+test_that("plotHistograms validates scenarioList type check with non-Scenario object", {
+  # Validate that checkmate type checking rejects invalid types
+  expect_error(
+    checkmate::assertList(
+      list("not_a_scenario"),
+      types = "Scenario",
+      null.ok = FALSE
+    ),
+    "Scenario|May only contain"
+  )
+})
+
+# =====================================================================
+# PHASE 2: NUMERIC BOUNDS & CROSS-PARAMETER VALIDATION
+# =====================================================================
+
+# ---------------------------------------------------------------------------
+# Numeric Bounds Edge Case Tests (Phase 2)
+# ---------------------------------------------------------------------------
+
+test_that("plotDistributionVsDemographics rejects facetAspectRatio = Inf", {
+  expect_error(
+    checkmate::assertNumeric(Inf, lower = 0, finite = TRUE, len = 1),
+    "finite"
+  )
+})
+
+test_that("plotDistributionVsDemographics rejects facetAspectRatio = negative", {
+  expect_error(
+    checkmate::assertNumeric(-0.5, lower = 0, finite = TRUE, len = 1),
+    ">= 0"
+  )
+})
+
+test_that("plotDistributionVsDemographics accepts facetAspectRatio = zero", {
+  expect_no_error(
+    checkmate::assertNumeric(0, lower = 0, finite = TRUE, len = 1)
+  )
+})
+
+test_that("plotDistributionVsDemographics accepts facetAspectRatio > zero", {
+  expect_no_error(
+    checkmate::assertNumeric(0.5, lower = 0, finite = TRUE, len = 1)
+  )
+})
+
+test_that("getAggregationFunction rejects percentiles with NaN", {
+  expect_error(
+    getAggregationFunction(
+      aggregationFlag = "Percentiles",
+      percentiles = c(0.05, NaN, 0.95),
+      customFunction = NULL,
+      legendsize = 2
+    ),
+    "missing|NaN"
+  )
+})
+
+test_that("getAggregationFunction rejects percentiles with Inf", {
+  expect_error(
+    getAggregationFunction(
+      aggregationFlag = "Percentiles",
+      percentiles = c(0.05, 0.5, Inf),
+      customFunction = NULL,
+      legendsize = 2
+    ),
+    "<= 1"
+  )
+})
+
+test_that("getAggregationFunction rejects percentiles outside [0, 1]", {
+  expect_error(
+    getAggregationFunction(
+      aggregationFlag = "Percentiles",
+      percentiles = c(-0.05, 0.5, 0.95),
+      customFunction = NULL,
+      legendsize = 2
+    ),
+    ">= 0"
+  )
+})
+
+test_that("getAggregationFunction rejects unsorted percentiles", {
+  expect_error(
+    getAggregationFunction(
+      aggregationFlag = "Percentiles",
+      percentiles = c(0.95, 0.5, 0.05),
+      customFunction = NULL,
+      legendsize = 2
+    ),
+    "sorted|must be sorted"
+  )
+})
+
+test_that("getAggregationFunction rejects duplicate percentiles", {
+  expect_error(
+    getAggregationFunction(
+      aggregationFlag = "Percentiles",
+      percentiles = c(0.05, 0.05, 0.95),
+      customFunction = NULL,
+      legendsize = 2
+    ),
+    "duplicated|unique"
+  )
+})
+
+test_that("getAggregationFunction rejects wrong number of percentiles", {
+  expect_error(
+    getAggregationFunction(
+      aggregationFlag = "Percentiles",
+      percentiles = c(0.05, 0.95),
+      customFunction = NULL,
+      legendsize = 2
+    ),
+    "length 3|Must have length 3"
+  )
+})
+
+# ---------------------------------------------------------------------------
+# Cross-Parameter Validation Tests (Phase 2)
+# ---------------------------------------------------------------------------
+
+test_that("getAggregationFunction with Percentiles validates legendsize is 2 or 3", {
+  # Test with invalid legendsize - should error at legend generation
+  expect_error(
+    getAggregationFunction(
+      aggregationFlag = "Percentiles",
+      percentiles = c(0.05, 0.5, 0.95),
+      customFunction = NULL,
+      legendsize = 4
+    ),
+    "legendsize"
+  )
+})
+
+test_that("getAggregationFunction with Percentiles accepts valid legendsize", {
+  # Test with legendsize = 2
+  fun2 <- getAggregationFunction(
+    aggregationFlag = "Percentiles",
+    percentiles = c(0.05, 0.5, 0.95),
+    customFunction = NULL,
+    legendsize = 2
+  )
+  expect_true(is.function(fun2))
+  
+  # Test with legendsize = 3
+  fun3 <- getAggregationFunction(
+    aggregationFlag = "Percentiles",
+    percentiles = c(0.05, 0.5, 0.95),
+    customFunction = NULL,
+    legendsize = 3
+  )
+  expect_true(is.function(fun3))
 })

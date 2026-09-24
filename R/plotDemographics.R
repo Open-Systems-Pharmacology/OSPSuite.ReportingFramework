@@ -281,11 +281,11 @@ prepareDemographicPlotData <- function(
       onePlotConfig = onePlotConfig,
       scenarioList = scenarioList
     )
-
     plotData[,
       scenarioType := factor(
         ifelse(
-          scenario == onePlotConfig$referenceScenario,
+          !is.na(onePlotConfig$referenceScenario) &
+            scenario == onePlotConfig$referenceScenario,
           names(colorVector)[2],
           names(colorVector)[1]
         ),
@@ -457,7 +457,7 @@ generateRangePlots <- function(
   }
   if (onePlotConfig$modeOfBinning[1] == BINNINGMODE$breaks) {
     breaks <- eval(parse(text = onePlotConfig$numberOfBins[1]))
-    numberOfBins <- NA
+    numberOfBins <- length(breaks) - 1
   } else {
     breaks <- NA
     numberOfBins <- as.double(onePlotConfig$numberOfBins[1])
@@ -746,13 +746,18 @@ getExportTableForRanges <- function(plotObject, aggregationFun, xLabel) {
   # initialize to avoid linter messages
   bin <- .bin <- scenarioType <- yErrorType <- value <- breaks <- NULL
 
-  dtExport <- unique(setDT(plotObject$data[, c(
+  plotData <- setDT(copy(plotObject$data))
+  if (!("scenarioType" %in% names(plotData))) {
+    plotData[, scenarioType := NA_character_]
+  }
+
+  dtExport <- unique(plotData[, c(
     ".bin",
     "plotTag",
     "scenarioType",
     "value",
     "individualId"
-  )]))[,
+  )])[,
     as.list(c(
       list(N = length(!is.na(value))),
       aggregationFun(value)
@@ -785,7 +790,9 @@ getExportTableForRanges <- function(plotObject, aggregationFun, xLabel) {
     all.x = TRUE
   )
 
-  dtExport[is.na(bin), bin := scenarioType]
+  if ("scenarioType" %in% names(plotObject$data)) {
+    dtExport[is.na(bin), bin := scenarioType]
+  }
 
   dtExport$bin <- factor(
     dtExport$bin,
@@ -1103,6 +1110,14 @@ validateDistributionVsDemographicsConfig <- function(
 
   # check for ParameterID
   validateParameterID(configTablePlots, ...)
+  .validateDistributionVsDemographicsParameterExistence(
+    configTablePlots = configTablePlots,
+    scenarioList = scenarioList
+  )
+  .validateDistributionVsDemographicsNumericParameters(
+    configTablePlots = configTablePlots,
+    scenarioList = scenarioList
+  )
 
   if (any(configTablePlots$modeOfBinning != BINNINGMODE$breaks)) {
     checkmate::assertNumeric(
@@ -1118,7 +1133,11 @@ validateDistributionVsDemographicsConfig <- function(
   if (any(configTablePlots$modeOfBinning == BINNINGMODE$breaks)) {
     validateNumericVectorColumns(
       "numberOfBins",
-      configTablePlots[modeOfBinning == BINNINGMODE$breaks]
+      configTablePlots[modeOfBinning == BINNINGMODE$breaks],
+      min.len = 2,
+      any.missing = FALSE,
+      sorted = TRUE,
+      unique = TRUE
     )
   }
 
@@ -1138,6 +1157,177 @@ validateDistributionVsDemographicsConfig <- function(
   )
 
   validateColorLegend(dt = configTablePlots[!is.na(referenceScenario)])
+}
+.validateDistributionVsDemographicsParameterExistence <- function(
+  configTablePlots,
+  scenarioList
+) {
+  missingParameterIds <- .getMissingPopulationParameterIds(
+    parameterIds = splitInputs(configTablePlots$parameterIds),
+    scenarioNames = unique(configTablePlots$scenario),
+    scenarioList = scenarioList
+  )
+  missingBinIds <- .getMissingPopulationParameterIds(
+    parameterIds = configTablePlots$parameterId_Bin,
+    scenarioNames = unique(c(
+      configTablePlots$scenario,
+      configTablePlots$referenceScenario
+    )),
+    scenarioList = scenarioList
+  )
+
+  if (length(missingParameterIds) == 0 && length(missingBinIds) == 0) {
+    return(invisible())
+  }
+
+  missingColumns <- c(
+    if (length(missingParameterIds) > 0) {
+      paste("ParameterIds:", concatWithAnd(missingParameterIds))
+    },
+    if (length(missingBinIds) > 0) {
+      paste("parameterId_Bin:", concatWithAnd(missingBinIds))
+    }
+  )
+
+  stop(paste(
+    "Configured model parameters are not available in the selected population(s). Check plotName",
+    configTablePlots$plotName[1],
+    paste(missingColumns, collapse = "; ")
+  ))
+}
+
+.getMissingPopulationParameterIds <- function(
+  parameterIds,
+  scenarioNames,
+  scenarioList
+) {
+  parameterIds <- unique(as.character(parameterIds))
+  parameterIds <- parameterIds[!is.na(parameterIds)]
+  scenarioNames <- unique(as.character(scenarioNames))
+  scenarioNames <- scenarioNames[!is.na(scenarioNames)]
+
+  if (length(parameterIds) == 0 || length(scenarioNames) == 0) {
+    return(character())
+  }
+
+  parameterDefinitions <- unique(as.data.frame(configEnv$modelParameter))
+  parameterDefinitions <- parameterDefinitions[
+    parameterDefinitions$parameterId %in% parameterIds,
+    c("parameterId", "modelPath"),
+    drop = FALSE
+  ]
+
+  if (nrow(parameterDefinitions) == 0) {
+    return(character())
+  }
+
+  missingByScenario <- lapply(scenarioNames, function(scenarioName) {
+    dtPop <- ospsuite::populationToDataFrame(
+      scenarioList[[scenarioName]]$population
+    ) %>%
+      setDT()
+
+    availablePaths <- names(dtPop)
+    missingRows <- !parameterDefinitions$modelPath %in% availablePaths
+    as.character(parameterDefinitions$parameterId[missingRows])
+  })
+
+  unique(unlist(missingByScenario, use.names = FALSE))
+}
+
+.validateDistributionVsDemographicsNumericParameters <- function(
+  configTablePlots,
+  scenarioList
+) {
+  invalidParameterIds <- .getCategoricPopulationParameterIds(
+    parameterIds = splitInputs(configTablePlots$parameterIds),
+    scenarioNames = unique(configTablePlots$scenario),
+    scenarioList = scenarioList
+  )
+  invalidBinIds <- .getCategoricPopulationParameterIds(
+    parameterIds = configTablePlots$parameterId_Bin,
+    scenarioNames = unique(c(
+      configTablePlots$scenario,
+      configTablePlots$referenceScenario
+    )),
+    scenarioList = scenarioList
+  )
+
+  if (length(invalidParameterIds) == 0 && length(invalidBinIds) == 0) {
+    return(invisible())
+  }
+
+  invalidColumns <- c(
+    if (length(invalidParameterIds) > 0) {
+      paste("ParameterIds:", concatWithAnd(invalidParameterIds))
+    },
+    if (length(invalidBinIds) > 0) {
+      paste("parameterId_Bin:", concatWithAnd(invalidBinIds))
+    }
+  )
+
+  stop(paste(
+    "Categoric model parameters are not supported for plotDistributionVsDemographics. Check plotName",
+    configTablePlots$plotName[1],
+    paste(invalidColumns, collapse = "; ")
+  ))
+}
+
+.getCategoricPopulationParameterIds <- function(
+  parameterIds,
+  scenarioNames,
+  scenarioList
+) {
+  parameterIds <- unique(as.character(parameterIds))
+  parameterIds <- parameterIds[!is.na(parameterIds)]
+  scenarioNames <- unique(as.character(scenarioNames))
+  scenarioNames <- scenarioNames[!is.na(scenarioNames)]
+
+  if (length(parameterIds) == 0 || length(scenarioNames) == 0) {
+    return(character())
+  }
+
+  parameterDefinitions <- unique(as.data.frame(configEnv$modelParameter))
+  parameterDefinitions <- parameterDefinitions[
+    parameterDefinitions$parameterId %in% parameterIds,
+    c("parameterId", "modelPath"),
+    drop = FALSE
+  ]
+
+  if (nrow(parameterDefinitions) == 0) {
+    return(character())
+  }
+
+  categoricParameterIds <- unlist(
+    lapply(scenarioNames, function(scenarioName) {
+      dtPop <- ospsuite::populationToDataFrame(
+        scenarioList[[scenarioName]]$population
+      ) %>%
+        setDT()
+      availableDefinitions <- parameterDefinitions[
+        parameterDefinitions$modelPath %in% names(dtPop),
+        ,
+        drop = FALSE
+      ]
+
+      if (nrow(availableDefinitions) == 0) {
+        return(character())
+      }
+
+      invalidRows <- !vapply(
+        availableDefinitions$modelPath,
+        function(path) {
+          is.numeric(dtPop[[path]])
+        },
+        logical(1)
+      )
+
+      as.character(availableDefinitions$parameterId[invalidRows])
+    }),
+    use.names = FALSE
+  )
+
+  unique(categoricParameterIds)
 }
 #' Validate Histograms Configuration
 #'
@@ -1229,45 +1419,64 @@ validateHistogramsConfig <- function(configTable, ...) {
 #' @return NULL (invisible).
 #' @keywords internal
 validateParameterID <- function(configTablePlots, ...) {
-  if (
-    any(
-      splitInputs(configTablePlots$parameterIds) %in%
-        configEnv$modelParameter$parameterId
-    )
-  ) {
-    validateConfigTablePlots(
-      configTablePlots = configTablePlots,
-      subsetList = list(
-        ParameterIds = list(
-          cols = c("ParameterIds"),
-          allowedValues = configEnv$modelParameter$parameterId
-        )
-      )
-    )
-  } else {
-    dotarg <- list(...)
-    if (!("pkParameterDT" %in% names(dotarg))) {
-      stop(messages$errorplotDemographicsL1XXX())
-    }
-
-    .validatePKParameterDT(dotarg$pkParameterDT)
-    validateOutputIdsForPlot()
-
-    validateConfigTablePlots(
-      configTablePlots = configTablePlots,
-      charactersWithoutMissing = c("outputPathIds"),
-      subsetList = list(
-        ParameterIds = list(
-          cols = c("ParameterIds"),
-          allowedValues = unique(dotarg$pkParameterDT$parameter)
-        ),
-        outputPathId = list(
-          cols = c("outputPathIds"),
-          allowedValues = unique(dotarg$pkParameterDT$outputPathId)
-        )
-      )
-    )
+  dotarg <- list(...)
+  modelParameterIds <- as.character(configEnv$modelParameter$parameterId)
+  pkParameterIds <- character()
+  if ("pkParameterDT" %in% names(dotarg)) {
+    pkParameterIds <- unique(dotarg$pkParameterDT$pkParameter)
   }
+  pkValidated <- FALSE
+
+  for (onePlotConfig in split(configTablePlots, by = "plotName")) {
+    parameterIds <- splitInputs(onePlotConfig$parameterIds)
+    useModelParameter <- parameterIds %in% modelParameterIds
+    usePKParameter <- parameterIds %in% pkParameterIds
+
+    if (any(useModelParameter)) {
+      if (any(usePKParameter)) {
+        stop(paste(
+          "ParameterIds within one plotName must be either model parameters or PK parameters. Check plotName",
+          onePlotConfig$plotName[1]
+        ))
+      }
+
+      validateConfigTablePlots(
+        configTablePlots = onePlotConfig,
+        subsetList = list(
+          ParameterIds = list(
+            cols = c("parameterIds"),
+            allowedValues = configEnv$modelParameter$parameterId
+          )
+        )
+      )
+    } else {
+      if (!("pkParameterDT" %in% names(dotarg))) {
+        stop(messages$errorplotDemographicsL1XXX())
+      }
+
+      if (!pkValidated) {
+        .validatePKParameterDT(dotarg$pkParameterDT)
+        validateOutputIdsForPlot()
+        pkValidated <- TRUE
+      }
+
+      validateConfigTablePlots(
+        configTablePlots = onePlotConfig,
+        charactersWithoutMissing = c("outputPathIds"),
+        subsetList = list(
+          ParameterIds = list(
+            cols = c("parameterIds"),
+            allowedValues = unique(dotarg$pkParameterDT$pkParameter)
+          ),
+          outputPathId = list(
+            cols = c("outputPathIds"),
+            allowedValues = unique(dotarg$pkParameterDT$outputPathId)
+          )
+        )
+      )
+    }
+  }
+
   return(invisible())
 }
 # support usability --------------------

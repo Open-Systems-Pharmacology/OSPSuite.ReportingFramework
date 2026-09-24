@@ -669,8 +669,13 @@ getDefaultShapesForScaleVector <- function(n) {
 #'         provided color legend.
 #' @keywords internal
 getColorVectorForLegend <- function(colorLegend, colorVector) {
-  checkmate::assertCharacter(colorLegend, any.missing = FALSE, len = 1)
+  checkmate::assertCharacter(colorLegend, len = 1)
+  if (is.na(colorLegend)) {
+    colorLegend <- 'scenario|referenceScenario'
+  }
+
   validateColorVector(colorVector)
+  colorVector <- colorVector[!is.na(colorVector)]
 
   colorLegendList <- trimws(strsplit(as.character(colorLegend), "\\|")[[1]])
 
@@ -1120,7 +1125,15 @@ validateSubsetList <- function(subsetList, data) {
 #' @param data A data frame containing the columns to validate.
 #' @param ... additionally parameters parsed to checkmate::assertNumeric
 #' @export
-validateNumericVectorColumns <- function(columns, data, ...) {
+validateNumericVectorColumns <- function(
+  columns,
+  data,
+  ...
+) {
+  dotArgs <- list(...)
+  strictlySorted <- isTRUE(dotArgs$strictlySorted)
+  dotArgs$strictlySorted <- NULL
+
   for (col in columns) {
     if (any(!is.na(data[[col]]))) {
       rangeStrings <- data[!is.na(get(col)), ][[col]]
@@ -1131,11 +1144,20 @@ validateNumericVectorColumns <- function(columns, data, ...) {
             stop(messages$errorutilitiesplotL2XXXXXXX())
           }
         )
-        checkmate::assertNumeric(
-          x = x,
-          .var.name = paste("Plot configuration column", col),
-          ...
-        )
+        do.call(checkmate::assertNumeric, c(
+          list(
+            x = x,
+            .var.name = paste("Plot configuration column", col)
+          ),
+          dotArgs
+        ))
+        if (strictlySorted && is.unsorted(x, strictly = TRUE)) {
+          stop(paste(
+            "Plot configuration column",
+            col,
+            "must be strictly sorted."
+          ))
+        }
       }
     }
   }
