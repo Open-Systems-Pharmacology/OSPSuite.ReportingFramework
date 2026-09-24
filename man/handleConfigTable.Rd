@@ -5,7 +5,7 @@
 \title{Handle Configuration Table Processing}
 \usage{
 handleConfigTable(
-  rmdPlotManager,
+  qmdPlotManager,
   configTable,
   projectConfiguration,
   inputs,
@@ -14,7 +14,7 @@ handleConfigTable(
 )
 }
 \arguments{
-\item{rmdPlotManager}{A QmdPlotManager object responsible for managing Qmd file generation and plot exports.}
+\item{qmdPlotManager}{A QmdPlotManager object responsible for managing Qmd file generation and plot exports.}
 
 \item{configTable}{A data frame containing the configuration settings for the plots.}
 

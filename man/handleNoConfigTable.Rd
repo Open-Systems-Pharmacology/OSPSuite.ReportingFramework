@@ -5,7 +5,7 @@
 \title{Handle Case with No Configuration Table}
 \usage{
 handleNoConfigTable(
-  rmdPlotManager,
+  qmdPlotManager,
   projectConfiguration,
   inputs,
   suppressExport,
@@ -13,7 +13,7 @@ handleNoConfigTable(
 )
 }
 \arguments{
-\item{rmdPlotManager}{A QmdPlotManager object responsible for managing Qmd file generation and plot exports.}
+\item{qmdPlotManager}{A QmdPlotManager object responsible for managing Qmd file generation and plot exports.}
 
 \item{projectConfiguration}{A ProjectConfiguration object containing the project configuration settings.}
 

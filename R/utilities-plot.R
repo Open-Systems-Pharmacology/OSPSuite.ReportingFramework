@@ -85,7 +85,7 @@ runPlot <- function(
 
   suppressExport <- shouldSuppressExport(suppressExport, plotNames, inputs)
 
-  rmdPlotManager <- initializePlotManager(
+  qmdPlotManager <- initializePlotManager(
     projectConfiguration = projectConfiguration,
     qmdName = qmdName,
     nameOfplotFunction = nameOfplotFunction,
@@ -96,14 +96,14 @@ runPlot <- function(
   configTable <- readConfigTableForPlot(
     projectConfiguration = projectConfiguration,
     sheetName = configTableSheet,
-    validateConfigTableFunction = rmdPlotManager$validateConfigTableFunction,
+    validateConfigTableFunction = qmdPlotManager$validateConfigTableFunction,
     plotNames = plotNames,
     inputs = inputs
   )
 
   if (is.null(configTable)) {
     plotList <- handleNoConfigTable(
-      rmdPlotManager = rmdPlotManager,
+      qmdPlotManager = qmdPlotManager,
       projectConfiguration = projectConfiguration,
       inputs = inputs,
       suppressExport = suppressExport,
@@ -111,7 +111,7 @@ runPlot <- function(
     )
   } else {
     plotList <- handleConfigTable(
-      rmdPlotManager = rmdPlotManager,
+      qmdPlotManager = qmdPlotManager,
       configTable = configTable,
       projectConfiguration = projectConfiguration,
       inputs = inputs,
@@ -120,7 +120,7 @@ runPlot <- function(
     )
   }
 
-  rmdPlotManager$writeQmd()
+  qmdPlotManager$writeQmd()
   return(invisible(plotList))
 }
 #' Determine if Export Should be Suppressed
@@ -178,7 +178,7 @@ initializePlotManager <- function(
 #' This helper function processes the plotfunctions where no configuration table is provided,
 #' generating plots based on default settings and exporting them.
 #'
-#' @param rmdPlotManager A QmdPlotManager object responsible for managing Qmd file generation and plot exports.
+#' @param qmdPlotManager A QmdPlotManager object responsible for managing Qmd file generation and plot exports.
 #' @param projectConfiguration A ProjectConfiguration object containing the project configuration settings.
 #' @param inputs A list of additional inputs for the plot function.
 #'
@@ -186,14 +186,14 @@ initializePlotManager <- function(
 #'
 #' @keywords internal
 handleNoConfigTable <- function(
-  rmdPlotManager,
+  qmdPlotManager,
   projectConfiguration,
   inputs,
   suppressExport,
   theme
 ) {
   plotList <- do.call(
-    what = rmdPlotManager$plotFunction,
+    what = qmdPlotManager$plotFunction,
     args = c(
       list(projectConfiguration = projectConfiguration, configTable = NULL),
       inputs
@@ -201,7 +201,7 @@ handleNoConfigTable <- function(
   )
   plotList <- applyThemeToPlotList(plotList, theme)
   if (!suppressExport) {
-    rmdPlotManager$exportPlotList(plotList)
+    qmdPlotManager$exportPlotList(plotList)
     return(list())
   }
   return(plotList)
@@ -210,7 +210,7 @@ handleNoConfigTable <- function(
 #'
 #' This helper function processes the configuration table, generating plots according to the specified configurations.
 #'
-#' @param rmdPlotManager A QmdPlotManager object responsible for managing Qmd file generation and plot exports.
+#' @param qmdPlotManager A QmdPlotManager object responsible for managing Qmd file generation and plot exports.
 #' @param configTable A data frame containing the configuration settings for the plots.
 #' @param projectConfiguration A ProjectConfiguration object containing the project configuration settings.
 #' @param inputs A list of additional inputs for the plot function.
@@ -220,7 +220,7 @@ handleNoConfigTable <- function(
 #'
 #' @keywords internal
 handleConfigTable <- function(
-  rmdPlotManager,
+  qmdPlotManager,
   configTable,
   projectConfiguration,
   inputs,
@@ -232,7 +232,7 @@ handleConfigTable <- function(
   levelLines <- which(!is.na(configTable$level))
   while (currentRow <= nrow(configTable)) {
     if (!is.na(configTable$level[currentRow])) {
-      rmdPlotManager$addHeader(
+      qmdPlotManager$addHeader(
         configTable$header[currentRow],
         level = configTable$level[currentRow]
       )
@@ -252,7 +252,7 @@ handleConfigTable <- function(
         tryCatch(
           {
             plotListiRow <- do.call(
-              what = rmdPlotManager$plotFunction,
+              what = qmdPlotManager$plotFunction,
               args = c(
                 list(
                   projectConfiguration = projectConfiguration,
@@ -279,7 +279,7 @@ handleConfigTable <- function(
               }
               plotList <- c(plotList, plotListiRow)
             } else {
-              rmdPlotManager$exportPlotList(plotListiRow)
+              qmdPlotManager$exportPlotList(plotListiRow)
             }
           },
           error = function(err) {

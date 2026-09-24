@@ -17,6 +17,7 @@ plotPKForestPointEstimateOfAbsoluteValues(
   vlineIntercept = NULL,
   withTable = TRUE,
   relWidths = NULL,
+  heightToWidth = 1,
   digitsToRound = 2,
   digitsToShow = 2
 )
@@ -64,6 +65,8 @@ line on the plot, often used to denote a reference value.}
 \item{withTable}{logical, if TRUE (default) values are displayed as table beside the plot}
 
 \item{relWidths}{Optional numeric vector specifying relative widths for the plot and table.}
+
+\item{heightToWidth}{Numeric scaling factor applied to the export width to derive export height.}
 
 \item{digitsToRound}{An integer specifying the number of digits to round in the
 displayed values.}

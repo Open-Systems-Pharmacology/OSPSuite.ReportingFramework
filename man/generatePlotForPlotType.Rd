@@ -14,7 +14,7 @@ generatePlotForPlotType(plotData, facetAspectRatio, plotType, ...)
 \item{plotType}{Type of the plot to generate.}
 }
 \value{
-Updated `rmdPlotManager` with the generated plot.
+List of plots.
 }
 \description{
 Generate plots for a specific plot type

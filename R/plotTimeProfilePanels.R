@@ -259,7 +259,7 @@ plotTimeProfiles <- function(
 #' @param facetAspectRatio Aspect ratio for the facets.
 #' @param plotType Type of the plot to generate.
 #'
-#' @return Updated `rmdPlotManager` with the generated plot.
+#' @return List of plots.
 #' @keywords internal
 generatePlotForPlotType <- function(plotData, facetAspectRatio, plotType, ...) {
   checkmate::assertChoice(

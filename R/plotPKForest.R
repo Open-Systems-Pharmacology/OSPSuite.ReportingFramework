@@ -99,6 +99,7 @@
 #'   line on the plot, often used to denote a reference value.
 #' @param withTable logical, if TRUE (default) values are displayed as table beside the plot
 #' @param relWidths Optional numeric vector specifying relative widths for the plot and table.
+#' @param heightToWidth Numeric scaling factor applied to the export width to derive export height.
 #' @param digitsToRound An integer specifying the number of digits to round in the
 #'   displayed values.
 #' @param digitsToShow An integer specifying the number of digits to show in the
@@ -129,6 +130,7 @@ plotPKForest <- function(
   vlineIntercept,
   withTable = TRUE,
   relWidths = NULL,
+  heightToWidth = 1,
   digitsToRound = 2,
   digitsToShow = 2,
   scaleVectors,
@@ -243,6 +245,9 @@ plotPKForest <- function(
         asPointeEstimate = asPointeEstimate,
         plotData = plotDataGroup[[groupName]]
       )
+      width <- ospsuite.plots::getOspsuite.plots.option(
+        optionKey = ospsuite.plots::OptionKeys$exportWidth
+      )
 
       # Prepare for export
       combinedObject <- setExportAttributes(
@@ -260,14 +265,8 @@ plotPKForest <- function(
           dtDataReference = NULL
         ),
         exportArguments = list(
-          width = 16,
-          height = 20
-          # heightToWidth = plotDataGroup[[groupName]][, uniqueN(.SD),
-          #                                            .SDcols = c(
-          #                                              columnList$yColumn, # nolint: indentation_linter
-          #                                              columnList$yFacetColumns
-          #                                            )
-          # ] / 15
+          width = width,
+          height = heightToWidth * width
         )
       )
 
@@ -320,6 +319,7 @@ plotPKForestAggregatedAbsoluteValues <- function(
   vlineIntercept = NULL,
   withTable = TRUE,
   relWidths = NULL,
+  heightToWidth = 1,
   digitsToRound = 2,
   digitsToShow = 2
 ) {
@@ -351,7 +351,8 @@ plotPKForestAggregatedAbsoluteValues <- function(
       percentiles = percentiles,
       scaleVectors = scaleVectors,
       vlineIntercept = vlineIntercept,
-      labelWrapWidth = labelWrapWidth
+      labelWrapWidth = labelWrapWidth,
+      heightToWidth = heightToWidth
     )
   return(plotList)
 }
@@ -380,6 +381,7 @@ plotPKForestPointEstimateOfAbsoluteValues <- function(
   vlineIntercept = NULL,
   withTable = TRUE,
   relWidths = NULL,
+  heightToWidth = 1,
   digitsToRound = 2,
   digitsToShow = 2
 ) {
@@ -416,7 +418,8 @@ plotPKForestPointEstimateOfAbsoluteValues <- function(
     digitsToRound = digitsToRound,
     digitsToShow = digitsToShow,
     labelWrapWidth = labelWrapWidth,
-    relWidths = relWidths
+    relWidths = relWidths,
+    heightToWidth = heightToWidth
   )
 
   return(plotList)
@@ -457,6 +460,7 @@ plotPKForestAggregatedRatios <- function(
   vlineIntercept = NULL,
   withTable = TRUE,
   relWidths = NULL,
+  heightToWidth = 1,
   digitsToRound = 2,
   digitsToShow = 2
 ) {
@@ -496,7 +500,8 @@ plotPKForestAggregatedRatios <- function(
       percentiles = percentiles,
       scaleVectors = scaleVectors,
       vlineIntercept = vlineIntercept,
-      labelWrapWidth = labelWrapWidth
+      labelWrapWidth = labelWrapWidth,
+      heightToWidth = heightToWidth
     )
 
   return(plotList)
@@ -526,6 +531,7 @@ plotPKForestPointEstimateOfRatios <- function(
   vlineIntercept = c(1),
   withTable = TRUE,
   relWidths = NULL,
+  heightToWidth = 1,
   digitsToRound = 2,
   digitsToShow = 2
 ) {
@@ -566,7 +572,8 @@ plotPKForestPointEstimateOfRatios <- function(
     digitsToRound = digitsToRound,
     digitsToShow = digitsToShow,
     labelWrapWidth = labelWrapWidth,
-    relWidths = relWidths
+    relWidths = relWidths,
+    heightToWidth = heightToWidth
   )
 
   return(plotList)
@@ -588,12 +595,12 @@ updateScalevector <- function(scaleVectorsInput) {
     simulated = list(
       color = "black",
       fill = "black",
-      shape = "circle filled"
+      shape = "circle"
     ),
     observed = list(
       color = "darkgrey",
       fill = "lightgrey",
-      shape = "triangle filled"
+      shape = "triangle"
     )
   )
   for (f in names(scaleVectors)) {
@@ -1271,6 +1278,7 @@ adjustPkForestPlotObject <- function(
         )
       )
     }
+
   return(combinedObject)
 }
 #' Add Precision Remark to Plot
