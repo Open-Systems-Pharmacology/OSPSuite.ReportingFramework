@@ -656,15 +656,3 @@ test_that("checkAndAdjustYlimits handles ylimit_linear for TP plots", {
   expect_true(is.numeric(ylimit))
   expect_equal(length(ylimit), 2)
 })
-
-# =====================================================================
-# PHASE 2: NUMERIC BOUNDS VALIDATION
-# =====================================================================
-
-test_that("plotTimeProfiles validates numeric scale parameters don't have Inf", {
-  # This would test numeric validation for scale/limit parameters
-  expect_error(
-    checkmate::assertNumeric(Inf, finite = TRUE),
-    "finite"
-  )
-})

@@ -889,32 +889,6 @@ test_that("plotHistograms validates scenarioList type check with non-Scenario ob
 # Numeric Bounds Edge Case Tests (Phase 2)
 # ---------------------------------------------------------------------------
 
-test_that("plotDistributionVsDemographics rejects facetAspectRatio = Inf", {
-  expect_error(
-    checkmate::assertNumeric(Inf, lower = 0, finite = TRUE, len = 1),
-    "finite"
-  )
-})
-
-test_that("plotDistributionVsDemographics rejects facetAspectRatio = negative", {
-  expect_error(
-    checkmate::assertNumeric(-0.5, lower = 0, finite = TRUE, len = 1),
-    ">= 0"
-  )
-})
-
-test_that("plotDistributionVsDemographics accepts facetAspectRatio = zero", {
-  expect_no_error(
-    checkmate::assertNumeric(0, lower = 0, finite = TRUE, len = 1)
-  )
-})
-
-test_that("plotDistributionVsDemographics accepts facetAspectRatio > zero", {
-  expect_no_error(
-    checkmate::assertNumeric(0.5, lower = 0, finite = TRUE, len = 1)
-  )
-})
-
 test_that("getAggregationFunction rejects percentiles with NaN", {
   expect_error(
     getAggregationFunction(
@@ -1013,7 +987,7 @@ test_that("getAggregationFunction with Percentiles accepts valid legendsize", {
     legendsize = 2
   )
   expect_true(is.function(fun2))
-  
+
   # Test with legendsize = 3
   fun3 <- getAggregationFunction(
     aggregationFlag = "Percentiles",

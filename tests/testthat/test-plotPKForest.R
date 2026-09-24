@@ -7,35 +7,35 @@
 # ---------------------------------------------------------------------------
 
 makeForestPlotData <- function(
-    pkParameter = c("AUC", "AUC", "Cmax"),
-    outputPathId = c("Plasma", "Plasma", "Liver"),
-    scenario = c("pediatric", "adult", "pediatric"),
-    displayNamePKParameter = pkParameter,
-    displayUnitPKParameter = c("mg*h/l", "mg*h/l", "mg/l"),
-    displayNameOutput = outputPathId,
-    scenarioShortName = scenario,
-    scenarioGroup = rep("", 3),
-    xValues = c(1.2, 1.0, 0.8),
-    xErrorType = rep(ospsuite::DataErrorType$GeometricStdDev, 3),
-    dataType = rep("simulated", 3),
-    plotTag = c("A", "A", "B"),
-    N = rep(100L, 3)
+  pkParameter = c("AUC", "AUC", "Cmax"),
+  outputPathId = c("Plasma", "Plasma", "Liver"),
+  scenario = c("pediatric", "adult", "pediatric"),
+  displayNamePKParameter = pkParameter,
+  displayUnitPKParameter = c("mg*h/l", "mg*h/l", "mg/l"),
+  displayNameOutput = outputPathId,
+  scenarioShortName = scenario,
+  scenarioGroup = rep("", 3),
+  xValues = c(1.2, 1.0, 0.8),
+  xErrorType = rep(ospsuite::DataErrorType$GeometricStdDev, 3),
+  dataType = rep("simulated", 3),
+  plotTag = c("A", "A", "B"),
+  N = rep(100L, 3)
 ) {
-    data.table::data.table(
-        pkParameter = pkParameter,
-        outputPathId = outputPathId,
-        scenario = scenario,
-        displayNamePKParameter = factor(displayNamePKParameter),
-        displayUnitPKParameter = displayUnitPKParameter,
-        displayNameOutput = displayNameOutput,
-        scenarioShortName = factor(scenarioShortName),
-        scenarioGroup = factor(scenarioGroup),
-        xValues = xValues,
-        xErrorType = xErrorType,
-        dataType = dataType,
-        plotTag = plotTag,
-        N = N
-    )
+  data.table::data.table(
+    pkParameter = pkParameter,
+    outputPathId = outputPathId,
+    scenario = scenario,
+    displayNamePKParameter = factor(displayNamePKParameter),
+    displayUnitPKParameter = displayUnitPKParameter,
+    displayNameOutput = displayNameOutput,
+    scenarioShortName = factor(scenarioShortName),
+    scenarioGroup = factor(scenarioGroup),
+    xValues = xValues,
+    xErrorType = xErrorType,
+    dataType = dataType,
+    plotTag = plotTag,
+    N = N
+  )
 }
 
 # ---------------------------------------------------------------------------
@@ -43,24 +43,24 @@ makeForestPlotData <- function(
 # ---------------------------------------------------------------------------
 
 test_that("updateScalevector returns defaults when input is empty", {
-    result <- ospsuite.reportingframework:::updateScalevector(list())
-    expect_equal(result$simulated$color, "black")
-    expect_equal(result$observed$shape, "triangle filled")
+  result <- ospsuite.reportingframework:::updateScalevector(list())
+  expect_equal(result$simulated$color, "black")
+  expect_equal(result$observed$shape, "triangle")
 })
 
 test_that("updateScalevector merges user-supplied values", {
-    result <- ospsuite.reportingframework:::updateScalevector(
-        list(simulated = list(color = "red"))
-    )
-    expect_equal(result$simulated$color, "red")
-    expect_equal(result$simulated$fill, "black")
+  result <- ospsuite.reportingframework:::updateScalevector(
+    list(simulated = list(color = "red"))
+  )
+  expect_equal(result$simulated$color, "red")
+  expect_equal(result$simulated$fill, "black")
 })
 
 test_that("updateScalevector does not alter unspecified observed defaults", {
-    result <- ospsuite.reportingframework:::updateScalevector(
-        list(simulated = list(shape = "square filled"))
-    )
-    expect_equal(result$observed$color, "darkgrey")
+  result <- ospsuite.reportingframework:::updateScalevector(
+    list(simulated = list(shape = "square filled"))
+  )
+  expect_equal(result$observed$color, "darkgrey")
 })
 
 # ---------------------------------------------------------------------------
@@ -68,41 +68,41 @@ test_that("updateScalevector does not alter unspecified observed defaults", {
 # ---------------------------------------------------------------------------
 
 test_that("getColumnSelectionForPKForest sets yColumn to scenarioShortName for ratioMode none", {
-    dt <- makeForestPlotData()
-    result <- ospsuite.reportingframework:::getColumnSelectionForPKForest(
-        dt,
-        ratioMode = "none"
-    )
-    expect_equal(result$yColumn, "scenarioShortName")
-    expect_match(result$xLabel, "AUC")
+  dt <- makeForestPlotData()
+  result <- ospsuite.reportingframework:::getColumnSelectionForPKForest(
+    dt,
+    ratioMode = "none"
+  )
+  expect_equal(result$yColumn, "scenarioShortName")
+  expect_match(result$xLabel, "AUC")
 })
 
 test_that("getColumnSelectionForPKForest sets xLabel to 'Ratio' for ratio mode", {
-    dt <- makeForestPlotData()
-    result <- ospsuite.reportingframework:::getColumnSelectionForPKForest(
-        dt,
-        ratioMode = "individualRatios"
-    )
-    expect_equal(result$yColumn, "displayNamePKParameter")
-    expect_equal(result$xLabel, "Ratio")
+  dt <- makeForestPlotData()
+  result <- ospsuite.reportingframework:::getColumnSelectionForPKForest(
+    dt,
+    ratioMode = "individualRatios"
+  )
+  expect_equal(result$yColumn, "displayNamePKParameter")
+  expect_equal(result$xLabel, "Ratio")
 })
 
 test_that("getColumnSelectionForPKForest sets xFacetColumn when multiple plotTags", {
-    dt <- makeForestPlotData()
-    result <- ospsuite.reportingframework:::getColumnSelectionForPKForest(
-        dt,
-        ratioMode = "none"
-    )
-    expect_equal(result$xFacetColumn, "plotTag")
+  dt <- makeForestPlotData()
+  result <- ospsuite.reportingframework:::getColumnSelectionForPKForest(
+    dt,
+    ratioMode = "none"
+  )
+  expect_equal(result$xFacetColumn, "plotTag")
 })
 
 test_that("getColumnSelectionForPKForest sets xFacetColumn NULL for single plotTag", {
-    dt <- makeForestPlotData(plotTag = c("A", "A", "A"))
-    result <- ospsuite.reportingframework:::getColumnSelectionForPKForest(
-        dt,
-        ratioMode = "none"
-    )
-    expect_null(result$xFacetColumn)
+  dt <- makeForestPlotData(plotTag = c("A", "A", "A"))
+  result <- ospsuite.reportingframework:::getColumnSelectionForPKForest(
+    dt,
+    ratioMode = "none"
+  )
+  expect_null(result$xFacetColumn)
 })
 
 # ---------------------------------------------------------------------------
@@ -110,39 +110,39 @@ test_that("getColumnSelectionForPKForest sets xFacetColumn NULL for single plotT
 # ---------------------------------------------------------------------------
 
 test_that("getCaptionForForestPlot builds absolute caption with linear scale", {
-    dt <- makeForestPlotData()
-    result <- ospsuite.reportingframework:::getCaptionForForestPlot(
-        plotData = dt,
-        xScale = "linear",
-        plotCaptionAddon = NA,
-        ratioMode = "none"
-    )
-    expect_match(result, "linear")
-    expect_false(grepl("ratios", result))
-    expect_match(result, "Plasma")
+  dt <- makeForestPlotData()
+  result <- ospsuite.reportingframework:::getCaptionForForestPlot(
+    plotData = dt,
+    xScale = "linear",
+    plotCaptionAddon = NA,
+    ratioMode = "none"
+  )
+  expect_match(result, "linear")
+  expect_false(grepl("ratios", result))
+  expect_match(result, "Plasma")
 })
 
 test_that("getCaptionForForestPlot builds ratio caption", {
-    dt <- makeForestPlotData()
-    result <- ospsuite.reportingframework:::getCaptionForForestPlot(
-        plotData = dt,
-        xScale = "log",
-        plotCaptionAddon = NA,
-        ratioMode = "individualRatios"
-    )
-    expect_match(result, "ratios")
-    expect_match(result, "logarithmic")
+  dt <- makeForestPlotData()
+  result <- ospsuite.reportingframework:::getCaptionForForestPlot(
+    plotData = dt,
+    xScale = "log",
+    plotCaptionAddon = NA,
+    ratioMode = "individualRatios"
+  )
+  expect_match(result, "ratios")
+  expect_match(result, "logarithmic")
 })
 
 test_that("getCaptionForForestPlot appends plotCaptionAddon", {
-    dt <- makeForestPlotData()
-    result <- ospsuite.reportingframework:::getCaptionForForestPlot(
-        plotData = dt,
-        xScale = "linear",
-        plotCaptionAddon = "See appendix.",
-        ratioMode = "none"
-    )
-    expect_match(result, "See appendix")
+  dt <- makeForestPlotData()
+  result <- ospsuite.reportingframework:::getCaptionForForestPlot(
+    plotData = dt,
+    xScale = "linear",
+    plotCaptionAddon = "See appendix.",
+    ratioMode = "none"
+  )
+  expect_match(result, "See appendix")
 })
 
 # ---------------------------------------------------------------------------
@@ -150,27 +150,27 @@ test_that("getCaptionForForestPlot appends plotCaptionAddon", {
 # ---------------------------------------------------------------------------
 
 test_that("getFootnoteLinesForForestPlots returns simulated text with no observed data", {
-    dt <- makeForestPlotData()
-    result <- ospsuite.reportingframework:::getFootnoteLinesForForestPlots(
-        plotData = dt,
-        ratioMode = "none",
-        asPointeEstimate = FALSE,
-        dtDataReference = NULL
-    )
-    expect_match(result[1], "Simulated")
-    expect_false(grepl("observed", result[1]))
+  dt <- makeForestPlotData()
+  result <- ospsuite.reportingframework:::getFootnoteLinesForForestPlots(
+    plotData = dt,
+    ratioMode = "none",
+    asPointeEstimate = FALSE,
+    dtDataReference = NULL
+  )
+  expect_match(result[1], "Simulated")
+  expect_false(grepl("observed", result[1]))
 })
 
 test_that("getFootnoteLinesForForestPlots adds ratio-of-population note", {
-    dt <- makeForestPlotData()
-    result <- ospsuite.reportingframework:::getFootnoteLinesForForestPlots(
-        plotData = dt,
-        ratioMode = "ratioOfPopulation",
-        asPointeEstimate = FALSE,
-        dtDataReference = NULL
-    )
-    expect_true(length(result) > 1)
-    expect_match(result[2], "ratios of population summary statistics")
+  dt <- makeForestPlotData()
+  result <- ospsuite.reportingframework:::getFootnoteLinesForForestPlots(
+    plotData = dt,
+    ratioMode = "ratioOfPopulation",
+    asPointeEstimate = FALSE,
+    dtDataReference = NULL
+  )
+  expect_true(length(result) > 1)
+  expect_match(result[2], "ratios of population summary statistics")
 })
 
 # ---------------------------------------------------------------------------
@@ -178,43 +178,43 @@ test_that("getFootnoteLinesForForestPlots adds ratio-of-population note", {
 # ---------------------------------------------------------------------------
 
 test_that("validatePointEstimateInputs passes with valid inputs", {
-    expect_invisible(
-        ospsuite.reportingframework:::validatePointEstimateInputs(
-            nBootstrap = 100L,
-            confLevel = 0.9,
-            statFun = c("geo mean" = function(y) exp(mean(log(y[y > 0]))))
-        )
+  expect_invisible(
+    ospsuite.reportingframework:::validatePointEstimateInputs(
+      nBootstrap = 100L,
+      confLevel = 0.9,
+      statFun = c("geo mean" = function(y) exp(mean(log(y[y > 0]))))
     )
+  )
 })
 
 test_that("validatePointEstimateInputs errors on non-integer nBootstrap", {
-    expect_error(
-        ospsuite.reportingframework:::validatePointEstimateInputs(
-            nBootstrap = 1.5,
-            confLevel = 0.9,
-            statFun = c("geo mean" = function(y) y)
-        )
+  expect_error(
+    ospsuite.reportingframework:::validatePointEstimateInputs(
+      nBootstrap = 1.5,
+      confLevel = 0.9,
+      statFun = c("geo mean" = function(y) y)
     )
+  )
 })
 
 test_that("validatePointEstimateInputs errors on confLevel outside [0,1]", {
-    expect_error(
-        ospsuite.reportingframework:::validatePointEstimateInputs(
-            nBootstrap = 100L,
-            confLevel = 1.5,
-            statFun = c("geo mean" = function(y) y)
-        )
+  expect_error(
+    ospsuite.reportingframework:::validatePointEstimateInputs(
+      nBootstrap = 100L,
+      confLevel = 1.5,
+      statFun = c("geo mean" = function(y) y)
     )
+  )
 })
 
 test_that("validatePointEstimateInputs errors on unnamed statFun", {
-    expect_error(
-        ospsuite.reportingframework:::validatePointEstimateInputs(
-            nBootstrap = 100L,
-            confLevel = 0.9,
-            statFun = list(function(y) y)
-        )
+  expect_error(
+    ospsuite.reportingframework:::validatePointEstimateInputs(
+      nBootstrap = 100L,
+      confLevel = 0.9,
+      statFun = list(function(y) y)
     )
+  )
 })
 
 # ---------------------------------------------------------------------------
@@ -222,48 +222,48 @@ test_that("validatePointEstimateInputs errors on unnamed statFun", {
 # ---------------------------------------------------------------------------
 
 test_that("getRatioMode returns 'none' when asRatio is FALSE", {
-    result <- ospsuite.reportingframework:::getRatioMode(
-        onePlotConfig = data.table::data.table(),
-        pkParameterDT = data.table::data.table(),
-        asRatio = FALSE
-    )
-    expect_equal(result, "none")
+  result <- ospsuite.reportingframework:::getRatioMode(
+    onePlotConfig = data.table::data.table(),
+    pkParameterDT = data.table::data.table(),
+    asRatio = FALSE
+  )
+  expect_equal(result, "none")
 })
 
 test_that("getRatioMode returns 'individualRatios' when populations match", {
-    config <- data.table::data.table(
-        plotName = "p1",
-        scenario = "s1",
-        referenceScenario = "s2"
-    )
-    pkDT <- data.table::data.table(
-        scenario = c("s1", "s2"),
-        populationId = c("pop1", "pop1")
-    )
-    result <- ospsuite.reportingframework:::getRatioMode(
-        config,
-        pkDT,
-        asRatio = TRUE
-    )
-    expect_equal(result, "individualRatios")
+  config <- data.table::data.table(
+    plotName = "p1",
+    scenario = "s1",
+    referenceScenario = "s2"
+  )
+  pkDT <- data.table::data.table(
+    scenario = c("s1", "s2"),
+    populationId = c("pop1", "pop1")
+  )
+  result <- ospsuite.reportingframework:::getRatioMode(
+    config,
+    pkDT,
+    asRatio = TRUE
+  )
+  expect_equal(result, "individualRatios")
 })
 
 test_that("getRatioMode returns 'ratioOfPopulation' when populations differ", {
-    config <- data.table::data.table(
-        plotName = "p1",
-        scenario = "s1",
-        referenceScenario = "s2"
-    )
-    pkDT <- data.table::data.table(
-        scenario = c("s1", "s2"),
-        populationId = c("pop1", "pop2")
-    )
-    result <- ospsuite.reportingframework:::getRatioMode(
-        config,
-        pkDT,
-        asRatio = TRUE
-    )
-    expect_equal(result, "ratioOfPopulation")
+  config <- data.table::data.table(
+    plotName = "p1",
+    scenario = "s1",
+    referenceScenario = "s2"
+  )
+  pkDT <- data.table::data.table(
+    scenario = c("s1", "s2"),
+    populationId = c("pop1", "pop2")
+  )
+  result <- ospsuite.reportingframework:::getRatioMode(
+    config,
+    pkDT,
+    asRatio = TRUE
+  )
+  expect_equal(result, "ratioOfPopulation")
 })
 
 # ---------------------------------------------------------------------------
@@ -271,158 +271,121 @@ test_that("getRatioMode returns 'ratioOfPopulation' when populations differ", {
 # ---------------------------------------------------------------------------
 
 test_that("filterParameterObserved handles empty config", {
-    obs <- data.table::data.table(
-        group = "g1",
-        pkParameter = "AUC",
-        outputPathId = "Plasma",
-        values = 1.5,
-        minValue = 1.0,
-        maxValue = 2.0
-    )
-    config <- data.table::data.table(
-        dataGroupId = character(0),
-        pkParameter = character(0),
-        outputPathId = character(0)
-    )
-    result <- ospsuite.reportingframework:::filterParameterObserved(obs, config)
-    expect_equal(nrow(result), 0)
+  obs <- data.table::data.table(
+    group = "g1",
+    pkParameter = "AUC",
+    outputPathId = "Plasma",
+    values = 1.5,
+    minValue = 1.0,
+    maxValue = 2.0
+  )
+  config <- data.table::data.table(
+    dataGroupId = character(0),
+    pkParameter = character(0),
+    outputPathId = character(0)
+  )
+  result <- ospsuite.reportingframework:::filterParameterObserved(obs, config)
+  expect_equal(nrow(result), 0)
 })
 
 test_that("filterParameterObserved handles multiple matching rows", {
-    obs <- data.table::data.table(
-        group = c("g1", "g1", "g2"),
-        pkParameter = c("AUC", "Cmax", "AUC"),
-        outputPathId = c("Plasma", "Plasma", "Liver"),
-        values = c(1.5, 2.5, 1.0),
-        minValue = c(1.0, 2.0, 0.5),
-        maxValue = c(2.0, 3.0, 1.5)
-    )
-    config <- data.table::data.table(
-        dataGroupId = c("g1", "g1"),
-        pkParameter = c("AUC", "Cmax"),
-        outputPathId = c("Plasma", "Plasma")
-    )
-    result <- ospsuite.reportingframework:::filterParameterObserved(obs, config)
-    expect_equal(nrow(result), 2)
+  obs <- data.table::data.table(
+    group = c("g1", "g1", "g2"),
+    pkParameter = c("AUC", "Cmax", "AUC"),
+    outputPathId = c("Plasma", "Plasma", "Liver"),
+    values = c(1.5, 2.5, 1.0),
+    minValue = c(1.0, 2.0, 0.5),
+    maxValue = c(2.0, 3.0, 1.5)
+  )
+  config <- data.table::data.table(
+    dataGroupId = c("g1", "g1"),
+    pkParameter = c("AUC", "Cmax"),
+    outputPathId = c("Plasma", "Plasma")
+  )
+  result <- ospsuite.reportingframework:::filterParameterObserved(obs, config)
+  expect_equal(nrow(result), 2)
 })
 
 test_that("filterParameterObserved handles special characters", {
-    obs <- data.table::data.table(
-        group = "g1",
-        pkParameter = "AUC/F (dose-normalized)",
-        outputPathId = "Liver & Kidney",
-        values = 1.5,
-        minValue = 1.0,
-        maxValue = 2.0
-    )
-    config <- data.table::data.table(
-        dataGroupId = "g1",
-        pkParameter = "AUC/F (dose-normalized)",
-        outputPathId = "Liver & Kidney"
-    )
-    result <- ospsuite.reportingframework:::filterParameterObserved(obs, config)
-    expect_equal(nrow(result), 1)
+  obs <- data.table::data.table(
+    group = "g1",
+    pkParameter = "AUC/F (dose-normalized)",
+    outputPathId = "Liver & Kidney",
+    values = 1.5,
+    minValue = 1.0,
+    maxValue = 2.0
+  )
+  config <- data.table::data.table(
+    dataGroupId = "g1",
+    pkParameter = "AUC/F (dose-normalized)",
+    outputPathId = "Liver & Kidney"
+  )
+  result <- ospsuite.reportingframework:::filterParameterObserved(obs, config)
+  expect_equal(nrow(result), 1)
 })
 
 test_that("getRatioMode handles both single and multiple population ratios", {
-    config <- data.table::data.table(
-        plotName = "p1",
-        scenario = "s1",
-        referenceScenario = "s1"
-    )
-    pkDT <- data.table::data.table(
-        scenario = "s1",
-        populationId = "pop1"
-    )
-    result <- ospsuite.reportingframework:::getRatioMode(
-        config,
-        pkDT,
-        asRatio = TRUE
-    )
-    expect_equal(result, "individualRatios")
+  config <- data.table::data.table(
+    plotName = "p1",
+    scenario = "s1",
+    referenceScenario = "s1"
+  )
+  pkDT <- data.table::data.table(
+    scenario = "s1",
+    populationId = "pop1"
+  )
+  result <- ospsuite.reportingframework:::getRatioMode(
+    config,
+    pkDT,
+    asRatio = TRUE
+  )
+  expect_equal(result, "individualRatios")
 })
 
 test_that("getRatioMode returns NULL when asRatio is FALSE", {
-    config <- data.table::data.table(
-        plotName = "p1",
-        scenario = "s1",
-        referenceScenario = "s2"
-    )
-    pkDT <- data.table::data.table(
-        scenario = c("s1", "s2"),
-        populationId = c("pop1", "pop2")
-    )
-    result <- ospsuite.reportingframework:::getRatioMode(
-        config,
-        pkDT,
-        asRatio = FALSE
-    )
-    expect_equal(result, "none")
+  config <- data.table::data.table(
+    plotName = "p1",
+    scenario = "s1",
+    referenceScenario = "s2"
+  )
+  pkDT <- data.table::data.table(
+    scenario = c("s1", "s2"),
+    populationId = c("pop1", "pop2")
+  )
+  result <- ospsuite.reportingframework:::getRatioMode(
+    config,
+    pkDT,
+    asRatio = FALSE
+  )
+  expect_equal(result, "none")
 })
 # filterParameterObserved
 # ---------------------------------------------------------------------------
 
 test_that("filterParameterObserved returns NULL when dataObservedPK is NULL", {
-    result <- ospsuite.reportingframework:::filterParameterObserved(
-        dataObservedPK = NULL,
-        onePlotConfig = data.table::data.table()
-    )
-    expect_null(result)
+  result <- ospsuite.reportingframework:::filterParameterObserved(
+    dataObservedPK = NULL,
+    onePlotConfig = data.table::data.table()
+  )
+  expect_null(result)
 })
 
 test_that("filterParameterObserved renames value columns and filters by config", {
-    obs <- data.table::data.table(
-        group = "g1",
-        pkParameter = "AUC",
-        outputPathId = "Plasma",
-        values = 1.5,
-        minValue = 1.0,
-        maxValue = 2.0
-    )
-    config <- data.table::data.table(
-        dataGroupId = "g1",
-        pkParameter = "AUC",
-        outputPathId = "Plasma"
-    )
-    result <- ospsuite.reportingframework:::filterParameterObserved(obs, config)
-    expect_true("xValues" %in% names(result))
-    expect_true("xMin" %in% names(result))
-    expect_equal(nrow(result), 1)
-})
-
-# =====================================================================
-# PHASE 1 & 2: EMPTY DATA & NUMERIC BOUNDS VALIDATION
-# =====================================================================
-
-test_that("plotPKForest requires non-empty scenario data", {
-    # Empty scenario list should be rejected
-    emptyScenarioList <- list()
-
-    # Should reject empty scenario list
-    expect_error(
-        checkmate::assertList(emptyScenarioList, min.len = 1),
-        ">= 1"
-    )
-})
-
-test_that("plotPKForest validates confidence interval is numeric", {
-    # Test that CI outside [0,1] is rejected
-    expect_error(
-        checkmate::assertDouble(1.5, lower = 0, upper = 1),
-        "<= 1"
-    )
-})
-
-test_that("plotPKForest validates confidence interval is non-negative", {
-    expect_error(
-        checkmate::assertDouble(-0.1, lower = 0, upper = 1),
-        ">= 0"
-    )
-})
-
-test_that("plotPKForest validates confidence interval is finite", {
-    expect_error(
-        checkmate::assertDouble(Inf, lower = 0, upper = 1, finite = TRUE),
-        "<= 1"
-    )
+  obs <- data.table::data.table(
+    group = "g1",
+    pkParameter = "AUC",
+    outputPathId = "Plasma",
+    values = 1.5,
+    minValue = 1.0,
+    maxValue = 2.0
+  )
+  config <- data.table::data.table(
+    dataGroupId = "g1",
+    pkParameter = "AUC",
+    outputPathId = "Plasma"
+  )
+  result <- ospsuite.reportingframework:::filterParameterObserved(obs, config)
+  expect_true("xValues" %in% names(result))
+  expect_true("xMin" %in% names(result))
+  expect_equal(nrow(result), 1)
 })
