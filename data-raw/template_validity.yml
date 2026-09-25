@@ -6,6 +6,7 @@
 #
 # validity: list
 #   Creates a list validation for the complete column (row 2 to Excel's last row).
+#   Configure either values: or valuesFunction:, but not both.
 #   Blank entries are allowed; non-list entries produce an information message only.
 #
 # validity: none
@@ -32,29 +33,7 @@ workbooks:
         DefaultScenario: {validity: none}
         Shape:
           validity: list
-          values:
-          - circle
-          - diamond
-          - triangle
-          - square
-          - invertedTriangle
-          - cross
-          - plus
-          - asterisk
-          - star
-          - pentagon
-          - hexagon
-          - thinCross
-          - thinPlus
-          - circleOpen
-          - diamondOpen
-          - triangleOpen
-          - squareOpen
-          - invertedTriangleOpen
-          - starOpen
-          - pentagonOpen
-          - hexagonOpen
-          - blank
+          valuesFunction: shapeValues
           prompt: "Select shape."
       Outputs:
         OutputPathId: {validity: none}
@@ -90,46 +69,43 @@ workbooks:
         TimeRange_lastApplication: {validity: none}
         yScale:
           validity: list
-          values:
-            - "linear, log"
-            - linear
-            - log
+          valuesFunction: axisScaleValues
           prompt: "Recommended y-axis scale.."
         SplitPlotsPerTimeRange:
           validity: list
-          values: [0, 1]
+          valuesFunction: yesNoValues
           prompt: "Use 1 for TRUE and 0 for FALSE."
         nFacetColumns: {validity: none}
         FacetScale:
           validity: list
-          values: [fixed, free, free_x, free_y]
+          valuesFunction: facetScaleValues
           prompt: "Recommended facet scale."
         Plot_TimeProfiles:
           validity: list
-          values: [0, 1]
+          valuesFunction: yesNoValues
           prompt: "Use 1 for TRUE and 0 for FALSE."
         ylimit_linear: {validity: none}
         ylimit_log: {validity: none}
         Plot_PredictedVsObserved:
           validity: list
-          values: [0, 1]
+          valuesFunction: yesNoValues
           prompt: "Use 1 for TRUE and 0 for FALSE."
         FoldDistance_PvO: {validity: none}
         Plot_ResidualsAsHistogram:
           validity: list
-          values: [0, 1]
+          valuesFunction: yesNoValues
           prompt: "Use 1 for TRUE and 0 for FALSE."
         Plot_ResidualsVsTime:
           validity: list
-          values: [0, 1]
+          valuesFunction: yesNoValues
           prompt: "Use 1 for TRUE and 0 for FALSE."
         Plot_ResidualsVsObserved:
           validity: list
-          values: [0, 1]
+          valuesFunction: yesNoValues
           prompt: "Use 1 for TRUE and 0 for FALSE."
         Plot_QQ:
           validity: list
-          values: [0, 1]
+          valuesFunction: yesNoValues
           prompt: "Use 1 for TRUE and 0 for FALSE."
 
       TimeRange:
@@ -150,24 +126,21 @@ workbooks:
         plotCaptionAddon: {validity: none}
         yScale:
           validity: list
-          values:
-            - "linear, log"
-            - linear
-            - log
+          valuesFunction: axisScaleValues
           prompt: "Recommended y-axis scale."
         ylimit_linear: {validity: none}
         ylimit_log: {validity: none}
         FacetScale:
           validity: list
-          values: [fixed, free, free_x, free_y]
+          valuesFunction: facetScaleValues
           prompt: "Recommended facet scale."
         Plot_Absolute:
           validity: list
-          values: [0, 1]
+          valuesFunction: yesNoValues
           prompt: "Use 1 for TRUE and 0 for FALSE."
         Plot_Ratio:
           validity: list
-          values: [0, 1]
+          valuesFunction: yesNoValues
           prompt: "Use 1 for TRUE and 0 for FALSE."
 
       PKParameter_Forest:
@@ -183,16 +156,13 @@ workbooks:
         DataGroupId: {validity: none}
         xScale:
           validity: list
-          values:
-            - "linear, log"
-            - linear
-            - log
+          valuesFunction: axisScaleValues
           prompt: "Recommended x-axis scale."
         xlimit_linear: {validity: none}
         xlimit_log: {validity: none}
         FacetScale:
           validity: list
-          values: [fixed, free, free_x, free_y]
+          valuesFunction: facetScaleValues
           prompt: "Recommended facet scale."
 
       Histograms:
@@ -207,16 +177,13 @@ workbooks:
         plotCaptionAddon: {validity: none}
         xScale:
           validity: list
-          values:
-            - "linear, log"
-            - linear
-            - log
+          valuesFunction: axisScaleValues
           prompt: "Recommended x-axis scale."
         xlimit_linear: {validity: none}
         xlimit_log: {validity: none}
         FacetScale:
           validity: list
-          values: [fixed, free, free_x, free_y]
+          valuesFunction: facetScaleValues
           prompt: "Recommended facet scale."
 
       DistributionVsRange:
@@ -231,25 +198,19 @@ workbooks:
         ParameterId_Bin: {validity: none}
         ModeOfBinning:
           validity: list
-          values:
-            - "Equal Frequency Binning"
-            - "Equal Width Binning"
-            - "Custom Binning"
+          valuesFunction: modeOfBinningValues
           prompt: "Recommended binning mode."
         NumberOfBins: {validity: none}
         plotCaptionAddon: {validity: none}
         yScale:
           validity: list
-          values:
-            - "linear, log"
-            - linear
-            - log
+          valuesFunction: axisScaleValues
           prompt: "Recommended y-axis scale."
         ylimit_linear: {validity: none}
         ylimit_log: {validity: none}
         FacetScale:
           validity: list
-          values: [fixed, free, free_x, free_y]
+          valuesFunction: facetScaleValues
           prompt: "Recommended facet scale."
 
       SensitivityPlots:
@@ -274,13 +235,13 @@ workbooks:
         DataFilter: {validity: none}
         DataClass:
           validity: list
-          values: [tpIndividual, tpAggregated, pkIndividual, pkAggregated, numericValues]
+          valuesFunction: dataclassValues
           prompt: "Recommended data class."
       tpDictionary:
         TargetColumn: {validity: none}
         Type:
           validity: list
-          values: [identifier, timeprofile, biometrics, covariate, metadata]
+          valuesFunction: dictionaryTypeValues
         SourceColumn: {validity: none}
         SourceUnit: {validity: none}
         Filter: {validity: none}
@@ -290,7 +251,7 @@ workbooks:
         TargetColumn: {validity: none}
         Type:
           validity: list
-          values: [identifier, timeprofile, biometrics, covariate, metadata]
+          valuesFunction: dictionaryTypeValues
         SourceColumn: {validity: none}
         SourceUnit: {validity: none}
         Filter: {validity: none}

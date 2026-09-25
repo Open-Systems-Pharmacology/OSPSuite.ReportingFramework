@@ -23,17 +23,12 @@ abortWithMessage <- function(...) {
   if (is.null(x)) y else x
 }
 
-# Generate a valid Excel range name from sheet, header, and rule index.
+# Generate a valid Excel named range identifier.
 # Excel names can only contain letters, digits, underscores, and dots.
 # They cannot start with a digit or resemble a cell reference.
-# @param sheetName Name of the worksheet
-# @param headerName Name of the column header
-# @param ruleIndex Index of the validation rule
+# @param nameParts Character vector of name fragments to combine
 # @return Character string suitable as an Excel named range
-# @examples
-# makeRangeName("DataGroups", "Shape", 1)
-# # "validity_DataGroups_Shape_1"
-makeRangeName <- function(sheetName, headerName, ruleIndex) {
+makeRangeName <- function(nameParts) {
   cleanName <- function(x) {
     x <- gsub("[^A-Za-z0-9_.]", "_", x)
     x <- gsub("_+", "_", x)
@@ -43,11 +38,7 @@ makeRangeName <- function(sheetName, headerName, ruleIndex) {
 
   paste0(
     "validity_",
-    cleanName(sheetName),
-    "_",
-    cleanName(headerName),
-    "_",
-    ruleIndex
+    paste(vapply(nameParts, cleanName, character(1L)), collapse = "_")
   )
 }
 
@@ -76,10 +67,54 @@ asCharacterValues <- function(values, context) {
   values
 }
 
+
+# Resolve validation values from either an inline YAML list or a named helper function.
+# Exactly one of values or valuesFunction must be configured for validity: list.
+# @param ruleConfig YAML rule configuration for one header
+# @param context String describing the context (for error messages)
+# @return Character vector of validated, unique values
+resolveValidationValues <- function(ruleConfig, context) {
+  inlineValues <- ruleConfig[["values", exact = TRUE]]
+  valuesFunctionName <- ruleConfig[["valuesFunction", exact = TRUE]]
+  hasInlineValues <- !is.null(inlineValues)
+  hasValuesFunction <- !is.null(valuesFunctionName)
+
+  if (hasInlineValues == hasValuesFunction) {
+    abortWithMessage(
+      context,
+      ": specify exactly one of 'values' or 'valuesFunction' when 'validity: list'."
+    )
+  }
+
+  if (hasInlineValues) {
+    return(asCharacterValues(inlineValues, context))
+  }
+
+  valuesFunctionName <- as.character(valuesFunctionName)
+  if (length(valuesFunctionName) != 1L || !nzchar(valuesFunctionName)) {
+    abortWithMessage(
+      context,
+      ": 'valuesFunction' must be a non-empty function name."
+    )
+  }
+
+  if (!exists(valuesFunctionName, mode = "function", inherits = TRUE)) {
+    abortWithMessage(
+      context,
+      ": unknown valuesFunction '",
+      valuesFunctionName,
+      "'."
+    )
+  }
+
+  valuesFunction <- get(valuesFunctionName, mode = "function", inherits = TRUE)
+  asCharacterValues(valuesFunction(), context)
+}
+
 # Parse YAML configuration file and convert to validation rules.
 # Returns one rule record per configured column header across all workbooks and sheets.
 # Each column must explicitly declare one of:
-#  - validity: list   (with non-empty values: list)
+#  - validity: list   (with exactly one of values: or valuesFunction:)
 #  - validity: none   (to remove existing validation)
 #  - validity: mixed  (to preserve existing validation)
 # @param yamlFile Path to the YAML configuration file
@@ -145,14 +180,20 @@ readValidityConfig <- function(yamlFile) {
           "'"
         )
 
-        if (!is.list(ruleConfig) || is.null(ruleConfig$validity)) {
+        validityValue <- ruleConfig[["validity", exact = TRUE]]
+        promptValue <- ruleConfig[["prompt", exact = TRUE]]
+        errorValue <- ruleConfig[["error", exact = TRUE]]
+        inlineValues <- ruleConfig[["values", exact = TRUE]]
+        valuesFunctionName <- ruleConfig[["valuesFunction", exact = TRUE]]
+
+        if (!is.list(ruleConfig) || is.null(validityValue)) {
           abortWithMessage(
             context,
             ": explicitly set 'validity: list', 'validity: none', or 'validity: mixed'."
           )
         }
 
-        validityType <- as.character(ruleConfig$validity)
+        validityType <- as.character(validityValue)
         if (
           length(validityType) != 1L ||
             !validityType %in% c("list", "none", "mixed")
@@ -167,18 +208,18 @@ readValidityConfig <- function(yamlFile) {
         prompt <- NULL
         error <- NULL
         if (identical(validityType, "list")) {
-          values <- asCharacterValues(ruleConfig$values, context)
+          values <- resolveValidationValues(ruleConfig, context)
           prompt <- as.character(
-            ruleConfig$prompt %||% paste(values, collapse = ", ")
+            promptValue %||% paste(values, collapse = ", ")
           )
           error <- as.character(
-            ruleConfig$error %||%
+            errorValue %||%
               "Select a listed value or enter another value. Blank is allowed."
           )
-        } else if (!is.null(ruleConfig$values)) {
+        } else if (!is.null(inlineValues) || !is.null(valuesFunctionName)) {
           abortWithMessage(
             context,
-            ": 'values' is only permitted when 'validity: list'."
+            ": 'values' and 'valuesFunction' are only permitted when 'validity: list'."
           )
         }
 
@@ -188,6 +229,16 @@ readValidityConfig <- function(yamlFile) {
           headerName = headerName,
           validityType = validityType,
           values = values,
+          valuesFunctionName = valuesFunctionName,
+          rangeName = if (identical(validityType, "list")) {
+            if (!is.null(valuesFunctionName)) {
+              makeRangeName(valuesFunctionName)
+            } else {
+              makeRangeName(c(sheetName, headerName))
+            }
+          } else {
+            NULL
+          },
           prompt = prompt,
           error = error
         )
@@ -345,26 +396,22 @@ clearColumnValidation <- function(workbook, sheetName, columnIndex) {
 #   - Creates a named range in the _Validity sheet for the validation list
 #   - Applies list validation to the target column (rows 2 to Excel max)
 #   - Allows blank entries and uses information-level error display
-applyListValidation <- function(workbook, rule, ruleIndex, validityRow) {
-  listRows <- validityRow:(validityRow + length(rule$values) - 1L)
-  rangeName <- makeRangeName(rule$sheetName, rule$headerName, ruleIndex)
+applyListValidation <- function(workbook, rule, validityRow) {
+  rangeName <- rule$rangeName
   columnIndex <- getHeaderColumn(workbook, rule$sheetName, rule$headerName)
 
-  openxlsx::writeData(
-    workbook,
-    sheet = validitySheet,
-    x = data.frame(value = rule$values, stringsAsFactors = FALSE),
-    startCol = 1L,
-    startRow = validityRow,
-    colNames = FALSE
-  )
-  openxlsx::createNamedRegion(
-    workbook,
-    sheet = validitySheet,
-    name = rangeName,
-    rows = listRows,
-    cols = 1L
-  )
+  if (is.null(rangeName) || !nzchar(rangeName)) {
+    abortWithMessage(
+      "Workbook '",
+      rule$workbookName,
+      "', sheet '",
+      rule$sheetName,
+      "', header '",
+      rule$headerName,
+      "': no range name resolved for list validation."
+    )
+  }
+
   openxlsx::dataValidation(
     workbook,
     sheet = rule$sheetName,
@@ -377,7 +424,7 @@ applyListValidation <- function(workbook, rule, ruleIndex, validityRow) {
     showErrorMsg = TRUE
   )
 
-  validityRow + length(rule$values) + 1L
+  validityRow
 }
 
 # Refresh all validations in a single template workbook.
@@ -398,17 +445,6 @@ refreshWorkbook <- function(templateFile, rules) {
     openxlsx::removeWorksheet(workbook, validitySheet)
   }
   openxlsx::addWorksheet(workbook, validitySheet, visible = FALSE)
-  openxlsx::writeData(
-    workbook,
-    sheet = validitySheet,
-    x = data.frame(
-      `Generated list values for Excel data validation` = character(),
-      check.names = FALSE
-    ),
-    startCol = 1L,
-    startRow = 1L,
-    colNames = TRUE
-  )
 
   configuredSheetNames <- unique(vapply(
     rules,
@@ -473,17 +509,45 @@ refreshWorkbook <- function(templateFile, rules) {
     }
   }
 
-  validityRow <- 2L
-  listRuleIndices <- which(vapply(
-    rules,
-    function(rule) rule$validityType == "list",
-    logical(1L)
-  ))
-  for (ruleIndex in listRuleIndices) {
+  validityRow <- 1L
+  listRules <- Filter(
+    function(rule) identical(rule$validityType, "list"),
+    rules
+  )
+  uniqueListRules <- list()
+  seenRangeNames <- character()
+  for (rule in listRules) {
+    if (!rule$rangeName %in% seenRangeNames) {
+      uniqueListRules[[length(uniqueListRules) + 1L]] <- rule
+      seenRangeNames <- c(seenRangeNames, rule$rangeName)
+    }
+  }
+
+  for (rule in uniqueListRules) {
+    listRows <- validityRow:(validityRow + length(rule$values) - 1L)
+    openxlsx::writeData(
+      workbook,
+      sheet = validitySheet,
+      x = data.frame(value = rule$values, stringsAsFactors = FALSE),
+      startCol = 1L,
+      startRow = validityRow,
+      colNames = FALSE
+    )
+    openxlsx::createNamedRegion(
+      workbook,
+      sheet = validitySheet,
+      name = rule$rangeName,
+      rows = listRows,
+      cols = 1L,
+      overwrite = TRUE
+    )
+    validityRow <- validityRow + length(rule$values) + 1L
+  }
+
+  for (rule in listRules) {
     validityRow <- applyListValidation(
       workbook,
-      rules[[ruleIndex]],
-      ruleIndex,
+      rule,
       validityRow
     )
   }
@@ -497,3 +561,39 @@ refreshWorkbook <- function(templateFile, rules) {
   openxlsx::saveWorkbook(workbook, templateFile, overwrite = TRUE)
   message("Updated: ", templateFile)
 }
+
+
+# Value functions ------------------------
+
+# Reusable provider functions for validation lists shared across templates.
+# These functions are referenced from YAML via valuesFunction.
+yesNoValues <- function() {
+  c("0", "1")
+}
+
+axisScaleValues <- function() {
+  c("linear, log", "linear", "log")
+}
+
+facetScaleValues <- function() {
+  c("fixed", "free", "free_x", "free_y")
+}
+
+shapeValues <- function() {
+  unname(unlist(ospsuite.plots::Shapes))
+}
+
+dictionaryTypeValues <- function() {
+  c("identifier", "timeprofile", "biometrics", "covariate", "metadata")
+}
+
+dataclassValues <- function() {
+  unlist(unname(ospsuite.reportingframework::DATACLASS[
+    names(ospsuite.reportingframework::DATACLASS) != 'tpTwinPop'
+  ]))
+}
+
+modeOfBinningValues <- function() {
+  unlist(unname(ospsuite.plots::BINNINGMODE))
+}
+
