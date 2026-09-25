@@ -185,6 +185,63 @@ test_that(".loadPkAnalysisRawData fills empty unit with empty string", {
   expect_false(any(is.na(result$unit)))
 })
 
+test_that(".addUnitFactorsToPKDefinition reports context for conversion failures", {
+  local_mocked_bindings(
+    getDimensionForUnit = function(unit) {
+      "mock-dimension"
+    },
+    toUnit = function(
+      quantityOrDimension,
+      values,
+      sourceUnit,
+      targetUnit,
+      molWeight
+    ) {
+      stop("mock conversion failure")
+    },
+    .package = "ospsuite"
+  )
+
+  dtOutputPaths <- data.table::data.table(
+    outputPathId = "Output-1",
+    outputPath = "Organism|Plasma|Drug"
+  )
+  dtPkAnalyses <- data.table::data.table(
+    parameter = "AUC",
+    quantityPath = "Organism|Plasma|Drug",
+    unit = "mg*h/L"
+  )
+  dtPkParameterDefinition <- data.table::data.table(
+    name = "AUC",
+    displayName = "AUC",
+    displayUnit = "mg/L*h",
+    outputPathIds = "Output-1"
+  )
+  scenarioSimulation <- list(
+    molWeightFor = function(path) {
+      expect_equal(path, "Organism|Plasma|Drug")
+      321.123
+    }
+  )
+
+  expect_error(
+    .addUnitFactorsToPKDefinition(
+      scenarioSimulation = scenarioSimulation,
+      dtOutputPaths = dtOutputPaths,
+      dtPkAnalyses = dtPkAnalyses,
+      dtPkParameterDefinition = dtPkParameterDefinition
+    ),
+    paste0(
+      "OutputPathId: Output-1.*",
+      "PK Parameter: AUC.*",
+      "Source unit: mg\\*h/L.*",
+      "Target unit: mg/L\\*h.*",
+      "Molweight: 321\\.123.*",
+      "Reason: mock conversion failure"
+    )
+  )
+})
+
 # Edge case tests for .readUserDefinedPKParameters
 test_that(".readUserDefinedPKParameters handles multiple rows with varying data types", {
   dt <- .readUserDefinedPKParameters(.pkParameterFile())

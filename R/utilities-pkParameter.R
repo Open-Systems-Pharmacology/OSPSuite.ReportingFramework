@@ -477,15 +477,31 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
 
   # Calculate unit factors for each row in dtPkParameterDefinition
   for (iRow in seq_len(nrow(dtPkParameterDefinition))) {
+    sourceUnit <- dtPkParameterDefinition$unit[iRow]
+    targetUnit <- dtPkParameterDefinition$displayUnit[iRow]
+    outputPathId <- dtPkParameterDefinition$outputPathId[iRow]
+    pkParameter <- dtPkParameterDefinition$name[iRow]
+    molWeight <- as.double(dtPkParameterDefinition$molweight[iRow])
+
     dtPkParameterDefinition$unitFactor[iRow] <-
-      ospsuite::toUnit(
-        quantityOrDimension = ospsuite::getDimensionForUnit(dtPkParameterDefinition$unit[
-          iRow
-        ]),
-        values = 1,
-        sourceUnit = dtPkParameterDefinition$unit[iRow],
-        targetUnit = dtPkParameterDefinition$displayUnit[iRow],
-        molWeight = as.double(dtPkParameterDefinition$molweight[iRow])
+      tryCatch(
+        {
+          quantityOrDimension <- ospsuite::getDimensionForUnit(sourceUnit)
+          ospsuite::toUnit(
+            quantityOrDimension = quantityOrDimension,
+            values = 1,
+            sourceUnit = sourceUnit,
+            targetUnit = targetUnit,
+            molWeight = molWeight
+          )
+        },
+        error = function(err) {
+          errMsg <- conditionMessage(err)
+          stop(
+            messages$errorutilitiespkParameterL1XXXXXXXX(),
+            call. = FALSE
+          )
+        }
       )
   }
 

@@ -746,6 +746,23 @@ messages$errorutilitiespkParameterL1XXXXXXX <- function(env = parent.frame()) {
   )
 }
 
+messages$errorutilitiespkParameterL1XXXXXXXX <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(paste(
+      "Could not convert PK parameter to target unit.",
+      paste("\nOutputPathId:", outputPathId),
+      paste("\nPK Parameter:", pkParameter),
+      paste("\nSource unit:", sourceUnit),
+      paste("\nTarget unit:", targetUnit),
+      paste("\nMolweight:", molWeight),
+      paste("\nReason:", errMsg)
+    )),
+    envir = env
+  )
+}
+
 messages$errorutilitiesplotL1 <- function(env = parent.frame()) {
   eval(quote(err), envir = env)
 }
