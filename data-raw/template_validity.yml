@@ -1,0 +1,310 @@
+# inst/validity.yml
+#
+# Workbook-level validity configuration for templates in inst/templates.
+# Each non-empty header is explicitly listed. Header names are matched exactly
+# and case-sensitively against row 1.
+#
+# validity: list
+#   Creates a list validation for the complete column (row 2 to Excel's last row).
+#   Blank entries are allowed; non-list entries produce an information message only.
+#
+# validity: none
+#   Explicitly declares that the column is intentionally not list-validated.
+#   Running the update script removes any existing data validation from that column.
+#
+# Excel list validation itself does not distinguish upper/lower case for manually
+# typed values, although this configuration and all header matching do.
+
+workbooks:
+  Reports.xlsx:
+    sheets:
+      Scenarios:
+        Scenario: {validity: none}
+        LongName: {validity: none}
+        ShortName: {validity: none}
+
+      DataGroups:
+        Group: {validity: none}
+        StudyId: {validity: none}
+        StudyArm: {validity: none}
+        DisplayName: {validity: none}
+        Reference: {validity: none}
+        DefaultScenario: {validity: none}
+        Shape:
+          validity: list
+          values:
+          - circle
+          - diamond
+          - triangle
+          - square
+          - invertedTriangle
+          - cross
+          - plus
+          - asterisk
+          - star
+          - pentagon
+          - hexagon
+          - thinCross
+          - thinPlus
+          - circleOpen
+          - diamondOpen
+          - triangleOpen
+          - squareOpen
+          - invertedTriangleOpen
+          - starOpen
+          - pentagonOpen
+          - hexagonOpen
+          - blank
+          prompt: "Select shape."
+      Outputs:
+        OutputPathId: {validity: none}
+        OutputPath: {validity: none}
+        DisplayName: {validity: none}
+        DisplayUnit: {validity: none}
+        Color: {validity: none}
+        Fill: {validity: none}
+
+      ModelParameter:
+        ParameterId: {validity: none}
+        ModelPath: {validity: none}
+        DisplayName: {validity: none}
+        DisplayUnit: {validity: none}
+
+      TimeProfiles:
+        Level: {validity: none}
+        Header: {validity: none}
+        PlotName: {validity: none}
+        Scenario: {validity: none}
+        DataGroupIds: {validity: none}
+        OutputPathIds: {validity: none}
+        IndividualIds: {validity: none}
+        ScenarioName: {validity: none}
+        plotCaptionAddon: {validity: none}
+        TimeUnit: {validity: none}
+        TimeOffset: {validity: none}
+        ReferenceScenario: {validity: none}
+        TimeOffset_Reference: {validity: none}
+        ColorLegend: {validity: none}
+        TimeRange_total: {validity: none}
+        TimeRange_firstApplication: {validity: none}
+        TimeRange_lastApplication: {validity: none}
+        yScale:
+          validity: list
+          values:
+            - "linear, log"
+            - linear
+            - log
+          prompt: "Recommended y-axis scale.."
+        SplitPlotsPerTimeRange:
+          validity: list
+          values: [0, 1]
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+        nFacetColumns: {validity: none}
+        FacetScale:
+          validity: list
+          values: [fixed, free, free_x, free_y]
+          prompt: "Recommended facet scale."
+        Plot_TimeProfiles:
+          validity: list
+          values: [0, 1]
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+        ylimit_linear: {validity: none}
+        ylimit_log: {validity: none}
+        Plot_PredictedVsObserved:
+          validity: list
+          values: [0, 1]
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+        FoldDistance_PvO: {validity: none}
+        Plot_ResidualsAsHistogram:
+          validity: list
+          values: [0, 1]
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+        Plot_ResidualsVsTime:
+          validity: list
+          values: [0, 1]
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+        Plot_ResidualsVsObserved:
+          validity: list
+          values: [0, 1]
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+        Plot_QQ:
+          validity: list
+          values: [0, 1]
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+
+      TimeRange:
+        Tag: {validity: none}
+        CaptionText: {validity: none}
+        TimeLabel: {validity: none}
+        TimeShift: {validity: none}
+
+      PKParameter_Boxplot:
+        Level: {validity: none}
+        Header: {validity: none}
+        PlotName: {validity: none}
+        Scenario: {validity: none}
+        ReferenceScenario: {validity: none}
+        ColorLegend: {validity: none}
+        PkParameters: {validity: none}
+        OutputPathIds: {validity: none}
+        plotCaptionAddon: {validity: none}
+        yScale:
+          validity: list
+          values:
+            - "linear, log"
+            - linear
+            - log
+          prompt: "Recommended y-axis scale."
+        ylimit_linear: {validity: none}
+        ylimit_log: {validity: none}
+        FacetScale:
+          validity: list
+          values: [fixed, free, free_x, free_y]
+          prompt: "Recommended facet scale."
+        Plot_Absolute:
+          validity: list
+          values: [0, 1]
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+        Plot_Ratio:
+          validity: list
+          values: [0, 1]
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+
+      PKParameter_Forest:
+        Level: {validity: none}
+        Header: {validity: none}
+        PlotName: {validity: none}
+        ScenarioGroup: {validity: none}
+        Scenario: {validity: none}
+        ReferenceScenario: {validity: none}
+        PkParameters: {validity: none}
+        OutputPathIds: {validity: none}
+        plotCaptionAddon: {validity: none}
+        DataGroupId: {validity: none}
+        xScale:
+          validity: list
+          values:
+            - "linear, log"
+            - linear
+            - log
+          prompt: "Recommended x-axis scale."
+        xlimit_linear: {validity: none}
+        xlimit_log: {validity: none}
+        FacetScale:
+          validity: list
+          values: [fixed, free, free_x, free_y]
+          prompt: "Recommended facet scale."
+
+      Histograms:
+        Level: {validity: none}
+        Header: {validity: none}
+        PlotName: {validity: none}
+        Scenario: {validity: none}
+        ReferenceScenario: {validity: none}
+        ColorLegend: {validity: none}
+        ParameterIds: {validity: none}
+        OutputPathIds: {validity: none}
+        plotCaptionAddon: {validity: none}
+        xScale:
+          validity: list
+          values:
+            - "linear, log"
+            - linear
+            - log
+          prompt: "Recommended x-axis scale."
+        xlimit_linear: {validity: none}
+        xlimit_log: {validity: none}
+        FacetScale:
+          validity: list
+          values: [fixed, free, free_x, free_y]
+          prompt: "Recommended facet scale."
+
+      DistributionVsRange:
+        Level: {validity: none}
+        Header: {validity: none}
+        PlotName: {validity: none}
+        Scenarios: {validity: none}
+        ReferenceScenario: {validity: none}
+        ColorLegend: {validity: none}
+        ParameterIds: {validity: none}
+        OutputPathIds: {validity: none}
+        ParameterId_Bin: {validity: none}
+        ModeOfBinning:
+          validity: list
+          values:
+            - "Equal Frequency Binning"
+            - "Equal Width Binning"
+            - "Custom Binning"
+          prompt: "Recommended binning mode."
+        NumberOfBins: {validity: none}
+        plotCaptionAddon: {validity: none}
+        yScale:
+          validity: list
+          values:
+            - "linear, log"
+            - linear
+            - log
+          prompt: "Recommended y-axis scale."
+        ylimit_linear: {validity: none}
+        ylimit_log: {validity: none}
+        FacetScale:
+          validity: list
+          values: [fixed, free, free_x, free_y]
+          prompt: "Recommended facet scale."
+
+      SensitivityPlots:
+        Level: {validity: none}
+        Header: {validity: none}
+        PlotName: {validity: none}
+        Scenario: {validity: none}
+        OutputPathIds: {validity: none}
+        SensitivityParameterSheet: {validity: none}
+        PKParameters: {validity: none}
+        Threshold: {validity: none}
+        plotCaptionAddon: {validity: none}
+
+  DataImportConfiguration.xlsx:
+    sheets:
+      # Some columns contain user-specific paths, R expressions, source field
+      # names, units, and free text. They are intentionally mixed and skipped.
+      DataFiles:
+        FileIdentifier: {validity: none}
+        DataFile: {validity: none}
+        Dictionary: {validity: none}
+        DataFilter: {validity: none}
+        DataClass:
+          validity: list
+          values: [tpIndividual, tpAggregated, pkIndividual, pkAggregated, numericValues]
+          prompt: "Recommended data class."
+      tpDictionary:
+        TargetColumn: {validity: none}
+        Type:
+          validity: list
+          values: [identifier, timeprofile, biometrics, covariate, metadata]
+        SourceColumn: {validity: none}
+        SourceUnit: {validity: none}
+        Filter: {validity: none}
+        FilterValue: {validity: mixed}
+        Description: {validity: none}
+      pkDictionary:
+        TargetColumn: {validity: none}
+        Type:
+          validity: list
+          values: [identifier, timeprofile, biometrics, covariate, metadata]
+        SourceColumn: {validity: none}
+        SourceUnit: {validity: none}
+        Filter: {validity: none}
+        FilterValue: {validity: mixed}
+        Description: {validity: none}
+      NumericValues:
+        VariableName: {validity: none}
+        Value: {validity: none}
+        Unit: {validity: none}
+        Reference: {validity: none}
+        Comment: {validity: none}
+
+  SensitivityParameter.xlsx:
+    sheets:
+      Template:
+        Parameter: {validity: none}
+        ParameterPath: {validity: none}

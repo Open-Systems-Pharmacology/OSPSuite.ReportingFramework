@@ -284,8 +284,8 @@ test_that("validateGroupConsistency function test", {
 })
 
 
-# Create example data for testing
-configTablePlots <- data.table(
+# Create example data for testing validateTimeRangeColumns
+configTablePlotsTimeRange <- data.table(
   value1 = c(1, 2, 3, 4),
   value2 = c("A", "B", "C", "D"),
   timeRange_Valid1 = c(NA, "total", "firstApplication", "lastApplication"),
@@ -296,13 +296,13 @@ configTablePlots <- data.table(
     "firstApplication",
     "lastApplication"
   ),
-  timeRange_invalid1 = c(
+  timeRange_invalid_wrongLength = c(
     "c(0,30,50)",
     "total",
     "firstApplication",
     "lastApplication"
   ),
-  timeRange_invalid1 = c(
+  timeRange_invalid_withNA = c(
     "c(0,NA)",
     "total",
     "firstApplication",
@@ -310,22 +310,205 @@ configTablePlots <- data.table(
   )
 )
 
-# Write unit tests for the function
-test_that("validateTimeRangeColumns function test", {
+# =====================================================================
+# COMPREHENSIVE UNIT TESTS FOR validateTimeRangeColumns
+# =====================================================================
+
+test_that("validateTimeRangeColumns accepts valid keyword values", {
+  # Test individual keyword values - need at least one non-NA per row
+  dt_total <- data.table(timeRange_1 = c("total", "total"))
+  expect_no_error(validateTimeRangeColumns(dt_total))
+
+  dt_firstApp <- data.table(
+    timeRange_1 = c("firstApplication", "firstApplication")
+  )
+  expect_no_error(validateTimeRangeColumns(dt_firstApp))
+
+  dt_lastApp <- data.table(
+    timeRange_1 = c("lastApplication", "lastApplication")
+  )
+  expect_no_error(validateTimeRangeColumns(dt_lastApp))
+
+  # Test mixed keywords with proper coverage
+  dt_keywords <- data.table(
+    timeRange_1 = c("total", "firstApplication", "lastApplication")
+  )
+  expect_no_error(validateTimeRangeColumns(dt_keywords))
+
+  # Test NA values allowed when row has another timeRange column with value
+  dt_withNA <- data.table(
+    timeRange_1 = c("total", NA, "firstApplication"),
+    timeRange_2 = c(NA, "lastApplication", NA)
+  )
+  expect_no_error(validateTimeRangeColumns(dt_withNA))
+})
+
+test_that("validateTimeRangeColumns accepts valid numeric vector expressions", {
+  # Test simple numeric ranges - need at least one entry per row
+  dt_simple <- data.table(timeRange_1 = c("c(0,30)", "c(5,10)"))
+  expect_no_error(validateTimeRangeColumns(dt_simple))
+
+  # Test numeric ranges with decimals
+  dt_decimal <- data.table(timeRange_1 = c("c(0.5,30.5)", "c(1.1,2.2)"))
+  expect_no_error(validateTimeRangeColumns(dt_decimal))
+
+  # Test negative numeric ranges
+  dt_negative <- data.table(timeRange_1 = c("c(-10,10)", "c(-5,-1)"))
+  expect_no_error(validateTimeRangeColumns(dt_negative))
+
+  # Test ranges with zero
+  dt_withZero <- data.table(timeRange_1 = c("c(0,0)", "c(-0,0)"))
+  expect_no_error(validateTimeRangeColumns(dt_withZero))
+
+  # Test with leading/trailing spaces (if supported by eval)
+  dt_spaces <- data.table(timeRange_1 = c("c( 0 , 30 )", "c(1,2)"))
+  expect_no_error(validateTimeRangeColumns(dt_spaces))
+
+  # Test with NA allowed when other column has value
+  dt_withNA <- data.table(
+    timeRange_1 = c("c(0,10)", NA, NA),
+    timeRange_2 = c(NA, "c(5,15)", "c(10,20)")
+  )
+  expect_no_error(validateTimeRangeColumns(dt_withNA))
+})
+
+test_that("validateTimeRangeColumns accepts mixed valid values across columns", {
+  # Multiple timeRange columns with different valid values
+  dt_mixed <- data.table(
+    timeRange_1 = c("total", "firstApplication", "lastApplication", NA),
+    timeRange_2 = c("c(0,10)", NA, "c(5,15)", "total"),
+    timeRange_3 = c(NA, "c(-10,10)", "firstApplication", "c(0,30)")
+  )
+  expect_no_error(validateTimeRangeColumns(dt_mixed))
+})
+
+test_that("validateTimeRangeColumns rejects tables without timeRange columns", {
+  # No timeRange columns at all
+  dt_no_timeRange <- data.table(
+    col1 = c("A", "B"),
+    col2 = c(1, 2)
+  )
+  expect_error(validateTimeRangeColumns(dt_no_timeRange))
+})
+
+test_that("validateTimeRangeColumns rejects invalid keyword values", {
+  # Invalid keyword that's not recognized
+  dt_invalidKeyword <- data.table(timeRange_1 = c("invalid", "total"))
+  expect_error(validateTimeRangeColumns(dt_invalidKeyword))
+
+  # Typos in keyword
+  dt_typo1 <- data.table(timeRange_1 = c("Total", NA)) # Capital T
+  expect_error(validateTimeRangeColumns(dt_typo1))
+
+  dt_typo2 <- data.table(timeRange_1 = c("firstapplication", NA)) # lowercase
+  expect_error(validateTimeRangeColumns(dt_typo2))
+})
+
+test_that("validateTimeRangeColumns rejects invalid numeric expressions", {
+  # Vector with wrong length (3 elements instead of 2)
+  dt_wrongLength <- data.table(timeRange_1 = c("c(0,30,50)", NA))
+  expect_error(validateTimeRangeColumns(dt_wrongLength))
+
+  # Vector with only 1 element
+  dt_singleElement <- data.table(timeRange_1 = c("c(30)", NA))
+  expect_error(validateTimeRangeColumns(dt_singleElement))
+
+  # Vector containing NA values
+  dt_vectorWithNA <- data.table(timeRange_1 = c("c(0,NA)", "total"))
+  expect_error(validateTimeRangeColumns(dt_vectorWithNA))
+
+  # Vector with one NA element
+  dt_vectorPartialNA <- data.table(timeRange_1 = c("c(NA,30)", NA))
+  expect_error(validateTimeRangeColumns(dt_vectorPartialNA))
+})
+
+test_that("validateTimeRangeColumns rejects malformed expressions", {
+  # Incomplete expression
+  dt_incomplete <- data.table(timeRange_1 = c("c(0,30", "total"))
+  expect_error(validateTimeRangeColumns(dt_incomplete))
+
+  # Invalid syntax
+  dt_invalidSyntax <- data.table(timeRange_1 = c("c(0,30]", NA))
+  expect_error(validateTimeRangeColumns(dt_invalidSyntax))
+
+  # Non-numeric values in expression
+  dt_nonNumeric <- data.table(timeRange_1 = c("c(a,b)", NA))
+  expect_error(validateTimeRangeColumns(dt_nonNumeric))
+
+  # Empty expression
+  dt_empty <- data.table(timeRange_1 = c("", NA))
+  expect_error(validateTimeRangeColumns(dt_empty))
+})
+
+test_that("validateTimeRangeColumns handles edge cases with mixed validity", {
+  # One invalid value among valid values
+  dt_oneInvalid <- data.table(
+    timeRange_1 = c("total", "invalid", "firstApplication")
+  )
+  expect_error(validateTimeRangeColumns(dt_oneInvalid))
+
+  # Invalid value in second column when first is valid
+  dt_invalidSecond <- data.table(
+    timeRange_1 = c("total", "firstApplication"),
+    timeRange_2 = c("c(0,10)", "c(0,30,50)")
+  )
+  expect_error(validateTimeRangeColumns(dt_invalidSecond))
+})
+
+test_that("validateTimeRangeColumns requires at least one entry in timeRange columns per row", {
+  # Each row must have at least one non-NA value in timeRange columns
+  dt_validWithMultiple <- data.table(
+    timeRange_1 = c("total", "firstApplication"),
+    timeRange_2 = c(NA, "lastApplication")
+  )
+  expect_no_error(validateTimeRangeColumns(dt_validWithMultiple))
+
+  # All NA values in all columns for any row should fail
+  dt_allNARow <- data.table(
+    timeRange_1 = c(NA, NA),
+    timeRange_2 = c(NA, "total")
+  )
+  expect_error(validateTimeRangeColumns(dt_allNARow))
+})
+
+test_that("validateTimeRangeColumns originally used test from integration", {
   # Test if the function correctly validates correct TimeRange Columns
-  expect_no_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4)]))
+  expect_no_error(validateTimeRangeColumns(configTablePlotsTimeRange[, c(
+    1,
+    2,
+    3,
+    4
+  )]))
 
   # Test if the function correctly checks for at least one TimeRange Column
-  expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2)]))
+  expect_error(validateTimeRangeColumns(configTablePlotsTimeRange[, c(1, 2)]))
 
   # Test if the function correctly validates the inputs in the TimeRange columns
-  expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 5)]))
+  expect_error(validateTimeRangeColumns(configTablePlotsTimeRange[, c(
+    1,
+    2,
+    3,
+    4,
+    5
+  )]))
 
-  # Test if the function correctly validates the inputs in the TimeRange columns
-  expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 6)]))
+  # Test if the function correctly validates wrong length numeric vector
+  expect_error(validateTimeRangeColumns(configTablePlotsTimeRange[, c(
+    1,
+    2,
+    3,
+    4,
+    6
+  )]))
 
-  # Test if the function correctly validates the inputs in the TimeRange columns
-  expect_error(validateTimeRangeColumns(configTablePlots[, c(1, 2, 3, 4, 7)]))
+  # Test if the function correctly validates numeric vector with NA values
+  expect_error(validateTimeRangeColumns(configTablePlotsTimeRange[, c(
+    1,
+    2,
+    3,
+    4,
+    7
+  )]))
 })
 
 
@@ -543,4 +726,218 @@ test_that("applyThemeToPlotList adds theme to CombinedPlot objects", {
     updatedList$combined$tableObject$theme$plot.background$fill,
     "grey85"
   )
+})
+
+# =====================================================================
+# COMPREHENSIVE UNIT TESTS FOR validateOutputPathIdFormat
+# =====================================================================
+
+test_that("validateOutputPathIdFormat accepts properly balanced brackets", {
+  # Test with no brackets
+  dt_noBrackets <- data.table(outputPathIds = c("id1", "id2, id3"))
+  expect_no_error(validateOutputPathIdFormat(dt_noBrackets))
+
+  # Test with properly matched brackets
+  dt_matched <- data.table(outputPathIds = c("(id1)", "(id2, id3)"))
+  expect_no_error(validateOutputPathIdFormat(dt_matched))
+
+  # Test with mixed brackets and non-brackets
+  dt_mixed <- data.table(outputPathIds = c("id1", "(id2, id3)", "id4"))
+  expect_no_error(validateOutputPathIdFormat(dt_mixed))
+
+  # Test with multiple bracket pairs
+  dt_multiple <- data.table(outputPathIds = c("(id1)", "(id2)", "(id3)"))
+  expect_no_error(validateOutputPathIdFormat(dt_multiple))
+})
+
+test_that("validateOutputPathIdFormat rejects unbalanced opening brackets", {
+  # More opening than closing brackets
+  dt_moreOpen <- data.table(outputPathIds = c("(id1", "id2)"))
+  expect_error(validateOutputPathIdFormat(dt_moreOpen))
+
+  # Opening bracket without closing
+  dt_incomplete <- data.table(outputPathIds = c("id1, (id2"))
+  expect_error(validateOutputPathIdFormat(dt_incomplete))
+})
+
+test_that("validateOutputPathIdFormat rejects unbalanced closing brackets", {
+  # More closing than opening brackets
+  dt_moreClose <- data.table(outputPathIds = c("id1)", "id2"))
+  expect_error(validateOutputPathIdFormat(dt_moreClose))
+
+  # Closing bracket without opening
+  dt_noOpen <- data.table(outputPathIds = c("id1, id2)"))
+  expect_error(validateOutputPathIdFormat(dt_noOpen))
+})
+
+test_that("validateOutputPathIdFormat handles edge cases", {
+  # Empty data frame
+  dt_empty <- data.table(outputPathIds = character(0))
+  expect_no_error(validateOutputPathIdFormat(dt_empty))
+
+  # Single value with brackets
+  dt_single <- data.table(outputPathIds = c("(id1)"))
+  expect_no_error(validateOutputPathIdFormat(dt_single))
+
+  # Nested brackets - balanced so should be OK
+  dt_nested <- data.table(outputPathIds = c("((id1))"))
+  expect_no_error(validateOutputPathIdFormat(dt_nested))
+})
+
+test_that("validateOutputPathIdFormat works with individualIds column", {
+  # Test with different column name
+  dt_individuals <- data.table(individualIds = c("(1, 2, 3)", "(4, 5)"))
+  expect_no_error(validateOutputPathIdFormat(
+    dt_individuals,
+    column = "individualIds"
+  ))
+
+  # Test unbalanced brackets in individualIds
+  dt_unbalanced <- data.table(individualIds = c("(1, 2", "3)"))
+  expect_error(validateOutputPathIdFormat(
+    dt_unbalanced,
+    column = "individualIds"
+  ))
+})
+
+# =====================================================================
+# COMPREHENSIVE UNIT TESTS FOR validateVirtualTwinPop
+# =====================================================================
+
+test_that("validateVirtualTwinPop requires individualIds for virtual twin scenarios", {
+  # Create mock scenario results with virtual twin population
+  mockScenarioResults <- list(
+    scenario1 = list(
+      population = list(
+        allCovariateNames = c("ObservedIndividualId", "age", "weight")
+      )
+    )
+  )
+  class(mockScenarioResults$scenario1$population) <- "Population"
+
+  # Valid configuration - individualIds provided
+  dt_valid <- data.table(
+    scenario = "scenario1",
+    individualIds = "1,2,3",
+    dataGroupIds = NA,
+    referenceScenario = NA,
+    plot_TimeProfiles = 1
+  )
+  expect_no_error(validateVirtualTwinPop(dt_valid, mockScenarioResults))
+
+  # Invalid configuration - missing individualIds
+  dt_invalid <- data.table(
+    scenario = "scenario1",
+    individualIds = NA,
+    dataGroupIds = NA,
+    referenceScenario = NA,
+    plot_TimeProfiles = 1
+  )
+  expect_error(validateVirtualTwinPop(dt_invalid, mockScenarioResults))
+})
+
+test_that("validateVirtualTwinPop rejects brackets in individualIds for time profiles", {
+  mockScenarioResults <- list(
+    scenario1 = list(
+      population = list(
+        allCovariateNames = c("ObservedIndividualId", "age")
+      )
+    )
+  )
+  class(mockScenarioResults$scenario1$population) <- "Population"
+
+  # Invalid - brackets in individualIds with plot_TimeProfiles = 1
+  dt_withBrackets <- data.table(
+    scenario = "scenario1",
+    individualIds = "(1,2,3)",
+    dataGroupIds = NA,
+    referenceScenario = NA,
+    plot_TimeProfiles = 1
+  )
+  expect_error(validateVirtualTwinPop(dt_withBrackets, mockScenarioResults))
+
+  # Valid - no brackets
+  dt_noBrackets <- data.table(
+    scenario = "scenario1",
+    individualIds = "1,2,3",
+    dataGroupIds = NA,
+    referenceScenario = NA,
+    plot_TimeProfiles = 1
+  )
+  expect_no_error(validateVirtualTwinPop(dt_noBrackets, mockScenarioResults))
+
+  # Valid - brackets OK when plot_TimeProfiles = 0
+  dt_bracketsOK <- data.table(
+    scenario = "scenario1",
+    individualIds = "(1,2,3)",
+    dataGroupIds = NA,
+    referenceScenario = NA,
+    plot_TimeProfiles = 0
+  )
+  expect_no_error(validateVirtualTwinPop(dt_bracketsOK, mockScenarioResults))
+})
+
+test_that("validateVirtualTwinPop warns when individualIds filled without virtual twin scenario", {
+  # Scenario without virtual twin population (no ObservedIndividualId)
+  mockScenarioResults <- list(
+    scenario1 = list(
+      population = list(allCovariateNames = c("age", "weight"))
+    )
+  )
+  class(mockScenarioResults$scenario1$population) <- "Population"
+
+  # Warning - individualIds filled but no virtual twin scenario
+  dt_unnecessaryIds <- data.table(
+    scenario = "scenario1",
+    individualIds = "1,2,3",
+    dataGroupIds = NA,
+    referenceScenario = NA,
+    plot_TimeProfiles = 1
+  )
+  expect_warning(validateVirtualTwinPop(dt_unnecessaryIds, mockScenarioResults))
+})
+
+test_that("validateVirtualTwinPop validates scenario/referenceScenario combinations", {
+  # One scenario is virtual twin, reference is not (should error)
+  mockScenarioResults <- list(
+    vtwinScenario = list(
+      population = list(allCovariateNames = c("ObservedIndividualId"))
+    ),
+    regularScenario = list(
+      population = list(allCovariateNames = c("age"))
+    )
+  )
+  class(mockScenarioResults$vtwinScenario$population) <- "Population"
+  class(mockScenarioResults$regularScenario$population) <- "Population"
+
+  # Invalid - mixing virtual twin and regular scenarios
+  dt_mixed <- data.table(
+    scenario = "vtwinScenario",
+    individualIds = "1,2,3",
+    dataGroupIds = NA,
+    referenceScenario = "regularScenario",
+    plot_TimeProfiles = 1
+  )
+  expect_error(validateVirtualTwinPop(dt_mixed, mockScenarioResults))
+
+  # Valid - both are virtual twin
+  mockScenarioResults2 <- list(
+    vtwin1 = list(
+      population = list(allCovariateNames = c("ObservedIndividualId"))
+    ),
+    vtwin2 = list(
+      population = list(allCovariateNames = c("ObservedIndividualId"))
+    )
+  )
+  class(mockScenarioResults2$vtwin1$population) <- "Population"
+  class(mockScenarioResults2$vtwin2$population) <- "Population"
+
+  dt_bothVtwin <- data.table(
+    scenario = "vtwin1",
+    individualIds = "1,2,3",
+    dataGroupIds = NA,
+    referenceScenario = "vtwin2",
+    plot_TimeProfiles = 1
+  )
+  expect_no_error(validateVirtualTwinPop(dt_bothVtwin, mockScenarioResults2))
 })
