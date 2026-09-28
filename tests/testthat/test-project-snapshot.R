@@ -306,3 +306,75 @@ test_that("restoreProjectConfigurationRF recreates xlsx files listed in addons",
   expect_true(file.exists(pkPath2))
   expect_equal(readxl::excel_sheets(pkPath2), sheets1)
 })
+
+test_that("rf workbook list structures are converted to named data frames", {
+  workbookData <- list(
+    ExistingSheet = list(
+      column_names = c("Name", "Value"),
+      rows = list(
+        list("A", "1"),
+        list("B", "NA"),
+        list("C", NULL)
+      )
+    ),
+    EmptySheet = list(
+      column_names = c("OnlyColumn"),
+      rows = list()
+    )
+  )
+
+  result <- ospsuite.reportingframework:::.rfWorkbookListStructureToDataFrames(
+    workbookData
+  )
+
+  expect_named(result, c("ExistingSheet", "EmptySheet"))
+  expect_equal(
+    result$ExistingSheet,
+    data.frame(
+      Name = c("A", "B", "C"),
+      Value = c("1", NA_character_, NA_character_),
+      stringsAsFactors = FALSE
+    )
+  )
+  expect_equal(nrow(result$EmptySheet), 0)
+  expect_equal(names(result$EmptySheet), "OnlyColumn")
+})
+
+test_that("rf overlay workbook sheets updates existing sheets and adds missing sheets", {
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "ExistingSheet")
+  openxlsx::writeData(
+    wb,
+    sheet = "ExistingSheet",
+    x = data.frame(Name = "old", Value = "stale", stringsAsFactors = FALSE)
+  )
+
+  workbookData <- list(
+    ExistingSheet = list(
+      column_names = c("Name", "Value"),
+      rows = list(
+        list("updated", "1")
+      )
+    ),
+    NewSheet = list(
+      column_names = c("Code"),
+      rows = list(
+        list("added")
+      )
+    )
+  )
+
+  ospsuite.reportingframework:::.rfOverlayWorkbookSheets(
+    wb = wb,
+    workbookData = workbookData
+  )
+
+  expect_equal(
+    xlsxReadData(wb, "ExistingSheet", convertHeaders = FALSE),
+    data.table::data.table(Name = "updated", Value = 1)
+  )
+  expect_equal(
+    xlsxReadData(wb, "NewSheet", convertHeaders = FALSE),
+    data.table::data.table(Code = "added")
+  )
+})

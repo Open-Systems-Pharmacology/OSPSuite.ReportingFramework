@@ -95,6 +95,47 @@
   return(df)
 }
 
+#' Reconstruct all sheets of a stored workbook structure
+#' @param workbookData Named list of sheet snapshot structures.
+#' @return Named list of `data.frame`s.
+#' @keywords internal
+#' @noRd
+.rfWorkbookListStructureToDataFrames <- function(workbookData) {
+  stats::setNames(
+    lapply(workbookData, .rfListStructureToDataFrame),
+    names(workbookData)
+  )
+}
+
+#' Overlay stored workbook data onto an existing workbook
+#' @param wb A workbook object created by `openxlsx::loadWorkbook()`.
+#' @param workbookData Named list of sheet snapshot structures.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.rfOverlayWorkbookSheets <- function(wb, workbookData) {
+  sheetData <- .rfWorkbookListStructureToDataFrames(workbookData)
+
+  for (sheetName in names(sheetData)) {
+    sheetDf <- sheetData[[sheetName]]
+    if (sheetName %in% wb$sheet_names) {
+      xlsxWriteData(
+        wb = wb,
+        sheetName = sheetName,
+        dt = sheetDf
+      )
+    } else {
+      xlsxAddSheet(
+        wb = wb,
+        sheetName = sheetName,
+        dt = data.table::as.data.table(sheetDf)
+      )
+    }
+  }
+
+  return(invisible(NULL))
+}
+
 #' Derive the JSON snapshot path for a given ProjectConfiguration.xlsx
 #' @param xlsxPath Path to ProjectConfiguration.xlsx.
 #' @param outputDir Optional output directory; defaults to same dir as xlsx.
@@ -134,8 +175,9 @@
   }
 
   wbOut <- openxlsx::createWorkbook()
-  for (sheetName in names(workbookData)) {
-    sheetDf <- .rfListStructureToDataFrame(workbookData[[sheetName]])
+  sheetData <- .rfWorkbookListStructureToDataFrames(workbookData)
+  for (sheetName in names(sheetData)) {
+    sheetDf <- sheetData[[sheetName]]
     openxlsx::addWorksheet(wbOut, sheetName)
     openxlsx::writeData(wbOut, sheet = sheetName, x = sheetDf)
   }

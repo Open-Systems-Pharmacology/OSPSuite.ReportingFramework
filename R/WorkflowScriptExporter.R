@@ -1033,8 +1033,9 @@ WorkflowScriptExporter <- R6::R6Class(
         )
         configSheet <- configSheet[1, ]
       } else {
-        tmp <- convertSheet(self$configurationSheets[[xlsLabel]])
-        configSheet <- setDT(tmp[[sheetName]])
+        configSheet <- setDT(.rfListStructureToDataFrame(
+          self$configurationSheets[[xlsLabel]][[sheetName]]
+        ))
       }
 
       # add new row to config sheet
@@ -1461,7 +1462,7 @@ importProjectConfiguration <- function(
 
   # export first ProjectConfiguration.xlsx as base for project structure
   sheetsData <- configData[["ProjectConfiguration"]]
-  excelSheets <- convertSheet(sheetsData)
+  excelSheets <- .rfWorkbookListStructureToDataFrames(sheetsData)
   excelPath <- file.path(configurationDirectory, "ProjectConfiguration.xlsx")
   openxlsx::write.xlsx(excelSheets[[1]], file = excelPath)
 
@@ -1473,19 +1474,13 @@ importProjectConfiguration <- function(
     # Get the sheets for this file
     sheetsData <- configData[[name]]
 
-    excelSheets <- convertSheet(sheetsData)
+    excelSheets <- .rfWorkbookListStructureToDataFrames(sheetsData)
     # Write the Excel file if we have data
     if (length(excelSheets) > 0) {
       excelPath <- file.path(configurationDirectory, paste0(name, ".xlsx"))
       wb <- openxlsx::loadWorkbook(excelPath)
 
-      for (sheet in names(excelSheets)) {
-        if (sheet %in% wb$sheet_names) {
-          xlsxWriteData(wb = wb, sheetName = sheet, dt = excelSheets[[sheet]])
-        } else {
-          xlsxAddSheet(wb = wb, sheetName = sheet, dt = excelSheets[[sheet]])
-        }
-      }
+      .rfOverlayWorkbookSheets(wb = wb, workbookData = sheetsData)
       openxlsx::saveWorkbook(wb = wb, file = excelPath, overwrite = TRUE)
     }
   }
@@ -1497,52 +1492,6 @@ importProjectConfiguration <- function(
   )
 
   return(directionOfSynchronisation)
-}
-#' @title Convert Sheet Data to Data Frame
-#' @description
-#' This function converts the sheet data from a JSON structure into a data frame format suitable for Excel.
-#'
-#' @param sheetsData A list containing the sheet data in a structured format.
-#' @return A list of data frames representing the sheets ready for Excel writing.
-#' @keywords internal
-convertSheet <- function(sheetsData) {
-  excelSheets <- list()
-
-  # Process each sheet
-  for (sheetName in names(sheetsData)) {
-    sheetInfo <- sheetsData[[sheetName]]
-
-    # Get column names
-    columnNames <- sheetInfo$column_names
-
-    # Create an empty data frame with the correct structure
-    df <- data.frame(matrix(
-      ncol = length(columnNames),
-      nrow = length(sheetInfo$rows)
-    ))
-    colnames(df) <- columnNames
-
-    # Fill in data if we have rows
-    if (length(sheetInfo$rows) > 0) {
-      for (i in seq_along(sheetInfo$rows)) {
-        rowData <- sheetInfo$rows[[i]]
-
-        # Fill in each column
-        for (j in seq_along(columnNames)) {
-          if (j <= length(rowData)) {
-            df[i, j] <- rowData[[j]] %||% ""
-          }
-        }
-      }
-      # Convert data types to match the originals
-      df <- .convertDataTypes(df)
-    }
-
-    # Add to the list of sheets
-    excelSheets[[sheetName]] <- df
-  }
-
-  return(excelSheets)
 }
 #' @title Import Workflow Files
 #' @description
