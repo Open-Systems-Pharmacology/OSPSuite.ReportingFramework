@@ -383,6 +383,122 @@ clearColumnValidation <- function(workbook, sheetName, columnIndex) {
       !grepl(colPattern, ws$dataValidations)
     ]
   }
+  if (!is.null(ws$extLst) && length(ws$extLst) > 0L && nzchar(ws$extLst)) {
+    extBlocks <- regmatches(
+      ws$extLst,
+      gregexpr("<ext\\b.*?</ext>", ws$extLst, perl = TRUE)
+    )[[1L]]
+
+    if (length(extBlocks) > 0L) {
+      extBlocks <- extBlocks[!grepl(colPattern, extBlocks)]
+      ws$extLst <- if (length(extBlocks) == 0L) {
+        ""
+      } else {
+        paste(extBlocks, collapse = "")
+      }
+    }
+  }
+}
+
+writeValidityRange <- function(workbook, rangeName, values, validityRow) {
+  listRows <- validityRow:(validityRow + length(values) - 1L)
+  openxlsx::writeData(
+    workbook,
+    sheet = validitySheet,
+    x = data.frame(value = values, stringsAsFactors = FALSE),
+    startCol = 1L,
+    startRow = validityRow,
+    colNames = FALSE
+  )
+  openxlsx::createNamedRegion(
+    workbook,
+    sheet = validitySheet,
+    name = rangeName,
+    rows = listRows,
+    cols = 1L,
+    overwrite = TRUE
+  )
+
+  validityRow + length(values) + 1L
+}
+
+appendWorksheetExtListValidation <- function(
+  workbook,
+  sheetName,
+  rangeName,
+  sqref
+) {
+  sheetIdx <- which(openxlsx::sheets(workbook) == sheetName)
+  if (length(sheetIdx) == 0L) {
+    abortWithMessage("Sheet '", sheetName, "' not found in workbook.")
+  }
+
+  extBlock <- paste0(
+    '<ext uri="{CCE6A557-97BC-4b89-ADB6-D9C93CAAB3DF}" ',
+    'xmlns:x14="http://schemas.microsoft.com/office/spreadsheetml/2009/9/main">',
+    '<x14:dataValidations count="1" xmlns:xm="http://schemas.microsoft.com/office/excel/2006/main">',
+    '<x14:dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1">',
+    '<x14:formula1><xm:f>',
+    rangeName,
+    '</xm:f></x14:formula1>',
+    '<xm:sqref>',
+    sqref,
+    '</xm:sqref>',
+    '</x14:dataValidation></x14:dataValidations></ext>'
+  )
+
+  worksheet <- workbook$worksheets[[sheetIdx]]
+  worksheet$extLst <- paste0(worksheet$extLst %||% "", extBlock)
+}
+
+combineDimensionUnits <- function(dimensions) {
+  unique(unlist(
+    lapply(dimensions, ospsuite::getUnitsForDimension),
+    use.names = FALSE
+  ))
+}
+
+rebuildPkParameterTemplateDisplayUnitValidations <- function(
+  workbook,
+  validityRow
+) {
+  sheetName <- "Template"
+  headerName <- "DisplayUnit"
+  columnIndex <- getHeaderColumn(workbook, sheetName, headerName)
+
+  clearColumnValidation(workbook, sheetName, columnIndex)
+
+  validationSpecs <- list(
+    list(
+      valuesFunctionName = "pkParameterConcentrationUnitValues",
+      sqref = "C3:C4 C6 C16:C19 C22:C23"
+    ),
+    list(
+      valuesFunctionName = "pkParameterTimeUnitValues",
+      sqref = "C32 C5 C11:C12 C20:C21"
+    ),
+    list(
+      valuesFunctionName = "pkParameterAucUnitValues",
+      sqref = "C7:C10 C24:C31"
+    ),
+    list(
+      valuesFunctionName = "pkParameterFlowPerWeightUnitValues",
+      sqref = "C13"
+    ),
+    list(
+      valuesFunctionName = "pkParameterVolumePerBodyWeightUnitValues",
+      sqref = "C14:C15"
+    )
+  )
+
+  for (spec in validationSpecs) {
+    values <- get(spec$valuesFunctionName, mode = "function", inherits = TRUE)()
+    rangeName <- makeRangeName(spec$valuesFunctionName)
+    validityRow <- writeValidityRange(workbook, rangeName, values, validityRow)
+    appendWorksheetExtListValidation(workbook, sheetName, rangeName, spec$sqref)
+  }
+
+  validityRow
 }
 
 # Apply a list-based validation rule to a column in a worksheet.
@@ -524,30 +640,25 @@ refreshWorkbook <- function(templateFile, rules) {
   }
 
   for (rule in uniqueListRules) {
-    listRows <- validityRow:(validityRow + length(rule$values) - 1L)
-    openxlsx::writeData(
+    validityRow <- writeValidityRange(
       workbook,
-      sheet = validitySheet,
-      x = data.frame(value = rule$values, stringsAsFactors = FALSE),
-      startCol = 1L,
-      startRow = validityRow,
-      colNames = FALSE
+      rule$rangeName,
+      rule$values,
+      validityRow
     )
-    openxlsx::createNamedRegion(
-      workbook,
-      sheet = validitySheet,
-      name = rule$rangeName,
-      rows = listRows,
-      cols = 1L,
-      overwrite = TRUE
-    )
-    validityRow <- validityRow + length(rule$values) + 1L
   }
 
   for (rule in listRules) {
     validityRow <- applyListValidation(
       workbook,
       rule,
+      validityRow
+    )
+  }
+
+  if (identical(rules[[1L]]$workbookName, "PKParameter.xlsx")) {
+    validityRow <- rebuildPkParameterTemplateDisplayUnitValidations(
+      workbook,
       validityRow
     )
   }
@@ -587,6 +698,31 @@ dictionaryTypeValues <- function() {
   c("identifier", "timeprofile", "biometrics", "covariate", "metadata")
 }
 
+pkParameterConcentrationUnitValues <- function() {
+  combineDimensionUnits(c("Concentration (mass)", "Concentration (molar)"))
+}
+
+pkParameterTimeUnitValues <- function() {
+  ospsuite::getUnitsForDimension(dimension = "Time")
+}
+
+pkParameterAucUnitValues <- function() {
+  combineDimensionUnits(c("AUC (mass)", "AUC (molar)"))
+}
+
+pkParameterFlowPerWeightUnitValues <- function() {
+  ospsuite::getUnitsForDimension(dimension = "Flow per weight")
+}
+
+pkParameterVolumePerBodyWeightUnitValues <- function() {
+  ospsuite::getUnitsForDimension(dimension = "Volume per body weight")
+}
+
+standardPkParameterValues <- function() {
+  values <- names(ospsuite::StandardPKParameter)
+  values[values != "Unknown"]
+}
+
 dataclassValues <- function() {
   unlist(unname(ospsuite.reportingframework::DATACLASS[
     names(ospsuite.reportingframework::DATACLASS) != 'tpTwinPop'
@@ -596,4 +732,3 @@ dataclassValues <- function() {
 modeOfBinningValues <- function() {
   unlist(unname(ospsuite.plots::BINNINGMODE))
 }
-

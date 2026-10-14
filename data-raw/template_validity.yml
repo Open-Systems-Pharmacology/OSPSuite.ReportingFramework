@@ -264,6 +264,31 @@ workbooks:
         Reference: {validity: none}
         Comment: {validity: none}
 
+  PKParameter.xlsx:
+    sheets:
+      Template:
+        Name: {validity: none}
+        DisplayName: {validity: none}
+        DisplayUnit: {validity: mixed}
+        OutputPathIds: {validity: none}
+        Descriptions: {validity: none}
+
+      Userdef PK Parameter:
+        Name: {validity: none}
+        Standard PK parameter:
+          validity: list
+          valuesFunction: standardPkParameterValues
+          prompt: "Recommended standard PK parameter."
+        Display Unit: {validity: none}
+        StartTime [min]: {validity: mixed}
+        StartApplicationIndex: {validity: mixed}
+        StartTimeOffset [min]: {validity: mixed}
+        EndTime [min]: {validity: mixed}
+        EndApplicationIndex: {validity: mixed}
+        EndTimeOffset [min]: {validity: mixed}
+        NormalizationFactor: {validity: none}
+        ConcentrationThreshold [µmol/l]: {validity: mixed}
+
   SensitivityParameter.xlsx:
     sheets:
       Template:

@@ -32,6 +32,7 @@
 #' @noRd
 .rfExcelFileToListStructure <- function(filePath) {
   sheets <- readxl::excel_sheets(filePath)
+  sheets <- setdiff(sheets, "_Validity")
   return(stats::setNames(
     lapply(sheets, function(s) .rfExcelSheetToListStructure(filePath, s)),
     sheets
@@ -105,35 +106,6 @@
     lapply(workbookData, .rfListStructureToDataFrame),
     names(workbookData)
   )
-}
-
-#' Overlay stored workbook data onto an existing workbook
-#' @param wb A workbook object created by `openxlsx::loadWorkbook()`.
-#' @param workbookData Named list of sheet snapshot structures.
-#' @return Invisible `NULL`.
-#' @keywords internal
-#' @noRd
-.rfOverlayWorkbookSheets <- function(wb, workbookData) {
-  sheetData <- .rfWorkbookListStructureToDataFrames(workbookData)
-
-  for (sheetName in names(sheetData)) {
-    sheetDf <- sheetData[[sheetName]]
-    if (sheetName %in% wb$sheet_names) {
-      xlsxWriteData(
-        wb = wb,
-        sheetName = sheetName,
-        dt = sheetDf
-      )
-    } else {
-      xlsxAddSheet(
-        wb = wb,
-        sheetName = sheetName,
-        dt = data.table::as.data.table(sheetDf)
-      )
-    }
-  }
-
-  return(invisible(NULL))
 }
 
 #' Derive the JSON snapshot path for a given ProjectConfiguration.xlsx

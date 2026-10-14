@@ -78,13 +78,6 @@ validation$ok
 validation$errors
 ```
 
-RStudio Addins for AI prompting:
-
-- `openAIWorkflowPrompt()`
-- `openAIImportDataPrompt()`
-- `openAIBuildPlotsPrompt()`
-- `openAIDebugRunPrompt()`
-
 #### Customizing the Workflow Template
 
 By default, the workflow template is loaded from the package's internal templates. If you wish to customize this template, follow these steps:

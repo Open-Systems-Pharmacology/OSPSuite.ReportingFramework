@@ -4,12 +4,7 @@
 \alias{importWorkflow}
 \title{Import Workflow}
 \usage{
-importWorkflow(
-  projectDirectory,
-  wfIdentifier,
-  ePackageFolder,
-  configurationDirectory
-)
+importWorkflow(projectDirectory, wfIdentifier, ePackageFolder)
 }
 \arguments{
 \item{projectDirectory}{A character string representing the path to the project directory where
@@ -20,9 +15,6 @@ used to distinguish between different workflows.}
 
 \item{ePackageFolder}{A character string representing the path to the electronic package folder
 that contains the workflow files and configurations to be imported.}
-
-\item{configurationDirectory}{A character string representing the directory where the configuration
-files will be stored.}
 }
 \value{
 An object containing the updated project configuration after the workflow has been imported.

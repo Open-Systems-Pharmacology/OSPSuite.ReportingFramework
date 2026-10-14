@@ -107,12 +107,6 @@ validation$ok
 validation$errors
 ```
 
-RStudio Addin shortcut for this prompt:
-
-```{r, echo=TRUE, eval=FALSE}
-openAIImportDataPrompt()
-```
-
 # Filling the Excel Table
 
 ```{r load-template, eval=TRUE, echo=FALSE}

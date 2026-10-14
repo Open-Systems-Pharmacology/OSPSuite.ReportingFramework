@@ -1,42 +1,59 @@
-# Unit tests for initLogfunction
-test_that("initLogfunction initializes logging successfully", {
-  projectConfiguration <- list(outputFolder = tempdir())
-
-  # Should not raise an error
-  expect_no_error(
-    initLogfunction(
-      projectConfiguration = projectConfiguration,
-      verbose = TRUE
-    )
-  )
-})
-
 # Unit tests for addMessageToLog
 test_that("addMessageToLog logs messages successfully", {
-  projectConfiguration <- list(outputFolder = tempdir())
-
-  # Initialize logging
-  initLogfunction(
-    projectConfiguration = projectConfiguration,
-    verbose = FALSE,
-    loggingFolder = tempdir()
-  )
-
-  # Capture output from logging message
   expect_no_error(addMessageToLog("Test message"))
+})
+
+test_that("setLogPath writes to the configured log file", {
+  logFolder <- file.path(tempdir(), "rf-custom-log")
+  logFile <- "workflow.log"
+  logPath <- file.path(logFolder, logFile)
+
+  unlink(logFolder, recursive = TRUE, force = TRUE)
+  on.exit(unlink(logFolder, recursive = TRUE, force = TRUE), add = TRUE)
+  on.exit(ospsuite.utils::setLogFolder(NULL), add = TRUE)
+
+  expect_no_error(setLogPath(logFolder = logFolder, logFileName = logFile))
+
+  addMessageToLog("Custom path message")
+
+  expect_true(file.exists(logPath))
+  expect_true(any(grepl(
+    "Custom path message",
+    readLines(logPath),
+    fixed = TRUE
+  )))
+})
+
+test_that("saveSessionInfo writes a separate file in the configured log folder", {
+  logFolder <- file.path(tempdir(), "rf-session-log")
+  sessionFile <- "custom-session-info.log"
+  sessionPath <- file.path(logFolder, sessionFile)
+
+  unlink(logFolder, recursive = TRUE, force = TRUE)
+  on.exit(unlink(logFolder, recursive = TRUE, force = TRUE), add = TRUE)
+  on.exit(ospsuite.utils::setLogFolder(NULL), add = TRUE)
+
+  expect_no_error(setLogPath(
+    logFolder = logFolder,
+    logFileName = "workflow.log"
+  ))
+  expect_no_error(saveSessionInfo(fileName = sessionFile))
+
+  expect_true(file.exists(sessionPath))
+  expect_true(any(grepl("R version", readLines(sessionPath), fixed = TRUE)))
+})
+
+test_that("saveSessionInfo requires a configured log folder", {
+  ospsuite.utils::setLogFolder(NULL)
+
+  expect_error(
+    saveSessionInfo(),
+    "No log folder configured"
+  )
 })
 
 # Unit tests errors and warnings
 test_that("captureLog function catches messages and errors", {
-  projectConfiguration <- list(outputFolder = tempdir())
-
-  # Initialize logging
-  initLogfunction(
-    projectConfiguration = projectConfiguration,
-    verbose = FALSE,
-    loggingFolder = tempdir()
-  )
-
   # Test message capture
   expect_no_error(captureLog(expr = message("Test info message")))
 
@@ -49,15 +66,6 @@ test_that("captureLog function catches messages and errors", {
 
 # Unit tests for setShowLogMessages
 test_that("setShowLogMessages controls verbosity", {
-  projectConfiguration <- list(outputFolder = tempdir())
-
-  # Initialize logging
-  initLogfunction(
-    projectConfiguration = projectConfiguration,
-    verbose = TRUE,
-    loggingFolder = tempdir()
-  )
-
   # Set to non-verbose
   expect_no_error(setShowLogMessages(FALSE))
 
@@ -67,15 +75,6 @@ test_that("setShowLogMessages controls verbosity", {
 
 # Unit tests for writeTableToLog
 test_that("writeTableToLog logs data frames successfully", {
-  projectConfiguration <- list(outputFolder = tempdir())
-
-  # Initialize logging
-  initLogfunction(
-    projectConfiguration = projectConfiguration,
-    verbose = FALSE,
-    loggingFolder = tempdir()
-  )
-
   exampleData <- data.table(x = 1:5, y = letters[1:5])
 
   # Call the function with example data
@@ -83,15 +82,6 @@ test_that("writeTableToLog logs data frames successfully", {
 })
 
 test_that("captureLog executes finallyExpression", {
-  projectConfiguration <- list(outputFolder = tempdir())
-
-  # Initialize logging
-  initLogfunction(
-    projectConfiguration = projectConfiguration,
-    verbose = FALSE,
-    loggingFolder = tempdir()
-  )
-
   # Call captureLog with an expression that generates an error
   expect_warning(
     expect_error(captureLog(

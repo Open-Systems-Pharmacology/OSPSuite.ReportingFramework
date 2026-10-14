@@ -30,6 +30,7 @@ Other function to read from and write to xlsx:
 \code{\link[=xlsxAddSheet]{xlsxAddSheet()}},
 \code{\link[=xlsxCloneAndSet]{xlsxCloneAndSet()}},
 \code{\link[=xlsxReadData]{xlsxReadData()}},
-\code{\link[=xlsxWriteData]{xlsxWriteData()}}
+\code{\link[=xlsxWriteData]{xlsxWriteData()}},
+\code{\link[=xlsxWriteOrAddData]{xlsxWriteOrAddData()}}
 }
 \concept{function to read from and write to xlsx}

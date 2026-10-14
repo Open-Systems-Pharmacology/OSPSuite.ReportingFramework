@@ -113,7 +113,7 @@ install.packages("cowplot")
 
 ## AI-assisted workflow support
 
-The package includes helper functions and RStudio Addins to support users working with AI assistants.
+The package includes helper functions to support users working with AI assistants.
 
 ### Generate AI-ready prompts
 
@@ -160,15 +160,6 @@ validation$ok
 validation$errors
 validation$warnings
 ```
-
-### RStudio Addins
-
-If `rstudioapi` is installed, the following Addins are available:
-
-- `openAIWorkflowPrompt()`
-- `openAIImportDataPrompt()`
-- `openAIBuildPlotsPrompt()`
-- `openAIDebugRunPrompt()`
 
 ## MS-Word reports
 

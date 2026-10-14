@@ -304,7 +304,36 @@ test_that("restoreProjectConfigurationRF recreates xlsx files listed in addons",
 
   pkPath2 <- pc2$addOns[["pKParameterFile"]]
   expect_true(file.exists(pkPath2))
-  expect_equal(readxl::excel_sheets(pkPath2), sheets1)
+  expect_equal(readxl::excel_sheets(pkPath2), setdiff(sheets1, "_Validity"))
+})
+
+test_that("snapshotProjectConfigurationRF excludes hidden validity addon sheets", {
+  d <- file.path(tempdir(), "snap_test_10")
+  unlink(d, recursive = TRUE)
+  dir.create(d)
+
+  ospsuite.reportingframework::initProject(
+    projectDirectory = d,
+    configurationDirectory = d,
+    overwrite = TRUE
+  )
+  pc <- ospsuite.reportingframework::createProjectConfiguration(
+    file.path(d, "ProjectConfiguration.xlsx")
+  )
+
+  pkPath <- fs::path_abs(
+    pc$addOns[["pKParameterFile"]],
+    start = pc$baseProjectconfiguration$configurationsFolder
+  )
+
+  expect_true("_Validity" %in% readxl::excel_sheets(pkPath))
+
+  snap <- ospsuite.reportingframework::snapshotProjectConfigurationRF(
+    pc,
+    outputDir = d
+  )
+
+  expect_false("_Validity" %in% names(snap$pKParameterFile))
 })
 
 test_that("rf workbook list structures are converted to named data frames", {
@@ -338,43 +367,4 @@ test_that("rf workbook list structures are converted to named data frames", {
   )
   expect_equal(nrow(result$EmptySheet), 0)
   expect_equal(names(result$EmptySheet), "OnlyColumn")
-})
-
-test_that("rf overlay workbook sheets updates existing sheets and adds missing sheets", {
-  wb <- openxlsx::createWorkbook()
-  openxlsx::addWorksheet(wb, "ExistingSheet")
-  openxlsx::writeData(
-    wb,
-    sheet = "ExistingSheet",
-    x = data.frame(Name = "old", Value = "stale", stringsAsFactors = FALSE)
-  )
-
-  workbookData <- list(
-    ExistingSheet = list(
-      column_names = c("Name", "Value"),
-      rows = list(
-        list("updated", "1")
-      )
-    ),
-    NewSheet = list(
-      column_names = c("Code"),
-      rows = list(
-        list("added")
-      )
-    )
-  )
-
-  ospsuite.reportingframework:::.rfOverlayWorkbookSheets(
-    wb = wb,
-    workbookData = workbookData
-  )
-
-  expect_equal(
-    xlsxReadData(wb, "ExistingSheet", convertHeaders = FALSE),
-    data.table::data.table(Name = "updated", Value = 1)
-  )
-  expect_equal(
-    xlsxReadData(wb, "NewSheet", convertHeaders = FALSE),
-    data.table::data.table(Code = "added")
-  )
 })

@@ -37,8 +37,11 @@ projectConfiguration <-
   ospsuite.reportingframework::createProjectConfiguration(
     path = "ProjectConfiguration.xlsx"
   )
-
-initLogfunction(projectConfiguration)
+# initialize the logging
+setLogPath(
+  logFolder = file.path(projectConfiguration$outputFolder, "logs"),
+  logFileName = "workflow.log"
+)
 
 
 # 1) Read observedData -------------------------------------------------------

@@ -1,62 +1,80 @@
-XXCHUNKstart-librariesXXX
+XXCHUNKstart - librariesXXX
 library(ospsuite.reportingframework)
-XXCHUNKend-librariesXXX
+XXCHUNKend - librariesXXX
 
-# set working directory to source file location!
+# Set the working directory to the source file location before running this script.
 
-# adjust Path. Please select appropriate directory to set up project structure
+# Adjust this path to the directory where the workflow-specific project structure should be created.
 projectDirectory <- 'XXprojectDirectoryXX'
 
-# Please decide if you want to do a cleanup, deleting all imported files and
-# leaving only the newly generated outputs
-cleanUp = TRUE
+# Set cleanUp to TRUE to remove imported temporary files and keep only the
+# newly generated outputs.
+cleanUp <- TRUE
 
-ospsuite.reportingframework::captureLog(expr = {
+setLogPath(
+  logFolder = file.path(projectDirectory, 'logs'),
+  logFileName = paste0('w', XXwfIdentifierXX, '.log')
+)
 
-  setWorkflowOptions(isValidRun = getQCpassedEnvironmentVariable())
+ospsuite.reportingframework::captureLog(
+  expr = {
+    setWorkflowOptions(isValidRun = getQCpassedEnvironmentVariable())
 
-  # build structure needed for workflow and import input files for workflow
-  projectConfiguration <- importWorkflow(projectDirectory = projectDirectory,
-                                        wfIdentifier = XXwfIdentifierXX,
-                                        ePackageFolder = '.')
-XXCHUNKstart-pathsCustomfunctionsXXX
-XXCHUNKend-pathsCustomfunctionsXXX
-XXCHUNKstart-dataObservedXXX
-XXCHUNKend-dataObservedXXX
-XXCHUNKstart-dataObservedPKXXX
-XXCHUNKend-dataObservedPKXXX
-XXCHUNKstart-scenarioNamesXXX
-XXCHUNKend-scenarioNamesXXX
-XXCHUNKstart-loadResultsXXX
-  # create list of scenarios
-  scenarioList <-
-    createScenarios.wrapped(projectConfiguration = projectConfiguration,
-                            scenarioNames = c('XXscenarioNamesXX'))
+    # Import the workflow input files and create the workflow-specific project structure.
+    projectConfiguration <- importWorkflow(
+      projectDirectory = projectDirectory,
+      wfIdentifier = XXwfIdentifierXX,
+      ePackageFolder = '.'
+    )
+    XXCHUNKstart - pathsCustomfunctionsXXX
+    XXCHUNKend - pathsCustomfunctionsXXX
+    XXCHUNKstart - dataObservedXXX
+    XXCHUNKend - dataObservedXXX
+    XXCHUNKstart - dataObservedPKXXX
+    XXCHUNKend - dataObservedPKXXX
+    XXCHUNKstart - scenarioNamesXXX
+    XXCHUNKend - scenarioNamesXXX
+    XXCHUNKstart - loadResultsXXX
+    # create list of scenarios
+    scenarioList <-
+      createScenarios.wrapped(
+        projectConfiguration = projectConfiguration,
+        scenarioNames = c('XXscenarioNamesXX')
+      )
 
-  # run simulations and calculate PK Parameter
-  scenarioResults <- runAndSaveScenarios(projectConfiguration = projectConfiguration,
-                                         scenarioList = scenarioList,
-                                         simulationRunOptions = ospsuite::SimulationRunOptions$new(
-                                           showProgress = TRUE
-                                         ))
-XXCHUNKend-loadResultsXXX
-XXCHUNKstart-runPlotXXX
-XXCHUNKend-runPlotXXX
+    # Run simulations and calculate PK parameters.
+    scenarioResults <- runAndSaveScenarios(
+      projectConfiguration = projectConfiguration,
+      scenarioList = scenarioList,
+      simulationRunOptions = ospsuite::SimulationRunOptions$new(
+        showProgress = TRUE
+      )
+    )
+    XXCHUNKend - loadResultsXXX
+    XXCHUNKstart - runPlotXXX
+    XXCHUNKend - runPlotXXX
 
-  # finalize workflow---------------------
-  addMessageToLog("finalize workflow")
+    # Finalize workflow.
+    addMessageToLog("finalize workflow")
 
-  # save Session Infos including the loaded packages and R version, into a log file
-  saveSessionInfo()
-}, finallyExpression = {
-  if (cleanUp){
-    # Cleanup all temporary files
-    for (folder in c(projectConfiguration$populationsFolder,
-                     projectConfiguration$modelFolder,
-                     projectConfiguration$configurationsFolder,
-                     projectConfiguration$addOns$dataFileFolder)){
-      if (dir.exists(folder))
-        unlink(folder, recursive = TRUE)
+    # Save session information, including loaded packages and the R version, to a log file.
+    saveSessionInfo(
+      fileName = paste0('w', XXwfIdentifierXX, '_sessionInfo.log')
+    )
+  },
+  finallyExpression = {
+    if (cleanUp) {
+      # Clean up all temporary files.
+      for (folder in c(
+        projectConfiguration$populationsFolder,
+        projectConfiguration$modelFolder,
+        projectConfiguration$configurationsFolder,
+        projectConfiguration$addOns$dataFileFolder
+      )) {
+        if (dir.exists(folder)) {
+          unlink(folder, recursive = TRUE)
+        }
+      }
     }
   }
-})
+)

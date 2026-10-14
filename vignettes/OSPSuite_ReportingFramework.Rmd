@@ -36,19 +36,13 @@ Project settings are managed by `ProjectConfigurationRF`, which wraps an `{esqla
 
 ## AI-Assisted Usage
 
-The package now includes helper functions and RStudio Addins for AI-assisted workflows.
+The package includes helper functions for AI-assisted workflows.
 
 - `createAIWorkflowPrompt(projectConfiguration, task = "create-workflow")`: Creates a project-specific prompt.
 - `createAIPromptFromTask(projectConfiguration, task = "import-data")`: Creates prompts from predefined task presets.
 - `exportWorkflowContext(projectConfiguration)`: Exports compact workflow context for AI tools.
 - `validateWorkflowForAI(projectConfiguration)`: Performs lightweight preflight checks.
 
-For one-click usage in RStudio Addins, use:
-
-- `openAIWorkflowPrompt()`
-- `openAIImportDataPrompt()`
-- `openAIBuildPlotsPrompt()`
-- `openAIDebugRunPrompt()`
 
 ## Available Vignettes
 

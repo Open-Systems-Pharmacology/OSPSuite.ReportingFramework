@@ -87,6 +87,44 @@ xlsxWriteData <- function(wb, sheetName, dt) {
   return(invisible())
 }
 
+#' Write data to a worksheet or add the worksheet if it does not exist
+#'
+#' This function centralizes the workbook mutation logic for callers that want
+#' to update an existing sheet when present or create a new one otherwise.
+#'
+#' @param wb A workbook object created by `openxlsx::loadWorkbook()`.
+#' @param sheetName A character string specifying the target sheet name.
+#' @param dt A `data.frame` or `data.table` to write.
+#'
+#' @return An invisible NULL value. The function performs an action on the workbook.
+#'
+#' @examples
+#' \dontrun{
+#' wb <- loadWorkbook("example.xlsx")
+#' data <- data.frame(Name = c("Charlie", "Dana"), Age = c(28, 32))
+#' xlsxWriteOrAddData(wb, "ExistingOrNewSheet", data)
+#' }
+#'
+#' @export
+#' @family function to read from and write to xlsx
+xlsxWriteOrAddData <- function(wb, sheetName, dt) {
+  checkmate::assertClass(wb, "Workbook", null.ok = FALSE)
+  checkmate::assertCharacter(sheetName, len = 1)
+  checkmate::assertDataFrame(dt)
+
+  if (sheetName %in% wb$sheet_names) {
+    xlsxWriteData(wb = wb, sheetName = sheetName, dt = dt)
+  } else {
+    xlsxAddSheet(
+      wb = wb,
+      sheetName = sheetName,
+      dt = data.table::as.data.table(data.table::copy(dt))
+    )
+  }
+
+  return(invisible())
+}
+
 #' Clone a sheet and set new content
 #'
 #' This function wraps `openxlsx::cloneWorksheet` but sets new content in the cloned sheet.

@@ -203,7 +203,8 @@ WorkflowScriptExporter <- R6::R6Class(
         convertHeaders = FALSE,
         skipDescriptionRow = FALSE
       )
-      configurationSheets[["Plots"]] <- plotSheetsJson
+      configurationSheets[["Reports"]] <-
+        .rfWorkbookListStructureToDataFrames(plotSheetsJson)
 
       # For filtering common configs, we still need to read as data.tables
       commonConfigs <- list(
@@ -274,8 +275,7 @@ WorkflowScriptExporter <- R6::R6Class(
             ]
           )
           # Convert filtered config to JSON format using the shared logic
-          configurationSheets[["Plots"]][[commonConfigTable]] <-
-            private$excelDataTableToListStructure(dtConfig)
+          configurationSheets[["Reports"]][[commonConfigTable]] <- dtConfig
         }
       }
 
@@ -423,7 +423,7 @@ WorkflowScriptExporter <- R6::R6Class(
 
         # Convert filtered individuals to JSON format
         self$configurationSheets[["Individuals"]][["IndividualBiometrics"]] <-
-          private$excelDataTableToListStructure(dtIndividuals)
+          dtIndividuals
       }
 
       private$addSelectedSheets(
@@ -467,7 +467,7 @@ WorkflowScriptExporter <- R6::R6Class(
         x = inputFiles[, c("fileName", "fileType")],
         file = file.path(
           private$electronicPackageFolder,
-          paste0("w", self$wfIdentifier, "_input_files.csv")
+          ePackageInputManifestFileName(self$wfIdentifier)
         )
       )
 
@@ -477,21 +477,44 @@ WorkflowScriptExporter <- R6::R6Class(
     #' Export configuration sheets to the electronic package folder.
     #' @return Invisible NULL.
     exportConfigSheets = function() {
-      # Convert Configuration to JSON
-      jsonData <- jsonlite::toJSON(
-        self$configurationSheets,
-        pretty = TRUE,
-        auto_unbox = TRUE,
-        digits = NA
+      transportPath <- file.path(
+        private$electronicPackageFolder,
+        paste0("w", self$wfIdentifier, "_config_json.txt")
       )
 
-      # Write to file
-      writeLines(
-        jsonData,
-        file.path(
-          private$electronicPackageFolder,
-          paste0("w", self$wfIdentifier, "_config_json.txt")
-        )
+      tempProjectDir <- tempfile(pattern = "workflow_config_")
+      dir.create(tempProjectDir)
+      on.exit(
+        unlink(tempProjectDir, recursive = TRUE, force = TRUE),
+        add = TRUE
+      )
+
+      initProject(
+        projectDirectory = tempProjectDir,
+        configurationDirectory = tempProjectDir,
+        overwrite = TRUE
+      )
+
+      tempProjectConfiguration <- createProjectConfiguration(
+        path = file.path(tempProjectDir, "ProjectConfiguration.xlsx"),
+        ignoreVersionCheck = TRUE
+      )
+      tempProjectConfiguration <- private$applyConfigurationSheetsToProject(
+        tempProjectConfiguration
+      )
+
+      private$ensureSnapshotDirectories(
+        tempProjectConfiguration
+      )
+
+      snapshotProjectConfigurationRF(
+        projectConfig = tempProjectConfiguration,
+        outputDir = tempProjectDir
+      )
+      file.copy(
+        from = file.path(tempProjectDir, "ProjectConfiguration.json"),
+        to = transportPath,
+        overwrite = TRUE
       )
 
       return(invisible())
@@ -657,6 +680,7 @@ WorkflowScriptExporter <- R6::R6Class(
     # Function to add validated filenames to the list of input files
     addValidFileNames = function(inputFiles) {
       inputFiles[, fileName := basename(source)]
+      inputFiles[, manuallyChanged := 0]
       # replace filename
       if (length(self$fileNameReplacements) > 0) {
         inputFiles[
@@ -666,9 +690,12 @@ WorkflowScriptExporter <- R6::R6Class(
               length(self$fileNameReplacements),
               2
             )],
-          fileName := self$fileNameReplacements[
-            which(fileName == self$fileNameReplacements) + 1
-          ],
+          `:=`(
+            fileName = self$fileNameReplacements[
+              which(fileName == self$fileNameReplacements) + 1
+            ],
+            manuallyChanged = 1
+          ),
           by = .I
         ]
       }
@@ -678,8 +705,12 @@ WorkflowScriptExporter <- R6::R6Class(
         fileName := fs::path_ext_set(path = fileName, ext = "xml")
       ]
       inputFiles[
+        fileType == "population",
+        fileName := ePackagePopulationFileName(fileName)
+      ]
+      inputFiles[
         fileType == "script",
-        fileName := fs::path_ext_set(path = fileName, ext = "txt")
+        fileName := ePackageScriptFileName(fileName)
       ]
 
       # adjust filenames to fulfill naming requirements
@@ -689,21 +720,34 @@ WorkflowScriptExporter <- R6::R6Class(
       ]
 
       # list all files with changed names
-      ixChanged <- which(
-        fs::path_ext_remove(basename(inputFiles$source)) !=
-          fs::path_ext_remove(inputFiles$fileName)
-      )
+      ixChanged <- which(mapply(
+        FUN = function(source, fileName, fileType) {
+          fs::path_ext_remove(basename(source)) !=
+            fs::path_ext_remove(changedInputReferenceFileName(
+              fileName = fileName,
+              fileType = fileType,
+              source = source
+            ))
+        },
+        source = inputFiles$source,
+        fileName = inputFiles$fileName,
+        fileType = inputFiles$fileType,
+        USE.NAMES = FALSE
+      ))
 
       # return the change names for replacement in config sheets
       changedInputFiles <- inputFiles[
         ixChanged,
-        c("source", "fileName", "fileType")
+        c("source", "fileName", "fileType", "manuallyChanged")
       ]
       changedInputFiles[,
-        fileName := as.character(fs::path_ext_set(
-          path = fileName,
-          ext = fs::path_ext(source)
-        ))
+        fileName := mapply(
+          FUN = changedInputReferenceFileName,
+          fileName = fileName,
+          fileType = fileType,
+          source = source,
+          USE.NAMES = FALSE
+        )
       ]
       changedInputFiles[, source := basename(source)]
       # population files are refernces with ID
@@ -713,22 +757,16 @@ WorkflowScriptExporter <- R6::R6Class(
       ]
       setkey(changedInputFiles, source)
 
-      self$changedInputFiles <- changedInputFiles
+      self$changedInputFiles <- changedInputFiles[, c(
+        "source",
+        "fileName",
+        "fileType"
+      )]
 
       # skip manually changed filenames for warning message
-      if (length(self$fileNameReplacements) > 0) {
-        ixChanged <- setdiff(
-          ixChanged,
-          which(
-            changedInputFiles$fileName %in%
-              self$fileNameReplacements[seq(
-                2,
-                length(self$fileNameReplacements),
-                2
-              )]
-          )
-        )
-      }
+      ixChanged <-
+        which(changedInputFiles[['manuallyChanged']] == 0)
+
       if (length(ixChanged > 0)) {
         warning(messages$warningWorkflowScriptExporterL2())
       }
@@ -760,14 +798,12 @@ WorkflowScriptExporter <- R6::R6Class(
         PopulationId := fs::path_ext_remove(i.fileName),
         on = .(PopulationId = source)
       ]
-      configurationSheets[["Scenarios"]] <-
-        list(Scenarios = private$excelDataTableToListStructure(dtScenarios))
+      configurationSheets[["Scenarios"]] <- list(Scenarios = dtScenarios)
 
       dtPKarameter <- xlsxReadData(wb, "PKParameter", convertHeaders = FALSE)
       dtPKarameter <- dtPKarameter[Scenario_name %in% self$scenarioNames]
       if (nrow(dtPKarameter) > 0) {
-        configurationSheets[["Scenarios"]][["PKParameter"]] <-
-          private$excelDataTableToListStructure(dtPKarameter)
+        configurationSheets[["Scenarios"]][["PKParameter"]] <- dtPKarameter
 
         private$addSelectedSheets(
           xlsfile = projectConfiguration$addOns$pKParameterFile,
@@ -776,8 +812,7 @@ WorkflowScriptExporter <- R6::R6Class(
       }
 
       dtOutputPaths <- xlsxReadData(wb, "OutputPaths", convertHeaders = FALSE)
-      configurationSheets[["Scenarios"]][["OutputPaths"]] <-
-        private$excelDataTableToListStructure(dtOutputPaths)
+      configurationSheets[["Scenarios"]][["OutputPaths"]] <- dtOutputPaths
 
       self$configurationSheets <- configurationSheets
 
@@ -794,12 +829,11 @@ WorkflowScriptExporter <- R6::R6Class(
       configurationSheets <- list()
 
       for (sheet in intersect(wb$sheet_names, selectedSheets)) {
-        configurationSheets[[xlsLabel]][[sheet]] <-
-          private$excelDataTableToListStructure(xlsxReadData(
-            wb,
-            sheet,
-            convertHeaders = FALSE
-          ))
+        configurationSheets[[xlsLabel]][[sheet]] <- xlsxReadData(
+          wb,
+          sheet,
+          convertHeaders = FALSE
+        )
       }
 
       self$configurationSheets <- configurationSheets
@@ -814,11 +848,19 @@ WorkflowScriptExporter <- R6::R6Class(
           value = TRUE
         ))) {
           ixStart <- grep(
-            paste0("^XXCHUNKstart-", gsub("-copy$", "", chunkName), "XXX"),
+            paste0(
+              "^\\s*XXCHUNKstart\\s*-\\s*",
+              gsub("-copy$", "", chunkName),
+              "XXX\\s*$"
+            ),
             workflowTextLines
           )
           ixEnd <- grep(
-            paste0("^XXCHUNKend-", gsub("-copy$", "", chunkName), "XXX"),
+            paste0(
+              "^\\s*XXCHUNKend\\s*-\\s*",
+              gsub("-copy$", "", chunkName),
+              "XXX\\s*$"
+            ),
             workflowTextLines
           )
           if (length(ixStart) * length(ixEnd) == 0) {
@@ -836,7 +878,7 @@ WorkflowScriptExporter <- R6::R6Class(
       # delete remaining chunk placeholders
       workflowTextLines <- workflowTextLines[setdiff(
         seq_len(length(workflowTextLines)),
-        grep("^XXCHUNK", workflowTextLines)
+        grep("^\\s*XXCHUNK.*XXX\\s*$", workflowTextLines)
       )]
 
       return(workflowTextLines)
@@ -1033,9 +1075,11 @@ WorkflowScriptExporter <- R6::R6Class(
         )
         configSheet <- configSheet[1, ]
       } else {
-        configSheet <- setDT(.rfListStructureToDataFrame(
-          self$configurationSheets[[xlsLabel]][[sheetName]]
-        ))
+        configSheet <- data.table::as.data.table(
+          private$asWorkbookSheetData(
+            self$configurationSheets[[xlsLabel]][[sheetName]]
+          )
+        )
       }
 
       # add new row to config sheet
@@ -1054,9 +1098,7 @@ WorkflowScriptExporter <- R6::R6Class(
         )
       )
 
-      private$.configurationSheets[[xlsLabel]][[
-        sheetName
-      ]] <- private$excelDataTableToListStructure(configSheet)
+      private$.configurationSheets[[xlsLabel]][[sheetName]] <- configSheet
 
       return(invisible())
     },
@@ -1109,7 +1151,7 @@ WorkflowScriptExporter <- R6::R6Class(
       self$configurationSheets <- setNames(
         list(
           setNames(
-            list(private$excelDataTableToListStructure(dict)),
+            list(dict),
             dictionaryName
           )
         ),
@@ -1121,11 +1163,12 @@ WorkflowScriptExporter <- R6::R6Class(
     # initializes configuration sheets a
     initializeconfigurationSheets = function(projectConfiguration) {
       wb <- openxlsx::loadWorkbook(
-        file = system.file(
-          "templates",
-          "ProjectConfiguration.xlsx",
-          package = "ospsuite.reportingframework"
-        )
+        # file = system.file(
+        #   "templates",
+        #   "ProjectConfiguration.xlsx",
+        #   package = "ospsuite.reportingframework"
+        # )
+        file = projectConfiguration$projectConfigurationFilePath
       )
       dtConfig <-
         xlsxReadData(
@@ -1154,20 +1197,117 @@ WorkflowScriptExporter <- R6::R6Class(
           start = configDirW
         )
       ]
-      dtConfig[
-        Property == "electronicPackageFolder",
-        Value := fs::path_rel(
-          projectConfiguration$addOns$electronicPackageFolder,
-          start = configDirW
-        )
+
+      dtConfig <- dtConfig[
+        Property %in% STANDARD_ESQLABSR_PROJECT_CONFIGURATION_PROPERTIES
       ]
 
       configurationSheets <- list(
         "ProjectConfiguration" = list(
-          Scenarios = private$excelDataTableToListStructure(dtConfig)
+          Scenarios = dtConfig
         )
       )
       self$configurationSheets <- configurationSheets
+
+      return(invisible())
+    },
+    # Maps logical workflow config labels onto actual RF workbook paths.
+    workbookPathForLabel = function(projectConfiguration, xlsLabel) {
+      switch(
+        xlsLabel,
+        "ProjectConfiguration" = projectConfiguration$projectConfigurationFilePath,
+        "Scenarios" = projectConfiguration$scenariosFile,
+        "Individuals" = projectConfiguration$individualsFile,
+        "ModelParameters" = projectConfiguration$modelParamsFile,
+        "Applications" = projectConfiguration$applicationsFile,
+        "Reports" = projectConfiguration$addOns$reportsFile,
+        "PKParameter" = projectConfiguration$addOns$pKParameterFile,
+        "DataImportConfiguration" = file.path(
+          projectConfiguration$configurationsFolder,
+          "DataImportConfiguration.xlsx"
+        ),
+        stop(sprintf("Unsupported configuration workbook label: %s", xlsLabel))
+      )
+    },
+    # Align workflow export payload with workbook names in a real RF project.
+    normalizeWorkbookDataForProject = function(
+      xlsLabel,
+      workbookData,
+      projectConfiguration
+    ) {
+      if (xlsLabel != "ProjectConfiguration" || length(workbookData) == 0) {
+        return(workbookData)
+      }
+
+      projectSheetName <- readxl::excel_sheets(
+        projectConfiguration$projectConfigurationFilePath
+      )[[1]]
+      names(workbookData)[[1]] <- projectSheetName
+
+      return(workbookData)
+    },
+    # Overlay the filtered workflow config onto a temporary RF project.
+    applyConfigurationSheetsToProject = function(projectConfiguration) {
+      for (xlsLabel in names(self$configurationSheets)) {
+        workbookData <- private$normalizeWorkbookDataForProject(
+          xlsLabel = xlsLabel,
+          workbookData = self$configurationSheets[[xlsLabel]],
+          projectConfiguration = projectConfiguration
+        )
+        workbookPath <- private$workbookPathForLabel(
+          projectConfiguration = projectConfiguration,
+          xlsLabel = xlsLabel
+        )
+        wb <- openxlsx::loadWorkbook(workbookPath)
+
+        for (sheetName in names(workbookData)) {
+          xlsxWriteOrAddData(
+            wb = wb,
+            sheetName = sheetName,
+            dt = private$asWorkbookSheetData(workbookData[[sheetName]])
+          )
+        }
+        openxlsx::saveWorkbook(wb = wb, file = workbookPath, overwrite = TRUE)
+      }
+
+      createProjectConfiguration(
+        path = projectConfiguration$projectConfigurationFilePath,
+        ignoreVersionCheck = TRUE
+      )
+    },
+    # Normalize one workbook sheet to tabular form for in-memory operations.
+    asWorkbookSheetData = function(sheetData) {
+      if (is.data.frame(sheetData)) {
+        return(sheetData)
+      }
+
+      if (
+        is.list(sheetData) &&
+          all(c("column_names", "rows") %in% names(sheetData))
+      ) {
+        return(.rfListStructureToDataFrame(sheetData))
+      }
+
+      stop("Unsupported workbook sheet data type.")
+    },
+    # Ensure workflow-specific folders referenced by the temp project exist.
+    ensureSnapshotDirectories = function(projectConfiguration) {
+      directories <- c(
+        suppressWarnings(projectConfiguration$modelFolder),
+        suppressWarnings(projectConfiguration$populationsFolder),
+        suppressWarnings(projectConfiguration$outputFolder),
+        suppressWarnings(projectConfiguration$dataFolder),
+        suppressWarnings(projectConfiguration$addOns$electronicPackageFolder)
+      )
+      directories <- unique(directories[
+        !is.na(directories) & nzchar(directories)
+      ])
+
+      for (directoryPath in directories) {
+        if (!dir.exists(directoryPath)) {
+          dir.create(directoryPath, recursive = TRUE, showWarnings = FALSE)
+        }
+      }
 
       return(invisible())
     }
@@ -1338,7 +1478,7 @@ importWorkflow <- function(
   checkmate::assertDirectoryExists(projectDirectory)
   checkmate::assertDirectoryExists(ePackageFolder)
   checkmate::assertIntegerish(wfIdentifier)
-
+  browser()
   configurationDirectory <- file.path(
     projectDirectory,
     getConfigDirectoryForWorkflow(wfIdentifier = wfIdentifier)
@@ -1347,23 +1487,23 @@ importWorkflow <- function(
   if (!dir.exists(configurationDirectory)) {
     dir.create(configurationDirectory, recursive = TRUE)
   }
-
-  directionOfSynchronisation <- importProjectConfiguration(
+  projectConfigurationNew <- importProjectConfiguration(
     ePackageFolder = ePackageFolder,
     configurationDirectory = configurationDirectory,
+    projectDirectory = projectDirectory,
     wfIdentifier = wfIdentifier
   )
 
-  # get paths of all relevant project files
-  projectConfigurationXlsx <- file.path(
-    configurationDirectory,
-    "ProjectConfiguration.xlsx"
-  )
-
-  projectConfigurationNew <-
-    ospsuite.reportingframework::createProjectConfiguration(
-      path = projectConfigurationXlsx
-    )
+  # # get paths of all relevant project files
+  # projectConfigurationXlsx <- file.path(
+  #   configurationDirectory,
+  #   "ProjectConfiguration.xlsx"
+  # )
+  #
+  # projectConfigurationNew <-
+  #   ospsuite.reportingframework::createProjectConfiguration(
+  #     path = projectConfigurationXlsx
+  #   )
 
   # add data folder
   projectConfigurationNew$addAddOnFolderToConfiguration(
@@ -1372,13 +1512,11 @@ importWorkflow <- function(
     description = "Path to the folder where data files are saved"
   )
 
-  initLogfunction(projectConfigurationNew)
-
   importWorkflowFiles(projectConfigurationNew, ePackageFolder, wfIdentifier)
 
   .synchronizeScenariosOutputsWithPlots(
     projectConfiguration = projectConfigurationNew,
-    direction = directionOfSynchronisation
+    direction = "bothways"
   )
   .synchronizeScenariosWithPlots(projectConfigurationNew)
 
@@ -1433,6 +1571,80 @@ validateAndAdjustFilenames <- function(fileName, fileType) {
 
   return(fileName)
 }
+
+ePackageInputManifestFileName <- function(wfIdentifier) {
+  paste0("w", wfIdentifier, "_input_files_csv.txt")
+}
+
+ePackagePopulationFileName <- function(fileName) {
+  if (grepl("_csv\\.txt$", fileName, ignore.case = TRUE)) {
+    return(fileName)
+  }
+
+  paste0(fs::path_ext_remove(fileName), "_csv.txt")
+}
+
+ePackageScriptFileName <- function(fileName) {
+  if (grepl("_r\\.txt$", fileName, ignore.case = TRUE)) {
+    return(fileName)
+  }
+
+  paste0(fs::path_ext_remove(fileName), "_r.txt")
+}
+
+changedInputReferenceFileName <- function(fileName, fileType, source) {
+  switch(
+    fileType,
+    "population" = paste0(
+      sub("_csv\\.txt$", "", fileName, ignore.case = TRUE),
+      ".csv"
+    ),
+    "script" = if (grepl("_r\\.txt$", fileName, ignore.case = TRUE)) {
+      paste0(sub("_r\\.txt$", "", fileName, ignore.case = TRUE), ".R")
+    } else {
+      as.character(fs::path_ext_set(
+        path = fileName,
+        ext = fs::path_ext(source)
+      ))
+    },
+    as.character(fs::path_ext_set(path = fileName, ext = fs::path_ext(source)))
+  )
+}
+
+resolveEPackageInputManifestPath <- function(ePackageFolder, wfIdentifier) {
+  manifestPath <- file.path(
+    ePackageFolder,
+    ePackageInputManifestFileName(wfIdentifier)
+  )
+  if (file.exists(manifestPath)) {
+    return(manifestPath)
+  }
+
+  file.path(
+    ePackageFolder,
+    paste0("w", wfIdentifier, "_input_files.csv")
+  )
+}
+
+importedProjectFileName <- function(fileName, fileType) {
+  switch(
+    fileType,
+    "population" = if (grepl("_csv\\.txt$", fileName, ignore.case = TRUE)) {
+      paste0(sub("_csv\\.txt$", "", fileName, ignore.case = TRUE), ".csv")
+    } else {
+      fileName
+    },
+    "script" = if (grepl("_r\\.txt$", fileName, ignore.case = TRUE)) {
+      paste0(sub("_r\\.txt$", "", fileName, ignore.case = TRUE), ".R")
+    } else {
+      as.character(fs::path_ext_set(fileName, ".R"))
+    },
+    "model" = as.character(fs::path_ext_set(fileName, ".pkml")),
+    fileName
+  )
+}
+
+
 #' @title Import Project Configuration
 #' @description
 #' This function imports the project configuration from an electronic package (ePackage) into a specified directory.
@@ -1445,6 +1657,7 @@ validateAndAdjustFilenames <- function(fileName, fileType) {
 #' @keywords internal
 importProjectConfiguration <- function(
   configurationDirectory,
+  projectDirectory,
   ePackageFolder,
   wfIdentifier
 ) {
@@ -1457,41 +1670,28 @@ importProjectConfiguration <- function(
     stop(messages$errorWorkflowScriptExporterL8X())
   }
 
-  # Load JSON data
-  configData <- jsonlite::fromJSON(jsonPath, simplifyVector = FALSE)
-
-  # export first ProjectConfiguration.xlsx as base for project structure
-  sheetsData <- configData[["ProjectConfiguration"]]
-  excelSheets <- .rfWorkbookListStructureToDataFrames(sheetsData)
-  excelPath <- file.path(configurationDirectory, "ProjectConfiguration.xlsx")
-  openxlsx::write.xlsx(excelSheets[[1]], file = excelPath)
-
   initProject(
+    projectDirectory = projectDirectory,
     configurationDirectory = configurationDirectory
   )
 
-  for (name in setdiff(names(configData), "ProjectConfiguration")) {
-    # Get the sheets for this file
-    sheetsData <- configData[[name]]
-
-    excelSheets <- .rfWorkbookListStructureToDataFrames(sheetsData)
-    # Write the Excel file if we have data
-    if (length(excelSheets) > 0) {
-      excelPath <- file.path(configurationDirectory, paste0(name, ".xlsx"))
-      wb <- openxlsx::loadWorkbook(excelPath)
-
-      .rfOverlayWorkbookSheets(wb = wb, workbookData = sheetsData)
-      openxlsx::saveWorkbook(wb = wb, file = excelPath, overwrite = TRUE)
-    }
-  }
-
-  directionOfSynchronisation <- ifelse(
-    "Plots" %in% names(configData),
-    "plotToScenario",
-    "bothways"
+  restoreJsonPath <- file.path(
+    configurationDirectory,
+    "ProjectConfiguration.json"
+  )
+  file.copy(
+    from = jsonPath,
+    to = restoreJsonPath,
+    overwrite = TRUE
   )
 
-  return(directionOfSynchronisation)
+  rPCf <- restoreProjectConfigurationRF(
+    jsonPath = restoreJsonPath,
+    outputDir = configurationDirectory,
+    silent = TRUE
+  )
+
+  return(rPCf)
 }
 #' @title Import Workflow Files
 #' @description
@@ -1509,9 +1709,9 @@ importWorkflowFiles <- function(
   wfIdentifier
 ) {
   inputFiles <- fread(
-    file = file.path(
-      ePackageFolder,
-      paste0("w", wfIdentifier, "_input_files.csv")
+    file = resolveEPackageInputManifestPath(
+      ePackageFolder = ePackageFolder,
+      wfIdentifier = wfIdentifier
     )
   )
 
@@ -1524,16 +1724,16 @@ importWorkflowFiles <- function(
           fileType,
           "population" = file.path(
             projectConfigurationNew$populationsFolder,
-            f
+            importedProjectFileName(f, fileType)
           ),
           "model" = file.path(
             projectConfigurationNew$modelFolder,
-            fs::path_ext_set(f, ".pkml")
+            importedProjectFileName(f, fileType)
           ),
           "data" = file.path(projectConfigurationNew$addOns$dataFileFolder, f),
           "script" = file.path(
             projectConfigurationNew$dataFolder,
-            fs::path_ext_set(f, ".R")
+            importedProjectFileName(f, fileType)
           ),
         )
 

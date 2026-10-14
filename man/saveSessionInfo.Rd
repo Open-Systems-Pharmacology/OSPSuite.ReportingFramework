@@ -4,7 +4,10 @@
 \alias{saveSessionInfo}
 \title{Save session information to the log}
 \usage{
-saveSessionInfo()
+saveSessionInfo(fileName = "sessionInfo.log")
+}
+\arguments{
+\item{fileName}{character string with the session info file name.}
 }
 \description{
 Save session information to the log
@@ -19,7 +22,7 @@ saveSessionInfo()
 Other log file management:
 \code{\link[=addMessageToLog]{addMessageToLog()}},
 \code{\link[=captureLog]{captureLog()}},
-\code{\link[=initLogfunction]{initLogfunction()}},
+\code{\link[=setLogPath]{setLogPath()}},
 \code{\link[=setShowLogMessages]{setShowLogMessages()}},
 \code{\link[=writeTableToLog]{writeTableToLog()}}
 }

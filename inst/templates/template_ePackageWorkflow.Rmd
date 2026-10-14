@@ -74,8 +74,6 @@ Changes in the chunk below will be ignored by the `exportTLFWorkflowToEPackage` 
 projectConfiguration <-
   ospsuite.reportingframework::createProjectConfiguration(
     path =  file.path("ProjectConfiguration.xlsx"))
-
-initLogfunction(projectConfiguration)
 ```
 
 
@@ -223,5 +221,5 @@ Each workflow ends with the code of the chunk below. Changes will be ignored.
 addMessageToLog("finalize workflow")
 
 # save Session Infos including the loaded packages and R version, into a log file
-saveSessionInfo()
+saveSessionInfo(fileName = paste0("w", wfIdentifier, "_sessionInfo.log"))
 ```

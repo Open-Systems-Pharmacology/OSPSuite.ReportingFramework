@@ -167,6 +167,36 @@ test_that("xlsxAddSheet works correctly", {
   expect_error(xlsxAddSheet(wb, "AnotherSheets", NULL))
 })
 
+test_that("xlsxWriteOrAddData updates existing sheets and adds missing sheets", {
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "ExistingSheet")
+  openxlsx::writeData(
+    wb,
+    sheet = "ExistingSheet",
+    x = data.frame(Name = "old", Value = "stale", stringsAsFactors = FALSE)
+  )
+
+  xlsxWriteOrAddData(
+    wb = wb,
+    sheetName = "ExistingSheet",
+    dt = data.frame(Name = "updated", Value = "1", stringsAsFactors = FALSE)
+  )
+  xlsxWriteOrAddData(
+    wb = wb,
+    sheetName = "NewSheet",
+    dt = data.frame(Code = "added", stringsAsFactors = FALSE)
+  )
+
+  expect_equal(
+    xlsxReadData(wb, "ExistingSheet", convertHeaders = FALSE),
+    data.table::data.table(Name = "updated", Value = 1)
+  )
+  expect_equal(
+    xlsxReadData(wb, "NewSheet", convertHeaders = FALSE),
+    data.table::data.table(Code = "added")
+  )
+})
+
 # Unit tests for the xlsxAddDataUsingTemplate function
 test_that("xlsxAddDataUsingTemplate works correctly", {
   # Load the workbook for testing

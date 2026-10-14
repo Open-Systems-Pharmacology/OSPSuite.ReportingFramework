@@ -50,6 +50,11 @@ initProject()
 projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
   path = file.path("Scripts", "ReportingFramework", "ProjectConfiguration.xlsx")
 )
+# initialize the logging
+setLogPath(
+  logFolder = file.path(projectConfiguration$outputFolder, "logs"),
+  logFileName = "workflow.log"
+)
 
 # After editing configuration tables, refresh the JSON snapshot.
 # Commit Scripts/ReportingFramework/ProjectConfiguration.json.
@@ -65,9 +70,6 @@ projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
 #   ),
 #   outputDir = file.path("Scripts", "ReportingFramework")
 # )
-
-# Initialize log file
-initLogfunction(projectConfiguration)
 
 # 1) Read Observed Data -------------------------------------------------------
 # Read observed data as data.table

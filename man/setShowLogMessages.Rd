@@ -16,8 +16,8 @@ Toggle display of log messages on the console
 Other log file management:
 \code{\link[=addMessageToLog]{addMessageToLog()}},
 \code{\link[=captureLog]{captureLog()}},
-\code{\link[=initLogfunction]{initLogfunction()}},
 \code{\link[=saveSessionInfo]{saveSessionInfo()}},
+\code{\link[=setLogPath]{setLogPath()}},
 \code{\link[=writeTableToLog]{writeTableToLog()}}
 }
 \concept{log file management}

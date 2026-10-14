@@ -18,8 +18,8 @@ Write a data frame to the log
 Other log file management:
 \code{\link[=addMessageToLog]{addMessageToLog()}},
 \code{\link[=captureLog]{captureLog()}},
-\code{\link[=initLogfunction]{initLogfunction()}},
 \code{\link[=saveSessionInfo]{saveSessionInfo()}},
+\code{\link[=setLogPath]{setLogPath()}},
 \code{\link[=setShowLogMessages]{setShowLogMessages()}}
 }
 \concept{log file management}

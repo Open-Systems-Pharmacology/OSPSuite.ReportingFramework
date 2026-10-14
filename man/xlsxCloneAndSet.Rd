@@ -36,6 +36,7 @@ Other function to read from and write to xlsx:
 \code{\link[=xlsxAddDataUsingTemplate]{xlsxAddDataUsingTemplate()}},
 \code{\link[=xlsxAddSheet]{xlsxAddSheet()}},
 \code{\link[=xlsxReadData]{xlsxReadData()}},
-\code{\link[=xlsxWriteData]{xlsxWriteData()}}
+\code{\link[=xlsxWriteData]{xlsxWriteData()}},
+\code{\link[=xlsxWriteOrAddData]{xlsxWriteOrAddData()}}
 }
 \concept{function to read from and write to xlsx}

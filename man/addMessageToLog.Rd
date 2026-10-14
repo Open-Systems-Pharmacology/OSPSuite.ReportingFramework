@@ -15,8 +15,8 @@ Add a message to the log file
 \seealso{
 Other log file management:
 \code{\link[=captureLog]{captureLog()}},
-\code{\link[=initLogfunction]{initLogfunction()}},
 \code{\link[=saveSessionInfo]{saveSessionInfo()}},
+\code{\link[=setLogPath]{setLogPath()}},
 \code{\link[=setShowLogMessages]{setShowLogMessages()}},
 \code{\link[=writeTableToLog]{writeTableToLog()}}
 }

@@ -176,7 +176,7 @@ initProject <- function(
     path = file.path(configurationDirectory, "ProjectConfiguration.xlsx"),
     ignoreVersionCheck = FALSE
   )
-  snapshotProjectConfigurationRF(pc, outputDir = configurationDirectory) # nolint: object_usage_linter
+
   .ensureConfigurationGitignore(c(
     configurationDirectory,
     pc$configurationsFolder

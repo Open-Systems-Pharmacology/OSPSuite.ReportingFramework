@@ -229,8 +229,11 @@ projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
 # For older ProjectConfiguration.xlsx files without a stored framework version,
 # use ignoreVersionCheck = TRUE (see ?createProjectConfiguration).
 
-# Initialize log file
-initLogfunction(projectConfiguration)
+setLogPath(
+  logFolder = file.path(projectConfiguration$outputFolder, "logs"),
+  logFileName = "workflow.log"
+)
+
 ```
 
 

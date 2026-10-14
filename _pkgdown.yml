@@ -87,7 +87,7 @@ reference:
     contents:
       - has_concept("get identifier")
   - title: "Addin support"
-    desc: "Functions to support Addin"
+    desc: "Functions to support template addins"
     contents:
       - has_concept("Addins Support")
   - title: "Miscellaneous"

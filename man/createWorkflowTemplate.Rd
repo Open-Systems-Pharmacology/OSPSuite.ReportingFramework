@@ -12,10 +12,6 @@ Opens the workflow template as new document
 \seealso{
 Other Addins Support:
 \code{\link[=createDocumentFromTemplate]{createDocumentFromTemplate()}},
-\code{\link[=openAIBuildPlotsPrompt]{openAIBuildPlotsPrompt()}},
-\code{\link[=openAIDebugRunPrompt]{openAIDebugRunPrompt()}},
-\code{\link[=openAIImportDataPrompt]{openAIImportDataPrompt()}},
-\code{\link[=openAIWorkflowPrompt]{openAIWorkflowPrompt()}},
 \code{\link[=openEPackageTemplate]{openEPackageTemplate()}},
 \code{\link[=openFigureTemplate]{openFigureTemplate()}},
 \code{\link[=openWorkflowTemplate]{openWorkflowTemplate()}}

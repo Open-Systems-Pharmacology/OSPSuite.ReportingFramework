@@ -35,51 +35,6 @@ openEPackageTemplate <- function() {
   )
 }
 
-#' Creates an AI-ready workflow prompt in the console
-#'
-#' @export
-#' @family Addins Support
-openAIWorkflowPrompt <- function() {
-  .openAIPromptFromTask(task = "create-workflow")
-}
-
-#' Creates an AI-ready import-data prompt in the console
-#'
-#' @export
-#' @family Addins Support
-openAIImportDataPrompt <- function() {
-  .openAIPromptFromTask(task = "import-data")
-}
-
-#' Creates an AI-ready build-plots prompt in the console
-#'
-#' @export
-#' @family Addins Support
-openAIBuildPlotsPrompt <- function() {
-  .openAIPromptFromTask(task = "build-plots")
-}
-
-#' Creates an AI-ready debug prompt in the console
-#'
-#' @export
-#' @family Addins Support
-openAIDebugRunPrompt <- function() {
-  .openAIPromptFromTask(task = "debug-run")
-}
-
-.openAIPromptFromTask <- function(task) {
-  rstudioapi::callFun(
-    "sendToConsole",
-    paste0(
-      "cat(ospsuite.reportingframework::createAIPromptFromTask(",
-      "projectConfiguration = ospsuite.reportingframework::createProjectConfiguration(), ",
-      "task = '",
-      task,
-      "'), sep='\\n')"
-    )
-  )
-}
-
 
 #' Opens the workflow template as new document
 #'

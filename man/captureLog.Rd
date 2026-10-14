@@ -18,8 +18,8 @@ for backwards compatibility.
 \seealso{
 Other log file management:
 \code{\link[=addMessageToLog]{addMessageToLog()}},
-\code{\link[=initLogfunction]{initLogfunction()}},
 \code{\link[=saveSessionInfo]{saveSessionInfo()}},
+\code{\link[=setLogPath]{setLogPath()}},
 \code{\link[=setShowLogMessages]{setShowLogMessages()}},
 \code{\link[=writeTableToLog]{writeTableToLog()}}
 }

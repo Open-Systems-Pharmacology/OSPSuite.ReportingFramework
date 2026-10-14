@@ -1139,9 +1139,9 @@ messages$warningWorkflowScriptExporterL2 <- function(env = parent.frame()) {
     quote(paste0(
       "Warning: Adjusted filenames due to naming requirements:\n",
       paste(
-        basename(changedInputFiles$source),
+        basename(changedInputFiles[ixChanged]$source),
         "->",
-        changedInputFiles$fileName,
+        changedInputFiles[ixChanged]$fileName,
         collapse = "\n"
       ),
       "\nYou may use the input variable `fileNameReplacements` of the workflow export function",
