@@ -6,6 +6,7 @@
 \usage{
 importProjectConfiguration(
   configurationDirectory,
+  projectDirectory,
   ePackageFolder,
   wfIdentifier
 )

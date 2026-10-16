@@ -631,7 +631,7 @@ validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
 
   configTablePlots <- configTablePlots[populationId != populationIdReference]
   if (nrow(configTablePlots) > 0) {
-    print(configTablePlots)
+    writeTableToLog(configTablePlots)
     stop(messages$errorplotPKBoxwhiskerL1XX())
   }
 }

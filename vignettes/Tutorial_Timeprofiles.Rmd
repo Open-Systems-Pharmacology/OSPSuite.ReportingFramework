@@ -236,6 +236,8 @@ setLogPath(
 
 ```
 
+For a short overview of the logging helpers used in workflows, see the
+**[Workflow](Workflow.html)** vignette section on logging and diagnostics.
 
 When loading an existing project configuration that was created before version tracking was introduced, pass `ignoreVersionCheck = TRUE` to `createProjectConfiguration()` or update the file once with `projectConfiguration$save()`.
 

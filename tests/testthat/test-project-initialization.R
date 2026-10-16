@@ -64,6 +64,14 @@ test_that("upgradeToReportingFramework keeps esqlabsR structure by default", {
     expect_true(file.exists(file.path(configFolder, f)))
   }
 
+  scenariosData <- xlsxReadData(
+    wb = file.path(configFolder, "Scenarios.xlsx"),
+    sheetName = "Scenarios",
+    convertHeaders = FALSE,
+    emptyAsNA = FALSE
+  )
+  expect_gt(nrow(scenariosData), 0)
+
   rootGitignore <- file.path(configurationDirectory, ".gitignore")
   expect_true(file.exists(rootGitignore))
   expect_true(any(trimws(readLines(rootGitignore, warn = FALSE)) == "*.xlsx"))
@@ -127,6 +135,23 @@ test_that("upgradeToReportingFramework applies RF defaults when requested", {
 
   newScenarios <- file.path(configurationDirectory, "Scenarios.xlsx")
   expect_true(file.exists(newScenarios))
+  expect_true("PKParameter" %in% openxlsx::getSheetNames(newScenarios))
+
+  cleanedScenarios <- xlsxReadData(
+    wb = newScenarios,
+    sheetName = "Scenarios",
+    convertHeaders = FALSE,
+    emptyAsNA = FALSE
+  )
+  cleanedOutputPaths <- xlsxReadData(
+    wb = newScenarios,
+    sheetName = "OutputPaths",
+    convertHeaders = FALSE,
+    emptyAsNA = FALSE
+  )
+  expect_gt(nrow(cleanedScenarios), 0)
+  expect_gt(nrow(cleanedOutputPaths), 0)
+
   expect_true(file.exists(file.path(
     configurationDirectory,
     "PKParameter.xlsx"
@@ -136,7 +161,8 @@ test_that("upgradeToReportingFramework applies RF defaults when requested", {
     trimws(readLines(
       file.path(configurationDirectory, ".gitignore"),
       warn = FALSE
-    )) == "*.xlsx"
+    )) ==
+      "*.xlsx"
   ))
 
   remainingLegacyDirs <- list.dirs(
@@ -149,7 +175,6 @@ test_that("upgradeToReportingFramework applies RF defaults when requested", {
   ]
   expect_length(remainingLegacyDirs, 0)
 })
-
 
 test_that("upgradeToReportingFramework is idempotent", {
   rootDirectory <- withr::local_tempdir()
@@ -259,6 +284,44 @@ test_that("initProject initializes and upgrades project in one call", {
   gitignoreFile <- file.path(configurationDirectory, ".gitignore")
   expect_true(file.exists(gitignoreFile))
   expect_true(any(trimws(readLines(gitignoreFile, warn = FALSE)) == "*.xlsx"))
+})
+
+
+test_that("initProject forwards keepEsqlabsRStructure to upgradeToReportingFramework", {
+  rootDirectory <- withr::local_tempdir()
+  projectDirectory <- file.path(rootDirectory, "Root")
+
+  initProject(
+    projectDirectory = projectDirectory,
+    overwrite = TRUE,
+    keepEsqlabsRStructure = TRUE
+  )
+
+  configurationDirectory <- file.path(
+    projectDirectory,
+    "Scripts",
+    "ReportingFramework"
+  )
+  configPath <- file.path(configurationDirectory, "ProjectConfiguration.xlsx")
+  dtConfig <- xlsxReadData(
+    wb = configPath,
+    sheetName = "esqlabsR",
+    convertHeaders = FALSE,
+    emptyAsNA = FALSE
+  )
+
+  expect_equal(
+    trimws(dtConfig$Value[dtConfig$Property == "configurationsFolder"][[1]]),
+    "Configurations/"
+  )
+
+  scenariosData <- xlsxReadData(
+    wb = file.path(configurationDirectory, "Configurations", "Scenarios.xlsx"),
+    sheetName = "Scenarios",
+    convertHeaders = FALSE,
+    emptyAsNA = FALSE
+  )
+  expect_gt(nrow(scenariosData), 0)
 })
 
 

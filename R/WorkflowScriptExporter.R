@@ -1163,11 +1163,6 @@ WorkflowScriptExporter <- R6::R6Class(
     # initializes configuration sheets a
     initializeconfigurationSheets = function(projectConfiguration) {
       wb <- openxlsx::loadWorkbook(
-        # file = system.file(
-        #   "templates",
-        #   "ProjectConfiguration.xlsx",
-        #   package = "ospsuite.reportingframework"
-        # )
         file = projectConfiguration$projectConfigurationFilePath
       )
       dtConfig <-
@@ -1196,10 +1191,6 @@ WorkflowScriptExporter <- R6::R6Class(
           projectConfiguration$outputFolder,
           start = configDirW
         )
-      ]
-
-      dtConfig <- dtConfig[
-        Property %in% STANDARD_ESQLABSR_PROJECT_CONFIGURATION_PROPERTIES
       ]
 
       configurationSheets <- list(

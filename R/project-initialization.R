@@ -1,4 +1,4 @@
-#' Upgrade an esqlabsR Project to a ReportingFramework Project
+﻿#' Upgrade an esqlabsR Project to a ReportingFramework Project
 #'
 #' @description Adds reporting-framework-specific configuration and template files
 #'   to a project directory. This is the second step in the two-step project
@@ -35,10 +35,6 @@ upgradeToReportingFramework <- function(
   checkmate::assertDirectoryExists(templatePath)
   checkmate::assertFlag(keepEsqlabsRStructure)
 
-  if (!dir.exists(configurationDirectory)) {
-    dir.create(configurationDirectory, recursive = TRUE, showWarnings = FALSE)
-  }
-
   configXlsxDest <- .projectConfigurationPath(configurationDirectory)
 
   templateConfigurationXlsx <- file.path(
@@ -67,6 +63,13 @@ upgradeToReportingFramework <- function(
       transferInitializedFiles = TRUE
     )
   }
+  if ("esqlabsRVersion" %in% dtConfiguration$Property) {
+    dtConfiguration[
+      dtConfiguration$Property == "esqlabsRVersion",
+      "Value"
+    ] <- as.character(utils::packageVersion("esqlabsR"))
+  }
+  xlsxWriteData(wb = configWb, sheetName = "esqlabsR", dt = dtConfiguration)
   .applyTemplateAddonsSheet(configWb, templateConfigurationWb)
   openxlsx::saveWorkbook(configWb, configXlsxDest, overwrite = TRUE)
   .stampReportingFrameworkVersion(path = configXlsxDest) # nolint: object_usage_linter
@@ -139,6 +142,10 @@ upgradeToReportingFramework <- function(
 #' @param templatePath Path to the RF template files. Defaults to the package templates.
 #' @param overwrite A logical value indicating whether to overwrite existing files.
 #'   Defaults to \code{FALSE}.
+#' @param keepEsqlabsRStructure If `TRUE`, preserve the esqlabsR directory and
+#'   workbook layout when calling `upgradeToReportingFramework()`. Defaults to
+#'   `FALSE` so a freshly initialized project uses the ReportingFramework
+#'   default structure.
 #'
 #' @return Invisible NULL.
 #' @export
@@ -154,7 +161,8 @@ initProject <- function(
     "templates",
     package = "ospsuite.reportingframework"
   ),
-  overwrite = FALSE
+  overwrite = FALSE,
+  keepEsqlabsRStructure = FALSE
 ) {
   configurationDirectory <- fs::path_abs(configurationDirectory)
   if (!dir.exists(configurationDirectory)) {
@@ -168,7 +176,7 @@ initProject <- function(
     configurationDirectory = configurationDirectory,
     templatePath = templatePath,
     overwrite = overwrite,
-    keepEsqlabsRStructure = FALSE
+    keepEsqlabsRStructure = keepEsqlabsRStructure
   )
 
   # Create initial JSON snapshot of the project configuration
@@ -176,6 +184,7 @@ initProject <- function(
     path = file.path(configurationDirectory, "ProjectConfiguration.xlsx"),
     ignoreVersionCheck = FALSE
   )
+  snapshotProjectConfigurationRF(projectConfig = pc)
 
   .ensureConfigurationGitignore(c(
     configurationDirectory,

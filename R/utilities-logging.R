@@ -68,11 +68,10 @@ captureLog <- function(expr, finallyExpression = invisible()) {
 #' Write a data frame to the log
 #'
 #' @param dt table to log
-#' @param filename Ignored; kept for backwards compatibility.
 #'
 #' @export
 #' @family log file management
-writeTableToLog <- function(dt, filename = NULL) {
+writeTableToLog <- function(dt) {
   checkmate::assertDataFrame(dt)
   ospsuite.utils::logInfo(paste(
     utils::capture.output(print(dt)),

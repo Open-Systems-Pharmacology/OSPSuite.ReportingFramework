@@ -376,7 +376,10 @@ test_that("xlsxReadData handles empty sheet", {
   openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
 
   # Empty sheets cause an error in processing, so we expect an error
-  expect_error(xlsxReadData(wb = testFile, sheetName = "EmptySheet"))
+  expect_error(expect_warning(xlsxReadData(
+    wb = testFile,
+    sheetName = "EmptySheet"
+  )))
 
   file.remove(testFile)
 })

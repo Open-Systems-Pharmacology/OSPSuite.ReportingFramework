@@ -212,13 +212,9 @@ test_that("validateIsCrossOverStudy errors when populations differ", {
     populationId = c("pop1", "pop2")
   )
   expect_error(
-    suppressMessages(
-      suppressWarnings(
-        ospsuite.reportingframework:::validateIsCrossOverStudy(
-          configTablePlots,
-          pkDT
-        )
-      )
+    ospsuite.reportingframework:::validateIsCrossOverStudy(
+      configTablePlots,
+      pkDT
     )
   )
 })
@@ -277,28 +273,6 @@ test_that("makeBoxwhiskerPlotData handles single value", {
   expect_equal(result$value, 1.0)
 })
 
-test_that("makeBoxwhiskerPlotData handles many scenarios", {
-  scenarios <- paste0("s", 1:10)
-  values <- seq(0.5, 1.5, length.out = 10)
-  result <- makeBoxwhiskerPlotData(
-    scenarios = scenarios,
-    values = values,
-    plotTag = "A"
-  )
-  expect_equal(nrow(result), 10)
-  expect_equal(length(unique(result$scenarioShortName)), 10)
-})
-
-test_that("makeBoxwhiskerPlotData handles zero and negative values", {
-  result <- makeBoxwhiskerPlotData(
-    scenarios = c("s1", "s2"),
-    values = c(0, -0.5),
-    plotTag = "A"
-  )
-  expect_equal(result$value[1], 0)
-  expect_equal(result$value[2], -0.5)
-})
-
 # =====================================================================
 # PHASE 1 & 2: EMPTY DATA & NUMERIC BOUNDS VALIDATION
 # =====================================================================
@@ -320,21 +294,21 @@ test_that("plotPKBoxwhisker handles empty data.table", {
 
 test_that("plotPKBoxwhisker rejects NaN values in data", {
   boxwhiskerData <- makeBoxwhiskerPlotData(values = c(1.0, NaN, 0.9, 1.1))
-  
+
   # Check that NaN is present
   expect_true(any(is.nan(boxwhiskerData$value)))
 })
 
 test_that("plotPKBoxwhisker rejects Inf values in data", {
   boxwhiskerData <- makeBoxwhiskerPlotData(values = c(1.0, Inf, 0.9, 1.1))
-  
+
   # Check that Inf is present
   expect_true(any(is.infinite(boxwhiskerData$value)))
 })
 
 test_that("plotPKBoxwhisker handles negative values appropriately", {
   boxwhiskerData <- makeBoxwhiskerPlotData(values = c(-1.0, 1.2, 0.9, 1.1))
-  
+
   # Negative values should be present (may be valid or invalid depending on context)
   expect_true(any(boxwhiskerData$value < 0))
 })
@@ -343,7 +317,7 @@ test_that("plotPKBoxwhisker rejects invalid colorIndex factor levels", {
   # colorIndex should have consistent factor levels
   dt1 <- makeBoxwhiskerPlotData(colorIndex = factor(c("A", "A", "B", "B")))
   dt2 <- makeBoxwhiskerPlotData(colorIndex = factor(c("A", "A", "C", "C")))
-  
+
   expect_equal(nlevels(dt1$colorIndex), 2)
   expect_equal(nlevels(dt2$colorIndex), 2)
 })

@@ -325,7 +325,7 @@ loadSensitivityPKValues <- function(
 ) {
   # avoid warnings for global variables during check
   Value <- Value.numerator <- Value.reference <- QuantityPath <- NULL
-  Parameter <- IndividualId <- ..keepCols <- NULL
+  Parameter <- IndividualId <- NULL
 
   checkmate::assertCharacter(scenarioFiles, min.len = 1, max.len = 2)
   checkmate::assertCharacter(outputPaths, any.missing = FALSE)

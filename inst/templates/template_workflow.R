@@ -37,8 +37,12 @@ setWorkflowOptions()
 
 # Initialize the project (creates base structure and JSON snapshot)
 # When called from project root, defaults will place ProjectConfiguration.xlsx in Scripts/ReportingFramework
-# A JSON snapshot of the configuration is automatically created for version control
-initProject()
+# Set keepEsqlabsRStructure = TRUE if you want to preserve the original
+# esqlabsR layout instead of switching to the ReportingFramework default layout.
+initProject(
+  overwrite = TRUE,
+  keepEsqlabsRStructure = FALSE
+)
 
 # Configuration in Git ------------------------------------------------------
 # *.xlsx configuration files are local working files and should not be versioned.

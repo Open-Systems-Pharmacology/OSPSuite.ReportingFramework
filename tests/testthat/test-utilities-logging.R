@@ -1,6 +1,16 @@
+withoutConsoleLogging <- function(expr) {
+  oldLogThreshold <- logger::log_threshold(index = 1)
+  on.exit(logger::log_threshold(oldLogThreshold, index = 1), add = TRUE)
+  logger::log_threshold(logger::FATAL, index = 1)
+
+  force(expr)
+}
+
 # Unit tests for addMessageToLog
 test_that("addMessageToLog logs messages successfully", {
-  expect_no_error(addMessageToLog("Test message"))
+  withoutConsoleLogging({
+    expect_no_error(addMessageToLog("Test message"))
+  })
 })
 
 test_that("setLogPath writes to the configured log file", {
@@ -14,7 +24,9 @@ test_that("setLogPath writes to the configured log file", {
 
   expect_no_error(setLogPath(logFolder = logFolder, logFileName = logFile))
 
-  addMessageToLog("Custom path message")
+  withoutConsoleLogging({
+    addMessageToLog("Custom path message")
+  })
 
   expect_true(file.exists(logPath))
   expect_true(any(grepl(
@@ -54,14 +66,25 @@ test_that("saveSessionInfo requires a configured log folder", {
 
 # Unit tests errors and warnings
 test_that("captureLog function catches messages and errors", {
-  # Test message capture
-  expect_no_error(captureLog(expr = message("Test info message")))
+  withoutConsoleLogging({
+    # Test message capture
+    expect_no_error(captureLog(expr = message("Test info message")))
 
-  # Test warning capture
-  expect_no_error(captureLog(expr = warning("Test warning message")))
+    # Test warning capture
+    expect_no_error(captureLog(expr = warning("Test warning message")))
 
-  # Test error capture
-  expect_error(captureLog(expr = stop("Test error message")))
+    # Test error capture
+    invisible(capture.output(
+      errorResult <- tryCatch(
+        captureLog(expr = stop("Test error message")),
+        error = identity
+      ),
+      type = "message"
+    ))
+
+    expect_s3_class(errorResult, "error")
+    expect_equal(conditionMessage(errorResult), "Test error message")
+  })
 })
 
 # Unit tests for setShowLogMessages
@@ -78,26 +101,43 @@ test_that("writeTableToLog logs data frames successfully", {
   exampleData <- data.table(x = 1:5, y = letters[1:5])
 
   # Call the function with example data
-  expect_no_error(writeTableToLog(exampleData, filename = "table.log"))
+  withoutConsoleLogging({
+    expect_no_error(writeTableToLog(exampleData))
+  })
 })
 
 test_that("captureLog executes finallyExpression", {
-  # Call captureLog with an expression that generates an error
-  expect_warning(
-    expect_error(captureLog(
-      expr = stop("This is an error"),
-      finallyExpression = warning("finallyExecuted")
-    )),
-    "finallyExecuted"
-  )
+  withoutConsoleLogging({
+    state <- new.env(parent = emptyenv())
+    state$finallyExecuted <- FALSE
 
-  # Call captureLog with a successful expression
-  expect_no_error(captureLog(
-    expr = {
-      a <- 1
-    },
-    finallyExpression = {
-      message("finallyExecuted")
-    }
-  ))
+    invisible(capture.output(
+      errorResult <- tryCatch(
+        captureLog(
+          expr = stop("This is an error"),
+          finallyExpression = {
+            state$finallyExecuted <- TRUE
+          }
+        ),
+        error = identity
+      ),
+      type = "message"
+    ))
+
+    expect_s3_class(errorResult, "error")
+    expect_equal(conditionMessage(errorResult), "This is an error")
+    expect_true(state$finallyExecuted)
+
+    state$finallyExecuted <- FALSE
+
+    expect_no_error(captureLog(
+      expr = {
+        a <- 1
+      },
+      finallyExpression = {
+        state$finallyExecuted <- TRUE
+      }
+    ))
+    expect_true(state$finallyExecuted)
+  })
 })

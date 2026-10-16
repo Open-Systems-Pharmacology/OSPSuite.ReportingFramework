@@ -139,10 +139,7 @@ importFrom(ospsuite.utils,
   logDebug,
   logError,
   logInfo,
-  logWarning,
-  setInfoMasking,
-  setLogFolder,
-  setWarningMasking
+  logWarning
 )
 importFrom(rlang,
   "%||%",

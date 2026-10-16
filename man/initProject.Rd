@@ -8,7 +8,8 @@ initProject(
   projectDirectory = ".",
   configurationDirectory = file.path(projectDirectory, "Scripts", "ReportingFramework"),
   templatePath = system.file("templates", package = "ospsuite.reportingframework"),
-  overwrite = FALSE
+  overwrite = FALSE,
+  keepEsqlabsRStructure = FALSE
 )
 }
 \arguments{
@@ -23,6 +24,11 @@ to \code{projectDirectory}.}
 
 \item{overwrite}{A logical value indicating whether to overwrite existing files.
 Defaults to \code{FALSE}.}
+
+\item{keepEsqlabsRStructure}{If `TRUE`, preserve the esqlabsR directory and
+workbook layout when calling `upgradeToReportingFramework()`. Defaults to
+`FALSE` so a freshly initialized project uses the ReportingFramework
+default structure.}
 }
 \value{
 Invisible NULL.

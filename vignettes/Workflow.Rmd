@@ -124,6 +124,51 @@ projectConfiguration <- createProjectConfiguration(
 `ProjectConfiguration.xlsx` stores the package versions used to create the project: `esqlabsRVersion` (managed by `{esqlabsR}`) and `ospsuiteReportingFrameworkVersion` (managed by this package).
 When you load a configuration, both versions are checked against installed packages; mismatches prompt for update in interactive sessions and stop execution in non-interactive runs (for example CI) until resolved. New projects created with `initProject()` receive the current framework version automatically, and `projectConfiguration$save()` updates stored version values.
 
+### Logging and Diagnostics
+
+Set up logging immediately after loading the project configuration so workflow messages, warnings, and errors are written to a predictable location.
+
+```{r, echo=TRUE, eval=FALSE}
+setLogPath(
+  logFolder = file.path(projectConfiguration$outputFolder, "logs"),
+  logFileName = "workflow.log"
+)
+```
+
+This creates a log file in `projectConfiguration$outputFolder/logs`. Use this log as the primary record for workflow execution in local runs and CI.
+
+Wrap workflow steps with `captureLog()` when you want messages, warnings, and errors from a code block to be routed to the log file while still propagating errors to the caller:
+
+```{r, echo=TRUE, eval=FALSE}
+captureLog({
+  importedData <- readObservedDataFromDataSet(
+    projectConfiguration = projectConfiguration,
+    dataFile = "observed-data.csv"
+  )
+})
+```
+
+Use `addMessageToLog()` for progress markers or decisions that should appear in the log, and `writeTableToLog()` when a data frame snapshot helps with debugging:
+
+```{r, echo=TRUE, eval=FALSE}
+addMessageToLog("Observed data import finished")
+writeTableToLog(head(importedData$data))
+```
+
+If console output becomes too noisy during interactive work, hide informational messages while still keeping warnings in the console:
+
+```{r, echo=TRUE, eval=FALSE}
+setShowLogMessages(FALSE)
+```
+
+For reproducibility or support requests, save the current R session details next to the workflow log:
+
+```{r, echo=TRUE, eval=FALSE}
+saveSessionInfo()
+```
+
+This writes `sessionInfo.log` into the configured log folder and is useful when investigating package version or environment-specific issues.
+
 ### Configuration in Git: Use JSON Snapshots
 
 Configuration workbooks (`*.xlsx`) are generated working files and are ignored by Git in configuration folders. The versioned source of truth is the JSON snapshot created from the configuration.

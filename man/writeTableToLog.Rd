@@ -4,12 +4,10 @@
 \alias{writeTableToLog}
 \title{Write a data frame to the log}
 \usage{
-writeTableToLog(dt, filename = NULL)
+writeTableToLog(dt)
 }
 \arguments{
 \item{dt}{table to log}
-
-\item{filename}{Ignored; kept for backwards compatibility.}
 }
 \description{
 Write a data frame to the log
