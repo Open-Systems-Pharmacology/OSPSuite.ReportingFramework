@@ -23,15 +23,18 @@
 #'
 #' @return A function that performs the specified aggregation. The returned function accepts a numeric vector and returns a list containing the aggregated values and error types.
 #' @keywords internal
-getAggregationFunction <- function(aggregationFlag,
-                                   percentiles,
-                                   customFunction,
-                                   legendsize = 2) {
+getAggregationFunction <- function(
+  aggregationFlag,
+  percentiles,
+  customFunction,
+  legendsize = 2
+) {
   checkmate::assertChoice(
     aggregationFlag,
     c(
       unname(unlist(ospsuite::DataErrorType)),
-      "Percentiles", "Custom"
+      "Percentiles",
+      "Custom"
     )
   )
 
@@ -66,7 +69,10 @@ getAggregationFunction <- function(aggregationFlag,
       len = 3,
       sorted = TRUE
     )
-    yErroryType <- getErrorTypeForPercentiles(percentiles, legendsize = legendsize)
+    yErroryType <- getErrorTypeForPercentiles(
+      percentiles,
+      legendsize = legendsize
+    )
     aggregationFunction <-
       function(y) {
         y <- y[!is.na(y)]
@@ -100,16 +106,20 @@ getErrorTypeForPercentiles <- function(percentiles, legendsize) {
 
   yMaxTxt <- formatPercentiles(percentiles[3], suffix = " percentile")
 
-  result <- switch(as.character(legendsize),
+  result <- switch(
+    as.character(legendsize),
     "2" = {
-      yMinTxt <- formatPercentiles(percentiles[1], suffix = ifelse(percentiles[3] == 1, " percentile", ""))
+      yMinTxt <- formatPercentiles(
+        percentiles[1],
+        suffix = ifelse(percentiles[3] == 1, " percentile", "")
+      )
       paste(mName, "|", trimws(yMinTxt), "-", trimws(yMaxTxt))
     },
     "3" = {
       yMinTxt <- formatPercentiles(percentiles[1], suffix = " percentile")
       paste(mName, "|", trimws(yMinTxt), "|", trimws(yMaxTxt))
     },
-    stop(messages$errorutilitiesaggregationL1())
+    stop(messages$errorutilitiesaggregationUnsupportedLegendSize())
   )
   return(result)
 }
@@ -127,21 +137,26 @@ getErrorTypeForPercentiles <- function(percentiles, legendsize) {
 #' @return A data.table containing aggregated results with counts (`numberOfIndividuals`),
 #' aggregated values, and the number of measurements below the lower limit of quantification (`nBelowLLOQ`).
 #' @keywords internal
-performAggregation <- function(dataToAggregate,
-                               aggregationFun,
-                               aggrCriteria) {
+performAggregation <- function(dataToAggregate, aggregationFun, aggrCriteria) {
   # avoid warning for global variable
   lloq <- LLOQFlag <- yValues <- NULL # nolint: object_name_linter
 
   checkmate::assertNames(aggrCriteria, subset.of = names(dataToAggregate))
 
-  aggregatedData <- dataToAggregate[, .(
-    numberOfIndividuals = .N
-  ), by = aggrCriteria]
+  aggregatedData <- dataToAggregate[,
+    .(
+      numberOfIndividuals = .N
+    ),
+    by = aggrCriteria
+  ]
 
   # Count number of measurements below LLOQ
-  if (!("lloq" %in% names(dataToAggregate))) dataToAggregate[, lloq := NA]
-  dataToAggregate[, LLOQFlag := ifelse(is.na(lloq), 0, ifelse(yValues < lloq, 1, 0))]
+  if (!("lloq" %in% names(dataToAggregate))) {
+    dataToAggregate[, lloq := NA]
+  }
+  dataToAggregate[,
+    LLOQFlag := ifelse(is.na(lloq), 0, ifelse(yValues < lloq, 1, 0))
+  ]
   tmp <- dataToAggregate[, .(nBelowLLOQ = sum(LLOQFlag)), by = aggrCriteria]
   aggregatedData <- merge(aggregatedData, tmp, by = aggrCriteria, all = TRUE)
 
@@ -164,7 +179,8 @@ performAggregation <- function(dataToAggregate,
 #' @keywords internal
 getErrorLabels <- function(yErrorType) {
   errorLabels <-
-    switch(yErrorType,
+    switch(
+      yErrorType,
       GeometricStdDev = c("geometric mean", "geometric standard deviation"),
       ArithmeticStdDev = c("mean", "standard deviation"),
       unlist(lapply(strsplit(yErrorType, "|", fixed = TRUE), trimws))
@@ -188,27 +204,31 @@ getErrorLabels <- function(yErrorType) {
 #'
 #' @return A data.table containing the aggregated variance results, including the aggregated values and error types.
 #' @keywords internal
-getAggregatedVariance <- function(dt,
-                                  aggregationFun,
-                                  valueColumn,
-                                  identifier,
-                                  direction = c("y", "x")) {
+getAggregatedVariance <- function(
+  dt,
+  aggregationFun,
+  valueColumn,
+  identifier,
+  direction = c("y", "x")
+) {
   direction <- match.arg(direction)
 
-  dtAggregated <- dt[, as.list(c(
-    list(N = length(!is.na(get(valueColumn)))),
-    aggregationFun(get(valueColumn))
-  )), by = identifier]
-
+  dtAggregated <- dt[,
+    as.list(c(
+      list(N = length(!is.na(get(valueColumn)))),
+      aggregationFun(get(valueColumn))
+    )),
+    by = identifier
+  ]
 
   if (direction == "x") {
-    data.table::setnames(dtAggregated,
+    data.table::setnames(
+      dtAggregated,
       old = c("yMin", "yValues", "yMax", "yErrorValues", "yErrorType"),
       new = c("xMin", "xValues", "xMax", "xErrorValues", "xErrorType"),
       skip_absent = TRUE
     )
   }
-
 
   return(dtAggregated)
 }
@@ -244,13 +264,15 @@ getAggregatedVariance <- function(dt,
 #'
 #'
 #' @keywords internal
-calculateAggregationWithCIBYGroup <- function(dt,
-                                              aggregationFun,
-                                              confLevel = 0.9,
-                                              identifier,
-                                              nBootstrap = 100,
-                                              valueColumn = "value",
-                                              direction = "y") {
+calculateAggregationWithCIBYGroup <- function(
+  dt,
+  aggregationFun,
+  confLevel = 0.9,
+  identifier,
+  nBootstrap = 100,
+  valueColumn = "value",
+  direction = "y"
+) {
   # initialize variable to avoid messages
   yErrorType <- NULL
 
@@ -273,7 +295,11 @@ calculateAggregationWithCIBYGroup <- function(dt,
       set.seed(sum(utf8ToInt(paste(.BY, collapse = "_"))))
 
       # Perform bootstrapping
-      bootResults <- boot::boot(data = get(valueColumn), statistic = bootFun, R = nBootstrap)
+      bootResults <- boot::boot(
+        data = get(valueColumn),
+        statistic = bootFun,
+        R = nBootstrap
+      )
 
       # Calculate confidence interval
       ci <- boot::boot.ci(bootResults, type = "basic", conf = confLevel)
@@ -289,14 +315,18 @@ calculateAggregationWithCIBYGroup <- function(dt,
     by = identifier
   ]
 
-  results[, yErrorType := paste(names(aggregationFun),
-    paste0(confLevel * 100, "% CI lower"),
-    paste0(confLevel * 100, "% CI upper"),
-    sep = "|"
-  )]
+  results[,
+    yErrorType := paste(
+      names(aggregationFun),
+      paste0(confLevel * 100, "% CI lower"),
+      paste0(confLevel * 100, "% CI upper"),
+      sep = "|"
+    )
+  ]
 
   if (direction == "x") {
-    data.table::setnames(results,
+    data.table::setnames(
+      results,
       old = c("yMin", "yValues", "yMax", "yErrorValues", "yErrorType"),
       new = c("xMin", "xValues", "xMax", "xErrorValues", "xErrorType"),
       skip_absent = TRUE

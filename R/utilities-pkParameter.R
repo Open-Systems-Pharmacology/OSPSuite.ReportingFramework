@@ -40,7 +40,7 @@ calculatePKParameterForScenarios <- function(
   )
   dtOutputPaths <- getOutputPathIds(projectConfiguration$addOns$reportsFile)
   if (nrow(dtOutputPaths) == 0) {
-    stop(messages$errorutilitiespkParameterL1())
+    stop(messages$errorutilitiespkParameterL1MissingOutputPaths())
   }
 
   for (sc in names(scenarioResults)) {
@@ -52,7 +52,7 @@ calculatePKParameterForScenarios <- function(
     if (length(pkParameterSheets) > 0) {
       # Load or calculate PK analyses
       ospsuite.utils::logInfo(paste("Calculate PK analysis result of", sc))
-      browser()
+
       pkAnalyses <- ospsuite::calculatePKAnalyses(
         results = scenarioResults[[sc]]$results
       )
@@ -119,11 +119,14 @@ calculatePKParameterForScenarios <- function(
     use.names = TRUE
   )
 
-  dtPkParameterDefinition <- unique(dtPkParameterDefinition[, c(
-    "name",
-    "displayName",
-    "displayUnit"
-  ), with = FALSE])
+  dtPkParameterDefinition <- unique(dtPkParameterDefinition[,
+    c(
+      "name",
+      "displayName",
+      "displayUnit"
+    ),
+    with = FALSE
+  ])
 
   definitionCounts <- stats::aggregate(
     x = list(definitionCount = seq_len(nrow(dtPkParameterDefinition))),
@@ -134,7 +137,7 @@ calculatePKParameterForScenarios <- function(
     definitionCounts$definitionCount > 1
   ]
   if (length(conflictingNames) > 0) {
-    stop(messages$errorutilitiespkParameterL1XXXXXXXXX())
+    stop(messages$errorutilitiespkParameterL1ConflictingDisplayDefinitions())
   }
 
   # Update PK parameters in the specified sheets
@@ -173,7 +176,7 @@ calculatePKParameterForScenarios <- function(
     unique = TRUE
   )
   if (any(is.na(dtUserdefPKParameter[["display Unit"]]))) {
-    stop(messages$errorutilitiespkParameterL1X())
+    stop(messages$errorutilitiespkParameterEmptyDisplayUnitNotAllowed())
   }
 
   return(dtUserdefPKParameter)
@@ -186,10 +189,10 @@ calculatePKParameterForScenarios <- function(
 #' @noRd
 .validateUserDefinedParameterIndex <- function(iRow, userPar) {
   if (length(iRow) == 0) {
-    stop(messages$errorutilitiespkParameterL1XX())
+    stop(messages$errorutilitiespkParameterL1NotDefined())
   }
   if (length(iRow) > 1) {
-    stop(messages$errorutilitiespkParameterL1XXX())
+    stop(messages$errorutilitiespkParameterL1NotUnique())
   }
 
   return(invisible(NULL))
@@ -280,7 +283,7 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
 
   dtOutputPaths <- getOutputPathIds(projectConfiguration$addOns$reportsFile)
   if (nrow(dtOutputPaths) == 0) {
-    stop(messages$errorutilitiespkParameterL1XXXX())
+    stop(messages$errorutilitiespkParameterL1MissingOutputPaths())
   }
   # Load or calculate PK analyses for all scenarios
   pkAnalysesList <- lapply(names(scenarioListOrResult), function(sc) {
@@ -415,7 +418,7 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
 
   fileName <- file.path(outputFolder, paste0(scenarioName, ".csv"))
   if (!file.exists(fileName)) {
-    stop(messages$errorutilitiespkParameterL1XXXXX())
+    stop(messages$errorutilitiespkParameterL1NotCalculated())
   }
 
   ospsuite.utils::logInfo(paste("Load PK analysis result of", scenarioName))
@@ -524,7 +527,7 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
         error = function(err) {
           errMsg <- conditionMessage(err)
           stop(
-            messages$errorutilitiespkParameterL1XXXXXXXX(),
+            messages$errorutilitiespkParameterL1UnitConversionFailed(),
             call. = FALSE
           )
         }
@@ -594,7 +597,7 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
     )
 
   if (nrow(mergedData) == 0) {
-    stop(messages$errorutilitiespkParameterL1XXXXXX())
+    stop(messages$errorutilitiespkParameterL1NoDataForPlot())
   }
 
   if (asRatio) {
@@ -720,7 +723,7 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
     unique()
 
   if (any(duplicated(tmp[, c("outputPathId", "pkParameter")]))) {
-    stop(messages$errorutilitiespkParameterL1XXXXXXX())
+    stop(messages$errorutilitiespkParameterL1InconsistentDisplayUnit())
   }
 
   return(invisible())

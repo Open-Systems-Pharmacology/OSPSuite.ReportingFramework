@@ -28,7 +28,7 @@ test_that("ospsuiteReportingFrameworkVersion is read-only", {
 
   expect_error(
     pc$ospsuiteReportingFrameworkVersion <- "1.0.0",
-    "ospsuiteReportingFrameworkVersion is readonly"
+    "ospsuiteReportingFrameworkVersion is read-only"
   )
 })
 

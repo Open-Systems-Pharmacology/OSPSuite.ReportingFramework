@@ -129,7 +129,7 @@ generateBoxwhiskerPlotForPlotType <- function(
     asRatio = asRatio
   )
   if (nrow(plotData) == 0) {
-    warning(messages$warningplotPKBoxwhiskerL1())
+    warning(messages$warningplotPKBoxwhiskerNoDataForPlot())
     return(list())
   }
 
@@ -563,7 +563,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   tmp <- .separateAndTrimColumn(tmp, "pkParameters")
   tmp <- tmp[, c("plotName", "scenario", "outputPathId", "pkParameter")]
   if (any(duplicated(tmp))) {
-    stop(messages$errorplotPKBoxwhiskerL1())
+    stop(messages$errorplotPKBoxwhiskerMultipleCombinationsPerPlot())
   }
 
   validateColorLegend(dt = configTablePlots[!is.na(referenceScenario)])
@@ -574,7 +574,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
     unique()
   if (nrow(tmp) > 0) {
     print(tmp)
-    stop(messages$errorplotPKBoxwhiskerL1X())
+    stop(messages$errorplotPKBoxwhiskerMissingPlotMode())
   }
 
   # check if reference Scenarios are there
@@ -632,7 +632,7 @@ validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
   configTablePlots <- configTablePlots[populationId != populationIdReference]
   if (nrow(configTablePlots) > 0) {
     writeTableToLog(configTablePlots)
-    stop(messages$errorplotPKBoxwhiskerL1XX())
+    stop(messages$errorplotPKBoxwhiskerL1RatioRequiresSamePopulation())
   }
 }
 #' Validate Existence of Reference for Ratio Plots
@@ -667,7 +667,7 @@ validateExistenceOfReferenceForRatio <- function(
     by = plotName
   ]
   if (any(tmp[[2]] == FALSE)) {
-    stop(messages$errorplotPKBoxwhiskerL1XXX())
+    stop(messages$errorplotPKBoxwhiskerL1MissingReferenceScenario())
   }
 
   return(invisible())

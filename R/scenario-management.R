@@ -52,7 +52,7 @@ loadScenarioResultsToFramework <- function(
   resultFiles <- file.path(outputFolder, paste0(scenarioNames, ".csv"))
 
   if (!all(file.exists(resultFiles))) {
-    stop(messages$errorscenariomanagementL1())
+    stop(messages$errorscenariomanagementMissingSimulationResults())
   }
 
   scenarioResults <- list()
@@ -226,7 +226,7 @@ runOrLoadScenarios <- function(
       fixed = TRUE
     ))
     if (length(ontogenyMapping) != 2) {
-      stop(messages$errorscenariomanagementL1X())
+      stop(messages$errorscenariomanagementInvalidOntogenyStructure())
     }
     protein <- ontogenyMapping[[1]]
     ontogeny <- ontogenyMapping[[2]]

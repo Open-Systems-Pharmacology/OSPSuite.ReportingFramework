@@ -85,7 +85,7 @@ runSensitivityAnalysisForScenarios <-
     pKParameter <- scenarioName <- NULL
 
     if (!("sensitivityFile" %in% names(projectConfiguration$addOns))) {
-      stop(messages$errorutilitiessensitivityL1())
+      stop(messages$errorutilitiessensitivityMissingSensitivityParameterConfig())
     }
 
     outputFolder <- file.path(

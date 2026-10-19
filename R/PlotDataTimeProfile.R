@@ -69,7 +69,7 @@ PlotDataTimeProfile <- R6::R6Class(
       if (
         is.null(private$.dataSimulated) || nrow(private$.dataSimulated) == 0
       ) {
-        stop(messages$errorPlotDataTimeProfileL1())
+        stop(messages$errorPlotDataTimeProfileNoSimulatedData())
       }
 
       # Get application times
@@ -169,7 +169,7 @@ PlotDataTimeProfile <- R6::R6Class(
       )
 
       if (nrow(private$.dataSimulated) == 0) {
-        stop(messages$errorPlotDataTimeProfileL1X())
+        stop(messages$errorPlotDataTimeProfileAllDataOutsideTimeRange())
       }
 
       if (nrow(private$.dataObserved) > 0) {
@@ -364,11 +364,11 @@ PlotDataTimeProfile <- R6::R6Class(
       isNeeded <- length(plotCols) > 0
 
       if (!self$hasObservedData() & isNeeded) {
-        warning(messages$warningPlotDataTimeProfileL1())
+        warning(messages$warningPlotDataTimeProfileNoObservedData())
         return(invisible())
       }
       if (isNeeded & dplyr::n_distinct(private$.dataObserved$yUnit) > 1) {
-        stop(messages$errorPlotDataTimeProfileL1XX())
+        stop(messages$errorPlotDataTimeProfileL1UnsupportedMultipleUnits())
       }
 
       if (isNeeded) {

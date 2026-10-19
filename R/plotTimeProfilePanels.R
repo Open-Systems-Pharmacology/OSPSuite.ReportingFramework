@@ -180,7 +180,7 @@ plotTimeProfiles <- function(
 
   checkmate::assertDataTable(onePlotConfig)
   if (dplyr::n_distinct(onePlotConfig$plotName) > 1) {
-    stop(messages$errorplotTimeProfilePanelsL1())
+    stop(messages$errorplotTimeProfilePanelsMultiplePlotNames())
   }
 
   ospsuite.utils::logInfo(paste("Create Plot", onePlotConfig$plotName[1]))
@@ -205,7 +205,7 @@ plotTimeProfiles <- function(
         1
   ) {
     tmp <- unique(plotData$data[, c("dataType", "yErrorType")])
-    stop(messages$errorplotTimeProfilePanelsL1X())
+    stop(messages$errorplotTimeProfilePanelsInconsistentAggregationMethods())
   }
 
   # replicate and filter data for each Time Range Tag
@@ -465,7 +465,7 @@ isPlotTypeNeededAndPossible <- function(plotType, plotData) {
     ResvO = "plot_ResidualsVsObserved",
     ResH = "plot_ResidualsAsHistogram",
     QQ = "plot_QQ",
-    stop(messages$errorplotTimeProfilePanelsL1XX())
+    stop(messages$errorplotTimeProfilePanelsUnknownPlotType())
   )
 
   if (plotType == "TP") {
@@ -577,7 +577,7 @@ checkAndAdjustYlimits <- function(
           na.rm = TRUE
         )
     ) {
-      stop(messages$errorplotTimeProfilePanelsL1XXX())
+      stop(messages$errorplotTimeProfilePanelsDataOutsideYLimit())
     }
   }
 
@@ -1151,7 +1151,7 @@ validateTimeProfilesConfig <- function(
   ]
   tmp <- configTablePlots[invalid == TRUE]
   if (nrow(tmp) > 0) {
-    stop(messages$errorplotTimeProfilePanelsL2())
+    stop(messages$errorplotTimeProfilePanelsBracketedOutputsWithReferenceScenarios())
   }
 
   configTablePlots[,
@@ -1160,7 +1160,7 @@ validateTimeProfilesConfig <- function(
   ]
   tmp <- configTablePlots[invalid == TRUE]
   if (nrow(tmp) > 0) {
-    stop(messages$errorplotTimeProfilePanelsL2X())
+    stop(messages$errorplotTimeProfilePanelsReferenceScenariosNeedColorLegend())
   }
 
   return(invisible())
@@ -1188,7 +1188,7 @@ validateUnitConsistency <- function(
       ) >
         2
     ) {
-      stop(messages$errorplotTimeProfilePanelsL2XX())
+      stop(messages$errorplotTimeProfilePanelsL2TooManyUnits())
     }
   }
 
@@ -1209,7 +1209,7 @@ validateTimeRangeColumns <- function(configTablePlots) {
     names(configTablePlots)[grepl("^timeRange_", names(configTablePlots))]
 
   if (length(timeRangeColumns) == 0) {
-    stop(messages$errorplotTimeProfilePanelsL2XXX())
+    stop(messages$errorplotTimeProfilePanelsL2MissingTimeRange())
   }
 
   validateAtleastOneEntry(configTablePlots, columnVector = timeRangeColumns)
@@ -1243,12 +1243,12 @@ validateTimeRangeColumns <- function(configTablePlots) {
           }
         ))
       ) {
-        stop(messages$errorplotTimeProfilePanelsL2XXXX())
+        stop(messages$errorplotTimeProfilePanelsL2InvalidTimeRangeFormat())
       }
     },
     error = function(err) {
       stop(paste0(
-        messages$errorplotTimeProfilePanelsL2XXXXX(),
+        messages$errorplotTimeProfilePanelsL2TimeRangeParseError(),
         ": ",
         conditionMessage(err)
       ))
@@ -1280,7 +1280,7 @@ validateOutputPathIdFormat <- function(
   tmp <- tmp[nBracketOpen != nBracketClosed]
 
   if (nrow(tmp) > 0) {
-    stop(messages$errorplotTimeProfilePanelsL2XXXXXX())
+    stop(messages$errorplotTimeProfilePanelsL2UnmatchedBrackets())
   }
 }
 
@@ -1318,7 +1318,7 @@ validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
   if (
     any(is.na(configTablePlots[scenario %in% indScenariosNames]$individualIds))
   ) {
-    stop(messages$errorplotTimeProfilePanelsL2XXXXXXX())
+    stop(messages$errorplotTimeProfilePanelsL2VirtualPopMissingIndividualIds())
   }
 
   tmp <- configTablePlots[
@@ -1328,7 +1328,7 @@ validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
     grepl("\\(", tmp$individualIds) | grepl("\\)", tmp$individualIds)
   )
   if (length(errorRows) > 0) {
-    stop(messages$errorplotTimeProfilePanelsL2XXXXXXXX())
+    stop(messages$errorplotTimeProfilePanelsL2BracketsDisallowedInIndividualIds())
   }
 
   tmp <- configTablePlots[
@@ -1337,7 +1337,7 @@ validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
       is.na(dataGroupIds)
   ]
   if (nrow(tmp) > 0) {
-    warning(messages$warningplotTimeProfilePanelsL2())
+    warning(messages$warningplotTimeProfilePanelsIndividualIdsIgnored())
   }
 
   popScenariosNames <- setdiff(names(popScenarios), indScenariosNames)
@@ -1349,7 +1349,7 @@ validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
           !(referenceScenario %in% popScenariosNames)))
   ]
   if (nrow(tmp) > 0) {
-    stop(messages$errorplotTimeProfilePanelsL2XXXXXXXXX())
+    stop(messages$errorplotTimeProfilePanelsL2ScenarioTypeConflict())
   }
 
   return(invisible())

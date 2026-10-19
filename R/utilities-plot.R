@@ -284,9 +284,9 @@ handleConfigTable <- function(
           },
           error = function(err) {
             if (!getOption("OSPSuite.RF.skipFailingPlots", default = FALSE)) {
-              stop(messages$errorutilitiesplotL1(), call. = FALSE)
+              stop(messages$errorutilitiesplotConditionMessage(), call. = FALSE)
             } else {
-              warning(messages$warningutilitiesplotL1())
+              warning(messages$warningutilitiesplotCreationFailed())
             }
           }
         )
@@ -567,7 +567,7 @@ getScaleVector <- function(namesOfScaleVector, listOfValues) {
   }
 
   if (is.null(scaleVector)) {
-    stop(messages$errorutilitiesplotL2())
+    stop(messages$errorutilitiesplotInvalidScaleVectorValues())
   }
 
   names(scaleVector) <- namesOfScaleVector
@@ -613,7 +613,7 @@ getDefaultColorsForScaleVector <- function(shade = c("dark", "light"), n) {
     )
   } else {
     if (n > length(ospsuite.plots::colorMaps[["ospDefault"]])) {
-      stop(messages$errorutilitiesplotL2X())
+      stop(messages$errorutilitiesplotTooManyColorsInVector())
     }
     colorVector <- ospsuite.plots::colorMaps[["ospDefault"]][seq_len(n)]
   }
@@ -641,11 +641,11 @@ getDefaultColorsForScaleVector <- function(shade = c("dark", "light"), n) {
 getDefaultShapesForScaleVector <- function(n) {
   shapes <- ospShapeNames
   if (is.null(shapes)) {
-    stop(messages$errorutilitiesplotL2XX())
+    stop(messages$errorutilitiesplotL2NoDefaultShapes())
   }
 
   if (n > length(shapes)) {
-    stop(messages$errorutilitiesplotL2XXX())
+    stop(messages$errorutilitiesplotL2InsufficientShapes())
   }
 
   return(shapes[1:n])
@@ -971,7 +971,7 @@ validateHeaders <- function(configTable) {
       )
     )
   ) {
-    stop(messages$errorutilitiesplotL2XXXX())
+    stop(messages$errorutilitiesplotL2HeaderRowsHaveNonEmptyColumns())
   }
 
   configTablePlots <- configTable[is.na(level)]
@@ -983,7 +983,7 @@ validateHeaders <- function(configTable) {
       .SDcols = "header"
     ])
   ) {
-    stop(messages$errorutilitiesplotL2XXXXX())
+    stop(messages$errorutilitiesplotL2MissingHeaderForLevel())
   }
 
   return(configTablePlots)
@@ -1095,7 +1095,7 @@ validateSubsetList <- function(subsetList, data) {
     invisible(lapply(subsetCheck$cols, function(col) {
       if (any(!is.na(data[[col]]))) {
         if (is.null(subsetCheck$allowedValues)) {
-          stop(messages$errorutilitiesplotL2XXXXXX())
+          stop(messages$errorutilitiesplotL2ColumnEntriesWithoutAllowedValues())
         }
         splitAllowed <- subsetCheck$splitAllowed
         if (is.null(subsetCheck$splitAllowed)) {
@@ -1133,7 +1133,7 @@ validateNumericVectorColumns <- function(columns, data, ...) {
         x <- tryCatch(
           eval(parse(text = rangeString)),
           error = function(e) {
-            stop(messages$errorutilitiesplotL2XXXXXXX())
+            stop(messages$errorutilitiesplotL2InvalidInputsInColumn())
           }
         )
         checkmate::assertNumeric(
@@ -1177,7 +1177,7 @@ validateGroupConsistency <- function(
   # Check if any value column has more than one unique value within each group
   lapply(valueColumns, function(col) {
     if (any(uniqueValueCounts[[col]] > 1)) {
-      stop(messages$errorutilitiesplotL2XXXXXXXX())
+      stop(messages$errorutilitiesplotL2ColumnValuesInconsistentWithinGroup())
     }
   })
 
@@ -1198,7 +1198,7 @@ validateAtleastOneEntry <- function(configTablePlots, columnVector) {
     ]) >
       0
   ) {
-    stop(messages$errorutilitiesplotL2XXXXXXXXX())
+    stop(messages$errorutilitiesplotL2NoCoreColumnsPopulated())
   }
 
   return(invisible())
@@ -1256,7 +1256,7 @@ validateOutputIdsForPlot <- function() {
   for (col in uniqueColumns) {
     # nolint: object_usage_linter
     if (any(uniqueIDValues[[col]] > 1)) {
-      stop(messages$errorutilitiesplotL2XXXXXXXXXX())
+      stop(messages$errorutilitiesplotL2ColumnValuesInconsistentWithinOutputPath())
     }
   }
 
@@ -1269,7 +1269,7 @@ validateOutputIdsForPlot <- function() {
           suppressMessages(ospsuite::getDimensionForUnit(unit))
         },
         error = function(e) {
-          stop(messages$errorutilitiesplotL2XXXXXXXXXXX())
+          stop(messages$errorutilitiesplotL2InvalidUnitInOutputsSheet())
         }
       )
     }
@@ -1321,7 +1321,7 @@ validateColorLegend <- function(dt) {
       dt[, c("plotName", "colorLegend")] %>%
         unique()
     )
-    stop(messages$errorutilitiesplotL2XXXXXXXXXXXX())
+    stop(messages$errorutilitiesplotL2InvalidColorLegendFormat())
   }
 
   return(invisible())
@@ -1355,7 +1355,7 @@ validateColorVector <- function(colorVector) {
   })
 
   if (!all(validColors)) {
-    stop(messages$errorutilitiesplotL2XXXXXXXXXXXXX())
+    stop(messages$errorutilitiesplotL2InvalidColorNames())
   }
 
   return(invisible())

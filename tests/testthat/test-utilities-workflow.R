@@ -62,7 +62,7 @@ test_that("getQCpassedEnvironmentVariable works correctly", {
     {
       result <- getQCpassedEnvironmentVariable()
     },
-    "Environment Variable 'QCpassed' not found, empty or a non logical, set 'QCpassed' to FALSE"
+    "Environment variable 'QCpassed' was not found, is empty, or is not logical. Set 'QCpassed' to FALSE."
   )
   expect_equal(result, FALSE)
 
@@ -72,7 +72,7 @@ test_that("getQCpassedEnvironmentVariable works correctly", {
     {
       result <- getQCpassedEnvironmentVariable()
     },
-    "Environment Variable 'QCpassed' not found, empty or a non logical, set 'QCpassed' to FALSE"
+    "Environment variable 'QCpassed' was not found, is empty, or is not logical. Set 'QCpassed' to FALSE."
   )
   expect_equal(result, FALSE)
 

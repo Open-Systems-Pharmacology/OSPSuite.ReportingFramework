@@ -3,15 +3,15 @@
 messages <- list()
 
 messages$infoVirtualTwinPopulationSheetShifted <- function() {
-  "shift sheet 'VirtualTwinPopulation' from 'Indvidual.xslx' to 'Population.xlsx'"
+  "Shift sheet 'VirtualTwinPopulation' from 'Individual.xlsx' to 'Population.xlsx'."
 }
 
 messages$infoNoGroupsForVirtualTwinPopulationCreation <- function() {
-  "No groups available for virtual twin population creation"
+  "No groups available for virtual twin population creation."
 }
 
 messages$infoAddVirtualTwinPopulationConfig <- function() {
-  "add virtual twin population configuration in Population configuration file:"
+  "Add virtual twin population configuration to the Population configuration file:"
 }
 
 messages$infoNoNewVirtualTwinPopulationsToGenerate <- function() {
@@ -21,7 +21,7 @@ messages$infoNoNewVirtualTwinPopulationsToGenerate <- function() {
 messages$warningSuspiciousProportionOfFemales <- function(suspiciousRows) {
   paste(
     "You have very small values for 'ProportionOfFemales' in the population configurations.\n",
-    "Unit is percent not fraction. Are you sure?\n",
+    "The unit is percent, not fraction. Are you sure?\n",
     paste(
       paste(
         suspiciousRows$populationName,
@@ -54,7 +54,7 @@ messages$errorInconsistentVirtualPopulationParameters <- function(
   observedIndividualId
 ) {
   paste(
-    "population parameter must be consistent within a virtual population. Check",
+    "Population parameters must be consistent within a virtual population. Check",
     paste(inconsistentParameters, collapse = ", "),
     "for",
     observedIndividualId
@@ -62,7 +62,9 @@ messages$errorInconsistentVirtualPopulationParameters <- function(
 }
 
 
-messages$errorPlotDataTimeProfileL1 <- function(env = parent.frame()) {
+messages$errorPlotDataTimeProfileNoSimulatedData <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "No simulated data found for",
@@ -72,79 +74,94 @@ messages$errorPlotDataTimeProfileL1 <- function(env = parent.frame()) {
   )
 }
 
-messages$errorPlotDataTimeProfileL1X <- function(env = parent.frame()) {
+messages$errorPlotDataTimeProfileAllDataOutsideTimeRange <- function(
+  env = parent.frame()
+) {
   eval(
     quote(glue::glue(
-      "All simulated data outside time range for {self$configTable$plotName[1]}"
+      "All simulated data are outside the time range for {self$configTable$plotName[1]}."
     )),
     envir = env
   )
 }
 
-messages$errorPlotDataTimeProfileL1XX <- function(env = parent.frame()) {
+messages$errorPlotDataTimeProfileUnsupportedMultipleUnits <- function(
+  env = parent.frame()
+) {
   eval(
     quote(glue::glue(
-      "For plot {self$configTable$plotName[1]}, you selected a plotType which is not suited for multiple units. Only Timeprofile can handle a secondary axis with a second unit. Please split outputPathId in the plot configuration xlsx to different rows."
+      "Plot {self$configTable$plotName[1]} uses a plotType that is not suited for multiple units. Only TimeProfile can handle a secondary axis with a second unit. Split outputPathId into separate rows in the plot configuration xlsx."
     )),
     envir = env
   )
 }
 
-messages$warningPlotDataTimeProfileL1 <- function(env = parent.frame()) {
+messages$warningPlotDataTimeProfileNoObservedData <- function(
+  env = parent.frame()
+) {
   eval(
     quote(glue::glue(
-      "For plot {self$configTable$plotName[1]}, no observed data available for {paste(plotCols, collapse = ', ')}, plots will be omitted"
+      "For plot {self$configTable$plotName[1]}, no observed data are available for {paste(plotCols, collapse = ', ')}. The plots will be omitted."
     )),
     envir = env
   )
 }
 
-messages$errorplotDemographicsL1 <- function(env = parent.frame()) {
+messages$errorplotDemographicsCategoricalXAxisNotAllowed <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "Categoric Values are not allowed for x-axis on rangeplots. Check plotName",
+      "Categorical values are not allowed on the x-axis for range plots. Check plotName",
       onePlotConfig$plotName[1]
     )),
     envir = env
   )
 }
 
-messages$errorplotDemographicsL1X <- function(env = parent.frame()) {
+messages$errorplotDemographicsMissingParameterPaths <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "Parameter path(s)",
       paste(setdiff(modelPaths, names(dtPop)), collapse = ", "),
-      "is not available for",
+      "are not available for",
       scenarioName
     )),
     envir = env
   )
 }
 
-messages$errorplotDemographicsL1XX <- function(env = parent.frame()) {
+messages$errorplotDemographicsMissingInputs <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
-      "Inputs are missing, please provide scenarioList and/or pkParameterDT"
+      "Inputs are missing. Please provide scenarioList and/or pkParameterDT."
     ),
     envir = env
   )
 }
 
-messages$errorplotDemographicsL1XXX <- function(env = parent.frame()) {
+messages$errorplotDemographicsInvalidParameterIds <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "The ParameterIds are no valid modelparameters!
-                 Are they PK-Parameter? But pkParameterDT is missing as input.",
+      "The ParameterIds are not valid model parameters. If they are PK parameters, pkParameterDT must be provided as input.",
       configTablePlots$plotName[1]
     )),
     envir = env
   )
 }
 
-messages$warningplotDemographicsL1 <- function(env = parent.frame()) {
+messages$warningplotDemographicsCategoricalParametersIgnored <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "Categoric parameter are not suited for this kind of plot and will be ignored:",
+      "Categorical parameters are not suitable for this kind of plot and will be ignored:",
       concatWithAnd(unique(
         plotData[!is.na(categoricValue), ]$parameterId
       ))
@@ -153,7 +170,9 @@ messages$warningplotDemographicsL1 <- function(env = parent.frame()) {
   )
 }
 
-messages$errorplotPKBoxwhiskerL1 <- function(env = parent.frame()) {
+messages$errorplotPKBoxwhiskerMultipleCombinationsPerPlot <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "Per plot only one combination of scenario, outputPathId and pkParameter is allowed. Please check plot",
@@ -163,63 +182,84 @@ messages$errorplotPKBoxwhiskerL1 <- function(env = parent.frame()) {
   )
 }
 
-messages$errorplotPKBoxwhiskerL1X <- function(env = parent.frame()) {
+messages$errorplotPKBoxwhiskerMissingPlotMode <- function(
+  env = parent.frame()
+) {
   eval(
-    quote("Please select either Plot_Ratio or Plot_Absolute!"),
+    quote("Please select either Plot_Ratio or Plot_Absolute."),
     envir = env
   )
 }
 
-messages$errorplotPKBoxwhiskerL1XX <- function(env = parent.frame()) {
+messages$errorplotPKBoxwhiskerRatioRequiresSamePopulation <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
-      "Ratio plots are only available if scenario and referenceScenario is based on the same population"
+      "Ratio plots are only available if scenario and referenceScenario are based on the same population."
     ),
     envir = env
   )
 }
 
-messages$errorplotPKBoxwhiskerL1XXX <- function(env = parent.frame()) {
+messages$errorplotPKBoxwhiskerMissingReferenceScenario <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "For ratio plots at lease one reference scenario has to be selected. Check PlotName",
+      "For ratio plots, at least one reference scenario must be selected. Check plotName",
       paste(tmp[isValid == FALSE, ]$plotName, collapse = ", ")
     )),
     envir = env
   )
 }
 
-messages$warningplotPKBoxwhiskerL1 <- function(env = parent.frame()) {
-  eval(quote(paste("No data for", onePlotConfig$plotName[1])), envir = env)
+messages$warningplotPKBoxwhiskerNoDataForPlot <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(paste("No data available for", onePlotConfig$plotName[1])),
+    envir = env
+  )
 }
 
-messages$errorplotPKForestL1 <- function(env = parent.frame()) {
+messages$errorplotPKForestMixedBasePopulationComparison <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
-      "Within one plot you must either compare always scenarios with the same base population or
-             always scenarios with different base populations"
+      "Within one plot, compare either only scenarios with the same base population or only scenarios with different base populations."
     ),
     envir = env
   )
 }
 
-messages$errorplotPKForestL1X <- function(env = parent.frame()) {
+messages$errorplotPKForestMissingObservedData <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
-      "Please provide aggregated observed PK-Parameter data for this kind of plot "
+      "Please provide aggregated observed PK-Parameter data for this kind of plot."
     ),
     envir = env
   )
 }
 
-messages$errorplotTimeProfilePanelsL1 <- function(env = parent.frame()) {
-  eval(quote("onePlotConfig conatinas more than one plotName"), envir = env)
+messages$errorplotTimeProfilePanelsMultiplePlotNames <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote("onePlotConfig must contain exactly one plotName."),
+    envir = env
+  )
 }
 
-messages$errorplotTimeProfilePanelsL1X <- function(env = parent.frame()) {
+messages$errorplotTimeProfilePanelsInconsistentAggregationMethods <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "Aggregation methods are not consistent! ",
+      "Aggregation methods are not consistent:",
       paste(
         paste(tmp$dataType, tmp$yErrorType, sep = ": "),
         collapse = ", "
@@ -229,136 +269,163 @@ messages$errorplotTimeProfilePanelsL1X <- function(env = parent.frame()) {
   )
 }
 
-messages$errorplotTimeProfilePanelsL1XX <- function(env = parent.frame()) {
-  eval(quote(paste("unknown plottype:", plotType)), envir = env)
+messages$errorplotTimeProfilePanelsUnknownPlotType <- function(
+  env = parent.frame()
+) {
+  eval(quote(paste("Unknown plot type:", plotType)), envir = env)
 }
 
-messages$errorplotTimeProfilePanelsL1XXX <- function(env = parent.frame()) {
+messages$errorplotTimeProfilePanelsDataOutsideYLimit <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "data outside ylimit for",
+      "Data outside y limit for",
       plotData$plotName,
-      "time range",
+      "within time range",
       timeRangeFilter
     )),
     envir = env
   )
 }
 
-messages$errorplotTimeProfilePanelsL2 <- function(env = parent.frame()) {
+messages$errorplotTimeProfilePanelsBracketedOutputsWithReferenceScenarios <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste0(
       "Do not combine outputs in one panel with brackets () ",
-      'if you want to display reference scenarios.
-               Please check "',
+      'if you want to display reference scenarios. Please check "',
       paste0(unique(tmp$plotName), collapse = '", "', '"')
     )),
     envir = env
   )
 }
 
-messages$errorplotTimeProfilePanelsL2X <- function(env = parent.frame()) {
+messages$errorplotTimeProfilePanelsReferenceScenariosNeedColorLegend <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste0(
-      "Plot configurations with reference scenarios need to have a color legend ",
-      'Please check "',
+      "Plot configurations with reference scenarios must define a color legend. Check ",
+      '"',
       paste0(unique(tmp$plotName), collapse = '", "', '"')
     )),
     envir = env
   )
 }
 
-messages$errorplotTimeProfilePanelsL2XX <- function(env = parent.frame()) {
-  eval(quote("do not combine more than two yUnits in one Panel"), envir = env)
+messages$errorplotTimeProfilePanelsL2TooManyUnits <- function(
+  env = parent.frame()
+) {
+  eval(quote("Do not combine more than two y units in one panel."), envir = env)
 }
 
-messages$errorplotTimeProfilePanelsL2XXX <- function(env = parent.frame()) {
-  eval(quote("You need at least one TimeRange Column"), envir = env)
+messages$errorplotTimeProfilePanelsL2MissingTimeRange <- function(
+  env = parent.frame()
+) {
+  eval(quote("At least one TimeRange column is required."), envir = env)
 }
 
-messages$errorplotTimeProfilePanelsL2XXXX <- function(env = parent.frame()) {
-  eval(quote('invalid inputs in one of the "TimeRange" columns'), envir = env)
+messages$errorplotTimeProfilePanelsL2InvalidTimeRangeFormat <- function(
+  env = parent.frame()
+) {
+  eval(quote('Invalid input in one of the "TimeRange" columns.'), envir = env)
 }
 
-messages$errorplotTimeProfilePanelsL2XXXXX <- function(env = parent.frame()) {
-  eval(quote('invalid inputs in one of the "TimeRange" columns'), envir = env)
+messages$errorplotTimeProfilePanelsL2TimeRangeParseError <- function(
+  env = parent.frame()
+) {
+  eval(quote('Failed to parse one of the "TimeRange" columns.'), envir = env)
 }
 
-messages$errorplotTimeProfilePanelsL2XXXXXX <- function(env = parent.frame()) {
+messages$errorplotTimeProfilePanelsL2UnmatchedBrackets <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "Please check the brackets in column",
       column,
-      paste(tmp[[column]], collapse = ";")
+      paste(tmp[[column]], collapse = "; ")
     )),
     envir = env
   )
 }
 
-messages$errorplotTimeProfilePanelsL2XXXXXXX <- function(env = parent.frame()) {
+messages$errorplotTimeProfilePanelsL2VirtualPopMissingIndividualIds <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "For scenarios with virtual twin populations, column individualIds has to be filled.",
-      'Use "*" or "(*)", if you want to plot all. (Brackets not allowed for Timeprofile Plots)',
-      "Check Scenarios:",
+      "For scenarios with virtual twin populations, column individualIds must be filled.",
+      'Use "*" or "(*)" if you want to plot all individuals. Brackets are not allowed for time profile plots.',
+      "Check scenarios:",
       paste(indScenariosNames, collapse = ", ")
     )),
     envir = env
   )
 }
 
-messages$errorplotTimeProfilePanelsL2XXXXXXXX <- function(
+messages$errorplotTimeProfilePanelsL2BracketsDisallowedInIndividualIds <- function(
   env = parent.frame()
 ) {
   eval(
     quote(paste(
-      "For scenarios with virtual twin populations and selected Plot_TimeProfiles,
-               brackets are not allowed in column individualIds.",
-      "Check Plots:",
+      "For scenarios with virtual twin populations and Plot_TimeProfiles selected, brackets are not allowed in column individualIds.",
+      "Check plots:",
       paste(tmp$plotName[errorRows], collapse = ", ")
     )),
     envir = env
   )
 }
 
-messages$errorplotTimeProfilePanelsL2XXXXXXXXX <- function(
+messages$errorplotTimeProfilePanelsL2ScenarioTypeConflict <- function(
   env = parent.frame()
 ) {
   eval(
     quote(paste(
-      "scenario and referenceScenario must be both populations or both indviduals",
-      "Check Plots:",
+      "scenario and referenceScenario must both be populations or both individuals.",
+      "Check plots:",
       paste(tmp$plotName, collapse = ", ")
     )),
     envir = env
   )
 }
 
-messages$warningplotTimeProfilePanelsL2 <- function(env = parent.frame()) {
+messages$warningplotTimeProfilePanelsIndividualIdsIgnored <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      'Column "individualIds" is filled but no data group is selected and
-    scenario is not a virtual twin population scenario. "individualIds" will be ignored.',
-      "Check Plots:",
+      'Column "individualIds" is filled, but no data group is selected and the scenario is not a virtual twin population scenario. "individualIds" will be ignored.',
+      "Check plots:",
       paste(tmp$plotName, collapse = ", ")
     )),
     envir = env
   )
 }
 
-messages$errorprojectconfigurationL1 <- function(env = parent.frame()) {
-  eval(quote(paste0(FIELD, " is readonly")), envir = env)
+messages$errorprojectconfigurationFieldReadOnly <- function(
+  env = parent.frame()
+) {
+  eval(quote(paste0(FIELD, " is read-only")), envir = env)
 }
 
-messages$errorprojectconfigurationL1X <- function(env = parent.frame()) {
-  eval(quote("ospsuiteReportingFrameworkVersion is readonly"), envir = env)
+messages$errorprojectconfigurationVersionReadOnly <- function(
+  env = parent.frame()
+) {
+  eval(quote("ospsuiteReportingFrameworkVersion is read-only"), envir = env)
 }
 
-messages$errorprojectconfigurationL1XX <- function(env = parent.frame()) {
+messages$errorprojectconfigurationAbortedByUser <- function(
+  env = parent.frame()
+) {
   eval(quote("Aborted by user."), envir = env)
 }
 
-messages$errorQmdPlotManagerL1 <- function(env = parent.frame()) {
+messages$errorQmdPlotManagerInvalidFileOrSubfolderName <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
       "Please provide a valid name for the .qmd file and its subfolder."
@@ -367,45 +434,55 @@ messages$errorQmdPlotManagerL1 <- function(env = parent.frame()) {
   )
 }
 
-messages$errorQmdPlotManagerL1X <- function(env = parent.frame()) {
+messages$errorQmdPlotManagerMissingPlotFunction <- function(
+  env = parent.frame()
+) {
   eval(
-    quote(paste("Function", nameOfplotFunction, "does not exist")),
+    quote(paste("Function", nameOfplotFunction, "does not exist.")),
     envir = env
   )
 }
 
-messages$errorQmdPlotManagerL1XX <- function(env = parent.frame()) {
+messages$errorQmdPlotManagerFileNameMustBeBasename <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
-      "Please insert fileName as basename, File will be saved in folder defined by class object"
+      "Provide fileName as a base name only. The file will be saved in the folder defined by the class object."
     ),
     envir = env
   )
 }
 
-messages$errorQmdPlotManagerL3 <- function(env = parent.frame()) {
+messages$errorQmdPlotManagerDuplicateKey <- function(env = parent.frame()) {
   eval(
     quote(paste0(
       'key "',
       key,
-      '" was already added. The figure and table keys must be unique'
+      '" was already added. Figure and table keys must be unique.'
     )),
     envir = env
   )
 }
 
-messages$warningQmdPlotManagerL2 <- function(env = parent.frame()) {
+messages$warningQmdPlotManagerMissingCaption <- function(
+  env = parent.frame()
+) {
   eval(quote(paste("Caption is missing for key", caption)), envir = env)
 }
 
-messages$infoQmdPlotManagerL1 <- function(env = parent.frame()) {
+messages$infoQmdPlotManagerNoValidationFunction <- function(
+  env = parent.frame()
+) {
   eval(
-    quote("No specific plotconfiguration validation function available."),
+    quote("No specific plot configuration validation function is available."),
     envir = env
   )
 }
 
-messages$errorscenariomanagementL1 <- function(env = parent.frame()) {
+messages$errorscenariomanagementMissingSimulationResults <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "Error: Simulation results for scenario(s)",
@@ -416,34 +493,44 @@ messages$errorscenariomanagementL1 <- function(env = parent.frame()) {
   )
 }
 
-messages$errorscenariomanagementL1X <- function(env = parent.frame()) {
+messages$errorscenariomanagementInvalidOntogenyStructure <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste("The ontogeny has the wrong structure:", ontogeny)),
     envir = env
   )
 }
 
-messages$errorutilitiesaggregationL1 <- function(env = parent.frame()) {
+messages$errorutilitiesaggregationUnsupportedLegendSize <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
-      "Error: legendsize not covered. Please provide a legendsize of 2 or 3."
+      "Error: Unsupported legendsize. Please provide a legendsize of 2 or 3."
     ),
     envir = env
   )
 }
 
-messages$errorutilitiesdataL1 <- function(env = parent.frame()) {
-  eval(quote(paste("no datafiles defined for", dataClassType)), envir = env)
+messages$errorutilitiesdataNoDataFilesDefined <- function(
+  env = parent.frame()
+) {
+  eval(quote(paste("No data files defined for", dataClassType)), envir = env)
 }
 
-messages$errorutilitiesdataL2 <- function(env = parent.frame()) {
+messages$errorutilitiesdataNumericValuesSheetMissing <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste("Numeric values sheet not found:", sheetName)),
     envir = env
   )
 }
 
-messages$errorutilitiesdataL3 <- function(env = parent.frame()) {
+messages$errorutilitiesdataDuplicateRowsInIdentifierColumns <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
       paste(
@@ -455,7 +542,9 @@ messages$errorutilitiesdataL3 <- function(env = parent.frame()) {
   )
 }
 
-messages$errorutilitiesdataL4 <- function(env = parent.frame()) {
+messages$errorutilitiesdataDictionarySourceOrFilterMissing <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste0(
       'Either sourceColumn or Filter on sourceColumn has to be filled in dictionary "',
@@ -468,67 +557,84 @@ messages$errorutilitiesdataL4 <- function(env = parent.frame()) {
   )
 }
 
-messages$errorutilitiesdataL4X <- function(env = parent.frame()) {
+messages$errorutilitiesdataFilterEvaluationFailed <- function(
+  env = parent.frame()
+) {
   eval(quote(conditionMessage(err)), envir = env)
 }
 
-messages$errorutilitiesdataL4XX <- function(env = parent.frame()) {
+messages$errorutilitiesdataL4NonUniqueYUnit <- function(env = parent.frame()) {
   eval(
     quote(paste(
-      "DataDT to combinedData: y Unit for dataset",
+      "DataDT to combinedData: y unit for dataset",
       groupName,
-      "is not unique"
+      "is not unique."
     )),
     envir = env
   )
 }
 
-messages$errorutilitiesdataL4XXX <- function(env = parent.frame()) {
+messages$errorutilitiesdataL4NonUniqueXUnit <- function(env = parent.frame()) {
   eval(
     quote(paste(
-      "DataDT to combinedData: x Unit for dataset",
+      "DataDT to combinedData: x unit for dataset",
       groupName,
-      "is not unique"
+      "is not unique."
     )),
     envir = env
   )
 }
 
-messages$errorutilitiesdataL4XXXX <- function(env = parent.frame()) {
-  eval(quote("IndividualData needs meta data individualId"), envir = env)
+messages$errorutilitiesdataL4IndividualDataMissingMetaId <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote("IndividualData requires metadata column individualId."),
+    envir = env
+  )
 }
 
-messages$errorutilitiesdataL4XXXXX <- function(env = parent.frame()) {
+messages$errorutilitiesdataL4AggregationCheckColumnsMissing <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
-      "For custom aggregation please provide lloqCheckColumns2of3 or lloqCheckColumns1of2"
+      "For custom aggregation, provide lloqCheckColumns2of3 or lloqCheckColumns1of2."
     ),
     envir = env
   )
 }
 
-messages$errorutilitiesdataL5 <- function(env = parent.frame()) {
+messages$errorutilitiesdataDuplicateVariableNames <- function(
+  env = parent.frame()
+) {
   eval(
     quote("Duplicate variableName entries found in numeric values sheets"),
     envir = env
   )
 }
 
-messages$errorutilitiesdataL6 <- function(env = parent.frame()) {
+messages$errorutilitiesdataMissingVariableNames <- function(
+  env = parent.frame()
+) {
   eval(
     quote("Numeric values sheet contains missing or empty variableName"),
     envir = env
   )
 }
 
-messages$errorutilitiesdataL7 <- function(env = parent.frame()) {
+messages$errorutilitiesdataNonNumericValues <- function(
+  env = parent.frame()
+) {
   eval(
     quote("Numeric values sheet contains non-numeric or missing values"),
     envir = env
   )
 }
 
-messages$warningutilitiesdataL1 <- function(env = parent.frame()) {
+messages$warningutilitiesdataExecutionFailedRetryManually <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "Error during execution of",
@@ -541,7 +647,9 @@ messages$warningutilitiesdataL1 <- function(env = parent.frame()) {
   )
 }
 
-messages$warningutilitiesdataL3 <- function(env = parent.frame()) {
+messages$warningutilitiesdataMissingColumnAttributes <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
       paste0(
@@ -557,25 +665,31 @@ messages$warningutilitiesdataL3 <- function(env = parent.frame()) {
   )
 }
 
-messages$warningutilitiesdataL3X <- function(env = parent.frame()) {
+messages$warningutilitiesdataColumnContainsMissingValues <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste("Data contains NAs or empty values in column", col)),
     envir = env
   )
 }
 
-messages$warningutilitiesdataL3XX <- function(env = parent.frame()) {
+messages$warningutilitiesdataL3AmbiguousUnits <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "Ambiguous units:",
       summaryString,
-      "\nPlease check if this acceptable, e.g. pkParameter as ratio and absolute values."
+      "\nPlease check whether this is acceptable, for example pkParameter as ratio and absolute values."
     )),
     envir = env
   )
 }
 
-messages$warningutilitiesdataL4 <- function(env = parent.frame()) {
+messages$warningutilitiesdataDictionaryFilterContext <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste0(
       "tpDictionary: '",
@@ -592,59 +706,70 @@ messages$warningutilitiesdataL4 <- function(env = parent.frame()) {
   )
 }
 
-messages$warningutilitiesdataL4X <- function(env = parent.frame()) {
-  eval(quote(paste("Unknown gender in data set")), envir = env)
+messages$warningutilitiesdataUnknownGender <- function(env = parent.frame()) {
+  eval(quote("Unknown gender in data set."), envir = env)
 }
 
-messages$warningutilitiesdataL4XX <- function(env = parent.frame()) {
+messages$warningutilitiesdataL4MultipleLloqMinimal <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "DataDT to combinedData: More than one LLOQ for dataset",
       groupName,
-      "is set to minimal"
+      "is set to minimal."
     )),
     envir = env
   )
 }
 
-messages$warningutilitiesdataL4XXX <- function(env = parent.frame()) {
-  eval(quote("No groups available for aggregation"), envir = env)
+messages$warningutilitiesdataNoGroupsForAggregation <- function(
+  env = parent.frame()
+) {
+  eval(quote("No groups available for aggregation."), envir = env)
 }
 
-messages$warningutilitiesdataL4XXXX <- function(env = parent.frame()) {
+messages$warningutilitiesdataL4UnusedAggregationCheckColumns <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "input variable lloqCheckColumns2of3 and lloqCheckColumns1of2 are not used for aggregationFlag",
+      "Input variables lloqCheckColumns2of3 and lloqCheckColumns1of2 are not used for aggregationFlag",
       aggregationFlag
     )),
     envir = env
   )
 }
 
-messages$warningutilitiesdataL4XXXXX <- function(env = parent.frame()) {
+messages$warningutilitiesdataL4ColumnCommasReplaced <- function(
+  env = parent.frame()
+) {
   eval(
-    quote(paste("Warning: Column", col, "commas were replaced by _")),
+    quote(paste("Column", col, "commas were replaced by _.")),
     envir = env
   )
 }
 
-messages$warningutilitiesdataL4XXXXXX <- function(env = parent.frame()) {
+messages$warningutilitiesdataL4UnsuitableGroupsForAggregation <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "Groups",
       paste(unsuitableGroups, collapse = ", "),
-      "are not suited for grouping.",
-      "Check if they are available in data, have more then",
+      "are not suitable for aggregation.",
+      "Check whether they are available in the data, have more than",
       minN,
-      "Individuals or
-                    if they are have data class",
+      "individuals, or have data class",
       DATACLASS$tpIndividual
     )),
     envir = env
   )
 }
 
-messages$errorutilitiesmarkdownL4 <- function(env = parent.frame()) {
+messages$errorutilitiesmarkdownMissingFigureOrTableFile <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "No file exists for key. There should be either",
@@ -656,7 +781,9 @@ messages$errorutilitiesmarkdownL4 <- function(env = parent.frame()) {
   )
 }
 
-messages$errorutilitiesmarkdownL4X <- function(env = parent.frame()) {
+messages$errorutilitiesmarkdownInvalidSourceRmdExtension <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
       "Error: One or more elements of sourceRmds have an extension other than .Rmd."
@@ -665,88 +792,96 @@ messages$errorutilitiesmarkdownL4X <- function(env = parent.frame()) {
   )
 }
 
-messages$errorutilitiesmarkdownL4XX <- function(env = parent.frame()) {
-  eval(quote("Error: NewName has an extension other than .Rmd."), envir = env)
+messages$errorutilitiesmarkdownL4InvalidNewNameExtension <- function(
+  env = parent.frame()
+) {
+  eval(quote("Error: newName has an extension other than .Rmd."), envir = env)
 }
 
-messages$errorutilitiespkParameterL1 <- function(env = parent.frame()) {
-  eval(
-    quote("Please define ouputPaths in plot configuration xlsx"),
-    envir = env
-  )
-}
-
-messages$errorutilitiespkParameterL1X <- function(env = parent.frame()) {
+messages$errorutilitiespkParameterEmptyDisplayUnitNotAllowed <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
-      "empty string is not possible as displayUnit in the sheet 'Userdef PK Parameter',
-    workaround: use % and set displayUnit in sheet derived from template-sheet to empty string"
+      "An empty string is not allowed as displayUnit in the sheet 'Userdef PK Parameter'. Workaround: use % and set displayUnit to an empty string in the sheet derived from the template sheet."
     ),
     envir = env
   )
 }
 
-messages$errorutilitiespkParameterL1XX <- function(env = parent.frame()) {
+messages$errorutilitiespkParameterL1NotDefined <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "pkParameter",
+      "PK parameter",
       userPar,
-      'is not defined in "Userdef PK Parameter" sheet.'
+      'is not defined in the "Userdef PK Parameter" sheet.'
     )),
     envir = env
   )
 }
 
-messages$errorutilitiespkParameterL1XXX <- function(env = parent.frame()) {
+messages$errorutilitiespkParameterL1NotUnique <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "pkParameter",
+      "PK parameter",
       userPar,
-      'is not unique in "Userdef PK Parameter" sheet.'
+      'is not unique in the "Userdef PK Parameter" sheet.'
     )),
     envir = env
   )
 }
 
-messages$errorutilitiespkParameterL1XXXX <- function(env = parent.frame()) {
+messages$errorutilitiespkParameterL1MissingOutputPaths <- function(
+  env = parent.frame()
+) {
   eval(
-    quote("Please define ouputPaths in plot configuration xlsx"),
+    quote("Please define outputPaths in the plot configuration xlsx."),
     envir = env
   )
 }
 
-messages$errorutilitiespkParameterL1XXXXX <- function(env = parent.frame()) {
+messages$errorutilitiespkParameterL1NotCalculated <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "PK Parameter for",
+      "PK parameter for",
       scenarioName,
-      "is not calculated!",
-      "Use function calculatePKParameterForCalculation to generate the result"
+      "is not calculated.",
+      "Use function calculatePKParameterForCalculation to generate the result."
     )),
     envir = env
   )
 }
 
-messages$errorutilitiespkParameterL1XXXXXX <- function(env = parent.frame()) {
+messages$errorutilitiespkParameterL1NoDataForPlot <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "no PK-Parameter available for",
+      "No PK parameter available for",
       onePlotConfig$plotName[1]
     )),
     envir = env
   )
 }
 
-messages$errorutilitiespkParameterL1XXXXXXX <- function(env = parent.frame()) {
+messages$errorutilitiespkParameterL1InconsistentDisplayUnit <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
-      "Please check pkParameterDT. It seems that displayUnitPKParameter is not consistent for outputPathId and pkParameter"
+      "Please check pkParameterDT. displayUnitPKParameter is not consistent for outputPathId and pkParameter."
     ),
     envir = env
   )
 }
 
-messages$errorutilitiespkParameterL1XXXXXXXX <- function(
+messages$errorutilitiespkParameterL1UnitConversionFailed <- function(
   env = parent.frame()
 ) {
   eval(
@@ -763,7 +898,7 @@ messages$errorutilitiespkParameterL1XXXXXXXX <- function(
   )
 }
 
-messages$errorutilitiespkParameterL1XXXXXXXXX <- function(
+messages$errorutilitiespkParameterL1ConflictingDisplayDefinitions <- function(
   env = parent.frame()
 ) {
   eval(
@@ -775,80 +910,95 @@ messages$errorutilitiespkParameterL1XXXXXXXXX <- function(
   )
 }
 
-messages$errorutilitiesplotL1 <- function(env = parent.frame()) {
+messages$errorutilitiesplotConditionMessage <- function(env = parent.frame()) {
   eval(quote(err), envir = env)
 }
 
-messages$errorutilitiesplotL2 <- function(env = parent.frame()) {
+messages$errorutilitiesplotInvalidScaleVectorValues <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "no valid values for scalevector for",
+      "No valid values for scalevector for",
       paste0(namesOfScaleVector, collapse = ", ")
     )),
     envir = env
   )
 }
 
-messages$errorutilitiesplotL2X <- function(env = parent.frame()) {
+messages$errorutilitiesplotTooManyColorsInVector <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "To many colors for colorVector, maximal",
+      "Too many colors for colorVector, maximum",
       length(ospsuite.plots::colorMaps[["ospDefault"]]),
-      "allowed"
+      "allowed."
     )),
     envir = env
   )
 }
 
-messages$errorutilitiesplotL2XX <- function(env = parent.frame()) {
+messages$errorutilitiesplotL2NoDefaultShapes <- function(env = parent.frame()) {
   eval(
     quote(
-      "no default shape sets for ospsuite.plots. Please use ospsuite.plots::setDefaults()"
+      "No default shape sets for ospsuite.plots. Please use ospsuite.plots::setDefaults()."
     ),
     envir = env
   )
 }
 
-messages$errorutilitiesplotL2XXX <- function(env = parent.frame()) {
-  eval(quote("not enough shapes available"), envir = env)
+messages$errorutilitiesplotL2InsufficientShapes <- function(
+  env = parent.frame()
+) {
+  eval(quote("Not enough shapes are available."), envir = env)
 }
 
-messages$errorutilitiesplotL2XXXX <- function(env = parent.frame()) {
+messages$errorutilitiesplotL2HeaderRowsHaveNonEmptyColumns <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
-      "Invalid plot configuration table. For Rows with headers all other columns must be empty."
+      "Invalid plot configuration table. For rows with headers, all other columns must be empty."
     ),
     envir = env
   )
 }
 
-messages$errorutilitiesplotL2XXXXX <- function(env = parent.frame()) {
+messages$errorutilitiesplotL2MissingHeaderForLevel <- function(
+  env = parent.frame()
+) {
   eval(
-    quote("Invalid plot configuration table. Missing header for level"),
+    quote("Invalid plot configuration table. Missing header for level."),
     envir = env
   )
 }
 
-messages$errorutilitiesplotL2XXXXXX <- function(env = parent.frame()) {
+messages$errorutilitiesplotL2ColumnEntriesWithoutAllowedValues <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "Plot configuration column",
       col,
-      "has entries but no allowed values.
-                     Did you forget some inputs e.g. observedData or pkParameterDT?"
+      "has entries but no allowed values. Did you forget inputs such as observedData or pkParameterDT?"
     )),
     envir = env
   )
 }
 
-messages$errorutilitiesplotL2XXXXXXX <- function(env = parent.frame()) {
+messages$errorutilitiesplotL2InvalidInputsInColumn <- function(
+  env = parent.frame()
+) {
   eval(
-    quote(paste("Invalid inputs in plot configuration column", col)),
+    quote(paste("Invalid input in plot configuration column", col)),
     envir = env
   )
 }
 
-messages$errorutilitiesplotL2XXXXXXXX <- function(env = parent.frame()) {
+messages$errorutilitiesplotL2ColumnValuesInconsistentWithinGroup <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "Values for",
@@ -860,55 +1010,67 @@ messages$errorutilitiesplotL2XXXXXXXX <- function(env = parent.frame()) {
   )
 }
 
-messages$errorutilitiesplotL2XXXXXXXXX <- function(env = parent.frame()) {
+messages$errorutilitiesplotL2NoCoreColumnsPopulated <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "Invalid configTable, each plot row needs at least one entry in one of the columns",
+      "Invalid configTable. Each plot row needs at least one entry in one of the columns",
       paste(columnVector, collapse = ", ")
     )),
     envir = env
   )
 }
 
-messages$errorutilitiesplotL2XXXXXXXXXX <- function(env = parent.frame()) {
+messages$errorutilitiesplotL2ColumnValuesInconsistentWithinOutputPath <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "values for",
+      "Values for",
       col,
-      "should be the same within outputPathId"
+      "should be the same within outputPathId."
     )),
     envir = env
   )
 }
 
-messages$errorutilitiesplotL2XXXXXXXXXXX <- function(env = parent.frame()) {
+messages$errorutilitiesplotL2InvalidUnitInOutputsSheet <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste0(
-      'Please check sheet Outputs in plotconfiguration file. Unit "',
+      'Please check sheet Outputs in the plot configuration file. Unit "',
       unit,
-      '" is not valid'
+      '" is not valid.'
     )),
     envir = env
   )
 }
 
-messages$errorutilitiesplotL2XXXXXXXXXXXX <- function(env = parent.frame()) {
+messages$errorutilitiesplotL2InvalidColorLegendFormat <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
-      "colorLegend must be a character string concatenated from two characters separated by |."
+      "colorLegend must be a character string composed of two characters separated by |."
     ),
     envir = env
   )
 }
 
-messages$errorutilitiesplotL2XXXXXXXXXXXXX <- function(env = parent.frame()) {
+messages$errorutilitiesplotL2InvalidColorNames <- function(
+  env = parent.frame()
+) {
   eval(
     quote("All values in colorVector must be valid color names."),
     envir = env
   )
 }
 
-messages$warningutilitiesplotL1 <- function(env = parent.frame()) {
+messages$warningutilitiesplotCreationFailed <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste0(
       "Error during creation of plot: '",
@@ -920,23 +1082,29 @@ messages$warningutilitiesplotL1 <- function(env = parent.frame()) {
   )
 }
 
-messages$errorutilitiesreportingL1 <- function(env = parent.frame()) {
+messages$errorutilitiesreportingQuartoNotInstalled <- function(
+  env = parent.frame()
+) {
   eval(
     quote("Quarto is not installed, word report was not created."),
     envir = env
   )
 }
 
-messages$errorutilitiessensitivityL1 <- function(env = parent.frame()) {
+messages$errorutilitiessensitivityMissingSensitivityParameterConfig <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
-      "SensitivityParameter xlsx is not added to the projectConfiguration Please call 'addSensitivityTable(projectConfiguration)'"
+      "SensitivityParameter xlsx is not added to projectConfiguration. Please call 'addSensitivityTable(projectConfiguration)'."
     ),
     envir = env
   )
 }
 
-messages$errorutilitiesworkflowL1 <- function(env = parent.frame()) {
+messages$errorutilitiesworkflowOptionsNotInitialized <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
       "Option stopHelperFunction to control valid runs is not initialized. Please call `setWorkflowOptions(isValidRun)`"
@@ -945,7 +1113,9 @@ messages$errorutilitiesworkflowL1 <- function(env = parent.frame()) {
   )
 }
 
-messages$errorutilitiesworkflowL1X <- function(env = parent.frame()) {
+messages$errorutilitiesworkflowHelperFunctionNotAllowed <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "You are using a helper function, which is not allowed during a valid run. Called from:",
@@ -955,45 +1125,55 @@ messages$errorutilitiesworkflowL1X <- function(env = parent.frame()) {
   )
 }
 
-messages$warningutilitiesworkflowL1 <- function(env = parent.frame()) {
+messages$warningutilitiesworkflowQcPassedInvalid <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
-      "Environment Variable 'QCpassed' not found, empty or a non logical, set 'QCpassed' to FALSE"
+      "Environment variable 'QCpassed' was not found, is empty, or is not logical. Set 'QCpassed' to FALSE."
     ),
     envir = env
   )
 }
 
-messages$errorutilitiesxlsxL1 <- function(env = parent.frame()) {
+messages$errorutilitiesxlsxClonedSheetMissing <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste("Sheet", clonedSheet, "does not exist in the workbook.")),
     envir = env
   )
 }
 
-messages$errorutilitiesxlsxL1X <- function(env = parent.frame()) {
+messages$errorutilitiesxlsxTemplateFileMissing <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste("Template file", templatePath, "does not exist.")),
     envir = env
   )
 }
 
-messages$errorutilitiesxlsxL1XX <- function(env = parent.frame()) {
+messages$errorutilitiesxlsxL1MissingSheet <- function(env = parent.frame()) {
   eval(quote(paste("Sheet", sheetName, "does not exist.")), envir = env)
 }
 
-messages$errorutilitiesxlsxL1XXX <- function(env = parent.frame()) {
+messages$errorutilitiesxlsxL1AmbiguousHeaderNames <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "ambiguous header names in sheet",
+      "Ambiguous header names in sheet",
       existingData,
-      paste(names(existingData)[ix], collapse = ",")
+      paste(names(existingData)[ix], collapse = ", ")
     )),
     envir = env
   )
 }
 
-messages$warningutilitiesxlsxL1 <- function(env = parent.frame()) {
+messages$warningutilitiesxlsxExistingSheetWillBeCleared <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       sheetName,
@@ -1003,16 +1183,20 @@ messages$warningutilitiesxlsxL1 <- function(env = parent.frame()) {
   )
 }
 
-messages$warningutilitiesxlsxL1X <- function(env = parent.frame()) {
+messages$warningutilitiesxlsxOutputDefinitionMismatch <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
-      "Output definition in Scenario.xlsx and Plot.xlsx is inconsistent. Please synchronize manually"
+      "Output definition in Scenario.xlsx and Plot.xlsx is inconsistent. Please synchronize manually."
     ),
     envir = env
   )
 }
 
-messages$errorWorkflowScriptExporterL1 <- function(env = parent.frame()) {
+messages$errorWorkflowScriptExporterMutuallyExclusiveInputs <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
       "Error: Please provide either scenarioNames or workflowRmd. Only one of the two is required."
@@ -1021,7 +1205,9 @@ messages$errorWorkflowScriptExporterL1 <- function(env = parent.frame()) {
   )
 }
 
-messages$errorWorkflowScriptExporterL1X <- function(env = parent.frame()) {
+messages$errorWorkflowScriptExporterL1MissingInitializationInput <- function(
+  env = parent.frame()
+) {
   eval(
     quote(
       "Error: Please provide either scenarioNames or workflowRmd. At least one of the two is required for initialization."
@@ -1030,28 +1216,36 @@ messages$errorWorkflowScriptExporterL1X <- function(env = parent.frame()) {
   )
 }
 
-messages$errorWorkflowScriptExporterL1XX <- function(env = parent.frame()) {
+messages$errorWorkflowScriptExporterL1FileTimeout <- function(
+  env = parent.frame()
+) {
   eval(
     quote("Error: The file did not become available within 1 minute."),
     envir = env
   )
 }
 
-messages$errorWorkflowScriptExporterL1XXX <- function(env = parent.frame()) {
+messages$errorWorkflowScriptExporterL1MissingRequiredChunks <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "Chunks are missing in workflowRmd check:",
+      "Required chunks are missing in workflowRmd. Check:",
       paste(tmp, collapse = ", ")
     )),
     envir = env
   )
 }
 
-messages$errorWorkflowScriptExporterL2 <- function(env = parent.frame()) {
-  eval(quote("no scenarios for export available"), envir = env)
+messages$errorWorkflowScriptExporterNoScenariosForExport <- function(
+  env = parent.frame()
+) {
+  eval(quote("No scenarios are available for export."), envir = env)
 }
 
-messages$errorWorkflowScriptExporterL2X <- function(env = parent.frame()) {
+messages$errorWorkflowScriptExporterL2PopulationScenariosRequireExportedPopulations <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "Error: Please use only population scenarios that have exported populations",
@@ -1061,7 +1255,9 @@ messages$errorWorkflowScriptExporterL2X <- function(env = parent.frame()) {
   )
 }
 
-messages$errorWorkflowScriptExporterL2XX <- function(env = parent.frame()) {
+messages$errorWorkflowScriptExporterL2DuplicateFileNames <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "Error: File names must be unique. Duplicate file names found:",
@@ -1075,7 +1271,9 @@ messages$errorWorkflowScriptExporterL2XX <- function(env = parent.frame()) {
   )
 }
 
-messages$errorWorkflowScriptExporterL2XXX <- function(env = parent.frame()) {
+messages$errorWorkflowScriptExporterL2FileCopyFailed <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "Error: File copy to the ePackage folder failed for the following files:",
@@ -1086,10 +1284,12 @@ messages$errorWorkflowScriptExporterL2XXX <- function(env = parent.frame()) {
   )
 }
 
-messages$errorWorkflowScriptExporterL5 <- function(env = parent.frame()) {
+messages$errorWorkflowScriptExporterMissingChunkPlaceholder <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
-      "Error: Inconsisten placeholders in workflow script template and chunk Names.",
+      "Error: Inconsistent placeholders in the workflow script template and chunk names.",
       "Placeholder for chunk",
       chunkName,
       "is missing",
@@ -1099,7 +1299,9 @@ messages$errorWorkflowScriptExporterL5 <- function(env = parent.frame()) {
   )
 }
 
-messages$errorWorkflowScriptExporterL6 <- function(env = parent.frame()) {
+messages$errorWorkflowScriptExporterMissingExpectedChunkVariable <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste0(
       "The chunk `",
@@ -1113,14 +1315,18 @@ messages$errorWorkflowScriptExporterL6 <- function(env = parent.frame()) {
   )
 }
 
-messages$errorWorkflowScriptExporterL6X <- function(env = parent.frame()) {
+messages$errorWorkflowScriptExporterL6InvalidFileExtension <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste("Error: Invalid file extension for", fileName)),
     envir = env
   )
 }
 
-messages$errorWorkflowScriptExporterL6XX <- function(env = parent.frame()) {
+messages$errorWorkflowScriptExporterL6FilenameBeginsWithNumber <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "Error: Filename cannot start with a number:",
@@ -1132,7 +1338,9 @@ messages$errorWorkflowScriptExporterL6XX <- function(env = parent.frame()) {
   )
 }
 
-messages$errorWorkflowScriptExporterL8 <- function(env = parent.frame()) {
+messages$errorWorkflowScriptExporterFilenameTooLong <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste(
       "Error: Filename is too long (greater than",
@@ -1146,7 +1354,9 @@ messages$errorWorkflowScriptExporterL8 <- function(env = parent.frame()) {
   )
 }
 
-messages$warningWorkflowScriptExporterL2 <- function(env = parent.frame()) {
+messages$warningWorkflowScriptExporterAdjustedFilenames <- function(
+  env = parent.frame()
+) {
   eval(
     quote(paste0(
       "Warning: Adjusted filenames due to naming requirements:\n",
@@ -1163,6 +1373,8 @@ messages$warningWorkflowScriptExporterL2 <- function(env = parent.frame()) {
   )
 }
 
-messages$errorWorkflowScriptExporterL8X <- function(env = parent.frame()) {
+messages$errorWorkflowScriptExporterL8MissingJsonFile <- function(
+  env = parent.frame()
+) {
   eval(quote(paste0("JSON file does not exist: ", jsonPath)), envir = env)
 }

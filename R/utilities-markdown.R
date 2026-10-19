@@ -347,7 +347,7 @@ addFiguresAndTables <- function(
           digitsOfSignificance = digitsOfSignificance
         )
       } else {
-        stop(messages$errorutilitiesmarkdownL4())
+        stop(messages$errorutilitiesmarkdownMissingFigureOrTableFile())
       }
     }
   }
@@ -408,7 +408,7 @@ mergeQmds <- function(
 
   # Check for any other extensions the .Rmd
   if (any(grepl("\\.[^.qmd]*$", sourceRmds))) {
-    stop(messages$errorutilitiesmarkdownL4X())
+    stop(messages$errorutilitiesmarkdownInvalidSourceRmdExtension())
   } else {
     sourceRmds <- ifelse(
       grepl("\\.qmd$", sourceRmds),
@@ -417,7 +417,7 @@ mergeQmds <- function(
     )
   }
   if (any(grepl("\\.[^.qmd]*$", newName))) {
-    stop(messages$errorutilitiesmarkdownL4XX())
+    stop(messages$errorutilitiesmarkdownL4InvalidNewNameExtension())
   } else {
     newName <- ifelse(
       grepl("\\.qmd$", newName),

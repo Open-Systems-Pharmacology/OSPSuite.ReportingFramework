@@ -1473,7 +1473,7 @@ getRatioMode <- function(onePlotConfig, pkParameterDT, asRatio) {
     ratioMode <- "ratioOfPopulation"
   } else {
     print(dtPop)
-    stop(messages$errorplotPKForestL1())
+    stop(messages$errorplotPKForestMixedBasePopulationComparison())
   }
 
   return(ratioMode)
@@ -1585,7 +1585,7 @@ validatePKForestConfigTable <- function(configTable, pkParameterDT, ...) {
   if (!is.null(dataObservedPK)) {
     checkmate::assertDataTable(dataObservedPK)
     if (!DATACLASS$pkAggregated %in% unique(dataObservedPK$dataClass)) {
-      stop(messages$errorplotPKForestL1X())
+      stop(messages$errorplotPKForestMissingObservedData())
     }
   }
 

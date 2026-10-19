@@ -115,7 +115,7 @@ plotDistributionVsDemographics <- function(
   )
 
   if ("categoricValue" %in% names(plotData)) {
-    warning(messages$warningplotDemographicsL1())
+    warning(messages$warningplotDemographicsCategoricalParametersIgnored())
   }
 
   return(plotList)
@@ -681,7 +681,7 @@ addDemographicsToBin <- function(
     setnames(old = "parameterId", new = "parameterId_Bin")
 
   if (all(is.na(plotData$value)) & "categoricValue" %in% names(plotData)) {
-    stop(messages$errorplotDemographicsL1())
+    stop(messages$errorplotDemographicsCategoricalXAxisNotAllowed())
   }
 
   plotData <- plotData %>%
@@ -836,7 +836,7 @@ loadPopulationParameterForScenario <- function(
   modelPaths <- unique(onePlotConfigIdentifier$modelPath)
 
   if (!all(modelPaths %in% names(dtPop))) {
-    stop(messages$errorplotDemographicsL1X())
+    stop(messages$errorplotDemographicsMissingParameterPaths())
   }
 
   dtPop <- dtPop[, .SD, .SDcols = c("IndividualId", modelPaths)][,
@@ -1358,7 +1358,7 @@ validateHistogramsConfig <- function(configTable, ...) {
   } else if ("pkParameterDT" %in% names(dotarg)) {
     popScenarios <- unique(dotarg$pkParameterDT$scenario)
   } else {
-    stop(messages$errorplotDemographicsL1XX())
+    stop(messages$errorplotDemographicsL1MissingInputs())
   }
 
   validateConfigTablePlots(
@@ -1451,7 +1451,7 @@ validateParameterID <- function(configTablePlots, ...) {
       )
     } else {
       if (!("pkParameterDT" %in% names(dotarg))) {
-        stop(messages$errorplotDemographicsL1XXX())
+        stop(messages$errorplotDemographicsL1InvalidParameterIds())
       }
 
       if (!pkValidated) {

@@ -27,7 +27,7 @@ xlsxAddSheet <- function(wb, sheetName, dt) {
   checkmate::assertDataTable(dt, null.ok = FALSE)
 
   if (sheetName %in% wb$sheet_names) {
-    warning(messages$warningutilitiesxlsxL1())
+    warning(messages$warningutilitiesxlsxExistingSheetWillBeCleared())
     invisible(xlsxReadData(wb, sheetName))
   } else {
     openxlsx::addWorksheet(wb = wb, sheetName = sheetName)
@@ -154,7 +154,7 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 
   # Check if the clonedSheet exists in the workbook
   if (!(clonedSheet %in% wb$sheet_names)) {
-    stop(messages$errorutilitiesxlsxL1())
+    stop(messages$errorutilitiesxlsxClonedSheetMissing())
   }
   if (!(sheetName %in% wb$sheet_names)) {
     openxlsx::cloneWorksheet(
@@ -334,7 +334,7 @@ xlsxAddDataUsingTemplate <- function(
 #' @noRd
 .checkSheetExists <- function(wb, sheetName) {
   if (!(sheetName %in% wb$sheet_names)) {
-    stop(messages$errorutilitiesxlsxL1XX())
+    stop(messages$errorutilitiesxlsxL1MissingSheet())
   }
   return(invisible(NULL))
 }
@@ -385,7 +385,7 @@ xlsxAddDataUsingTemplate <- function(
       if (length(ix) == 1) {
         newName <- names(existingData)[ix]
       } else if (length(ix) > 1) {
-        stop(messages$errorutilitiesxlsxL1XXX())
+        stop(messages$errorutilitiesxlsxL1AmbiguousHeaderNames())
       } else {
         newName <- x
       }
@@ -732,7 +732,7 @@ setHeadersToLowerCase <- function(dt) {
     ]) >
       0
   ) {
-    warning(messages$warningutilitiesxlsxL1X())
+    warning(messages$warningutilitiesxlsxOutputDefinitionMismatch())
   }
 
   # Synchronize output paths based on availability

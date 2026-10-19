@@ -32,7 +32,7 @@ QmdPlotManager <- R6::R6Class(
 
       if (!suppressExport) {
         if (is.null(qmdName)) {
-          stop(messages$errorQmdPlotManagerL1())
+          stop(messages$errorQmdPlotManagerInvalidFileOrSubfolderName())
         }
         tools::file_path_sans_ext(qmdName)
 
@@ -59,7 +59,7 @@ QmdPlotManager <- R6::R6Class(
           mode = "function"
         )
       ) {
-        stop(messages$errorQmdPlotManagerL1X())
+        stop(messages$errorQmdPlotManagerMissingPlotFunction())
       }
       self$plotFunction <- get(nameOfplotFunction)
 
@@ -82,7 +82,7 @@ QmdPlotManager <- R6::R6Class(
         )
       } else {
         # otherwise use default function
-        message(messages$infoQmdPlotManagerL1())
+        message(messages$infoQmdPlotManagerNoValidationFunction())
         self$validateConfigTableFunction <- validateConfigTableForPlots
       }
 
@@ -110,7 +110,7 @@ QmdPlotManager <- R6::R6Class(
         overwrite = TRUE
       )
       if (basename(fileName) != fileName) {
-        stop(messages$errorQmdPlotManagerL1XX())
+        stop(messages$errorQmdPlotManagerFileNameMustBeBasename())
       }
 
       private$.closeFigureKeys()
@@ -160,7 +160,7 @@ QmdPlotManager <- R6::R6Class(
         obj <- plotList[[key]]
         caption <- attr(obj, "caption")
         if (is.null(caption)) {
-          warning(messages$warningQmdPlotManagerL2())
+          warning(messages$warningQmdPlotManagerMissingCaption())
           caption <- "Missing"
         }
 
@@ -505,7 +505,7 @@ QmdPlotManager <- R6::R6Class(
     # only export if key is unique
     .checkKeyIsUnique = function(key) {
       if (key %in% private$.listOfALLKeys) {
-        stop(messages$errorQmdPlotManagerL3())
+        stop(messages$errorQmdPlotManagerDuplicateKey())
       }
     },
     # adjust height if necessary

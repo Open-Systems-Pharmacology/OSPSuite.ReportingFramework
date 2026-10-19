@@ -49,7 +49,7 @@ renderWord <- function(
 
   # Check if pandoc is available before trying to render word report
   if (!nzchar(quarto::quarto_path())) {
-    stop(messages$errorutilitiesreportingL1())
+    stop(messages$errorutilitiesreportingQuartoNotInstalled())
     return(invisible())
   }
   if (is.null(wordConversionTemplate)) {

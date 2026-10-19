@@ -65,7 +65,7 @@
     eval(substitute(
       function(value) {
         if (!missing(value)) {
-          stop(messages$errorprojectconfigurationL1())
+          stop(messages$errorprojectconfigurationFieldReadOnly())
         }
         self$baseProjectconfiguration[[FIELD]]
       },
@@ -182,7 +182,7 @@ ProjectConfigurationRF <- # nolint: object_name_linter
         #'   package stored in the project configuration. Read-only.
         ospsuiteReportingFrameworkVersion = function(value) {
           if (!missing(value)) {
-            stop(messages$errorprojectconfigurationL1X())
+            stop(messages$errorprojectconfigurationVersionReadOnly())
           }
           private$.reportingFrameworkVersion
         }
@@ -333,7 +333,7 @@ ProjectConfigurationRF <- # nolint: object_name_linter
             choices = qs
           )
           if (out == 0L || qs[[out]] != "Yes") {
-            stop(messages$errorprojectconfigurationL1XX())
+            stop(messages$errorprojectconfigurationAbortedByUser())
           }
         } else {
           stop(

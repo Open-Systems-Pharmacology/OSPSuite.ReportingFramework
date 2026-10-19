@@ -29,10 +29,10 @@ WorkflowScriptExporter <- R6::R6Class(
       self$fileNameReplacements <- fileNameReplacements
 
       if (is.null(scenarioNames) & is.null(workflowRmd)) {
-        stop(messages$errorWorkflowScriptExporterL1())
+        stop(messages$errorWorkflowScriptExporterMutuallyExclusiveInputs())
       }
       if (!is.null(scenarioNames) & !is.null(workflowRmd)) {
-        stop(messages$errorWorkflowScriptExporterL1X())
+        stop(messages$errorWorkflowScriptExporterL1MissingInitializationInput())
       }
 
       electronicPackageFolder <- suppressWarnings(
@@ -84,7 +84,7 @@ WorkflowScriptExporter <- R6::R6Class(
             as.numeric(difftime(Sys.time(), startTime, units = "secs")) >=
               timeout
           ) {
-            stop(messages$errorWorkflowScriptExporterL1XX())
+            stop(messages$errorWorkflowScriptExporterL1FileTimeout())
           }
           Sys.sleep(0.1) # Check every 0.1 seconds
           codeChunks <- knitr::read_chunk(tmpScript)
@@ -110,7 +110,7 @@ WorkflowScriptExporter <- R6::R6Class(
 
       if (!all(unlist(chunkLabels) %in% names(codeChunks))) {
         tmp <- setdiff(unlist(chunkLabels), names(codeChunks))
-        stop(messages$errorWorkflowScriptExporterL1XXX())
+        stop(messages$errorWorkflowScriptExporterL1MissingRequiredChunks())
       }
 
       codeChunks <- codeChunks[unlist(chunkLabels)]
@@ -339,7 +339,7 @@ WorkflowScriptExporter <- R6::R6Class(
       inputFiles <- data.table()
 
       if (is.null(self$scenarioNames) | length(self$scenarioNames) == 0) {
-        stop(messages$errorWorkflowScriptExporterL2())
+        stop(messages$errorWorkflowScriptExporterNoScenariosForExport())
       }
 
       wb <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
@@ -358,7 +358,7 @@ WorkflowScriptExporter <- R6::R6Class(
           any(!(readPopulationFromCSV), na.rm = TRUE) |
             any(is.na(readPopulationFromCSV))
         ) {
-          stop(messages$errorWorkflowScriptExporterL2X())
+          stop(messages$errorWorkflowScriptExporterL2PopulationScenariosRequireExportedPopulations())
         }
 
         inputFiles <-
@@ -447,7 +447,7 @@ WorkflowScriptExporter <- R6::R6Class(
       inputFiles <- self$inputFiles
 
       if (any(duplicated(inputFiles$fileName))) {
-        stop(messages$errorWorkflowScriptExporterL2XX())
+        stop(messages$errorWorkflowScriptExporterL2DuplicateFileNames())
       }
 
       success <- file.copy(
@@ -460,7 +460,7 @@ WorkflowScriptExporter <- R6::R6Class(
       )
 
       if (!all(success)) {
-        stop(messages$errorWorkflowScriptExporterL2XXX())
+        stop(messages$errorWorkflowScriptExporterL2FileCopyFailed())
       }
 
       fwrite(
@@ -768,7 +768,7 @@ WorkflowScriptExporter <- R6::R6Class(
         which(changedInputFiles[['manuallyChanged']] == 0)
 
       if (length(ixChanged > 0)) {
-        warning(messages$warningWorkflowScriptExporterL2())
+        warning(messages$warningWorkflowScriptExporterAdjustedFilenames())
       }
 
       # set source of data files to NA, as copy is not needed
@@ -864,7 +864,7 @@ WorkflowScriptExporter <- R6::R6Class(
             workflowTextLines
           )
           if (length(ixStart) * length(ixEnd) == 0) {
-            stop(messages$errorWorkflowScriptExporterL5())
+            stop(messages$errorWorkflowScriptExporterMissingChunkPlaceholder())
           }
           workflowTextLines <-
             c(
@@ -1534,7 +1534,7 @@ validateAndAdjustFilenames <- function(fileName, fileType) {
   # Check if the file has a valid extension
   extension <- fs::path_ext(fileName)
   if (!(extension %in% c("txt", "csv", "xml"))) {
-    stop(messages$errorWorkflowScriptExporterL6X())
+    stop(messages$errorWorkflowScriptExporterL6InvalidFileExtension())
   }
 
   # use only lowercase
@@ -1551,13 +1551,13 @@ validateAndAdjustFilenames <- function(fileName, fileType) {
 
   # Check if the first character is numeric
   if (grepl("^[0-9]", fileName)) {
-    stop(messages$errorWorkflowScriptExporterL6XX())
+    stop(messages$errorWorkflowScriptExporterL6FilenameBeginsWithNumber())
   }
 
   # Check if the length of the filename is below the limit
   limitLength <- ifelse(fileType == "data", 32, 64)
   if (nchar(fileName) > limitLength) {
-    stop(messages$errorWorkflowScriptExporterL8())
+    stop(messages$errorWorkflowScriptExporterFilenameTooLong())
   }
 
   return(fileName)
@@ -1658,7 +1658,7 @@ importProjectConfiguration <- function(
     paste0("w", wfIdentifier, "_config_json.txt")
   )
   if (!file.exists(jsonPath)) {
-    stop(messages$errorWorkflowScriptExporterL8X())
+    stop(messages$errorWorkflowScriptExporterL8MissingJsonFile())
   }
 
   initProject(

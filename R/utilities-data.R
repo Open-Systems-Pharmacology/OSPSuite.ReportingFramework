@@ -46,7 +46,7 @@ readObservedDataByDictionary <- function(
     ]
   )
   if (nrow(dataList) == 0) {
-    stop(messages$errorutilitiesdataL1())
+    stop(messages$errorutilitiesdataNoDataFilesDefined())
   }
 
   if (!is.null(fileIds)) {
@@ -156,7 +156,7 @@ readObservedDataByDictionary <- function(
           do.call(call$func, call$args)
         },
         error = function(err) {
-          warning(messages$warningutilitiesdataL1())
+          warning(messages$warningutilitiesdataExecutionFailedRetryManually())
         }
       )
     }
@@ -205,7 +205,7 @@ readObservedDataByDictionary <- function(
     }
 
     if (!(sheetName %in% wb$sheet_names)) {
-      stop(messages$errorutilitiesdataL2())
+      stop(messages$errorutilitiesdataNumericValuesSheetMissing())
     }
 
     numericValues <- rbind(
@@ -216,7 +216,7 @@ readObservedDataByDictionary <- function(
   }
 
   if (any(duplicated(numericValues$variableName))) {
-    stop(messages$errorutilitiesdataL5())
+    stop(messages$errorutilitiesdataDuplicateVariableNames())
   }
 
   return(numericValues)
@@ -264,10 +264,10 @@ readObservedDataByDictionary <- function(
   ]
 
   if (any(is.na(tmpData$variableName) | tmpData$variableName == "")) {
-    stop(messages$errorutilitiesdataL6())
+    stop(messages$errorutilitiesdataMissingVariableNames())
   }
   if (any(is.na(tmpData$value))) {
-    stop(messages$errorutilitiesdataL7())
+    stop(messages$errorutilitiesdataNonNumericValues())
   }
 
   return(tmpData[])
@@ -372,7 +372,7 @@ validateObservedData <- function(dataDT, dataClassType) {
       }
     ))]
   if (!all(names(dataDT) %in% columnsWithAttributes)) {
-    warning(messages$warningutilitiesdataL3())
+    warning(messages$warningutilitiesdataMissingColumnAttributes())
   }
 
   # Check data validity
@@ -382,7 +382,7 @@ validateObservedData <- function(dataDT, dataClassType) {
       names(dataDT)
     )
   if (any(duplicated(dataDT, by = colIdentifier))) {
-    stop(messages$errorutilitiesdataL3())
+    stop(messages$errorutilitiesdataDuplicateRowsInIdentifierColumns())
   }
   for (col in setdiff(
     names(dataDT),
@@ -398,7 +398,7 @@ validateObservedData <- function(dataDT, dataClassType) {
     )
   )) {
     if (any(is.na(dataDT[[col]]) | dataDT[[col]] == "")) {
-      warning(messages$warningutilitiesdataL3X())
+      warning(messages$warningutilitiesdataColumnContainsMissingValues())
     }
   }
 
@@ -428,7 +428,7 @@ validateObservedData <- function(dataDT, dataClassType) {
         apply(tmp, 1, function(row) paste(row, collapse = " ")),
         collapse = "; "
       )
-      warning(messages$warningutilitiesdataL3XX())
+      warning(messages$warningutilitiesdataL3AmbiguousUnits())
     }
   }
 
@@ -554,7 +554,7 @@ readDataDictionary <- function(dictionaryFile, sheet, data, dataClass) {
 
   tmp <- dict[is.na(sourceColumn) & is.na(filter), ]
   if (nrow(tmp) > 0) {
-    stop(messages$errorutilitiesdataL4())
+    stop(messages$errorutilitiesdataDictionarySourceOrFilterMissing())
   }
 
   checkmate::assertNames(
@@ -599,8 +599,8 @@ convertDataByDictionary <- function(data, dataFilter, dict, dictionaryName) {
           ]
         },
         error = function(err) {
-          warning(messages$warningutilitiesdataL4())
-          stop(messages$errorutilitiesdataL4X())
+          warning(messages$warningutilitiesdataDictionaryFilterContext())
+          stop(messages$errorutilitiesdataFilterEvaluationFailed())
         }
       )
     }
@@ -680,7 +680,7 @@ convertBiometrics <- function(data, dict, dictionaryName) {
     ]
 
     if (any(data$gender == "UNKNOWN")) {
-      warning(messages$warningutilitiesdataL4X())
+      warning(messages$warningutilitiesdataUnknownGender())
     }
   }
 
@@ -971,20 +971,20 @@ createDataSets <- function(groupData) {
   )
 
   if (dplyr::n_distinct(groupData$yUnit) > 1) {
-    stop(messages$errorutilitiesdataL4XX())
+    stop(messages$errorutilitiesdataL4NonUniqueYUnit())
   }
   dataSet$yDimension <- ospsuite::getDimensionForUnit(groupData$yUnit[1])
   dataSet$yUnit <- groupData$yUnit[1]
 
   if (dplyr::n_distinct(groupData$xUnit) > 1) {
-    stop(messages$errorutilitiesdataL4XXX())
+    stop(messages$errorutilitiesdataL4NonUniqueXUnit())
   }
   dataSet$xUnit <- groupData$xUnit[1]
 
   if (any(!is.na(groupData$lloq))) {
     lLOQ <- groupData[!is.na(lloq)]$lloq
     if (dplyr::n_distinct(lLOQ) > 1) {
-      warning(messages$warningutilitiesdataL4XX())
+      warning(messages$warningutilitiesdataL4MultipleLloqMinimal())
     }
     lLOQ <- min(lLOQ)
     dataSet$LLOQ <- lLOQ
@@ -1056,7 +1056,7 @@ convertDataCombinedToDataTable <- function(datacombined) {
       !("individualId" %in% names(dataDT))
   ) {
     # nolint: indentation_linter
-    stop(messages$errorutilitiesdataL4XXXX())
+    stop(messages$errorutilitiesdataL4IndividualDataMissingMetaId())
   }
 }
 
@@ -1196,7 +1196,7 @@ prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
   groups <- getIndividualDataGroups(dataObserved, groups)
 
   if (length(groups) == 0) {
-    warning(messages$warningutilitiesdataL4XXX())
+    warning(messages$warningutilitiesdataL4NoGroupsForAggregation())
     return(NULL)
   }
 
@@ -1235,7 +1235,7 @@ checkLLOQ <- function(
     aggregationFlag != "Custom" &
       (!is.null(lloqCheckColumns2of3) | !is.null(lloqCheckColumns1of2))
   ) {
-    warning(messages$warningutilitiesdataL4XXXX())
+    warning(messages$warningutilitiesdataL4UnusedAggregationCheckColumns())
     lloqCheckColumns2of3 <- NULL
     lloqCheckColumns1of2 <- NULL
   }
@@ -1246,7 +1246,7 @@ checkLLOQ <- function(
     lloqCheckColumns1of2 <- c("yValues", "yMin", "yMax")
   } else {
     if (is.null(lloqCheckColumns2of3) & is.null(lloqCheckColumns1of2)) {
-      stop(messages$errorutilitiesdataL4XXXXX())
+      stop(messages$errorutilitiesdataL4AggregationCheckColumnsMissing())
     }
   }
 
@@ -1391,7 +1391,7 @@ convertIdentifierColumns <- function(dt, identifierCols) {
   for (col in identifierCols) {
     dt[[col]] <- as.character(dt[[col]])
     if (any(grepl(",", dt[[col]]))) {
-      warning(messages$warningutilitiesdataL4XXXXX())
+      warning(messages$warningutilitiesdataL4ColumnCommasReplaced())
     }
     dt[[col]] <- gsub(",", "_", dt[[col]])
   }
@@ -1432,7 +1432,7 @@ getIndividualDataGroups <- function(dataObserved, groups, minN = 2) {
   } else {
     unsuitableGroups <- setdiff(groups, groupsAvailable)
     if (length(unsuitableGroups) > 0) {
-      warning(messages$warningutilitiesdataL4XXXXXX())
+      warning(messages$warningutilitiesdataL4UnsuitableGroupsForAggregation())
     }
     groups <- intersect(groups, groupsAvailable)
   }
