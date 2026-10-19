@@ -428,39 +428,103 @@ test_that("xlsxReadData handles emptyAsNA parameter", {
   file.remove(testFile)
 })
 
-test_that("xlsxWriteData handles data types correctly", {
-  wb <- openxlsx::createWorkbook()
-  openxlsx::addWorksheet(wb, "DataTypes")
-  df <- data.frame(
-    numeric_col = c(1.5, 2.5),
-    integer_col = c(1L, 2L),
-    char_col = c("a", "b"),
-    logical_col = c(TRUE, FALSE)
+test_that("setupProject creates a readable scenarios workbook", {
+  projectDir <- withr::local_tempdir()
+
+  initProject(
+    projectDirectory = projectDir,
+    configurationDirectory = projectDir,
+    overwrite = TRUE
   )
-  openxlsx::writeData(wb, "DataTypes", df)
-  testFile <- file.path(tempdir(), "test_types.xlsx")
-  openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
+  projectConfiguration <- createProjectConfiguration(
+    file.path(projectDir, "ProjectConfiguration.xlsx"),
+    ignoreVersionCheck = TRUE
+  )
 
-  xlsxWriteData(wb, "DataTypes", df[1, ])
-  result <- xlsxReadData(wb = testFile, sheetName = "DataTypes")
-  expect_true(is.data.table(result))
-  expect_true(nrow(result) >= 1)
+  expect_true(file.exists(projectConfiguration$scenariosFile))
+  expect_true(
+    "Scenarios" %in% openxlsx::getSheetNames(projectConfiguration$scenariosFile)
+  )
 
-  file.remove(testFile)
+  scenariosData <- xlsxReadData(
+    wb = projectConfiguration$scenariosFile,
+    sheetName = "Scenarios",
+    convertHeaders = FALSE,
+    emptyAsNA = FALSE
+  )
+
+  expect_s3_class(scenariosData, "data.table")
+  expect_gt(nrow(scenariosData), 0)
+  expect_gt(ncol(scenariosData), 0)
 })
 
-test_that("xlsxWriteData handles large datasets", {
+test_that("xlsxWriteData preserves structure for edge-case round trips", {
+  tempDir <- withr::local_tempdir()
+  testFile <- file.path(tempDir, "edge_cases.xlsx")
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "EdgeCases")
+  openxlsx::writeData(
+    wb,
+    sheet = "EdgeCases",
+    x = data.frame(
+      scenario = c("seed"),
+      dose = c(1),
+      time = c(0),
+      note = c("seed"),
+      value = c(1),
+      stringsAsFactors = FALSE
+    )
+  )
+
+  testData <- data.table(
+    scenario = c("TestScenario1", NA, "TestScenario3", ""),
+    dose = c(100, NA_real_, 200, 150),
+    time = c(0L, 24L, 48L, NA_integer_),
+    note = c("Normal", "Has spaces   ", NA_character_, "Special chars: @#$"),
+    value = c(1, 1.5, Inf, 2.5)
+  )
+
+  xlsxWriteData(wb = wb, sheetName = "EdgeCases", dt = testData)
+  openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
+
+  readBackData <- xlsxReadData(wb = testFile, sheetName = "EdgeCases")
+
+  expect_equal(dim(readBackData), dim(testData))
+  expect_gte(sum(is.na(readBackData)), 4)
+  expect_equal(readBackData$scenario[[1]], "TestScenario1")
+  expect_equal(readBackData$note[[4]], "Special chars: @#$")
+})
+
+test_that("xlsxWriteData round-trips large datasets", {
+  tempDir <- withr::local_tempdir()
+  testFile <- file.path(tempDir, "large_data.xlsx")
   wb <- openxlsx::createWorkbook()
   openxlsx::addWorksheet(wb, "LargeData")
-  largedf <- data.frame(A = 1:1000, B = rep(1:100, 10))
-  openxlsx::writeData(wb, "LargeData", largedf)
-  testFile <- file.path(tempdir(), "large_data.xlsx")
+  openxlsx::writeData(
+    wb,
+    sheet = "LargeData",
+    x = data.frame(
+      id = 1,
+      value = 0,
+      category = "A",
+      timestamp = as.Date("2024-01-01")
+    )
+  )
+
+  largeData <- data.table(
+    id = 1:1000,
+    value = rnorm(1000),
+    category = rep(c("A", "B", "C", "D"), length.out = 1000),
+    timestamp = rep(as.Date("2024-01-01") + 0:99, length.out = 1000)
+  )
+
+  xlsxWriteData(wb = wb, sheetName = "LargeData", dt = largeData)
   openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
 
   result <- xlsxReadData(wb = testFile, sheetName = "LargeData")
-  expect_equal(nrow(result), 1000)
 
-  file.remove(testFile)
+  expect_equal(nrow(result), 1000)
+  expect_equal(ncol(result), ncol(largeData))
 })
 
 # Clean up

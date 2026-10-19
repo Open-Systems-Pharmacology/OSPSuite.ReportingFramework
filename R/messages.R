@@ -763,6 +763,18 @@ messages$errorutilitiespkParameterL1XXXXXXXX <- function(
   )
 }
 
+messages$errorutilitiespkParameterL1XXXXXXXXX <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(paste(
+      "PK parameter names have conflicting display definitions across merged PK parameter sheets:",
+      paste(conflictingNames, collapse = ", ")
+    )),
+    envir = env
+  )
+}
+
 messages$errorutilitiesplotL1 <- function(env = parent.frame()) {
   eval(quote(err), envir = env)
 }

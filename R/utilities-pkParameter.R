@@ -52,7 +52,7 @@ calculatePKParameterForScenarios <- function(
     if (length(pkParameterSheets) > 0) {
       # Load or calculate PK analyses
       ospsuite.utils::logInfo(paste("Calculate PK analysis result of", sc))
-
+      browser()
       pkAnalyses <- ospsuite::calculatePKAnalyses(
         results = scenarioResults[[sc]]$results
       )
@@ -87,7 +87,6 @@ calculatePKParameterForScenarios <- function(
   if (is.null(pkParameterSheets) || length(pkParameterSheets) == 0) {
     return(invisible())
   }
-
   ospsuite::removeAllUserDefinedPKParameters()
 
   # Read user-defined PK parameters and clean the names
@@ -96,19 +95,46 @@ calculatePKParameterForScenarios <- function(
   )
 
   # Loop through each PK parameter sheet
-  dtPkParameterDefinition <- data.table()
+  dtPkParameterDefinitionList <- list()
   for (pkParameterSheet in splitInputs(pkParameterSheets)) {
-    dtPkParameterDefinition <- xlsxReadData(
+    dtPkParameterDefinitionSheet <- xlsxReadData(
       wb = projectConfiguration$addOns$pKParameterFile,
       sheetName = pkParameterSheet,
       skipDescriptionRow = TRUE
     )
 
+    dtPkParameterDefinitionList[[pkParameterSheet]] <-
+      dtPkParameterDefinitionSheet
+
     userdefinedParameters <- setdiff(
-      dtPkParameterDefinition$name,
+      dtPkParameterDefinitionSheet$name,
       ospsuite::allPKParameterNames()
     )
     .addUserDefinedParameters(userdefinedParameters, dtUserdefPKParameter)
+  }
+
+  dtPkParameterDefinition <- data.table::rbindlist(
+    dtPkParameterDefinitionList,
+    fill = TRUE,
+    use.names = TRUE
+  )
+
+  dtPkParameterDefinition <- unique(dtPkParameterDefinition[, c(
+    "name",
+    "displayName",
+    "displayUnit"
+  ), with = FALSE])
+
+  definitionCounts <- stats::aggregate(
+    x = list(definitionCount = seq_len(nrow(dtPkParameterDefinition))),
+    by = list(name = dtPkParameterDefinition$name),
+    FUN = length
+  )
+  conflictingNames <- definitionCounts$name[
+    definitionCounts$definitionCount > 1
+  ]
+  if (length(conflictingNames) > 0) {
+    stop(messages$errorutilitiespkParameterL1XXXXXXXXX())
   }
 
   # Update PK parameters in the specified sheets

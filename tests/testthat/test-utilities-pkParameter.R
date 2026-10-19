@@ -18,7 +18,210 @@
   system.file("extdata", "PKAnalyses.csv", package = "ospsuite")
 }
 
+.mockProjectConfiguration <- function(
+  outputFolder = withr::local_tempdir(),
+  pkParameterFile = "PKParameter.xlsx",
+  reportsFile = "Reports.xlsx"
+) {
+  structure(
+    list(
+      outputFolder = outputFolder,
+      addOns = list(
+        pKParameterFile = pkParameterFile,
+        reportsFile = reportsFile
+      )
+    ),
+    class = "ProjectConfigurationRF"
+  )
+}
+
 # .readUserDefinedPKParameters -----------------------------------------------
+
+test_that(".initializeParametersOfSheets updates PK parameters from all merged sheets", {
+  pc <- .mockProjectConfiguration(pkParameterFile = "mock-pk.xlsx")
+  updatedParameters <- list()
+  removedAll <- FALSE
+
+  local_mocked_bindings(
+    .readUserDefinedPKParameters = function(file) {
+      data.table::data.table(
+        name = character(),
+        `standard PK parameter` = character(),
+        `display Unit` = character(),
+        check.names = FALSE
+      )
+    },
+    .addUserDefinedParameters = function(
+      userdefinedParameters,
+      dtUserdefPKParameter
+    ) {
+      expect_length(userdefinedParameters, 0)
+      invisible(NULL)
+    },
+    xlsxReadData = function(wb, sheetName, skipDescriptionRow) {
+      switch(
+        sheetName,
+        SheetA = data.table::data.table(
+          name = "AUC_tEnd",
+          displayName = "AUC",
+          displayUnit = "mg*h/L"
+        ),
+        SheetB = data.table::data.table(
+          name = "C_max",
+          displayName = "Cmax",
+          displayUnit = "mg/L"
+        ),
+        stop(paste("Unexpected sheet", sheetName))
+      )
+    }
+  )
+  local_mocked_bindings(
+    removeAllUserDefinedPKParameters = function() {
+      removedAll <<- TRUE
+      invisible(NULL)
+    },
+    allPKParameterNames = function() {
+      c("AUC_tEnd", "C_max")
+    },
+    updatePKParameter = function(name, displayName, displayUnit) {
+      updatedParameters[[length(updatedParameters) + 1]] <<- list(
+        name = name,
+        displayName = displayName,
+        displayUnit = displayUnit
+      )
+      invisible(NULL)
+    },
+    .package = "ospsuite"
+  )
+
+  expect_invisible(.initializeParametersOfSheets(pc, "SheetA, SheetB"))
+
+  expect_true(removedAll)
+  expect_length(updatedParameters, 2)
+  expect_equal(
+    vapply(updatedParameters, `[[`, character(1), "name"),
+    c("AUC_tEnd", "C_max")
+  )
+  expect_equal(
+    vapply(updatedParameters, `[[`, character(1), "displayName"),
+    c("AUC", "Cmax")
+  )
+})
+
+test_that(".initializeParametersOfSheets allows identical definitions for the same name across sheets", {
+  pc <- .mockProjectConfiguration(pkParameterFile = "mock-pk.xlsx")
+  updatedParameters <- list()
+
+  local_mocked_bindings(
+    .readUserDefinedPKParameters = function(file) {
+      data.table::data.table(
+        name = character(),
+        `standard PK parameter` = character(),
+        `display Unit` = character(),
+        check.names = FALSE
+      )
+    },
+    .addUserDefinedParameters = function(
+      userdefinedParameters,
+      dtUserdefPKParameter
+    ) {
+      invisible(NULL)
+    },
+    xlsxReadData = function(wb, sheetName, skipDescriptionRow) {
+      switch(
+        sheetName,
+        SheetA = data.table::data.table(
+          name = "AUC_tEnd",
+          displayName = "AUC",
+          displayUnit = "mg*h/L"
+        ),
+        SheetB = data.table::data.table(
+          name = "AUC_tEnd",
+          displayName = "AUC",
+          displayUnit = "mg*h/L"
+        ),
+        stop(paste("Unexpected sheet", sheetName))
+      )
+    }
+  )
+  local_mocked_bindings(
+    removeAllUserDefinedPKParameters = function() {
+      invisible(NULL)
+    },
+    allPKParameterNames = function() {
+      "AUC_tEnd"
+    },
+    updatePKParameter = function(name, displayName, displayUnit) {
+      updatedParameters[[length(updatedParameters) + 1]] <<- list(
+        name = name,
+        displayName = displayName,
+        displayUnit = displayUnit
+      )
+      invisible(NULL)
+    },
+    .package = "ospsuite"
+  )
+
+  expect_invisible(.initializeParametersOfSheets(pc, "SheetA, SheetB"))
+  expect_length(updatedParameters, 1)
+  expect_equal(updatedParameters[[1]]$name, "AUC_tEnd")
+  expect_equal(updatedParameters[[1]]$displayName, "AUC")
+  expect_equal(updatedParameters[[1]]$displayUnit, "mg*h/L")
+})
+
+test_that(".initializeParametersOfSheets errors on conflicting definitions for the same name", {
+  pc <- .mockProjectConfiguration(pkParameterFile = "mock-pk.xlsx")
+
+  local_mocked_bindings(
+    .readUserDefinedPKParameters = function(file) {
+      data.table::data.table(
+        name = character(),
+        `standard PK parameter` = character(),
+        `display Unit` = character(),
+        check.names = FALSE
+      )
+    },
+    .addUserDefinedParameters = function(
+      userdefinedParameters,
+      dtUserdefPKParameter
+    ) {
+      invisible(NULL)
+    },
+    xlsxReadData = function(wb, sheetName, skipDescriptionRow) {
+      switch(
+        sheetName,
+        SheetA = data.table::data.table(
+          name = "AUC_tEnd",
+          displayName = "AUC",
+          displayUnit = "mg*h/L"
+        ),
+        SheetB = data.table::data.table(
+          name = "AUC_tEnd",
+          displayName = "AUC end",
+          displayUnit = "mg/L"
+        ),
+        stop(paste("Unexpected sheet", sheetName))
+      )
+    }
+  )
+  local_mocked_bindings(
+    removeAllUserDefinedPKParameters = function() {
+      invisible(NULL)
+    },
+    allPKParameterNames = function() {
+      "AUC_tEnd"
+    },
+    updatePKParameter = function(name, displayName, displayUnit) {
+      invisible(NULL)
+    },
+    .package = "ospsuite"
+  )
+
+  expect_error(
+    .initializeParametersOfSheets(pc, "SheetA, SheetB"),
+    "PK parameter names have conflicting display definitions across merged PK parameter sheets: AUC_tEnd"
+  )
+})
 
 test_that(".readUserDefinedPKParameters returns a data.table with required columns", {
   dt <- .readUserDefinedPKParameters(.pkParameterFile())
@@ -183,6 +386,289 @@ test_that(".loadPkAnalysisRawData fills empty unit with empty string", {
   )
 
   expect_false(any(is.na(result$unit)))
+})
+
+test_that(".loadPKAnalysisPerScenario tags the scenario and keeps matching PK definitions only", {
+  pc <- .mockProjectConfiguration()
+
+  local_mocked_bindings(
+    .loadPkAnalysisRawData = function(
+      projectConfiguration,
+      scenarioName,
+      scenarioSimulation
+    ) {
+      expect_identical(scenarioName, "ScenarioA")
+      data.table::data.table(
+        individualId = c(1L, 1L),
+        quantityPath = c("Path|A", "Path|A"),
+        parameter = c("AUC_tEnd", "C_max"),
+        value = c(10, 5),
+        unit = c("mg*h/L", "mg/L")
+      )
+    },
+    getOutputPathIds = function(reportsFile) {
+      data.table::data.table(
+        outputPathId = "Output-1",
+        outputPath = "Path|A"
+      )
+    },
+    xlsxReadData = function(wb, sheetName, skipDescriptionRow) {
+      expect_identical(sheetName, "PK_Plasma")
+      data.table::data.table(
+        name = "AUC_tEnd",
+        displayName = "AUC",
+        displayUnit = "mg*h/L",
+        outputPathIds = "Output-1"
+      )
+    },
+    .addUnitFactorsToPKDefinition = function(
+      scenarioSimulation,
+      dtOutputPaths,
+      dtPkAnalyses,
+      dtPkParameterDefinition
+    ) {
+      data.table::data.table(
+        name = "AUC_tEnd",
+        displayName = "AUC",
+        displayUnit = "mg*h/L",
+        outputPathId = "Output-1",
+        outputPath = "Path|A",
+        unitFactor = 1
+      )
+    }
+  )
+
+  result <- .loadPKAnalysisPerScenario(
+    scenarioName = "ScenarioA",
+    scenarioSimulation = list(molWeightFor = function(path) 1),
+    pkParameterSheets = "PK_Plasma",
+    projectConfiguration = pc
+  )
+
+  expect_s3_class(result, "data.table")
+  expect_named(
+    result,
+    c(
+      "scenario",
+      "pkParameter",
+      "individualId",
+      "value",
+      "outputPathId",
+      "displayNamePKParameter",
+      "displayUnitPKParameter"
+    )
+  )
+  expect_equal(nrow(result), 1L)
+  expect_identical(result$scenario, "ScenarioA")
+  expect_identical(result$pkParameter, "AUC_tEnd")
+  expect_identical(result$outputPathId, "Output-1")
+  expect_equal(result$value, 10)
+})
+
+test_that(".loadPKAnalysisPerScenario combines multiple sheets and applies unit factors", {
+  pc <- .mockProjectConfiguration()
+
+  local_mocked_bindings(
+    .loadPkAnalysisRawData = function(
+      projectConfiguration,
+      scenarioName,
+      scenarioSimulation
+    ) {
+      data.table::data.table(
+        individualId = c(1L, 1L),
+        quantityPath = c("Path|A", "Path|A"),
+        parameter = c("AUC_tEnd", "C_max"),
+        value = c(10, 5),
+        unit = c("mg*h/L", "mg/L")
+      )
+    },
+    getOutputPathIds = function(reportsFile) {
+      data.table::data.table(
+        outputPathId = "Output-1",
+        outputPath = "Path|A"
+      )
+    },
+    splitInputs = function(value) {
+      trimws(strsplit(value, ",")[[1]])
+    },
+    xlsxReadData = function(wb, sheetName, skipDescriptionRow) {
+      switch(
+        sheetName,
+        SheetA = data.table::data.table(
+          name = "AUC_tEnd",
+          displayName = "AUC",
+          displayUnit = "mg*h/L",
+          outputPathIds = "Output-1"
+        ),
+        SheetB = data.table::data.table(
+          name = "C_max",
+          displayName = "Cmax",
+          displayUnit = "mg/L",
+          outputPathIds = "Output-1"
+        ),
+        stop(paste("Unexpected sheet", sheetName))
+      )
+    },
+    .addUnitFactorsToPKDefinition = function(
+      scenarioSimulation,
+      dtOutputPaths,
+      dtPkAnalyses,
+      dtPkParameterDefinition
+    ) {
+      if (identical(dtPkParameterDefinition$name, "AUC_tEnd")) {
+        return(data.table::data.table(
+          name = "AUC_tEnd",
+          displayName = "AUC",
+          displayUnit = "mg*h/L",
+          outputPathId = "Output-1",
+          outputPath = "Path|A",
+          unitFactor = 2
+        ))
+      }
+
+      data.table::data.table(
+        name = "C_max",
+        displayName = "Cmax",
+        displayUnit = "mg/L",
+        outputPathId = "Output-1",
+        outputPath = "Path|A",
+        unitFactor = 0.5
+      )
+    }
+  )
+
+  result <- .loadPKAnalysisPerScenario(
+    scenarioName = "ScenarioA",
+    scenarioSimulation = list(molWeightFor = function(path) 1),
+    pkParameterSheets = "SheetA, SheetB",
+    projectConfiguration = pc
+  )
+
+  expect_equal(nrow(result), 2L)
+  expect_equal(
+    sort(result$pkParameter),
+    c("AUC_tEnd", "C_max")
+  )
+  expect_equal(
+    result[order(pkParameter)]$value,
+    c(20, 2.5)
+  )
+})
+
+test_that(".loadPKAnalysisPerScenario returns stable results across repeated loads", {
+  pc <- .mockProjectConfiguration()
+
+  local_mocked_bindings(
+    .loadPkAnalysisRawData = function(
+      projectConfiguration,
+      scenarioName,
+      scenarioSimulation
+    ) {
+      data.table::data.table(
+        individualId = 1L,
+        quantityPath = "Path|A",
+        parameter = "AUC_tEnd",
+        value = 10,
+        unit = "mg*h/L"
+      )
+    },
+    getOutputPathIds = function(reportsFile) {
+      data.table::data.table(
+        outputPathId = "Output-1",
+        outputPath = "Path|A"
+      )
+    },
+    xlsxReadData = function(wb, sheetName, skipDescriptionRow) {
+      data.table::data.table(
+        name = "AUC_tEnd",
+        displayName = "AUC",
+        displayUnit = "mg*h/L",
+        outputPathIds = "Output-1"
+      )
+    },
+    .addUnitFactorsToPKDefinition = function(
+      scenarioSimulation,
+      dtOutputPaths,
+      dtPkAnalyses,
+      dtPkParameterDefinition
+    ) {
+      data.table::data.table(
+        name = "AUC_tEnd",
+        displayName = "AUC",
+        displayUnit = "mg*h/L",
+        outputPathId = "Output-1",
+        outputPath = "Path|A",
+        unitFactor = 1
+      )
+    }
+  )
+
+  first <- .loadPKAnalysisPerScenario(
+    scenarioName = "ScenarioA",
+    scenarioSimulation = list(molWeightFor = function(path) 1),
+    pkParameterSheets = "PK_Plasma",
+    projectConfiguration = pc
+  )
+  second <- .loadPKAnalysisPerScenario(
+    scenarioName = "ScenarioA",
+    scenarioSimulation = list(molWeightFor = function(path) 1),
+    pkParameterSheets = "PK_Plasma",
+    projectConfiguration = pc
+  )
+
+  expect_equal(first, second)
+})
+
+test_that("loadPKParameter merges population metadata onto per-scenario PK rows", {
+  pc <- .mockProjectConfiguration()
+  scenarioList <- list(
+    ScenarioA = list(simulation = structure(list(), class = "MockSimulation")),
+    ScenarioB = list(simulation = structure(list(), class = "MockSimulation"))
+  )
+
+  local_mocked_bindings(
+    getScenarioDefinitions = function(scenariosFile) {
+      data.table::data.table(
+        scenarioName = c("ScenarioA", "ScenarioB"),
+        pKParameter = c("SheetA", "SheetB"),
+        populationId = c("Pop-A", "Pop-B")
+      )
+    },
+    getOutputPathIds = function(reportsFile) {
+      data.table::data.table(
+        outputPathId = "Output-1",
+        outputPath = "Path|A"
+      )
+    },
+    .loadPKAnalysisPerScenario = function(
+      scenarioName,
+      scenarioSimulation,
+      pkParameterSheets,
+      projectConfiguration
+    ) {
+      data.table::data.table(
+        scenario = scenarioName,
+        pkParameter = paste0("Param-", pkParameterSheets),
+        individualId = 1L,
+        value = if (identical(scenarioName, "ScenarioA")) 10 else 20,
+        outputPathId = "Output-1",
+        displayNamePKParameter = paste0("Display-", pkParameterSheets),
+        displayUnitPKParameter = "mg/L"
+      )
+    }
+  )
+
+  result <- loadPKParameter(
+    projectConfiguration = pc,
+    scenarioListOrResult = scenarioList
+  )
+
+  expect_equal(nrow(result), 2L)
+  expect_equal(result[order(scenario)]$populationId, c("Pop-A", "Pop-B"))
+  expect_equal(
+    result[order(scenario)]$pkParameter,
+    c("Param-SheetA", "Param-SheetB")
+  )
 })
 
 test_that(".addUnitFactorsToPKDefinition reports context for conversion failures", {

@@ -82,7 +82,7 @@ runSensitivityAnalysisForScenarios <-
     overwrite = TRUE
   ) {
     # initialize variable to avoid messages
-    pKParameter <- NULL
+    pKParameter <- scenarioName <- NULL
 
     if (!("sensitivityFile" %in% names(projectConfiguration$addOns))) {
       stop(messages$errorutilitiessensitivityL1())
@@ -103,22 +103,22 @@ runSensitivityAnalysisForScenarios <-
       sheetName = sensitivitysheet
     )
 
-    for (scenarioName in scenarioNames) {
+    for (currentScenarioName in scenarioNames) {
       if (
         !file.exists(file.path(
           outputFolder,
-          sensitivityAnalysisName(scenarioName, sensitivitysheet)
+          sensitivityAnalysisName(currentScenarioName, sensitivitysheet)
         )) |
           overwrite
       ) {
         pkParameterSheets <- dtScenarios[
-          scenarioName == scenarioName & !is.na(pKParameter)
+          scenarioName == currentScenarioName & !is.na(pKParameter)
         ]$pKParameter
         if (length(pkParameterSheets) > 0) {
           .initializeParametersOfSheets(projectConfiguration, pkParameterSheets)
 
           sensitivityAnalysis <- ospsuite::SensitivityAnalysis$new(
-            simulation = scenarioList[[scenarioName]]$simulation,
+            simulation = scenarioList[[currentScenarioName]]$simulation,
             parameterPaths = sensitivityParameterDt$parameterPath
           )
 
@@ -132,7 +132,7 @@ runSensitivityAnalysisForScenarios <-
             results = sensitivityResults,
             filePath = file.path(
               outputFolder,
-              sensitivityAnalysisName(scenarioName, sensitivitysheet)
+              sensitivityAnalysisName(currentScenarioName, sensitivitysheet)
             )
           )
         }
@@ -396,7 +396,7 @@ loadSensitivityPKValues <- function(
     c("IndividualId", "QuantityPath", "PKParameter", "Value"),
     names(dtPK)
   )
-  return(dtPK[, ..keepCols])
+  return(dtPK[, keepCols, with = FALSE])
 }
 
 #' Prepare a population for custom sensitivity analysis
