@@ -133,7 +133,7 @@ The standard workflow consists of five steps:
 2. Ensure PK parameter sheets are configured.
 3. Run the sensitivity calculation.
 4. Inspect the CSV output in `Outputs/SensitivityResults`.
-5. Plot the results with `plotSensitivity()`.
+5. Plot the results with `runPlot()` using `plotSensitivity`.
 
 ### Example
 
@@ -251,13 +251,17 @@ In addition to the standard sensitivity columns, it includes representative meta
 
 ## Plotting Sensitivity Results
 
-Sensitivity results can be plotted with `plotSensitivity()`.
+Sensitivity results should be plotted through `runPlot()` as described in the plotting vignette.
 
 ```{r plot-sensitivity}
-plotList <- plotSensitivity(
+plotList <- runPlot(
+  nameOfplotFunction = "plotSensitivity",
+  configTableSheet = "Sensitivity",
+  qmdName = "Sensitivity",
   projectConfiguration = projectConfiguration,
-  onePlotConfig = onePlotConfig,
-  scenarioList = scenarioList
+  inputs = list(
+    scenarioList = scenarioList
+  )
 )
 ```
 
@@ -271,7 +275,7 @@ If `threshold` is `0`, no threshold line is added to the caption.
 
 ### Representative outputs
 
-For representative population sensitivity, `plotSensitivity()` exposes representative strata explicitly.
+For representative population sensitivity, `plotSensitivity` (called via `runPlot()`) exposes representative strata explicitly.
 
 Facet labels and exported tables preserve the representative context, including:
 
@@ -359,5 +363,6 @@ These extensions make the sensitivity workflow more suitable for reproducible re
 - `addSensitivityTable()`
 - `runSensitivityAnalysisForScenarios()`
 - `runRepresentativeSensitivityAnalysisForScenarios()`
+- `runPlot()`
 - `plotSensitivity()`
 - `Plot_and_Report_Generation`

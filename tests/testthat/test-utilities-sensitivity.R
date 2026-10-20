@@ -112,6 +112,39 @@ test_that("buildSensitivityPopulationFromBaselineRow accepts data.frame input", 
   )
 })
 
+test_that("buildSensitivityPopulationFromBaselineRow enriches missing paths from simulation", {
+  baselineRow <- data.frame(
+    IndividualId = 0,
+    check.names = FALSE
+  )
+  baselineRow[["Organism|Hematocrit"]] <- 0.45
+
+  local_mocked_bindings(
+    getParameter = function(path, container, stopIfNotFound = FALSE) {
+      if (identical(path, "P1|CL")) {
+        return(list(value = 10))
+      }
+      NULL
+    },
+    .package = "ospsuite"
+  )
+
+  result <- ospsuite.reportingframework:::.buildSensitivityPopulationFromBaselineRow(
+    baselineRow = baselineRow,
+    sensitivityParameter = list(Clearance = "P1|CL"),
+    simulation = "dummy-simulation",
+    variationRange = 0.1,
+    numberOfSteps = 1L
+  )
+
+  expect_true("P1|CL" %in% result$allParameterPaths)
+  expect_equal(
+    result$getParameterValues("P1|CL"),
+    c(10, 9.090909, 11),
+    tolerance = 1e-6
+  )
+})
+
 test_that("getRepresentativeIndividualsForSensitivity selects nearest requested quantiles", {
   tmp <- withr::local_tempdir()
   pkDir <- file.path(tmp, EXPORTDIR$pKAnalysisResults)
@@ -180,6 +213,39 @@ test_that(".prepareRepresentativeSensitivityPopulation keeps one individual and 
     c("IndividualId", "factor", "SensitivityParameter", "Organism|Hematocrit")
   )
   expect_equal(representativePopulation$count, 5)
+})
+
+test_that(".prepareRepresentativeSensitivityPopulation enriches missing paths from simulation", {
+  pop <- loadPopulation(.populationPath())
+
+  local_mocked_bindings(
+    getParameter = function(path, container, stopIfNotFound = FALSE) {
+      if (identical(path, "Organism|SimulationOnly|CL")) {
+        return(list(value = 4))
+      }
+      NULL
+    },
+    .package = "ospsuite"
+  )
+
+  representativePopulation <-
+    ospsuite.reportingframework:::.prepareRepresentativeSensitivityPopulation(
+      population = pop,
+      representativeIndividualId = 2,
+      sensitivityParameter = list(Clearance = "Organism|SimulationOnly|CL"),
+      scenarioSimulation = "dummy-simulation",
+      variationRange = 0.1,
+      numberOfSteps = 1
+    )
+
+  expect_true(
+    "Organism|SimulationOnly|CL" %in% representativePopulation$allParameterPaths
+  )
+  expect_equal(
+    representativePopulation$getParameterValues("Organism|SimulationOnly|CL"),
+    c(4, 3.6363636, 4.4),
+    tolerance = 1e-6
+  )
 })
 
 test_that(".getScenarioFilesForSensitivity returns scenario files and supports ratio mode", {
@@ -401,35 +467,4 @@ test_that(".ensureRepresentativeSensitivityPrerequisites runs scenarios only whe
     scenarioName = "ScenarioA"
   )
   expect_false(called)
-})
-
-test_that(".getScenarioPopulationForSensitivity returns in-memory or file population", {
-  inMemoryPopulation <- structure(list(id = "in-memory"), class = "Population")
-  inMemory <- ospsuite.reportingframework:::.getScenarioPopulationForSensitivity(
-    scenarioList = list(ScenarioA = list(population = inMemoryPopulation)),
-    projectConfiguration = list(outputFolder = tempdir()),
-    scenarioName = "ScenarioA"
-  )
-  expect_identical(inMemory, inMemoryPopulation)
-
-  tmp <- withr::local_tempdir()
-  simDir <- file.path(tmp, EXPORTDIR$simulationResult)
-  dir.create(simDir, recursive = TRUE)
-  popPath <- file.path(simDir, "ScenarioB_population.csv")
-  data.table::fwrite(data.table::data.table(a = 1), popPath)
-
-  local_mocked_bindings(
-    loadPopulation = function(filePath) {
-      expect_equal(filePath, popPath)
-      structure(list(id = "loaded"), class = "Population")
-    },
-    .package = "ospsuite"
-  )
-
-  loaded <- ospsuite.reportingframework:::.getScenarioPopulationForSensitivity(
-    scenarioList = list(ScenarioB = list()),
-    projectConfiguration = list(outputFolder = tmp),
-    scenarioName = "ScenarioB"
-  )
-  expect_equal(loaded$id, "loaded")
 })

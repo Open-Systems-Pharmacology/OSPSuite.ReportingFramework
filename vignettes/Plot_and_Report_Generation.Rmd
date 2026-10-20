@@ -79,6 +79,7 @@ runPlot(
   configTableSheet = "myTimeProfile",
   qmdName = "myTimeProfile",
   digitsOfSignificanceCSVDisplay = 3,
+  theme = ggplot2::theme_bw(),
   projectConfiguration = projectConfiguration,
   inputs = list(
     scenarioResults = scenarioResults,
@@ -86,6 +87,27 @@ runPlot(
   )
 )
 ```
+
+### Applying a Common Theme
+
+By default, plotting routines in this package generate figures using `ospsuite.plots::theme_osp()`.
+The `runPlot` function includes an optional `theme` argument that can be used to adjust or override this default styling for all generated `ggplot` objects.
+
+```{r runPlot-theme-example}
+plotList <- runPlot(
+  nameOfplotFunction = "plotTimeProfiles",
+  configTableSheet = "myTimeProfile",
+  projectConfiguration = projectConfiguration,
+  theme = ggplot2::theme_classic(),
+  plotNames = c("Plot1"),
+  inputs = list(
+    scenarioResults = scenarioResults,
+    dataObserved = dataObserved
+  )
+)
+```
+
+Tables returned by plot functions are not affected by `theme`.
 
 ### Suppressing Export of Plots
 

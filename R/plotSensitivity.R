@@ -12,6 +12,7 @@
 plotSensitivity <- function(projectConfiguration, onePlotConfig, scenarioList) {
   # initialize variable to avoid messages
   sens <- parameterName <- plotFacetLabel <- plotTag <- NULL
+  representativeStratum <- scenarioLongName <- NULL
 
   checkmate::assertFileExists(
     x = .getSensitivityResultFilePath(
@@ -28,24 +29,55 @@ plotSensitivity <- function(projectConfiguration, onePlotConfig, scenarioList) {
     scenarioList
   )
 
-  plotObject <- ggplotWithWatermark(plotData) +
-    geom_col(
-      aes(x = parameterName, y = sens),
-      fill = "grey",
-      position = "dodge"
-    ) +
-    labs(
-      y = "Sensitivity",
-      x = ""
-    ) +
-    scale_x_discrete(limits = rev(unique(plotData$parameterName))) +
-    theme(
-      legend.position = "top",
-      legend.direction = "vertical",
-      legend.title = element_blank()
-    ) +
-    scale_fill_grey(start = 0.7, end = 0) +
-    coord_flip()
+  hasRepresentativeStrata <-
+    "representativeStratum" %in% names(plotData) &&
+    any(!is.na(plotData$representativeStratum) & nzchar(plotData$representativeStratum))
+
+  if (hasRepresentativeStrata) {
+    plotObject <- ggplotWithWatermark(plotData) +
+      geom_hline(yintercept = 0, color = "grey70") +
+      geom_point(
+        aes(
+          x = parameterName,
+          y = sens,
+          color = scenarioLongName,
+          shape = representativeStratum
+        ),
+        position = position_dodge(width = 0.7),
+        size = 2.5
+      ) +
+      labs(
+        y = "Sensitivity",
+        x = "",
+        color = "Scenario",
+        shape = "Representative"
+      ) +
+      scale_x_discrete(limits = rev(unique(plotData$parameterName))) +
+      theme(
+        legend.position = "top",
+        legend.direction = "vertical"
+      ) +
+      coord_flip()
+  } else {
+    plotObject <- ggplotWithWatermark(plotData) +
+      geom_col(
+        aes(x = parameterName, y = sens),
+        fill = "grey",
+        position = "dodge"
+      ) +
+      labs(
+        y = "Sensitivity",
+        x = ""
+      ) +
+      scale_x_discrete(limits = rev(unique(plotData$parameterName))) +
+      theme(
+        legend.position = "top",
+        legend.direction = "vertical",
+        legend.title = element_blank()
+      ) +
+      scale_fill_grey(start = 0.7, end = 0) +
+      coord_flip()
+  }
 
   facetValues <- if ("plotFacetLabel" %in% names(plotData)) {
     plotData$plotFacetLabel
@@ -139,6 +171,22 @@ prepareSensitivityPlotData <- function(
   PKParameter <- QuantityPath <- NULL
   representativeStratum <- plotFacetLabel <- NULL
 
+  scenarioName <- longName <- NULL
+
+  referenceScenarioLookup <- data.table::data.table(
+    scenarioName = character(0),
+    referenceScenarioLongName = character(0)
+  )
+  if (
+    "scenarios" %in% ls(envir = configEnv) &&
+      all(c("scenarioName", "longName") %in% names(configEnv$scenarios))
+  ) {
+    referenceScenarioLookup <- unique(configEnv$scenarios[, .(
+      scenarioName,
+      referenceScenarioLongName = longName
+    )])
+  }
+
   pkDefinitions <- getPKParameterOverview(projectConfiguration) %>%
     .[, c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")]
 
@@ -190,6 +238,30 @@ prepareSensitivityPlotData <- function(
       plotDataLine <- lapply(
         split(configLine, seq(1, nrow(configLine))),
         function(cL) {
+          referenceScenarioName <- if ("referenceScenario" %in% names(cL)) {
+            cL$referenceScenario
+          } else {
+            NA_character_
+          }
+
+          referenceScenarioLongName <- NA_character_
+          if (!is.na(referenceScenarioName) && nzchar(referenceScenarioName)) {
+            if (nrow(referenceScenarioLookup) > 0) {
+              matchedLongName <- referenceScenarioLookup[
+                scenarioName == referenceScenarioName
+              ]$referenceScenarioLongName
+              if (length(matchedLongName) > 0 &&
+                !is.na(matchedLongName[1]) &&
+                nzchar(matchedLongName[1])) {
+                referenceScenarioLongName <- matchedLongName[1]
+              } else {
+                referenceScenarioLongName <- referenceScenarioName
+              }
+            } else {
+              referenceScenarioLongName <- referenceScenarioName
+            }
+          }
+
           filteredData <- rawSensitivityData[
             PKParameter == cL$pKParameter &
               QuantityPath == cL$outputPath &
@@ -204,6 +276,8 @@ prepareSensitivityPlotData <- function(
             pKParameter = cL$pKParameter,
             displayNamePKParameter = cL$displayNamePKParameter,
             scenarioLongName = cL$scenarioLongName,
+            referenceScenario = referenceScenarioName,
+            referenceScenarioLongName = referenceScenarioLongName,
             RepresentativeOutputPath = if (hasRepresentativeStrata) {
               filteredData$RepresentativeOutputPath
             } else {
@@ -239,6 +313,30 @@ prepareSensitivityPlotData <- function(
 
       plotDataLine <-
         lapply(split(configLine, seq(1, nrow(configLine))), function(cL) {
+          referenceScenarioName <- if ("referenceScenario" %in% names(cL)) {
+            cL$referenceScenario
+          } else {
+            NA_character_
+          }
+
+          referenceScenarioLongName <- NA_character_
+          if (!is.na(referenceScenarioName) && nzchar(referenceScenarioName)) {
+            if (nrow(referenceScenarioLookup) > 0) {
+              matchedLongName <- referenceScenarioLookup[
+                scenarioName == referenceScenarioName
+              ]$referenceScenarioLongName
+              if (length(matchedLongName) > 0 &&
+                !is.na(matchedLongName[1]) &&
+                nzchar(matchedLongName[1])) {
+                referenceScenarioLongName <- matchedLongName[1]
+              } else {
+                referenceScenarioLongName <- referenceScenarioName
+              }
+            } else {
+              referenceScenarioLongName <- referenceScenarioName
+            }
+          }
+
           sensitivities <- sensitivityResults$allPKParameterSensitivitiesFor(
             pkParameterName = cL$pKParameter,
             outputPath = cL$outputPath,
@@ -255,7 +353,9 @@ prepareSensitivityPlotData <- function(
             outputPathId = cL$outputPathId,
             pKParameter = cL$pKParameter,
             displayNamePKParameter = cL$displayNamePKParameter,
-            scenarioLongName = cL$scenarioLongName
+            scenarioLongName = cL$scenarioLongName,
+            referenceScenario = referenceScenarioName,
+            referenceScenarioLongName = referenceScenarioLongName
           )
         })
 
@@ -329,12 +429,15 @@ prepareSensitivityPlotData <- function(
     ]]
     representativeOutputDisplay[is.na(representativeOutputDisplay)] <-
       plotData[["RepresentativeOutputPath"]]
+    representativePKParameter <- plotData[["RepresentativePKParameter"]]
+    representativeQuantile <- plotData[["RepresentativeQuantile"]]
+    representativeIndividualId <- plotData[["RepresentativeIndividualId"]]
     plotData[,
       representativeStratum := .formatRepresentativeSensitivityStratum(
         representativeOutputDisplay = representativeOutputDisplay,
-        representativePKParameter = RepresentativePKParameter,
-        representativeQuantile = RepresentativeQuantile,
-        representativeIndividualId = RepresentativeIndividualId
+        representativePKParameter = representativePKParameter,
+        representativeQuantile = representativeQuantile,
+        representativeIndividualId = representativeIndividualId
       )
     ]
   } else {
@@ -343,14 +446,13 @@ prepareSensitivityPlotData <- function(
 
   dtPlotTag <- unique(plotData[, c(
     "outputPathId",
-    "pKParameter",
-    "representativeStratum"
+    "pKParameter"
   )])
   dtPlotTag[, plotTag := generatePlotTag(.I)]
   plotData <- merge(
     plotData,
     dtPlotTag,
-    by = c("outputPathId", "pKParameter", "representativeStratum"),
+    by = c("outputPathId", "pKParameter"),
     all.x = TRUE,
     sort = FALSE
   )
@@ -361,14 +463,6 @@ prepareSensitivityPlotData <- function(
   )
 
   plotData[, plotFacetLabel := as.character(plotTag)]
-  plotData[
-    !is.na(representativeStratum) & nzchar(representativeStratum),
-    plotFacetLabel := paste(
-      as.character(plotTag),
-      representativeStratum,
-      sep = ": "
-    )
-  ]
   plotData$plotFacetLabel <- factor(
     plotData$plotFacetLabel,
     ordered = TRUE,
@@ -402,6 +496,9 @@ getCaptionForSensitivityPlot <- function(
   projectConfiguration,
   plotCaptionAddon
 ) {
+  referenceScenario <- referenceScenarioLongName <- scenarioLongName <- NULL
+  ratioPair <- referenceLabel <- NULL
+
   dtCaption <- plotData %>%
     dplyr::select(c(
       "plotTag",
@@ -435,6 +532,35 @@ getCaptionForSensitivityPlot <- function(
       paste(
         "Filtering threshold (absolute sensitivity): >=",
         thresholdText
+      )
+    )
+  }
+
+  if (
+    "referenceScenario" %in% names(plotData) &&
+      any(!is.na(plotData$referenceScenario) & nzchar(plotData$referenceScenario))
+  ) {
+    ratioCaptionData <- unique(plotData[
+      !is.na(referenceScenario) & nzchar(referenceScenario),
+      c(
+        "plotTag",
+        "scenarioLongName",
+        "referenceScenario",
+        "referenceScenarioLongName"
+      )
+    ])
+    ratioCaptionData[, referenceLabel := referenceScenarioLongName]
+    ratioCaptionData[
+      is.na(referenceLabel) | !nzchar(referenceLabel),
+      referenceLabel := referenceScenario
+    ]
+    ratioCaptionData[, ratioPair := paste0(scenarioLongName, " / ", referenceLabel)]
+
+    captiontext <- addCaptionTextAddon(
+      captiontext,
+      paste(
+        "Ratio mode (scenario/reference):",
+        pasteFigureTags(ratioCaptionData, captionColumn = "ratioPair")
       )
     )
   }

@@ -32,7 +32,9 @@ makeSensitivityPlotData <- function(
   scenarioLongName = "Adults",
   displayNameOutput = "Plasma concentration",
   plotTag = "A",
-  threshold = 0
+  threshold = 0,
+  referenceScenario = NA_character_,
+  referenceScenarioLongName = NA_character_
 ) {
   data.table::data.table(
     outputPathId = outputPathId,
@@ -40,7 +42,9 @@ makeSensitivityPlotData <- function(
     scenarioLongName = scenarioLongName,
     displayNameOutput = displayNameOutput,
     plotTag = plotTag,
-    threshold = threshold
+    threshold = threshold,
+    referenceScenario = referenceScenario,
+    referenceScenarioLongName = referenceScenarioLongName
   )
 }
 
@@ -165,6 +169,34 @@ test_that("getCaptionForSensitivityPlot omits threshold text when threshold is 0
   )
 
   expect_false(grepl("Filtering threshold", result))
+})
+
+test_that("getCaptionForSensitivityPlot includes ratio-mode description", {
+  plotData <- makeSensitivityPlotData(
+    scenarioLongName = "Treatment",
+    referenceScenario = "ReferenceScenario",
+    referenceScenarioLongName = "Reference",
+    plotTag = "A"
+  )
+
+  configEnv <- get0("configEnv", envir = .GlobalEnv, inherits = FALSE)
+  mockEnv <- if (is.null(configEnv)) new.env(parent = emptyenv()) else configEnv
+  oldOutputPaths <- mockEnv$outputPaths
+  on.exit(mockEnv$outputPaths <- oldOutputPaths, add = TRUE)
+  mockEnv$outputPaths <- data.table::data.table(
+    outputPathId = "Plasma",
+    displayNameOutput = "Plasma concentration"
+  )
+  assign("configEnv", mockEnv, envir = .GlobalEnv)
+
+  result <- ospsuite.reportingframework:::getCaptionForSensitivityPlot(
+    plotData = plotData,
+    projectConfiguration = NULL,
+    plotCaptionAddon = NA
+  )
+
+  expect_match(result, "Ratio mode")
+  expect_match(result, "Treatment / Reference")
 })
 
 # ---------------------------------------------------------------------------
@@ -811,7 +843,7 @@ test_that("prepareSensitivityPlotData exposes representative strata in facet lab
     scenarioList = list(ScenarioA = list(simulation = "unused"))
   )
 
-  expect_equal(length(unique(as.character(plotData$plotTag))), 2)
-  expect_true(all(grepl("p(5|50)", as.character(plotData$plotFacetLabel))))
+  expect_equal(length(unique(as.character(plotData$plotTag))), 1)
+  expect_equal(length(unique(as.character(plotData$plotFacetLabel))), 1)
   expect_true(all(grepl("ID_", plotData$representativeStratum)))
 })

@@ -296,7 +296,8 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   dtOutputPaths <- getOutputPathIds(projectConfiguration$addOns$reportsFile)
   sensitivityParameterDt <- xlsxReadData(
     projectConfiguration$addOns$sensitivityFile,
-    sheetName = sensitivitysheet
+    sheetName = sensitivitysheet,
+    skipDescriptionRow = TRUE
   )
   sensitivityParameter <- .asSensitivityParameterList(sensitivityParameterDt)
 
@@ -361,12 +362,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
         )
         next
       }
-
-      scenarioPopulation <- .getScenarioPopulationForSensitivity(
-        scenarioList = scenarioList,
-        projectConfiguration = projectConfiguration,
-        scenarioName = currentScenarioName
-      )
+      scenarioPopulation <- scenarioList[[currentScenarioName]]$population
 
       representativeResults <- lapply(
         split(representatives, seq_len(nrow(representatives))),
@@ -376,6 +372,9 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
               population = scenarioPopulation,
               representativeIndividualId = representative$RepresentativeIndividualId,
               sensitivityParameter = sensitivityParameter,
+              scenarioSimulation = scenarioList[[
+                currentScenarioName
+              ]]$simulation,
               variationRange = variationRange,
               numberOfSteps = numberOfSteps
             )
@@ -438,10 +437,15 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
 #'
 #' @return A string representing the generated file name for the sensitivity analysis results.
 #' @keywords internal
+#' @noRd
 .sensitivityAnalysisName <- function(scenarioName, sensitivitysheet) {
   paste0(scenarioName, "_", sensitivitysheet, ".csv")
 }
 
+#' Build representative sensitivity result file name.
+#'
+#' @keywords internal
+#' @noRd
 .representativeSensitivityAnalysisName <- function(
   scenarioName,
   sensitivitysheet
@@ -449,6 +453,10 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   paste0(scenarioName, "_", sensitivitysheet, "_representatives.csv")
 }
 
+#' Resolve scenario PKML files for sensitivity analysis.
+#'
+#' @keywords internal
+#' @noRd
 .getScenarioFilesForSensitivity <- function(
   dtScenarios,
   currentScenarioName,
@@ -486,6 +494,10 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   )
 }
 
+#' Build PK definition table for sensitivity analysis.
+#'
+#' @keywords internal
+#' @noRd
 .getPKDefinitionsForSensitivity <- function(
   projectConfiguration,
   pkParameterSheets,
@@ -526,6 +538,10 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   return(pkDefinitions)
 }
 
+#' Normalize sensitivity parameter table columns and values.
+#'
+#' @keywords internal
+#' @noRd
 .normalizedSensitivityParameterTable <- function(sensitivityParameterDt) {
   checkmate::assertDataFrame(sensitivityParameterDt, min.rows = 1)
   checkmate::assertNames(
@@ -563,6 +579,10 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   unique(normalizedTable[, c("parameterName", "parameterPath")])
 }
 
+#' Convert normalized sensitivity parameters to named list.
+#'
+#' @keywords internal
+#' @noRd
 .asSensitivityParameterList <- function(sensitivityParameterDt) {
   normalizedTable <- .normalizedSensitivityParameterTable(
     sensitivityParameterDt
@@ -575,6 +595,10 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   lapply(sensitivityParameter, unique)
 }
 
+#' Build mapping dictionary for sensitivity parameter labels and paths.
+#'
+#' @keywords internal
+#' @noRd
 .sensitivityParameterNameDictionary <- function(sensitivityParameterDt) {
   normalizedTable <- .normalizedSensitivityParameterTable(
     sensitivityParameterDt
@@ -661,7 +685,6 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   if (!is.null(population)) {
     checkmate::assertClass(population, classes = "Population")
   }
-
   pkAnalysisFolder <- tempfile(pattern = "sensitivity-pk-")
   dir.create(pkAnalysisFolder)
   on.exit(unlink(pkAnalysisFolder, recursive = TRUE, force = TRUE), add = TRUE)
@@ -757,6 +780,10 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   return(invisible(sens))
 }
 
+#' Format quantile labels for representative sensitivity outputs.
+#'
+#' @keywords internal
+#' @noRd
 .representativeQuantileLabels <- function(representativeQuantiles) {
   paste0(
     "p",
@@ -768,6 +795,10 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   )
 }
 
+#' Select representative individuals from PK analysis outputs.
+#'
+#' @keywords internal
+#' @noRd
 .getRepresentativeIndividualsForSensitivity <- function(
   outputFolder,
   scenarioName,
@@ -866,6 +897,10 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   representatives
 }
 
+#' Ensure simulation and PK outputs exist for representative workflow.
+#'
+#' @keywords internal
+#' @noRd
 .ensureRepresentativeSensitivityPrerequisites <- function(
   projectConfiguration,
   scenarioList,
@@ -902,29 +937,11 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   return(invisible(NULL))
 }
 
-.getScenarioPopulationForSensitivity <- function(
-  scenarioList,
-  projectConfiguration,
-  scenarioName
-) {
-  scenario <- scenarioList[[scenarioName]]
-  if (
-    !is.null(scenario$population) &&
-      inherits(scenario$population, "Population")
-  ) {
-    return(scenario$population)
-  }
 
-  populationFile <- file.path(
-    projectConfiguration$outputFolder,
-    EXPORTDIR$simulationResult,
-    paste0(scenarioName, "_population.csv")
-  )
-  checkmate::assertFileExists(populationFile)
-
-  ospsuite::loadPopulation(populationFile)
-}
-
+#' Keep only sensitivity parameter paths available in baseline data.
+#'
+#' @keywords internal
+#' @noRd
 .filterSensitivityParametersForAvailablePaths <- function(
   sensitivityParameter,
   availablePaths
@@ -968,9 +985,14 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   filteredSensitivityParameter
 }
 
+#' Build perturbed sensitivity population from one baseline row.
+#'
+#' @keywords internal
+#' @noRd
 .buildSensitivityPopulationFromBaselineRow <- function(
   baselineRow,
   sensitivityParameter,
+  simulation = NULL,
   variationRange = 0.1,
   numberOfSteps = 2
 ) {
@@ -982,6 +1004,11 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   checkmate::assertInt(numberOfSteps, lower = 1)
 
   baselineRow <- data.table::as.data.table(baselineRow)
+  baselineRow <- .addSimulationParametersToBaselineRow(
+    baselineRow = baselineRow,
+    sensitivityParameter = sensitivityParameter,
+    simulation = simulation
+  )
 
   positive <- 1 + variationRange * (seq_len(numberOfSteps) / numberOfSteps)
   factors <- sort(unique(c(positive, 1 / positive, 1)))
@@ -993,7 +1020,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   )
 
   populationDefault <- data.table::copy(data.table::as.data.table(
-    baselineRow[, ..availablePaths]
+    baselineRow[, availablePaths, with = FALSE]
   ))
   populationDefault[, factor := 1]
   populationDefault[, SensitivityParameter := ""]
@@ -1031,12 +1058,52 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   ospsuite::loadPopulation(popFileName)
 }
 
+#' Add simulation-only sensitivity parameters to baseline row.
+#'
+#' @keywords internal
+#' @noRd
+.addSimulationParametersToBaselineRow <- function(
+  baselineRow,
+  sensitivityParameter,
+  simulation = NULL
+) {
+  if (is.null(simulation)) {
+    return(baselineRow)
+  }
+
+  requestedPaths <- unique(unlist(sensitivityParameter, use.names = FALSE))
+  if (length(requestedPaths) == 0) {
+    return(baselineRow)
+  }
+
+  missingPaths <- setdiff(requestedPaths, names(baselineRow))
+  if (length(missingPaths) == 0) {
+    return(baselineRow)
+  }
+
+  for (parPath in missingPaths) {
+    res <- ospsuite::getParameter(
+      path = parPath,
+      container = simulation,
+      stopIfNotFound = FALSE
+    )
+    if (is.null(res) || !("value" %in% names(res))) {
+      next
+    }
+    baselineRow[, (parPath) := as.numeric(res$value)]
+  }
+
+  baselineRow
+}
+
 #' Prepare a sensitivity population for one representative individual
 #'
 #' @param population An ospsuite `Population` object.
 #' @param representativeIndividualId Individual ID to extract from the source
 #'   population.
 #' @param sensitivityParameter Named list of sensitivity parameter paths.
+#' @param scenarioSimulation Optional ospsuite simulation used to resolve
+#'   sensitivity parameter paths that are not present as population columns.
 #' @param variationRange Numeric fraction variation range.
 #' @param numberOfSteps Integer number of perturbation steps.
 #'
@@ -1047,6 +1114,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   population,
   representativeIndividualId,
   sensitivityParameter,
+  scenarioSimulation = NULL,
   variationRange = 0.1,
   numberOfSteps = 2
 ) {
@@ -1059,7 +1127,6 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
     names(populationDt),
     must.include = "IndividualId"
   )
-
   baselineRow <- populationDt[
     IndividualId == representativeIndividualId,
     ,
@@ -1075,6 +1142,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   .buildSensitivityPopulationFromBaselineRow(
     baselineRow = baselineRow,
     sensitivityParameter = sensitivityParameter,
+    simulation = scenarioSimulation,
     variationRange = variationRange,
     numberOfSteps = numberOfSteps
   )
