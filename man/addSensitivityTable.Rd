@@ -7,23 +7,29 @@
 addSensitivityTable(
   projectConfiguration,
   scenarioList = NULL,
-  scenarioName,
-  sheetName = scenarioName
+  sheetName = "Sensitivity",
+  parameterPathMode = c("intersection", "union")
 )
 }
 \arguments{
 \item{projectConfiguration}{An object representing the project configuration.}
 
-\item{scenarioList}{A list of scenarios from which to extract parameter paths. Defaults to NULL.}
+\item{scenarioList}{A named list of scenarios from which to extract
+parameter paths. If \code{NULL}, only the template workbook is added to the
+project configuration.}
 
-\item{scenarioName}{The name of the scenario to extract parameter paths from.}
+\item{sheetName}{The name of the sheet in the Excel file to populate.}
 
-\item{sheetName}{The name of the sheet in the Excel file to populate. Defaults to the value of scenarioName.}
+\item{parameterPathMode}{Character string indicating how to combine the
+potential parameter paths from \code{scenarioList}: \code{"intersection"}
+keeps only paths present in every scenario, while \code{"union"} keeps any
+path present in at least one scenario.}
 }
 \value{
 The modified project configuration object.
 }
 \description{
 This function adds a sensitivity table to the provided project configuration.
-It loads a template Excel file and populates it with parameter paths from the specified scenario.
+It loads a template Excel file and, when \code{scenarioList} is provided,
+populates it with parameter paths derived across the supplied scenarios.
 }

@@ -34,7 +34,6 @@ listed model paths are multiplied by the same factor. The baseline row
 }
 \seealso{
 Other sensitivity functions:
-\code{\link[=calculateSensitivities]{calculateSensitivities()}},
 \code{\link[=loadSensitivityPKValues]{loadSensitivityPKValues()}}
 }
 \concept{sensitivity functions}

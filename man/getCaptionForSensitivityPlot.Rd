@@ -18,5 +18,7 @@ A string containing the generated caption for the sensitivity plot.
 }
 \description{
 Generates a caption for the sensitivity plot based on the plot data and project configuration.
+If the configured sensitivity threshold is greater than 0, the caption
+includes the applied absolute sensitivity filter.
 }
 \keyword{internal}

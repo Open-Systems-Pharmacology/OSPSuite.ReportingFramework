@@ -1,0 +1,363 @@
+---
+title: "Sensitivity_Analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Sensitivity_Analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  eval = FALSE,
+  echo = TRUE,
+  warning = FALSE,
+  error = FALSE,
+  message = FALSE,
+  comment = "#>"
+)
+```
+
+```{r setup, echo = FALSE, eval = TRUE}
+library(ospsuite.reportingframework)
+library(data.table)
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
+
+## Introduction
+
+`ospsuite.reportingframework` extends the default sensitivity workflow available in PK-Sim to support reporting-focused workflows and population-based use cases.
+
+The conceptual basis remains the same as in PK-Sim: local parameter perturbations are propagated to pharmacokinetic (PK) endpoints, and sensitivities are interpreted through the direction and magnitude of the response.
+
+The Reporting Framework extends that baseline workflow in four important ways:
+
+- It supports configuration-driven execution across predefined scenarios.
+- It supports many-to-one mappings, where multiple parameter paths are reported under one sensitivity label.
+- It supports ratio mode for scenario-versus-reference comparisons, which is especially useful for DDI ratio analyses.
+- It supports representative-individual sensitivity for population scenarios.
+
+This vignette explains those extensions, shows where they fit into the reporting workflow, and summarizes when each sensitivity mode should be used.
+
+## Relationship to PK-Sim Sensitivity
+
+The default PK-Sim sensitivity workflow answers a local question: how does a small perturbation in a model parameter affect a PK endpoint?
+
+The Reporting Framework keeps that question intact, but adds reporting-oriented execution and aggregation layers around it.
+
+### What stays the same
+
+- Sensitivity is based on perturbing model parameters.
+- Sensitivity is evaluated against PK endpoints.
+- Positive and negative sensitivity values keep the same interpretation as in PK-Sim.
+
+### What is extended here
+
+- **Many-to-one mapping**: several model parameter paths can be grouped under one reported sensitivity label.
+- **Ratio mode**: sensitivity can be calculated on `scenario / referenceScenario` instead of on a single scenario.
+- **Reporting integration**: results are written to CSV and can be plotted and exported in a standard workflow.
+- **Representative population sensitivity**: sensitivity can be evaluated on selected representative individuals from a population scenario.
+
+## Choosing the Right Sensitivity Workflow
+
+Three workflows are available conceptually.
+
+### Standard single-scenario sensitivity
+
+Use this when you want to evaluate how parameter perturbations affect PK endpoints for one scenario.
+
+This is the closest extension of the default PK-Sim use case.
+
+### Ratio-mode sensitivity
+
+Use this when you want to evaluate sensitivity on a ratio between two scenarios, for example:
+
+- treatment versus reference,
+- interaction versus control,
+- scenario comparison at the level of a mean model.
+
+In this mode, sensitivities are calculated on `scenario / referenceScenario`.
+
+### Representative population sensitivity
+
+Use this when you want to characterize local sensitivities for selected representative individuals rather than a single mean model or an entire population aggregate.
+
+This workflow selects individuals nearest to chosen PK quantiles and then performs sensitivity calculations separately for each representative.
+
+Representative population sensitivity does **not** support ratio mode.
+
+## Required Configuration Inputs
+
+Sensitivity calculations depend on several configuration inputs that connect scenarios, outputs, PK parameters, and the sensitivity setup.
+
+### SensitivityParameter.xlsx
+
+The sensitivity parameter workbook can be added with `addSensitivityTable()`.
+
+```{r add-sensitivity-table}
+projectConfiguration <- addSensitivityTable(
+  projectConfiguration = projectConfiguration,
+  scenarioList = scenarioList
+)
+```
+
+The sheet contains at least the following logical inputs:
+
+- `parameterPath`: the parameter path to perturb.
+- `parameter`: an optional reporting label.
+
+If multiple rows share the same `parameter` value, those parameter paths are treated as one grouped sensitivity label.
+
+### PK parameter definitions
+
+Sensitivity is reported against PK parameters defined in the PK parameter configuration workbook. The selected PK parameter sheets determine which PK endpoints are evaluated.
+
+### Output path mappings
+
+Sensitivity plots and exports are linked to output paths through the reporting configuration. Output path identifiers are resolved to simulation paths and display names during the reporting workflow.
+
+### Scenario configuration
+
+Scenarios determine:
+
+- which model file is used,
+- which PK parameter sheet is active,
+- whether the workflow is single-scenario, ratio-mode, or population-based.
+
+## Standard Sensitivity Workflow
+
+The standard workflow consists of five steps:
+
+1. Create or populate `SensitivityParameter.xlsx`.
+2. Ensure PK parameter sheets are configured.
+3. Run the sensitivity calculation.
+4. Inspect the CSV output in `Outputs/SensitivityResults`.
+5. Plot the results with `plotSensitivity()`.
+
+### Example
+
+```{r run-standard-sensitivity}
+runSensitivityAnalysisForScenarios(
+  projectConfiguration = projectConfiguration,
+  scenarioList = scenarioList,
+  scenarioNames = c("ScenarioA"),
+  sensitivitysheet = "Sensitivity"
+)
+```
+
+The resulting CSV contains one row per sensitivity label, output path, and PK parameter.
+
+## Many-to-One Mapping of Parameter Paths
+
+One major extension over the default PK-Sim workflow is the ability to report several perturbed parameter paths under one sensitivity label.
+
+This is useful when several technical model parameters represent one common biological or mechanistic concept.
+
+### Example structure of the sensitivity sheet
+
+| parameter | parameterPath |
+|-----------|---------------|
+| Clearance | Organism|Liver|Drug|Specific clearance |
+| Clearance | Organism|Kidney|Drug|Specific clearance |
+| Volume    | Organism|Plasma|Drug|Volume |
+
+In this example, two different parameter paths are perturbed together and reported as one sensitivity label, `Clearance`.
+
+This grouped reporting is specific to the Reporting Framework extension layer.
+
+## Ratio Mode for Scenario Comparison
+
+Ratio mode extends the default single-scenario workflow to scenario-versus-reference comparisons.
+
+This is particularly useful for mean-model based analyses where the reported endpoint of interest is a ratio rather than an absolute quantity.
+
+### Example
+
+```{r run-ratio-mode}
+runSensitivityAnalysisForScenarios(
+  projectConfiguration = projectConfiguration,
+  scenarioList = scenarioList,
+  scenarioNames = c("Treatment"),
+  sensitivitysheet = "Sensitivity",
+  referenceScenario = "Reference"
+)
+```
+
+In this workflow:
+
+- the reference scenario provides the denominator,
+- the target scenario provides the numerator,
+- sensitivity is evaluated on the ratio of PK outputs.
+
+### When ratio mode is useful
+
+- mean model comparisons,
+- DDI-style comparisons,
+- intervention-versus-baseline analyses.
+
+### Interpretation notes
+
+- the choice of reference scenario matters,
+- ratio sensitivities are not directly interchangeable with absolute sensitivities,
+- the result reflects the sensitivity of the comparison metric, not just of the numerator scenario alone.
+
+## Representative Population Sensitivity
+
+Representative population sensitivity is an additional Reporting Framework extension for population scenarios.
+
+Instead of calculating sensitivity for a single mean model, this workflow:
+
+1. reads PK results for the analyzed scenario,
+2. selects representative individuals nearest to configured quantiles,
+3. builds one-individual sensitivity populations,
+4. runs the sensitivity calculation separately for each representative.
+
+### Representative selection
+
+By default, representative individuals are selected at the 5th, 50th, and 95th percentiles for each configured PK parameter and output path combination.
+
+Those quantiles are adjustable through the function input.
+
+### Example
+
+```{r run-representative-sensitivity}
+runRepresentativeSensitivityAnalysisForScenarios(
+  projectConfiguration = projectConfiguration,
+  scenarioList = scenarioList,
+  scenarioNames = c("PopulationScenario"),
+  sensitivitysheet = "Sensitivity",
+  representativeQuantiles = c(0.05, 0.5, 0.95)
+)
+```
+
+### Output structure
+
+The representative workflow writes a separate result file with a `_representatives` suffix.
+
+In addition to the standard sensitivity columns, it includes representative metadata such as:
+
+- representative output path,
+- representative PK parameter,
+- representative quantile,
+- representative individual ID.
+
+### Current limitations
+
+- The workflow is single-scenario only.
+- Ratio mode is intentionally disabled.
+- Representative results depend on the selected quantiles.
+- Representative results do not replace full-population inference.
+
+## Plotting Sensitivity Results
+
+Sensitivity results can be plotted with `plotSensitivity()`.
+
+```{r plot-sensitivity}
+plotList <- plotSensitivity(
+  projectConfiguration = projectConfiguration,
+  onePlotConfig = onePlotConfig,
+  scenarioList = scenarioList
+)
+```
+
+### Standard and ratio-mode outputs
+
+For standard sensitivity and ratio-mode sensitivity, the plot shows sensitivities by PK parameter and output path according to the plot configuration.
+
+When a positive `threshold` is configured for a sensitivity plot, the generated
+caption includes the applied absolute-sensitivity filter (`abs(sens) >= threshold`).
+If `threshold` is `0`, no threshold line is added to the caption.
+
+### Representative outputs
+
+For representative population sensitivity, `plotSensitivity()` exposes representative strata explicitly.
+
+Facet labels and exported tables preserve the representative context, including:
+
+- the PK parameter used to define the representative,
+- the output used to define the representative,
+- the selected quantile,
+- the individual ID.
+
+This makes it possible to compare how sensitivities shift between low, median, and high PK representatives.
+
+## Output Files
+
+The sensitivity workflow writes its final outputs to `Outputs/SensitivityResults`.
+
+### Standard sensitivity output
+
+Standard output files follow the scenario and sheet naming convention:
+
+`<scenario>_<sensitivitysheet>.csv`
+
+### Representative sensitivity output
+
+Representative output files follow the naming convention:
+
+`<scenario>_<sensitivitysheet>_representatives.csv`
+
+### Core result columns
+
+Standard sensitivity results contain:
+
+- `SensitivityParameter`,
+- `QuantityPath`,
+- `PKParameter`,
+- `sens`.
+
+Representative sensitivity results contain the same columns plus representative metadata columns.
+
+## Interpretation Guidance
+
+Sensitivity values should always be interpreted in the context of the selected workflow.
+
+### Standard sensitivity
+
+This describes how a local perturbation changes a PK endpoint within one scenario.
+
+### Grouped many-to-one sensitivity
+
+This describes the effect of perturbing several parameter paths under one reporting label. The reported sensitivity therefore belongs to the grouped concept, not to a single parameter path in isolation.
+
+### Ratio-mode sensitivity
+
+This describes the sensitivity of a comparison metric, not just the absolute endpoint in one model.
+
+### Representative population sensitivity
+
+This describes local sensitivities for selected representative individuals. Those representatives are chosen to span the PK distribution, but they are not substitutes for a full uncertainty or variability analysis across the whole population.
+
+## Recommended Use Cases
+
+The table below summarizes which workflow is most appropriate for common questions.
+
+| Question | Recommended workflow |
+|----------|----------------------|
+| Which parameters drive PK in one scenario? | Standard sensitivity |
+| Which parameters drive a treatment/reference comparison? | Ratio mode |
+| How do sensitivities differ between low, median, and high PK individuals? | Representative population sensitivity |
+| How should multiple mechanistically related parameters be reported together? | Many-to-one grouped sensitivity |
+
+## Summary
+
+`ospsuite.reportingframework` extends the default PK-Sim sensitivity concept in a way that is tailored to reporting workflows.
+
+The main extensions are:
+
+- configuration-driven execution,
+- many-to-one parameter grouping,
+- ratio mode for scenario comparisons,
+- representative sensitivity for population scenarios,
+- plotting and export layers that preserve reporting context.
+
+These extensions make the sensitivity workflow more suitable for reproducible report generation while keeping the original PK-Sim sensitivity concept intact.
+
+## See Also
+
+- `addSensitivityTable()`
+- `runSensitivityAnalysisForScenarios()`
+- `runRepresentativeSensitivityAnalysisForScenarios()`
+- `plotSensitivity()`
+- `Plot_and_Report_Generation`

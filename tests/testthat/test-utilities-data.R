@@ -1,80 +1,9 @@
 # Self-contained fixture based on package tutorial data
 .makeUtilitiesDataProjectConfiguration <- function(.env = parent.frame()) {
-  projectDir <- tempfile(pattern = "rf_util_data_")
-  dir.create(projectDir, recursive = TRUE, showWarnings = FALSE)
-  tutorialDir <- system.file(
-    "extdata",
-    "Tutorial",
-    package = "ospsuite.reportingframework"
-  )
-
-  filesToCopy <- c(
-    "DataImportConfiguration.xlsx",
-    "Individuals.xlsx",
-    "Reports.xlsx",
-    "Scenarios.xlsx"
-  )
-
-  file.copy(
-    from = file.path(tutorialDir, filesToCopy),
-    to = file.path(projectDir, filesToCopy),
-    overwrite = TRUE
-  )
-
-  dataDir <- file.path(projectDir, "Data")
-  dir.create(dataDir, recursive = TRUE, showWarnings = FALSE)
-  dataFiles <- c(
-    "timeprofiles_study1234_iv.csv",
-    "timeprofiles_study1234_po.csv"
-  )
-  file.copy(
-    from = file.path(
-      tutorialDir,
-      dataFiles
-    ),
-    to = file.path(
-      dataDir,
-      dataFiles
-    ),
-    overwrite = TRUE
-  )
-
-  # DataImportConfiguration.xlsx references files via Data/...; stage files in common temp roots.
-  for (rootDir in unique(c(
-    tempdir(),
-    dirname(tempdir()),
-    dirname(dirname(tempdir())),
-    projectDir
-  ))) {
-    tempDataDir <- file.path(rootDir, "Data")
-    dir.create(tempDataDir, recursive = TRUE, showWarnings = FALSE)
-    srcFiles <- file.path(dataDir, dataFiles)
-    dstFiles <- file.path(tempDataDir, dataFiles)
-    if (
-      !all(
-        normalizePath(srcFiles, winslash = "/") ==
-          normalizePath(dstFiles, winslash = "/", mustWork = FALSE)
-      )
-    ) {
-      file.copy(
-        from = srcFiles,
-        to = dstFiles,
-        overwrite = TRUE
-      )
-    }
-  }
-
-  list(
-    dataImporterConfigurationFile = file.path(
-      projectDir,
-      "DataImportConfiguration.xlsx"
-    ),
-    projectConfigurationDirPath = tempdir(),
-    individualsFile = file.path(projectDir, "Individuals.xlsx"),
-    scenariosFile = file.path(projectDir, "Scenarios.xlsx"),
-    addOns = list(
-      reportsFile = file.path(projectDir, "Reports.xlsx")
-    )
+  .makeTutorialDataProjectConfiguration(
+    projectDirPrefix = "rf_util_data_",
+    includeIndividualsFile = TRUE,
+    includeScenariosFile = TRUE
   )
 }
 

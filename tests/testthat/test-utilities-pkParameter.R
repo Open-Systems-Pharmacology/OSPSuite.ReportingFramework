@@ -7,17 +7,6 @@
   )
 }
 
-# helper: Aciclovir simulation and PKAnalyses.csv co-shipped with ospsuite
-.aciclovirSimulation <- function() {
-  ospsuite::loadSimulation(
-    system.file("extdata", "Aciclovir.pkml", package = "ospsuite"),
-    loadFromCache = FALSE
-  )
-}
-.pkAnalysesCsvPath <- function() {
-  system.file("extdata", "PKAnalyses.csv", package = "ospsuite")
-}
-
 .mockProjectConfiguration <- function(
   outputFolder = withr::local_tempdir(),
   pkParameterFile = "PKParameter.xlsx",

@@ -25,7 +25,6 @@ returned `Value` column contains `scenario2 / scenario1` (DDI ratio).
 }
 \seealso{
 Other sensitivity functions:
-\code{\link[=calculateSensitivities]{calculateSensitivities()}},
 \code{\link[=prepareSensitivityPopulation]{prepareSensitivityPopulation()}}
 }
 \concept{sensitivity functions}

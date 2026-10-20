@@ -9,8 +9,10 @@ runSensitivityAnalysisForScenarios(
   scenarioList,
   scenarioNames = NULL,
   sensitivitysheet,
-  sensitivityAnalysisRunOptions =
-    ospsuite::SensitivityAnalysisRunOptions$new(showProgress = TRUE),
+  referenceScenario = NULL,
+  variationRange = 0.1,
+  numberOfSteps = 2,
+  simulationRunOptions = ospsuite::SimulationRunOptions$new(showProgress = TRUE),
   overwrite = TRUE
 )
 }
@@ -23,12 +25,37 @@ runSensitivityAnalysisForScenarios(
 
 \item{sensitivitysheet}{The name of the sheet in the sensitivity Excel file to use for analysis.}
 
-\item{sensitivityAnalysisRunOptions}{Options for running the sensitivity analysis.
-Defaults to an instance of `SensitivityAnalysisRunOptions` with `showProgress` set to TRUE.}
+\item{referenceScenario}{Optional scenario name used as the denominator for
+ratio mode. When provided, sensitivities are computed as
+\\code{scenario / referenceScenario}.}
+
+\item{variationRange}{Numeric fraction variation range passed to
+`.calculateSensitivities()`.}
+
+\item{numberOfSteps}{Integer number of perturbation steps passed to
+`.calculateSensitivities()`.}
+
+\item{simulationRunOptions}{Optional `SimulationRunOptions` passed to the
+simulation runs used by the enhanced workflow.}
 
 \item{overwrite}{A logical indicating whether to overwrite existing results. Defaults to TRUE.}
 }
 \description{
-This function executes sensitivity analysis for the specified scenarios in the project configuration.
-It checks for the presence of the sensitivity file and runs the analysis, saving the results to CSV files.
+This function executes sensitivity analysis for the specified scenarios in the
+project configuration.
+It checks for the presence of the sensitivity file, derives the PK
+parameters and output paths configured for each scenario, and runs the
+enhanced sensitivity workflow, saving the results to CSV files.
+}
+\details{
+Repeated rows in the sensitivity sheet that share the same `parameter`
+value are treated as one grouped sensitivity label, so multiple
+`parameterPath` values can be varied together.
+
+Ratio mode is only applied when `referenceScenario` is provided.
+In that case the sensitivity is calculated for
+`scenario / referenceScenario`.
+Intermediate PK-analysis CSV files are written to a temporary folder and
+cleaned up automatically; only the final sensitivity CSV is kept in
+`Outputs/SensitivityResults`.
 }

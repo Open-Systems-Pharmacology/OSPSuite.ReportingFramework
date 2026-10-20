@@ -1,70 +1,8 @@
 .makeUtilitiesDataProjectConfigurationAI <- function() {
-    projectDir <- tempfile(pattern = "rf_util_ai_")
-    dir.create(projectDir, recursive = TRUE, showWarnings = FALSE)
-    tutorialDir <- system.file(
-        "extdata",
-        "Tutorial",
-        package = "ospsuite.reportingframework"
+    .makeTutorialDataProjectConfiguration(
+        projectDirPrefix = "rf_util_ai_",
+        includeScenariosFile = TRUE
     )
-
-    filesToCopy <- c(
-        "DataImportConfiguration.xlsx",
-        "Individuals.xlsx",
-        "Reports.xlsx",
-        "Scenarios.xlsx"
-    )
-
-    file.copy(
-        from = file.path(tutorialDir, filesToCopy),
-        to = file.path(projectDir, filesToCopy),
-        overwrite = TRUE
-    )
-
-    dataDir <- file.path(projectDir, "Data")
-    dir.create(dataDir, recursive = TRUE, showWarnings = FALSE)
-    dataFiles <- c(
-        "timeprofiles_study1234_iv.csv",
-        "timeprofiles_study1234_po.csv"
-    )
-    file.copy(
-        from = file.path(tutorialDir, dataFiles),
-        to = file.path(dataDir, dataFiles),
-        overwrite = TRUE
-    )
-
-    for (rootDir in unique(c(
-        tempdir(),
-        dirname(tempdir()),
-        dirname(dirname(tempdir())),
-        projectDir
-    ))) {
-        tempDataDir <- file.path(rootDir, "Data")
-        dir.create(tempDataDir, recursive = TRUE, showWarnings = FALSE)
-        srcFiles <- file.path(dataDir, dataFiles)
-        dstFiles <- file.path(tempDataDir, dataFiles)
-        if (
-            !all(
-                normalizePath(srcFiles, winslash = "/") ==
-                    normalizePath(dstFiles, winslash = "/", mustWork = FALSE)
-            )
-        ) {
-            file.copy(
-                from = srcFiles,
-                to = dstFiles,
-                overwrite = TRUE
-            )
-        }
-    }
-
-    return(list(
-        dataImporterConfigurationFile = file.path(
-            projectDir,
-            "DataImportConfiguration.xlsx"
-        ),
-        projectConfigurationDirPath = tempdir(),
-        scenariosFile = file.path(projectDir, "Scenarios.xlsx"),
-        addOns = list(reportsFile = file.path(projectDir, "Reports.xlsx"))
-    ))
 }
 
 test_that("exportWorkflowContext returns expected sections and writes JSON", {

@@ -3,19 +3,19 @@
 # integration-test package.
 
 # ---------------------------------------------------------------------------
-# sensitivityAnalysisName
+# .sensitivityAnalysisName
 # ---------------------------------------------------------------------------
 
-test_that("sensitivityAnalysisName builds correct filename", {
-  result <- ospsuite.reportingframework:::sensitivityAnalysisName(
+test_that(".sensitivityAnalysisName builds correct filename", {
+  result <- ospsuite.reportingframework:::.sensitivityAnalysisName(
     "myScenario",
     "mySheet"
   )
   expect_equal(result, "myScenario_mySheet.csv")
 })
 
-test_that("sensitivityAnalysisName handles vectorised scenario input", {
-  result <- ospsuite.reportingframework:::sensitivityAnalysisName(
+test_that(".sensitivityAnalysisName handles vectorised scenario input", {
+  result <- ospsuite.reportingframework:::.sensitivityAnalysisName(
     c("sc1", "sc2"),
     "sheet1"
   )
@@ -31,14 +31,16 @@ makeSensitivityPlotData <- function(
   pKParameter = "AUC",
   scenarioLongName = "Adults",
   displayNameOutput = "Plasma concentration",
-  plotTag = "A"
+  plotTag = "A",
+  threshold = 0
 ) {
   data.table::data.table(
     outputPathId = outputPathId,
     pKParameter = pKParameter,
     scenarioLongName = scenarioLongName,
     displayNameOutput = displayNameOutput,
-    plotTag = plotTag
+    plotTag = plotTag,
+    threshold = threshold
   )
 }
 
@@ -116,6 +118,53 @@ test_that("getCaptionForSensitivityPlot handles multiple PK parameters", {
   )
   expect_match(result, "AUC")
   expect_match(result, "Cmax")
+})
+
+test_that("getCaptionForSensitivityPlot includes threshold text when threshold > 0", {
+  plotData <- makeSensitivityPlotData(threshold = 0.15)
+
+  configEnv <- get0("configEnv", envir = .GlobalEnv, inherits = FALSE)
+  mockEnv <- if (is.null(configEnv)) new.env(parent = emptyenv()) else configEnv
+  oldOutputPaths <- mockEnv$outputPaths
+  on.exit(mockEnv$outputPaths <- oldOutputPaths, add = TRUE)
+  mockEnv$outputPaths <- data.table::data.table(
+    outputPathId = "Plasma",
+    displayNameOutput = "Plasma concentration"
+  )
+  assign("configEnv", mockEnv, envir = .GlobalEnv)
+
+  result <- ospsuite.reportingframework:::getCaptionForSensitivityPlot(
+    plotData = plotData,
+    projectConfiguration = NULL,
+    plotCaptionAddon = NA
+  )
+
+  expect_match(result, "Filtering threshold")
+  expect_match(result, ">= 0.15")
+  expect_match(result, "sorted by absolute sensitivity\\. Filtering threshold")
+  expect_false(grepl(" \\\\.$", result))
+})
+
+test_that("getCaptionForSensitivityPlot omits threshold text when threshold is 0", {
+  plotData <- makeSensitivityPlotData(threshold = 0)
+
+  configEnv <- get0("configEnv", envir = .GlobalEnv, inherits = FALSE)
+  mockEnv <- if (is.null(configEnv)) new.env(parent = emptyenv()) else configEnv
+  oldOutputPaths <- mockEnv$outputPaths
+  on.exit(mockEnv$outputPaths <- oldOutputPaths, add = TRUE)
+  mockEnv$outputPaths <- data.table::data.table(
+    outputPathId = "Plasma",
+    displayNameOutput = "Plasma concentration"
+  )
+  assign("configEnv", mockEnv, envir = .GlobalEnv)
+
+  result <- ospsuite.reportingframework:::getCaptionForSensitivityPlot(
+    plotData = plotData,
+    projectConfiguration = NULL,
+    plotCaptionAddon = NA
+  )
+
+  expect_false(grepl("Filtering threshold", result))
 })
 
 # ---------------------------------------------------------------------------
@@ -236,35 +285,35 @@ test_that("validateCommonInputs errors on non-numeric variationRange", {
 })
 
 # ---------------------------------------------------------------------------
-# sensitivityAnalysisName — edge cases
+# .sensitivityAnalysisName — edge cases
 # ---------------------------------------------------------------------------
 
-test_that("sensitivityAnalysisName handles special characters in scenario names", {
-  result <- ospsuite.reportingframework:::sensitivityAnalysisName(
+test_that(".sensitivityAnalysisName handles special characters in scenario names", {
+  result <- ospsuite.reportingframework:::.sensitivityAnalysisName(
     "scenario-with-dashes",
     "sheet_with_underscores"
   )
   expect_equal(result, "scenario-with-dashes_sheet_with_underscores.csv")
 })
 
-test_that("sensitivityAnalysisName handles numeric scenario names", {
-  result <- ospsuite.reportingframework:::sensitivityAnalysisName(
+test_that(".sensitivityAnalysisName handles numeric scenario names", {
+  result <- ospsuite.reportingframework:::.sensitivityAnalysisName(
     "123",
     "456"
   )
   expect_equal(result, "123_456.csv")
 })
 
-test_that("sensitivityAnalysisName handles spaces in input", {
-  result <- ospsuite.reportingframework:::sensitivityAnalysisName(
+test_that(".sensitivityAnalysisName handles spaces in input", {
+  result <- ospsuite.reportingframework:::.sensitivityAnalysisName(
     "scenario name",
     "sheet name"
   )
   expect_equal(result, "scenario name_sheet name.csv")
 })
 
-test_that("sensitivityAnalysisName handles empty string scenario", {
-  result <- ospsuite.reportingframework:::sensitivityAnalysisName(
+test_that(".sensitivityAnalysisName handles empty string scenario", {
+  result <- ospsuite.reportingframework:::.sensitivityAnalysisName(
     "",
     "sheet"
   )
@@ -402,6 +451,88 @@ test_that("getCaptionForSensitivityPlot handles NA plotCaptionAddon", {
 })
 
 # ---------------------------------------------------------------------------
+# validateSensitivityConfig
+# ---------------------------------------------------------------------------
+
+makeSensitivityConfigTable <- function(threshold = 0.5) {
+  data.table::data.table(
+    level = NA_integer_,
+    header = NA_character_,
+    plotName = "Sensitivity Plot",
+    scenario = "Scenario1",
+    scenarioLongName = "Scenario 1",
+    outputPathIds = "Plasma",
+    pKParameters = "AUC",
+    sensitivityParameterSheet = "Sensitivity Parameters",
+    threshold = threshold
+  )
+}
+
+mockSensitivityConfigEnv <- function() {
+  packageEnv <- asNamespace("ospsuite.reportingframework")
+  mockEnv <- get("configEnv", envir = packageEnv)
+
+  oldOutputPaths <- mockEnv$outputPaths
+  oldDataGroupIds <- mockEnv$dataGroupIds
+  oldScenarios <- mockEnv$scenarios
+
+  mockEnv$outputPaths <- data.table::data.table(
+    outputPathId = factor("Plasma"),
+    outputPath = "Organism|PeripheralVenousBlood|Plasma",
+    displayNameOutput = "Plasma concentration",
+    displayUnit = "mg/l"
+  )
+  mockEnv$dataGroupIds <- data.table::data.table(
+    group = factor("Group1"),
+    displayNameData = "Group 1"
+  )
+  mockEnv$scenarios <- data.table::data.table(
+    scenarioName = "Scenario1"
+  )
+
+  function() {
+    mockEnv$outputPaths <- oldOutputPaths
+    mockEnv$dataGroupIds <- oldDataGroupIds
+    mockEnv$scenarios <- oldScenarios
+  }
+}
+
+test_that("validateSensitivityConfig accepts threshold values >= 0", {
+  restoreConfigEnv <- mockSensitivityConfigEnv()
+  on.exit(restoreConfigEnv(), add = TRUE)
+
+  expect_no_error(
+    ospsuite.reportingframework:::validateSensitivityConfig(
+      makeSensitivityConfigTable(threshold = 0)
+    )
+  )
+
+  expect_no_error(
+    ospsuite.reportingframework:::validateSensitivityConfig(
+      makeSensitivityConfigTable(threshold = 1)
+    )
+  )
+
+  expect_no_error(
+    ospsuite.reportingframework:::validateSensitivityConfig(
+      makeSensitivityConfigTable(threshold = 1.1)
+    )
+  )
+})
+
+test_that("validateSensitivityConfig rejects negative threshold values", {
+  restoreConfigEnv <- mockSensitivityConfigEnv()
+  on.exit(restoreConfigEnv(), add = TRUE)
+
+  expect_error(
+    ospsuite.reportingframework:::validateSensitivityConfig(
+      makeSensitivityConfigTable(threshold = -0.1)
+    ),
+    "threshold"
+  )
+})
+
+# ---------------------------------------------------------------------------
 # Factors generation — additional edge cases
 # ---------------------------------------------------------------------------
 
@@ -460,4 +591,227 @@ test_that("plotSensitivity rejects negative threshold when inappropriate", {
     checkmate::assertNumeric(-0.1, lower = 0),
     ">= 0"
   )
+})
+
+
+test_that("prepareSensitivityPlotData reads enhanced sensitivity CSV format", {
+  tmp <- withr::local_tempdir()
+  sensitivityDir <- file.path(tmp, EXPORTDIR$sensitivityResults)
+  dir.create(sensitivityDir, recursive = TRUE)
+
+  data.table::fwrite(
+    data.table::data.table(
+      SensitivityParameter = c("P1|CL", "P2|V"),
+      QuantityPath = c("Organism|Plasma|Drug", "Organism|Plasma|Drug"),
+      PKParameter = c("AUC", "AUC"),
+      sens = c(0.3, 0.1)
+    ),
+    file.path(sensitivityDir, "ScenarioA_default.csv")
+  )
+
+  configEnv <- get0("configEnv", envir = .GlobalEnv, inherits = FALSE)
+  mockEnv <- if (is.null(configEnv)) {
+    new.env(parent = emptyenv())
+  } else {
+    configEnv
+  }
+  oldOutputPaths <- mockEnv$outputPaths
+  on.exit(mockEnv$outputPaths <- oldOutputPaths, add = TRUE)
+  mockEnv$outputPaths <- data.table::data.table(
+    outputPathId = factor("plasma", levels = "plasma", ordered = TRUE),
+    outputPath = "Organism|Plasma|Drug",
+    displayNameOutput = "Plasma"
+  )
+  assign("configEnv", mockEnv, envir = .GlobalEnv)
+
+  local_mocked_bindings(
+    getPKParameterOverview = function(...) {
+      data.table::data.table(
+        pKParameter = "AUC",
+        displayNamePKParameter = "AUC",
+        displayUnitPKParameter = "mg*h/L",
+        outputPathId = "plasma"
+      )
+    },
+    xlsxReadData = function(...) {
+      data.table::data.table(
+        parameter = c("Clearance", "Volume"),
+        parameterPath = c("P1|CL", "P2|V")
+      )
+    },
+    .package = "ospsuite.reportingframework"
+  )
+
+  plotData <- ospsuite.reportingframework:::prepareSensitivityPlotData(
+    onePlotConfig = data.table::data.table(
+      scenario = "ScenarioA",
+      scenarioLongName = "Adults",
+      outputPathIds = "plasma",
+      pKParameters = "AUC",
+      sensitivityParameterSheet = "default",
+      threshold = 0.15
+    ),
+    projectConfiguration = list(
+      outputFolder = tmp,
+      addOns = list(
+        sensitivityFile = file.path(tmp, "SensitivityParameter.xlsx")
+      )
+    ),
+    scenarioList = list(ScenarioA = list(simulation = "unused"))
+  )
+
+  expect_equal(nrow(plotData), 1)
+  expect_equal(as.character(plotData$parameterName), "Clearance")
+  expect_equal(plotData$sens, 0.3)
+  expect_equal(as.character(plotData$outputPathId), "plasma")
+  expect_equal(as.character(plotData$pKParameter), "AUC")
+})
+
+test_that("prepareSensitivityPlotData reads grouped enhanced sensitivity labels", {
+  tmp <- withr::local_tempdir()
+  sensitivityDir <- file.path(tmp, EXPORTDIR$sensitivityResults)
+  dir.create(sensitivityDir, recursive = TRUE)
+
+  data.table::fwrite(
+    data.table::data.table(
+      SensitivityParameter = "Clearance",
+      QuantityPath = "Organism|Plasma|Drug",
+      PKParameter = "AUC",
+      sens = 0.3
+    ),
+    file.path(sensitivityDir, "ScenarioA_default.csv")
+  )
+
+  configEnv <- get0("configEnv", envir = .GlobalEnv, inherits = FALSE)
+  mockEnv <- if (is.null(configEnv)) {
+    new.env(parent = emptyenv())
+  } else {
+    configEnv
+  }
+  oldOutputPaths <- mockEnv$outputPaths
+  on.exit(mockEnv$outputPaths <- oldOutputPaths, add = TRUE)
+  mockEnv$outputPaths <- data.table::data.table(
+    outputPathId = factor("plasma", levels = "plasma", ordered = TRUE),
+    outputPath = "Organism|Plasma|Drug",
+    displayNameOutput = "Plasma"
+  )
+  assign("configEnv", mockEnv, envir = .GlobalEnv)
+
+  local_mocked_bindings(
+    getPKParameterOverview = function(...) {
+      data.table::data.table(
+        pKParameter = "AUC",
+        displayNamePKParameter = "AUC",
+        displayUnitPKParameter = "mg*h/L",
+        outputPathId = "plasma"
+      )
+    },
+    xlsxReadData = function(...) {
+      data.table::data.table(
+        parameter = c("Clearance", "Clearance"),
+        parameterPath = c("P1|CL", "P2|CL")
+      )
+    },
+    .package = "ospsuite.reportingframework"
+  )
+
+  plotData <- ospsuite.reportingframework:::prepareSensitivityPlotData(
+    onePlotConfig = data.table::data.table(
+      scenario = "ScenarioA",
+      scenarioLongName = "Adults",
+      outputPathIds = "plasma",
+      pKParameters = "AUC",
+      sensitivityParameterSheet = "default",
+      threshold = 0.15
+    ),
+    projectConfiguration = list(
+      outputFolder = tmp,
+      addOns = list(
+        sensitivityFile = file.path(tmp, "SensitivityParameter.xlsx")
+      )
+    ),
+    scenarioList = list(ScenarioA = list(simulation = "unused"))
+  )
+
+  expect_equal(nrow(plotData), 1)
+  expect_equal(as.character(plotData$parameterName), "Clearance")
+  expect_equal(plotData$sens, 0.3)
+})
+
+test_that("prepareSensitivityPlotData exposes representative strata in facet labels", {
+  tmp <- withr::local_tempdir()
+  sensitivityDir <- file.path(tmp, EXPORTDIR$sensitivityResults)
+  dir.create(sensitivityDir, recursive = TRUE)
+
+  data.table::fwrite(
+    data.table::data.table(
+      SensitivityParameter = c("P1|CL", "P1|CL"),
+      QuantityPath = c("Organism|Plasma|Drug", "Organism|Plasma|Drug"),
+      PKParameter = c("AUC", "AUC"),
+      sens = c(0.3, 0.25),
+      RepresentativeOutputPath = c(
+        "Organism|Plasma|Drug",
+        "Organism|Plasma|Drug"
+      ),
+      RepresentativePKParameter = c("AUC", "AUC"),
+      RepresentativeQuantile = c("p5", "p50"),
+      RepresentativeIndividualId = c("ID_1", "ID_2")
+    ),
+    file.path(sensitivityDir, "ScenarioA_default_representatives.csv")
+  )
+
+  configEnv <- get0("configEnv", envir = .GlobalEnv, inherits = FALSE)
+  mockEnv <- if (is.null(configEnv)) {
+    new.env(parent = emptyenv())
+  } else {
+    configEnv
+  }
+  oldOutputPaths <- mockEnv$outputPaths
+  on.exit(mockEnv$outputPaths <- oldOutputPaths, add = TRUE)
+  mockEnv$outputPaths <- data.table::data.table(
+    outputPathId = factor("plasma", levels = "plasma", ordered = TRUE),
+    outputPath = "Organism|Plasma|Drug",
+    displayNameOutput = "Plasma"
+  )
+  assign("configEnv", mockEnv, envir = .GlobalEnv)
+
+  local_mocked_bindings(
+    getPKParameterOverview = function(...) {
+      data.table::data.table(
+        pKParameter = "AUC",
+        displayNamePKParameter = "AUC",
+        displayUnitPKParameter = "mg*h/L",
+        outputPathId = "plasma"
+      )
+    },
+    xlsxReadData = function(...) {
+      data.table::data.table(
+        parameter = "Clearance",
+        parameterPath = "P1|CL"
+      )
+    },
+    .package = "ospsuite.reportingframework"
+  )
+
+  plotData <- ospsuite.reportingframework:::prepareSensitivityPlotData(
+    onePlotConfig = data.table::data.table(
+      scenario = "ScenarioA",
+      scenarioLongName = "Adults",
+      outputPathIds = "plasma",
+      pKParameters = "AUC",
+      sensitivityParameterSheet = "default",
+      threshold = 0.15
+    ),
+    projectConfiguration = list(
+      outputFolder = tmp,
+      addOns = list(
+        sensitivityFile = file.path(tmp, "SensitivityParameter.xlsx")
+      )
+    ),
+    scenarioList = list(ScenarioA = list(simulation = "unused"))
+  )
+
+  expect_equal(length(unique(as.character(plotData$plotTag))), 2)
+  expect_true(all(grepl("p(5|50)", as.character(plotData$plotFacetLabel))))
+  expect_true(all(grepl("ID_", plotData$representativeStratum)))
 })

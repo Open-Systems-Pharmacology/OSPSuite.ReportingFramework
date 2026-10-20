@@ -1102,6 +1102,20 @@ messages$errorutilitiessensitivityMissingSensitivityParameterConfig <- function(
   )
 }
 
+messages$errorutilitiessensitivityNoParameterPaths <- function(
+  parameterPathMode,
+  env = parent.frame()
+) {
+  eval(
+    quote(paste0(
+      "No sensitivity parameter paths available for parameterPathMode '",
+      parameterPathMode,
+      "'."
+    )),
+    envir = env
+  )
+}
+
 messages$errorutilitiesworkflowOptionsNotInitialized <- function(
   env = parent.frame()
 ) {
