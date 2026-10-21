@@ -884,10 +884,12 @@ getCaptionForPlot <- function(
 
   scaleName <- ""
   if (plotType %in% c("TP", "PvO")) {
-    scaleName <- paste(
-      " on a",
-      ifelse(yScale == "linear", "linear", "logarithmic"),
-      ifelse(plotType == "TP", "y-scale.", "x and y-scale.")
+    scaleName <- paste0(
+      " ",
+      captionScaleText(
+        scale = yScale,
+        axisLabel = ifelse(plotType == "TP", "y", "x and y")
+      )
     )
   }
 
@@ -905,6 +907,8 @@ getCaptionForPlot <- function(
     individualtext <- ""
   }
   captiontext <- paste0(
+    captionPrefixSimulated(),
+    " ",
     plotTypeTxt,
     " for ",
     pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"),

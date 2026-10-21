@@ -62,7 +62,7 @@ test_that("getCaptionForSensitivityPlot builds caption with correct spacing", {
   )
   assign("configEnv", mockEnv, envir = .GlobalEnv)
 
-  result <- ospsuite.reportingframework:::getCaptionForSensitivityPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForSensitivityPlot(
     plotData = plotData,
     projectConfiguration = NULL,
     plotCaptionAddon = NA
@@ -91,7 +91,7 @@ test_that("getCaptionForSensitivityPlot appends plotCaptionAddon", {
   )
   assign("configEnv", mockEnv, envir = .GlobalEnv)
 
-  result <- ospsuite.reportingframework:::getCaptionForSensitivityPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForSensitivityPlot(
     plotData = plotData,
     projectConfiguration = NULL,
     plotCaptionAddon = "See appendix."
@@ -115,7 +115,7 @@ test_that("getCaptionForSensitivityPlot handles multiple PK parameters", {
   )
   assign("configEnv", mockEnv, envir = .GlobalEnv)
 
-  result <- ospsuite.reportingframework:::getCaptionForSensitivityPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForSensitivityPlot(
     plotData = plotData,
     projectConfiguration = NULL,
     plotCaptionAddon = NA
@@ -137,7 +137,7 @@ test_that("getCaptionForSensitivityPlot includes threshold text when threshold >
   )
   assign("configEnv", mockEnv, envir = .GlobalEnv)
 
-  result <- ospsuite.reportingframework:::getCaptionForSensitivityPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForSensitivityPlot(
     plotData = plotData,
     projectConfiguration = NULL,
     plotCaptionAddon = NA
@@ -162,7 +162,7 @@ test_that("getCaptionForSensitivityPlot omits threshold text when threshold is 0
   )
   assign("configEnv", mockEnv, envir = .GlobalEnv)
 
-  result <- ospsuite.reportingframework:::getCaptionForSensitivityPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForSensitivityPlot(
     plotData = plotData,
     projectConfiguration = NULL,
     plotCaptionAddon = NA
@@ -189,7 +189,7 @@ test_that("getCaptionForSensitivityPlot includes ratio-mode description", {
   )
   assign("configEnv", mockEnv, envir = .GlobalEnv)
 
-  result <- ospsuite.reportingframework:::getCaptionForSensitivityPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForSensitivityPlot(
     plotData = plotData,
     projectConfiguration = NULL,
     plotCaptionAddon = NA
@@ -450,7 +450,7 @@ test_that("getCaptionForSensitivityPlot handles single plot tag", {
   )
   assign("configEnv", mockEnv, envir = .GlobalEnv)
 
-  result <- ospsuite.reportingframework:::getCaptionForSensitivityPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForSensitivityPlot(
     plotData = plotData,
     projectConfiguration = NULL,
     plotCaptionAddon = NA
@@ -473,7 +473,7 @@ test_that("getCaptionForSensitivityPlot handles NA plotCaptionAddon", {
   )
   assign("configEnv", mockEnv, envir = .GlobalEnv)
 
-  result <- ospsuite.reportingframework:::getCaptionForSensitivityPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForSensitivityPlot(
     plotData = plotData,
     projectConfiguration = NULL,
     plotCaptionAddon = NA
@@ -561,6 +561,57 @@ test_that("validateSensitivityConfig rejects negative threshold values", {
       makeSensitivityConfigTable(threshold = -0.1)
     ),
     "threshold"
+  )
+})
+
+test_that("validateSensitivityConfig rejects duplicate scenario rows in non-representative mode", {
+  restoreConfigEnv <- mockSensitivityConfigEnv()
+  on.exit(restoreConfigEnv(), add = TRUE)
+
+  configTable <- data.table::rbindlist(list(
+    makeSensitivityConfigTable(),
+    makeSensitivityConfigTable()
+  ))
+  configTable[, outputPathIds := c("Plasma", "Plasma")]
+
+  local_mocked_bindings(
+    .hasRepresentativeSensitivityResultFile = function(...) {
+      FALSE
+    },
+    .package = "ospsuite.reportingframework"
+  )
+
+  expect_error(
+    ospsuite.reportingframework:::validateSensitivityConfig(
+      configTable,
+      projectConfiguration = list(outputFolder = tempdir())
+    ),
+    "only one row per scenario"
+  )
+})
+
+test_that("validateSensitivityConfig allows duplicate scenario rows in representative mode", {
+  restoreConfigEnv <- mockSensitivityConfigEnv()
+  on.exit(restoreConfigEnv(), add = TRUE)
+
+  configTable <- data.table::rbindlist(list(
+    makeSensitivityConfigTable(),
+    makeSensitivityConfigTable()
+  ))
+  configTable[, outputPathIds := c("Plasma", "Plasma")]
+
+  local_mocked_bindings(
+    .hasRepresentativeSensitivityResultFile = function(...) {
+      TRUE
+    },
+    .package = "ospsuite.reportingframework"
+  )
+
+  expect_no_error(
+    ospsuite.reportingframework:::validateSensitivityConfig(
+      configTable,
+      projectConfiguration = list(outputFolder = tempdir())
+    )
   )
 })
 
@@ -657,7 +708,7 @@ test_that("prepareSensitivityPlotData reads enhanced sensitivity CSV format", {
   assign("configEnv", mockEnv, envir = .GlobalEnv)
 
   local_mocked_bindings(
-    getPKParameterOverview = function(...) {
+    .getPKParameterOverview = function(...) {
       data.table::data.table(
         pKParameter = "AUC",
         displayNamePKParameter = "AUC",
@@ -674,7 +725,7 @@ test_that("prepareSensitivityPlotData reads enhanced sensitivity CSV format", {
     .package = "ospsuite.reportingframework"
   )
 
-  plotData <- ospsuite.reportingframework:::prepareSensitivityPlotData(
+  plotData <- ospsuite.reportingframework:::.prepareSensitivityPlotData(
     onePlotConfig = data.table::data.table(
       scenario = "ScenarioA",
       scenarioLongName = "Adults",
@@ -730,7 +781,7 @@ test_that("prepareSensitivityPlotData reads grouped enhanced sensitivity labels"
   assign("configEnv", mockEnv, envir = .GlobalEnv)
 
   local_mocked_bindings(
-    getPKParameterOverview = function(...) {
+    .getPKParameterOverview = function(...) {
       data.table::data.table(
         pKParameter = "AUC",
         displayNamePKParameter = "AUC",
@@ -747,7 +798,7 @@ test_that("prepareSensitivityPlotData reads grouped enhanced sensitivity labels"
     .package = "ospsuite.reportingframework"
   )
 
-  plotData <- ospsuite.reportingframework:::prepareSensitivityPlotData(
+  plotData <- ospsuite.reportingframework:::.prepareSensitivityPlotData(
     onePlotConfig = data.table::data.table(
       scenario = "ScenarioA",
       scenarioLongName = "Adults",
@@ -808,7 +859,7 @@ test_that("prepareSensitivityPlotData exposes representative strata in facet lab
   assign("configEnv", mockEnv, envir = .GlobalEnv)
 
   local_mocked_bindings(
-    getPKParameterOverview = function(...) {
+    .getPKParameterOverview = function(...) {
       data.table::data.table(
         pKParameter = "AUC",
         displayNamePKParameter = "AUC",
@@ -825,7 +876,7 @@ test_that("prepareSensitivityPlotData exposes representative strata in facet lab
     .package = "ospsuite.reportingframework"
   )
 
-  plotData <- ospsuite.reportingframework:::prepareSensitivityPlotData(
+  plotData <- ospsuite.reportingframework:::.prepareSensitivityPlotData(
     onePlotConfig = data.table::data.table(
       scenario = "ScenarioA",
       scenarioLongName = "Adults",
@@ -846,4 +897,76 @@ test_that("prepareSensitivityPlotData exposes representative strata in facet lab
   expect_equal(length(unique(as.character(plotData$plotTag))), 1)
   expect_equal(length(unique(as.character(plotData$plotFacetLabel))), 1)
   expect_true(all(grepl("ID_", plotData$representativeStratum)))
+})
+
+test_that("plotSensitivity representative mode merges scenarios and maps color/shape aesthetics", {
+  tmp <- withr::local_tempdir()
+  sensitivityFile <- file.path(tmp, "ScenarioA_default_representatives.csv")
+  file.create(sensitivityFile)
+
+  mockedPlotData <- data.table::data.table(
+    parameterName = factor("Clearance", levels = "Clearance", ordered = TRUE),
+    sens = c(0.3, 0.25),
+    scenarioShortName = factor(
+      c("Ad", "Ped"),
+      levels = c("Ad", "Ped"),
+      ordered = TRUE
+    ),
+    scenarioLongName = c("Adults", "Pediatrics"),
+    representativeStratum = c(
+      "AUC in Plasma (p5, ID 1)",
+      "AUC in Plasma (p50, ID 2)"
+    ),
+    plotTag = factor(c("A", "A"), levels = "A", ordered = TRUE),
+    plotFacetLabel = factor(c("A", "A"), levels = "A", ordered = TRUE),
+    outputPathId = factor(
+      c("plasma", "plasma"),
+      levels = "plasma",
+      ordered = TRUE
+    ),
+    pKParameter = factor(c("AUC", "AUC"), levels = "AUC", ordered = TRUE)
+  )
+
+  local_mocked_bindings(
+    .getSensitivityResultFilePath = function(...) {
+      sensitivityFile
+    },
+    .prepareSensitivityPlotData = function(...) {
+      mockedPlotData
+    },
+    .getCaptionForSensitivityPlot = function(...) {
+      "Mock sensitivity caption"
+    },
+    setExportAttributes = function(object, ...) {
+      object
+    },
+    .package = "ospsuite.reportingframework"
+  )
+
+  result <- ospsuite.reportingframework::plotSensitivity(
+    projectConfiguration = list(outputFolder = tmp),
+    onePlotConfig = data.table::data.table(
+      plotName = "RepresentativeSensitivity",
+      plotCaptionAddon = NA_character_,
+      scenario = "ScenarioA",
+      sensitivityParameterSheet = "default"
+    ),
+    scenarioList = list()
+  )
+
+  expect_true("RepresentativeSensitivity" %in% names(result))
+  plotObject <- result[["RepresentativeSensitivity"]]
+
+  expect_s3_class(plotObject, "ggplot")
+  expect_true(inherits(plotObject$layers[[2]]$geom, "GeomPoint"))
+  expect_equal(
+    rlang::as_label(plotObject$layers[[2]]$mapping$colour),
+    "scenarioShortName"
+  )
+  expect_equal(
+    rlang::as_label(plotObject$layers[[2]]$mapping$shape),
+    "representativeStratum"
+  )
+  expect_equal(levels(plotObject$data$scenarioShortName), c("Ad", "Ped"))
+  expect_equal(length(unique(as.character(mockedPlotData$plotTag))), 1)
 })

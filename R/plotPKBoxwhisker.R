@@ -393,7 +393,6 @@ getCaptionForBoxwhiskerPlot <- function(
 
   captiontext <- paste(
     paste0("Population summary statistics of", ifelse(asRatio, " ratios", "")),
-    "of",
     pasteFigureTags(dtCaption, captionColumn = "displayNameOutput")
   )
 
@@ -408,9 +407,7 @@ getCaptionForBoxwhiskerPlot <- function(
         collapse = ", "
       ),
       "percentiles",
-      "on a",
-      ifelse(yScale == "linear", "linear", "logarithmic"),
-      "y-scale"
+      captionScaleText(scale = yScale, axisLabel = "y")
     )
   }
   return(captiontext)

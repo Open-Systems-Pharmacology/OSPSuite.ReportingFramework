@@ -945,10 +945,12 @@ getCaptionForDemographicPlot <- function(
   scaletxt <- ""
   if (!is.null(valueScale)) {
     scaletxt <- paste0(
-      " on a ",
-      ifelse(valueScale == "linear", "linear", "logarithmic"),
-      ifelse(!is.null(binLabel), " y", " x"),
-      "-scale."
+      " ",
+      captionScaleText(
+        scale = valueScale,
+        axisLabel = ifelse(!is.null(binLabel), "y", "x")
+      ),
+      "."
     )
   }
 
@@ -970,7 +972,8 @@ getCaptionForDemographicPlot <- function(
   }
 
   captiontxt <- paste0(
-    "Simulated ",
+    captionPrefixSimulated(),
+    " ",
     valueLabel,
     ifelse(!is.null(binLabel), " dependency", ""),
     outputText,

@@ -1352,14 +1352,15 @@ getCaptionForForestPlot <- function(
   }
 
   captiontxt <- paste0(
-    "Simulated ",
+    captionPrefixSimulated(),
+    " ",
     ifelse("observed" %in% unique(plotData$dataType), " and observed ", ""),
     pktext,
     " of ",
     pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"),
-    " on a ",
-    ifelse(xScale == "linear", "linear", "logarithmic"),
-    " x-scale."
+    " ",
+    captionScaleText(scale = xScale, axisLabel = "x"),
+    "."
   )
 
   # add number of individuals

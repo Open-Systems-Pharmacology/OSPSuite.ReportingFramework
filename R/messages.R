@@ -214,6 +214,17 @@ messages$errorplotPKBoxwhiskerMissingReferenceScenario <- function(
   )
 }
 
+messages$errorplotSensitivityMultipleRowsPerScenario <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(
+      "For non-representative sensitivity mode, only one row per scenario is allowed within a plotName."
+    ),
+    envir = env
+  )
+}
+
 messages$warningplotPKBoxwhiskerNoDataForPlot <- function(
   env = parent.frame()
 ) {

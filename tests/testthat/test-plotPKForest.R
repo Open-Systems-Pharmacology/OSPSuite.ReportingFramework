@@ -145,6 +145,36 @@ test_that("getCaptionForForestPlot appends plotCaptionAddon", {
   expect_match(result, "See appendix")
 })
 
+test_that("getCaptionForForestPlot includes observed wording when observed data are present", {
+  dt <- makeForestPlotData(dataType = c("simulated", "observed", "simulated"))
+  result <- ospsuite.reportingframework:::getCaptionForForestPlot(
+    plotData = dt,
+    xScale = "linear",
+    plotCaptionAddon = NA,
+    ratioMode = "none"
+  )
+
+  expect_match(result, "and observed")
+})
+
+test_that("getCaptionForForestPlot includes per-scenario counts when N differs", {
+  dt <- makeForestPlotData(
+    scenario = c("pediatric", "adult", "pediatric"),
+    scenarioShortName = c("P", "A", "P"),
+    N = c(100L, 80L, 80L)
+  )
+  result <- ospsuite.reportingframework:::getCaptionForForestPlot(
+    plotData = dt,
+    xScale = "linear",
+    plotCaptionAddon = NA,
+    ratioMode = "none"
+  )
+
+  expect_match(result, "Number of simulated values is")
+  expect_match(result, "100")
+  expect_match(result, "80")
+})
+
 # ---------------------------------------------------------------------------
 # getFootnoteLinesForForestPlots
 # ---------------------------------------------------------------------------

@@ -614,6 +614,84 @@ test_that("getCaptionForPlot handles empty displayNameOutput", {
   expect_true(is.character(caption))
 })
 
+test_that("getCaptionForPlot creates PvO caption with x and y scale text", {
+  plotData <- list(
+    dtCaption = data.table::data.table(
+      timeRangeTag = "all",
+      counter = 1,
+      displayNameOutput = "Plasma Concentration",
+      scenarioLongName = "Scenario 1",
+      timeRangeCaption = "",
+      individualId = NA_character_
+    ),
+    timeRangeTagFilter = list(allTimeRanges = 'timeRangeTag == "all"'),
+    configTable = data.table::data.table(plotCaptionAddon = NA_character_)
+  )
+
+  caption <- getCaptionForPlot(
+    plotData = plotData,
+    yScale = "log",
+    timeRangeFilter = "allTimeRanges",
+    plotType = "PvO",
+    plotCounter = 1
+  )
+
+  expect_true(grepl("Predicted vs Observed", caption, fixed = TRUE))
+  expect_true(grepl("x and y-scale", caption, fixed = TRUE))
+  expect_true(grepl("logarithmic", caption, fixed = TRUE))
+})
+
+test_that("getCaptionForPlot omits scale text for non-TP and non-PvO plot types", {
+  plotData <- list(
+    dtCaption = data.table::data.table(
+      timeRangeTag = "all",
+      counter = 1,
+      displayNameOutput = "Plasma Concentration",
+      scenarioLongName = "Scenario 1",
+      timeRangeCaption = "",
+      individualId = NA_character_
+    ),
+    timeRangeTagFilter = list(allTimeRanges = 'timeRangeTag == "all"'),
+    configTable = data.table::data.table(plotCaptionAddon = NA_character_)
+  )
+
+  caption <- getCaptionForPlot(
+    plotData = plotData,
+    yScale = "linear",
+    timeRangeFilter = "allTimeRanges",
+    plotType = "ResvT",
+    plotCounter = 1
+  )
+
+  expect_true(grepl("Residuals vs time values", caption, fixed = TRUE))
+  expect_false(grepl("-scale", caption, fixed = TRUE))
+})
+
+test_that("getCaptionForPlot appends formatted time-range caption text", {
+  plotData <- list(
+    dtCaption = data.table::data.table(
+      timeRangeTag = "all",
+      counter = 1,
+      displayNameOutput = "Plasma Concentration",
+      scenarioLongName = "Scenario 1",
+      timeRangeCaption = "up to 24h",
+      individualId = NA_character_
+    ),
+    timeRangeTagFilter = list(allTimeRanges = 'timeRangeTag == "all"'),
+    configTable = data.table::data.table(plotCaptionAddon = NA_character_)
+  )
+
+  caption <- getCaptionForPlot(
+    plotData = plotData,
+    yScale = "linear",
+    timeRangeFilter = "allTimeRanges",
+    plotType = "TP",
+    plotCounter = 1
+  )
+
+  expect_true(grepl("up to 24h\\.", caption))
+})
+
 # =====================================================================
 # PHASE 1: ERROR PARSING & TRYCATCH PATH TESTS
 # =====================================================================
