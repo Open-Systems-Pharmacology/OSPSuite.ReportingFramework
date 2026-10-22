@@ -63,6 +63,131 @@ test_that(".sensitivityTableDataFromScenarios validates inputs", {
   )
 })
 
+test_that(".sensitivityScenarioType classifies population, individual, and mixed", {
+  populationScenario <- list(
+    population = structure(list(), class = "Population")
+  )
+  individualScenario <- list(simulation = "sim")
+
+  expect_equal(
+    ospsuite.reportingframework:::.sensitivityScenarioType(
+      scenarioList = list(A = populationScenario),
+      scenarioNames = "A"
+    ),
+    "population"
+  )
+
+  expect_equal(
+    ospsuite.reportingframework:::.sensitivityScenarioType(
+      scenarioList = list(A = individualScenario),
+      scenarioNames = "A"
+    ),
+    "individual"
+  )
+
+  expect_equal(
+    ospsuite.reportingframework:::.sensitivityScenarioType(
+      scenarioList = list(A = populationScenario, B = individualScenario),
+      scenarioNames = c("A", "B")
+    ),
+    "mixed"
+  )
+})
+
+test_that("runSensitivityAnalysisForScenarios errors for population scenarios", {
+  local_mocked_bindings(
+    getScenarioDefinitions = function(...) {
+      data.table::data.table(
+        scenarioName = "ScenarioA",
+        pKParameter = NA_character_,
+        modelFile = "a.pkml"
+      )
+    },
+    getOutputPathIds = function(...) {
+      data.table::data.table(
+        outputPathId = character(),
+        outputPath = character()
+      )
+    },
+    xlsxReadData = function(...) {
+      data.table::data.table(
+        parameter = "Clearance",
+        parameterPath = "P1|CL"
+      )
+    },
+    .package = "ospsuite.reportingframework"
+  )
+
+  projectConfiguration <- list(
+    addOns = list(
+      sensitivityFile = "SensitivityParameter.xlsx",
+      reportsFile = "Reports.xlsx"
+    ),
+    outputFolder = withr::local_tempdir(),
+    scenariosFile = "Scenarios.xlsx",
+    modelFolder = "Models"
+  )
+
+  expect_error(
+    ospsuite.reportingframework::runSensitivityAnalysisForScenarios(
+      projectConfiguration = projectConfiguration,
+      scenarioList = list(
+        ScenarioA = list(population = structure(list(), class = "Population"))
+      ),
+      scenarioNames = "ScenarioA",
+      sensitivitysheet = "Sensitivity",
+      overwrite = FALSE
+    ),
+    "runRepresentativeSensitivityAnalysisForScenarios"
+  )
+})
+
+test_that("runRepresentativeSensitivityAnalysisForScenarios errors for individual scenarios", {
+  local_mocked_bindings(
+    getScenarioDefinitions = function(...) {
+      data.table::data.table(
+        scenarioName = "ScenarioA",
+        pKParameter = NA_character_,
+        modelFile = "a.pkml"
+      )
+    },
+    getOutputPathIds = function(...) {
+      data.table::data.table(
+        outputPathId = character(),
+        outputPath = character()
+      )
+    },
+    xlsxReadData = function(...) {
+      data.table::data.table(
+        parameter = "Clearance",
+        parameterPath = "P1|CL"
+      )
+    },
+    .package = "ospsuite.reportingframework"
+  )
+
+  projectConfiguration <- list(
+    addOns = list(
+      sensitivityFile = "SensitivityParameter.xlsx",
+      reportsFile = "Reports.xlsx"
+    ),
+    outputFolder = withr::local_tempdir(),
+    scenariosFile = "Scenarios.xlsx",
+    modelFolder = "Models"
+  )
+
+  expect_error(
+    ospsuite.reportingframework::runRepresentativeSensitivityAnalysisForScenarios(
+      projectConfiguration = projectConfiguration,
+      scenarioList = list(ScenarioA = list(simulation = "sim")),
+      scenarioNames = "ScenarioA",
+      sensitivitysheet = "Sensitivity",
+      overwrite = FALSE
+    ),
+    "runSensitivityAnalysisForScenarios"
+  )
+})
+
 
 test_that("asSensitivityParameterList groups rows by parameter label", {
   sensitivityParameter <-
@@ -296,6 +421,9 @@ test_that(".getPKDefinitionsForSensitivity maps PK names to output paths", {
     xlsxReadData = function(...) {
       data.table::data.table(
         name = c("AUC", "Cmax"),
+        displayName = c("AUC display", "Cmax display"),
+        displayUnit = c("mg*h/L", "mg/L"),
+        descriptions = c("", ""),
         outputPathIds = c("op1", "op2")
       )
     },
@@ -312,10 +440,22 @@ test_that(".getPKDefinitionsForSensitivity maps PK names to output paths", {
   )
 
   expect_true(all(c("pKParameterName", "outputPath") %in% names(definitions)))
+  expect_true(all(
+    c("displayNamePKParameter", "displayUnitPKParameter") %in%
+      names(definitions)
+  ))
   expect_setequal(definitions$pKParameterName, c("AUC", "Cmax"))
   expect_setequal(
     definitions$outputPath,
     c("Organism|Plasma", "Organism|Liver")
+  )
+  expect_setequal(
+    definitions$displayNamePKParameter,
+    c("AUC display", "Cmax display")
+  )
+  expect_setequal(
+    definitions$displayUnitPKParameter,
+    c("mg*h/L", "mg/L")
   )
 })
 
@@ -324,6 +464,9 @@ test_that(".getPKDefinitionsForSensitivity errors when no valid rows remain", {
     xlsxReadData = function(...) {
       data.table::data.table(
         name = c("AUC", "Cmax"),
+        displayName = c("AUC display", "Cmax display"),
+        displayUnit = c("mg*h/L", "mg/L"),
+        descriptions = c("", ""),
         outputPathIds = c("missing1", "missing2")
       )
     },
@@ -345,6 +488,76 @@ test_that(".getPKDefinitionsForSensitivity errors when no valid rows remain", {
   )
 })
 
+test_that(".readPKDefinitionsFromSheets filters invalid sheet names and separates outputPathIds", {
+  capturedSheets <- character(0)
+
+  local_mocked_bindings(
+    xlsxReadData = function(wb, sheetName, skipDescriptionRow = TRUE) {
+      capturedSheets <<- c(capturedSheets, sheetName)
+      data.table::data.table(
+        name = paste0("PK_", sheetName),
+        outputPathIds = "op1, op2"
+      )
+    },
+    .package = "ospsuite.reportingframework"
+  )
+
+  definitions <- ospsuite.reportingframework:::.readPKDefinitionsFromSheets(
+    projectConfiguration = list(addOns = list(pKParameterFile = "unused.xlsx")),
+    pkParameterSheets = c("PK_A", NA_character_, "", "PK_B", "PK_A")
+  )
+
+  expect_setequal(capturedSheets, c("PK_A", "PK_B"))
+  expect_true(all(c("name", "outputPathId") %in% names(definitions)))
+  expect_setequal(definitions$outputPathId, c("op1", "op2"))
+})
+
+test_that(".readPKDefinitionsFromSheets errors when no valid sheet names remain", {
+  expect_error(
+    ospsuite.reportingframework:::.readPKDefinitionsFromSheets(
+      projectConfiguration = list(
+        addOns = list(pKParameterFile = "unused.xlsx")
+      ),
+      pkParameterSheets = c(NA_character_, "")
+    ),
+    "length >= 1"
+  )
+})
+
+test_that(".normalizedPKDefinitionsForSensitivity renames expected columns", {
+  pkDefinitions <- data.table::data.table(
+    name = c("AUC", "Cmax"),
+    displayName = c("AUC display", "Cmax display"),
+    displayUnit = c("mg*h/L", "mg/L"),
+    descriptions = c("desc A", "desc B"),
+    outputPathIds = c("op1", "op2")
+  )
+
+  normalized <- ospsuite.reportingframework:::.normalizedPKDefinitionsForSensitivity(
+    pkDefinitions
+  )
+
+  expect_true(all(
+    c(
+      "pKParameter",
+      "displayNamePKParameter",
+      "displayUnitPKParameter",
+      "outputPathIds"
+    ) %in%
+      names(normalized)
+  ))
+  expect_false("descriptions" %in% names(normalized))
+  expect_setequal(normalized$pKParameter, c("AUC", "Cmax"))
+  expect_setequal(
+    normalized$displayNamePKParameter,
+    c("AUC display", "Cmax display")
+  )
+  expect_setequal(
+    normalized$displayUnitPKParameter,
+    c("mg*h/L", "mg/L")
+  )
+})
+
 test_that(".calculateSensitivities computes summary sensitivity with mocked dependencies", {
   tmp <- withr::local_tempdir()
   fileA <- file.path(tmp, "a.pkml")
@@ -353,10 +566,10 @@ test_that(".calculateSensitivities computes summary sensitivity with mocked depe
   file.create(fileB)
 
   local_mocked_bindings(
-    prepareSensitivityPopulation = function(...) {
+    .prepareSensitivityPopulation = function(...) {
       structure(list(), class = "Population")
     },
-    loadSensitivityPKValues = function(...) {
+    .loadSensitivityPKValues = function(...) {
       data.table::data.table(
         IndividualId = c(1L, 2L),
         QuantityPath = c("q1", "q1"),
@@ -404,7 +617,7 @@ test_that(".calculateSensitivities errors when simulation run returns no results
   file.create(fileA)
 
   local_mocked_bindings(
-    prepareSensitivityPopulation = function(...) {
+    .prepareSensitivityPopulation = function(...) {
       structure(list(), class = "Population")
     },
     .package = "ospsuite.reportingframework"

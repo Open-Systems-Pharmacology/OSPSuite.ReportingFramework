@@ -432,6 +432,97 @@ addFacets <- function(
 }
 
 
+#' Determine Number of Facet Columns
+#'
+#' Returns a facet-column layout based on non-empty facet tags and a selected strategy.
+#'
+#' @param data A data.frame or data.table containing facet metadata.
+#' @param strategy Layout strategy, one of "singleColumnIfMultiple", "allInOneRow", "byMaxRows", or "demographics".
+#' @param nMaxFacetRows Maximum number of facet rows used by strategies with row constraints.
+#' @param facetColumn Column name containing facet labels.
+#' @param scenarioColumn Column name containing scenario labels.
+#' @param outputColumn Column name containing output labels.
+#'
+#' @return Integer number of facet columns, or NULL when no faceting is required.
+#' @keywords internal
+#' @noRd
+.getFacetColumns <- function(
+  data,
+  strategy = c(
+    "singleColumnIfMultiple",
+    "allInOneRow",
+    "byMaxRows",
+    "demographics"
+  ),
+  nMaxFacetRows = 2,
+  facetColumn = "plotTag",
+  scenarioColumn = "scenario",
+  outputColumn = "displayNameOutput"
+) {
+  # initialize to avoid data.table notes
+  facetValues <- scenarioValues <- outputValues <- NULL
+
+  checkmate::assertDataFrame(data)
+  strategy <- match.arg(strategy)
+  checkmate::assertInt(nMaxFacetRows, lower = 1)
+  checkmate::assertString(facetColumn)
+  checkmate::assertString(scenarioColumn)
+  checkmate::assertString(outputColumn)
+
+  checkmate::assertChoice(facetColumn, choices = names(data))
+
+  facetValues <- data[[facetColumn]]
+  facetValues <- facetValues[!is.na(facetValues) & facetValues != ""]
+  nFacets <- length(unique(facetValues))
+
+  if (nFacets <= 1) {
+    return(NULL)
+  }
+
+  if (strategy == "singleColumnIfMultiple") {
+    return(1L)
+  }
+
+  if (strategy == "allInOneRow") {
+    return(as.integer(nFacets))
+  }
+
+  if (strategy == "byMaxRows") {
+    if (!scenarioColumn %in% names(data)) {
+      return(1L)
+    }
+
+    scenarioValues <- data[[scenarioColumn]]
+    return(as.integer(max(
+      1,
+      floor(data.table::uniqueN(scenarioValues) / nMaxFacetRows)
+    )))
+  }
+
+  if (outputColumn %in% names(data) && scenarioColumn %in% names(data)) {
+    scenarioValues <- data[[scenarioColumn]]
+    outputValues <- data[[outputColumn]]
+
+    if (
+      data.table::uniqueN(scenarioValues) > 1 &&
+        data.table::uniqueN(outputValues) > 1
+    ) {
+      return(as.integer(data.table::uniqueN(outputValues)))
+    }
+  }
+
+  if (!scenarioColumn %in% names(data)) {
+    return(1L)
+  }
+
+  scenarioValues <- data[[scenarioColumn]]
+  return(as.integer(max(
+    1,
+    floor(data.table::uniqueN(scenarioValues) / nMaxFacetRows)
+  )))
+}
+
+
 #' Adjust concentration labels for x and y axes
 #'
 #' Replaces case-insensitive occurrences of "Concentration (mass)" and

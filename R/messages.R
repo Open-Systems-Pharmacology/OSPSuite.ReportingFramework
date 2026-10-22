@@ -1127,6 +1127,28 @@ messages$errorutilitiessensitivityNoParameterPaths <- function(
   )
 }
 
+messages$errorutilitiessensitivityPopulationScenariosForStandardRunner <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(
+      "All selected scenarios include population information. Consider using 'runRepresentativeSensitivityAnalysisForScenarios()' for representative-individual sensitivity runs."
+    ),
+    envir = env
+  )
+}
+
+messages$errorutilitiessensitivityIndividualScenariosForRepresentativeRunner <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(
+      "Selected scenarios do not include population information. Consider using 'runSensitivityAnalysisForScenarios()' for standard sensitivity runs."
+    ),
+    envir = env
+  )
+}
+
 messages$errorutilitiesworkflowOptionsNotInitialized <- function(
   env = parent.frame()
 ) {

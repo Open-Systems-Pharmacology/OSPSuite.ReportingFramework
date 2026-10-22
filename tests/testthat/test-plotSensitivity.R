@@ -23,6 +23,55 @@ test_that(".sensitivityAnalysisName handles vectorised scenario input", {
 })
 
 # ---------------------------------------------------------------------------
+# .formatSensitivityExportTable
+# ---------------------------------------------------------------------------
+
+test_that(".formatSensitivityExportTable uses 3 significant digits by default", {
+  plotDataTag <- data.table::data.table(
+    sensitivityParameter = c("CL", "Q"),
+    sens = c(0.123456, 12.3456),
+    RepresentativeQuantile = c(NA_character_, NA_character_)
+  )
+
+  result <- ospsuite.reportingframework:::.formatSensitivityExportTable(
+    plotDataTag
+  )
+
+  expect_equal(result$Sensitivity, c(0.123, 12.3))
+  expect_equal(names(result), c("Parameter", "Sensitivity"))
+})
+
+test_that(".formatSensitivityExportTable allows overriding significant digits", {
+  plotDataTag <- data.table::data.table(
+    sensitivityParameter = c("CL"),
+    sens = c(0.123456),
+    RepresentativeQuantile = c(NA_character_)
+  )
+
+  result <- ospsuite.reportingframework:::.formatSensitivityExportTable(
+    plotDataTag,
+    significantDigits = 5
+  )
+
+  expect_equal(result$Sensitivity, c(0.12346))
+})
+
+test_that(".formatSensitivityExportTable keeps representative column when available", {
+  plotDataTag <- data.table::data.table(
+    RepresentativeQuantile = c("P50"),
+    sensitivityParameter = c("CL"),
+    sens = c(0.98765)
+  )
+
+  result <- ospsuite.reportingframework:::.formatSensitivityExportTable(
+    plotDataTag
+  )
+
+  expect_equal(names(result), c("Representative", "Parameter", "Sensitivity"))
+  expect_equal(result$Sensitivity, c(0.988))
+})
+
+# ---------------------------------------------------------------------------
 # getCaptionForSensitivityPlot
 # ---------------------------------------------------------------------------
 
@@ -200,7 +249,7 @@ test_that("getCaptionForSensitivityPlot includes ratio-mode description", {
 })
 
 # ---------------------------------------------------------------------------
-# loadSensitivityPKValues — ratio computation with mock CSVs
+# .loadSensitivityPKValues — ratio computation with mock CSVs
 # ---------------------------------------------------------------------------
 
 writeMockPKCsv <- function(folder, name, dt) {
@@ -219,10 +268,10 @@ makePKCsv <- function(individualIds = 0:2, values = c(10, 20, 30)) {
   )
 }
 
-test_that("loadSensitivityPKValues returns single-scenario data unchanged", {
+test_that(".loadSensitivityPKValues returns single-scenario data unchanged", {
   tmp <- tempdir()
   writeMockPKCsv(tmp, "sc1", makePKCsv())
-  result <- loadSensitivityPKValues(
+  result <- ospsuite.reportingframework:::.loadSensitivityPKValues(
     scenarioFiles = c(sc1 = "dummy"),
     outputPaths = "Plasma",
     pkParameter = "AUC",
@@ -233,11 +282,11 @@ test_that("loadSensitivityPKValues returns single-scenario data unchanged", {
   expect_false("Parameter" %in% names(result))
 })
 
-test_that("loadSensitivityPKValues computes ratio for two scenarios", {
+test_that(".loadSensitivityPKValues computes ratio for two scenarios", {
   tmp <- tempdir()
   writeMockPKCsv(tmp, "ctrl", makePKCsv(values = c(10, 20, 30)))
   writeMockPKCsv(tmp, "trt", makePKCsv(values = c(20, 40, 60)))
-  result <- loadSensitivityPKValues(
+  result <- ospsuite.reportingframework:::.loadSensitivityPKValues(
     scenarioFiles = c(ctrl = "dummy1", trt = "dummy2"),
     outputPaths = "Plasma",
     pkParameter = "AUC",
@@ -246,7 +295,7 @@ test_that("loadSensitivityPKValues computes ratio for two scenarios", {
   expect_equal(result$Value, c(2, 2, 2))
 })
 
-test_that("loadSensitivityPKValues filters by outputPaths", {
+test_that(".loadSensitivityPKValues filters by outputPaths", {
   tmp <- tempdir()
   dt <- data.table::rbindlist(list(
     makePKCsv(values = c(1, 2, 3)),
@@ -258,7 +307,7 @@ test_that("loadSensitivityPKValues filters by outputPaths", {
     )
   ))
   writeMockPKCsv(tmp, "sc_filt", dt)
-  result <- loadSensitivityPKValues(
+  result <- ospsuite.reportingframework:::.loadSensitivityPKValues(
     scenarioFiles = c(sc_filt = "dummy"),
     outputPaths = "Plasma",
     pkParameter = "AUC",
@@ -267,9 +316,9 @@ test_that("loadSensitivityPKValues filters by outputPaths", {
   expect_true(all(result$QuantityPath == "Plasma"))
 })
 
-test_that("loadSensitivityPKValues errors when reference file missing", {
+test_that(".loadSensitivityPKValues errors when reference file missing", {
   expect_error(
-    loadSensitivityPKValues(
+    ospsuite.reportingframework:::.loadSensitivityPKValues(
       scenarioFiles = c(missing = "dummy"),
       outputPaths = "Plasma",
       pkParameter = "AUC",
@@ -279,11 +328,11 @@ test_that("loadSensitivityPKValues errors when reference file missing", {
 })
 
 # ---------------------------------------------------------------------------
-# prepareSensitivityPopulation — factors generation (pure logic)
+# .prepareSensitivityPopulation — factors generation (pure logic)
 # ---------------------------------------------------------------------------
 
 test_that("factors vector contains baseline 1 and symmetric values", {
-  # Exercise the factors-generation logic extracted from prepareSensitivityPopulation
+  # Exercise the factors-generation logic extracted from .prepareSensitivityPopulation
   variationRange <- 0.1
   numberOfSteps <- 2L
   positive <- 1 + variationRange * (seq_len(numberOfSteps) / numberOfSteps)
@@ -306,7 +355,7 @@ test_that("factors vector grows with numberOfSteps", {
 
 test_that("validateCommonInputs errors on non-numeric variationRange", {
   expect_error(
-    ospsuite.reportingframework:::prepareSensitivityPopulation(
+    ospsuite.reportingframework:::.prepareSensitivityPopulation(
       scenarioFiles = c(s = "dummy.pkml"),
       sensitivityParameter = list(CL = "path"),
       variationRange = "bad",
@@ -353,10 +402,10 @@ test_that(".sensitivityAnalysisName handles empty string scenario", {
 })
 
 # ---------------------------------------------------------------------------
-# loadSensitivityPKValues — edge cases
+# .loadSensitivityPKValues — edge cases
 # ---------------------------------------------------------------------------
 
-test_that("loadSensitivityPKValues handles multiple output paths", {
+test_that(".loadSensitivityPKValues handles multiple output paths", {
   tmp <- tempdir()
   dt <- data.table::rbindlist(list(
     data.table::data.table(
@@ -376,7 +425,7 @@ test_that("loadSensitivityPKValues handles multiple output paths", {
     dt,
     file.path(tmp, "multi-PKAnalysisResults.csv")
   )
-  result <- loadSensitivityPKValues(
+  result <- ospsuite.reportingframework:::.loadSensitivityPKValues(
     scenarioFiles = c(multi = "dummy"),
     outputPaths = c("Plasma", "Liver"),
     pkParameter = "AUC",
@@ -385,7 +434,7 @@ test_that("loadSensitivityPKValues handles multiple output paths", {
   expect_true(all(c("Plasma", "Liver") %in% result$QuantityPath))
 })
 
-test_that("loadSensitivityPKValues handles different parameters", {
+test_that(".loadSensitivityPKValues handles different parameters", {
   tmp <- tempdir()
   dt <- data.table::rbindlist(list(
     data.table::data.table(
@@ -405,20 +454,20 @@ test_that("loadSensitivityPKValues handles different parameters", {
     dt,
     file.path(tmp, "multi_param-PKAnalysisResults.csv")
   )
-  result <- loadSensitivityPKValues(
+  result <- ospsuite.reportingframework:::.loadSensitivityPKValues(
     scenarioFiles = c(multi_param = "dummy"),
     outputPaths = "Plasma",
     pkParameter = "AUC",
     outFolder = tmp
   )
-  expect_true(all(result$Parameter == "AUC"))
+  expect_true(all(result$PKParameter == "AUC"))
 })
 
-test_that("loadSensitivityPKValues computes correct ratio for multiple individuals", {
+test_that(".loadSensitivityPKValues computes correct ratio for multiple individuals", {
   tmp <- tempdir()
   writeMockPKCsv(tmp, "base", makePKCsv(values = c(100, 200, 300)))
   writeMockPKCsv(tmp, "alt", makePKCsv(values = c(150, 300, 450)))
-  result <- loadSensitivityPKValues(
+  result <- ospsuite.reportingframework:::.loadSensitivityPKValues(
     scenarioFiles = c(base = "dummy1", alt = "dummy2"),
     outputPaths = "Plasma",
     pkParameter = "AUC",
@@ -969,4 +1018,68 @@ test_that("plotSensitivity representative mode merges scenarios and maps color/s
   )
   expect_equal(levels(plotObject$data$scenarioShortName), c("Ad", "Ped"))
   expect_equal(length(unique(as.character(mockedPlotData$plotTag))), 1)
+})
+
+
+test_that("plotSensitivity adds facet wrap when multiple plot tags are present", {
+  tmp <- withr::local_tempdir()
+  sensitivityFile <- file.path(tmp, "ScenarioA_default_representatives.csv")
+  file.create(sensitivityFile)
+
+  mockedPlotData <- data.table::data.table(
+    parameterName = factor(
+      c("Clearance", "Volume"),
+      levels = c("Clearance", "Volume"),
+      ordered = TRUE
+    ),
+    sens = c(0.3, 0.25),
+    scenarioShortName = factor(c("Ad", "Ad"), levels = "Ad", ordered = TRUE),
+    scenarioLongName = c("Adults", "Adults"),
+    representativeStratum = c(
+      "AUC in Plasma (p5, ID 1)",
+      "AUC in Plasma (p50, ID 2)"
+    ),
+    plotTag = factor(c("A", "B"), levels = c("A", "B"), ordered = TRUE),
+    plotFacetLabel = factor(c("A", "B"), levels = c("A", "B"), ordered = TRUE),
+    outputPathId = factor(
+      c("plasma", "plasma"),
+      levels = "plasma",
+      ordered = TRUE
+    ),
+    pKParameter = factor(c("AUC", "AUC"), levels = "AUC", ordered = TRUE)
+  )
+
+  local_mocked_bindings(
+    .getSensitivityResultFilePath = function(...) {
+      sensitivityFile
+    },
+    .prepareSensitivityPlotData = function(...) {
+      mockedPlotData
+    },
+    .getCaptionForSensitivityPlot = function(...) {
+      "Mock sensitivity caption"
+    },
+    setExportAttributes = function(object, ...) {
+      object
+    },
+    .package = "ospsuite.reportingframework"
+  )
+
+  result <- ospsuite.reportingframework::plotSensitivity(
+    projectConfiguration = list(outputFolder = tmp),
+    onePlotConfig = data.table::data.table(
+      plotName = "RepresentativeSensitivity",
+      plotCaptionAddon = NA_character_,
+      scenario = "ScenarioA",
+      sensitivityParameterSheet = "default"
+    ),
+    scenarioList = list()
+  )
+
+  expect_true("RepresentativeSensitivity" %in% names(result))
+  plotObject <- result[["RepresentativeSensitivity"]]
+
+  expect_s3_class(plotObject, "ggplot")
+  expect_true(inherits(plotObject$facet, "FacetWrap"))
+  expect_equal(plotObject$facet$params$ncol, 2)
 })

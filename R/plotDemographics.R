@@ -343,7 +343,7 @@ generateHistograms <- function(
   ...
 ) {
   # initialize to avoid linter messages
-  plotTag <- scenarioType <- value <- categoricValue <- parameterId <- NULL
+  scenarioType <- value <- categoricValue <- parameterId <- NULL
 
   plotList <- list()
   for (pid in splitInputs(onePlotConfig$parameterIds)) {
@@ -373,7 +373,6 @@ generateHistograms <- function(
           ),
           ...
         ) +
-        facet_wrap(vars(plotTag)) +
         labs(x = constructLabelWithUnit(xlabel, xlabelUnit)) +
         scale_fill_manual(values = colorVector) +
         theme(legend.title = element_blank())
@@ -1012,29 +1011,16 @@ getFootnoteLinesForRangePlots <- function(errorLabels) {
 #' @return The number of facet columns to use.
 #' @keywords internal
 getNFacetsForDemographics <- function(idData, isRangePlot, nMaxFacetRows = 2) {
-  # initialize to avoid linter messages
-  scenario <- displayNameOutput <- plotTag <- NULL
+  strategy <- ifelse(isRangePlot, "singleColumnIfMultiple", "demographics")
 
-  nFacetColumns <- NULL
-
-  if (idData[, uniqueN(plotTag)] > 1) {
-    if (isRangePlot) {
-      nFacetColumns <- 1
-    } else if (
-      "displayNameOutput" %in%
-        names(idData) &&
-        idData[, uniqueN(scenario)] > 1 &&
-        idData[, uniqueN(displayNameOutput)] > 1
-    ) {
-      nFacetColumns <- idData[, uniqueN(displayNameOutput)]
-    } else {
-      nFacetColumns <- max(
-        1,
-        floor(idData[, uniqueN(scenario)] / nMaxFacetRows)
-      )
-    }
-  }
-  return(nFacetColumns)
+  return(.getFacetColumns(
+    data = idData,
+    strategy = strategy,
+    nMaxFacetRows = nMaxFacetRows,
+    facetColumn = "plotTag",
+    scenarioColumn = "scenario",
+    outputColumn = "displayNameOutput"
+  ))
 }
 # validation ----------
 #' Validate Distribution vs Demographics Configuration

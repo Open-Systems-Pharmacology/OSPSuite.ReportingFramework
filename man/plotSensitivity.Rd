@@ -4,7 +4,12 @@
 \alias{plotSensitivity}
 \title{Plot Sensitivity Function}
 \usage{
-plotSensitivity(projectConfiguration, onePlotConfig, scenarioList)
+plotSensitivity(
+	projectConfiguration,
+	onePlotConfig,
+	scenarioList,
+	significantDigits = 3
+)
 }
 \arguments{
 \item{projectConfiguration}{A list containing project configuration settings, including file paths and parameters.}
@@ -12,6 +17,9 @@ plotSensitivity(projectConfiguration, onePlotConfig, scenarioList)
 \item{onePlotConfig}{A data frame containing the configuration for a single plot.}
 
 \item{scenarioList}{A list of scenarios for which the sensitivity analysis will be performed.}
+
+\item{significantDigits}{Number of significant digits used for sensitivity values
+in exported tables.}
 }
 \value{
 A list of plots and tables, where each entry corresponds to a generated sensitivity plot or its data.

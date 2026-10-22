@@ -1469,7 +1469,7 @@ importWorkflow <- function(
   checkmate::assertDirectoryExists(projectDirectory)
   checkmate::assertDirectoryExists(ePackageFolder)
   checkmate::assertIntegerish(wfIdentifier)
-  browser()
+
   configurationDirectory <- file.path(
     projectDirectory,
     getConfigDirectoryForWorkflow(wfIdentifier = wfIdentifier)

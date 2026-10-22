@@ -134,10 +134,11 @@ generateBoxwhiskerPlotForPlotType <- function(
   }
 
   # Determine facet columns
-  nFacetColumns <- NULL
-  if (dplyr::n_distinct(plotData$plotTag) > 1) {
-    nFacetColumns <- 1
-  }
+  nFacetColumns <- .getFacetColumns(
+    data = plotData,
+    strategy = "singleColumnIfMultiple",
+    facetColumn = "plotTag"
+  )
 
   # Initialize plot list
   plotList <- list()

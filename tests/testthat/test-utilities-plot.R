@@ -582,6 +582,54 @@ test_that("addFacets only adds facet wrap when requested and useful", {
 })
 
 
+test_that(".getFacetColumns returns expected values for all strategies", {
+  dt <- data.table::data.table(
+    plotTag = c("A", "A", "B", "B", "C", "C"),
+    scenario = c("s1", "s1", "s2", "s2", "s3", "s3"),
+    displayNameOutput = c("out1", "out2", "out1", "out2", "out1", "out2")
+  )
+
+  expect_equal(
+    .getFacetColumns(dt, strategy = "singleColumnIfMultiple"),
+    1L
+  )
+  expect_equal(
+    .getFacetColumns(dt, strategy = "allInOneRow"),
+    3L
+  )
+  expect_equal(
+    .getFacetColumns(dt, strategy = "byMaxRows", nMaxFacetRows = 2),
+    1L
+  )
+  expect_equal(
+    .getFacetColumns(dt, strategy = "demographics", nMaxFacetRows = 2),
+    2L
+  )
+})
+
+
+test_that(".getFacetColumns handles edge cases", {
+  singleFacet <- data.table::data.table(
+    plotTag = c("A", "A"),
+    scenario = c("s1", "s1")
+  )
+  expect_null(.getFacetColumns(singleFacet, strategy = "allInOneRow"))
+
+  noScenario <- data.table::data.table(plotTag = c("A", "B"))
+  expect_equal(
+    .getFacetColumns(
+      noScenario,
+      strategy = "byMaxRows",
+      facetColumn = "plotTag",
+      scenarioColumn = "scenario"
+    ),
+    1L
+  )
+
+  expect_error(.getFacetColumns(data.table::data.table(x = 1:2)))
+})
+
+
 test_that("getScaleVector selects first complete entry and errors otherwise", {
   scaleVector <- getScaleVector(
     namesOfScaleVector = c("a", "b"),

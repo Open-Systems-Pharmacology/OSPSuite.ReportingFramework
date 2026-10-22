@@ -58,49 +58,6 @@ addSensitivityTable <- function(
   return(projectConfiguration)
 }
 
-#' Build sensitivity table data from scenarios.
-#'
-#' Internal helper that extracts potential variable parameter paths from each
-#' scenario simulation and combines them according to `parameterPathMode`.
-#'
-#' @param scenarioList Named list of scenarios. Each element must provide a
-#'   `simulation` object.
-#' @param sheetName Name of the target Excel sheet. Used for validation
-#'   consistency with the caller.
-#' @param parameterPathMode Character string indicating how to combine
-#'   parameter paths: `"intersection"` or `"union"`.
-#'
-#' @return A data.table with columns `parameter` and `parameterPath`.
-#' @keywords internal
-#' @noRd
-.sensitivityTableDataFromScenarios <- function(
-  scenarioList,
-  sheetName,
-  parameterPathMode
-) {
-  checkmate::assertList(scenarioList, min.len = 1, names = "named")
-  checkmate::assertString(sheetName, max.chars = 31)
-  parameterPathMode <- match.arg(parameterPathMode, c("intersection", "union"))
-
-  parameterPathsPerScenario <- lapply(scenarioList, function(oneScenario) {
-    ospsuite::potentialVariableParameterPathsFor(oneScenario$simulation)
-  })
-  parameterPaths <- switch(
-    parameterPathMode,
-    intersection = Reduce(intersect, parameterPathsPerScenario),
-    union = Reduce(union, parameterPathsPerScenario)
-  )
-  parameterPaths <- unique(parameterPaths)
-
-  if (length(parameterPaths) == 0) {
-    stop(messages$errorutilitiessensitivityNoParameterPaths(parameterPathMode))
-  }
-
-  data.table(
-    parameter = gsub("\\|", " ", parameterPaths),
-    parameterPath = parameterPaths
-  )
-}
 #' Run Sensitivity Analysis for Specified Scenarios
 #'
 #' This function executes sensitivity analysis for the specified scenarios in the
@@ -150,25 +107,21 @@ runSensitivityAnalysisForScenarios <-
   ) {
     # initialize variable to avoid messages
     pKParameter <- scenarioName <- NULL
-
-    if (!("sensitivityFile" %in% names(projectConfiguration$addOns))) {
-      stop(messages$errorutilitiessensitivityMissingSensitivityParameterConfig())
-    }
-    outputFolder <- file.path(
-      projectConfiguration$outputFolder,
-      EXPORTDIR$sensitivityResults
+    browser()
+    checkmate::assertList(
+      scenarioList,
+      min.len = 1,
+      any.missing = FALSE,
+      names = "named"
     )
-    if (!dir.exists(outputFolder)) {
-      dir.create(outputFolder)
-    }
 
-    dtScenarios <- getScenarioDefinitions(projectConfiguration$scenariosFile)
-    dtOutputPaths <- getOutputPathIds(projectConfiguration$addOns$reportsFile)
-
-    sensitivityParameterDt <- xlsxReadData(
-      projectConfiguration$addOns$sensitivityFile,
-      sheetName = sensitivitysheet,
-      skipDescriptionRow = TRUE
+    outputFolder <- .setupSensitivityRunner(projectConfiguration)
+    runnerData <- .loadSensitivityRunnerData(
+      projectConfiguration,
+      sensitivitysheet
+    )
+    sensitivityParameter <- .asSensitivityParameterList(
+      runnerData$sensitivityParameterDt
     )
 
     if (is.null(scenarioNames)) {
@@ -180,6 +133,15 @@ runSensitivityAnalysisForScenarios <-
       null.ok = TRUE
     )
 
+    scenarioType <- .sensitivityScenarioType(
+      scenarioList = scenarioList,
+      scenarioNames = scenarioNames
+    )
+    .assertSensitivityRunnerScenarioTypeCompatibility(
+      runnerType = "standard",
+      scenarioType = scenarioType
+    )
+
     for (currentScenarioName in scenarioNames) {
       sensitivityResultFile <- file.path(
         outputFolder,
@@ -189,14 +151,14 @@ runSensitivityAnalysisForScenarios <-
         !file.exists(sensitivityResultFile) |
           overwrite
       ) {
-        pkParameterSheets <- dtScenarios[
+        pkParameterSheets <- runnerData$dtScenarios[
           scenarioName == currentScenarioName & !is.na(pKParameter)
         ]$pKParameter
         if (length(pkParameterSheets) > 0) {
           .initializeParametersOfSheets(projectConfiguration, pkParameterSheets)
 
           scenarioFiles <- .getScenarioFilesForSensitivity(
-            dtScenarios = dtScenarios,
+            dtScenarios = runnerData$dtScenarios,
             currentScenarioName = currentScenarioName,
             modelFolder = projectConfiguration$modelFolder,
             referenceScenario = referenceScenario
@@ -205,16 +167,18 @@ runSensitivityAnalysisForScenarios <-
           pkDefinitions <- .getPKDefinitionsForSensitivity(
             projectConfiguration = projectConfiguration,
             pkParameterSheets = pkParameterSheets,
-            dtOutputPaths = dtOutputPaths
+            dtOutputPaths = runnerData$dtOutputPaths
           )
 
+          addMessageToLog(sprintf(
+            "Calculating sensitivities for scenario '%s'.",
+            currentScenarioName
+          ))
           .calculateSensitivities(
             scenarioFiles = scenarioFiles,
             outputPaths = unique(pkDefinitions$outputPath),
             pkParameter = unique(pkDefinitions$pKParameterName),
-            sensitivityParameter = .asSensitivityParameterList(
-              sensitivityParameterDt
-            ),
+            sensitivityParameter = sensitivityParameter,
             variationRange = variationRange,
             numberOfSteps = numberOfSteps,
             outFolder = projectConfiguration$outputFolder,
@@ -270,10 +234,6 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   RepresentativeOutputPath <- RepresentativePKParameter <- NULL
   RepresentativeQuantile <- NULL
 
-  if (!("sensitivityFile" %in% names(projectConfiguration$addOns))) {
-    stop(messages$errorutilitiessensitivityMissingSensitivityParameterConfig())
-  }
-
   checkmate::assertList(scenarioList, any.missing = FALSE, names = "named")
   checkmate::assertNumeric(
     representativeQuantiles,
@@ -284,26 +244,27 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
     unique = TRUE
   )
 
-  outputFolder <- file.path(
-    projectConfiguration$outputFolder,
-    EXPORTDIR$sensitivityResults
+  outputFolder <- .setupSensitivityRunner(projectConfiguration)
+  runnerData <- .loadSensitivityRunnerData(
+    projectConfiguration,
+    sensitivitysheet
   )
-  if (!dir.exists(outputFolder)) {
-    dir.create(outputFolder)
-  }
-
-  dtScenarios <- getScenarioDefinitions(projectConfiguration$scenariosFile)
-  dtOutputPaths <- getOutputPathIds(projectConfiguration$addOns$reportsFile)
-  sensitivityParameterDt <- xlsxReadData(
-    projectConfiguration$addOns$sensitivityFile,
-    sheetName = sensitivitysheet,
-    skipDescriptionRow = TRUE
+  sensitivityParameter <- .asSensitivityParameterList(
+    runnerData$sensitivityParameterDt
   )
-  sensitivityParameter <- .asSensitivityParameterList(sensitivityParameterDt)
 
   if (is.null(scenarioNames)) {
     scenarioNames <- names(scenarioList)
   }
+
+  scenarioType <- .sensitivityScenarioType(
+    scenarioList = scenarioList,
+    scenarioNames = scenarioNames
+  )
+  .assertSensitivityRunnerScenarioTypeCompatibility(
+    runnerType = "representative",
+    scenarioType = scenarioType
+  )
 
   for (currentScenarioName in scenarioNames) {
     sensitivityResultFile <- file.path(
@@ -315,7 +276,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
     )
 
     if (!file.exists(sensitivityResultFile) | overwrite) {
-      pkParameterSheets <- dtScenarios[
+      pkParameterSheets <- runnerData$dtScenarios[
         scenarioName == currentScenarioName & !is.na(pKParameter)
       ]$pKParameter
       if (length(pkParameterSheets) == 0) {
@@ -331,7 +292,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
       )
 
       scenarioFiles <- .getScenarioFilesForSensitivity(
-        dtScenarios = dtScenarios,
+        dtScenarios = runnerData$dtScenarios,
         currentScenarioName = currentScenarioName,
         modelFolder = projectConfiguration$modelFolder,
         referenceScenario = NULL
@@ -340,7 +301,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
       pkDefinitions <- .getPKDefinitionsForSensitivity(
         projectConfiguration = projectConfiguration,
         pkParameterSheets = pkParameterSheets,
-        dtOutputPaths = dtOutputPaths
+        dtOutputPaths = runnerData$dtOutputPaths
       )
 
       representatives <- .getRepresentativeIndividualsForSensitivity(
@@ -378,6 +339,16 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
               variationRange = variationRange,
               numberOfSteps = numberOfSteps
             )
+          addMessageToLog(sprintf(
+            paste0(
+              "Calculating sensitivities for scenario '%s' ",
+              "(representative: %s, PK parameter: %s, output path: %s)."
+            ),
+            currentScenarioName,
+            representative$RepresentativeQuantile,
+            representative$RepresentativePKParameter,
+            representative$RepresentativeOutputPath
+          ))
 
           sens <- .calculateSensitivities(
             scenarioFiles = scenarioFiles,
@@ -395,12 +366,12 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
           )
 
           sens[,
-            RepresentativeOutputPath := as.character(
+            OutputPath := as.character(
               representative$RepresentativeOutputPath
             )
           ]
           sens[,
-            RepresentativePKParameter := as.character(
+            PKParameter := as.character(
               representative$RepresentativePKParameter
             )
           ]
@@ -427,6 +398,154 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
 
   return(invisible(NULL))
 }
+
+
+#' Build sensitivity table data from scenarios.
+#'
+#' Internal helper that extracts potential variable parameter paths from each
+#' scenario simulation and combines them according to `parameterPathMode`.
+#'
+#' @param scenarioList Named list of scenarios. Each element must provide a
+#'   `simulation` object.
+#' @param sheetName Name of the target Excel sheet. Used for validation
+#'   consistency with the caller.
+#' @param parameterPathMode Character string indicating how to combine
+#'   parameter paths: `"intersection"` or `"union"`.
+#'
+#' @return A data.table with columns `parameter` and `parameterPath`.
+#' @keywords internal
+#' @noRd
+.sensitivityTableDataFromScenarios <- function(
+  scenarioList,
+  sheetName,
+  parameterPathMode
+) {
+  checkmate::assertList(scenarioList, min.len = 1, names = "named")
+  checkmate::assertString(sheetName, max.chars = 31)
+  parameterPathMode <- match.arg(parameterPathMode, c("intersection", "union"))
+
+  parameterPathsPerScenario <- lapply(scenarioList, function(oneScenario) {
+    ospsuite::potentialVariableParameterPathsFor(oneScenario$simulation)
+  })
+  parameterPaths <- switch(
+    parameterPathMode,
+    intersection = Reduce(intersect, parameterPathsPerScenario),
+    union = Reduce(union, parameterPathsPerScenario)
+  )
+  parameterPaths <- unique(parameterPaths)
+
+  if (length(parameterPaths) == 0) {
+    stop(messages$errorutilitiessensitivityNoParameterPaths(parameterPathMode))
+  }
+
+  data.table(
+    parameter = gsub("\\|", " ", parameterPaths),
+    parameterPath = parameterPaths
+  )
+}
+
+#' Classify selected scenarios by population availability.
+#'
+#' @param scenarioList Named scenario list.
+#' @param scenarioNames Optional subset of scenario names.
+#'
+#' @return One of `"population"`, `"individual"`, or `"mixed"`.
+#' @keywords internal
+#' @noRd
+.sensitivityScenarioType <- function(scenarioList, scenarioNames = NULL) {
+  checkmate::assertList(scenarioList, min.len = 1, names = "named")
+  namesToCheck <- scenarioNames %||% names(scenarioList)
+  checkmate::assertCharacter(namesToCheck, min.len = 1, any.missing = FALSE)
+  checkmate::assertSubset(namesToCheck, names(scenarioList))
+
+  hasPopulation <- vapply(
+    namesToCheck,
+    function(oneScenarioName) {
+      oneScenario <- scenarioList[[oneScenarioName]]
+      !is.null(oneScenario$population) && !is.na(oneScenario$population)
+    },
+    logical(1)
+  )
+
+  if (all(hasPopulation)) {
+    return("population")
+  }
+  if (all(!hasPopulation)) {
+    return("individual")
+  }
+  return("mixed")
+}
+
+#' Assert runner choice matches selected scenario type.
+#'
+#' @param runnerType Runner kind: `"standard"` or `"representative"`.
+#' @param scenarioType Scenario type from `.sensitivityScenarioType`.
+#'
+#' @keywords internal
+#' @noRd
+.assertSensitivityRunnerScenarioTypeCompatibility <- function(
+  runnerType,
+  scenarioType
+) {
+  checkmate::assertChoice(runnerType, c("standard", "representative"))
+  checkmate::assertChoice(scenarioType, c("population", "individual", "mixed"))
+
+  if (runnerType == "standard" && scenarioType == "population") {
+    stop(
+      messages$errorutilitiessensitivityPopulationScenariosForStandardRunner()
+    )
+  }
+
+  if (runnerType == "representative" && scenarioType == "individual") {
+    stop(
+      messages$errorutilitiessensitivityIndividualScenariosForRepresentativeRunner()
+    )
+  }
+
+  return(invisible(NULL))
+}
+
+#' Validate sensitivity inputs and ensure output folder exists.
+#'
+#' @keywords internal
+#' @noRd
+.setupSensitivityRunner <- function(projectConfiguration) {
+  if (!("sensitivityFile" %in% names(projectConfiguration$addOns))) {
+    stop(messages$errorutilitiessensitivityMissingSensitivityParameterConfig())
+  }
+
+  outputFolder <- file.path(
+    projectConfiguration$outputFolder,
+    EXPORTDIR$sensitivityResults
+  )
+  if (!dir.exists(outputFolder)) {
+    dir.create(outputFolder)
+  }
+
+  return(outputFolder)
+}
+
+#' Load shared tables for sensitivity runners.
+#'
+#' @keywords internal
+#' @noRd
+.loadSensitivityRunnerData <- function(projectConfiguration, sensitivitysheet) {
+  dtScenarios <- getScenarioDefinitions(projectConfiguration$scenariosFile)
+  dtOutputPaths <- getOutputPathIds(projectConfiguration$addOns$reportsFile)
+
+  sensitivityParameterDt <- xlsxReadData(
+    projectConfiguration$addOns$sensitivityFile,
+    sheetName = sensitivitysheet,
+    skipDescriptionRow = TRUE
+  )
+
+  return(list(
+    dtScenarios = dtScenarios,
+    dtOutputPaths = dtOutputPaths,
+    sensitivityParameterDt = sensitivityParameterDt
+  ))
+}
+
 
 #' Generate Sensitivity Analysis Output File Name
 #'
@@ -494,6 +613,51 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   )
 }
 
+#' Read PK definition rows from configured PK parameter sheets.
+#'
+#' @keywords internal
+#' @noRd
+.readPKDefinitionsFromSheets <- function(
+  projectConfiguration,
+  pkParameterSheets
+) {
+  pkParameterSheets <- unique(splitInputs(pkParameterSheets))
+  pkParameterSheets <- pkParameterSheets[
+    !is.na(pkParameterSheets) & nzchar(pkParameterSheets)
+  ]
+  checkmate::assertCharacter(
+    pkParameterSheets,
+    any.missing = FALSE,
+    min.len = 1
+  )
+
+  lapply(splitInputs(pkParameterSheets), function(sheetName) {
+    xlsxReadData(
+      wb = projectConfiguration$addOns$pKParameterFile,
+      sheetName = sheetName,
+      skipDescriptionRow = TRUE
+    )
+  }) %>%
+    data.table::rbindlist(fill = TRUE, use.names = TRUE) %>%
+    .separateAndTrimColumn(columnName = "outputPathIds")
+}
+
+#' Normalize PK definition column names for sensitivity workflows.
+#'
+#' @keywords internal
+#' @noRd
+.normalizedPKDefinitionsForSensitivity <- function(pkDefinitions) {
+  if ("descriptions" %in% names(pkDefinitions)) {
+    pkDefinitions[, descriptions := NULL]
+  }
+
+  pkDefinitions %>%
+    setnames(
+      old = c("name", "displayName", "displayUnit"),
+      new = c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")
+    )
+}
+
 #' Build PK definition table for sensitivity analysis.
 #'
 #' @keywords internal
@@ -505,22 +669,18 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
 ) {
   outputPath <- pKParameterName <- NULL
 
-  pkDefinitions <- lapply(splitInputs(pkParameterSheets), function(sheetName) {
-    xlsxReadData(
-      wb = projectConfiguration$addOns$pKParameterFile,
-      sheetName = sheetName,
-      skipDescriptionRow = TRUE
-    )
-  }) %>%
-    data.table::rbindlist(fill = TRUE, use.names = TRUE) %>%
-    .separateAndTrimColumn(columnName = "outputPathIds") %>%
+  pkDefinitions <- .readPKDefinitionsFromSheets(
+    projectConfiguration = projectConfiguration,
+    pkParameterSheets = pkParameterSheets
+  ) %>%
+    .normalizedPKDefinitionsForSensitivity() %>%
+    setnames(old = "pKParameter", new = "pKParameterName") %>%
     merge(
       dtOutputPaths[, c("outputPathId", "outputPath")],
       by = "outputPathId",
       all.x = TRUE,
       sort = FALSE
-    ) %>%
-    setnames(old = "name", new = "pKParameterName")
+    )
 
   checkmate::assertNames(
     names(pkDefinitions),
@@ -595,35 +755,6 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   lapply(sensitivityParameter, unique)
 }
 
-#' Build mapping dictionary for sensitivity parameter labels and paths.
-#'
-#' @keywords internal
-#' @noRd
-.sensitivityParameterNameDictionary <- function(sensitivityParameterDt) {
-  normalizedTable <- .normalizedSensitivityParameterTable(
-    sensitivityParameterDt
-  )
-
-  labelsDictionary <- data.table::setnames(
-    data.table::data.table(
-      normalizedTable[["parameterName"]],
-      normalizedTable[["parameterName"]]
-    ),
-    c("parameterInternal", "parameterName")
-  )
-
-  pathsDictionary <- data.table::setnames(
-    data.table::data.table(
-      normalizedTable[["parameterPath"]],
-      normalizedTable[["parameterName"]]
-    ),
-    c("parameterInternal", "parameterName")
-  )
-
-  unique(data.table::rbindlist(list(labelsDictionary, pathsDictionary)))
-}
-
-
 #' Internal helper for scenario sensitivity calculation.
 #'
 #' @param scenarioFiles Named character vector (length 1 or 2) of PKML file paths.
@@ -695,7 +826,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   }
 
   sensitivityPopulation <- population %||%
-    prepareSensitivityPopulation(
+    .prepareSensitivityPopulation(
       scenarioFiles = scenarioFiles,
       sensitivityParameter = sensitivityParameter,
       variationRange = variationRange,
@@ -726,7 +857,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
     ospsuite::populationToDataFrame(sensitivityPopulation)
   )[, .(IndividualId, factor, SensitivityParameter)]
 
-  pkVals <- loadSensitivityPKValues(
+  pkVals <- .loadSensitivityPKValues(
     scenarioFiles = scenarioFiles,
     outputPaths = outputPaths,
     pkParameter = pkParameter,
@@ -785,13 +916,10 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
 #' @keywords internal
 #' @noRd
 .representativeQuantileLabels <- function(representativeQuantiles) {
-  paste0(
-    "p",
-    format(
-      representativeQuantiles * 100,
-      trim = TRUE,
-      scientific = FALSE
-    )
+  formatPercentiles(
+    percentiles = representativeQuantiles,
+    suffix = " percentile",
+    allAsPercentiles = FALSE
   )
 }
 
@@ -1160,9 +1288,9 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
 #' @param outFolder Folder containing the `<scenarioName>-PKAnalysisResults.csv` files.
 #'
 #' @return A data.table with columns `IndividualId`, `QuantityPath`, `PKParameter`, `Value`.
-#' @export
-#' @family sensitivity functions
-loadSensitivityPKValues <- function(
+#' @keywords internal
+#' @noRd
+.loadSensitivityPKValues <- function(
   scenarioFiles,
   outputPaths,
   pkParameter,
@@ -1260,9 +1388,9 @@ loadSensitivityPKValues <- function(
 #' @param numberOfSteps Integer number of positive perturbation steps (default `2`).
 #'
 #' @return An ospsuite population object.
-#' @export
-#' @family sensitivity functions
-prepareSensitivityPopulation <- function(
+#' @keywords internal
+#' @noRd
+.prepareSensitivityPopulation <- function(
   scenarioFiles,
   sensitivityParameter,
   variationRange = 0.1,
