@@ -225,6 +225,46 @@ messages$errorplotSensitivityMultipleRowsPerScenario <- function(
   )
 }
 
+messages$errorplotSensitivityInvalidReferenceScenario <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(paste(
+      "Invalid referenceScenario value(s) in sensitivity configuration:",
+      paste(invalidReferenceScenarios, collapse = ", "),
+      "Allowed values are scenario names from the Scenarios sheet."
+    )),
+    envir = env
+  )
+}
+
+messages$errorplotSensitivityMissingResultFile <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(paste(
+      "Missing sensitivity result file(s) for sensitivity configuration row(s):",
+      paste(
+        sprintf(
+          "%s [scenario=%s, sheet=%s, reference=%s] -> %s",
+          missingResultFiles$plotName,
+          missingResultFiles$scenario,
+          missingResultFiles$sensitivityParameterSheet,
+          ifelse(
+            is.na(missingResultFiles$referenceScenario) |
+              missingResultFiles$referenceScenario == "",
+            "<none>",
+            missingResultFiles$referenceScenario
+          ),
+          missingResultFiles$resultFile
+        ),
+        collapse = "; "
+      )
+    )),
+    envir = env
+  )
+}
+
 messages$warningplotPKBoxwhiskerNoDataForPlot <- function(
   env = parent.frame()
 ) {
@@ -1145,6 +1185,20 @@ messages$errorutilitiessensitivityIndividualScenariosForRepresentativeRunner <- 
     quote(
       "Selected scenarios do not include population information. Consider using 'runSensitivityAnalysisForScenarios()' for standard sensitivity runs."
     ),
+    envir = env
+  )
+}
+
+messages$warningutilitiessensitivityReferenceScenarioExcluded <- function(
+  referenceScenario,
+  env = parent.frame()
+) {
+  eval(
+    quote(paste0(
+      "Reference scenario '",
+      referenceScenario,
+      "' is part of the selected scenarios and will be excluded from sensitivity calculations."
+    )),
     envir = env
   )
 }

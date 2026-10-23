@@ -177,7 +177,7 @@ test_that("runRepresentativeSensitivityAnalysisForScenarios errors for individua
   )
 
   expect_error(
-    ospsuite.reportingframework::runRepresentativeSensitivityAnalysisForScenarios(
+    ospsuite.reportingframework:::runRepresentativeSensitivityAnalysisForScenarios(
       projectConfiguration = projectConfiguration,
       scenarioList = list(ScenarioA = list(simulation = "sim")),
       scenarioNames = "ScenarioA",
@@ -272,7 +272,10 @@ test_that("buildSensitivityPopulationFromBaselineRow enriches missing paths from
 
 test_that("getRepresentativeIndividualsForSensitivity selects nearest requested quantiles", {
   tmp <- withr::local_tempdir()
-  pkDir <- file.path(tmp, EXPORTDIR$pKAnalysisResults)
+  pkDir <- file.path(
+    tmp,
+    ospsuite.reportingframework:::EXPORTDIR$pKAnalysisResults
+  )
   dir.create(pkDir, recursive = TRUE)
 
   data.table::fwrite(
@@ -296,7 +299,7 @@ test_that("getRepresentativeIndividualsForSensitivity selects nearest requested 
 
   expect_equal(
     representatives$RepresentativeQuantile,
-    c("p5", "p50", "p95")
+    c("5th percentile", "median", "95th percentile")
   )
   expect_equal(
     representatives$RepresentativeIndividualId,
@@ -305,7 +308,7 @@ test_that("getRepresentativeIndividualsForSensitivity selects nearest requested 
 })
 
 test_that(".prepareRepresentativeSensitivityPopulation keeps one individual and perturbs parameters", {
-  pop <- loadPopulation(.populationPath())
+  pop <- ospsuite::loadPopulation(.populationPath())
 
   representativePopulation <-
     ospsuite.reportingframework:::.prepareRepresentativeSensitivityPopulation(
@@ -341,7 +344,7 @@ test_that(".prepareRepresentativeSensitivityPopulation keeps one individual and 
 })
 
 test_that(".prepareRepresentativeSensitivityPopulation enriches missing paths from simulation", {
-  pop <- loadPopulation(.populationPath())
+  pop <- ospsuite::loadPopulation(.populationPath())
 
   local_mocked_bindings(
     getParameter = function(path, container, stopIfNotFound = FALSE) {
@@ -601,6 +604,7 @@ test_that(".calculateSensitivities computes summary sensitivity with mocked depe
     pkParameter = "AUC",
     sensitivityParameter = list(CL = "P1|CL"),
     outFolder = tmp,
+    referenceScenario = "base",
     writeResult = FALSE
   )
 
@@ -609,6 +613,7 @@ test_that(".calculateSensitivities computes summary sensitivity with mocked depe
   expect_equal(result$QuantityPath, "q1")
   expect_equal(result$PKParameter, "AUC")
   expect_equal(result$sens, 1)
+  expect_equal(result$referenceScenario, "base")
 })
 
 test_that(".calculateSensitivities errors when simulation run returns no results", {
@@ -644,8 +649,14 @@ test_that(".calculateSensitivities errors when simulation run returns no results
 
 test_that(".ensureRepresentativeSensitivityPrerequisites runs scenarios only when needed", {
   tmp <- withr::local_tempdir()
-  dir.create(file.path(tmp, EXPORTDIR$simulationResult), recursive = TRUE)
-  dir.create(file.path(tmp, EXPORTDIR$pKAnalysisResults), recursive = TRUE)
+  dir.create(
+    file.path(tmp, ospsuite.reportingframework:::EXPORTDIR$simulationResult),
+    recursive = TRUE
+  )
+  dir.create(
+    file.path(tmp, ospsuite.reportingframework:::EXPORTDIR$pKAnalysisResults),
+    recursive = TRUE
+  )
 
   projectConfiguration <- list(outputFolder = tmp)
   called <- FALSE
@@ -655,11 +666,19 @@ test_that(".ensureRepresentativeSensitivityPrerequisites runs scenarios only whe
       called <<- TRUE
       data.table::fwrite(
         data.table::data.table(a = 1),
-        file.path(tmp, EXPORTDIR$pKAnalysisResults, "ScenarioA.csv")
+        file.path(
+          tmp,
+          ospsuite.reportingframework:::EXPORTDIR$pKAnalysisResults,
+          "ScenarioA.csv"
+        )
       )
       data.table::fwrite(
         data.table::data.table(a = 1),
-        file.path(tmp, EXPORTDIR$simulationResult, "ScenarioA_population.csv")
+        file.path(
+          tmp,
+          ospsuite.reportingframework:::EXPORTDIR$simulationResult,
+          "ScenarioA_population.csv"
+        )
       )
       invisible(NULL)
     },

@@ -319,7 +319,8 @@ readConfigTableForPlot <- function(
   inputs,
   plotNames
 ) {
-  plotName <- scenarioName <- scenarioLongName <- NULL
+  longName <- plotName <- scenarioName <- scenarioLongName <- NULL
+  referenceScenarioLongName <- NULL
 
   if (is.null(sheetName)) {
     return(NULL)
@@ -370,13 +371,37 @@ readConfigTableForPlot <- function(
     }
   }
 
+  if ("referenceScenario" %in% names(configTable)) {
+    configTable <- merge(
+      configTable,
+      configEnv$scenarios[, c("scenarioName", "longName")],
+      by.x = "referenceScenario",
+      by.y = "scenarioName",
+      all.x = TRUE,
+      sort = FALSE
+    )
+
+    if (!"referenceScenarioLongName" %in% names(configTable)) {
+      data.table::setnames(
+        configTable,
+        old = "longName",
+        new = "referenceScenarioLongName"
+      )
+    }
+  }
+
   # validate
+  validatorArgs <- c(list(configTable = configTable), inputs)
+  if (!("projectConfiguration" %in% names(validatorArgs))) {
+    validatorArgs <- c(
+      list(projectConfiguration = projectConfiguration),
+      validatorArgs
+    )
+  }
+
   do.call(
     what = validateConfigTableFunction,
-    args = c(
-      list(configTable = configTable),
-      inputs
-    )
+    args = validatorArgs
   )
 
   return(configTable)

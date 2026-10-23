@@ -244,7 +244,6 @@ In addition to the standard sensitivity columns, it includes representative meta
 
 ### Current limitations
 
-- The workflow is single-scenario only.
 - Ratio mode is intentionally disabled.
 - Representative results depend on the selected quantiles.
 - Representative results do not replace full-population inference.
@@ -268,6 +267,10 @@ plotList <- runPlot(
 ### Standard and ratio-mode outputs
 
 For standard sensitivity and ratio-mode sensitivity, the plot shows sensitivities by PK parameter and output path according to the plot configuration.
+
+For ratio-mode plotting, the SensitivityPlots configuration sheet must include the `referenceScenario` column.
+The plotting workflow uses this column to select the correct sensitivity result file for each row.
+The corresponding `referenceScenarioLongName` is derived from the scenario definitions and used in ratio captions.
 
 When a positive `threshold` is configured for a sensitivity plot, the generated
 caption includes the applied absolute-sensitivity filter (`abs(sens) >= threshold`).
@@ -296,6 +299,12 @@ Standard output files follow the scenario and sheet naming convention:
 
 `<scenario>_<sensitivitysheet>.csv`
 
+### Ratio-mode sensitivity output
+
+Ratio-mode output files include the reference scenario to keep file names unique:
+
+`<scenario>_<sensitivitysheet>_<referenceScenario>.csv`
+
 ### Representative sensitivity output
 
 Representative output files follow the naming convention:
@@ -309,7 +318,8 @@ Standard sensitivity results contain:
 - `SensitivityParameter`,
 - `QuantityPath`,
 - `PKParameter`,
-- `sens`.
+- `sens`,
+- `referenceScenario` (filled in ratio mode, `NA` for standard single-scenario output).
 
 Representative sensitivity results contain the same columns plus representative metadata columns.
 

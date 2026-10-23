@@ -107,7 +107,7 @@ runSensitivityAnalysisForScenarios <-
   ) {
     # initialize variable to avoid messages
     pKParameter <- scenarioName <- NULL
-    browser()
+
     checkmate::assertList(
       scenarioList,
       min.len = 1,
@@ -127,11 +127,26 @@ runSensitivityAnalysisForScenarios <-
     if (is.null(scenarioNames)) {
       scenarioNames <- names(scenarioList)
     }
-    checkmate::assertChoice(
-      referenceScenario,
-      choices = names(scenarioList),
-      null.ok = TRUE
+    checkmate::assertString(referenceScenario, null.ok = TRUE)
+    checkmate::assertCharacter(
+      scenarioNames,
+      min.len = 1,
+      any.missing = FALSE
     )
+
+    if (!is.null(referenceScenario) && referenceScenario %in% scenarioNames) {
+      warning(
+        messages$warningutilitiessensitivityReferenceScenarioExcluded(
+          referenceScenario
+        ),
+        call. = FALSE
+      )
+      scenarioNames <- scenarioNames[scenarioNames != referenceScenario]
+    }
+
+    if (length(scenarioNames) == 0) {
+      return(invisible(NULL))
+    }
 
     scenarioType <- .sensitivityScenarioType(
       scenarioList = scenarioList,
@@ -145,7 +160,11 @@ runSensitivityAnalysisForScenarios <-
     for (currentScenarioName in scenarioNames) {
       sensitivityResultFile <- file.path(
         outputFolder,
-        .sensitivityAnalysisName(currentScenarioName, sensitivitysheet)
+        .sensitivityAnalysisName(
+          currentScenarioName,
+          sensitivitysheet,
+          referenceScenario = referenceScenario
+        )
       )
       if (
         !file.exists(sensitivityResultFile) |
@@ -183,6 +202,7 @@ runSensitivityAnalysisForScenarios <-
             numberOfSteps = numberOfSteps,
             outFolder = projectConfiguration$outputFolder,
             resultFilePath = sensitivityResultFile,
+            referenceScenario = referenceScenario,
             simulationRunOptions = simulationRunOptions
           )
         }
@@ -462,7 +482,8 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
     namesToCheck,
     function(oneScenarioName) {
       oneScenario <- scenarioList[[oneScenarioName]]
-      !is.null(oneScenario$population) && !is.na(oneScenario$population)
+      !is.null(oneScenario$population) &&
+        inherits(oneScenario$population, "Population")
     },
     logical(1)
   )
@@ -553,12 +574,34 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
 #'
 #' @param scenarioName The name of the scenario.
 #' @param sensitivitysheet The name of the sensitivity sheet.
+#' @param referenceScenario Optional reference scenario name used in ratio mode.
 #'
 #' @return A string representing the generated file name for the sensitivity analysis results.
 #' @keywords internal
 #' @noRd
-.sensitivityAnalysisName <- function(scenarioName, sensitivitysheet) {
-  paste0(scenarioName, "_", sensitivitysheet, ".csv")
+.sensitivityAnalysisName <- function(
+  scenarioName,
+  sensitivitysheet,
+  referenceScenario = NULL
+) {
+  fileStem <- paste0(scenarioName, "_", sensitivitysheet)
+
+  if (!is.null(referenceScenario)) {
+    referenceScenario <- as.character(referenceScenario)
+    if (length(referenceScenario) == 1 && length(fileStem) > 1) {
+      referenceScenario <- rep(referenceScenario, length(fileStem))
+    }
+
+    hasReferenceScenario <- !is.na(referenceScenario) &
+      nzchar(referenceScenario)
+    fileStem[hasReferenceScenario] <- paste0(
+      fileStem[hasReferenceScenario],
+      "_",
+      referenceScenario[hasReferenceScenario]
+    )
+  }
+
+  paste0(fileStem, ".csv")
 }
 
 #' Build representative sensitivity result file name.
@@ -772,10 +815,12 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
 #'   CSV. If omitted, the file is written as
 #'   \\code{<lastScenarioName>-sensitivity.csv} under
 #'   \\code{<outFolder>/SensitivityResults/}.
+#' @param referenceScenario Optional reference scenario name. When provided,
+#'   a `referenceScenario` column with this value is added to the result.
 #'
 #' @return Invisibly returns a data.table with columns
 #'   \code{SensitivityParameter}, \code{QuantityPath}, \code{PKParameter},
-#'   and \code{sens}.
+#'   \code{sens}, and \code{referenceScenario}.
 #' @keywords internal
 #' @noRd
 .calculateSensitivities <- function(
@@ -788,6 +833,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   outFolder = tempdir(),
   simulationRunOptions = NULL,
   resultFilePath = NULL,
+  referenceScenario = NULL,
   writeResult = TRUE,
   population = NULL
 ) {
@@ -809,6 +855,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   checkmate::assertInt(numberOfSteps, lower = 1)
   checkmate::assertString(outFolder)
   checkmate::assertString(resultFilePath, null.ok = TRUE)
+  checkmate::assertString(referenceScenario, null.ok = TRUE)
   checkmate::assertFlag(writeResult)
   for (fp in scenarioFiles) {
     checkmate::assertFileExists(fp, .var.name = paste("scenarioFile", fp))
@@ -896,6 +943,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
     .(sens = mean(sens, na.rm = TRUE)),
     by = .(SensitivityParameter, QuantityPath, PKParameter)
   ]
+  sens[, referenceScenario := referenceScenario %||% NA_character_]
 
   if (writeResult) {
     if (is.null(resultFilePath)) {
