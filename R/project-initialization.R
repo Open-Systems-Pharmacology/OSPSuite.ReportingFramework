@@ -194,7 +194,7 @@ initProject <- function(
   return(invisible())
 }
 
-#' #' Create a `ProjectConfiguration`
+#' Create a `ProjectConfiguration`
 #'
 #' @description  Create a `ProjectConfigurationRF` based on the `"ProjectConfiguration.xlsx"`
 #'
@@ -205,6 +205,17 @@ initProject <- function(
 #'   reporting framework when loading the configuration file. Defaults to `FALSE`.
 #'
 #' @return Object of type `ProjectConfigurationRF`
+#'
+#' @examples
+#' \dontrun{
+#' # Initialize a new reporting project configuration folder first
+#' initProject(configurationDirectory = "path/to/Configuration")
+#'
+#' # Then load the generated ProjectConfiguration.xlsx
+#' pc <- createProjectConfiguration(
+#'   path = file.path("path/to/Configuration", "ProjectConfiguration.xlsx")
+#' )
+#' }
 #' @export
 #' @family project initialization
 createProjectConfiguration <- function(
