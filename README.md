@@ -30,13 +30,7 @@ This is the beta release of the  `{ospsuite.reportingframework}`. We welcome you
 
 ## Installation
 
-# OSPSuite.ReportingFramework
-
-Framework to create R workflows which configures simulations, runs them plots results and creates a report
-
-## Installation
-
-The `{ospsuite.reportingframework}` package is compatible with version 2.10 and higher of R. Please follow the installation instructions below:
+The package `DESCRIPTION` currently declares `R (>= 2.10)`. Please follow the installation instructions below:
 
 ### From GitHub <img src=https://avatars.githubusercontent.com/github width=15px></img>
 
