@@ -630,7 +630,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   scenarioNames <- currentScenarioName
   if (!is.null(referenceScenario)) {
     if (identical(referenceScenario, currentScenarioName)) {
-      stop("referenceScenario must differ from the current scenario.")
+      stop(messages$errorutilitiessensitivityReferenceScenarioMustDiffer())
     }
     scenarioNames <- c(referenceScenario, currentScenarioName)
   }
@@ -735,7 +735,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   ]
 
   if (nrow(pkDefinitions) == 0) {
-    stop("No PK parameter/output path definitions available for sensitivity.")
+    stop(messages$errorutilitiessensitivityNoPKDefinitionsForSensitivity())
   }
 
   return(pkDefinitions)
@@ -769,7 +769,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   ]
 
   if (nrow(normalizedTable) == 0) {
-    stop("Sensitivity sheet does not contain any parameterPath values.")
+    stop(messages$errorutilitiessensitivityMissingParameterPathValues())
   }
 
   missingParameter <- is.na(normalizedTable[["parameter"]]) |
@@ -1376,7 +1376,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
       "Value"
     )
     if (length(keyCols) == 0) {
-      stop("No common columns to merge the two PK analysis files.")
+      stop(messages$errorutilitiessensitivityNoCommonColumnsToMergePKAnalysis())
     }
     dtPK <- merge(
       dtPK,

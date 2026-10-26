@@ -1178,10 +1178,9 @@ validateDistributionVsDemographicsConfig <- function(
     }
   )
 
-  stop(paste(
-    "Configured model parameters are not available in the selected population(s). Check plotName",
-    configTablePlots$plotName[1],
-    paste(missingColumns, collapse = "; ")
+  stop(messages$errorplotDemographicsMissingConfiguredModelParameters(
+    plotName = configTablePlots$plotName[1],
+    missingColumns = missingColumns
   ))
 }
 
@@ -1255,10 +1254,9 @@ validateDistributionVsDemographicsConfig <- function(
     }
   )
 
-  stop(paste(
-    "Categoric model parameters are not supported for plotDistributionVsDemographics. Check plotName",
-    configTablePlots$plotName[1],
-    paste(invalidColumns, collapse = "; ")
+  stop(messages$errorplotDemographicsCategoricParametersNotSupportedForDistribution(
+    plotName = configTablePlots$plotName[1],
+    invalidColumns = invalidColumns
   ))
 }
 

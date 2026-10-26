@@ -156,6 +156,36 @@ messages$errorplotDemographicsInvalidParameterIds <- function(
   )
 }
 
+messages$errorplotDemographicsMissingConfiguredModelParameters <- function(
+  plotName,
+  missingColumns,
+  env = parent.frame()
+) {
+  eval(
+    quote(paste(
+      "Configured model parameters are not available in the selected population(s). Check plotName",
+      plotName,
+      paste(missingColumns, collapse = "; ")
+    )),
+    envir = env
+  )
+}
+
+messages$errorplotDemographicsCategoricParametersNotSupportedForDistribution <- function(
+  plotName,
+  invalidColumns,
+  env = parent.frame()
+) {
+  eval(
+    quote(paste(
+      "Categoric model parameters are not supported for plotDistributionVsDemographics. Check plotName",
+      plotName,
+      paste(invalidColumns, collapse = "; ")
+    )),
+    envir = env
+  )
+}
+
 messages$warningplotDemographicsCategoricalParametersIgnored <- function(
   env = parent.frame()
 ) {
@@ -1185,6 +1215,42 @@ messages$errorutilitiessensitivityIndividualScenariosForRepresentativeRunner <- 
     quote(
       "Selected scenarios do not include population information. Consider using 'runSensitivityAnalysisForScenarios()' for standard sensitivity runs."
     ),
+    envir = env
+  )
+}
+
+messages$errorutilitiessensitivityReferenceScenarioMustDiffer <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote("referenceScenario must differ from the current scenario."),
+    envir = env
+  )
+}
+
+messages$errorutilitiessensitivityNoPKDefinitionsForSensitivity <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote("No PK parameter/output path definitions available for sensitivity."),
+    envir = env
+  )
+}
+
+messages$errorutilitiessensitivityMissingParameterPathValues <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote("Sensitivity sheet does not contain any parameterPath values."),
+    envir = env
+  )
+}
+
+messages$errorutilitiessensitivityNoCommonColumnsToMergePKAnalysis <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote("No common columns to merge the two PK analysis files."),
     envir = env
   )
 }
