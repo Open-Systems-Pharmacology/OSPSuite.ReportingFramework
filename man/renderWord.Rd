@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-reporting.R
 \name{renderWord}
 \alias{renderWord}
-\title{converts .Rmd file to word}
+\title{Convert a .qmd file to Word}
 \usage{
 renderWord(
   fileName,
@@ -13,7 +13,7 @@ renderWord(
 )
 }
 \arguments{
-\item{fileName}{name of .Rmd file to convert to word format (".docx")}
+\item{fileName}{Name of a `.qmd` file to convert to Word format (`.docx`).}
 
 \item{wordConversionTemplate}{template used for conversion}
 
@@ -24,13 +24,13 @@ The selected styles should be defined in the `wordConversionTemplate`}
 \item{...}{passed to render}
 }
 \description{
-converts .Rmd file to word
+Convert a .qmd file to Word
 }
 \examples{
 \dontrun{
 # Example with customstyles for Footnotes
 renderWord(
-  fileName = "myReport.Rmd",
+  fileName = "myReport.qmd",
   wordConversionTemplate = "path/to/template/myTemplate.docx",
   customStyles = list(FigureFootnote = "myFootnoteFormat", TableFootnote = "myFootnoteFormat")
 )
