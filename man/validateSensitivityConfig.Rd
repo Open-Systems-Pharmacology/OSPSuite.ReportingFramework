@@ -4,7 +4,7 @@
 \alias{validateSensitivityConfig}
 \title{Validate Sensitivity Configuration Table}
 \usage{
-validateSensitivityConfig(configTable, ...)
+validateSensitivityConfig(configTable, scenarioList, ...)
 }
 \arguments{
 \item{configTable}{A data.table containing the configuration for sensitivity analysis.}

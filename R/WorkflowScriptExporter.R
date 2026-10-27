@@ -52,6 +52,9 @@ WorkflowScriptExporter <- R6::R6Class(
 
       private$initializeconfigurationSheets(projectConfiguration)
 
+      private$.chunkEvalEnv <- new.env(parent = globalenv())
+      private$.chunkEvalEnv$projectConfiguration <- projectConfiguration
+
       self$codeChunks <- list()
 
       return(self)
@@ -600,11 +603,28 @@ WorkflowScriptExporter <- R6::R6Class(
         value <- private$.changedInputFiles
       } else {
         if (is.data.table(private$.changedInputFiles)) {
-          value <- rbind(
-            private$.changedInputFiles,
-            value
-          ) %>%
-            unique()
+          value <- data.table::as.data.table(value)
+          requiredCols <- c("source", "fileName", "fileType")
+          missingCols <- setdiff(requiredCols, names(value))
+          if (length(missingCols) > 0) {
+            stop(
+              sprintf(
+                "Missing required columns in changedInputFiles: %s",
+                paste(missingCols, collapse = ", ")
+              )
+            )
+          }
+          value <- value[, ..requiredCols]
+          value[, source := as.character(source)]
+          value[, fileName := as.character(fileName)]
+          value[, fileType := as.character(fileType)]
+
+          value <- data.table::rbindlist(
+            list(private$.changedInputFiles, value),
+            use.names = TRUE,
+            fill = FALSE
+          )
+          value <- unique(value, by = requiredCols)
         }
       }
       private$.changedInputFiles <- value
@@ -658,6 +678,8 @@ WorkflowScriptExporter <- R6::R6Class(
     .configurationSheets = NA,
     # list with code read in from workflowRmd
     .codeChunks = NA,
+    # environment used for evaluating workflow chunks
+    .chunkEvalEnv = NULL,
     # Convert a data.table to JSON-friendly list structure (column_names + rows)
     excelDataTableToListStructure = function(df) {
       # Convert to simple list format
@@ -756,18 +778,18 @@ WorkflowScriptExporter <- R6::R6Class(
         source := fs::path_ext_remove(source)
       ]
       setkey(changedInputFiles, source)
+      self$changedInputFiles <-
+        changedInputFiles[, c(
+          "source",
+          "fileName",
+          "fileType"
+        )]
 
-      self$changedInputFiles <- changedInputFiles[, c(
-        "source",
-        "fileName",
-        "fileType"
-      )]
+      ixChanged <- which(
+        changedInputFiles[["manuallyChanged"]] == 0
+      )
 
-      # skip manually changed filenames for warning message
-      ixChanged <-
-        which(changedInputFiles[['manuallyChanged']] == 0)
-
-      if (length(ixChanged > 0)) {
+      if (length(ixChanged) > 0) {
         warning(messages$warningWorkflowScriptExporterAdjustedFilenames())
       }
 
@@ -887,7 +909,10 @@ WorkflowScriptExporter <- R6::R6Class(
     evalChunkAndValidate = function(chunkName, expectedVarName) {
       tryCatch(
         expr = {
-          eval(parse(text = self$codeChunks[[chunkName]]))
+          eval(
+            parse(text = self$codeChunks[[chunkName]]),
+            envir = private$.chunkEvalEnv
+          )
         },
         error = function(e) {
           stop(
@@ -901,7 +926,13 @@ WorkflowScriptExporter <- R6::R6Class(
       )
 
       # Check if the expected variable exists
-      if (!exists(expectedVarName)) {
+      if (
+        !exists(
+          expectedVarName,
+          envir = private$.chunkEvalEnv,
+          inherits = FALSE
+        )
+      ) {
         stop(
           sprintf(
             "Expected variable '%s' not found after evaluating chunk '%s'",
@@ -912,7 +943,11 @@ WorkflowScriptExporter <- R6::R6Class(
       }
 
       # Check if the variable is NULL or empty
-      variableValue <- get(expectedVarName, envir = environment())
+      variableValue <- get(
+        expectedVarName,
+        envir = private$.chunkEvalEnv,
+        inherits = FALSE
+      )
       if (is.null(variableValue) || length(variableValue) == 0) {
         self$codeChunks <- setNames(list(NULL), chunkName)
       }
@@ -933,12 +968,11 @@ WorkflowScriptExporter <- R6::R6Class(
         source = pathsCustomfunctions,
         fileType = "script"
       )
-
       fileNames <- self$inputFiles[fileType == "script"]$fileName
       contentLines <- paste0(
         "", # source custom functions",
         "source(file.path(projectConfiguration$configurationsFolder,'",
-        fs::path_ext_set(path = fileNames, ext = "R"),
+        gsub('_r\\.txt$', '.R', fileNames),
         "'))"
       )
       self$codeChunks <- list("pathsCustomfunctions-copy" = contentLines)
@@ -1019,7 +1053,7 @@ WorkflowScriptExporter <- R6::R6Class(
         )
 
         self$inputFiles <- data.table(
-          source = filename,
+          source = fileName,
           fileType = "data"
         )
       }
@@ -1411,10 +1445,22 @@ exportTLFWorkflowToEPackage <- function(
   workflowRmd,
   fileNameReplacements = c()
 ) {
+  checkmate::assertFileExists(workflowRmd)
+  workflowRmdPath <- normalizePath(workflowRmd, mustWork = TRUE)
+  originalWd <- getwd()
+  on.exit(setwd(originalWd), add = TRUE)
+  setwd(dirname(workflowRmdPath))
+
+  # initialize the logging
+  setLogPath(
+    logFolder = file.path(projectConfiguration$outputFolder, "logs"),
+    logFileName = "workflow_export.log"
+  )
+
   exporter <- WorkflowScriptExporter$new(
     projectConfiguration,
     wfIdentifier = wfIdentifier,
-    workflowRmd = workflowRmd,
+    workflowRmd = basename(workflowRmdPath),
     fileNameReplacements = fileNameReplacements
   )
 
@@ -1455,21 +1501,17 @@ exportTLFWorkflowToEPackage <- function(
 #'                     used to distinguish between different workflows.
 #' @param ePackageFolder A character string representing the path to the electronic package folder
 #'                       that contains the workflow files and configurations to be imported.
-#' @param configurationDirectory A character string representing the directory where the configuration
-#'                               files will be stored.
 #' @return An object containing the updated project configuration after the workflow has been imported.
 #' @export
 #' @family electronic package
 importWorkflow <- function(
   projectDirectory,
   wfIdentifier,
-  ePackageFolder,
-  configurationDirectory
+  ePackageFolder
 ) {
   checkmate::assertDirectoryExists(projectDirectory)
   checkmate::assertDirectoryExists(ePackageFolder)
   checkmate::assertIntegerish(wfIdentifier)
-
   configurationDirectory <- file.path(
     projectDirectory,
     getConfigDirectoryForWorkflow(wfIdentifier = wfIdentifier)
@@ -1484,17 +1526,6 @@ importWorkflow <- function(
     projectDirectory = projectDirectory,
     wfIdentifier = wfIdentifier
   )
-
-  # # get paths of all relevant project files
-  # projectConfigurationXlsx <- file.path(
-  #   configurationDirectory,
-  #   "ProjectConfiguration.xlsx"
-  # )
-  #
-  # projectConfigurationNew <-
-  #   ospsuite.reportingframework::createProjectConfiguration(
-  #     path = projectConfigurationXlsx
-  #   )
 
   # add data folder
   projectConfigurationNew$addAddOnFolderToConfiguration(
@@ -1533,8 +1564,14 @@ importWorkflow <- function(
 validateAndAdjustFilenames <- function(fileName, fileType) {
   # Check if the file has a valid extension
   extension <- fs::path_ext(fileName)
-  if (!(extension %in% c("txt", "csv", "xml"))) {
+  if (!(extension %in% c("txt", "xml"))) {
     stop(messages$errorWorkflowScriptExporterL6InvalidFileExtension())
+  }
+
+  # add "_" before Uppercase Letters, that will make more readable function file names in the ePackage
+  # as the final name is in lower case
+  if (fileType == 'script') {
+    fileName <- gsub("([a-z0-9])([A-Z])", "\\1_\\2", basename(fileName))
   }
 
   # use only lowercase
@@ -1660,7 +1697,6 @@ importProjectConfiguration <- function(
   if (!file.exists(jsonPath)) {
     stop(messages$errorWorkflowScriptExporterL8MissingJsonFile())
   }
-
   initProject(
     projectDirectory = projectDirectory,
     configurationDirectory = configurationDirectory
@@ -1676,10 +1712,30 @@ importProjectConfiguration <- function(
     overwrite = TRUE
   )
 
-  rPCf <- restoreProjectConfigurationRF(
-    jsonPath = restoreJsonPath,
-    outputDir = configurationDirectory,
-    silent = TRUE
+  # Avoid esqlabsR interactive overwrite confirmation during import.
+  restoreXlsxPath <- fs::path_ext_set(restoreJsonPath, ".xlsx")
+  if (file.exists(restoreXlsxPath)) {
+    file.remove(restoreXlsxPath)
+  }
+
+  rPCf <- withCallingHandlers(
+    restoreProjectConfigurationRF(
+      jsonPath = restoreJsonPath,
+      outputDir = configurationDirectory,
+      silent = TRUE
+    ),
+    warning = function(w) {
+      # Expected during import when JSON and current Excel files differ.
+      if (
+        grepl(
+          "Excel configuration files are NOT in sync with the JSON snapshot",
+          conditionMessage(w),
+          fixed = TRUE
+        )
+      ) {
+        invokeRestart("muffleWarning")
+      }
+    }
   )
 
   return(rPCf)
@@ -1706,6 +1762,30 @@ importWorkflowFiles <- function(
     )
   )
 
+  modelFolder <- suppressWarnings(projectConfigurationNew$modelFolder)
+  populationsFolder <- suppressWarnings(
+    projectConfigurationNew$populationsFolder
+  )
+  dataFileFolder <- suppressWarnings(
+    projectConfigurationNew$addOns$dataFileFolder
+  )
+
+  dir.create(
+    modelFolder,
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+  dir.create(
+    populationsFolder,
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+  dir.create(
+    dataFileFolder,
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+
   fileGroup <- split(inputFiles, by = "fileType")
   for (fileType in names(fileGroup)) {
     fileNames <- fileGroup[[fileType]]$fileName
@@ -1714,16 +1794,16 @@ importWorkflowFiles <- function(
         switch(
           fileType,
           "population" = file.path(
-            projectConfigurationNew$populationsFolder,
+            populationsFolder,
             importedProjectFileName(f, fileType)
           ),
           "model" = file.path(
-            projectConfigurationNew$modelFolder,
+            modelFolder,
             importedProjectFileName(f, fileType)
           ),
           "data" = file.path(projectConfigurationNew$addOns$dataFileFolder, f),
           "script" = file.path(
-            projectConfigurationNew$dataFolder,
+            projectConfigurationNew$configurationsFolder,
             importedProjectFileName(f, fileType)
           ),
         )

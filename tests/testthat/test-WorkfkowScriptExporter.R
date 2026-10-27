@@ -86,6 +86,24 @@ test_that("WorkflowScriptExporter constructor accepts fileNameReplacements", {
   expect_equal(exporter$fileNameReplacements, c("old.csv", "new.csv"))
 })
 
+test_that("WorkflowScriptExporter does not warn for explicit fileNameReplacements", {
+  exporter <- WorkflowScriptExporter$new(
+    projectConfiguration = projectConfiguration,
+    wfIdentifier = 20,
+    scenarioNames = c("scenario1"),
+    fileNameReplacements = c("Aciclovir.pkml", "acyclovir.pkml")
+  )
+
+  expect_no_warning({
+    exporter$inputFiles <- data.table(
+      source = "Aciclovir.pkml",
+      fileType = "model"
+    )
+  })
+
+  expect_equal(exporter$inputFiles$fileName, "acyclovir.xml")
+})
+
 test_that("WorkflowScriptExporter initializes codeChunks", {
   exporter <- WorkflowScriptExporter$new(
     projectConfiguration = projectConfiguration,

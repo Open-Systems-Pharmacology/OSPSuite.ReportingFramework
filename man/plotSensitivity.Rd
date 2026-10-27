@@ -5,10 +5,10 @@
 \title{Plot Sensitivity Function}
 \usage{
 plotSensitivity(
-	projectConfiguration,
-	onePlotConfig,
-	scenarioList,
-	significantDigits = 3
+  projectConfiguration,
+  onePlotConfig,
+  scenarioList,
+  significantDigits = 3
 )
 }
 \arguments{

@@ -29,14 +29,14 @@ runSensitivityAnalysisForScenarios(
 ratio mode. When provided, sensitivities are computed as
 \\code{scenario / referenceScenario}.}
 
-\item{variationRange}{Numeric fraction variation range passed to
-`.calculateSensitivities()`.}
+\item{variationRange}{Numeric fraction defining how much each sensitivity
+parameter is varied around baseline (e.g., `0.1` means +/- 10%).}
 
-\item{numberOfSteps}{Integer number of perturbation steps passed to
-`.calculateSensitivities()`.}
+\item{numberOfSteps}{Integer number of perturbation steps on each side of
+baseline used for sensitivity estimation.}
 
 \item{simulationRunOptions}{Optional `SimulationRunOptions` passed to the
-simulation runs used by the enhanced workflow.}
+simulation runs.}
 
 \item{overwrite}{A logical indicating whether to overwrite existing results. Defaults to TRUE.}
 }
@@ -55,7 +55,4 @@ value are treated as one grouped sensitivity label, so multiple
 Ratio mode is only applied when `referenceScenario` is provided.
 In that case the sensitivity is calculated for
 `scenario / referenceScenario`.
-Intermediate PK-analysis CSV files are written to a temporary folder and
-cleaned up automatically; only the final sensitivity CSV is kept in
-`Outputs/SensitivityResults`.
 }

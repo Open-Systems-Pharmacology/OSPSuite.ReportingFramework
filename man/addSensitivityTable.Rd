@@ -15,21 +15,21 @@ addSensitivityTable(
 \item{projectConfiguration}{An object representing the project configuration.}
 
 \item{scenarioList}{A named list of scenarios from which to extract
-parameter paths. If \code{NULL}, only the template workbook is added to the
+parameter paths. If `NULL`, only the template workbook is added to the
 project configuration.}
 
 \item{sheetName}{The name of the sheet in the Excel file to populate.}
 
 \item{parameterPathMode}{Character string indicating how to combine the
-potential parameter paths from \code{scenarioList}: \code{"intersection"}
-keeps only paths present in every scenario, while \code{"union"} keeps any
-path present in at least one scenario.}
+potential parameter paths from `scenarioList`: `"intersection"` keeps only
+paths present in every scenario, while `"union"` keeps any path present in
+at least one scenario.}
 }
 \value{
 The modified project configuration object.
 }
 \description{
 This function adds a sensitivity table to the provided project configuration.
-It loads a template Excel file and, when \code{scenarioList} is provided,
+It loads a template Excel file and, when `scenarioList` is provided,
 populates it with parameter paths derived across the supplied scenarios.
 }

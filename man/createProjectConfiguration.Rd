@@ -2,7 +2,7 @@
 % Please edit documentation in R/project-initialization.R
 \name{createProjectConfiguration}
 \alias{createProjectConfiguration}
-\title{#' Create a `ProjectConfiguration`}
+\title{Create a `ProjectConfiguration`}
 \usage{
 createProjectConfiguration(
   path = file.path("ProjectConfiguration.xlsx"),
@@ -22,6 +22,17 @@ Object of type `ProjectConfigurationRF`
 Create a `ProjectConfigurationRF` based on the `"ProjectConfiguration.xlsx"`
 
 based on esqlabsR::ProjectConfiguration but with additional file information for PK Parameter definitions
+}
+\examples{
+\dontrun{
+# Initialize a new reporting project configuration folder first
+initProject(configurationDirectory = "path/to/Configuration")
+
+# Then load the generated ProjectConfiguration.xlsx
+pc <- createProjectConfiguration(
+  path = file.path("path/to/Configuration", "ProjectConfiguration.xlsx")
+)
+}
 }
 \seealso{
 Other project initialization:

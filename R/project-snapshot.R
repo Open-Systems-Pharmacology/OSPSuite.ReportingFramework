@@ -330,6 +330,25 @@ restoreProjectConfigurationRF <- function(jsonPath, outputDir = NULL, ...) {
     ...
   )
 
+  # esqlabsR restores xlsx files into file.path(effectiveOutputDir, "Configurations")
+  # but ReportingFramework expects them directly in effectiveOutputDir
+  esqlabsConfigDir <- file.path(effectiveOutputDir, "Configurations")
+  if (dir.exists(esqlabsConfigDir)) {
+    xlsfiles <- list.files(
+      path = esqlabsConfigDir,
+      pattern = "\\.xlsx$",
+      full.names = TRUE
+    )
+    for (xls in xlsfiles) {
+      file.copy(
+        from = xls,
+        to = file.path(effectiveOutputDir, basename(xls)),
+        overwrite = TRUE
+      )
+    }
+    unlink(esqlabsConfigDir, recursive = TRUE, force = TRUE)
+  }
+
   xlsxPath <- file.path(
     effectiveOutputDir,
     sub("\\.json$", ".xlsx", basename(jsonPath))

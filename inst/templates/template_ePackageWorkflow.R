@@ -1,5 +1,11 @@
 XXCHUNKstart - librariesXXX
-library(ospsuite.reportingframework)
+#library(ospsuite.reportingframework)
+pkgload::load_all(
+  path = file.path(
+    'C:/Users/17fec1a5/Documents/GitHub/',
+    'OSPSuite.ReportingFramework'
+  )
+)
 XXCHUNKend - librariesXXX
 
 # Set the working directory to the source file location before running this script.
@@ -13,7 +19,7 @@ cleanUp <- TRUE
 
 setLogPath(
   logFolder = file.path(projectDirectory, 'logs'),
-  logFileName = paste0('w', XXwfIdentifierXX, '.log')
+  logFileName = 'wXXwfIdentifierXX.log'
 )
 
 ospsuite.reportingframework::captureLog(
@@ -37,7 +43,7 @@ ospsuite.reportingframework::captureLog(
     XXCHUNKstart - loadResultsXXX
     # create list of scenarios
     scenarioList <-
-      createScenarios.wrapped(
+      createScenariosWrapped(
         projectConfiguration = projectConfiguration,
         scenarioNames = c('XXscenarioNamesXX')
       )
@@ -59,7 +65,7 @@ ospsuite.reportingframework::captureLog(
 
     # Save session information, including loaded packages and the R version, to a log file.
     saveSessionInfo(
-      fileName = paste0('w', XXwfIdentifierXX, '_sessionInfo.log')
+      fileName = 'wXXwfIdentifierXX_sessionInfo.log'
     )
   },
   finallyExpression = {
