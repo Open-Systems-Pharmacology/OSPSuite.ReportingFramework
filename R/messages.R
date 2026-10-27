@@ -158,31 +158,23 @@ messages$errorplotDemographicsInvalidParameterIds <- function(
 
 messages$errorplotDemographicsMissingConfiguredModelParameters <- function(
   plotName,
-  missingColumns,
-  env = parent.frame()
+  missingColumns
 ) {
-  eval(
-    quote(paste(
-      "Configured model parameters are not available in the selected population(s). Check plotName",
-      plotName,
-      paste(missingColumns, collapse = "; ")
-    )),
-    envir = env
+  paste(
+    "Configured model parameters are not available in the selected population(s). Check plotName",
+    plotName,
+    paste(missingColumns, collapse = "; ")
   )
 }
 
 messages$errorplotDemographicsCategoricParametersNotSupportedForDistribution <- function(
   plotName,
-  invalidColumns,
-  env = parent.frame()
+  invalidColumns
 ) {
-  eval(
-    quote(paste(
-      "Categoric model parameters are not supported for plotDistributionVsDemographics. Check plotName",
-      plotName,
-      paste(invalidColumns, collapse = "; ")
-    )),
-    envir = env
+  paste(
+    "Categoric model parameters are not supported for plotDistributionVsDemographics. Check plotName",
+    plotName,
+    paste(invalidColumns, collapse = "; ")
   )
 }
 

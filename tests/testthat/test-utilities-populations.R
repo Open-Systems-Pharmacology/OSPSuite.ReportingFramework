@@ -65,7 +65,7 @@ test_that(".warnOnSuspiciousFemaleProportions warns for fractional percentages",
 
     expect_warning(
         .warnOnSuspiciousFemaleProportions(dtPops),
-        "percent not fraction"
+        "percent, not fraction"
     )
 })
 
