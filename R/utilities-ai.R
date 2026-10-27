@@ -18,15 +18,15 @@ exportWorkflowContext <- function(
 ) {
   checkmate::assertFlag(includeNumericValues)
 
-  dataImporterConfigurationFile <- projectConfiguration$dataImporterConfigurationFile
+  dataImportMapFile <- projectConfiguration$addOns$dataImportMapFile
   scenariosFile <- projectConfiguration$scenariosFile
   reportsFile <- projectConfiguration$addOns$reportsFile
 
-  checkmate::assertFileExists(dataImporterConfigurationFile)
+  checkmate::assertFileExists(dataImportMapFile)
   checkmate::assertFileExists(scenariosFile)
   checkmate::assertFileExists(reportsFile)
 
-  dataImportWb <- openxlsx::loadWorkbook(dataImporterConfigurationFile)
+  dataImportWb <- openxlsx::loadWorkbook(dataImportMapFile)
   dataFiles <- xlsxReadData(
     wb = dataImportWb,
     sheetName = "DataFiles",
@@ -39,7 +39,7 @@ exportWorkflowContext <- function(
       "ospsuite.reportingframework"
     )),
     configurationFiles = list(
-      dataImporterConfigurationFile = dataImporterConfigurationFile,
+      dataImportMapFile = dataImportMapFile,
       scenariosFile = scenariosFile,
       reportsFile = reportsFile
     ),
@@ -139,8 +139,8 @@ createAIWorkflowPrompt <- function(
     "",
     "Project context:",
     paste(
-      "- Data importer configuration:",
-      context$configurationFiles$dataImporterConfigurationFile
+      "- Data import map workbook:",
+      context$configurationFiles$dataImportMapFile
     ),
     paste(
       "- Scenarios workbook:",
@@ -275,25 +275,25 @@ validateWorkflowForAI <- function(projectConfiguration, strict = FALSE) {
   warnings <- character()
   suggestions <- character()
 
-  dataImporterConfigurationFile <- projectConfiguration$dataImporterConfigurationFile
+  dataImportMapFile <- projectConfiguration$addOns$dataImportMapFile
   scenariosFile <- projectConfiguration$scenariosFile
   reportsFile <- projectConfiguration$addOns$reportsFile
 
-  for (p in c(dataImporterConfigurationFile, scenariosFile, reportsFile)) {
+  for (p in c(dataImportMapFile, scenariosFile, reportsFile)) {
     if (!file.exists(p)) {
       errors <- c(errors, paste("Missing configuration file:", p))
     }
   }
 
   if (length(errors) == 0) {
-    wb <- openxlsx::loadWorkbook(dataImporterConfigurationFile)
+    wb <- openxlsx::loadWorkbook(dataImportMapFile)
     requiredSheets <- c("DataFiles")
     missingSheets <- setdiff(requiredSheets, wb$sheet_names)
     if (length(missingSheets) > 0) {
       errors <- c(
         errors,
         paste(
-          "Missing required sheets in DataImportConfiguration:",
+            "Missing required sheets in DataImportMap:",
           paste(missingSheets, collapse = ", ")
         )
       )

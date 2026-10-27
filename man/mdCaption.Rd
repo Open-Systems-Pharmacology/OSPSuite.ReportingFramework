@@ -20,7 +20,6 @@ Add caption with optional custom style.
 }
 \seealso{
 Other markdown helper function:
-\code{\link[=addFiguresAndTables]{addFiguresAndTables()}},
 \code{\link[=mdBullet]{mdBullet()}},
 \code{\link[=mdFigure]{mdFigure()}},
 \code{\link[=mdFootNote]{mdFootNote()}},

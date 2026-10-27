@@ -40,6 +40,7 @@
 
   filesToCopy <- c(
     "DataImportConfiguration.xlsx",
+    "DataImportMap.xlsx",
     "Individuals.xlsx",
     "Reports.xlsx",
     "Scenarios.xlsx"
@@ -63,7 +64,7 @@
     overwrite = TRUE
   )
 
-  # DataImportConfiguration.xlsx references files via Data/...; stage files in common temp roots.
+  # Data import workbooks reference files via Data/...; stage files in common temp roots.
   for (rootDir in unique(c(
     tempdir(),
     dirname(tempdir()),
@@ -95,6 +96,7 @@
     ),
     projectConfigurationDirPath = tempdir(),
     addOns = list(
+      dataImportMapFile = file.path(projectDir, "DataImportMap.xlsx"),
       reportsFile = file.path(projectDir, "Reports.xlsx")
     )
   )

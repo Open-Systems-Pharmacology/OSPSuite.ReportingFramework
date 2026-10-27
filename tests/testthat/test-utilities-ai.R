@@ -111,7 +111,7 @@ test_that("validateWorkflowForAI reports unknown DataClass values", {
         )
     )
     openxlsx::saveWorkbook(wb, invalidDataImportFile, overwrite = TRUE)
-    projectConfiguration$dataImporterConfigurationFile <- invalidDataImportFile
+    projectConfiguration$addOns$dataImportMapFile <- invalidDataImportFile
 
     validation <- validateWorkflowForAI(
         projectConfiguration = projectConfiguration

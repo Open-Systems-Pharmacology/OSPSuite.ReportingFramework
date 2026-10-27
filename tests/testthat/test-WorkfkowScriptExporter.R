@@ -237,6 +237,7 @@ test_that("importWorkflowFiles restores project-compatible filenames", {
   populationsDir <- withr::local_tempdir()
   modelDir <- withr::local_tempdir()
   dataDir <- withr::local_tempdir()
+  configurationsDir <- withr::local_tempdir()
 
   writeLines("population", file.path(ePackageDir, "study_population_csv.txt"))
   writeLines("script", file.path(ePackageDir, "workflow_script_r.txt"))
@@ -248,6 +249,7 @@ test_that("importWorkflowFiles restores project-compatible filenames", {
   projectConfigurationNew <- list(
     populationsFolder = populationsDir,
     modelFolder = modelDir,
+    configurationsFolder = configurationsDir,
     dataFolder = dataDir,
     addOns = list(dataFileFolder = dataDir)
   )
@@ -255,7 +257,7 @@ test_that("importWorkflowFiles restores project-compatible filenames", {
   importWorkflowFiles(projectConfigurationNew, ePackageDir, 8)
 
   expect_true(file.exists(file.path(populationsDir, "study_population.csv")))
-  expect_true(file.exists(file.path(dataDir, "workflow_script.R")))
+  expect_true(file.exists(file.path(configurationsDir, "workflow_script.R")))
 })
 
 test_that("importWorkflowFiles supports legacy manifest name", {

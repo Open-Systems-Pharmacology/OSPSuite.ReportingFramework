@@ -55,7 +55,7 @@ test_that("upgradeToReportingFramework keeps esqlabsR structure by default", {
   }
 
   expectedFiles <- c(
-    "DataImportConfiguration.xlsx",
+    "DataImportMap.xlsx",
     "Reports.xlsx",
     "PKParameter.xlsx",
     "SensitivityParameter.xlsx"
@@ -131,6 +131,17 @@ test_that("upgradeToReportingFramework applies RF defaults when requested", {
       dtConfig$Property == "dataImporterConfigurationFile"
     ][[1]]),
     "DataImportConfiguration.xlsx"
+  )
+
+  dtAddons <- xlsxReadData(
+    wb = configPath,
+    sheetName = "addons",
+    convertHeaders = FALSE,
+    emptyAsNA = FALSE
+  )
+  expect_equal(
+    trimws(dtAddons$Value[dtAddons$Property == "dataImportMapFile"][[1]]),
+    "DataImportMap.xlsx"
   )
 
   newScenarios <- file.path(configurationDirectory, "Scenarios.xlsx")

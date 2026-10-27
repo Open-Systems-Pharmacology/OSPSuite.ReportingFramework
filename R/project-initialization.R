@@ -864,7 +864,7 @@ createProjectConfiguration <- function(
   overwrite
 ) {
   filesToCopy <- c(
-    "DataImportConfiguration.xlsx",
+    "DataImportMap.xlsx",
     "Reports.xlsx",
     "PKParameter.xlsx",
     "SensitivityParameter.xlsx"

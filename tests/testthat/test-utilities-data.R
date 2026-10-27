@@ -57,6 +57,7 @@ dataObserved <- suppressWarnings(readObservedDataByDictionary(
 
   list(
     dataImporterConfigurationFile = dataImportFile,
+    addOns = list(dataImportMapFile = dataImportFile),
     projectConfigurationDirPath = projectDir
   )
 }
@@ -90,7 +91,7 @@ test_that("It should read and process data based on the provided project configu
 test_that("It should filter data by fileIds parameter", {
   # Read the DataFiles sheet to get available fileIdentifiers
   wb <- openxlsx::loadWorkbook(
-    projectConfiguration$dataImporterConfigurationFile
+    projectConfiguration$addOns$dataImportMapFile
   )
   dataList <- xlsxReadData(
     wb = wb,

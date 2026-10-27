@@ -23,7 +23,6 @@ Insert bulleted item using paste0.
 }
 \seealso{
 Other markdown helper function:
-\code{\link[=addFiguresAndTables]{addFiguresAndTables()}},
 \code{\link[=mdCaption]{mdCaption()}},
 \code{\link[=mdFigure]{mdFigure()}},
 \code{\link[=mdFootNote]{mdFootNote()}},

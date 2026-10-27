@@ -1084,7 +1084,7 @@ WorkflowScriptExporter <- R6::R6Class(
     },
     # Add configuration for data files
     addDataFilesConfig = function(dataClass, filename, dictionaryName) {
-      xlsLabel <- "DataImportConfiguration"
+      xlsLabel <- "DataImportMap"
       sheetName <- "DataFiles"
       # Initialize configsheet if necessary
       if (
@@ -1100,7 +1100,7 @@ WorkflowScriptExporter <- R6::R6Class(
         configSheet <- xlsxReadData(
           wb = system.file(
             "templates",
-            "DataImportConfiguration.xlsx",
+            "DataImportMap.xlsx",
             package = "ospsuite.reportingframework"
           ),
           sheetName = sheetName,
@@ -1160,7 +1160,7 @@ WorkflowScriptExporter <- R6::R6Class(
       dictTemplate <- xlsxReadData(
         wb = system.file(
           "templates",
-          "DataImportConfiguration.xlsx",
+          "DataImportMap.xlsx",
           package = "ospsuite.reportingframework"
         ),
         sheetName = ifelse(
@@ -1189,7 +1189,7 @@ WorkflowScriptExporter <- R6::R6Class(
             dictionaryName
           )
         ),
-        "DataImportConfiguration"
+        "DataImportMap"
       )
 
       return(invisible())
@@ -1247,10 +1247,7 @@ WorkflowScriptExporter <- R6::R6Class(
         "Applications" = projectConfiguration$applicationsFile,
         "Reports" = projectConfiguration$addOns$reportsFile,
         "PKParameter" = projectConfiguration$addOns$pKParameterFile,
-        "DataImportConfiguration" = file.path(
-          projectConfiguration$configurationsFolder,
-          "DataImportConfiguration.xlsx"
-        ),
+        "DataImportMap" = projectConfiguration$addOns$dataImportMapFile,
         stop(sprintf("Unsupported configuration workbook label: %s", xlsLabel))
       )
     },

@@ -224,7 +224,7 @@ workbooks:
         Threshold: {validity: none}
         plotCaptionAddon: {validity: none}
 
-  DataImportConfiguration.xlsx:
+  DataImportMap.xlsx:
     sheets:
       # Some columns contain user-specific paths, R expressions, source field
       # names, units, and free text. They are intentionally mixed and skipped.

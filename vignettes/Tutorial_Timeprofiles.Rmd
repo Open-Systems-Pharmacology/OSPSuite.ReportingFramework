@@ -133,7 +133,7 @@ Before you begin, ensure you have installed the `ospsuite.reportingframework` pa
 The package contains the following materials used for the tutorial:
 
 - Data files used for the tutorial: `timeprofiles_study1234_iv.csv`, `timeprofiles_study1234_po.csv`
-- Final configuration tables: `DataImportConfiguration.xlsx`, `Individuals.xlsx`, `Populations.xlsx`, `Scenarios.xlsx`, `Reports.xlsx`
+- Final configuration tables: `DataImportMap.xlsx`, `Individuals.xlsx`, `Populations.xlsx`, `Scenarios.xlsx`, `Reports.xlsx`
 - The final workflow: `workflow.R`
 - The final Word document containing all plots generated during this tutorial: `TutorialPlots.docx`
 
@@ -278,7 +278,7 @@ You have now the complete project structure with all configuration files. Copy t
 
 (See **[Data Import by Dictionary](DataImport_by_Dictionary.html)**)
 
-Open the `<configurationDirectory>/DataImportConfiguration.xlsx`.
+Open the `<configurationDirectory>/DataImportMap.xlsx`.
 
 
 - List in the sheet `DataFiles` your available data. The paths should be relative to the configuration table which is in `<rootDirectory>/Scripts/ReportingFramework`, the data are saved in `<rootDirectory>/Data`, so the correct path is `../../Data`.
@@ -290,7 +290,7 @@ Open the `<configurationDirectory>/DataImportConfiguration.xlsx`.
 
 ```{r configData-Files, echo=FALSE, eval = TRUE}
 tmp <- xlsxReadData(
-  wb = projectConfiguration$dataImporterConfigurationFile,
+  wb = projectConfiguration$addOns$dataImportMapFile,
   sheetName = "DataFiles",
   skipDescriptionRow = TRUE,
   emptyAsNA = FALSE,
@@ -310,7 +310,7 @@ knitr::kable(tmp[DataClass == DATACLASS$tpIndividual])
 
 ```{r configData-Dictionary, echo=FALSE, eval = TRUE}
 tmp <- xlsxReadData(
-  wb = projectConfiguration$dataImporterConfigurationFile,
+  wb = projectConfiguration$addOns$dataImportMapFile,
   sheetName = "tpDictionary",
   skipDescriptionRow = TRUE,
   emptyAsNA = FALSE,

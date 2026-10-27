@@ -18,7 +18,6 @@ mdPaste0
 }
 \seealso{
 Other markdown helper function:
-\code{\link[=addFiguresAndTables]{addFiguresAndTables()}},
 \code{\link[=mdBullet]{mdBullet()}},
 \code{\link[=mdCaption]{mdCaption()}},
 \code{\link[=mdFigure]{mdFigure()}},
