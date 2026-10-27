@@ -4,9 +4,15 @@
 #' Read data by dictionary
 #'
 #' This function reads and processes data based on the provided project configuration.
+#' Depending on `spreadData`, it can also propagate identifiers and metadata into
+#' reporting-configuration workbooks.
 #'
 #' @param projectConfiguration An object containing project configuration details, including the path to the data importer configuration file.
-#' @param spreadData If TRUE, information derived from observed data, such as identifiers and biometrics, is spread to other tables.
+#' @param spreadData If `TRUE`, information derived from observed data is spread
+#'   to configuration workbooks: `Reports.xlsx` (`DataGroups`, `Outputs`, and
+#'   synchronized `Scenarios`) and `Individuals.xlsx` (`IndividualBiometrics`,
+#'   `VirtualTwinPopulation`). If `FALSE`, import remains read-only and no
+#'   configuration workbook is modified.
 #' @param dataClassType A character string indicating the type of data class to process. Options are "timeprofile", "pkParameter", or "numericValues".
 #' @param fileIds A character vector with file identifiers to be selected, if NULL (default) all are selected.
 #'
@@ -25,7 +31,7 @@ readObservedDataByDictionary <- function(
   dataClassType <- match.arg(dataClassType)
 
   wb <- openxlsx::loadWorkbook(
-    projectConfiguration$dataImporterConfigurationFile
+    projectConfiguration$addOns$dataImportMapFile
   )
   dataList <- xlsxReadData(
     wb = wb,
@@ -74,7 +80,7 @@ readObservedDataByDictionary <- function(
     ))
 
     tmpdict <- readDataDictionary(
-      dictionaryFile = projectConfiguration$dataImporterConfigurationFile,
+      dictionaryFile = projectConfiguration$addOns$dataImportMapFile,
       sheet = d$dictionary,
       data = tmpData,
       dataClass = d$dataClass
@@ -1324,7 +1330,7 @@ setDataTypeAttributes <- function(dataDT, dict = NULL) {
       xlsxReadData(
         wb = system.file(
           "templates",
-          "DataImportConfiguration.xlsx",
+          "DataImportMap.xlsx",
           package = "ospsuite.reportingframework",
           mustWork = TRUE
         ),

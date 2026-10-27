@@ -30,7 +30,7 @@ This vignette provides a detailed guide to the data import process within the OS
 
 - **Import Function**: The primary function used for data import is `readObservedDataByDictionary`.
 
-- **Configuration File**: Data import configuration is managed through the "DataImportConfiguration.xlsx" file, which consists of:
+- **Configuration File**: Data import configuration is managed through the "DataImportMap.xlsx" file, which consists of:
   - A `DataFiles` sheet listing all files to be imported.
   - Dictionary sheets that outline the import specifications and rules.
 
@@ -42,7 +42,7 @@ This vignette provides a detailed guide to the data import process within the OS
 - **Data Transfer**: The import function also facilitates the transfer of additional data to other configuration sheets:
   - It populates the `IndividualBiometrics` sheet in `Individuals.xlsx` with all available data.
   - It creates a new sheet, `VirtualTwinPopulation`, in `Individuals.xlsx` that includes individual data suitable for generating a virtual twin population (refer to the Population vignette for more details).
-  - It appends the output identifier and data group identifier, along with all available data, to the corresponding sheets in `Plot.xlsx` and `Scenario.xlsx`.
+  - It appends the output identifier and data group identifier, along with all available data, to `Reports.xlsx` (sheets `Outputs` and `DataGroups`) and synchronizes scenario display entries in `Reports.xlsx` (sheet `Scenarios`) with `Scenarios.xlsx` when needed.
 
 
 ![Overview of Data Import](images/DataImport.png)
@@ -52,7 +52,7 @@ This vignette provides a detailed guide to the data import process within the OS
 The `readObservedDataByDictionary` function reads and processes observed data based on the project configuration and data dictionary. Use these arguments to control import behavior:
 
 - `projectConfiguration`: Project configuration object.
-- `spreadData`: If `TRUE`, imported metadata is propagated to configuration tables.
+- `spreadData`: If `TRUE`, imported metadata is propagated to configuration tables (`Individuals.xlsx` and `Reports.xlsx`). If `FALSE`, import is read-only and no configuration workbook is modified.
 - `dataClassType`: Data class to import (`"timeprofile"`, `"pkParameter"`, or `"numericValues"`).
 - `fileIds`: Optional subset of file identifiers from the `DataFiles` sheet.
 
@@ -110,7 +110,7 @@ validation$errors
 # Filling the Excel Table
 
 ```{r load-template, eval=TRUE, echo=FALSE}
-templateFilePath <- system.file("templates", "DataImportConfiguration.xlsx",
+templateFilePath <- system.file("templates", "DataImportMap.xlsx",
   package = "ospsuite.reportingframework", mustWork = TRUE
 )
 
@@ -149,7 +149,7 @@ In the "DataFiles" sheet of the Excel template, provide the following informatio
 ### Example
 
 In the example below, we want to read data from three source files. 
-"data1" and "data2" have the same format and use the same dictionary for the import, while "data3" uses the dictionary "tpDictionaryAggregated". All used dictionaries must be part of the "DataImportConfiguration.xlsx."
+"data1" and "data2" have the same format and use the same dictionary for the import, while "data3" uses the dictionary "tpDictionaryAggregated". All used dictionaries must be part of the "DataImportMap.xlsx."
 
 For `data1`, we need all rows; for the other two files, we have defined filters. In `data2`, we want to exclude all flagged with `PKFLAG > 0`, and in `data3`, we want to exclude data from study 1234.
 

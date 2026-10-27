@@ -14,7 +14,11 @@ readObservedDataByDictionary(
 \arguments{
 \item{projectConfiguration}{An object containing project configuration details, including the path to the data importer configuration file.}
 
-\item{spreadData}{If TRUE, information derived from observed data, such as identifiers and biometrics, is spread to other tables.}
+\item{spreadData}{If `TRUE`, information derived from observed data is spread
+to configuration workbooks: `Reports.xlsx` (`DataGroups`, `Outputs`, and
+synchronized `Scenarios`) and `Individuals.xlsx` (`IndividualBiometrics`,
+`VirtualTwinPopulation`). If `FALSE`, import remains read-only and no
+configuration workbook is modified.}
 
 \item{dataClassType}{A character string indicating the type of data class to process. Options are "timeprofile", "pkParameter", or "numericValues".}
 
@@ -25,6 +29,8 @@ A `data.table` containing the processed data based on the dictionary. The struct
 }
 \description{
 This function reads and processes data based on the provided project configuration.
+Depending on `spreadData`, it can also propagate identifiers and metadata into
+reporting-configuration workbooks.
 }
 \seealso{
 Other observed data processing:

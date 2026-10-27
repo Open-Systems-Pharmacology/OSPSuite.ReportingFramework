@@ -34,7 +34,7 @@ options(rmarkdown.html_vignette.check_title = FALSE)
 
 ## Configuration Table
 
-The configuration for plot generation is managed through the `projectConfiguration$addons$reportsFile`, which consists of several sheets for general configurations that should not be renamed:
+The configuration for plot generation is managed through the `projectConfiguration$addOns$reportsFile`, which consists of several sheets for general configurations that should not be renamed:
 
 - **`Scenarios`**: Configures the display names of scenarios in all plot functions.
 - **`Outputs`**: Configures the display names and units of outputs in all plot functions.
