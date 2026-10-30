@@ -32,7 +32,7 @@ representative individuals per PK parameter and output path. Defaults to
 `c(0.05, 0.5, 0.95)`.}
 
 \item{variationRange}{Numeric fraction defining how much each sensitivity
-parameter is varied around baseline (e.g., `0.1` means +/- 10%).}
+parameter is varied around baseline (e.g., `0.1` means +/- 10\%).}
 
 \item{numberOfSteps}{Integer number of perturbation steps on each side of
 baseline used for sensitivity estimation.}

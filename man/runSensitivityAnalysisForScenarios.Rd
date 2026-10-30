@@ -30,7 +30,7 @@ ratio mode. When provided, sensitivities are computed as
 \\code{scenario / referenceScenario}.}
 
 \item{variationRange}{Numeric fraction defining how much each sensitivity
-parameter is varied around baseline (e.g., `0.1` means +/- 10%).}
+parameter is varied around baseline (e.g., `0.1` means +/- 10\%).}
 
 \item{numberOfSteps}{Integer number of perturbation steps on each side of
 baseline used for sensitivity estimation.}
