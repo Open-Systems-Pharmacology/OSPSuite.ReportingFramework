@@ -401,6 +401,77 @@ test_that("convertIdentifierColumns function works as expected", {
   expect_warning(updatedDt <- convertIdentifierColumns(testDt, "col1"))
 })
 
+test_that("getIndividualDataGroups filters eligible observed TP individual groups", {
+  mockObserved <- data.table(
+    group = c(
+      "g_ok2",
+      "g_ok2",
+      "g_ok3",
+      "g_ok3",
+      "g_ok3",
+      "g_low",
+      "g_agg",
+      "g_agg",
+      "g_sim",
+      "g_sim"
+    ),
+    dataClass = c(
+      DATACLASS$tpIndividual,
+      DATACLASS$tpIndividual,
+      DATACLASS$tpIndividual,
+      DATACLASS$tpIndividual,
+      DATACLASS$tpIndividual,
+      DATACLASS$tpIndividual,
+      DATACLASS$tpAggregated,
+      DATACLASS$tpAggregated,
+      DATACLASS$tpIndividual,
+      DATACLASS$tpIndividual
+    ),
+    dataType = c(
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "observed",
+      "simulated",
+      "simulated"
+    ),
+    individualId = c(
+      "i1",
+      "i2",
+      "i1",
+      "i2",
+      "i3",
+      "i1",
+      "i1",
+      "i2",
+      "i1",
+      "i2"
+    )
+  )
+
+  expect_setequal(
+    getIndividualDataGroups(mockObserved, groups = NULL),
+    c("g_ok2", "g_ok3")
+  )
+
+  expect_equal(
+    getIndividualDataGroups(mockObserved, groups = NULL, minN = 3),
+    "g_ok3"
+  )
+
+  expect_warning(
+    selectedGroups <- getIndividualDataGroups(
+      mockObserved,
+      groups = c("g_ok2", "g_low", "g_missing")
+    )
+  )
+  expect_equal(selectedGroups, "g_ok2")
+})
+
 # Test for aggregateObservedDataGroups
 
 mockData <- copy(dataObserved)
