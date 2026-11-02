@@ -164,8 +164,17 @@ test_that("validateExistenceOfReferenceForRatio errors when a plot has no refere
     plotName = c("p1", "p2"),
     referenceScenario = c("ref", NA)
   )
+  tmp <- dt[, .(isValid = any(!is.na(referenceScenario))), by = plotName]
+  expectedMessage <- ospsuite.reportingframework:::messages$errorplotPKBoxwhiskerMissingReferenceScenario(
+    env = list2env(list(tmp = tmp), parent = baseenv())
+  )
   expect_error(
-    ospsuite.reportingframework:::validateExistenceOfReferenceForRatio(dt, NULL)
+    ospsuite.reportingframework:::validateExistenceOfReferenceForRatio(
+      dt,
+      NULL
+    ),
+    expectedMessage,
+    fixed = TRUE
   )
 })
 
@@ -215,7 +224,8 @@ test_that("validateIsCrossOverStudy errors when populations differ", {
     ospsuite.reportingframework:::validateIsCrossOverStudy(
       configTablePlots,
       pkDT
-    )
+    ),
+    ospsuite.reportingframework:::messages$errorplotPKBoxwhiskerRatioRequiresSamePopulation()
   )
 })
 

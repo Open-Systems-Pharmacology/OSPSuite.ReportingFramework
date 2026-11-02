@@ -630,7 +630,7 @@ validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
   configTablePlots <- configTablePlots[populationId != populationIdReference]
   if (nrow(configTablePlots) > 0) {
     writeTableToLog(configTablePlots)
-    stop(messages$errorplotPKBoxwhiskerL1RatioRequiresSamePopulation())
+    stop(messages$errorplotPKBoxwhiskerRatioRequiresSamePopulation())
   }
 }
 #' Validate Existence of Reference for Ratio Plots
@@ -661,11 +661,11 @@ validateExistenceOfReferenceForRatio <- function(
 
   # check if reference Scenarios are there
   tmp <- configTablePlots[,
-    .(any(!is.na(referenceScenario))),
+    .(isValid = any(!is.na(referenceScenario))),
     by = plotName
   ]
-  if (any(tmp[[2]] == FALSE)) {
-    stop(messages$errorplotPKBoxwhiskerL1MissingReferenceScenario())
+  if (any(tmp$isValid == FALSE)) {
+    stop(messages$errorplotPKBoxwhiskerMissingReferenceScenario())
   }
 
   return(invisible())
