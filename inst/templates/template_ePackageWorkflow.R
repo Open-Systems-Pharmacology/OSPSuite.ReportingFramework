@@ -1,11 +1,5 @@
 XXCHUNKstart - librariesXXX
-#library(ospsuite.reportingframework)
-pkgload::load_all(
-  path = file.path(
-    'C:/Users/17fec1a5/Documents/GitHub/',
-    'OSPSuite.ReportingFramework'
-  )
-)
+library(ospsuite.reportingframework)
 XXCHUNKend - librariesXXX
 
 # Set the working directory to the source file location before running this script.
