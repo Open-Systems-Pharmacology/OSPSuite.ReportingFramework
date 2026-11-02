@@ -283,3 +283,132 @@ test_that("importWorkflowFiles supports legacy manifest name", {
 
   expect_true(file.exists(file.path(populationsDir, "legacy_population.csv")))
 })
+
+test_that("WorkflowScriptExporter exports numeric values via evalCodeChunks", {
+  ePackageDir <- withr::local_tempdir()
+  exporter <- WorkflowScriptExporter$new(
+    projectConfiguration = modifyList(
+      projectConfiguration,
+      list(addOns = list(electronicPackageFolder = ePackageDir))
+    ),
+    wfIdentifier = 71,
+    scenarioNames = c("scenario1")
+  )
+
+  exporter$codeChunks <- list(
+    "numericValues-eval" = c(
+      "numericValues <- data.table::data.table(",
+      "  variableName = c('Dose', 'HalfLife'),",
+      "  value = c(100, 3.5),",
+      "  unit = c('mg', 'h'),",
+      "  reference = c('Study A', 'Study A')",
+      ")"
+    )
+  )
+
+  exporter$evalCodeChunks()
+
+  expect_true("numericValues-copy" %in% names(exporter$codeChunks))
+  expect_true(any(grepl(
+    "data.table::fread(file.path(projectConfiguration$addOns$dataFileFolder, 'data_numericvalues_csv.txt'))",
+    exporter$codeChunks[["numericValues-copy"]],
+    fixed = TRUE
+  )))
+
+  analysisDataFolder <- resolveWorkflowAnalysisDataFolder(ePackageDir)
+  expect_true(file.exists(file.path(
+    analysisDataFolder,
+    "data_numericvalues_csv.txt"
+  )))
+
+  if ("DataImportMap" %in% names(exporter$configurationSheets)) {
+    expect_false(
+      "NumericValuesDictionary" %in%
+        names(
+          exporter$configurationSheets[["DataImportMap"]]
+        )
+    )
+  }
+
+  expect_true(any(
+    exporter$inputFiles$fileName == "data_numericvalues_csv.txt" &
+      exporter$inputFiles$fileType == "data"
+  ))
+})
+
+test_that("WorkflowScriptExporter prunes DataImportMap to required sheets", {
+  projectDir <- withr::local_tempdir(pattern = "workflow_datamap_cleanup_")
+
+  initProject(
+    projectDirectory = projectDir,
+    configurationDirectory = projectDir,
+    overwrite = TRUE
+  )
+
+  pc <- createProjectConfiguration(
+    path = file.path(projectDir, "ProjectConfiguration.xlsx"),
+    ignoreVersionCheck = TRUE
+  )
+
+  exporter <- WorkflowScriptExporter$new(
+    projectConfiguration = pc,
+    wfIdentifier = 72,
+    scenarioNames = c("scenario1")
+  )
+
+  dataImportMapPath <- pc$addOns$dataImportMapFile
+  wb <- openxlsx::loadWorkbook(dataImportMapPath)
+
+  dataFiles <- xlsxReadData(
+    wb = wb,
+    sheetName = "DataFiles",
+    skipDescriptionRow = FALSE,
+    convertHeaders = FALSE
+  )
+  dataFiles <- rbind(
+    dataFiles[1],
+    data.table(
+      FileIdentifier = "tpIndividual",
+      DataFile = "../Data_w72/data_tpindividual_csv.txt",
+      Dictionary = "RequiredDictionary",
+      DataFilter = NA_character_,
+      DataClass = DATACLASS[["tpIndividual"]]
+    ),
+    fill = TRUE
+  )
+  xlsxWriteOrAddData(wb = wb, sheetName = "DataFiles", dt = dataFiles)
+
+  requiredDict <- xlsxReadData(
+    wb = wb,
+    sheetName = "tpDictionary",
+    skipDescriptionRow = FALSE,
+    convertHeaders = FALSE
+  )
+  xlsxWriteOrAddData(
+    wb = wb,
+    sheetName = "RequiredDictionary",
+    dt = requiredDict
+  )
+
+  unusedDict <- xlsxReadData(
+    wb = wb,
+    sheetName = "pkDictionary",
+    skipDescriptionRow = FALSE,
+    convertHeaders = FALSE
+  )
+  xlsxWriteOrAddData(
+    wb = wb,
+    sheetName = "UnusedDictionary",
+    dt = unusedDict
+  )
+  openxlsx::saveWorkbook(wb = wb, file = dataImportMapPath, overwrite = TRUE)
+
+  exporter$.__enclos_env__$private$pruneDataImportMapSheets(
+    projectConfiguration = pc
+  )
+
+  sheetNames <- readxl::excel_sheets(dataImportMapPath)
+  expect_true("DataFiles" %in% sheetNames)
+  expect_true("RequiredDictionary" %in% sheetNames)
+  expect_false("UnusedDictionary" %in% sheetNames)
+})

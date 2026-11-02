@@ -94,6 +94,7 @@ WorkflowScriptExporter <- R6::R6Class(
         }
         return(codeChunks)
       }
+
       codeChunksTemplate <- .extract(system.file(
         "templates",
         "template_ePackageWorkflow.Rmd",
@@ -151,11 +152,15 @@ WorkflowScriptExporter <- R6::R6Class(
           "scenarioNames-eval" = private$evalChunkForScenarioNames(
             scenarioNames = variableValue
           ),
-          "dataObserved-eval" = private$evalChunkDataImport(
+          "dataObserved-eval" = private$handleEvalDataImport(
             dataObserved = variableValue,
             chunkName = chunkName
           ),
-          "dataObservedPK-eval" = private$evalChunkDataImport(
+          "dataObservedPK-eval" = private$handleEvalDataImport(
+            dataObserved = variableValue,
+            chunkName = chunkName
+          ),
+          "numericValues-eval" = private$handleEvalDataImport(
             dataObserved = variableValue,
             chunkName = chunkName
           )
@@ -506,14 +511,21 @@ WorkflowScriptExporter <- R6::R6Class(
         tempProjectConfiguration
       )
 
+      private$pruneDataImportMapSheets(
+        projectConfiguration = tempProjectConfiguration
+      )
+
       private$ensureSnapshotDirectories(
         tempProjectConfiguration
       )
 
-      snapshotProjectConfigurationRF(
-        projectConfig = tempProjectConfiguration,
-        outputDir = tempProjectDir
-      )
+      invisible(utils::capture.output(
+        snapshotProjectConfigurationRF(
+          projectConfig = tempProjectConfiguration,
+          outputDir = tempProjectDir
+        ),
+        type = "output"
+      ))
       file.copy(
         from = file.path(tempProjectDir, "ProjectConfiguration.json"),
         to = transportPath,
@@ -1000,40 +1012,96 @@ WorkflowScriptExporter <- R6::R6Class(
 
       return(invisible())
     },
-    # Evaluate the chunk for data importEvaluate the chunk for data import
-    evalChunkDataImport = function(dataObserved, chunkName) {
+    # Evaluate and dispatch workflow data import chunks.
+    handleEvalDataImport = function(dataObserved, chunkName) {
       checkmate::assertDataTable(dataObserved, null.ok = TRUE)
+      spec <- private$evalDataImportSpec(chunkName)
 
       # check if anything to do
       if (is.null(dataObserved) || nrow(dataObserved) == 0) {
         return(invisible())
       }
 
-      # Ensure AnalysisData folder exists
-      analysisDataFolder <- file.path(
-        private$electronicPackageFolder,
-        "..",
-        "AnalysisData"
+      exportContext <- private$prepareWorkflowDataExportContext()
+
+      if (spec$dataClassType == "numericValues") {
+        private$exportNumericValuesData(
+          dataObserved = dataObserved,
+          spec = spec,
+          exportContext = exportContext
+        )
+      } else {
+        private$exportObservedDataByClass(
+          dataObserved = dataObserved,
+          exportContext = exportContext
+        )
+      }
+
+      self$codeChunks <- setNames(
+        list(
+          private$buildCopyChunkForDataClass(
+            dataClassType = spec$dataClassType,
+            variableName = spec$variableName
+          )
+        ),
+        spec$copyChunkName
       )
-      if (!dir.exists(analysisDataFolder)) {
-        dir.create(analysisDataFolder, recursive = TRUE)
+
+      invisible(NULL)
+    },
+    # Define import metadata for each evaluated workflow data chunk.
+    evalDataImportSpec = function(chunkName) {
+      mapping <- list(
+        "dataObserved-eval" = list(
+          variableName = "dataObserved",
+          dataClassType = "timeprofile",
+          copyChunkName = "dataObserved-copy"
+        ),
+        "dataObservedPK-eval" = list(
+          variableName = "dataObservedPK",
+          dataClassType = "pkParameter",
+          copyChunkName = "dataObservedPK-copy"
+        ),
+        "numericValues-eval" = list(
+          variableName = "numericValues",
+          dataClassType = "numericValues",
+          copyChunkName = "numericValues-copy"
+        )
+      )
+
+      if (!(chunkName %in% names(mapping))) {
+        stop(sprintf("Unsupported data import chunk '%s'", chunkName))
+      }
+
+      return(mapping[[chunkName]])
+    },
+    # Create workflow data export context shared across handlers.
+    prepareWorkflowDataExportContext = function() {
+      analysisDataFolder <- resolveWorkflowAnalysisDataFolder(
+        ePackageFolder = private$electronicPackageFolder,
+        create = TRUE
+      )
+
+      list(analysisDataFolder = analysisDataFolder)
+    },
+    # Export observed data classes that provide dataClass/xUnit metadata.
+    exportObservedDataByClass = function(dataObserved, exportContext) {
+      if (!("dataClass" %in% names(dataObserved))) {
+        stop("Expected column 'dataClass' in observed data import chunk")
       }
 
       for (dt in split(dataObserved, by = "dataClass")) {
         dataClass <- dt$dataClass[1]
-        xUnit <- dt$xUnit[1]
-        dt <- dt[, !c("dataClass", "dataType", "xUnit"), with = FALSE]
+        xUnit <- if ("xUnit" %in% names(dt)) dt$xUnit[1] else ""
+        dt <- private$prepareObservedDataFrame(dt)
 
-        # Data files in electronic package use _csv.txt ending and are stored in AnalysisData subfolder
         baseName <- paste0("data_", tolower(gsub(" ", "", dataClass)))
         fileName <- paste0(baseName, "_csv.txt")
-        # Store relative path for the manifest file
-        relativeFileName <- file.path("AnalysisData", fileName)
         dictionaryName <- paste0(gsub(" ", "", dataClass), "Dictionary")
 
-        private$addDataFilesConfig(
+        private$registerWorkflowDataFile(
           dataClass = dataClass,
-          filename = relativeFileName,
+          filename = fileName,
           dictionaryName = dictionaryName
         )
 
@@ -1044,43 +1112,112 @@ WorkflowScriptExporter <- R6::R6Class(
           dictionaryName = dictionaryName
         )
 
-        write.csv(
-          dt,
-          file = file.path(analysisDataFolder, fileName),
-          na = "",
-          row.names = FALSE,
-          fileEncoding = "UTF-8"
-        )
-
-        self$inputFiles <- data.table(
-          source = fileName,
-          fileType = "data"
+        private$writeWorkflowDataArtifact(
+          dt = dt,
+          fileName = fileName,
+          exportContext = exportContext
         )
       }
-      self$codeChunks <-
-        switch(
-          chunkName,
-          "dataObserved-eval" = list(
-            "dataObserved-copy" = c(
-              "", # import observed time profile data",
-              "dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,",
-              "                                             dataClassType = 'timeprofile',",
-              "                                             fileIds = NULL,",
-              "                                             spreadData = FALSE)"
-            )
-          ),
-          "dataObservedPK-eval" = list(
-            "dataObservedPK-copy" = c(
-              "", # import observed pk-parameter",
-              "dataObservedPK <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,",
-              "                                             dataClassType = 'pkParameter',",
-              "                                             fileIds = NULL,",
-              "                                             spreadData = FALSE)"
-            )
-          )
-        )
+      return(invisible())
+    },
+    # Export numeric values with explicit schema handling.
+    exportNumericValuesData = function(dataObserved, spec, exportContext) {
+      checkmate::assertNames(
+        names(dataObserved),
+        must.include = c("variableName", "value", "unit", "reference")
+      )
 
-      invisible(NULL)
+      dataClass <- DATACLASS[["numericValues"]]
+      fileName <- "data_numericvalues_csv.txt"
+
+      private$registerWorkflowDataFile(
+        dataClass = dataClass,
+        filename = fileName,
+        addToDataImportMap = FALSE
+      )
+
+      private$writeWorkflowDataArtifact(
+        dt = dataObserved[,
+          c("variableName", "value", "unit", "reference"),
+          with = FALSE
+        ],
+        fileName = fileName,
+        exportContext = exportContext
+      )
+
+      return(invisible())
+    },
+    # Normalize observed data payload by removing class metadata columns.
+    prepareObservedDataFrame = function(dt) {
+      colsToRemove <- intersect(
+        c("dataClass", "dataType", "xUnit"),
+        names(dt)
+      )
+
+      dt[, !colsToRemove, with = FALSE]
+    },
+    # Register one workflow data file and optionally dictionary in DataImportMap.
+    registerWorkflowDataFile = function(
+      dataClass,
+      filename,
+      dictionaryName = NULL,
+      addToDataImportMap = TRUE
+    ) {
+      if (addToDataImportMap) {
+        private$addDataFilesConfig(
+          dataClass = dataClass,
+          filename = filename,
+          dictionaryName = dictionaryName
+        )
+      }
+
+      self$inputFiles <- data.table(
+        source = filename,
+        fileType = "data"
+      )
+
+      return(invisible())
+    },
+    # Write one workflow data artifact into AnalysisData folder.
+    writeWorkflowDataArtifact = function(dt, fileName, exportContext) {
+      write.csv(
+        dt,
+        file = file.path(exportContext$analysisDataFolder, fileName),
+        na = "",
+        row.names = FALSE,
+        fileEncoding = "UTF-8"
+      )
+
+      return(invisible())
+    },
+    # Generate code inserted into copy chunks for loading exported workflow data.
+    buildCopyChunkForDataClass = function(dataClassType, variableName) {
+      if (dataClassType == "numericValues") {
+        return(c(
+          "",
+          "# import numeric values from exported workflow data",
+          paste0(
+            variableName,
+            " <- data.table::fread(file.path(projectConfiguration$addOns$dataFileFolder, 'data_numericvalues_csv.txt'))"
+          )
+        ))
+      }
+
+      c(
+        "",
+        paste0("# import ", dataClassType, " observed data"),
+        paste0(
+          variableName,
+          " <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,"
+        ),
+        paste0(
+          "                                             dataClassType = '",
+          dataClassType,
+          "',"
+        ),
+        "                                             fileIds = NULL,",
+        "                                             spreadData = FALSE)"
+      )
     },
     # Add configuration for data files
     addDataFilesConfig = function(dataClass, filename, dictionaryName) {
@@ -1332,6 +1469,49 @@ WorkflowScriptExporter <- R6::R6Class(
       }
 
       return(invisible())
+    },
+    # Keep only DataFiles and dictionary sheets referenced by DataFiles.
+    pruneDataImportMapSheets = function(projectConfiguration) {
+      dataImportMapPath <- suppressWarnings(
+        projectConfiguration$addOns$dataImportMapFile
+      )
+      if (is.null(dataImportMapPath) || !file.exists(dataImportMapPath)) {
+        return(invisible())
+      }
+
+      wb <- openxlsx::loadWorkbook(dataImportMapPath)
+      if (!("DataFiles" %in% wb$sheet_names)) {
+        return(invisible())
+      }
+
+      dataFiles <- xlsxReadData(
+        wb = wb,
+        sheetName = "DataFiles",
+        skipDescriptionRow = FALSE,
+        convertHeaders = FALSE
+      )
+
+      neededSheets <- "DataFiles"
+      if ("Dictionary" %in% names(dataFiles) && nrow(dataFiles) > 1) {
+        dictionaryNames <- trimws(as.character(dataFiles[-1][["Dictionary"]]))
+        dictionaryNames <- unique(dictionaryNames[
+          !is.na(dictionaryNames) & nzchar(dictionaryNames)
+        ])
+        neededSheets <- unique(c(neededSheets, dictionaryNames))
+      }
+
+      sheetsToRemove <- setdiff(wb$sheet_names, neededSheets)
+      for (sheetName in sheetsToRemove) {
+        openxlsx::removeWorksheet(wb = wb, sheet = sheetName)
+      }
+
+      openxlsx::saveWorkbook(
+        wb = wb,
+        file = dataImportMapPath,
+        overwrite = TRUE
+      )
+
+      return(invisible())
     }
   )
 )
@@ -1407,6 +1587,9 @@ exportSimulationWorkflowToEPackage <- function(
 #' It initializes a `WorkflowScriptExporter` object, extracts code chunks from the provided R Markdown file,
 #' evaluates the code chunks, and executes a series of operations to prepare the workflow for export.
 #' This includes generating workflow text, retrieving input files, configuring scenario details, and exporting necessary files.
+#' For observed time profile and PK-parameter data, export includes workflow-specific `DataImportMap` entries and dictionaries.
+#' Numeric values are exported as `data_numericvalues_csv.txt` and loaded directly by the exported workflow script.
+#' During export, `DataImportMap.xlsx` is pruned to include only `DataFiles` and dictionaries referenced there.
 #'
 #' @param projectConfiguration An object of class `projectConfiguration` that contains various configuration details,
 #'                             including paths for input files, output directories, and any other relevant settings
@@ -1491,6 +1674,8 @@ exportTLFWorkflowToEPackage <- function(
 #' It initializes the project configuration, retrieves relevant project files, and synchronizes
 #' scenarios with plots. The function ensures that the necessary directories exist and that the
 #' configuration is set up correctly for further processing.
+#' Files listed in the workflow input manifest are restored, including workflow data files (for example
+#' `data_numericvalues_csv.txt`) into the workflow-specific data folder used by the exported script.
 #'
 #' @param projectDirectory A character string representing the path to the project directory where
 #'                         the workflow will be imported.
@@ -1651,6 +1836,25 @@ resolveEPackageInputManifestPath <- function(ePackageFolder, wfIdentifier) {
   )
 }
 
+#' Resolve workflow AnalysisData folder
+#'
+#' @param ePackageFolder Path to the workflow electronic package folder.
+#' @param create Logical flag indicating whether to create the folder if missing.
+#' @return Character path to the AnalysisData folder used by workflow data import/export.
+#' @keywords internal
+#' @noRd
+resolveWorkflowAnalysisDataFolder <- function(ePackageFolder, create = FALSE) {
+  checkmate::assertCharacter(ePackageFolder, len = 1, any.missing = FALSE)
+  checkmate::assertFlag(create)
+
+  analysisDataFolder <- file.path(ePackageFolder, "..", "AnalysisData")
+  if (create && !dir.exists(analysisDataFolder)) {
+    dir.create(analysisDataFolder, recursive = TRUE)
+  }
+
+  return(analysisDataFolder)
+}
+
 importedProjectFileName <- function(fileName, fileType) {
   switch(
     fileType,
@@ -1715,25 +1919,31 @@ importProjectConfiguration <- function(
     file.remove(restoreXlsxPath)
   }
 
-  rPCf <- withCallingHandlers(
-    restoreProjectConfigurationRF(
-      jsonPath = restoreJsonPath,
-      outputDir = configurationDirectory,
-      silent = TRUE
-    ),
-    warning = function(w) {
-      # Expected during import when JSON and current Excel files differ.
-      if (
-        grepl(
-          "Excel configuration files are NOT in sync with the JSON snapshot",
-          conditionMessage(w),
-          fixed = TRUE
-        )
-      ) {
-        invokeRestart("muffleWarning")
-      }
-    }
-  )
+  rPCf <- NULL
+  invisible(utils::capture.output(
+    {
+      rPCf <- withCallingHandlers(
+        restoreProjectConfigurationRF(
+          jsonPath = restoreJsonPath,
+          outputDir = configurationDirectory,
+          silent = TRUE
+        ),
+        warning = function(w) {
+          # Expected during import when JSON and current Excel files differ.
+          if (
+            grepl(
+              "Excel configuration files are NOT in sync with the JSON snapshot",
+              conditionMessage(w),
+              fixed = TRUE
+            )
+          ) {
+            invokeRestart("muffleWarning")
+          }
+        }
+      )
+    },
+    type = "output"
+  ))
 
   return(rPCf)
 }
@@ -1758,13 +1968,15 @@ importWorkflowFiles <- function(
       wfIdentifier = wfIdentifier
     )
   )
-
   modelFolder <- suppressWarnings(projectConfigurationNew$modelFolder)
   populationsFolder <- suppressWarnings(
     projectConfigurationNew$populationsFolder
   )
   dataFileFolder <- suppressWarnings(
     projectConfigurationNew$addOns$dataFileFolder
+  )
+  ePackageDataFolder <- resolveWorkflowAnalysisDataFolder(
+    ePackageFolder = ePackageFolder
   )
 
   dir.create(
@@ -1806,7 +2018,11 @@ importWorkflowFiles <- function(
         )
 
       file.copy(
-        from = file.path(ePackageFolder, f),
+        from = switch(
+          fileType,
+          "data" = file.path(ePackageDataFolder, f),
+          file.path(ePackageFolder, f)
+        ),
         to = newFile
       )
     }

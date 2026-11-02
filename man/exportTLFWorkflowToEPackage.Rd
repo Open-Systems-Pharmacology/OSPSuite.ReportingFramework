@@ -39,6 +39,9 @@ This function facilitates the export of a TLF (Table-Linked Format) workflow to 
 It initializes a `WorkflowScriptExporter` object, extracts code chunks from the provided R Markdown file,
 evaluates the code chunks, and executes a series of operations to prepare the workflow for export.
 This includes generating workflow text, retrieving input files, configuring scenario details, and exporting necessary files.
+For observed time profile and PK-parameter data, export includes workflow-specific `DataImportMap` entries and dictionaries.
+Numeric values are exported as `data_numericvalues_csv.txt` and loaded directly by the exported workflow script.
+During export, `DataImportMap.xlsx` is pruned to include only `DataFiles` and dictionaries referenced there.
 }
 \examples{
 \dontrun{
