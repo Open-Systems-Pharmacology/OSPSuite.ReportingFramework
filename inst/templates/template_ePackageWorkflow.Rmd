@@ -160,6 +160,11 @@ print(names(dataObservedPK))
 
 ### Optional: load numeric values
 
+The workflow export script evaluates `numericValues-eval` during export.
+If `numericValues` is not `NULL`, the evaluated table is exported as a CSV file into the electronic package and reloaded in the final workflow script from that file.
+In this authoring chunk, you can still use `readObservedDataByDictionary` to build `numericValues` from your working configuration.
+This means you can keep preprocessing logic here, and the exported workflow remains reproducible.
+
 ```{r numericValues-eval}
 # use this line if you have no numeric values data
 numericValues <- NULL
@@ -210,7 +215,7 @@ Please make sure all required plot configuration sheets are referenced this way.
 
 ```{r runPlot-copy}
 # set graphic
-ospsuite.plots::setDefaults()
+ggplot2::theme_set(theme_osp())
 options(knitr.kable.NA = '')
 
 runPlotTheme <- ggplot2::theme(

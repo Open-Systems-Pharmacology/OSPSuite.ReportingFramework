@@ -38,6 +38,8 @@ ospsuite.reportingframework::captureLog(
     XXCHUNKend - dataObservedXXX
     XXCHUNKstart - dataObservedPKXXX
     XXCHUNKend - dataObservedPKXXX
+    XXCHUNKstart - numericValuesXXX
+    XXCHUNKend - numericValuesXXX
     XXCHUNKstart - scenarioNamesXXX
     XXCHUNKend - scenarioNamesXXX
     XXCHUNKstart - loadResultsXXX

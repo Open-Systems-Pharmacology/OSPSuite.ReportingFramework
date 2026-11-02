@@ -97,7 +97,7 @@ At the beginning of the workflow, a variable `projectDirectory` is defined. By d
 
 As shown in the figure below, the workflow consists of three steps:
 
-- **importWorkflow**: The script calls `importWorkflow(projectDirectory, wfIdentifier, ePackageFolder, configurationDirectory)` to build a workflow-specific project structure with all required files. The output folder name is kept from your original project configuration, while other folders are generated with suffix `_w<wfIdentifier>` to avoid overwriting existing configuration tables.
+- **importWorkflow**: The script calls `importWorkflow(projectDirectory, wfIdentifier, ePackageFolder)` to build a workflow-specific project structure with all required files. The output folder name is kept from your original project configuration, while other folders are generated with suffix `_w<wfIdentifier>` to avoid overwriting existing configuration tables.
 
 - **scenario simulation**: The scenarios are simulated and filed as usual. Existing results in the output folder will be overwritten.
 
@@ -135,6 +135,10 @@ See the function help `? exportTLFWorkflowToEPackage` for more information.
 2. **Running TLF Workflows**
 
 Running a TLF workflow is very similar to running a simulation workflow; however, in Step 2, it will produce figures instead of simulating scenarios.
+
+For ePackage exports, `DataImportMap.xlsx` is reduced to `DataFiles` plus only those dictionary sheets referenced by `DataFiles`, so the exported configuration remains minimal and workflow-specific.
+
+For numeric values in TLF workflows, the exported workflow reads the frozen file `data_numericvalues_csv.txt` directly from the workflow data folder (instead of importing numeric values through `DataImportMap.xlsx`).
 
 ### Step 4: Report Generation
 

@@ -180,9 +180,9 @@ knitr::kable(dataFilesSheet)
 
 Use this sheet when numeric values should be maintained in configuration instead of hard-coded in scripts.
 
-- Required columns in the sheet: `VariableName`, `Value`, `Unit`, `Reference`, `Description`.
+- Required columns in the sheet: `VariableName`, `Value`, `Unit`, `Reference`.
 - Returned table columns after import: `variableName`, `value`, `unit`, `reference`.
-- The `Description` column is metadata and is not returned.
+- Optional metadata columns (for example `Description`) are ignored by the numeric-values importer.
 - Variable names must be unique across imported numeric-value sheets.
 
 Add a row in `DataFiles` with `DataClass = DATACLASS$numericValues` and `Dictionary = "NumericValues"` (or another sheet name if configured).
