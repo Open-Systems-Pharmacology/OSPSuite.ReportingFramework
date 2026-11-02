@@ -44,6 +44,9 @@ Key differences vs 1.0.1:
 	- Updated exported API docs in `man/` and namespace exports.
 	- Updated README/pkgdown/vignettes and adjusted tests to cover new workflow, plotting, and configuration behavior.
 
+- AI workflow helpers are currently experimental.
+	- `exportWorkflowContext()`, `createAIWorkflowPrompt()`, `createAIPromptFromTask()`, and `validateWorkflowForAI()` are provided for early evaluation and may evolve in upcoming releases.
+
 # ospsuite.reportingframework 1.0.1
 
 - Initial release of the package as beta version

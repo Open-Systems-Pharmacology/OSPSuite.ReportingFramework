@@ -8,6 +8,9 @@
 #' @param includeNumericValues If `TRUE`, include values imported via
 #'   `dataClassType = "numericValues"` when available.
 #'
+#' @details Experimental: this helper is intended for early evaluation and may
+#'   change in future releases.
+#'
 #' @return A named list with workflow context information.
 #' @export
 #' @family project initialization
@@ -16,6 +19,7 @@ exportWorkflowContext <- function(
   file = "workflow-context.json",
   includeNumericValues = TRUE
 ) {
+  lifecycle::signal_stage("experimental", "exportWorkflowContext()")
   checkmate::assertFlag(includeNumericValues)
 
   dataImportMapFile <- projectConfiguration$addOns$dataImportMapFile
@@ -105,6 +109,9 @@ exportWorkflowContext <- function(
 #' @param includeExamples If `TRUE`, include example commands and snippets.
 #' @param maxItemsPerSection Maximum number of list items included per section.
 #'
+#' @details Experimental: this helper is intended for early evaluation and may
+#'   change in future releases.
+#'
 #' @return A character string containing the prompt.
 #' @export
 #' @family project initialization
@@ -114,6 +121,7 @@ createAIWorkflowPrompt <- function(
   includeExamples = TRUE,
   maxItemsPerSection = 30
 ) {
+  lifecycle::signal_stage("experimental", "createAIWorkflowPrompt()")
   checkmate::assertString(task, min.chars = 1)
   checkmate::assertFlag(includeExamples)
   checkmate::assertCount(maxItemsPerSection, positive = TRUE)
@@ -221,6 +229,9 @@ createAIWorkflowPrompt <- function(
 #' @param includeExamples If `TRUE`, include example commands and snippets.
 #' @param maxItemsPerSection Maximum number of list items included per section.
 #'
+#' @details Experimental: this helper is intended for early evaluation and may
+#'   change in future releases.
+#'
 #' @return A character string containing the prompt.
 #' @export
 #' @family project initialization
@@ -230,6 +241,7 @@ createAIPromptFromTask <- function(
   includeExamples = TRUE,
   maxItemsPerSection = 30
 ) {
+  lifecycle::signal_stage("experimental", "createAIPromptFromTask()")
   task <- match.arg(task)
 
   taskInstruction <- switch(
@@ -265,10 +277,14 @@ createAIPromptFromTask <- function(
 #' @param projectConfiguration Project configuration object.
 #' @param strict If `TRUE`, warnings are treated as failing checks.
 #'
+#' @details Experimental: this helper is intended for early evaluation and may
+#'   change in future releases.
+#'
 #' @return A list with `ok`, `errors`, `warnings`, and `suggestions`.
 #' @export
 #' @family project initialization
 validateWorkflowForAI <- function(projectConfiguration, strict = FALSE) {
+  lifecycle::signal_stage("experimental", "validateWorkflowForAI()")
   checkmate::assertFlag(strict)
 
   errors <- character()

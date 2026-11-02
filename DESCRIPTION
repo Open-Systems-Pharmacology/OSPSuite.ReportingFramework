@@ -31,6 +31,7 @@ Imports:
     ospsuite,
     ospsuite.utils,
     logger,
+    lifecycle,
     quarto,
     ggplot2,
     ggsci,
