@@ -382,33 +382,23 @@ internalFunctionRulesLinter <- function() {
     }, skipTests = TRUE)
 }
 
-internalFunctionReturnLinter <- function() {
+functionReturnLinter <- function() {
     makeFileLinter(function(filePath) {
         data <- .extractFunctionInfos(filePath)
         lines <- data$lines
         lints <- list()
 
         for (fun in data$functions) {
-            roxygenBlock <- .roxygenBlockForFunction(lines, fun$line)
-            tags <- .parseRoxygenTags(roxygenBlock)
-
-            requiresExplicitReturn <- startsWith(fun$name, ".") ||
-                tags$hasKeywordsInternal ||
-                tags$hasNoRd
-            if (!requiresExplicitReturn) {
-                next
-            }
-
             if (!.endsWithExplicitReturn(fun$functionExpr)) {
                 lints[[length(lints) + 1L]] <- .newLint(
                     filePath,
                     fun$line,
                     fun$column,
                     sprintf(
-                        "Internal/noRd function '%s' should end with explicit return(...).",
+                        "Function '%s' should end with explicit return(...).",
                         fun$name
                     ),
-                    "internalFunctionReturnLinter",
+                    "functionReturnLinter",
                     lines
                 )
             }
