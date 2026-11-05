@@ -368,7 +368,7 @@ test_that(".loadPkAnalysisRawData returns a data.table with 14 PK parameters", {
   result <- suppressWarnings(.loadPkAnalysisRawData(pc, "ScenarioA", sim))
 
   expect_s3_class(result, "data.table")
-  expect_equal(unique(result$parameter), 14L)
+  expect_equal(length(unique(result$parameter)), 14L)
   expect_true(all(
     c("individualId", "quantityPath", "parameter", "value", "unit") %in%
       names(result)

@@ -201,47 +201,46 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 #'
 #' @export
 #' @family function to read from and write to xlsx
-# nolint start: cyclocomp_linter
-xlsxReadData <- function(
-  wb,
-  sheetName = 1,
-  skipDescriptionRow = FALSE,
-  alwaysCharacter = c("Group", "Id$", "Ids$"),
-  emptyAsNA = TRUE,
-  convertHeaders = TRUE
-) {
-  # Input validation
-  if (!any(class(wb) %in% "Workbook")) {
-    checkmate::assertFileExists(wb)
+xlsxReadData <- # nolint: cyclocomp_linter
+  function(
+    wb,
+    sheetName = 1,
+    skipDescriptionRow = FALSE,
+    alwaysCharacter = c("Group", "Id$", "Ids$"),
+    emptyAsNA = TRUE,
+    convertHeaders = TRUE
+  ) {
+    # Input validation
+    if (!any(class(wb) %in% "Workbook")) {
+      checkmate::assertFileExists(wb)
+    }
+    skipIsLogical <- is.logical(skipDescriptionRow) &&
+      length(skipDescriptionRow) == 1 &&
+      !is.na(skipDescriptionRow)
+    skipIsCount <- is.numeric(skipDescriptionRow) &&
+      length(skipDescriptionRow) == 1 &&
+      !is.na(skipDescriptionRow) &&
+      skipDescriptionRow >= 0 &&
+      skipDescriptionRow == as.integer(skipDescriptionRow)
+    checkmate::assertTRUE(skipIsLogical || skipIsCount)
+    checkmate::assertCharacter(alwaysCharacter, null.ok = TRUE)
+    checkmate::assertLogical(emptyAsNA, len = 1)
+    checkmate::assertLogical(convertHeaders, len = 1)
+
+    # Read data from the specified sheet
+    dt <- .readSheetData(wb, sheetName)
+
+    # Process the data based on the provided parameters
+    dt <- .processSheetData(
+      dt,
+      skipDescriptionRow,
+      alwaysCharacter,
+      emptyAsNA,
+      convertHeaders
+    )
+
+    return(dt)
   }
-  skipIsLogical <- is.logical(skipDescriptionRow) &&
-    length(skipDescriptionRow) == 1 &&
-    !is.na(skipDescriptionRow)
-  skipIsCount <- is.numeric(skipDescriptionRow) &&
-    length(skipDescriptionRow) == 1 &&
-    !is.na(skipDescriptionRow) &&
-    skipDescriptionRow >= 0 &&
-    skipDescriptionRow == as.integer(skipDescriptionRow)
-  checkmate::assertTRUE(skipIsLogical || skipIsCount)
-  checkmate::assertCharacter(alwaysCharacter, null.ok = TRUE)
-  checkmate::assertLogical(emptyAsNA, len = 1)
-  checkmate::assertLogical(convertHeaders, len = 1)
-
-  # Read data from the specified sheet
-  dt <- .readSheetData(wb, sheetName)
-
-  # Process the data based on the provided parameters
-  dt <- .processSheetData(
-    dt,
-    skipDescriptionRow,
-    alwaysCharacter,
-    emptyAsNA,
-    convertHeaders
-  )
-
-  return(dt)
-}
-# nolint end
 #' Add new data to a config file using a template sheet
 #'
 #' If the template does not exist in the configuration file in the project directory,
