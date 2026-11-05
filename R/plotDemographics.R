@@ -455,7 +455,7 @@ plotHistograms <- function(
   }
 
   plotList <- list()
-  for (pid in splitInputs(onePlotConfig$parameterIds)) {
+  for (pid in unique(splitInputs(onePlotConfig$parameterIds))) {
     idData <- plotData[parameterId == pid]
     hasValueBin <- !is.na(idData[["value.bin"]])
     xlabel <- idData[hasValueBin]$displayNameParameter.bin[1]
@@ -464,6 +464,7 @@ plotHistograms <- function(
     ylabelUnit <- idData$displayUnit[1]
 
     # initialize dtExport (will be the set only once per pid)
+    dtExport <- NULL
 
     for (yscale in splitInputs(onePlotConfig$yScale[1])) {
       plotObject <-
