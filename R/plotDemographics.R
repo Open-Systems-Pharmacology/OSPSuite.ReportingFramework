@@ -191,7 +191,6 @@ plotHistograms <- function(
   if (usePKParameter) {
     .validatePKParameterDT(pkParameterDT)
   }
-
   plotData <- .prepareDemographicPlotData(
     onePlotConfig = onePlotConfig,
     pkParameterDT = pkParameterDT,
@@ -339,7 +338,7 @@ plotHistograms <- function(
   ...
 ) {
   plotList <- list()
-  for (pid in splitInputs(onePlotConfig$parameterIds)) {
+  for (pid in unique(splitInputs(onePlotConfig$parameterIds))) {
     idData <- plotData[parameterId == pid]
     xlabel <- idData$displayNameParameter[1]
     xlabelUnit <- idData$displayUnit[1]

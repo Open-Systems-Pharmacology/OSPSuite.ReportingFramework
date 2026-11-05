@@ -289,14 +289,16 @@ test_that("It should check the validity of the observed dataset", {
 
 # Unit tests for groupDataByIdentifier function
 test_that("groupDataByIdentifier function test", {
-  groupedData <- groupDataByIdentifier(dataObserved)
+  groupedData <- ospsuite.reportingframework:::.groupDataByIdentifier(
+    dataObserved
+  )
 
   # Add assertions based on the expected output of the function
   expect_s3_class(groupedData, "list")
   expect_true(
     length(groupedData) ==
       dataObserved %>%
-        dplyr::select(getColumnsForColumnType(
+        dplyr::select(ospsuite.reportingframework:::.getColumnsForColumnType(
           dataObserved,
           columnTypes = "identifier"
         )) %>%
@@ -308,7 +310,10 @@ test_that("groupDataByIdentifier function test", {
 # Unit tests for getColumnsForColumnType function
 test_that("getColumnsForColumnType function test", {
   columnTypes <- c("identifier")
-  columnNames <- getColumnsForColumnType(dataObserved, columnTypes)
+  columnNames <- ospsuite.reportingframework:::.getColumnsForColumnType(
+    dataObserved,
+    columnTypes
+  )
 
   #
   expect_equal(length(columnNames), 7)
@@ -322,33 +327,42 @@ test_that("getColumnsForColumnType function test", {
 test_that("createDataSets function test", {
   tmpData <- dataObserved[outputPathId == "Plasma"]
 
-  groupedData <- groupDataByIdentifier(tmpData)
+  groupedData <- ospsuite.reportingframework:::.groupDataByIdentifier(tmpData)
 
-  dataSet <- createDataSets(groupData = groupedData[[1]])
+  dataSet <- ospsuite.reportingframework:::.createDataSets(
+    groupData = groupedData[[1]]
+  )
 
   expect_s3_class(dataSet, "DataSet")
   expect_equal(dataSet$LLOQ, unique(tmpData$lloq))
 
   # unique yUnit
   tmpData$yUnit[1] <- "pmol/L"
-  groupedData <- groupDataByIdentifier(tmpData)
-  expect_error(createDataSets(groupedData[[1]]))
+  groupedData <- ospsuite.reportingframework:::.groupDataByIdentifier(tmpData)
+  expect_error(ospsuite.reportingframework:::.createDataSets(groupedData[[1]]))
 
   # Warning for different LLOQ
   tmpData <- dataObserved[outputPathId == "Plasma"]
   tmpData$lloq[1] <- 2
-  groupedData <- groupDataByIdentifier(tmpData)
-  expect_warning(dataSet <- createDataSets(groupedData[[1]]))
+  groupedData <- ospsuite.reportingframework:::.groupDataByIdentifier(tmpData)
+  expect_warning(
+    dataSet <- ospsuite.reportingframework:::.createDataSets(groupedData[[1]])
+  )
 })
 
 # Unit tests for addMetaDataToDataSet function
 test_that("addMetaDataToDataSet function test", {
   tmpData <- dataObserved[outputPathId == "Plasma"]
-  groupedData <- groupDataByIdentifier(tmpData)
+  groupedData <- ospsuite.reportingframework:::.groupDataByIdentifier(tmpData)
 
-  dataSet <- createDataSets(groupData = groupedData[[1]])
+  dataSet <- ospsuite.reportingframework:::.createDataSets(
+    groupData = groupedData[[1]]
+  )
 
-  dataSetWithMeta <- addMetaDataToDataSet(dataSet, groupData = groupedData[[1]])
+  dataSetWithMeta <- ospsuite.reportingframework:::.addMetaDataToDataSet(
+    dataSet,
+    groupData = groupedData[[1]]
+  )
 
   # Add assertions based on the expected output of the function
   expect_s3_class(dataSetWithMeta, "DataSet")
@@ -389,7 +403,7 @@ test_that("convertIdentifierColumns function works as expected", {
   )
 
   identifierCols <- c("col1", "col2")
-  updatedDt <- suppressWarnings(convertIdentifierColumns(
+  updatedDt <- suppressWarnings(ospsuite.reportingframework:::.convertIdentifierColumns(
     testDt,
     identifierCols
   ))
@@ -398,7 +412,12 @@ test_that("convertIdentifierColumns function works as expected", {
   expect_equal(updatedDt$col1[1], "a_b_c")
   expect_equal(updatedDt$col2[1], "x_y_z")
 
-  expect_warning(updatedDt <- convertIdentifierColumns(testDt, "col1"))
+  expect_warning(
+    updatedDt <- ospsuite.reportingframework:::.convertIdentifierColumns(
+      testDt,
+      "col1"
+    )
+  )
 })
 
 test_that("getIndividualDataGroups filters eligible observed TP individual groups", {
@@ -454,17 +473,24 @@ test_that("getIndividualDataGroups filters eligible observed TP individual group
   )
 
   expect_setequal(
-    getIndividualDataGroups(mockObserved, groups = NULL),
+    ospsuite.reportingframework:::.getIndividualDataGroups(
+      mockObserved,
+      groups = NULL
+    ),
     c("g_ok2", "g_ok3")
   )
 
   expect_equal(
-    getIndividualDataGroups(mockObserved, groups = NULL, minN = 3),
+    ospsuite.reportingframework:::.getIndividualDataGroups(
+      mockObserved,
+      groups = NULL,
+      minN = 3
+    ),
     "g_ok3"
   )
 
   expect_warning(
-    selectedGroups <- getIndividualDataGroups(
+    selectedGroups <- ospsuite.reportingframework:::.getIndividualDataGroups(
       mockObserved,
       groups = c("g_ok2", "g_low", "g_missing")
     )
@@ -574,7 +600,7 @@ aggregatedData <- data.table(
 
 # Test for addUniqueColumns
 test_that("addUniqueColumns works correctly", {
-  result <- addUniqueColumns(
+  result <- ospsuite.reportingframework:::.addUniqueColumns(
     dataObserved = originalData,
     aggregatedData = aggregatedData
   )
