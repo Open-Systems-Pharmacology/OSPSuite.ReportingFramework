@@ -15,6 +15,8 @@
 #'   at least one scenario.
 #'
 #' @return The modified project configuration object.
+#' @family sensitivity analysis
+#' @concept sensitivity analysis
 #' @export
 addSensitivityTable <- function(
   projectConfiguration,
@@ -80,7 +82,7 @@ addSensitivityTable <- function(
 #' @param sensitivitysheet The name of the sheet in the sensitivity Excel file to use for analysis.
 #' @param referenceScenario Optional scenario name used as the denominator for
 #'   ratio mode. When provided, sensitivities are computed as
-#'   \\code{scenario / referenceScenario}.
+#'   `scenario / referenceScenario`.
 #' @param variationRange Numeric fraction defining how much each sensitivity
 #'   parameter is varied around baseline (e.g., `0.1` means +/- 10\%).
 #' @param numberOfSteps Integer number of perturbation steps on each side of
@@ -92,6 +94,8 @@ addSensitivityTable <- function(
 #'   computes scenario/reference ratios when `referenceScenario` is provided.
 #'
 #' @return NULL
+#' @family sensitivity analysis
+#' @concept sensitivity analysis
 #' @export
 runSensitivityAnalysisForScenarios <-
   function(
@@ -237,6 +241,8 @@ runSensitivityAnalysisForScenarios <-
 #' @param overwrite A logical indicating whether to overwrite existing results.
 #'
 #' @return Invisibly returns `NULL`.
+#' @family sensitivity analysis
+#' @concept sensitivity analysis
 #' @export
 runRepresentativeSensitivityAnalysisForScenarios <- function(
   projectConfiguration,

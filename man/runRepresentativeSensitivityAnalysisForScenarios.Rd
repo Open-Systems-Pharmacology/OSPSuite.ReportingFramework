@@ -53,3 +53,9 @@ existing sensitivity workflow separately for each representative.
 \details{
 Ratio mode is intentionally not supported for this workflow.
 }
+\seealso{
+Other sensitivity analysis:
+\code{\link[=addSensitivityTable]{addSensitivityTable()}},
+\code{\link[=runSensitivityAnalysisForScenarios]{runSensitivityAnalysisForScenarios()}}
+}
+\concept{sensitivity analysis}

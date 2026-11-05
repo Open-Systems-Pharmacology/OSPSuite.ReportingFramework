@@ -33,3 +33,9 @@ This function adds a sensitivity table to the provided project configuration.
 It loads a template Excel file and, when `scenarioList` is provided,
 populates it with parameter paths derived across the supplied scenarios.
 }
+\seealso{
+Other sensitivity analysis:
+\code{\link[=runRepresentativeSensitivityAnalysisForScenarios]{runRepresentativeSensitivityAnalysisForScenarios()}},
+\code{\link[=runSensitivityAnalysisForScenarios]{runSensitivityAnalysisForScenarios()}}
+}
+\concept{sensitivity analysis}

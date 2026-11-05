@@ -27,7 +27,7 @@ runSensitivityAnalysisForScenarios(
 
 \item{referenceScenario}{Optional scenario name used as the denominator for
 ratio mode. When provided, sensitivities are computed as
-\\code{scenario / referenceScenario}.}
+`scenario / referenceScenario`.}
 
 \item{variationRange}{Numeric fraction defining how much each sensitivity
 parameter is varied around baseline (e.g., `0.1` means +/- 10\%).}
@@ -59,3 +59,9 @@ In that case the sensitivity is calculated for
 Runs sensitivity analysis for each selected scenario and optionally
   computes scenario/reference ratios when `referenceScenario` is provided.
 }
+\seealso{
+Other sensitivity analysis:
+\code{\link[=addSensitivityTable]{addSensitivityTable()}},
+\code{\link[=runRepresentativeSensitivityAnalysisForScenarios]{runRepresentativeSensitivityAnalysisForScenarios()}}
+}
+\concept{sensitivity analysis}
