@@ -75,7 +75,7 @@ readObservedDataByDictionary <- function(
       path = d$dataFile
     ))
 
-    tmpdict <- readDataDictionary(
+    tmpdict <- .readDataDictionary(
       dictionaryFile = projectConfiguration$addOns$dataImportMapFile,
       sheet = d$dictionary,
       data = tmpData,
@@ -84,7 +84,7 @@ readObservedDataByDictionary <- function(
 
     dataDT <- rbind(
       dataDT,
-      convertDataByDictionary(
+      .convertDataByDictionary(
         data = tmpData,
         dataFilter = d$dataFilter,
         dict = tmpdict,
@@ -108,7 +108,7 @@ readObservedDataByDictionary <- function(
 
   dataDT[, dataType := "observed"]
 
-  dataDT <- setDataTypeAttributes(dataDT, dict)
+  dataDT <- .setDataTypeAttributes(dataDT, dict)
 
   validateObservedData(dataDT = dataDT, dataClassType)
 
@@ -181,6 +181,11 @@ readObservedDataByDictionary <- function(
 #'
 #' @param wb Workbook object containing DataFiles and numeric values sheets.
 #' @param dataList DataFiles subset containing rows with numeric values data class.
+#'
+#' @details
+#' Iterates over each row in `dataList`, resolves the source sheet name,
+#' validates sheet existence, and appends normalized scalar rows from each
+#' sheet into one combined table.
 #'
 #' @return A `data.table` with columns `variableName`, `value`, `unit`, and `reference`.
 #' @keywords internal
@@ -476,7 +481,7 @@ validateObservedData <- function(dataDT, dataClassType) {
 #' @return A `data.table` containing the data dictionary.
 #' @keywords internal
 #' @noRd
-readDataDictionary <- function(dictionaryFile, sheet, data, dataClass) {
+.readDataDictionary <- function(dictionaryFile, sheet, data, dataClass) {
   dict <- xlsxReadData(
     wb = dictionaryFile,
     sheetName = sheet,
@@ -566,7 +571,7 @@ readDataDictionary <- function(dictionaryFile, sheet, data, dataClass) {
 #' @return A `data.table` containing the converted data.
 #' @keywords internal
 #' @noRd
-convertDataByDictionary <- function(data, dataFilter, dict, dictionaryName) {
+.convertDataByDictionary <- function(data, dataFilter, dict, dictionaryName) {
   # Execute data filter
   if (!is.na(dataFilter) & dataFilter != "") {
     data <- data[eval(parse(text = dataFilter))]
@@ -618,12 +623,12 @@ convertDataByDictionary <- function(data, dataFilter, dict, dictionaryName) {
   }
 
   # Transfer identifier to character without commas
-  data <- convertIdentifierColumns(
+  data <- .convertIdentifierColumns(
     dt = data,
     identifierCols = dict[type == "identifier"]$targetColumn
   )
 
-  data <- convertBiometrics(data, dict)
+  data <- .convertBiometrics(data, dict)
 
   return(data)
 }
@@ -637,7 +642,7 @@ convertDataByDictionary <- function(data, dataFilter, dict, dictionaryName) {
 #' @return A `data.table` with converted columns.
 #' @keywords internal
 #' @noRd
-convertBiometrics <- function(data, dict, dictionaryName) {
+.convertBiometrics <- function(data, dict, dictionaryName) {
   for (col in intersect(names(BIOMETRICUNITS), dict$targetColumn)) {
     unitFactor <- ospsuite::toUnit(
       quantityOrDimension = ospsuite::getDimensionForUnit(BIOMETRICUNITS[[
@@ -697,7 +702,7 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
   colsSelected <- unique(c(
     identifierCols,
     setdiff(
-      getColumnsForColumnType(dt = dataDT, columnTypes = "metadata"),
+      .getColumnsForColumnType(dt = dataDT, columnTypes = "metadata"),
       c("compartment", "molecule", "organ")
     )
   ))
@@ -882,13 +887,13 @@ addBiometricsToConfig <- function(
 convertDataTableToDataCombined <- function(dataDT) {
   validateObservedData(dataDT = dataDT, dataClassType = "timeprofile")
 
-  groupedData <- groupDataByIdentifier(dataDT = dataDT)
+  groupedData <- .groupDataByIdentifier(dataDT = dataDT)
 
   dataCombined <- ospsuite::DataCombined$new()
 
   for (groupData in groupedData) {
-    dataSet <- createDataSets(groupData)
-    dataSet <- addMetaDataToDataSet(dataSet, groupData)
+    dataSet <- .createDataSets(groupData)
+    dataSet <- .addMetaDataToDataSet(dataSet, groupData)
 
     dataCombined$addDataSets(
       dataSets = dataSet,
@@ -905,11 +910,12 @@ convertDataTableToDataCombined <- function(dataDT) {
 #'
 #' @return A list with grouped data.
 #' @keywords internal
-groupDataByIdentifier <- function(dataDT) {
+#' @noRd
+.groupDataByIdentifier <- function(dataDT) {
   checkmate::assert_disjunct(names(dataDT), ".groupBy")
 
   # Group data by identifier
-  groupBy <- getColumnsForColumnType(dt = dataDT, columnTypes = "identifier")
+  groupBy <- .getColumnsForColumnType(dt = dataDT, columnTypes = "identifier")
 
   # Use a copy to keep the data.table outside the function unchanged
   dataDT <- data.table::copy(dataDT) %>%
@@ -934,7 +940,8 @@ groupDataByIdentifier <- function(dataDT) {
 #'
 #' @return An object of class `DataSet`.
 #' @keywords internal
-createDataSets <- function(groupData) {
+#' @noRd
+.createDataSets <- function(groupData) {
   groupData <- data.table::as.data.table(groupData)
   groupName <- groupData$.groupBy[1]
   dataSet <- ospsuite::DataSet$new(groupName)
@@ -973,9 +980,10 @@ createDataSets <- function(groupData) {
 #'
 #' @return A `DataSet` with observed data with added metadata.
 #' @keywords internal
-addMetaDataToDataSet <- function(dataSet, groupData) {
+#' @noRd
+.addMetaDataToDataSet <- function(dataSet, groupData) {
   metaColumns <-
-    getColumnsForColumnType(
+    .getColumnsForColumnType(
       dt = groupData,
       columnTypes = c("covariate", "biometrics", "identifier")
     )
@@ -1088,7 +1096,7 @@ aggregateObservedDataGroups <- function(
   lloqCheckColumns2of3 = NULL,
   lloqCheckColumns1of2 = NULL
 ) {
-  dataToAggregate <- prepareDataForAggregation(
+  dataToAggregate <- .prepareDataForAggregation(
     dataObserved = dataObserved,
     groups = groups,
     groupSuffix = groupSuffix
@@ -1110,17 +1118,17 @@ aggregateObservedDataGroups <- function(
     aggrCriteria = c("group", "outputPathId", "xValues")
   )
 
-  aggregatedData <- checkLLOQ(
+  aggregatedData <- .checkLLOQ(
     aggregatedData = aggregatedData,
     lloqCheckColumns2of3 = lloqCheckColumns2of3,
     lloqCheckColumns1of2 = lloqCheckColumns1of2,
     aggregationFlag = aggregationFlag
   )
 
-  aggregatedData <- addUniqueColumns(dataToAggregate, aggregatedData)
+  aggregatedData <- .addUniqueColumns(dataToAggregate, aggregatedData)
   aggregatedData$dataClass <- DATACLASS$tpAggregated
 
-  aggregatedData <- setDataTypeAttributes(aggregatedData)
+  aggregatedData <- .setDataTypeAttributes(aggregatedData)
 
   return(aggregatedData)
 }
@@ -1135,7 +1143,7 @@ aggregateObservedDataGroups <- function(
 #' @return Prepared data for aggregation as a `data.table`.
 #' @keywords internal
 #' @noRd
-prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
+.prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
   if ("DataCombined" %in% class(dataObserved)) {
     dataObserved <- convertDataCombinedToDataTable(dataObserved)
   }
@@ -1159,7 +1167,7 @@ prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
     choices = DATACLASS$tpIndividual
   )
 
-  groups <- getIndividualDataGroups(dataObserved, groups)
+  groups <- .getIndividualDataGroups(dataObserved, groups)
 
   if (length(groups) == 0) {
     warning(messages$warningutilitiesdataL4NoGroupsForAggregation())
@@ -1188,7 +1196,7 @@ prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
 #' @return Updated aggregated data `data.table`.
 #' @keywords internal
 #' @noRd
-checkLLOQ <- function(
+.checkLLOQ <- function(
   aggregatedData,
   lloqCheckColumns2of3,
   lloqCheckColumns1of2,
@@ -1244,7 +1252,7 @@ checkLLOQ <- function(
 #' @return The updated aggregated data as a `data.table`.
 #' @keywords internal
 #' @noRd
-addUniqueColumns <- function(dataObserved, aggregatedData) {
+.addUniqueColumns <- function(dataObserved, aggregatedData) {
   identifier <- c("group", "outputPathId")
 
   colsToCheck <- setdiff(names(dataObserved), identifier)
@@ -1281,7 +1289,7 @@ addUniqueColumns <- function(dataObserved, aggregatedData) {
 #' @return A `data.table` with attributes.
 #' @keywords internal
 #' @noRd
-setDataTypeAttributes <- function(dataDT, dict = NULL) {
+.setDataTypeAttributes <- function(dataDT, dict = NULL) {
   if (is.null(dict)) {
     tmpdict <-
       xlsxReadData(
@@ -1332,7 +1340,7 @@ setDataTypeAttributes <- function(dataDT, dict = NULL) {
 #' @return A vector with column names.
 #' @keywords internal
 #' @noRd
-getColumnsForColumnType <- function(dt, columnTypes) {
+.getColumnsForColumnType <- function(dt, columnTypes) {
   columnsWithAttributes <- unlist(lapply(dt, attr, "columnType"))
 
   columnNames <-
@@ -1350,7 +1358,7 @@ getColumnsForColumnType <- function(dt, columnTypes) {
 #' @return The updated `data.table`.
 #' @keywords internal
 #' @noRd
-convertIdentifierColumns <- function(dt, identifierCols) {
+.convertIdentifierColumns <- function(dt, identifierCols) {
   for (col in identifierCols) {
     dt[[col]] <- as.character(dt[[col]])
     if (any(grepl(",", dt[[col]]))) {
@@ -1373,7 +1381,7 @@ convertIdentifierColumns <- function(dt, identifierCols) {
 #' @return A vector with suitable group Ids.
 #' @keywords internal
 #' @noRd
-getIndividualDataGroups <- function(dataObserved, groups, minN = 2) {
+.getIndividualDataGroups <- function(dataObserved, groups, minN = 2) {
   tmp <-
     dataObserved[,
       .(N = dplyr::n_distinct(individualId)),

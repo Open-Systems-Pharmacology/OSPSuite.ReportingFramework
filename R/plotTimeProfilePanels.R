@@ -153,7 +153,6 @@ plotTimeProfiles <- function(
   referenceScaleVector = list(),
   ...
 ) {
-  # initialize data.table variables
   checkmate::assertIntegerish(nMaxFacetRows, lower = 1, len = 1)
   checkmate::assertDouble(facetAspectRatio, lower = 0, len = 1)
 
@@ -500,8 +499,6 @@ plotTimeProfiles <- function(
 #' @keywords internal
 #' @noRd
 .getMapSimulatedAndObserved <- function(plotData) {
-  # initialize data.table variables
-
   if (!plotData$hasObservedData()) {
     return(NULL)
   }
@@ -659,8 +656,6 @@ plotTimeProfiles <- function(
   plotType,
   plotCounter
 ) {
-  # initialize data.table variables
-
   if (plotType != "TP") {
     return(NULL)
   }
@@ -1672,8 +1667,6 @@ addDefaultConfigForTimeProfilePlots <- function(
 #' @keywords internal
 #' @noRd
 .mergeDataGroups <- function(dtNewConfig, dtDataGroups, dataObserved) {
-  # initialize data.table variables
-
   tmp <- dtDataGroups[,
     .(dataGroupIds = paste(as.character(group), collapse = ", ")),
     by = "defaultScenario"

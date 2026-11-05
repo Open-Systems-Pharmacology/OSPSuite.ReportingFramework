@@ -67,8 +67,6 @@ plotDistributionVsDemographics <- function(
   colorVector = c(scenario = NA, referenceScenario = NA),
   ...
 ) {
-  # initialize data.table variables
-
   checkmate::assertFlag(asStepPlot)
   checkmate::assertNumeric(facetAspectRatio, lower = 0, finite = TRUE, len = 1)
   colorVector <- .getColorVectorForLegend(
@@ -433,8 +431,6 @@ plotHistograms <- function(
   aggregationFun,
   ...
 ) {
-  # initialize to avoid linter messages
-
   # convert aggregation function to the form expected by plotRangeDistribution
   statFun <- function(y) {
     l <- aggregationFun(y)
@@ -581,8 +577,6 @@ plotHistograms <- function(
 #' @keywords internal
 #' @noRd
 .loadDemographicParameters <- function(onePlotConfig, scenarioList) {
-  # initialize to avoid linter messages
-
   onePlotConfigIdentifier <- onePlotConfig[, c(
     "scenario",
     "referenceScenario",
@@ -713,8 +707,6 @@ plotHistograms <- function(
 #' @keywords internal
 #' @noRd
 .setPlotTag <- function(plotData, asRangePlot, usePKParameter) {
-  # initialize to avoid linter messages
-
   plotTagIdentifier <- c()
   if (usePKParameter) {
     plotTagIdentifier <- "displayNameOutput"
@@ -745,8 +737,6 @@ plotHistograms <- function(
 #' @keywords internal
 #' @noRd
 .getExportTableForRanges <- function(plotObject, aggregationFun, xLabel) {
-  # initialize to avoid linter messages
-
   plotData <- setDT(copy(plotObject$data))
   if (!("scenarioType" %in% names(plotData))) {
     plotData[, scenarioType := NA_character_]
@@ -835,8 +825,6 @@ plotHistograms <- function(
   scenarioList,
   onePlotConfigIdentifier
 ) {
-  # initialize to avoid linter messages
-
   dtPop <- ospsuite::populationToDataFrame(
     scenarioList[[scenarioName]]$population
   ) %>%
@@ -1051,8 +1039,6 @@ validateDistributionVsDemographicsConfig <- function(
   scenarioList,
   ...
 ) {
-  # initialize to avoid linter messages
-
   configTablePlots <- validateHeaders(configTable)
 
   popScenarios <- names(scenarioList[unlist(lapply(
@@ -1373,8 +1359,6 @@ validateDistributionVsDemographicsConfig <- function(
 #' @family plot configuration validation function
 #' @family functions to generate histograms
 validateHistogramsConfig <- function(configTable, ...) {
-  # initialize variable to avoid messages
-
   configTablePlots <- validateHeaders(configTable)
 
   dotarg <- list(...)
@@ -1620,8 +1604,6 @@ addDefaultConfigForDistributionsVsDemographics <- function(
   asRangePlot,
   templateSheet
 ) {
-  # initialize to avoid linter messages
-
   # this function stops in valid runs
   .stopHelperFunction()
   wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$reportsFile)

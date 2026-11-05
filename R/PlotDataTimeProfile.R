@@ -126,7 +126,7 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
             )
 
             observedDataTmp <- observedDataTmp %>%
-              dplyr::select(dplyr::any_of(getColumnsForColumnType(
+              dplyr::select(dplyr::any_of(.getColumnsForColumnType(
                 dataObserved,
                 columnTypes = c("identifier", "timeprofile")
               ))) %>%
@@ -1313,9 +1313,6 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
   nFacetColumns,
   nMaxFacetRows
 ) {
-  # Initialize variables used for data.tables
-  counter <- plotId <- plotTag <- NULL
-
   maxPlotId <- nFacetColumns * nMaxFacetRows
 
   # Update the counter based on the condition
@@ -1412,9 +1409,6 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
 #' @keywords internal
 #' @noRd
 .addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
-  # initialize variables used for data.table to avoid messages during checks
-  diffY <- predicted <- xValues <- yValues <- NULL
-
   checkmate::assertCharacter(identifier, any.missing = FALSE)
   checkmate::assertDataTable(dtObserved)
   checkmate::assertNames(

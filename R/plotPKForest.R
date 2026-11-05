@@ -138,8 +138,6 @@
   scaleVectors,
   labelWrapWidth = 2
 ) {
-  # initialize to avoid linter messages
-
   # separates the comma separate inputs to rows
   onePlotConfig <- .separateAndTrimColumn(
     data = onePlotConfig,
@@ -886,7 +884,6 @@ plotPKForestPointEstimateOfRatios <- function(
 #' @keywords internal
 #' @noRd
 .adjustForestDataPerGroup <- function(dataGroup, onePlotConfig) {
-  # initialize to avoid linter messages
   tmp <- dataGroup[,
     .N,
     by = c(
@@ -953,7 +950,6 @@ plotPKForestPointEstimateOfRatios <- function(
   aggregationFun,
   aggregationFlag
 ) {
-  # initialize to avoid linter messages
   if (ratioMode == "ratioOfPopulation") {
     results <- lapply(
       pkParameterFiltered,
@@ -1035,8 +1031,6 @@ plotPKForestPointEstimateOfRatios <- function(
 #' @keywords internal
 #' @noRd
 .checkPrecision <- function(dt) {
-  # initialize to avoid linter messages
-
   dt[, precision := (xMax - xMin) / xValues]
 
   precisionThreshold <- getOption(
@@ -1068,8 +1062,6 @@ plotPKForestPointEstimateOfRatios <- function(
 #' @keywords internal
 #' @noRd
 .addObservedData <- function(plotData, dataObservedPK, onePlotConfig) {
-  # initialize to avoid linter messages
-
   plotData[, dataType := "simulated"]
   # add datagroupId
   configToFilter <- onePlotConfig[, c(
@@ -1119,8 +1111,6 @@ plotPKForestPointEstimateOfRatios <- function(
 #' @keywords internal
 #' @noRd
 .addDescriptions <- function(plotData, onePlotConfig, pkParameterDT) {
-  # initialize to avoid linter messages
-
   plotData <- merge(
     plotData,
     onePlotConfig[, c("scenario", "scenarioShortName", "scenarioGroup")] %>%
@@ -1215,8 +1205,6 @@ plotPKForestPointEstimateOfRatios <- function(
 #' @keywords internal
 #' @noRd
 .getMappingForForestPlots <- function(plotData, columnList) {
-  # initialize variable to avoid messages
-
   mapping <- aes(x = xValues, y = get(columnList$yColumn), groupby = dataType)
 
   mapping <- utils::modifyList(
@@ -1373,8 +1361,6 @@ plotPKForestPointEstimateOfRatios <- function(
 #' @keywords internal
 #' @noRd
 .addPrecisisonRemark <- function(combinedObject, asPointeEstimate, plotData) {
-  # initialize to avoid linter messages
-
   if (!asPointeEstimate) {
     return(combinedObject)
   }
@@ -1417,8 +1403,6 @@ plotPKForestPointEstimateOfRatios <- function(
   plotCaptionAddon,
   ratioMode
 ) {
-  # initialize to avoid linter messages
-
   dtCaption <-
     plotData[, c(
       "displayNameOutput",

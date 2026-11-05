@@ -72,7 +72,7 @@ setupVirtualTwinPopConfig <- function(
   }
 
   if (is.null(groups)) {
-    groups <- getIndividualDataGroups(dataObserved, groups)
+    groups <- .getIndividualDataGroups(dataObserved, groups)
   }
   # Remove any groups that are already in dtTwinPops
   groups <- setdiff(
@@ -137,7 +137,6 @@ exportVirtualTwinPopulations <- function(
   overwrite = FALSE,
   populationNames = NULL
 ) {
-  # Initialize variables used for data.tables
   checkmate::assertCharacter(
     populationNames,
     any.missing = FALSE,
@@ -538,8 +537,6 @@ exportRandomPopulations <- function(
   projectConfiguration,
   sim
 ) {
-  # initialize variable to avoid messages
-
   # Use foreach for parallel processing
   resultsList <- lapply(dtIndividualBiometrics$individualId, function(indId) {
     biomForInd <- dtIndividualBiometrics[individualId == indId, ]
@@ -838,8 +835,6 @@ exportRandomPopulations <- function(
 #' @keywords internal
 #' @noRd
 .convertBiomForIndStatics <- function(biomForInd, sim) {
-  # avoid messages for global variables during check
-
   dtSelection <- data.table(
     pName = c(
       "individualId",
