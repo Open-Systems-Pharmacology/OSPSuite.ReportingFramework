@@ -9,6 +9,9 @@ addMessageToLog(messageText)
 \arguments{
 \item{messageText}{character with message text}
 }
+\value{
+NULL (invisible).
+}
 \description{
 Add a message to the log file
 }

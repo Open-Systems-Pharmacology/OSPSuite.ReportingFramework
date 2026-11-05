@@ -1,40 +1,40 @@
 # testProject was set up by setup.R
 
-# Test cases for concatWithAnd function
-test_that("concatWithAnd works correctly", {
+# Test cases for .concatWithAnd function
+test_that(".concatWithAnd works correctly", {
   # Test with no elements
-  expect_equal(concatWithAnd(character(0)), "")
+  expect_equal(.concatWithAnd(character(0)), "")
 
   # Test with one element
-  expect_equal(concatWithAnd(c("apple")), "apple")
+  expect_equal(.concatWithAnd(c("apple")), "apple")
 
   # Test with two elements
-  expect_equal(concatWithAnd(c("apple", "banana")), "apple and banana")
+  expect_equal(.concatWithAnd(c("apple", "banana")), "apple and banana")
 
   # Test with three elements
   expect_equal(
-    concatWithAnd(c("apple", "banana", "cherry")),
+    .concatWithAnd(c("apple", "banana", "cherry")),
     "apple, banana and cherry"
   )
 
   # Test with four elements
   expect_equal(
-    concatWithAnd(c("apple", "banana", "cherry", "date")),
+    .concatWithAnd(c("apple", "banana", "cherry", "date")),
     "apple, banana, cherry and date"
   )
 
   # Test with special characters
   expect_equal(
-    concatWithAnd(c("apple!", "banana@", "cherry#")),
+    .concatWithAnd(c("apple!", "banana@", "cherry#")),
     "apple!, banana@ and cherry#"
   )
 
   # Test with empty strings
-  expect_equal(concatWithAnd(c("", "banana")), "banana")
-  expect_equal(concatWithAnd(c("apple", "", "cherry")), "apple and cherry")
+  expect_equal(.concatWithAnd(c("", "banana")), "banana")
+  expect_equal(.concatWithAnd(c("apple", "", "cherry")), "apple and cherry")
 
   # Test with ws
-  expect_equal(concatWithAnd(c("apple ", "", " cherry")), "apple and cherry")
+  expect_equal(.concatWithAnd(c("apple ", "", " cherry")), "apple and cherry")
 })
 
 test_that("formatPercentiles returns correct labels for specific values", {
@@ -199,37 +199,37 @@ dtOutputPaths <- data.table(
 )
 
 # Write unit tests for the function
-test_that("validateOutputIdsForPlot function test", {
+test_that(".validateOutputIdsForPlot function test", {
   # Test if the function correctly find the inconsistency in displayUnit
-  expect_error(validateOutputIdsForPlot(dtOutputPaths))
+  expect_error(.validateOutputIdsForPlot(dtOutputPaths))
 })
 
 # ColorVector
-test_that("getColorVectorForLegend works correctly with valid inputs", {
+test_that(".getColorVectorForLegend works correctly with valid inputs", {
   colorLegend <- "red|green|blue"
   colorVector <- c(red = "#FF0000", green = "#00FF00", blue = "#0000FF")
 
-  result <- getColorVectorForLegend(colorLegend, colorVector)
+  result <- .getColorVectorForLegend(colorLegend, colorVector)
 
   expect_equal(result, c(red = "#FF0000", green = "#00FF00", blue = "#0000FF"))
 })
 
-test_that("getColorVectorForLegend returns default colors when colorVector is empty", {
+test_that(".getColorVectorForLegend returns default colors when colorVector is empty", {
   colorLegend <- "red|green|blue"
   colorVector <- character(0) # Empty character vector
 
-  result <- getColorVectorForLegend(colorLegend, colorVector)
+  result <- .getColorVectorForLegend(colorLegend, colorVector)
 
-  expect_no_error(validateColorVector(result))
+  expect_no_error(.validateColorVector(result))
 })
 
-test_that("getColorVectorForLegend handles missing colors gracefully", {
+test_that(".getColorVectorForLegend handles missing colors gracefully", {
   colorLegend <- "red|green|blue"
   colorVector <- c(red = "#FF0000", blue = "#0000FF") # Missing green
 
-  result <- getColorVectorForLegend(colorLegend, colorVector)
+  result <- .getColorVectorForLegend(colorLegend, colorVector)
 
-  expect_no_error(validateColorVector(result))
+  expect_no_error(.validateColorVector(result))
 })
 
 
@@ -316,164 +316,164 @@ configTablePlotsTimeRange <- data.table(
 
 test_that("validateTimeRangeColumns accepts valid keyword values", {
   # Test individual keyword values - need at least one non-NA per row
-  dt_total <- data.table(timeRange_1 = c("total", "total"))
-  expect_no_error(validateTimeRangeColumns(dt_total))
+  dtTotal <- data.table(timeRange_1 = c("total", "total"))
+  expect_no_error(.validateTimeRangeColumns(dtTotal))
 
-  dt_firstApp <- data.table(
+  dtFirstApp <- data.table(
     timeRange_1 = c("firstApplication", "firstApplication")
   )
-  expect_no_error(validateTimeRangeColumns(dt_firstApp))
+  expect_no_error(.validateTimeRangeColumns(dtFirstApp))
 
-  dt_lastApp <- data.table(
+  dtLastApp <- data.table(
     timeRange_1 = c("lastApplication", "lastApplication")
   )
-  expect_no_error(validateTimeRangeColumns(dt_lastApp))
+  expect_no_error(.validateTimeRangeColumns(dtLastApp))
 
   # Test mixed keywords with proper coverage
-  dt_keywords <- data.table(
+  dtKeywords <- data.table(
     timeRange_1 = c("total", "firstApplication", "lastApplication")
   )
-  expect_no_error(validateTimeRangeColumns(dt_keywords))
+  expect_no_error(.validateTimeRangeColumns(dtKeywords))
 
   # Test NA values allowed when row has another timeRange column with value
-  dt_withNA <- data.table(
+  dtWithNa <- data.table(
     timeRange_1 = c("total", NA, "firstApplication"),
     timeRange_2 = c(NA, "lastApplication", NA)
   )
-  expect_no_error(validateTimeRangeColumns(dt_withNA))
+  expect_no_error(.validateTimeRangeColumns(dtWithNa))
 })
 
 test_that("validateTimeRangeColumns accepts valid numeric vector expressions", {
   # Test simple numeric ranges - need at least one entry per row
-  dt_simple <- data.table(timeRange_1 = c("c(0,30)", "c(5,10)"))
-  expect_no_error(validateTimeRangeColumns(dt_simple))
+  dtSimple <- data.table(timeRange_1 = c("c(0,30)", "c(5,10)"))
+  expect_no_error(.validateTimeRangeColumns(dtSimple))
 
   # Test numeric ranges with decimals
-  dt_decimal <- data.table(timeRange_1 = c("c(0.5,30.5)", "c(1.1,2.2)"))
-  expect_no_error(validateTimeRangeColumns(dt_decimal))
+  dtDecimal <- data.table(timeRange_1 = c("c(0.5,30.5)", "c(1.1,2.2)"))
+  expect_no_error(.validateTimeRangeColumns(dtDecimal))
 
   # Test negative numeric ranges
-  dt_negative <- data.table(timeRange_1 = c("c(-10,10)", "c(-5,-1)"))
-  expect_no_error(validateTimeRangeColumns(dt_negative))
+  dtNegative <- data.table(timeRange_1 = c("c(-10,10)", "c(-5,-1)"))
+  expect_no_error(.validateTimeRangeColumns(dtNegative))
 
   # Test ranges with zero
-  dt_withZero <- data.table(timeRange_1 = c("c(0,0)", "c(-0,0)"))
-  expect_no_error(validateTimeRangeColumns(dt_withZero))
+  dtWithZero <- data.table(timeRange_1 = c("c(0,0)", "c(-0,0)"))
+  expect_no_error(.validateTimeRangeColumns(dtWithZero))
 
   # Test with leading/trailing spaces (if supported by eval)
-  dt_spaces <- data.table(timeRange_1 = c("c( 0 , 30 )", "c(1,2)"))
-  expect_no_error(validateTimeRangeColumns(dt_spaces))
+  dtSpaces <- data.table(timeRange_1 = c("c( 0 , 30 )", "c(1,2)"))
+  expect_no_error(.validateTimeRangeColumns(dtSpaces))
 
   # Test with NA allowed when other column has value
-  dt_withNA <- data.table(
+  dtWithNa <- data.table(
     timeRange_1 = c("c(0,10)", NA, NA),
     timeRange_2 = c(NA, "c(5,15)", "c(10,20)")
   )
-  expect_no_error(validateTimeRangeColumns(dt_withNA))
+  expect_no_error(.validateTimeRangeColumns(dtWithNa))
 })
 
 test_that("validateTimeRangeColumns accepts mixed valid values across columns", {
   # Multiple timeRange columns with different valid values
-  dt_mixed <- data.table(
+  dtMixed <- data.table(
     timeRange_1 = c("total", "firstApplication", "lastApplication", NA),
     timeRange_2 = c("c(0,10)", NA, "c(5,15)", "total"),
     timeRange_3 = c(NA, "c(-10,10)", "firstApplication", "c(0,30)")
   )
-  expect_no_error(validateTimeRangeColumns(dt_mixed))
+  expect_no_error(.validateTimeRangeColumns(dtMixed))
 })
 
 test_that("validateTimeRangeColumns rejects tables without timeRange columns", {
   # No timeRange columns at all
-  dt_no_timeRange <- data.table(
+  dtNoTimeRange <- data.table(
     col1 = c("A", "B"),
     col2 = c(1, 2)
   )
-  expect_error(validateTimeRangeColumns(dt_no_timeRange))
+  expect_error(.validateTimeRangeColumns(dtNoTimeRange))
 })
 
 test_that("validateTimeRangeColumns rejects invalid keyword values", {
   # Invalid keyword that's not recognized
-  dt_invalidKeyword <- data.table(timeRange_1 = c("invalid", "total"))
-  expect_error(validateTimeRangeColumns(dt_invalidKeyword))
+  dtInvalidKeyword <- data.table(timeRange_1 = c("invalid", "total"))
+  expect_error(.validateTimeRangeColumns(dtInvalidKeyword))
 
   # Typos in keyword
-  dt_typo1 <- data.table(timeRange_1 = c("Total", NA)) # Capital T
-  expect_error(validateTimeRangeColumns(dt_typo1))
+  dtTypo1 <- data.table(timeRange_1 = c("Total", NA)) # Capital T
+  expect_error(.validateTimeRangeColumns(dtTypo1))
 
-  dt_typo2 <- data.table(timeRange_1 = c("firstapplication", NA)) # lowercase
-  expect_error(validateTimeRangeColumns(dt_typo2))
+  dtTypo2 <- data.table(timeRange_1 = c("firstapplication", NA)) # lowercase
+  expect_error(.validateTimeRangeColumns(dtTypo2))
 })
 
 test_that("validateTimeRangeColumns rejects invalid numeric expressions", {
   # Vector with wrong length (3 elements instead of 2)
-  dt_wrongLength <- data.table(timeRange_1 = c("c(0,30,50)", NA))
-  expect_error(validateTimeRangeColumns(dt_wrongLength))
+  dtWrongLength <- data.table(timeRange_1 = c("c(0,30,50)", NA))
+  expect_error(.validateTimeRangeColumns(dtWrongLength))
 
   # Vector with only 1 element
-  dt_singleElement <- data.table(timeRange_1 = c("c(30)", NA))
-  expect_error(validateTimeRangeColumns(dt_singleElement))
+  dtSingleElement <- data.table(timeRange_1 = c("c(30)", NA))
+  expect_error(.validateTimeRangeColumns(dtSingleElement))
 
   # Vector containing NA values
-  dt_vectorWithNA <- data.table(timeRange_1 = c("c(0,NA)", "total"))
-  expect_error(validateTimeRangeColumns(dt_vectorWithNA))
+  dtVectorWithNa <- data.table(timeRange_1 = c("c(0,NA)", "total"))
+  expect_error(.validateTimeRangeColumns(dtVectorWithNa))
 
   # Vector with one NA element
-  dt_vectorPartialNA <- data.table(timeRange_1 = c("c(NA,30)", NA))
-  expect_error(validateTimeRangeColumns(dt_vectorPartialNA))
+  dtVectorPartialNa <- data.table(timeRange_1 = c("c(NA,30)", NA))
+  expect_error(.validateTimeRangeColumns(dtVectorPartialNa))
 })
 
 test_that("validateTimeRangeColumns rejects malformed expressions", {
   # Incomplete expression
-  dt_incomplete <- data.table(timeRange_1 = c("c(0,30", "total"))
-  expect_error(validateTimeRangeColumns(dt_incomplete))
+  dtIncomplete <- data.table(timeRange_1 = c("c(0,30", "total"))
+  expect_error(.validateTimeRangeColumns(dtIncomplete))
 
   # Invalid syntax
-  dt_invalidSyntax <- data.table(timeRange_1 = c("c(0,30]", NA))
-  expect_error(validateTimeRangeColumns(dt_invalidSyntax))
+  dtInvalidSyntax <- data.table(timeRange_1 = c("c(0,30]", NA))
+  expect_error(.validateTimeRangeColumns(dtInvalidSyntax))
 
   # Non-numeric values in expression
-  dt_nonNumeric <- data.table(timeRange_1 = c("c(a,b)", NA))
-  expect_error(validateTimeRangeColumns(dt_nonNumeric))
+  dtNonNumeric <- data.table(timeRange_1 = c("c(a,b)", NA))
+  expect_error(.validateTimeRangeColumns(dtNonNumeric))
 
   # Empty expression
-  dt_empty <- data.table(timeRange_1 = c("", NA))
-  expect_error(validateTimeRangeColumns(dt_empty))
+  dtEmpty <- data.table(timeRange_1 = c("", NA))
+  expect_error(.validateTimeRangeColumns(dtEmpty))
 })
 
 test_that("validateTimeRangeColumns handles edge cases with mixed validity", {
   # One invalid value among valid values
-  dt_oneInvalid <- data.table(
+  dtOneInvalid <- data.table(
     timeRange_1 = c("total", "invalid", "firstApplication")
   )
-  expect_error(validateTimeRangeColumns(dt_oneInvalid))
+  expect_error(.validateTimeRangeColumns(dtOneInvalid))
 
   # Invalid value in second column when first is valid
-  dt_invalidSecond <- data.table(
+  dtInvalidSecond <- data.table(
     timeRange_1 = c("total", "firstApplication"),
     timeRange_2 = c("c(0,10)", "c(0,30,50)")
   )
-  expect_error(validateTimeRangeColumns(dt_invalidSecond))
+  expect_error(.validateTimeRangeColumns(dtInvalidSecond))
 })
 
 test_that("validateTimeRangeColumns requires at least one entry in timeRange columns per row", {
   # Each row must have at least one non-NA value in timeRange columns
-  dt_validWithMultiple <- data.table(
+  dtValidWithMultiple <- data.table(
     timeRange_1 = c("total", "firstApplication"),
     timeRange_2 = c(NA, "lastApplication")
   )
-  expect_no_error(validateTimeRangeColumns(dt_validWithMultiple))
+  expect_no_error(.validateTimeRangeColumns(dtValidWithMultiple))
 
   # All NA values in all columns for any row should fail
-  dt_allNARow <- data.table(
+  dtAllNaRow <- data.table(
     timeRange_1 = c(NA, NA),
     timeRange_2 = c(NA, "total")
   )
-  expect_error(validateTimeRangeColumns(dt_allNARow))
+  expect_error(.validateTimeRangeColumns(dtAllNaRow))
 })
 
 test_that("validateTimeRangeColumns originally used test from integration", {
   # Test if the function correctly validates correct TimeRange Columns
-  expect_no_error(validateTimeRangeColumns(configTablePlotsTimeRange[, c(
+  expect_no_error(.validateTimeRangeColumns(configTablePlotsTimeRange[, c(
     1,
     2,
     3,
@@ -481,10 +481,10 @@ test_that("validateTimeRangeColumns originally used test from integration", {
   )]))
 
   # Test if the function correctly checks for at least one TimeRange Column
-  expect_error(validateTimeRangeColumns(configTablePlotsTimeRange[, c(1, 2)]))
+  expect_error(.validateTimeRangeColumns(configTablePlotsTimeRange[, c(1, 2)]))
 
   # Test if the function correctly validates the inputs in the TimeRange columns
-  expect_error(validateTimeRangeColumns(configTablePlotsTimeRange[, c(
+  expect_error(.validateTimeRangeColumns(configTablePlotsTimeRange[, c(
     1,
     2,
     3,
@@ -493,7 +493,7 @@ test_that("validateTimeRangeColumns originally used test from integration", {
   )]))
 
   # Test if the function correctly validates wrong length numeric vector
-  expect_error(validateTimeRangeColumns(configTablePlotsTimeRange[, c(
+  expect_error(.validateTimeRangeColumns(configTablePlotsTimeRange[, c(
     1,
     2,
     3,
@@ -502,7 +502,7 @@ test_that("validateTimeRangeColumns originally used test from integration", {
   )]))
 
   # Test if the function correctly validates numeric vector with NA values
-  expect_error(validateTimeRangeColumns(configTablePlotsTimeRange[, c(
+  expect_error(.validateTimeRangeColumns(configTablePlotsTimeRange[, c(
     1,
     2,
     3,
@@ -557,7 +557,7 @@ test_that("setExportAttributes keeps non-ggplot objects unchanged except attribu
 })
 
 
-test_that("addFacets only adds facet wrap when requested and useful", {
+test_that(".addFacets only adds facet wrap when requested and useful", {
   plotData <- data.frame(
     x = 1:4,
     y = 1:4,
@@ -566,12 +566,12 @@ test_that("addFacets only adds facet wrap when requested and useful", {
   plotObject <- ggplot2::ggplot(plotData, ggplot2::aes(x = x, y = y)) +
     ggplot2::geom_point()
 
-  noFacetPlot <- addFacets(
+  noFacetPlot <- .addFacets(
     plotObject = plotObject,
     facetScale = "free",
     nFacetColumns = NULL
   )
-  facetedPlot <- addFacets(
+  facetedPlot <- .addFacets(
     plotObject = plotObject,
     facetScale = "free",
     nFacetColumns = 2
@@ -630,8 +630,8 @@ test_that(".getFacetColumns handles edge cases", {
 })
 
 
-test_that("getScaleVector selects first complete entry and errors otherwise", {
-  scaleVector <- getScaleVector(
+test_that(".getScaleVector selects first complete entry and errors otherwise", {
+  scaleVector <- .getScaleVector(
     namesOfScaleVector = c("a", "b"),
     listOfValues = list(
       c(NA, 2),
@@ -641,50 +641,50 @@ test_that("getScaleVector selects first complete entry and errors otherwise", {
 
   expect_equal(scaleVector, c(a = "x", b = "y"))
 
-  expect_error(getScaleVector(
+  expect_error(.getScaleVector(
     namesOfScaleVector = c("a", "b"),
     listOfValues = list(NULL, c(NA, NA))
   ))
 })
 
 
-test_that("getDefaultColorsForScaleVector returns expected sizes and errors for too-large n", {
-  darkColors <- getDefaultColorsForScaleVector(shade = "dark", n = 3)
-  lightColors <- getDefaultColorsForScaleVector(shade = "light", n = 3)
+test_that(".getDefaultColorsForScaleVector returns expected sizes and errors for too-large n", {
+  darkColors <- .getDefaultColorsForScaleVector(shade = "dark", n = 3)
+  lightColors <- .getDefaultColorsForScaleVector(shade = "light", n = 3)
   defaultPaletteLength <- length(ospsuite.plots::colorMaps[["ospDefault"]])
 
   expect_length(darkColors, 3)
   expect_length(lightColors, 3)
   expect_false(identical(darkColors, lightColors))
 
-  expect_error(getDefaultColorsForScaleVector(n = defaultPaletteLength + 1))
+  expect_error(.getDefaultColorsForScaleVector(n = defaultPaletteLength + 1))
 })
 
 
-test_that("getDefaultShapesForScaleVector returns prefix and errors when n is too large", {
+test_that(".getDefaultShapesForScaleVector returns prefix and errors when n is too large", {
   skip_if(length(ospShapeNames) < 2)
 
-  shapes <- getDefaultShapesForScaleVector(2)
+  shapes <- .getDefaultShapesForScaleVector(2)
   expect_equal(shapes, ospShapeNames[1:2])
 
-  expect_error(getDefaultShapesForScaleVector(length(ospShapeNames) + 1))
+  expect_error(.getDefaultShapesForScaleVector(length(ospShapeNames) + 1))
 })
 
 
-test_that("getXorYlimits parses configured limits and preserves existing scale args", {
+test_that(".getXorYlimits parses configured limits and preserves existing scale args", {
   onePlotConfig <- data.table::data.table(
     ylimit_linear = "c(1, 10)",
     limit_log = "c(0.1, 100)"
   )
 
-  yScale <- getXorYlimits(
+  yScale <- .getXorYlimits(
     onePlotConfig = onePlotConfig,
     xOryScale = "linear",
     direction = "y",
     yScaleArgs = list(trans = "identity")
   )
 
-  fallbackScale <- getXorYlimits(
+  fallbackScale <- .getXorYlimits(
     onePlotConfig = onePlotConfig,
     xOryScale = "log",
     direction = "x",
@@ -698,17 +698,17 @@ test_that("getXorYlimits parses configured limits and preserves existing scale a
 })
 
 
-test_that("getXorYlimits errors for invalid limit expressions", {
+test_that(".getXorYlimits errors for invalid limit expressions", {
   onePlotConfig <- data.table::data.table(ylimit_linear = "c(1,)")
 
   expect_error(
-    getXorYlimits(onePlotConfig, xOryScale = "linear", direction = "y"),
+    .getXorYlimits(onePlotConfig, xOryScale = "linear", direction = "y"),
     "Invalid limit expression"
   )
 })
 
 
-test_that("applyThemeToPlotList adds theme only to ggplot objects", {
+test_that(".applyThemeToPlotList adds theme only to ggplot objects", {
   basePlot <- ggplot2::ggplot(
     data.frame(x = 1:2, y = 1:2),
     ggplot2::aes(x = x, y = y)
@@ -720,14 +720,14 @@ test_that("applyThemeToPlotList adds theme only to ggplot objects", {
   )
   inputList <- list(plot = basePlot, meta = data.table::data.table(a = 1))
 
-  updatedList <- applyThemeToPlotList(inputList, theme = themeToAdd)
+  updatedList <- .applyThemeToPlotList(inputList, theme = themeToAdd)
 
   expect_equal(updatedList$plot$theme$plot.background$fill, "grey90")
   expect_equal(updatedList$meta, inputList$meta)
 })
 
 
-test_that("applyThemeToPlotList returns input unchanged when theme is NULL", {
+test_that(".applyThemeToPlotList returns input unchanged when theme is NULL", {
   basePlot <- ggplot2::ggplot(
     data.frame(x = 1:2, y = 1:2),
     ggplot2::aes(x = x, y = y)
@@ -735,13 +735,13 @@ test_that("applyThemeToPlotList returns input unchanged when theme is NULL", {
     ggplot2::geom_point()
 
   inputList <- list(plot = basePlot)
-  updatedList <- applyThemeToPlotList(inputList, theme = NULL)
+  updatedList <- .applyThemeToPlotList(inputList, theme = NULL)
 
   expect_equal(updatedList, inputList)
 })
 
 
-test_that("applyThemeToPlotList adds theme to CombinedPlot objects", {
+test_that(".applyThemeToPlotList adds theme to CombinedPlot objects", {
   basePlot <- ggplot2::ggplot(
     data.frame(x = 1:2, y = 1:2),
     ggplot2::aes(x = x, y = y)
@@ -761,7 +761,7 @@ test_that("applyThemeToPlotList adds theme to CombinedPlot objects", {
     plot.background = ggplot2::element_rect(fill = "grey85")
   )
 
-  updatedList <- applyThemeToPlotList(
+  updatedList <- .applyThemeToPlotList(
     list(combined = combinedPlot),
     theme = themeToAdd
   )
@@ -782,68 +782,68 @@ test_that("applyThemeToPlotList adds theme to CombinedPlot objects", {
 
 test_that("validateOutputPathIdFormat accepts properly balanced brackets", {
   # Test with no brackets
-  dt_noBrackets <- data.table(outputPathIds = c("id1", "id2, id3"))
-  expect_no_error(validateOutputPathIdFormat(dt_noBrackets))
+  dtNoBrackets <- data.table(outputPathIds = c("id1", "id2, id3"))
+  expect_no_error(.validateOutputPathIdFormat(dtNoBrackets))
 
   # Test with properly matched brackets
-  dt_matched <- data.table(outputPathIds = c("(id1)", "(id2, id3)"))
-  expect_no_error(validateOutputPathIdFormat(dt_matched))
+  dtMatched <- data.table(outputPathIds = c("(id1)", "(id2, id3)"))
+  expect_no_error(.validateOutputPathIdFormat(dtMatched))
 
   # Test with mixed brackets and non-brackets
-  dt_mixed <- data.table(outputPathIds = c("id1", "(id2, id3)", "id4"))
-  expect_no_error(validateOutputPathIdFormat(dt_mixed))
+  dtMixed <- data.table(outputPathIds = c("id1", "(id2, id3)", "id4"))
+  expect_no_error(.validateOutputPathIdFormat(dtMixed))
 
   # Test with multiple bracket pairs
-  dt_multiple <- data.table(outputPathIds = c("(id1)", "(id2)", "(id3)"))
-  expect_no_error(validateOutputPathIdFormat(dt_multiple))
+  dtMultiple <- data.table(outputPathIds = c("(id1)", "(id2)", "(id3)"))
+  expect_no_error(.validateOutputPathIdFormat(dtMultiple))
 })
 
 test_that("validateOutputPathIdFormat rejects unbalanced opening brackets", {
   # More opening than closing brackets
-  dt_moreOpen <- data.table(outputPathIds = c("(id1", "id2)"))
-  expect_error(validateOutputPathIdFormat(dt_moreOpen))
+  dtMoreOpen <- data.table(outputPathIds = c("(id1", "id2)"))
+  expect_error(.validateOutputPathIdFormat(dtMoreOpen))
 
   # Opening bracket without closing
-  dt_incomplete <- data.table(outputPathIds = c("id1, (id2"))
-  expect_error(validateOutputPathIdFormat(dt_incomplete))
+  dtIncomplete <- data.table(outputPathIds = c("id1, (id2"))
+  expect_error(.validateOutputPathIdFormat(dtIncomplete))
 })
 
 test_that("validateOutputPathIdFormat rejects unbalanced closing brackets", {
   # More closing than opening brackets
-  dt_moreClose <- data.table(outputPathIds = c("id1)", "id2"))
-  expect_error(validateOutputPathIdFormat(dt_moreClose))
+  dtMoreClose <- data.table(outputPathIds = c("id1)", "id2"))
+  expect_error(.validateOutputPathIdFormat(dtMoreClose))
 
   # Closing bracket without opening
-  dt_noOpen <- data.table(outputPathIds = c("id1, id2)"))
-  expect_error(validateOutputPathIdFormat(dt_noOpen))
+  dtNoOpen <- data.table(outputPathIds = c("id1, id2)"))
+  expect_error(.validateOutputPathIdFormat(dtNoOpen))
 })
 
 test_that("validateOutputPathIdFormat handles edge cases", {
   # Empty data frame
-  dt_empty <- data.table(outputPathIds = character(0))
-  expect_no_error(validateOutputPathIdFormat(dt_empty))
+  dtEmpty <- data.table(outputPathIds = character(0))
+  expect_no_error(.validateOutputPathIdFormat(dtEmpty))
 
   # Single value with brackets
-  dt_single <- data.table(outputPathIds = c("(id1)"))
-  expect_no_error(validateOutputPathIdFormat(dt_single))
+  dtSingle <- data.table(outputPathIds = c("(id1)"))
+  expect_no_error(.validateOutputPathIdFormat(dtSingle))
 
   # Nested brackets - balanced so should be OK
-  dt_nested <- data.table(outputPathIds = c("((id1))"))
-  expect_no_error(validateOutputPathIdFormat(dt_nested))
+  dtNested <- data.table(outputPathIds = c("((id1))"))
+  expect_no_error(.validateOutputPathIdFormat(dtNested))
 })
 
 test_that("validateOutputPathIdFormat works with individualIds column", {
   # Test with different column name
-  dt_individuals <- data.table(individualIds = c("(1, 2, 3)", "(4, 5)"))
-  expect_no_error(validateOutputPathIdFormat(
-    dt_individuals,
+  dtIndividuals <- data.table(individualIds = c("(1, 2, 3)", "(4, 5)"))
+  expect_no_error(.validateOutputPathIdFormat(
+    dtIndividuals,
     column = "individualIds"
   ))
 
   # Test unbalanced brackets in individualIds
-  dt_unbalanced <- data.table(individualIds = c("(1, 2", "3)"))
-  expect_error(validateOutputPathIdFormat(
-    dt_unbalanced,
+  dtUnbalanced <- data.table(individualIds = c("(1, 2", "3)"))
+  expect_error(.validateOutputPathIdFormat(
+    dtUnbalanced,
     column = "individualIds"
   ))
 })
@@ -864,24 +864,24 @@ test_that("validateVirtualTwinPop requires individualIds for virtual twin scenar
   class(mockScenarioResults$scenario1$population) <- "Population"
 
   # Valid configuration - individualIds provided
-  dt_valid <- data.table(
+  dtValid <- data.table(
     scenario = "scenario1",
     individualIds = "1,2,3",
     dataGroupIds = NA,
     referenceScenario = NA,
     plot_TimeProfiles = 1
   )
-  expect_no_error(validateVirtualTwinPop(dt_valid, mockScenarioResults))
+  expect_no_error(.validateVirtualTwinPop(dtValid, mockScenarioResults))
 
   # Invalid configuration - missing individualIds
-  dt_invalid <- data.table(
+  dtInvalid <- data.table(
     scenario = "scenario1",
     individualIds = NA,
     dataGroupIds = NA,
     referenceScenario = NA,
     plot_TimeProfiles = 1
   )
-  expect_error(validateVirtualTwinPop(dt_invalid, mockScenarioResults))
+  expect_error(.validateVirtualTwinPop(dtInvalid, mockScenarioResults))
 })
 
 test_that("validateVirtualTwinPop rejects brackets in individualIds for time profiles", {
@@ -895,34 +895,34 @@ test_that("validateVirtualTwinPop rejects brackets in individualIds for time pro
   class(mockScenarioResults$scenario1$population) <- "Population"
 
   # Invalid - brackets in individualIds with plot_TimeProfiles = 1
-  dt_withBrackets <- data.table(
+  dtWithBrackets <- data.table(
     scenario = "scenario1",
     individualIds = "(1,2,3)",
     dataGroupIds = NA,
     referenceScenario = NA,
     plot_TimeProfiles = 1
   )
-  expect_error(validateVirtualTwinPop(dt_withBrackets, mockScenarioResults))
+  expect_error(.validateVirtualTwinPop(dtWithBrackets, mockScenarioResults))
 
   # Valid - no brackets
-  dt_noBrackets <- data.table(
+  dtNoBrackets <- data.table(
     scenario = "scenario1",
     individualIds = "1,2,3",
     dataGroupIds = NA,
     referenceScenario = NA,
     plot_TimeProfiles = 1
   )
-  expect_no_error(validateVirtualTwinPop(dt_noBrackets, mockScenarioResults))
+  expect_no_error(.validateVirtualTwinPop(dtNoBrackets, mockScenarioResults))
 
   # Valid - brackets OK when plot_TimeProfiles = 0
-  dt_bracketsOK <- data.table(
+  dtBracketsOk <- data.table(
     scenario = "scenario1",
     individualIds = "(1,2,3)",
     dataGroupIds = NA,
     referenceScenario = NA,
     plot_TimeProfiles = 0
   )
-  expect_no_error(validateVirtualTwinPop(dt_bracketsOK, mockScenarioResults))
+  expect_no_error(.validateVirtualTwinPop(dtBracketsOk, mockScenarioResults))
 })
 
 test_that("validateVirtualTwinPop warns when individualIds filled without virtual twin scenario", {
@@ -935,14 +935,17 @@ test_that("validateVirtualTwinPop warns when individualIds filled without virtua
   class(mockScenarioResults$scenario1$population) <- "Population"
 
   # Warning - individualIds filled but no virtual twin scenario
-  dt_unnecessaryIds <- data.table(
+  dtUnnecessaryIds <- data.table(
     scenario = "scenario1",
     individualIds = "1,2,3",
     dataGroupIds = NA,
     referenceScenario = NA,
     plot_TimeProfiles = 1
   )
-  expect_warning(validateVirtualTwinPop(dt_unnecessaryIds, mockScenarioResults))
+  expect_warning(.validateVirtualTwinPop(
+    dtUnnecessaryIds,
+    mockScenarioResults
+  ))
 })
 
 test_that("validateVirtualTwinPop validates scenario/referenceScenario combinations", {
@@ -959,14 +962,14 @@ test_that("validateVirtualTwinPop validates scenario/referenceScenario combinati
   class(mockScenarioResults$regularScenario$population) <- "Population"
 
   # Invalid - mixing virtual twin and regular scenarios
-  dt_mixed <- data.table(
+  dtMixed <- data.table(
     scenario = "vtwinScenario",
     individualIds = "1,2,3",
     dataGroupIds = NA,
     referenceScenario = "regularScenario",
     plot_TimeProfiles = 1
   )
-  expect_error(validateVirtualTwinPop(dt_mixed, mockScenarioResults))
+  expect_error(.validateVirtualTwinPop(dtMixed, mockScenarioResults))
 
   # Valid - both are virtual twin
   mockScenarioResults2 <- list(
@@ -980,12 +983,12 @@ test_that("validateVirtualTwinPop validates scenario/referenceScenario combinati
   class(mockScenarioResults2$vtwin1$population) <- "Population"
   class(mockScenarioResults2$vtwin2$population) <- "Population"
 
-  dt_bothVtwin <- data.table(
+  dtBothVtwin <- data.table(
     scenario = "vtwin1",
     individualIds = "1,2,3",
     dataGroupIds = NA,
     referenceScenario = "vtwin2",
     plot_TimeProfiles = 1
   )
-  expect_no_error(validateVirtualTwinPop(dt_bothVtwin, mockScenarioResults2))
+  expect_no_error(.validateVirtualTwinPop(dtBothVtwin, mockScenarioResults2))
 })

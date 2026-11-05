@@ -23,6 +23,9 @@ The selected styles should be defined in the `wordConversionTemplate`}
 
 \item{...}{passed to render}
 }
+\value{
+NULL (invisible).
+}
 \description{
 Convert a .qmd file to Word
 }

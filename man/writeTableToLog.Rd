@@ -9,6 +9,9 @@ writeTableToLog(dt)
 \arguments{
 \item{dt}{table to log}
 }
+\value{
+NULL (invisible).
+}
 \description{
 Write a data frame to the log
 }

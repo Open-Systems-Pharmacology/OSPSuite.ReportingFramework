@@ -6,6 +6,9 @@
 \usage{
 openFigureTemplate()
 }
+\value{
+Invisibly returns `NULL` after triggering the template command in RStudio.
+}
 \description{
 Opens the  template for figure creation as new document
 }

@@ -66,7 +66,7 @@ plotPKBoxwhisker <- function(
   checkmate::assertNumeric(facetAspectRatio, any.missing = FALSE)
 
   colorLegend <- onePlotConfig[["colorLegend"]][1]
-  colorVector <- getColorVectorForLegend(
+  colorVector <- .getColorVectorForLegend(
     colorVector = colorVector,
     colorLegend = colorLegend
   )
@@ -76,7 +76,7 @@ plotPKBoxwhisker <- function(
     if (any(as.logical(onePlotConfig[[paste0("plot_", plotType)]]))) {
       plotList <- c(
         plotList,
-        generateBoxwhiskerPlotForPlotType(
+        .generateBoxwhiskerPlotForPlotType(
           onePlotConfig = onePlotConfig[
             as.logical(get(paste0("plot_", plotType))) == TRUE
           ],
@@ -106,9 +106,12 @@ plotPKBoxwhisker <- function(
 #' @param facetAspectRatio Aspect ratio for facets.
 #' @param asRatio Logical indicating if the plot is for ratios.
 #' @param ... Additional arguments passed to plotting functions.
+#' @details Iterates over plot groups and y-scales, builds plot and export-table
+#'   artifacts, and annotates each output with captions for downstream reporting.
 #' @return A list of ggplot objects generated for the specified plot type.
 #' @keywords internal
-generateBoxwhiskerPlotForPlotType <- function(
+#' @noRd
+.generateBoxwhiskerPlotForPlotType <- function(
   onePlotConfig,
   pkParameterDT,
   percentiles,
@@ -118,9 +121,8 @@ generateBoxwhiskerPlotForPlotType <- function(
   asRatio,
   ...
 ) {
-
   # Prepare data for plotting
-  plotData <- prepareDataForPKBoxplot(
+  plotData <- .prepareDataForPKBoxplot(
     onePlotConfig = onePlotConfig,
     pkParameterDT = pkParameterDT,
     colorVector = colorVector,
@@ -145,7 +147,7 @@ generateBoxwhiskerPlotForPlotType <- function(
   for (plotNameLoop in unique(plotData$plotName)) {
     plotDataPk <- plotData[plotName == plotNameLoop]
 
-    plotDataSummary <- getSummaryTable(
+    plotDataSummary <- .getSummaryTable(
       plotDataPk = plotDataPk,
       onePlotConfig = onePlotConfig,
       percentiles = percentiles
@@ -153,7 +155,7 @@ generateBoxwhiskerPlotForPlotType <- function(
 
     # Loop through yScale values
     for (yScale in splitInputs(onePlotConfig$yScale[1])) {
-      plotObject <- createBaseBoxWhisker(
+      plotObject <- .createBaseBoxWhisker(
         plotDataPk = plotDataPk,
         yScale = yScale,
         asRatio = asRatio,
@@ -163,7 +165,7 @@ generateBoxwhiskerPlotForPlotType <- function(
       )
 
       # Add facets
-      plotObject <- addFacets(
+      plotObject <- .addFacets(
         plotObject = plotObject,
         facetScale = onePlotConfig$facetScale[1],
         facetAspectRatio = facetAspectRatio,
@@ -179,7 +181,7 @@ generateBoxwhiskerPlotForPlotType <- function(
       # Prepare for export
       plotObject <- setExportAttributes(
         object = plotObject,
-        caption = getCaptionForBoxwhiskerPlot(
+        caption = .getCaptionForBoxwhiskerPlot(
           plotDataPk = plotDataPk,
           yScale = yScale,
           percentiles = percentiles,
@@ -208,7 +210,7 @@ generateBoxwhiskerPlotForPlotType <- function(
         tableKey <- paste(tableKey, plotDataSummaryTag$plotTag[1], sep = "-")
       }
 
-      plotList[[tableKey]] <- prepareTableForExport(
+      plotList[[tableKey]] <- .prepareTableForExport(
         dtExport = plotDataSummaryTag,
         plotCaptionAddon = onePlotConfig$plotCaptionAddon[1],
         asRatio = asRatio,
@@ -229,13 +231,13 @@ generateBoxwhiskerPlotForPlotType <- function(
 #' @param asRatio boolean indicating if the plot is for ratios.
 #' @return A data.table prepared for plotting.
 #' @keywords internal
-prepareDataForPKBoxplot <- function(
+#' @noRd
+.prepareDataForPKBoxplot <- function(
   onePlotConfig,
   pkParameterDT,
   colorVector,
   asRatio
 ) {
-
   plotData <- .mergePKParameterWithConfigTable(
     onePlotConfig = onePlotConfig,
     pkParameterDT = pkParameterDT,
@@ -248,7 +250,7 @@ prepareDataForPKBoxplot <- function(
   }
 
   # add Tag for faceting
-  plotData[, plotTag := generatePlotTag(as.numeric(displayNameOutput))]
+  plotData[, plotTag := .generatePlotTag(as.numeric(displayNameOutput))]
 
   return(plotData)
 }
@@ -263,8 +265,8 @@ prepareDataForPKBoxplot <- function(
 #' @param percentiles A vector of percentiles to calculate.
 #' @return A data.table summarizing the plot data.
 #' @keywords internal
-getSummaryTable <- function(plotDataPk, onePlotConfig, percentiles) {
-
+#' @noRd
+.getSummaryTable <- function(plotDataPk, onePlotConfig, percentiles) {
   # add names of box whisker limits to ggplot for use in function getBoxWhiskerLimits
   statFun <- function(y) {
     y <- y[!is.na(y)]
@@ -312,13 +314,13 @@ getSummaryTable <- function(plotDataPk, onePlotConfig, percentiles) {
 #'
 #' @return A data.table prepared for plotting, including merged configuration and parameter data.
 #' @keywords internal
-prepareTableForExport <- function(
+#' @noRd
+.prepareTableForExport <- function(
   dtExport,
   asRatio,
   plotCaptionAddon,
   plotDataPk
 ) {
-
   # reorder
   setorderv(dtExport, "scenarioShortName")
 
@@ -343,7 +345,7 @@ prepareTableForExport <- function(
 
   dtExport <- setExportAttributes(
     object = dtExport,
-    caption = getCaptionForBoxwhiskerPlot(
+    caption = .getCaptionForBoxwhiskerPlot(
       plotDataPk = plotDataPk,
       plotCaptionAddon = plotCaptionAddon,
       isPlotCaption = FALSE,
@@ -367,7 +369,8 @@ prepareTableForExport <- function(
 #' @param asRatio boolean indicating if the plot is for ratios.
 #' @return A character string containing the caption.
 #' @keywords internal
-getCaptionForBoxwhiskerPlot <- function(
+#' @noRd
+.getCaptionForBoxwhiskerPlot <- function(
   plotDataPk,
   percentiles = NULL,
   yScale = NULL,
@@ -386,10 +389,10 @@ getCaptionForBoxwhiskerPlot <- function(
 
   captiontext <- paste(
     paste0("Population summary statistics of", ifelse(asRatio, " ratios", "")),
-    pasteFigureTags(dtCaption, captionColumn = "displayNameOutput")
+    .pasteFigureTags(dtCaption, captionColumn = "displayNameOutput")
   )
 
-  captiontext <- addCaptionTextAddon(captiontext, plotCaptionAddon)
+  captiontext <- .addCaptionTextAddon(captiontext, plotCaptionAddon)
 
   if (isPlotCaption) {
     captiontext <- paste(
@@ -400,7 +403,7 @@ getCaptionForBoxwhiskerPlot <- function(
         collapse = ", "
       ),
       "percentiles",
-      captionScaleText(scale = yScale, axisLabel = "y")
+      .captionScaleText(scale = yScale, axisLabel = "y")
     )
   }
   return(captiontext)
@@ -421,7 +424,8 @@ getCaptionForBoxwhiskerPlot <- function(
 #'
 #' @return A ggplot object representing the box and whisker plot.
 #' @keywords internal
-createBaseBoxWhisker <- function(
+#' @noRd
+.createBaseBoxWhisker <- function(
   plotDataPk,
   yScale,
   asRatio,
@@ -429,7 +433,6 @@ createBaseBoxWhisker <- function(
   onePlotConfig,
   ...
 ) {
-
   # Define the mapping for aes() based on asRatio
   aesMapping <- aes(x = scenarioShortName, y = value)
   if (!asRatio) {
@@ -444,7 +447,7 @@ createBaseBoxWhisker <- function(
     data = plotDataPk,
     mapping = aesMapping,
     yScale = yScale,
-    yScaleArgs = getXorYlimits(onePlotConfig, yScale, ...)
+    yScaleArgs = .getXorYlimits(onePlotConfig, yScale, ...)
   )
 
   if (uniqueN(plotDataPk$colorIndex) == 1) {
@@ -489,10 +492,9 @@ createBaseBoxWhisker <- function(
 #' @family plot configuration validation function
 #' @family functions to generate box whisker plots
 validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
-
   configTablePlots <- validateHeaders(configTable)
-  validateOutputIdsForPlot()
-  validateDataGroupIdsForPlot()
+  .validateOutputIdsForPlot()
+  .validateDataGroupIdsForPlot()
   .validatePKParameterDT(pkParameterDT)
 
   validateConfigTablePlots(
@@ -551,7 +553,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
     stop(messages$errorplotPKBoxwhiskerMultipleCombinationsPerPlot())
   }
 
-  validateColorLegend(dt = configTablePlots[!is.na(referenceScenario)])
+  .validateColorLegend(dt = configTablePlots[!is.na(referenceScenario)])
 
   tmp <- configTablePlots[
     as.logical(plot_Ratio) == FALSE & as.logical(plot_Absolute) == FALSE
@@ -563,7 +565,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   }
 
   # check if reference Scenarios are there
-  validateExistenceOfReferenceForRatio(
+  .validateExistenceOfReferenceForRatio(
     configTablePlots = configTablePlots[as.logical(plot_Ratio) == TRUE],
     pkParameterDT
   )
@@ -574,7 +576,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
     c("plotName", "scenario", "referenceScenario")
   ] %>%
     unique()
-  validateIsCrossOverStudy(
+  .validateIsCrossOverStudy(
     configTablePlots = tmp,
     pkParameterDT = pkParameterDT
   )
@@ -596,8 +598,8 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
 #' @return None. The function will print any invalid configurations and stop
 #'         execution if the validation fails.
 #' @keywords internal
-validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
-
+#' @noRd
+.validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
   configTablePlots <- configTablePlots %>%
     merge(
       pkParameterDT[, c("scenario", "populationId")] %>%
@@ -617,6 +619,8 @@ validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
     writeTableToLog(configTablePlots)
     stop(messages$errorplotPKBoxwhiskerRatioRequiresSamePopulation())
   }
+
+  return(invisible())
 }
 #' Validate Existence of Reference for Ratio Plots
 #'
@@ -633,11 +637,11 @@ validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
 #' @return None. The function will stop execution if validation fails,
 #'         otherwise returns invisibly.
 #' @keywords internal
-validateExistenceOfReferenceForRatio <- function(
+#' @noRd
+.validateExistenceOfReferenceForRatio <- function(
   configTablePlots,
   pkParameterDT
 ) {
-
   if (nrow(configTablePlots) == 0) {
     return(invisible())
   }
@@ -692,7 +696,6 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(
   sheetName = "PKParameter_Boxplot",
   overwrite = FALSE
 ) {
-
   # this function stops in valid runs
   .stopHelperFunction()
   wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$reportsFile)
@@ -742,7 +745,7 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(
     sheetName = sheetName,
     dtNewData = rbind(
       dtNewHeader,
-      dtNewConfig, # nolint: indentation_linter
+      dtNewConfig,
       fill = TRUE
     )
   )

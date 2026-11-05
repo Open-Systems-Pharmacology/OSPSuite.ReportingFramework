@@ -125,12 +125,12 @@ test_that("ospsuiteReportingFrameworkVersion is written to the addons sheet when
   savedPath <- withr::local_tempfile(fileext = ".xlsx")
   pc$save(path = savedPath)
 
-  saved_pc <- createProjectConfiguration(
+  savedPc <- createProjectConfiguration(
     path = savedPath,
     ignoreVersionCheck = TRUE
   )
   expect_equal(
-    saved_pc$ospsuiteReportingFrameworkVersion,
+    savedPc$ospsuiteReportingFrameworkVersion,
     as.character(utils::packageVersion("ospsuite.reportingframework"))
   )
 })

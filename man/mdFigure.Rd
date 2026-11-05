@@ -29,6 +29,9 @@ mdFigure(
 
 \item{customStyles}{Custom styles list.}
 }
+\value{
+Invisible `NULL`.
+}
 \description{
 Include figure with caption and footnote.
 }

@@ -11,6 +11,9 @@ captureLog(expr, finallyExpression = invisible())
 
 \item{finallyExpression}{The expression to evaluate finally.}
 }
+\value{
+NULL (invisible).
+}
 \description{
 Wraps `ospsuite.utils::logCatch` and preserves an optional `finally` expression
 for backwards compatibility.

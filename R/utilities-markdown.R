@@ -1,5 +1,6 @@
 #' mdNewline
 #' @param n Number of new lines (default 1).
+#' @return Invisible `NULL`.
 #' @export
 #' @family markdown helper function
 mdNewline <- function(n = 1) {
@@ -14,6 +15,7 @@ mdNewline <- function(n = 1) {
 #' @param sep Separator (default `" "`).
 #' @param collapse Collapse argument.
 #' @param newlines Newlines afterwards (default 1).
+#' @return Invisible `NULL`.
 #' @export
 #' @family markdown helper function
 mdPaste <- function(..., sep = " ", collapse = NULL, newlines = 1) {
@@ -26,6 +28,7 @@ mdPaste <- function(..., sep = " ", collapse = NULL, newlines = 1) {
 #' @param ... Elements to be `paste0`d.
 #' @param collapse Collapse argument.
 #' @param newlines Newlines afterwards (default 1).
+#' @return Invisible `NULL`.
 #' @export
 #' @family markdown helper function
 mdPaste0 <- function(..., collapse = NULL, newlines = 1) {
@@ -37,6 +40,7 @@ mdPaste0 <- function(..., collapse = NULL, newlines = 1) {
 
 #' mdNewpage
 #' Insert page break and newline.
+#' @return Invisible `NULL`.
 #' @export
 #' @family markdown helper function
 mdNewpage <- function() {
@@ -49,6 +53,7 @@ mdNewpage <- function() {
 #' @param ... Content passed to mdPaste.
 #' @param level Header level (default 1).
 #' @param newlines Newlines after heading (default 2).
+#' @return Invisible `NULL`.
 #' @export
 #' @family markdown helper function
 mdHeading <- function(..., level = 1, newlines = 2) {
@@ -61,6 +66,7 @@ mdHeading <- function(..., level = 1, newlines = 2) {
 #' @param ... Bullet content.
 #' @param bullet Bullet character (default "-").
 #' @param level Indentation level (default 1).
+#' @return Invisible `NULL`.
 #' @export
 #' @family markdown helper function
 mdBullet <- function(..., bullet = "-", level = 1) {
@@ -76,6 +82,10 @@ mdBullet <- function(..., bullet = "-", level = 1) {
 
 #' Insert bulleted item using paste0.
 #' @rdname mdBullet
+#' @param ... Bullet content.
+#' @param bullet Bullet character (default "-").
+#' @param level Indentation level (default 1).
+#' @return Invisible `NULL`.
 #' @export
 mdBullet0 <- function(..., bullet = "-", level = 1) {
   checkmate::assertString(bullet)
@@ -97,6 +107,7 @@ mdBullet0 <- function(..., bullet = "-", level = 1) {
 #' @param subfolder Folder relative to Rmd.
 #' @param addNewPage Add page break after (default TRUE).
 #' @param customStyles Custom styles list.
+#' @return Invisible `NULL`.
 #' @export
 #' @family markdown helper function
 mdFigure <- function(
@@ -108,7 +119,7 @@ mdFigure <- function(
   addNewPage = TRUE,
   customStyles = list()
 ) {
-  validateMdFigureTableInputs(subfolder, figureFile, captionFile, list())
+  .validateMdFigureTableInputs(subfolder, figureFile, captionFile, list())
   mdNewline()
   mdLink("", utils::URLencode(figureFile), subfolder, prefix = "!")
   mdNewline()
@@ -131,6 +142,7 @@ mdFigure <- function(
 #' @param filename File to link to.
 #' @param folder Folder location.
 #' @param prefix Optional prefix (default "").
+#' @return Invisible `NULL`.
 #' @export
 #' @family markdown helper function
 mdLink <- function(label, filename, folder, prefix = "") {
@@ -148,6 +160,7 @@ mdLink <- function(label, filename, folder, prefix = "") {
 #' @param digitsOfSignificance Significant digits (default 3).
 #' @param addNewPage Add page break after (default TRUE).
 #' @param ... Passed to `knitr::kable`.
+#' @return Invisible `NULL`.
 #' @export
 #' @family markdown helper function
 mdTable <- function(
@@ -161,7 +174,7 @@ mdTable <- function(
   addNewPage = TRUE,
   ...
 ) {
-  validateMdFigureTableInputs(subfolder, tableCsv, captionFile, customStyles)
+  .validateMdFigureTableInputs(subfolder, tableCsv, captionFile, customStyles)
   mdCaption(
     subfolder,
     captionFile,
@@ -174,7 +187,7 @@ mdTable <- function(
       is.numeric(dt[[col]]) & !is.integer(dt[[col]])
     }))]
     dt[,
-      (colsToConvert) := signif(.SD, digits = digitsOfSignificance),
+      (colsToConvert) := janitor::signif_half_up(.SD, digits = digitsOfSignificance),
       .SDcols = colsToConvert
     ]
   }
@@ -192,6 +205,7 @@ mdTable <- function(
 #' @param subfolder Folder location.
 #' @param footNoteFile Footnote file.
 #' @param footNoteCustomStyle Custom style (optional).
+#' @return Invisible `NULL`.
 #' @export
 #' @family markdown helper function
 mdFootNote <- function(subfolder, footNoteFile, footNoteCustomStyle = NULL) {
@@ -220,6 +234,7 @@ mdFootNote <- function(subfolder, footNoteFile, footNoteCustomStyle = NULL) {
 #' @param captionFile Caption file.
 #' @param captionPrefix Prefix (e.g., "Figure 1:").
 #' @param captionStyle Custom style (optional).
+#' @return Invisible `NULL`.
 #' @export
 #' @family markdown helper function
 mdCaption <- function(
@@ -248,8 +263,10 @@ mdCaption <- function(
 #' @param importFile Figure/table file.
 #' @param captionFile Caption file.
 #' @param customStyles Custom styles list.
+#' @return Invisible `NULL`.
 #' @keywords internal
-validateMdFigureTableInputs <- function(
+#' @noRd
+.validateMdFigureTableInputs <- function(
   subfolder,
   importFile,
   captionFile,
@@ -269,7 +286,7 @@ validateMdFigureTableInputs <- function(
       )
     )
   }
-  invisible()
+  return(invisible(NULL))
 }
 
 
@@ -277,8 +294,9 @@ validateMdFigureTableInputs <- function(
 #' @param title Report title (default "Report").
 #' @return Character vector of header lines.
 #' @keywords internal
-startQmd <- function(title = "Report") {
-  c(
+#' @noRd
+.startQmd <- function(title = "Report") {
+  return(c(
     "---",
     paste0('title: "', title, '"'),
     "format: docx",
@@ -296,7 +314,7 @@ startQmd <- function(title = "Report") {
     'knitr::opts_chunk$set(echo = FALSE, warning = FALSE, results = "asis", error = FALSE, message = FALSE)',
     "```",
     " "
-  )
+  ))
 }
 
 
@@ -305,6 +323,7 @@ startQmd <- function(title = "Report") {
 #' @param title Output title (default "Appendix").
 #' @param sourceRmds Source Qmd files to include.
 #' @param projectConfiguration ProjectConfiguration object.
+#' @return Invisible `NULL`.
 #' @export
 #' @family functions called by workflow script
 mergeQmds <- function(
@@ -347,7 +366,7 @@ mergeQmds <- function(
     sourceRmds
   ))
 
-  rmdTxt <- startQmd(title = title)
+  rmdTxt <- .startQmd(title = title)
 
   for (sourceRmd in sourceRmds) {
     rmdTxt <- c(

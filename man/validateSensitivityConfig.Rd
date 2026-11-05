@@ -9,6 +9,8 @@ validateSensitivityConfig(configTable, scenarioList, ...)
 \arguments{
 \item{configTable}{A data.table containing the configuration for sensitivity analysis.}
 
+\item{scenarioList}{Named list of loaded scenario results.}
+
 \item{...}{Additional arguments passed to other functions.}
 }
 \value{

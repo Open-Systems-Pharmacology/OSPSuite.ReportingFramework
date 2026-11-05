@@ -19,6 +19,10 @@ Runs lightweight checks to detect missing sheets, unknown data classes,
 and numeric-values configuration inconsistencies before users execute
 AI-generated workflow code.
 }
+\details{
+Experimental: this helper is intended for early evaluation and may
+  change in future releases.
+}
 \seealso{
 Other project initialization:
 \code{\link{ProjectConfigurationRF}},

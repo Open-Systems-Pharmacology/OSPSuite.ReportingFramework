@@ -27,6 +27,10 @@ A character string containing the prompt.
 Builds a project-specific prompt text that users can paste into an AI assistant.
 The prompt includes available scenarios, outputs, groups, and data-import metadata.
 }
+\details{
+Experimental: this helper is intended for early evaluation and may
+  change in future releases.
+}
 \seealso{
 Other project initialization:
 \code{\link{ProjectConfigurationRF}},

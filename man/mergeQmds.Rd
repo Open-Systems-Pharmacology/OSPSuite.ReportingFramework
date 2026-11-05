@@ -20,6 +20,9 @@ mergeQmds(
 
 \item{projectConfiguration}{ProjectConfiguration object.}
 }
+\value{
+Invisible `NULL`.
+}
 \description{
 Merge multiple Qmd files into one.
 }

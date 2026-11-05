@@ -1,8 +1,9 @@
+# nolint start: object_name_linter
+
 #' @title enumeration keys for Time range shortcut
 #' @export
 #' @family enumerations
 TIMERANGE <- ospsuite.utils::enum(c(
-  # nolint
   total = "total",
   firstApplication = "firstApplication",
   lastApplication = "lastApplication"
@@ -12,7 +13,6 @@ TIMERANGE <- ospsuite.utils::enum(c(
 #' @export
 #' @family enumerations
 DATACLASS <- ospsuite.utils::enum(c(
-  # nolint
   tpIndividual = "tp Individual",
   tpAggregated = "tp Aggregated",
   pkIndividual = "pk Individual",
@@ -21,11 +21,11 @@ DATACLASS <- ospsuite.utils::enum(c(
   numericValues = "numeric Values"
 ))
 
+
 #' @title enumeration keys for exportDirectories
 #' @export
 #' @family enumerations
 EXPORTDIR <- ospsuite.utils::enum(c(
-  # nolint
   simulationResult = "SimulationResults",
   sensitivityResults = "SensitivityResults",
   pKAnalysisResults = "PKAnalysisResults"
@@ -36,8 +36,9 @@ EXPORTDIR <- ospsuite.utils::enum(c(
 #' @export
 #' @family enumerations
 BIOMETRICUNITS <- ospsuite.utils::enum(c(
-  # nolint
   age = "year(s)",
   weight = "kg",
   height = "cm"
 ))
+
+# nolint end

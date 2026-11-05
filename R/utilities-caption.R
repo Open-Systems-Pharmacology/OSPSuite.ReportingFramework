@@ -3,8 +3,8 @@
 #' @return Prefix text used at the start of generated captions.
 #' @keywords internal
 #' @noRd
-captionPrefixSimulated <- function() {
-  "Simulated"
+.captionPrefixSimulated <- function() {
+  return("Simulated")
 }
 
 #' Caption Scale Text
@@ -15,12 +15,12 @@ captionPrefixSimulated <- function() {
 #' @return A sentence fragment describing the axis scale.
 #' @keywords internal
 #' @noRd
-captionScaleText <- function(scale, axisLabel) {
-  paste(
+.captionScaleText <- function(scale, axisLabel) {
+  return(paste(
     "on a",
     ifelse(scale == "linear", "linear", "logarithmic"),
     paste0(axisLabel, "-scale")
-  )
+  ))
 }
 
 #' Paste Figure Tags for Captions
@@ -39,7 +39,8 @@ captionScaleText <- function(scale, axisLabel) {
 #' @return A character string representing the formatted caption text, which includes the captions and associated plot tags.
 #'
 #' @keywords internal
-pasteFigureTags <- function(
+#' @noRd
+.pasteFigureTags <- function(
   dtCaption,
   captionColumn,
   endWithDot = FALSE,
@@ -73,7 +74,7 @@ pasteFigureTags <- function(
 
     captionTextVector <- gsub(allTags, "", captionTextVector)
 
-    captionText <- concatWithAnd(captionTextVector)
+    captionText <- .concatWithAnd(captionTextVector)
   }
   if (endWithDot && trimws(captionText) != "" && !grepl("\\.$", captionText)) {
     captionText <- paste0(captionText, ".")
@@ -96,7 +97,8 @@ pasteFigureTags <- function(
 #' text to be added. If NULL or NA, it will not be added.
 #' @return A modified caption text with the additional caption added if applicable.
 #' @keywords internal
-addCaptionTextAddon <- function(captiontext, plotCaptionAddon) {
+#' @noRd
+.addCaptionTextAddon <- function(captiontext, plotCaptionAddon) {
   captiontext <- trimws(captiontext)
   if (!grepl("\\.$", captiontext)) {
     captiontext <- paste0(captiontext, ".")
@@ -122,7 +124,8 @@ addCaptionTextAddon <- function(captiontext, plotCaptionAddon) {
 #' @return A single character string representing the concatenated text.
 #'
 #' @keywords internal
-concatWithAnd <- function(textVector) {
+#' @noRd
+.concatWithAnd <- function(textVector) {
   textVector <- trimws(textVector)
   textVector <- textVector[textVector != ""]
 
@@ -130,16 +133,18 @@ concatWithAnd <- function(textVector) {
 
   if (n == 0) {
     return("")
-  } else if (n == 1) {
-    return(textVector)
-  } else if (n == 2) {
-    return(paste(textVector, collapse = " and "))
-  } else {
-    return(concatWithAnd(c(
-      paste(textVector[1:(n - 1)], collapse = ", "),
-      utils::tail(textVector, 1)
-    )))
   }
+  if (n == 1) {
+    return(textVector)
+  }
+  if (n == 2) {
+    return(paste(textVector, collapse = " and "))
+  }
+
+  return(.concatWithAnd(c(
+    paste(textVector[1:(n - 1)], collapse = ", "),
+    utils::tail(textVector, 1)
+  )))
 }
 
 
@@ -189,7 +194,8 @@ formatPercentiles <- function(
 #' @return A character string representing the uppercase letter
 #' corresponding to the given index.
 #' @keywords internal
-generatePlotTag <- function(index) {
+#' @noRd
+.generatePlotTag <- function(index) {
   checkmate::assertIntegerish(index, lower = 1, upper = length(letters))
-  toupper(letters[index])
+  return(toupper(letters[index]))
 }

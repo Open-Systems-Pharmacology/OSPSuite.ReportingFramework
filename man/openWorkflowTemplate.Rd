@@ -6,6 +6,9 @@
 \usage{
 openWorkflowTemplate()
 }
+\value{
+Invisibly returns `NULL` after triggering the template command in RStudio.
+}
 \description{
 Per default the workflow template of the package is loaded.
 To customize it save the file with name "template_workflow.R" in your template directory and

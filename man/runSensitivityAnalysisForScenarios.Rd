@@ -55,4 +55,7 @@ value are treated as one grouped sensitivity label, so multiple
 Ratio mode is only applied when `referenceScenario` is provided.
 In that case the sensitivity is calculated for
 `scenario / referenceScenario`.
+
+Runs sensitivity analysis for each selected scenario and optionally
+  computes scenario/reference ratios when `referenceScenario` is provided.
 }

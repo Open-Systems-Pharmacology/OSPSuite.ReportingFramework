@@ -1,5 +1,4 @@
 # Read data by dictionary ----------
-# nolint start: object_usage_linter
 
 #' Read data by dictionary
 #'
@@ -86,7 +85,6 @@ readObservedDataByDictionary <- function(
     dataDT <- rbind(
       dataDT,
       convertDataByDictionary(
-        # nolint: indentation_linter
         data = tmpData,
         dataFilter = d$dataFilter,
         dict = tmpdict,
@@ -717,7 +715,7 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
   if (nrow(dtDataGroupIdsNew) > 0) {
     dtDataGroupIds <- rbind(
       dtDataGroupIds,
-      dtDataGroupIdsNew, # nolint: indentation_linter
+      dtDataGroupIdsNew,
       fill = TRUE
     )
 
@@ -764,7 +762,7 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
   if (nrow(dtOutputPathsNew) > 0) {
     dtOutputPaths <- rbind(
       dtOutputPaths,
-      dtOutputPathsNew, # nolint: indentation_linter
+      dtOutputPathsNew,
       fill = TRUE
     )
 
@@ -842,7 +840,7 @@ addBiometricsToConfig <- function(
   dtIndividualBiometrics <-
     rbind(
       dtIndividualBiometrics,
-      biometrics, # nolint: indentation_linter
+      biometrics,
       fill = TRUE
     )
 
@@ -1021,13 +1019,12 @@ convertDataCombinedToDataTable <- function(datacombined) {
       DATACLASS$tpIndividual
     ),
     by = "group"
-  ] # nolint: indentation_linter
+  ]
 
   if (
     any(dataDT$dataClass == DATACLASS$tpIndividual) &&
       !("individualId" %in% names(dataDT))
   ) {
-    # nolint: indentation_linter
     stop(messages$errorutilitiesdataL4IndividualDataMissingMetaId())
   }
 }
@@ -1101,13 +1098,13 @@ aggregateObservedDataGroups <- function(
   }
 
   aggregationFlag <- match.arg(aggregationFlag)
-  aggregationFun <- getAggregationFunction(
+  aggregationFun <- .getAggregationFunction(
     aggregationFlag,
     percentiles,
     customFunction
   )
 
-  aggregatedData <- performAggregation(
+  aggregatedData <- .performAggregation(
     dataToAggregate = dataToAggregate,
     aggregationFun = aggregationFun,
     aggrCriteria = c("group", "outputPathId", "xValues")
@@ -1174,7 +1171,7 @@ prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
 
   checkmate::assertNames(
     unique(dataToAggregate$group),
-    disjunct.from = unique(dataObserved$group), # nolint: indentation_linter
+    disjunct.from = unique(dataObserved$group),
     .var.name = "new group names"
   )
 
@@ -1253,7 +1250,7 @@ addUniqueColumns <- function(dataObserved, aggregatedData) {
   colsToCheck <- setdiff(names(dataObserved), identifier)
   columnISUnique <- dataObserved[,
     lapply(.SD, function(x) length(unique(x))),
-    by = identifier, # nolint: indentation_linter
+    by = identifier,
     .SDcols = colsToCheck
   ] %>%
     .[, lapply(.SD, function(x) all(x == 1)), .SDcols = colsToCheck] %>%
@@ -1265,7 +1262,7 @@ addUniqueColumns <- function(dataObserved, aggregatedData) {
 
   aggregatedData <- merge(
     aggregatedData,
-    tmp, # nolint: indentation_linter
+    tmp,
     by = identifier,
     all.x = TRUE
   )
@@ -1381,7 +1378,7 @@ getIndividualDataGroups <- function(dataObserved, groups, minN = 2) {
     dataObserved[,
       .(N = dplyr::n_distinct(individualId)),
       by = c("group", "dataClass", "dataType")
-    ] # nolint: indentation_linter
+    ]
   groupsAvailable <- unique(
     tmp[
       dataClass == DATACLASS$tpIndividual &
@@ -1402,5 +1399,3 @@ getIndividualDataGroups <- function(dataObserved, groups, minN = 2) {
 
   return(groups)
 }
-
-# nolint end

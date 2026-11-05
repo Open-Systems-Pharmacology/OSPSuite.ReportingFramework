@@ -102,10 +102,10 @@
 #' @keywords internal
 #' @noRd
 .rfWorkbookListStructureToDataFrames <- function(workbookData) {
-  stats::setNames(
+  return(stats::setNames(
     lapply(workbookData, .rfListStructureToDataFrame),
     names(workbookData)
-  )
+  ))
 }
 
 #' Derive the JSON snapshot path for a given ProjectConfiguration.xlsx
@@ -116,7 +116,10 @@
 #' @noRd
 .rfSnapshotJsonPath <- function(xlsxPath, outputDir = NULL) {
   outputDirectory <- if (is.null(outputDir)) dirname(xlsxPath) else outputDir
-  return(file.path(outputDirectory, sub("\\.xlsx$", ".json", basename(xlsxPath))))
+  return(file.path(
+    outputDirectory,
+    sub("\\.xlsx$", ".json", basename(xlsxPath))
+  ))
 }
 
 #' Check whether an add-on workbook entry should be restored
@@ -370,8 +373,7 @@ restoreProjectConfigurationRF <- function(jsonPath, outputDir = NULL, ...) {
   }
 
   pcRF <- createProjectConfiguration(
-    # nolint: object_usage_linter
-    path = xlsxPath,
+path = xlsxPath,
     ignoreVersionCheck = TRUE
   )
   return(invisible(pcRF))

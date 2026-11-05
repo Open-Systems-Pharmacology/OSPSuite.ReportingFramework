@@ -9,6 +9,9 @@ saveSessionInfo(fileName = "sessionInfo.log")
 \arguments{
 \item{fileName}{character string with the session info file name.}
 }
+\value{
+NULL (invisible).
+}
 \description{
 Save session information to the log
 }

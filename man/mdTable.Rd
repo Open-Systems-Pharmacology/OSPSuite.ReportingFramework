@@ -35,6 +35,9 @@ mdTable(
 
 \item{...}{Passed to `knitr::kable`.}
 }
+\value{
+Invisible `NULL`.
+}
 \description{
 Insert table from CSV with caption.
 }

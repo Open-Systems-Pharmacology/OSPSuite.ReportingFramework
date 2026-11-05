@@ -14,6 +14,9 @@ createDocumentFromTemplate(
 
 \item{templatePath}{path of template script}
 }
+\value{
+Invisibly returns a new RStudio document object.
+}
 \description{
 Opens a template file a new document
 }

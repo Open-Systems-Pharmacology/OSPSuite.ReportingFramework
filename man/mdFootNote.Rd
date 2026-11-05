@@ -13,6 +13,9 @@ mdFootNote(subfolder, footNoteFile, footNoteCustomStyle = NULL)
 
 \item{footNoteCustomStyle}{Custom style (optional).}
 }
+\value{
+Invisible `NULL`.
+}
 \description{
 Add footnote lines from file.
 }

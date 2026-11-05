@@ -184,7 +184,7 @@ messages$warningplotDemographicsCategoricalParametersIgnored <- function(
   eval(
     quote(paste(
       "Categorical parameters are not suitable for this kind of plot and will be ignored:",
-      concatWithAnd(unique(
+      .concatWithAnd(unique(
         plotData[!is.na(categoricValue), ]$parameterId
       ))
     )),

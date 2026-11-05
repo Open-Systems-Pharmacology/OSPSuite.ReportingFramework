@@ -15,6 +15,9 @@ mdLink(label, filename, folder, prefix = "")
 
 \item{prefix}{Optional prefix (default "").}
 }
+\value{
+Invisible `NULL`.
+}
 \description{
 Insert markdown link.
 }

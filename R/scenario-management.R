@@ -118,8 +118,7 @@ runAndSaveScenarios <- function(
     ospsuite.utils::logInfo(paste("Start simulation of", sc))
 
     # Make sure custom params are not again overwritten by population
-    scenarioList[[sc]] <- .setCustomParamsToPopulation(scenarioList[[sc]]) # nolint: object_usage_linter
-
+    scenarioList[[sc]] <- .setCustomParamsToPopulation(scenarioList[[sc]])
     scenarioResults[sc] <- esqlabsR::runScenarios(
       scenarios = scenarioList[sc],
       simulationRunOptions = simulationRunOptions

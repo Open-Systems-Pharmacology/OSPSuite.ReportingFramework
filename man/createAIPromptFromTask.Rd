@@ -28,6 +28,10 @@ A character string containing the prompt.
 Convenience wrapper around `createAIWorkflowPrompt()` with predefined
 task labels for common user journeys.
 }
+\details{
+Experimental: this helper is intended for early evaluation and may
+  change in future releases.
+}
 \seealso{
 Other project initialization:
 \code{\link{ProjectConfigurationRF}},

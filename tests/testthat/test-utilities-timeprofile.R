@@ -48,7 +48,7 @@ test_that("addPredictedValues adds predicted column to observed rows", {
   dtObs <- makeObsDT()
   dtSim <- makeSimDT()
 
-  result <- addPredictedValues(
+  result <- .addPredictedValues(
     dtObserved = dtObs,
     dtSimulated = dtSim,
     identifier = "group"
@@ -66,7 +66,7 @@ test_that("addPredictedValues interpolates within range", {
   )
   dtObs <- data.table::data.table(xValues = 5, group = "g")
 
-  result <- addPredictedValues(dtObs, dtSim, identifier = "group")
+  result <- .addPredictedValues(dtObs, dtSim, identifier = "group")
 
   expect_equal(result$predicted, 0.5, tolerance = 1e-6)
 })
@@ -79,7 +79,7 @@ test_that("addPredictedValues returns NA for x outside simulated range", {
   )
   dtObs <- data.table::data.table(xValues = 10, group = "g")
 
-  result <- addPredictedValues(dtObs, dtSim, identifier = "group")
+  result <- .addPredictedValues(dtObs, dtSim, identifier = "group")
 
   expect_true(is.na(result$predicted))
 })
@@ -92,7 +92,7 @@ test_that("addPredictedValues skips rows with no matching simulated group", {
   )
   dtObs <- data.table::data.table(xValues = c(2, 3), group = c("A", "B"))
 
-  result <- addPredictedValues(dtObs, dtSim, identifier = "group")
+  result <- .addPredictedValues(dtObs, dtSim, identifier = "group")
 
   expect_equal(nrow(result), 2)
   expect_false(is.na(result$predicted[1]))
@@ -101,14 +101,14 @@ test_that("addPredictedValues skips rows with no matching simulated group", {
 
 test_that("addPredictedValues validates inputs", {
   expect_error(
-    addPredictedValues(
+    .addPredictedValues(
       dtObserved = list(x = 1),
       dtSimulated = makeSimDT(),
       identifier = "group"
     )
   )
   expect_error(
-    addPredictedValues(
+    .addPredictedValues(
       dtObserved = makeObsDT(),
       dtSimulated = makeSimDT(),
       identifier = 123
@@ -129,7 +129,7 @@ test_that("addPredictedValues handles multiple identifier columns", {
     outputPathId = "p1"
   )
 
-  result <- addPredictedValues(
+  result <- .addPredictedValues(
     dtObs,
     dtSim,
     identifier = c("group", "outputPathId")
@@ -149,7 +149,7 @@ test_that("convertAndShiftTimeUnits converts from hour to minute and applies off
     xUnit = "h"
   )
 
-  result <- convertAndShiftTimeUnits(
+  result <- .convertAndShiftTimeUnits(
     timeprofile = dt,
     targetTimeUnit = "min",
     timeOffset = 30
@@ -166,7 +166,7 @@ test_that("convertAndShiftTimeUnits validates timeOffset", {
   )
 
   expect_error(
-    convertAndShiftTimeUnits(
+    .convertAndShiftTimeUnits(
       timeprofile = dt,
       targetTimeUnit = "min",
       timeOffset = "a"
@@ -180,16 +180,16 @@ test_that("filterIndividualID filters selected IDs and keeps all for wildcard", 
     xValues = c(1, 2, 3)
   )
 
-  filtered <- filterIndividualID(dt, "(1, 3)")
+  filtered <- .filterIndividualID(dt, "(1, 3)")
   expect_equal(filtered$individualId, c("1", "3"))
 
-  allRows <- filterIndividualID(dt, "(*)")
+  allRows <- .filterIndividualID(dt, "(*)")
   expect_equal(nrow(allRows), nrow(dt))
 })
 
 test_that("filterIndividualID returns input unchanged when individualId column is absent", {
   dt <- data.table::data.table(xValues = c(1, 2, 3))
-  result <- filterIndividualID(dt, "(1, 2)")
+  result <- .filterIndividualID(dt, "(1, 2)")
   expect_equal(result, dt)
 })
 
@@ -206,7 +206,7 @@ test_that("getUnitConversionDT returns expected unit factors for matching paths"
     outputPath = "A|B"
   )
 
-  result <- getUnitConversionDT(dtSimulated, dtOutputs)
+  result <- .getUnitConversionDT(dtSimulated, dtOutputs)
 
   expect_true("unitFactor" %in% names(result))
   expect_equal(nrow(result), 1)
@@ -233,7 +233,7 @@ test_that("convertYunit scales y-values and replaces yUnit with displayUnit", {
     unitFactor = 1000
   )
 
-  result <- convertYunit(timeprofile, dtUnit)
+  result <- .convertYunit(timeprofile, dtUnit)
 
   expect_equal(result$yValues, c(2000, 4000))
   expect_true(all(result$yUnit == "ng/ml"))
@@ -274,14 +274,14 @@ dtOutputPaths <- data.table::data.table(
 )
 
 test_that("getPlotIdForColumns adds plotId column", {
-  result <- getPlotIdForColumns(configTable, "outputPathIds")
+  result <- .getPlotIdForColumns(configTable, "outputPathIds")
   expect_true("plotId" %in% names(result))
   expect_equal(nrow(result), 5)
 })
 
 test_that("splitCaptionByIndividuals adds individualId column", {
-  dtCaption <- getPlotIdForColumns(configTable, "outputPathIds")
-  result <- splitCaptionByIndividuals(
+  dtCaption <- .getPlotIdForColumns(configTable, "outputPathIds")
+  result <- .splitCaptionByIndividuals(
     configTable,
     individualIdVector = c("1", "2"),
     dtCaption
@@ -291,8 +291,8 @@ test_that("splitCaptionByIndividuals adds individualId column", {
 })
 
 test_that("addTimeTagsToCaption adds timeRangeTag column and multiplies rows", {
-  dtCaption <- getPlotIdForColumns(configTable, "outputPathIds")
-  result <- addTimeTagsToCaption(
+  dtCaption <- .getPlotIdForColumns(configTable, "outputPathIds")
+  result <- .addTimeTagsToCaption(
     dtCaption,
     timeTags,
     splitPlotsPerTimeRange = 0
@@ -302,18 +302,18 @@ test_that("addTimeTagsToCaption adds timeRangeTag column and multiplies rows", {
 })
 
 test_that("setTimeRangeFilter returns one filter per tag when split=1", {
-  result <- setTimeRangeFilter(splitPlotsPerTimeRange = 1, timeTags)
+  result <- .setTimeRangeFilter(splitPlotsPerTimeRange = 1, timeTags)
   expect_equal(length(result), 2)
 })
 
 test_that("setTimeRangeFilter returns single filter when split=0", {
-  result <- setTimeRangeFilter(splitPlotsPerTimeRange = 0, timeTags)
+  result <- .setTimeRangeFilter(splitPlotsPerTimeRange = 0, timeTags)
   expect_equal(length(result), 1)
 })
 
 test_that("restructureApplicationTimeByScenarioIndex returns one entry per row", {
   applicationTimes <- list(A = c(1, 2), B = c(3, 4))
-  result <- restructureApplicationTimeByScenarioIndex(
+  result <- .restructureApplicationTimeByScenarioIndex(
     applicationTimes,
     configTable
   )
@@ -321,7 +321,7 @@ test_that("restructureApplicationTimeByScenarioIndex returns one entry per row",
 })
 
 test_that("getOutputPathsPerScenario returns one list entry per unique scenario", {
-  result <- getOutputPathsPerScenario(configTable, dtOutputPaths)
+  result <- .getOutputPathsPerScenario(configTable, dtOutputPaths)
   expect_true(is.list(result))
   expect_equal(length(result), length(unique(configTable$scenario)))
 })
@@ -338,7 +338,7 @@ test_that("getObservedUnitConversionDT returns unitFactor column", {
     displayUnit = c("g", "kg"),
     unitFactor = c(1000, 1)
   )
-  result <- getObservedUnitConversionDT(dataObserved, dtUnit)
+  result <- .getObservedUnitConversionDT(dataObserved, dtUnit)
   expect_true("unitFactor" %in% names(result))
   expect_equal(nrow(result), 2)
 })

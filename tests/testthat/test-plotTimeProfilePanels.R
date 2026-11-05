@@ -1,6 +1,6 @@
 # helper-only unit tests for plotTimeProfilePanels -----------
 
-test_that("isPlotTypeNeededAndPossible handles TP and observed-dependent plot types", {
+test_that(".isPlotTypeNeededAndPossible handles TP and observed-dependent plot types", {
   plotDataTp <- list(
     configTable = data.table::data.table(
       plot_TimeProfiles = TRUE,
@@ -8,8 +8,8 @@ test_that("isPlotTypeNeededAndPossible handles TP and observed-dependent plot ty
     ),
     hasObservedData = function() FALSE
   )
-  expect_true(isPlotTypeNeededAndPossible("TP", plotDataTp))
-  expect_false(isPlotTypeNeededAndPossible("PvO", plotDataTp))
+  expect_true(.isPlotTypeNeededAndPossible("TP", plotDataTp))
+  expect_false(.isPlotTypeNeededAndPossible("PvO", plotDataTp))
 
   plotDataObserved <- list(
     configTable = data.table::data.table(
@@ -18,11 +18,11 @@ test_that("isPlotTypeNeededAndPossible handles TP and observed-dependent plot ty
     ),
     hasObservedData = function() TRUE
   )
-  expect_true(isPlotTypeNeededAndPossible("PvO", plotDataObserved))
+  expect_true(.isPlotTypeNeededAndPossible("PvO", plotDataObserved))
 })
 
-test_that("checkAndAdjustYlimits returns NULL for non-TP plots", {
-  expect_null(checkAndAdjustYlimits(
+test_that(".checkAndAdjustYlimits returns NULL for non-TP plots", {
+  expect_null(.checkAndAdjustYlimits(
     plotData = list(),
     yScale = "log",
     timeRangeFilter = "allTimeRanges",
@@ -31,13 +31,13 @@ test_that("checkAndAdjustYlimits returns NULL for non-TP plots", {
   ))
 })
 
-test_that("checkAndAdjustYlimits throws informative error for invalid ylimit expression", {
+test_that(".checkAndAdjustYlimits throws informative error for invalid ylimit expression", {
   plotData <- list(
     configTable = data.table::data.table(ylimit_log = "c(1, )")
   )
 
   expect_error(
-    checkAndAdjustYlimits(
+    .checkAndAdjustYlimits(
       plotData = plotData,
       yScale = "log",
       timeRangeFilter = "allTimeRanges",
@@ -48,8 +48,8 @@ test_that("checkAndAdjustYlimits throws informative error for invalid ylimit exp
   )
 })
 
-# getGroupbyMapping -----------
-test_that("getGroupbyMapping does not include shape for simulated data", {
+# .getGroupbyMapping -----------
+test_that(".getGroupbyMapping does not include shape for simulated data", {
   makePlotData <- function(useColorIndex = TRUE, useShapeIndex = TRUE) {
     list(
       useColorIndex = function() useColorIndex,
@@ -72,7 +72,7 @@ test_that("getGroupbyMapping does not include shape for simulated data", {
       useShapeIndex = testCase$useShapeIndex
     )
 
-    mapping <- getGroupbyMapping(
+    mapping <- .getGroupbyMapping(
       plotData = plotData,
       plotType = testCase$plotType,
       dataType = "simulated"
@@ -83,7 +83,7 @@ test_that("getGroupbyMapping does not include shape for simulated data", {
   }
 })
 
-test_that("getGroupbyMapping includes shape for observed TP data", {
+test_that(".getGroupbyMapping includes shape for observed TP data", {
   makePlotData <- function(useShapeIndex = TRUE) {
     list(
       useColorIndex = function() TRUE,
@@ -91,7 +91,7 @@ test_that("getGroupbyMapping includes shape for observed TP data", {
     )
   }
 
-  mapping <- getGroupbyMapping(
+  mapping <- .getGroupbyMapping(
     plotData = makePlotData(useShapeIndex = TRUE),
     plotType = "TP",
     dataType = "observed"
@@ -102,7 +102,7 @@ test_that("getGroupbyMapping includes shape for observed TP data", {
   expect_equal(rlang::as_label(mapping$shape), "shapeIndex")
 })
 
-test_that("getGroupbyMapping includes fixed observed shape for TP without shape index", {
+test_that(".getGroupbyMapping includes fixed observed shape for TP without shape index", {
   makePlotData <- function(useShapeIndex = FALSE) {
     list(
       useColorIndex = function() TRUE,
@@ -110,7 +110,7 @@ test_that("getGroupbyMapping includes fixed observed shape for TP without shape 
     )
   }
 
-  mapping <- getGroupbyMapping(
+  mapping <- .getGroupbyMapping(
     plotData = makePlotData(useShapeIndex = FALSE),
     plotType = "TP",
     dataType = "observed"
@@ -121,7 +121,7 @@ test_that("getGroupbyMapping includes fixed observed shape for TP without shape 
   expect_equal(rlang::as_label(mapping$shape), '"Observed data"')
 })
 
-test_that("getGroupbyMapping includes shape for observed non-TP data when shape index is used", {
+test_that(".getGroupbyMapping includes shape for observed non-TP data when shape index is used", {
   makePlotData <- function(useColorIndex = TRUE, useShapeIndex = TRUE) {
     list(
       useColorIndex = function() useColorIndex,
@@ -129,7 +129,7 @@ test_that("getGroupbyMapping includes shape for observed non-TP data when shape 
     )
   }
 
-  mapping <- getGroupbyMapping(
+  mapping <- .getGroupbyMapping(
     plotData = makePlotData(useColorIndex = TRUE, useShapeIndex = TRUE),
     plotType = "PvO",
     dataType = "observed"
@@ -140,7 +140,7 @@ test_that("getGroupbyMapping includes shape for observed non-TP data when shape 
   expect_equal(rlang::as_label(mapping$shape), "shapeIndex")
 })
 
-test_that("getGroupbyMapping does not include shape for observed non-TP data without shape index", {
+test_that(".getGroupbyMapping does not include shape for observed non-TP data without shape index", {
   makePlotData <- function(useColorIndex = TRUE, useShapeIndex = FALSE) {
     list(
       useColorIndex = function() useColorIndex,
@@ -148,7 +148,7 @@ test_that("getGroupbyMapping does not include shape for observed non-TP data wit
     )
   }
 
-  mapping <- getGroupbyMapping(
+  mapping <- .getGroupbyMapping(
     plotData = makePlotData(useColorIndex = TRUE, useShapeIndex = FALSE),
     plotType = "PvO",
     dataType = "observed"
@@ -158,17 +158,17 @@ test_that("getGroupbyMapping does not include shape for observed non-TP data wit
   expect_false("shape" %in% names(mapping))
 })
 
-test_that("getGroupAesthetics standardizes names and returns only supported aesthetics", {
+test_that(".getGroupAesthetics standardizes names and returns only supported aesthetics", {
   plotData <- list(
     scaleVectors = list(color = c(a = "black"), fill = c(a = "grey"), size = 2)
   )
 
-  aesthetics <- getGroupAesthetics(plotData)
+  aesthetics <- .getGroupAesthetics(plotData)
 
   expect_equal(aesthetics, c("colour", "fill"))
 })
 
-test_that("getFoldDistanceForPvO uses default when missing and custom when provided", {
+test_that(".getFoldDistanceForPvO uses default when missing and custom when provided", {
   plotDataDefault <- list(
     configTable = data.table::data.table(foldDistance_PvO = NA_real_)
   )
@@ -177,50 +177,50 @@ test_that("getFoldDistanceForPvO uses default when missing and custom when provi
   )
 
   expect_equal(
-    getFoldDistanceForPvO(plotDataDefault),
+    .getFoldDistanceForPvO(plotDataDefault),
     ospsuite.plots::getFoldDistanceList(2)
   )
   expect_equal(
-    getFoldDistanceForPvO(plotDataCustom),
+    .getFoldDistanceForPvO(plotDataCustom),
     ospsuite.plots::getFoldDistanceList(3)
   )
 })
 
-test_that("getGeomLineAttributesForTP and getGeomLLOQAttributesForTP depend on observed range", {
+test_that(".getGeomLineAttributesForTP and .getGeomLLOQAttributesForTP depend on observed range", {
   withRange <- list(hasObservedDataRange = function() TRUE)
   withoutRange <- list(hasObservedDataRange = function() FALSE)
 
   expect_equal(
-    getGeomLineAttributesForTP(withRange),
+    .getGeomLineAttributesForTP(withRange),
     list(linetype = "solid", show.legend = TRUE)
   )
-  expect_equal(getGeomLineAttributesForTP(withoutRange), list())
+  expect_equal(.getGeomLineAttributesForTP(withoutRange), list())
 
   expect_equal(
-    getGeomLLOQAttributesForTP(withRange),
+    .getGeomLLOQAttributesForTP(withRange),
     list(linewidth = 0.5, show.legend = TRUE)
   )
-  expect_equal(getGeomLLOQAttributesForTP(withoutRange), list())
+  expect_equal(.getGeomLLOQAttributesForTP(withoutRange), list())
 })
 
-test_that("getFootNoteLines returns source line for reference data", {
+test_that(".getFootNoteLines returns source line for reference data", {
   dataObserved <- data.table::data.table(
     dataClass = "individual",
     yErrorType = NA_character_
   )
   dtDataReference <- data.table::data.table(reference = c("A", "B", "A"))
 
-  lines <- getFootNoteLines(dataObserved, dtDataReference)
+  lines <- .getFootNoteLines(dataObserved, dtDataReference)
   expect_true(any(grepl("Data source: [A, B]", lines, fixed = TRUE)))
 })
 
-test_that("getFootNoteLines includes aggregated-data description", {
+test_that(".getFootNoteLines includes aggregated-data description", {
   dataObserved <- data.table::data.table(
     dataClass = DATACLASS$tpAggregated,
     yErrorType = ospsuite::DataErrorType$ArithmeticStdDev
   )
 
-  lines <- getFootNoteLines(
+  lines <- .getFootNoteLines(
     dataObserved = dataObserved,
     dtDataReference = data.table::data.table(reference = character(0))
   )
@@ -228,12 +228,12 @@ test_that("getFootNoteLines includes aggregated-data description", {
   expect_true(any(grepl("Observed data is displayed as", lines, fixed = TRUE)))
 })
 
-test_that("getMapSimulatedAndObserved returns NULL when no observed data", {
+test_that(".getMapSimulatedAndObserved returns NULL when no observed data", {
   plotData <- list(hasObservedData = function() FALSE)
-  expect_null(getMapSimulatedAndObserved(plotData))
+  expect_null(.getMapSimulatedAndObserved(plotData))
 })
 
-test_that("getMapSimulatedAndObserved returns mapping table for simulated and observed", {
+test_that(".getMapSimulatedAndObserved returns mapping table for simulated and observed", {
   plotData <- list(
     hasObservedData = function() TRUE,
     data = data.table::data.table(
@@ -243,7 +243,7 @@ test_that("getMapSimulatedAndObserved returns mapping table for simulated and ob
     scaleVectors = list(colour = c("black"), fill = c("grey"))
   )
 
-  result <- getMapSimulatedAndObserved(plotData)
+  result <- .getMapSimulatedAndObserved(plotData)
 
   expect_true(is.data.table(result))
   expect_equal(result$simulated, "Sim")
@@ -252,7 +252,7 @@ test_that("getMapSimulatedAndObserved returns mapping table for simulated and ob
   expect_equal(result$fill, "grey")
 })
 
-test_that("checkAndAdjustYlimits returns explicit limits when expression is valid", {
+test_that(".checkAndAdjustYlimits returns explicit limits when expression is valid", {
   simulated <- data.table::data.table(
     xValues = c(0, 5, 10),
     yValues = c(10, 6, 2),
@@ -281,7 +281,7 @@ test_that("checkAndAdjustYlimits returns explicit limits when expression is vali
     }
   )
 
-  limits <- checkAndAdjustYlimits(
+  limits <- .checkAndAdjustYlimits(
     plotData = plotData,
     yScale = "linear",
     timeRangeFilter = "allTimeRanges",
@@ -292,7 +292,7 @@ test_that("checkAndAdjustYlimits returns explicit limits when expression is vali
   expect_equal(limits, c(1, 8))
 })
 
-test_that("checkAndAdjustYlimits throws when observed values are outside explicit limits", {
+test_that(".checkAndAdjustYlimits throws when observed values are outside explicit limits", {
   simulated <- data.table::data.table(
     xValues = c(0, 5, 10),
     yValues = c(10, 6, 2),
@@ -322,7 +322,7 @@ test_that("checkAndAdjustYlimits throws when observed values are outside explici
   )
 
   expect_error(
-    checkAndAdjustYlimits(
+    .checkAndAdjustYlimits(
       plotData = plotData,
       yScale = "linear",
       timeRangeFilter = "allTimeRanges",
@@ -332,7 +332,7 @@ test_that("checkAndAdjustYlimits throws when observed values are outside explici
   )
 })
 
-test_that("checkAndAdjustYlimits auto-computes lower bound for log scale", {
+test_that(".checkAndAdjustYlimits auto-computes lower bound for log scale", {
   simulated <- data.table::data.table(
     xValues = c(0, 2, 4, 6, 8, 10),
     yValues = c(10, 8, 4, 2, 1, 0.5),
@@ -361,7 +361,7 @@ test_that("checkAndAdjustYlimits auto-computes lower bound for log scale", {
     }
   )
 
-  limits <- checkAndAdjustYlimits(
+  limits <- .checkAndAdjustYlimits(
     plotData = plotData,
     yScale = "log",
     timeRangeFilter = "allTimeRanges",
@@ -376,7 +376,7 @@ test_that("checkAndAdjustYlimits auto-computes lower bound for log scale", {
   expect_true(is.na(limits[2]))
 })
 
-test_that("setManualScaleVectors handles non-TP branch without color and shape indices", {
+test_that(".setManualScaleVectors handles non-TP branch without color and shape indices", {
   skip_if_not_installed("ggplot2")
   basePlot <- ggplot2::ggplot(
     data.frame(x = 1, y = 1, grp = "Observed data"),
@@ -390,7 +390,7 @@ test_that("setManualScaleVectors handles non-TP branch without color and shape i
     useShapeIndex = function() FALSE
   )
 
-  result <- setManualScaleVectors(
+  result <- .setManualScaleVectors(
     plotObject = basePlot,
     plotData = plotData,
     plotType = "PvO"
@@ -399,7 +399,7 @@ test_that("setManualScaleVectors handles non-TP branch without color and shape i
   expect_s3_class(result, "gg")
 })
 
-test_that("updateGuides works for TP without simulated population and without observed data", {
+test_that(".updateGuides works for TP without simulated population and without observed data", {
   skip_if_not_installed("ggplot2")
   basePlot <- ggplot2::ggplot(
     data.frame(x = 1, y = 1, grp = "A"),
@@ -417,7 +417,7 @@ test_that("updateGuides works for TP without simulated population and without ob
     reverseLegend = FALSE
   )
 
-  result <- updateGuides(
+  result <- .updateGuides(
     plotData = plotData,
     plotObject = basePlot,
     plotType = "TP"
@@ -426,7 +426,7 @@ test_that("updateGuides works for TP without simulated population and without ob
   expect_s3_class(result, "gg")
 })
 
-test_that("getCaptionForPlot creates TP caption with subject and scale text", {
+test_that(".getCaptionForPlot creates TP caption with subject and scale text", {
   plotData <- list(
     dtCaption = data.table::data.table(
       timeRangeTag = "all",
@@ -440,7 +440,7 @@ test_that("getCaptionForPlot creates TP caption with subject and scale text", {
     configTable = data.table::data.table(plotCaptionAddon = NA_character_)
   )
 
-  caption <- getCaptionForPlot(
+  caption <- .getCaptionForPlot(
     plotData = plotData,
     yScale = "linear",
     timeRangeFilter = "allTimeRanges",
@@ -454,7 +454,7 @@ test_that("getCaptionForPlot creates TP caption with subject and scale text", {
 })
 
 # Edge case tests for plotTimeProfilePanels functions
-test_that("isPlotTypeNeededAndPossible handles both FALSE conditions", {
+test_that(".isPlotTypeNeededAndPossible handles both FALSE conditions", {
   plotDataNeither <- list(
     configTable = data.table::data.table(
       plot_TimeProfiles = FALSE,
@@ -462,16 +462,16 @@ test_that("isPlotTypeNeededAndPossible handles both FALSE conditions", {
     ),
     hasObservedData = function() FALSE
   )
-  expect_false(isPlotTypeNeededAndPossible("TP", plotDataNeither))
-  expect_false(isPlotTypeNeededAndPossible("PvO", plotDataNeither))
+  expect_false(.isPlotTypeNeededAndPossible("TP", plotDataNeither))
+  expect_false(.isPlotTypeNeededAndPossible("PvO", plotDataNeither))
 })
 
-test_that("checkAndAdjustYlimits handles empty expression string", {
+test_that(".checkAndAdjustYlimits handles empty expression string", {
   plotData <- list(
     configTable = data.table::data.table(ylimit_linear = "")
   )
   # Function should handle empty string gracefully
-  expect_null(checkAndAdjustYlimits(
+  expect_null(.checkAndAdjustYlimits(
     plotData = plotData,
     yScale = "linear",
     timeRangeFilter = "allTimeRanges",
@@ -480,12 +480,12 @@ test_that("checkAndAdjustYlimits handles empty expression string", {
   ))
 })
 
-test_that("getGroupbyMapping handles missing color and shape index methods", {
+test_that(".getGroupbyMapping handles missing color and shape index methods", {
   minimalPlotData <- list(
     useColorIndex = function() FALSE,
     useShapeIndex = function() FALSE
   )
-  mapping <- getGroupbyMapping(
+  mapping <- .getGroupbyMapping(
     plotData = minimalPlotData,
     plotType = "TP",
     dataType = "simulated"
@@ -493,68 +493,68 @@ test_that("getGroupbyMapping handles missing color and shape index methods", {
   expect_true(is.list(mapping))
 })
 
-test_that("getGroupAesthetics handles empty scaleVectors", {
+test_that(".getGroupAesthetics handles empty scaleVectors", {
   plotData <- list(scaleVectors = list())
-  aesthetics <- getGroupAesthetics(plotData)
+  aesthetics <- .getGroupAesthetics(plotData)
   expect_true(is.character(aesthetics) || length(aesthetics) == 0)
 })
 
-test_that("getGroupAesthetics handles only size in scaleVectors", {
+test_that(".getGroupAesthetics handles only size in scaleVectors", {
   plotData <- list(
     scaleVectors = list(size = c("size1" = 2, "size2" = 3))
   )
-  aesthetics <- getGroupAesthetics(plotData)
+  aesthetics <- .getGroupAesthetics(plotData)
   expect_false("colour" %in% aesthetics)
   expect_false("fill" %in% aesthetics)
 })
 
-test_that("getFoldDistanceForPvO handles minimum valid value", {
+test_that(".getFoldDistanceForPvO handles minimum valid value", {
   plotDataMin <- list(
     configTable = data.table::data.table(foldDistance_PvO = 1.5)
   )
-  result <- getFoldDistanceForPvO(plotDataMin)
+  result <- .getFoldDistanceForPvO(plotDataMin)
   expect_true(is.list(result))
 })
 
-test_that("getFoldDistanceForPvO handles large custom values", {
+test_that(".getFoldDistanceForPvO handles large custom values", {
   plotDataLarge <- list(
     configTable = data.table::data.table(foldDistance_PvO = 100)
   )
-  result <- getFoldDistanceForPvO(plotDataLarge)
+  result <- .getFoldDistanceForPvO(plotDataLarge)
   expect_true(is.list(result))
 })
 
-test_that("getGeomLineAttributesForTP works with hasObservedDataRange method", {
+test_that(".getGeomLineAttributesForTP works with hasObservedDataRange method", {
   withMethod <- list(
     hasObservedDataRange = function() TRUE
   )
-  result <- getGeomLineAttributesForTP(withMethod)
+  result <- .getGeomLineAttributesForTP(withMethod)
   expect_true(is.list(result))
   expect_true("linetype" %in% names(result))
 })
 
-test_that("getFootNoteLines handles empty reference data", {
+test_that(".getFootNoteLines handles empty reference data", {
   dataObserved <- data.table::data.table(
     dataClass = "individual",
     yErrorType = NA_character_
   )
   dtDataReference <- data.table::data.table(reference = character(0))
-  lines <- getFootNoteLines(dataObserved, dtDataReference)
+  lines <- .getFootNoteLines(dataObserved, dtDataReference)
   # Function may return NULL or character vector
   expect_true(is.null(lines) || is.character(lines))
 })
 
-test_that("getFootNoteLines handles single unique reference", {
+test_that(".getFootNoteLines handles single unique reference", {
   dataObserved <- data.table::data.table(
     dataClass = "individual",
     yErrorType = NA_character_
   )
   dtDataReference <- data.table::data.table(reference = c("SourceA", "SourceA"))
-  lines <- getFootNoteLines(dataObserved, dtDataReference)
+  lines <- .getFootNoteLines(dataObserved, dtDataReference)
   expect_true(any(grepl("SourceA", lines, fixed = TRUE)))
 })
 
-test_that("getMapSimulatedAndObserved handles single data type only", {
+test_that(".getMapSimulatedAndObserved handles single data type only", {
   plotDataSingleType <- list(
     hasObservedData = function() TRUE,
     data = data.table::data.table(
@@ -563,11 +563,11 @@ test_that("getMapSimulatedAndObserved handles single data type only", {
     ),
     scaleVectors = list(colour = c("black"), fill = c("grey"))
   )
-  result <- getMapSimulatedAndObserved(plotDataSingleType)
+  result <- .getMapSimulatedAndObserved(plotDataSingleType)
   expect_true(is.data.table(result) || is.null(result))
 })
 
-test_that("getCaptionForPlot handles NA plotCaptionAddon", {
+test_that(".getCaptionForPlot handles NA plotCaptionAddon", {
   plotData <- list(
     dtCaption = data.table::data.table(
       timeRangeTag = "all",
@@ -580,7 +580,7 @@ test_that("getCaptionForPlot handles NA plotCaptionAddon", {
     timeRangeTagFilter = list(allTimeRanges = 'timeRangeTag == "all"'),
     configTable = data.table::data.table(plotCaptionAddon = NA_character_)
   )
-  caption <- getCaptionForPlot(
+  caption <- .getCaptionForPlot(
     plotData = plotData,
     yScale = "linear",
     timeRangeFilter = "allTimeRanges",
@@ -591,7 +591,7 @@ test_that("getCaptionForPlot handles NA plotCaptionAddon", {
   expect_true(nchar(caption) > 0)
 })
 
-test_that("getCaptionForPlot handles empty displayNameOutput", {
+test_that(".getCaptionForPlot handles empty displayNameOutput", {
   plotData <- list(
     dtCaption = data.table::data.table(
       timeRangeTag = "all",
@@ -604,7 +604,7 @@ test_that("getCaptionForPlot handles empty displayNameOutput", {
     timeRangeTagFilter = list(allTimeRanges = 'timeRangeTag == "all"'),
     configTable = data.table::data.table(plotCaptionAddon = "")
   )
-  caption <- getCaptionForPlot(
+  caption <- .getCaptionForPlot(
     plotData = plotData,
     yScale = "linear",
     timeRangeFilter = "allTimeRanges",
@@ -614,7 +614,7 @@ test_that("getCaptionForPlot handles empty displayNameOutput", {
   expect_true(is.character(caption))
 })
 
-test_that("getCaptionForPlot creates PvO caption with x and y scale text", {
+test_that(".getCaptionForPlot creates PvO caption with x and y scale text", {
   plotData <- list(
     dtCaption = data.table::data.table(
       timeRangeTag = "all",
@@ -628,7 +628,7 @@ test_that("getCaptionForPlot creates PvO caption with x and y scale text", {
     configTable = data.table::data.table(plotCaptionAddon = NA_character_)
   )
 
-  caption <- getCaptionForPlot(
+  caption <- .getCaptionForPlot(
     plotData = plotData,
     yScale = "log",
     timeRangeFilter = "allTimeRanges",
@@ -641,7 +641,7 @@ test_that("getCaptionForPlot creates PvO caption with x and y scale text", {
   expect_true(grepl("logarithmic", caption, fixed = TRUE))
 })
 
-test_that("getCaptionForPlot omits scale text for non-TP and non-PvO plot types", {
+test_that(".getCaptionForPlot omits scale text for non-TP and non-PvO plot types", {
   plotData <- list(
     dtCaption = data.table::data.table(
       timeRangeTag = "all",
@@ -655,7 +655,7 @@ test_that("getCaptionForPlot omits scale text for non-TP and non-PvO plot types"
     configTable = data.table::data.table(plotCaptionAddon = NA_character_)
   )
 
-  caption <- getCaptionForPlot(
+  caption <- .getCaptionForPlot(
     plotData = plotData,
     yScale = "linear",
     timeRangeFilter = "allTimeRanges",
@@ -667,7 +667,7 @@ test_that("getCaptionForPlot omits scale text for non-TP and non-PvO plot types"
   expect_false(grepl("-scale", caption, fixed = TRUE))
 })
 
-test_that("getCaptionForPlot appends formatted time-range caption text", {
+test_that(".getCaptionForPlot appends formatted time-range caption text", {
   plotData <- list(
     dtCaption = data.table::data.table(
       timeRangeTag = "all",
@@ -681,7 +681,7 @@ test_that("getCaptionForPlot appends formatted time-range caption text", {
     configTable = data.table::data.table(plotCaptionAddon = NA_character_)
   )
 
-  caption <- getCaptionForPlot(
+  caption <- .getCaptionForPlot(
     plotData = plotData,
     yScale = "linear",
     timeRangeFilter = "allTimeRanges",
@@ -696,14 +696,14 @@ test_that("getCaptionForPlot appends formatted time-range caption text", {
 # PHASE 1: ERROR PARSING & TRYCATCH PATH TESTS
 # =====================================================================
 
-test_that("checkAndAdjustYlimits handles various malformed ylimit expressions", {
+test_that(".checkAndAdjustYlimits handles various malformed ylimit expressions", {
   # Test with unclosed parenthesis
   plotData <- list(
     configTable = data.table::data.table(ylimit_log = "c(1, 2")
   )
 
   expect_error(
-    checkAndAdjustYlimits(
+    .checkAndAdjustYlimits(
       plotData = plotData,
       yScale = "log",
       timeRangeFilter = "allTimeRanges",
@@ -714,21 +714,21 @@ test_that("checkAndAdjustYlimits handles various malformed ylimit expressions", 
   )
 })
 
-test_that("checkAndAdjustYlimits validates empty expression handling", {
+test_that(".checkAndAdjustYlimits validates empty expression handling", {
   # Test that empty/invalid expressions throw informative errors
   expect_error(
     {
-      expr_text <- ""
-      if (nchar(expr_text) == 0) {
+      exprText <- ""
+      if (nchar(exprText) == 0) {
         stop("Invalid ylimit expression: empty")
       }
-      eval(parse(text = expr_text))
+      eval(parse(text = exprText))
     },
     "Invalid ylimit expression|empty"
   )
 })
 
-test_that("checkAndAdjustYlimits handles ylimit_linear for TP plots", {
+test_that(".checkAndAdjustYlimits handles ylimit_linear for TP plots", {
   # Test that valid expressions are parsed correctly
   ylimit <- eval(parse(text = "c(1, 2)"))
   expect_true(is.numeric(ylimit))

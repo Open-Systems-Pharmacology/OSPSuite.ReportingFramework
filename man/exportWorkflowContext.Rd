@@ -25,6 +25,10 @@ A named list with workflow context information.
 Collects a compact, structured summary of key workflow configuration tables.
 The output can be used directly by AI assistants to reduce manual prompt setup.
 }
+\details{
+Experimental: this helper is intended for early evaluation and may
+  change in future releases.
+}
 \seealso{
 Other project initialization:
 \code{\link{ProjectConfigurationRF}},

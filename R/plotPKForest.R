@@ -79,6 +79,7 @@
 #' @param aggregationFlag A character string indicating the method of aggregation
 #'   for variance calculation. Options include "GeometricStdDev", "ArithmeticStdDev",
 #'   and "Percentiles".
+#' @param aggregationFun A function used to aggregate values before plotting.
 #'  (for `plotPKForestAggregatedAbsoluteValues` and `plotPKForestAggregatedRatios`):
 #' @param percentiles A numeric vector specifying which percentiles to calculate
 #'   and display in the plot, only relevant if `aggregationFlag = "Percentiles"`
@@ -115,7 +116,8 @@
 #' \code{\link{addDefaultConfigForPKForestPlots}}
 #'
 #' @keywords internal
-plotPKForest <- function(
+#' @noRd
+.plotPKForest <- function(
   projectConfiguration,
   onePlotConfig,
   pkParameterDT,
@@ -159,20 +161,20 @@ plotPKForest <- function(
       sort = FALSE
     )
 
-  scaleVectors <- updateScalevector(scaleVectorsInput = scaleVectors)
+  scaleVectors <- .updateScalevector(scaleVectorsInput = scaleVectors)
   # switch to naming convention of forest plot and filter for relevant data
-  dataObservedPK <- filterParameterObserved(dataObservedPK, onePlotConfig)
+  dataObservedPK <- .filterParameterObserved(dataObservedPK, onePlotConfig)
 
   # filter for relevant data and calculate ratio if necessary
   pkParameterFiltered <-
-    filterParameterSimulated(
+    .filterParameterSimulated(
       projectConfiguration = projectConfiguration,
       pkParameterDT = pkParameterDT,
       onePlotConfig = onePlotConfig,
       ratioMode = ratioMode,
       asPointeEstimate = asPointeEstimate
     )
-  plotDataGroup <- prepareDataForPKForest(
+  plotDataGroup <- .prepareDataForPKForest(
     onePlotConfig = onePlotConfig,
     pkParameterFiltered = pkParameterFiltered,
     dataObservedPK = dataObservedPK,
@@ -187,18 +189,18 @@ plotPKForest <- function(
   plotList <- list()
   for (groupName in names(plotDataGroup)) {
     columnList <-
-      getColumnSelectionForPKForest(
+      .getColumnSelectionForPKForest(
         plotData = plotDataGroup[[groupName]],
         ratioMode = ratioMode
       )
 
     tableLabels <-
-      getTableLabelsForPKForest(
+      .getTableLabelsForPKForest(
         plotData = plotDataGroup[[groupName]]
       )
 
     mapping <-
-      getMappingForForestPlots(
+      .getMappingForForestPlots(
         plotData = plotDataGroup[[groupName]],
         columnList = columnList
       )
@@ -212,7 +214,7 @@ plotPKForest <- function(
           yFacetColumns = columnList$yFacetColumns,
           xFacetColumn = columnList$xFacetColumn,
           xScale = xScale,
-          xScaleArgs = getXorYlimits(
+          xScaleArgs = .getXorYlimits(
             onePlotConfig = onePlotConfig,
             xOryScale = xScale,
             direction = "x"
@@ -227,7 +229,7 @@ plotPKForest <- function(
         )
 
       combinedObject <-
-        adjustPkForestPlotObject(
+        .adjustPkForestPlotObject(
           combinedObject = combinedObject,
           scaleVectors = scaleVectors,
           vlineIntercept = vlineIntercept,
@@ -239,7 +241,7 @@ plotPKForest <- function(
         combinedObject$relWidths <- c(5, 2)
       }
 
-      combinedObject <- addPrecisisonRemark(
+      combinedObject <- .addPrecisisonRemark(
         combinedObject = combinedObject,
         asPointeEstimate = asPointeEstimate,
         plotData = plotDataGroup[[groupName]]
@@ -251,13 +253,13 @@ plotPKForest <- function(
       # Prepare for export
       combinedObject <- setExportAttributes(
         object = combinedObject,
-        caption = getCaptionForForestPlot(
+        caption = .getCaptionForForestPlot(
           plotData = plotDataGroup[[groupName]],
           xScale = xScale,
           plotCaptionAddon = onePlotConfig$plotCaptionAddon[1],
           ratioMode = ratioMode
         ),
-        footNoteLines = getFootnoteLinesForForestPlots(
+        footNoteLines = .getFootnoteLinesForForestPlots(
           plotData = plotDataGroup[[groupName]],
           ratioMode = ratioMode,
           asPointeEstimate = asPointeEstimate,
@@ -283,7 +285,16 @@ plotPKForest <- function(
   return(plotList)
 }
 
-#' @inherit plotPKForest
+#' Plot PK Forest Aggregated Absolute Values
+#'
+#' Generates PK forest plots showing aggregated absolute values.
+#'
+#' @param projectConfiguration A ProjectConfiguration object containing report and scenario settings.
+#' @param onePlotConfig A data.table with plot configuration rows for one plot definition.
+#' @param pkParameterDT A data.table containing simulated PK parameter values.
+#' @param dataObservedPK Optional data.table containing observed PK parameter values.
+#' @param aggregationFlag Aggregation mode for variance summaries.
+#' @param percentiles Percentiles used when `aggregationFlag` is `Percentiles`.
 #' @param customFunction An optional custom function for aggregation.
 #' A custom function should take a numeric vector `y` as input and return a list containing:
 #'
@@ -294,6 +305,15 @@ plotPKForest <- function(
 #' it is used in plot legends and captions. It must be a concatenation of the descriptor of `yValues`
 #' and the descriptor of `yMin - yMax` range separated by "|" (e.g., "mean | standard deviation"
 #' or "median | 5th - 95th percentile").
+#' @param scaleVectors Optional scale overrides for simulated/observed aesthetics.
+#' @param labelWrapWidth Width used when wrapping long axis labels.
+#' @param vlineIntercept Optional x-position(s) for vertical reference line(s).
+#' @param withTable Logical indicating whether to include the side table.
+#' @param relWidths Optional relative widths for plot and table layout.
+#' @param heightToWidth Height-to-width ratio used for export.
+#' @param digitsToRound Number of digits for numeric rounding.
+#' @param digitsToShow Number of digits to show in formatted labels/tables.
+#' @return A named list of plot objects keyed by plot and scale.
 #'
 #' @export
 #' @family plot functions
@@ -322,7 +342,7 @@ plotPKForestAggregatedAbsoluteValues <- function(
   digitsToRound = 2,
   digitsToShow = 2
 ) {
-  validateCommonInputs(
+  .validateCommonInputs(
     pkParameterDT = pkParameterDT,
     dataObservedPK = dataObservedPK,
     scaleVectors = scaleVectors,
@@ -330,7 +350,7 @@ plotPKForestAggregatedAbsoluteValues <- function(
     vlineIntercept = vlineIntercept
   )
   aggregationFlag <- match.arg(aggregationFlag)
-  aggregationFun <- getAggregationFunction(
+  aggregationFun <- .getAggregationFunction(
     aggregationFlag,
     percentiles,
     customFunction,
@@ -338,7 +358,7 @@ plotPKForestAggregatedAbsoluteValues <- function(
   )
 
   plotList <-
-    plotPKForest(
+    .plotPKForest(
       projectConfiguration,
       onePlotConfig = onePlotConfig,
       pkParameterDT = pkParameterDT,
@@ -356,13 +376,31 @@ plotPKForestAggregatedAbsoluteValues <- function(
   return(plotList)
 }
 
-#' @inherit plotPKForest
+#' Plot PK Forest Point Estimate of Absolute Values
+#'
+#' Generates PK forest plots showing point estimates of absolute values.
+#'
+#' @param projectConfiguration A ProjectConfiguration object containing report and scenario settings.
+#' @param onePlotConfig A data.table with plot configuration rows for one plot definition.
+#' @param pkParameterDT A data.table containing simulated PK parameter values.
+#' @param dataObservedPK Optional data.table containing observed PK parameter values.
 #' @param statFun A named list of functions used for statistical aggregation, typically
 #'   including the geometric mean function for bootstrapping.
 #'   This must be a function accepting as input a numeric vector and returning a numeric value.
 #'   The input is formatted as a named list, the name is used in plot legends and captions
 #'    c('geometric mean' = function(y) exp(mean(log(y[y>0]))))
 #'  (for `plotPKForestPointEstimateOfAbsoluteValues` and `plotPKForestPointEstimateOfRatios`)
+#' @param confLevel Confidence level used for bootstrap intervals.
+#' @param nBootstrap Number of bootstrap samples.
+#' @param scaleVectors Optional scale overrides for simulated/observed aesthetics.
+#' @param labelWrapWidth Width used when wrapping long axis labels.
+#' @param vlineIntercept Optional x-position(s) for vertical reference line(s).
+#' @param withTable Logical indicating whether to include the side table.
+#' @param relWidths Optional relative widths for plot and table layout.
+#' @param heightToWidth Height-to-width ratio used for export.
+#' @param digitsToRound Number of digits for numeric rounding.
+#' @param digitsToShow Number of digits to show in formatted labels/tables.
+#' @return A named list of plot objects keyed by plot and scale.
 #'
 #' @export
 #' @family plot functions
@@ -386,7 +424,7 @@ plotPKForestPointEstimateOfAbsoluteValues <- function(
 ) {
   ratioMode <- "none"
 
-  validateCommonInputs(
+  .validateCommonInputs(
     pkParameterDT = pkParameterDT,
     dataObservedPK = dataObservedPK,
     scaleVectors = scaleVectors,
@@ -394,13 +432,13 @@ plotPKForestPointEstimateOfAbsoluteValues <- function(
     vlineIntercept = vlineIntercept
   )
 
-  validatePointEstimateInputs(
+  .validatePointEstimateInputs(
     nBootstrap = nBootstrap,
     confLevel = confLevel,
     statFun = statFun
   )
 
-  plotList <- plotPKForest(
+  plotList <- .plotPKForest(
     projectConfiguration = projectConfiguration,
     onePlotConfig = onePlotConfig,
     pkParameterDT = pkParameterDT,
@@ -424,7 +462,16 @@ plotPKForestPointEstimateOfAbsoluteValues <- function(
   return(plotList)
 }
 
-#' @inherit plotPKForest
+#' Plot PK Forest Aggregated Ratios
+#'
+#' Generates PK forest plots showing aggregated ratios between scenarios.
+#'
+#' @param projectConfiguration A ProjectConfiguration object containing report and scenario settings.
+#' @param onePlotConfig A data.table with plot configuration rows for one plot definition.
+#' @param pkParameterDT A data.table containing simulated PK parameter values.
+#' @param dataObservedPK Optional data.table containing observed PK parameter values.
+#' @param aggregationFlag Aggregation mode for variance summaries.
+#' @param percentiles Percentiles used when `aggregationFlag` is `Percentiles`.
 #' @param customFunction An optional custom function for aggregation.
 #' A custom function should take a numeric vector `y` as input and return a list containing:
 #'
@@ -435,6 +482,15 @@ plotPKForestPointEstimateOfAbsoluteValues <- function(
 #' it is used in plot legends and captions. It must be a concatenation of the descriptor of `yValues`
 #' and the descriptor of `yMin - yMax` range separated by "|" (e.g., "mean | standard deviation"
 #' or "median | 5th - 95th percentile").
+#' @param scaleVectors Optional scale overrides for simulated/observed aesthetics.
+#' @param labelWrapWidth Width used when wrapping long axis labels.
+#' @param vlineIntercept Optional x-position(s) for vertical reference line(s).
+#' @param withTable Logical indicating whether to include the side table.
+#' @param relWidths Optional relative widths for plot and table layout.
+#' @param heightToWidth Height-to-width ratio used for export.
+#' @param digitsToRound Number of digits for numeric rounding.
+#' @param digitsToShow Number of digits to show in formatted labels/tables.
+#' @return A named list of plot objects keyed by plot and scale.
 #'
 #' @export
 #' @family plot functions
@@ -463,7 +519,7 @@ plotPKForestAggregatedRatios <- function(
   digitsToRound = 2,
   digitsToShow = 2
 ) {
-  validateCommonInputs(
+  .validateCommonInputs(
     pkParameterDT = pkParameterDT,
     dataObservedPK = dataObservedPK,
     scaleVectors = scaleVectors,
@@ -472,7 +528,7 @@ plotPKForestAggregatedRatios <- function(
   )
 
   aggregationFlag <- match.arg(aggregationFlag)
-  aggregationFun <- getAggregationFunction(
+  aggregationFun <- .getAggregationFunction(
     aggregationFlag,
     percentiles,
     customFunction,
@@ -481,13 +537,13 @@ plotPKForestAggregatedRatios <- function(
 
   # as this essential, do this validation here and not in validatePKForestAggregatedRatios
   # within a custom function plotPKForestAggregatedRatios may be called without validatePKForestAggregatedRatios
-  validateIsCrossOverStudy(
+  .validateIsCrossOverStudy(
     configTablePlots = onePlotConfig,
     pkParameterDT = pkParameterDT
   )
 
   plotList <-
-    plotPKForest(
+    .plotPKForest(
       projectConfiguration,
       onePlotConfig = onePlotConfig,
       pkParameterDT = pkParameterDT,
@@ -506,13 +562,31 @@ plotPKForestAggregatedRatios <- function(
   return(plotList)
 }
 
-#' @inherit plotPKForest
+#' Plot PK Forest Point Estimate of Ratios
+#'
+#' Generates PK forest plots showing point estimates of scenario ratios.
+#'
+#' @param projectConfiguration A ProjectConfiguration object containing report and scenario settings.
+#' @param onePlotConfig A data.table with plot configuration rows for one plot definition.
+#' @param pkParameterDT A data.table containing simulated PK parameter values.
+#' @param dataObservedPK Optional data.table containing observed PK parameter values.
+#' @param nBootstrap Number of bootstrap samples.
+#' @param confLevel Confidence level used for bootstrap intervals.
 #' @param statFun A named list of functions used for statistical aggregation, typically
 #'   including the geometric mean function for bootstrapping.
 #'   This must be a function accepting as input a numeric vector and returning a numeric value.
 #'   The input is formatted as a named list, the name is used in plot legends and captions
 #'    c('geometric mean' = function(y) exp(mean(log(y[y>0]))))
 #'  (for `plotPKForestPointEstimateOfAbsoluteValues` and `plotPKForestPointEstimateOfRatios`)
+#' @param scaleVectors Optional scale overrides for simulated/observed aesthetics.
+#' @param labelWrapWidth Width used when wrapping long axis labels.
+#' @param vlineIntercept Optional x-position(s) for vertical reference line(s).
+#' @param withTable Logical indicating whether to include the side table.
+#' @param relWidths Optional relative widths for plot and table layout.
+#' @param heightToWidth Height-to-width ratio used for export.
+#' @param digitsToRound Number of digits for numeric rounding.
+#' @param digitsToShow Number of digits to show in formatted labels/tables.
+#' @return A named list of plot objects keyed by plot and scale.
 #'
 #' @export
 #' @family plot functions
@@ -534,7 +608,7 @@ plotPKForestPointEstimateOfRatios <- function(
   digitsToRound = 2,
   digitsToShow = 2
 ) {
-  validateCommonInputs(
+  .validateCommonInputs(
     pkParameterDT = pkParameterDT,
     dataObservedPK = dataObservedPK,
     scaleVectors = scaleVectors,
@@ -542,19 +616,19 @@ plotPKForestPointEstimateOfRatios <- function(
     vlineIntercept = vlineIntercept
   )
 
-  ratioMode <- getRatioMode(
+  ratioMode <- .getRatioMode(
     onePlotConfig = onePlotConfig,
     pkParameterDT = pkParameterDT,
     asRatio = TRUE
   )
 
-  validatePointEstimateInputs(
+  .validatePointEstimateInputs(
     nBootstrap = nBootstrap,
     confLevel = confLevel,
     statFun = statFun
   )
 
-  plotList <- plotPKForest(
+  plotList <- .plotPKForest(
     projectConfiguration = projectConfiguration,
     onePlotConfig = onePlotConfig,
     pkParameterDT = pkParameterDT,
@@ -583,13 +657,15 @@ plotPKForestPointEstimateOfRatios <- function(
 #'
 #' This function updates the scale vectors for simulated and observed data based on the provided input.
 #'
-#' @inheritParams plotPKForest
+#' @param scaleVectorsInput A named list with optional `simulated` and `observed`
+#'   entries to override default `color`, `fill`, and `shape` scales.
 #'
 #' @return A list containing updated scale vectors for both simulated and observed data. Each component of the
 #'         list includes properties such as `color`, `fill`, and `shape`.
 #'
 #' @keywords internal
-updateScalevector <- function(scaleVectorsInput) {
+#' @noRd
+.updateScalevector <- function(scaleVectorsInput) {
   scaleVectors <- list(
     simulated = list(
       color = "black",
@@ -617,10 +693,12 @@ updateScalevector <- function(scaleVectorsInput) {
 #'
 #' Filters observed PK parameters based on the provided configuration.
 #'
-#' @inheritParams plotPKForest
+#' @param dataObservedPK Optional observed PK data table.
+#' @param onePlotConfig A one-plot configuration table.
 #' @return Filtered data table of observed PK parameters.
 #' @keywords internal
-filterParameterObserved <- function(dataObservedPK, onePlotConfig) {
+#' @noRd
+.filterParameterObserved <- function(dataObservedPK, onePlotConfig) {
   if (is.null(dataObservedPK)) {
     return(NULL)
   }
@@ -662,10 +740,15 @@ filterParameterObserved <- function(dataObservedPK, onePlotConfig) {
 #'
 #' Filters simulated PK parameters based on the provided configuration.
 #'
-#' @inheritParams plotPKForest
+#' @param projectConfiguration Project configuration object.
+#' @param pkParameterDT Simulated PK parameter data table.
+#' @param onePlotConfig A one-plot configuration table.
+#' @param ratioMode Ratio calculation mode.
+#' @param asPointeEstimate Logical indicating point-estimate mode.
 #' @return Filtered data table of simulated PK parameters.
 #' @keywords internal
-filterParameterSimulated <- function(
+#' @noRd
+.filterParameterSimulated <- function(
   projectConfiguration,
   pkParameterDT,
   onePlotConfig,
@@ -726,7 +809,8 @@ filterParameterSimulated <- function(
 #'
 #' @return A list of prepared data for the PK forest plot.
 #' @keywords internal
-prepareDataForPKForest <- function(
+#' @noRd
+.prepareDataForPKForest <- function(
   onePlotConfig,
   pkParameterFiltered,
   dataObservedPK,
@@ -738,7 +822,7 @@ prepareDataForPKForest <- function(
   aggregationFlag
 ) {
   if (asPointeEstimate) {
-    plotData <- aggregatePointEstimate(
+    plotData <- .aggregatePointEstimate(
       pkParameterFiltered = pkParameterFiltered,
       onePlotConfig = onePlotConfig,
       ratioMode = ratioMode,
@@ -752,7 +836,7 @@ prepareDataForPKForest <- function(
       pkParameterFiltered <- pkParameterFiltered[[1]]
     }
   } else {
-    plotData <- getAggregatedVariance(
+    plotData <- .getAggregatedVariance(
       dt = pkParameterFiltered,
       aggregationFun = aggregationFun,
       valueColumn = "value",
@@ -761,13 +845,13 @@ prepareDataForPKForest <- function(
     )
   }
 
-  plotData <- addObservedData(
+  plotData <- .addObservedData(
     plotData = plotData,
     dataObservedPK = dataObservedPK,
     onePlotConfig = onePlotConfig
   )
 
-  plotData <- addDescriptions(
+  plotData <- .addDescriptions(
     plotData = plotData,
     onePlotConfig = onePlotConfig,
     pkParameterDT = pkParameterFiltered
@@ -780,7 +864,7 @@ prepareDataForPKForest <- function(
   )
 
   plotDataGroup <- lapply(plotDataGroup, function(dataGroup) {
-    adjustForestDataPerGroup(
+    .adjustForestDataPerGroup(
       dataGroup = dataGroup,
       onePlotConfig = onePlotConfig
     )
@@ -800,7 +884,8 @@ prepareDataForPKForest <- function(
 #' @param onePlotConfig Configuration for the plot, containing metadata like plot names.
 #' @return A modified data table with updated `outputPathId` as a factor and generated `plotTag`.
 #' @keywords internal
-adjustForestDataPerGroup <- function(dataGroup, onePlotConfig) {
+#' @noRd
+.adjustForestDataPerGroup <- function(dataGroup, onePlotConfig) {
   # initialize to avoid linter messages
   tmp <- dataGroup[,
     .N,
@@ -841,7 +926,7 @@ adjustForestDataPerGroup <- function(dataGroup, onePlotConfig) {
   }
 
   dataGroup <-
-    dataGroup[, plotTag := generatePlotTag(as.numeric(outputPathId))]
+    dataGroup[, plotTag := .generatePlotTag(as.numeric(outputPathId))]
 
   return(dataGroup)
 }
@@ -858,7 +943,8 @@ adjustForestDataPerGroup <- function(dataGroup, onePlotConfig) {
 #' @param aggregationFlag Optional aggregation method.
 #' @return A data table containing the aggregated point estimates and confidence intervals.
 #' @keywords internal
-aggregatePointEstimate <- function(
+#' @noRd
+.aggregatePointEstimate <- function(
   pkParameterFiltered,
   onePlotConfig,
   ratioMode,
@@ -872,7 +958,7 @@ aggregatePointEstimate <- function(
     results <- lapply(
       pkParameterFiltered,
       function(dt) {
-        calculateAggregationWithCIBYGroup(
+        .calculateAggregationWithCIBYGroup(
           dt = dt,
           aggregationFun = aggregationFun,
           confLevel = confLevel,
@@ -881,7 +967,7 @@ aggregatePointEstimate <- function(
           identifier = c("pkParameter", "outputPathId", "scenario"),
           direction = "x"
         ) %>%
-          checkPrecision()
+          .checkPrecision()
       }
     )
     plotData <- unique(onePlotConfig[, c(
@@ -914,7 +1000,7 @@ aggregatePointEstimate <- function(
         ifelse(is.na(xMin.reference), xValues.reference, xMin.reference)
     ]
   } else {
-    plotData <- calculateAggregationWithCIBYGroup(
+    plotData <- .calculateAggregationWithCIBYGroup(
       dt = pkParameterFiltered,
       aggregationFun = aggregationFun,
       confLevel = confLevel,
@@ -923,7 +1009,7 @@ aggregatePointEstimate <- function(
       identifier = c("pkParameter", "outputPathId", "scenario"),
       direction = "x"
     ) %>%
-      checkPrecision()
+      .checkPrecision()
   }
 
   return(plotData)
@@ -947,7 +1033,8 @@ aggregatePointEstimate <- function(
 #'          remain, a message is logged indicating that the required precision was not reached.
 #'
 #' @keywords internal
-checkPrecision <- function(dt) {
+#' @noRd
+.checkPrecision <- function(dt) {
   # initialize to avoid linter messages
 
   dt[, precision := (xMax - xMin) / xValues]
@@ -979,7 +1066,8 @@ checkPrecision <- function(dt) {
 #' @param onePlotConfig Configuration for the plot.
 #' @return Updated plot data with observed data added.
 #' @keywords internal
-addObservedData <- function(plotData, dataObservedPK, onePlotConfig) {
+#' @noRd
+.addObservedData <- function(plotData, dataObservedPK, onePlotConfig) {
   # initialize to avoid linter messages
 
   plotData[, dataType := "simulated"]
@@ -1029,7 +1117,8 @@ addObservedData <- function(plotData, dataObservedPK, onePlotConfig) {
 #'
 #' @return Updated plot data with descriptions added.
 #' @keywords internal
-addDescriptions <- function(plotData, onePlotConfig, pkParameterDT) {
+#' @noRd
+.addDescriptions <- function(plotData, onePlotConfig, pkParameterDT) {
   # initialize to avoid linter messages
 
   plotData <- merge(
@@ -1094,12 +1183,13 @@ addDescriptions <- function(plotData, onePlotConfig, pkParameterDT) {
 #' @param plotData Data table containing plot data.
 #' @return A named vector of table labels.
 #' @keywords internal
-getTableLabelsForPKForest <- function(plotData) {
+#' @noRd
+.getTableLabelsForPKForest <- function(plotData) {
   tableColumns <- intersect(
     c("xValues", "xErrorValues", "xMin", "xMax"),
     names(plotData)
   )
-  tableLabels <- getErrorLabels(plotData$xErrorType[1])[seq(
+  tableLabels <- .getErrorLabels(plotData$xErrorType[1])[seq(
     1,
     length(tableColumns)
   )]
@@ -1123,7 +1213,8 @@ getTableLabelsForPKForest <- function(plotData) {
 #' @return A mapping object created using `aes` from ggplot2, which can be used
 #'   in a ggplot call to create forest plots.
 #' @keywords internal
-getMappingForForestPlots <- function(plotData, columnList) {
+#' @noRd
+.getMappingForForestPlots <- function(plotData, columnList) {
   # initialize variable to avoid messages
 
   mapping <- aes(x = xValues, y = get(columnList$yColumn), groupby = dataType)
@@ -1165,7 +1256,8 @@ getMappingForForestPlots <- function(plotData, columnList) {
 #' @param ratioMode Mode for ratio calculations.
 #' @return A list of selected columns for the plot.
 #' @keywords internal
-getColumnSelectionForPKForest <- function(plotData, ratioMode) {
+#' @noRd
+.getColumnSelectionForPKForest <- function(plotData, ratioMode) {
   columnList <- list()
   if (ratioMode == "none") {
     columnList$yColumn <- "scenarioShortName"
@@ -1195,8 +1287,7 @@ getColumnSelectionForPKForest <- function(plotData, ratioMode) {
 
   if (uniqueN(plotData$plotTag) > 1) {
     columnList$xFacetColumn <- "plotTag"
-  } else {
-  }
+  } else {}
   return(columnList)
 }
 #' Adjust PK Forest Plot Object
@@ -1209,7 +1300,8 @@ getColumnSelectionForPKForest <- function(plotData, ratioMode) {
 #' @param tableLabels named vector with table headers
 #' @return The adjusted plot object.
 #' @keywords internal
-adjustPkForestPlotObject <- function(
+#' @noRd
+.adjustPkForestPlotObject <- function(
   combinedObject,
   scaleVectors,
   vlineIntercept,
@@ -1279,7 +1371,8 @@ adjustPkForestPlotObject <- function(
 #' @param plotData Data table containing plot data.
 #' @return The adjusted plot object with precision remark if applicable.
 #' @keywords internal
-addPrecisisonRemark <- function(combinedObject, asPointeEstimate, plotData) {
+#' @noRd
+.addPrecisisonRemark <- function(combinedObject, asPointeEstimate, plotData) {
   # initialize to avoid linter messages
 
   if (!asPointeEstimate) {
@@ -1317,7 +1410,8 @@ addPrecisisonRemark <- function(combinedObject, asPointeEstimate, plotData) {
 #' @param ratioMode Mode for ratio calculations.
 #' @return A string containing the caption for the plot.
 #' @keywords internal
-getCaptionForForestPlot <- function(
+#' @noRd
+.getCaptionForForestPlot <- function(
   plotData,
   xScale,
   plotCaptionAddon,
@@ -1333,23 +1427,23 @@ getCaptionForForestPlot <- function(
     unique()
 
   if (ratioMode == "none") {
-    pktext <- concatWithAnd(unique(plotData$displayNamePKParameter))
+    pktext <- .concatWithAnd(unique(plotData$displayNamePKParameter))
   } else {
-    pktext <- concatWithAnd(paste(
+    pktext <- .concatWithAnd(paste(
       unique(plotData$displayNamePKParameter),
       "ratios"
     ))
   }
 
   captiontxt <- paste0(
-    captionPrefixSimulated(),
+    .captionPrefixSimulated(),
     " ",
     ifelse("observed" %in% unique(plotData$dataType), " and observed ", ""),
     pktext,
     " of ",
-    pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"),
+    .pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"),
     " ",
-    captionScaleText(scale = xScale, axisLabel = "x"),
+    .captionScaleText(scale = xScale, axisLabel = "x"),
     "."
   )
 
@@ -1362,7 +1456,7 @@ getCaptionForForestPlot <- function(
     )
   } else {
     tmp <- plotData[,
-      .(N = pasteFigureTags(.SD, "N", endWithDot = FALSE)),
+      .(N = .pasteFigureTags(.SD, "N", endWithDot = FALSE)),
       by = "scenarioShortName"
     ]
     tmp <- tmp[,
@@ -1370,19 +1464,19 @@ getCaptionForForestPlot <- function(
         scenariosPerN = paste(
           N,
           "for",
-          concatWithAnd(unique(scenarioShortName))
+          .concatWithAnd(unique(scenarioShortName))
         )
       ),
       by = c("N")
     ]
     nTxt <- paste(
       "Number of simulated values is",
-      concatWithAnd(tmp$scenariosPerN)
+      .concatWithAnd(tmp$scenariosPerN)
     )
   }
-  captiontxt <- addCaptionTextAddon(captiontxt, nTxt)
+  captiontxt <- .addCaptionTextAddon(captiontxt, nTxt)
 
-  captiontxt <- addCaptionTextAddon(captiontxt, plotCaptionAddon)
+  captiontxt <- .addCaptionTextAddon(captiontxt, plotCaptionAddon)
 
   return(captiontxt)
 }
@@ -1396,20 +1490,21 @@ getCaptionForForestPlot <- function(
 #' @param dtDataReference Optional data reference.
 #' @return A character vector containing footnote lines.
 #' @keywords internal
-getFootnoteLinesForForestPlots <- function(
+#' @noRd
+.getFootnoteLinesForForestPlots <- function(
   plotData,
   ratioMode,
   asPointeEstimate,
   dtDataReference
 ) {
-  errorLabels <- getErrorLabels(plotData$xErrorType[1])
+  errorLabels <- .getErrorLabels(plotData$xErrorType[1])
 
   footnoteLines <-
     paste0(
       "Simulated ",
       ifelse("observed" %in% unique(plotData$dataType), " and observed ", ""),
       "data is displayed as ",
-      concatWithAnd(errorLabels),
+      .concatWithAnd(errorLabels),
       "."
     )
   if (ratioMode == "ratioOfPopulation") {
@@ -1437,7 +1532,8 @@ getFootnoteLinesForForestPlots <- function(
 #' - 'ratioOfPopulation' if all population IDs are different between scenarios.
 #'
 #' @keywords internal
-getRatioMode <- function(onePlotConfig, pkParameterDT, asRatio) {
+#' @noRd
+.getRatioMode <- function(onePlotConfig, pkParameterDT, asRatio) {
   if (!asRatio) {
     return("none")
   }
@@ -1484,7 +1580,7 @@ getRatioMode <- function(onePlotConfig, pkParameterDT, asRatio) {
 #' @family functions to generate forest plots
 validatePKForestAggregatedAbsoluteValuesConfig <-
   function(configTable, pkParameterDT, ...) {
-    validatePKForestConfigTable(
+    .validatePKForestConfigTable(
       configTable = configTable,
       pkParameterDT = pkParameterDT,
       ...
@@ -1504,7 +1600,7 @@ validatePKForestAggregatedAbsoluteValuesConfig <-
 #' @family functions to generate forest plots
 validatePKForestPointEstimateOfAbsoluteValuesConfig <-
   function(configTable, pkParameterDT, ...) {
-    validatePKForestConfigTable(
+    .validatePKForestConfigTable(
       configTable = configTable,
       pkParameterDT = pkParameterDT,
       ...
@@ -1524,14 +1620,14 @@ validatePKForestPointEstimateOfAbsoluteValuesConfig <-
 #' @family functions to generate forest plots
 validatePKForestAggregatedRatiosConfig <-
   function(configTable, pkParameterDT, ...) {
-    configTablePlots <- validatePKForestConfigTable(
+    configTablePlots <- .validatePKForestConfigTable(
       configTable = configTable,
       pkParameterDT = pkParameterDT,
       ...
     )
 
     # check if reference Scenarios are there
-    validateExistenceOfReferenceForRatio(configTablePlots = configTablePlots)
+    .validateExistenceOfReferenceForRatio(configTablePlots = configTablePlots)
 
     return(invisible())
   }
@@ -1548,14 +1644,14 @@ validatePKForestAggregatedRatiosConfig <-
 #' @family functions to generate forest plots
 validatePKForestPointEstimateOfRatiosConfig <-
   function(configTable, pkParameterDT, ...) {
-    configTablePlots <- validatePKForestConfigTable(
+    configTablePlots <- .validatePKForestConfigTable(
       configTable = configTable,
       pkParameterDT = pkParameterDT,
       ...
     )
 
     # check if reference Scenarios are there
-    validateExistenceOfReferenceForRatio(configTablePlots = configTablePlots)
+    .validateExistenceOfReferenceForRatio(configTablePlots = configTablePlots)
     return(invisible())
   }
 #' Validate PK Forest Configuration Table
@@ -1568,7 +1664,8 @@ validatePKForestPointEstimateOfRatiosConfig <-
 #' @return NULL (invisible).
 #'
 #' @keywords internal
-validatePKForestConfigTable <- function(configTable, pkParameterDT, ...) {
+#' @noRd
+.validatePKForestConfigTable <- function(configTable, pkParameterDT, ...) {
   configTablePlots <- validateHeaders(configTable)
   dotArgs <- list(...)
   dataObservedPK <- dotArgs$dataObservedPK
@@ -1635,7 +1732,8 @@ validatePKForestConfigTable <- function(configTable, pkParameterDT, ...) {
 #' @param statFun Statistical function for bootstrapping.
 #' @return NULL (invisible).
 #' @keywords internal
-validatePointEstimateInputs <- function(nBootstrap, confLevel, statFun) {
+#' @noRd
+.validatePointEstimateInputs <- function(nBootstrap, confLevel, statFun) {
   checkmate::assertIntegerish(nBootstrap, lower = 0, len = 1)
   checkmate::assertDouble(
     confLevel,
@@ -1660,7 +1758,8 @@ validatePointEstimateInputs <- function(nBootstrap, confLevel, statFun) {
 #' @param vlineIntercept Optional vertical line intercept.
 #' @return NULL (invisible).
 #' @keywords internal
-validateCommonInputs <- function(
+#' @noRd
+.validateCommonInputs <- function(
   pkParameterDT,
   dataObservedPK,
   scaleVectors,
@@ -1708,7 +1807,7 @@ validateCommonInputs <- function(
 #' @seealso
 #' \code{\link{plotPKForestAggregatedAbsoluteValues}}, \code{\link{plotPKForestPointEstimateOfAbsoluteValues}},
 #' \code{\link{plotPKForestAggregatedRatios}}, \code{\link{plotPKForestPointEstimateOfRatios}},
-#
+#'
 #' @export
 #' @family plot functions
 #' @family plot configuration helper function
@@ -1764,7 +1863,7 @@ addDefaultConfigForPKForestPlots <- function(
     sheetName = sheetName,
     dtNewData = rbind(
       dtNewHeader,
-      dtNewConfig, # nolint: indentation_linter
+      dtNewConfig,
       fill = TRUE
     )
   )

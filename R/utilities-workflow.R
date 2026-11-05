@@ -76,7 +76,7 @@ getQCpassedEnvironmentVariable <- function() {
   }
   # add warning message for unset or corrupt variable, set to default to avoid further messages
   if (is.na(qCpassed)) {
-    warning(messages$warningutilitiesworkflowQcPassedInvalid()) # nolint: object_usage_linter
+    warning(messages$warningutilitiesworkflowQcPassedInvalid())
     Sys.setenv(QCpassed = 0)
     qCpassed <- FALSE
   }
@@ -103,11 +103,11 @@ getQCpassedEnvironmentVariable <- function() {
   stopHelperFunction <- getOption("OSPSuite.RF.stopHelperFunction")
 
   if (is.null(stopHelperFunction)) {
-    stop(messages$errorutilitiesworkflowOptionsNotInitialized()) # nolint: object_usage_linter
+    stop(messages$errorutilitiesworkflowOptionsNotInitialized())
   }
 
   if (stopHelperFunction) {
-    stop(messages$errorutilitiesworkflowHelperFunctionNotAllowed()) # nolint: object_usage_linter
+    stop(messages$errorutilitiesworkflowHelperFunctionNotAllowed())
   }
 
   return(invisible())

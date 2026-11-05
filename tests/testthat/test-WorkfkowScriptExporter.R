@@ -157,7 +157,7 @@ test_that("WorkflowScriptExporter renames packaged population and script files",
     "workflow_script_r.txt"
   )
   expect_equal(
-    changedInputReferenceFileName(
+    .changedInputReferenceFileName(
       fileName = "study_population_csv.txt",
       fileType = "population",
       source = "study_population.csv"
@@ -165,7 +165,7 @@ test_that("WorkflowScriptExporter renames packaged population and script files",
     "study_population.csv"
   )
   expect_equal(
-    changedInputReferenceFileName(
+    .changedInputReferenceFileName(
       fileName = "workflow_script_r.txt",
       fileType = "script",
       source = "workflow_script.R"
@@ -232,7 +232,7 @@ test_that("WorkflowScriptExporter removes indented leftover chunk placeholders",
   expect_equal(cleanedLines, c("before", "after"))
 })
 
-test_that("importWorkflowFiles restores project-compatible filenames", {
+test_that(".importWorkflowFiles restores project-compatible filenames", {
   ePackageDir <- withr::local_tempdir()
   populationsDir <- withr::local_tempdir()
   modelDir <- withr::local_tempdir()
@@ -254,13 +254,13 @@ test_that("importWorkflowFiles restores project-compatible filenames", {
     addOns = list(dataFileFolder = dataDir)
   )
 
-  importWorkflowFiles(projectConfigurationNew, ePackageDir, 8)
+  .importWorkflowFiles(projectConfigurationNew, ePackageDir, 8)
 
   expect_true(file.exists(file.path(populationsDir, "study_population.csv")))
   expect_true(file.exists(file.path(configurationsDir, "workflow_script.R")))
 })
 
-test_that("importWorkflowFiles supports legacy manifest name", {
+test_that(".importWorkflowFiles supports legacy manifest name", {
   ePackageDir <- withr::local_tempdir()
   populationsDir <- withr::local_tempdir()
   modelDir <- withr::local_tempdir()
@@ -279,7 +279,7 @@ test_that("importWorkflowFiles supports legacy manifest name", {
     addOns = list(dataFileFolder = dataDir)
   )
 
-  importWorkflowFiles(projectConfigurationNew, ePackageDir, 9)
+  .importWorkflowFiles(projectConfigurationNew, ePackageDir, 9)
 
   expect_true(file.exists(file.path(populationsDir, "legacy_population.csv")))
 })
@@ -315,7 +315,7 @@ test_that("WorkflowScriptExporter exports numeric values via evalCodeChunks", {
     fixed = TRUE
   )))
 
-  analysisDataFolder <- resolveWorkflowAnalysisDataFolder(ePackageDir)
+  analysisDataFolder <- .resolveWorkflowAnalysisDataFolder(ePackageDir)
   expect_true(file.exists(file.path(
     analysisDataFolder,
     "data_numericvalues_csv.txt"

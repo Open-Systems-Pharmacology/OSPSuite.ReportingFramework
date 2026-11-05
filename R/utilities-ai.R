@@ -287,106 +287,24 @@ validateWorkflowForAI <- function(projectConfiguration, strict = FALSE) {
   lifecycle::signal_stage("experimental", "validateWorkflowForAI()")
   checkmate::assertFlag(strict)
 
-  errors <- character()
-  warnings <- character()
-  suggestions <- character()
-
   dataImportMapFile <- projectConfiguration$addOns$dataImportMapFile
   scenariosFile <- projectConfiguration$scenariosFile
   reportsFile <- projectConfiguration$addOns$reportsFile
+  configurationFiles <- c(dataImportMapFile, scenariosFile, reportsFile)
 
-  for (p in c(dataImportMapFile, scenariosFile, reportsFile)) {
-    if (!file.exists(p)) {
-      errors <- c(errors, paste("Missing configuration file:", p))
-    }
+  fileErrors <- .missingConfigurationFileErrors(configurationFiles)
+  fileWarnings <- character()
+
+  if (length(fileErrors) == 0) {
+    workbookValidation <- .validateDataImportWorkbookForAI(dataImportMapFile)
+    fileErrors <- c(fileErrors, workbookValidation$errors)
+    fileWarnings <- c(fileWarnings, workbookValidation$warnings)
   }
 
-  if (length(errors) == 0) {
-    wb <- openxlsx::loadWorkbook(dataImportMapFile)
-    requiredSheets <- c("DataFiles")
-    missingSheets <- setdiff(requiredSheets, wb$sheet_names)
-    if (length(missingSheets) > 0) {
-      errors <- c(
-        errors,
-        paste(
-            "Missing required sheets in DataImportMap:",
-          paste(missingSheets, collapse = ", ")
-        )
-      )
-    }
+  suggestions <- .aiValidationSuggestions(fileErrors, fileWarnings)
 
-    if ("DataFiles" %in% wb$sheet_names) {
-      dataFiles <- xlsxReadData(
-        wb = wb,
-        sheetName = "DataFiles",
-        skipDescriptionRow = TRUE
-      )
-
-      if (!all(c("fileIdentifier", "dataClass") %in% names(dataFiles))) {
-        errors <- c(
-          errors,
-          "DataFiles sheet must contain columns fileIdentifier and dataClass"
-        )
-      } else {
-        unknownDataClass <- setdiff(
-          unique(dataFiles$dataClass),
-          unname(unlist(DATACLASS))
-        )
-        unknownDataClass <- unknownDataClass[!is.na(unknownDataClass)]
-        if (length(unknownDataClass) > 0) {
-          errors <- c(
-            errors,
-            paste(
-              "Unknown DataClass values:",
-              paste(unknownDataClass, collapse = ", ")
-            )
-          )
-        }
-      }
-
-      numericRows <- dataFiles[
-        dataFiles$dataClass == DATACLASS[["numericValues"]]
-      ]
-      if (nrow(numericRows) > 0) {
-        if (!("dictionary" %in% names(dataFiles))) {
-          warnings <- c(
-            warnings,
-            "DataFiles has numericValues rows but no dictionary column"
-          )
-        } else {
-          dictionaryValues <- unique(stats::na.omit(
-            numericRows$dictionary
-          ))
-          missingNumericSheets <- setdiff(
-            dictionaryValues,
-            wb$sheet_names
-          )
-          if (length(missingNumericSheets) > 0) {
-            errors <- c(
-              errors,
-              paste(
-                "Missing numeric values sheets:",
-                paste(missingNumericSheets, collapse = ", ")
-              )
-            )
-          }
-        }
-      }
-    }
-  }
-
-  if (length(errors) == 0 && length(warnings) == 0) {
-    suggestions <- c(
-      suggestions,
-      "Configuration looks ready for AI-assisted workflow generation"
-    )
-  } else {
-    suggestions <- c(
-      suggestions,
-      "Run readObservedDataByDictionary for each dataClassType to confirm import behavior",
-      "Ensure numericValues entries are unique and units are explicit"
-    )
-  }
+  errors <- unique(fileErrors)
+  warnings <- unique(fileWarnings)
 
   ok <- length(errors) == 0 && (!strict || length(warnings) == 0)
 
@@ -398,6 +316,135 @@ validateWorkflowForAI <- function(projectConfiguration, strict = FALSE) {
   ))
 }
 
+#' Collect Missing Configuration File Errors
+#'
+#' @param configurationFiles Character vector of required configuration file paths.
+#'
+#' @return Character vector with missing-file error messages.
+#' @keywords internal
+#' @noRd
+.missingConfigurationFileErrors <- function(configurationFiles) {
+  missingFiles <- configurationFiles[!file.exists(configurationFiles)]
+  if (length(missingFiles) == 0) {
+    return(character())
+  }
+
+  return(paste("Missing configuration file:", missingFiles))
+}
+
+#' Validate Data Import Workbook for AI Workflow Checks
+#'
+#' @param dataImportMapFile Path to the DataImportMap workbook.
+#'
+#' @return A list with `errors` and `warnings` character vectors.
+#' @details
+#' Performs staged checks for required sheets, required columns, allowed `dataClass`
+#' values, and consistency of optional numeric-values dictionary sheets.
+#' @keywords internal
+#' @noRd
+.validateDataImportWorkbookForAI <- function(dataImportMapFile) {
+  errors <- character()
+  warnings <- character()
+
+  wb <- openxlsx::loadWorkbook(dataImportMapFile)
+  requiredSheets <- c("DataFiles")
+  missingSheets <- setdiff(requiredSheets, wb$sheet_names)
+  if (length(missingSheets) > 0) {
+    errors <- c(
+      errors,
+      paste(
+        "Missing required sheets in DataImportMap:",
+        paste(missingSheets, collapse = ", ")
+      )
+    )
+    return(list(errors = errors, warnings = warnings))
+  }
+
+  dataFiles <- xlsxReadData(
+    wb = wb,
+    sheetName = "DataFiles",
+    skipDescriptionRow = TRUE
+  )
+
+  requiredColumns <- c("fileIdentifier", "dataClass")
+  if (!all(requiredColumns %in% names(dataFiles))) {
+    errors <- c(
+      errors,
+      "DataFiles sheet must contain columns fileIdentifier and dataClass"
+    )
+    return(list(errors = errors, warnings = warnings))
+  }
+
+  unknownDataClass <- setdiff(
+    unique(dataFiles$dataClass),
+    unname(unlist(DATACLASS))
+  )
+  unknownDataClass <- unknownDataClass[!is.na(unknownDataClass)]
+  if (length(unknownDataClass) > 0) {
+    errors <- c(
+      errors,
+      paste(
+        "Unknown DataClass values:",
+        paste(unknownDataClass, collapse = ", ")
+      )
+    )
+  }
+
+  numericRows <- dataFiles[dataFiles$dataClass == DATACLASS[["numericValues"]]]
+  if (nrow(numericRows) == 0) {
+    return(list(errors = errors, warnings = warnings))
+  }
+
+  if (!("dictionary" %in% names(dataFiles))) {
+    warnings <- c(
+      warnings,
+      "DataFiles has numericValues rows but no dictionary column"
+    )
+    return(list(errors = errors, warnings = warnings))
+  }
+
+  dictionaryValues <- unique(stats::na.omit(numericRows$dictionary))
+  missingNumericSheets <- setdiff(dictionaryValues, wb$sheet_names)
+  if (length(missingNumericSheets) > 0) {
+    errors <- c(
+      errors,
+      paste(
+        "Missing numeric values sheets:",
+        paste(missingNumericSheets, collapse = ", ")
+      )
+    )
+  }
+
+  return(list(errors = errors, warnings = warnings))
+}
+
+#' Build AI Validation Suggestions
+#'
+#' @param errors Character vector with validation errors.
+#' @param warnings Character vector with validation warnings.
+#'
+#' @return Character vector of suggestion messages.
+#' @keywords internal
+#' @noRd
+.aiValidationSuggestions <- function(errors, warnings) {
+  if (length(errors) == 0 && length(warnings) == 0) {
+    return("Configuration looks ready for AI-assisted workflow generation")
+  }
+
+  return(c(
+    "Run readObservedDataByDictionary for each dataClassType to confirm import behavior",
+    "Ensure numericValues entries are unique and units are explicit"
+  ))
+}
+
+#' Extract Unique Non-Missing Values from a Column
+#'
+#' @param dt A data.frame or data.table.
+#' @param columnName Name of the column to extract values from.
+#'
+#' @return Character vector of unique non-missing values; empty if column is absent.
+#' @keywords internal
+#' @noRd
 .safeUniqueValues <- function(dt, columnName) {
   if (!(columnName %in% names(dt))) {
     return(character())
@@ -406,20 +453,35 @@ validateWorkflowForAI <- function(projectConfiguration, strict = FALSE) {
   return(unique(as.character(stats::na.omit(dt[[columnName]]))))
 }
 
+#' Truncate Value Vector to a Maximum Size
+#'
+#' @param x Vector of values.
+#' @param maxItemsPerSection Maximum number of values to keep.
+#'
+#' @return Character vector truncated to `maxItemsPerSection` plus ellipsis when needed.
+#' @keywords internal
+#' @noRd
 .truncateValues <- function(x, maxItemsPerSection) {
   x <- as.character(stats::na.omit(x))
   if (length(x) <= maxItemsPerSection) {
     return(x)
   }
 
-  c(x[seq_len(maxItemsPerSection)], "...")
+  return(c(x[seq_len(maxItemsPerSection)], "..."))
 }
 
+#' Convert Values to Markdown Bullet Lines
+#'
+#' @param values Character vector values.
+#'
+#' @return Character vector of markdown bullet lines.
+#' @keywords internal
+#' @noRd
 .toBulletLines <- function(values) {
   values <- as.character(values)
   if (length(values) == 0) {
     return("- none")
   }
 
-  paste("-", values)
+  return(paste("-", values))
 }

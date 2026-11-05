@@ -6,6 +6,7 @@
 #'    available list elements for styles are: `FigureCaption`, `FigureFootnote`, `TableCaption` and `TableFootnote`
 #'    The selected styles should be defined in the `wordConversionTemplate`
 #' @param ... passed to render
+#' @return NULL (invisible).
 #'
 #' @export
 #'

@@ -5,11 +5,12 @@ NULL
 #' Add a message to the log file
 #'
 #' @param messageText character with message text
+#' @return NULL (invisible).
 #'
 #' @export
 #' @family log file management
 addMessageToLog <- function(messageText) {
-  ospsuite.utils::logInfo(messageText)
+  return(ospsuite.utils::logInfo(messageText))
 }
 
 #' Set log folder and file name
@@ -20,6 +21,7 @@ addMessageToLog <- function(messageText) {
 #' @param logFolder character string with the folder for log files. If `NULL`,
 #'   file logging is disabled.
 #' @param logFileName character string with the log file name.
+#' @return NULL (invisible).
 #'
 #' @export
 #' @family log file management
@@ -53,6 +55,7 @@ setLogPath <- function(logFolder = NULL, logFileName = "log.txt") {
 #'
 #' @param expr The expression to evaluate.
 #' @param finallyExpression The expression to evaluate finally.
+#' @return NULL (invisible).
 #'
 #' @export
 #' @family log file management
@@ -68,6 +71,7 @@ captureLog <- function(expr, finallyExpression = invisible()) {
 #' Write a data frame to the log
 #'
 #' @param dt table to log
+#' @return NULL (invisible).
 #'
 #' @export
 #' @family log file management
@@ -83,6 +87,7 @@ writeTableToLog <- function(dt) {
 #' Toggle display of log messages on the console
 #'
 #' @param verbose boolean, if true log messages will be shown
+#' @return NULL (invisible).
 #'
 #' @export
 #' @family log file management
@@ -97,6 +102,7 @@ setShowLogMessages <- function(verbose = TRUE) {
 #' Save session information to the log
 #'
 #' @param fileName character string with the session info file name.
+#' @return NULL (invisible).
 #'
 #' @examples
 #' \dontrun{

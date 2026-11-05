@@ -2,371 +2,400 @@
 #' @docType class
 #' @description Manages the export of an ePackage workflow.
 #' @keywords internal
-WorkflowScriptExporter <- R6::R6Class(
-  # nolint
-  "WorkflowScriptExporter",
-  inherit = ospsuite.utils::Printable,
-  cloneable = TRUE,
-  # public ----
-  public = list(
-    #' @description
-    #' Initialize a new instance of the class.
-    #' @param projectConfiguration An object of class projectConfiguration containing information like paths.
-    #' @param wfIdentifier A unique identifier for the workflow.
-    #' @param scenarioNames A vector of scenario names to be included in the workflow (optional).
-    #' @param workflowRmd Path to the input markdown file for the workflow (optional).
-    #' @param fileNameReplacements A vector of file name replacements (optional).
-    initialize = function(
-      projectConfiguration,
-      wfIdentifier,
-      scenarioNames = NULL,
-      workflowRmd = NULL,
-      fileNameReplacements = c()
-    ) {
-      self$wfIdentifier <- wfIdentifier
-      self$scenarioNames <- scenarioNames
-      self$workflowRmd <- workflowRmd
-      self$fileNameReplacements <- fileNameReplacements
+WorkflowScriptExporter <- # nolint: cyclocomp_linter, object_name_linter
+  R6::R6Class(
+    "WorkflowScriptExporter",
+    inherit = ospsuite.utils::Printable,
+    cloneable = TRUE,
+    # public ----
+    public = list(
+      #' @description
+      #' Initialize a new instance of the class.
+      #' @param projectConfiguration An object of class projectConfiguration containing information like paths.
+      #' @param wfIdentifier A unique identifier for the workflow.
+      #' @param scenarioNames A vector of scenario names to be included in the workflow (optional).
+      #' @param workflowRmd Path to the input markdown file for the workflow (optional).
+      #' @param fileNameReplacements A vector of file name replacements (optional).
+      initialize = function(
+        projectConfiguration,
+        wfIdentifier,
+        scenarioNames = NULL,
+        workflowRmd = NULL,
+        fileNameReplacements = c()
+      ) {
+        self$wfIdentifier <- wfIdentifier
+        self$scenarioNames <- scenarioNames
+        self$workflowRmd <- workflowRmd
+        self$fileNameReplacements <- fileNameReplacements
 
-      if (is.null(scenarioNames) & is.null(workflowRmd)) {
-        stop(messages$errorWorkflowScriptExporterMutuallyExclusiveInputs())
-      }
-      if (!is.null(scenarioNames) & !is.null(workflowRmd)) {
-        stop(messages$errorWorkflowScriptExporterL1MissingInitializationInput())
-      }
+        if (is.null(scenarioNames) & is.null(workflowRmd)) {
+          stop(messages$errorWorkflowScriptExporterMutuallyExclusiveInputs())
+        }
+        if (!is.null(scenarioNames) & !is.null(workflowRmd)) {
+          stop(messages$errorWorkflowScriptExporterL1MissingInitializationInput())
+        }
 
-      electronicPackageFolder <- suppressWarnings(
-        projectConfiguration$addOns$electronicPackageFolder
-      )
-      if (!dir.exists(electronicPackageFolder)) {
-        dir.create(electronicPackageFolder, recursive = TRUE)
-      }
-      private$electronicPackageFolder <- electronicPackageFolder
+        electronicPackageFolder <- suppressWarnings(
+          projectConfiguration$addOns$electronicPackageFolder
+        )
+        if (!dir.exists(electronicPackageFolder)) {
+          dir.create(electronicPackageFolder, recursive = TRUE)
+        }
+        private$electronicPackageFolder <- electronicPackageFolder
 
-      self$inputFiles <- data.table()
-      self$changedInputFiles <- data.table(
-        source = character(0),
-        fileName = character(0),
-        fileType = character(0)
-      )
+        self$inputFiles <- data.table()
+        self$changedInputFiles <- data.table(
+          source = character(0),
+          fileName = character(0),
+          fileType = character(0)
+        )
 
-      private$initializeconfigurationSheets(projectConfiguration)
+        private$initializeconfigurationSheets(projectConfiguration)
 
-      private$.chunkEvalEnv <- new.env(parent = globalenv())
-      private$.chunkEvalEnv$projectConfiguration <- projectConfiguration
+        private$.chunkEvalEnv <- new.env(parent = globalenv())
+        private$.chunkEvalEnv$projectConfiguration <- projectConfiguration
 
-      self$codeChunks <- list()
+        self$codeChunks <- list()
 
-      return(self)
-    },
-    #' @description
-    #' Extract code chunks from the specified R Markdown file.
-    #' This method reads the R Markdown file provided in the `workflowRmd` field and extracts code chunks
-    #' for further processing. It also ensures that necessary code chunks are present and replaces any
-    #' placeholders with the corresponding values from the template.
-    #'
-    #' @return Invisible NULL. The function does not return any value but populates the `codeChunks`
-    #'         field with the extracted code chunks.
-    #' @details
-    #' The method will raise an error if required code chunks are missing from the R Markdown file.
-    #' It also handles the temporary creation of a script file to read the code chunks.
-    #' A timeout mechanism is implemented to ensure that the script file is available for reading.
-    extractCodeChunks = function() {
-      .extract <- function(rmdfile) {
-        knitr::knit_code$restore()
+        return(self)
+      },
+      #' @description
+      #' Extract code chunks from the specified R Markdown file.
+      #' This method reads the R Markdown file provided in the `workflowRmd` field and extracts code chunks
+      #' for further processing. It also ensures that necessary code chunks are present and replaces any
+      #' placeholders with the corresponding values from the template.
+      #'
+      #' @return Invisible NULL. The function does not return any value but populates the `codeChunks`
+      #'         field with the extracted code chunks.
+      #' @details
+      #' The method will raise an error if required code chunks are missing from the R Markdown file.
+      #' It also handles the temporary creation of a script file to read the code chunks.
+      #' A timeout mechanism is implemented to ensure that the script file is available for reading.
+      extractCodeChunks = function() {
+        .extract <- function(rmdfile) {
+          knitr::knit_code$restore()
 
-        tmpScript <- tempfile()
-        knitr::purl(rmdfile, output = tmpScript, quiet = TRUE)
-        # Set the timeout duration (in seconds)
-        timeout <- 60
-        startTime <- Sys.time()
-        codeChunks <- knitr::read_chunk(tmpScript)
-        # Wait until the file exists and is not empty, or timeout after 1 minute
-        while (is.null(unlist(tail(codeChunks, 1)))) {
-          if (
-            as.numeric(difftime(Sys.time(), startTime, units = "secs")) >=
-              timeout
-          ) {
-            stop(messages$errorWorkflowScriptExporterL1FileTimeout())
-          }
-          Sys.sleep(0.1) # Check every 0.1 seconds
+          tmpScript <- tempfile()
+          knitr::purl(rmdfile, output = tmpScript, quiet = TRUE)
+          # Set the timeout duration (in seconds)
+          timeout <- 60
+          startTime <- Sys.time()
           codeChunks <- knitr::read_chunk(tmpScript)
-        }
-        return(codeChunks)
-      }
-
-      codeChunksTemplate <- .extract(system.file(
-        "templates",
-        "template_ePackageWorkflow.Rmd",
-        package = "ospsuite.reportingframework"
-      ))
-
-      chunkLabels <- list()
-      for (suffix in c("copy", "eval")) {
-        chunkLabels[[suffix]] <- grep(
-          paste0("-", suffix, "$"),
-          names(codeChunksTemplate),
-          value = TRUE
-        )
-      }
-
-      codeChunks <- .extract(self$workflowRmd)
-
-      if (!all(unlist(chunkLabels) %in% names(codeChunks))) {
-        tmp <- setdiff(unlist(chunkLabels), names(codeChunks))
-        stop(messages$errorWorkflowScriptExporterL1MissingRequiredChunks())
-      }
-
-      codeChunks <- codeChunks[unlist(chunkLabels)]
-
-      codeChunks <- utils::modifyList(
-        codeChunks,
-        codeChunksTemplate[chunkLabels[["replace"]]]
-      )
-
-      self$codeChunks <- codeChunks
-
-      return(invisible())
-    },
-    #' @description
-    #' This function evaluates the code chunks extracted from the R Markdown file associated with the workflow.
-    #' It iterates through the code chunks, validating and executing them to set up the necessary variables
-    #' for the workflow export process. The evaluation includes handling specific chunks related to custom functions,
-    #' scenario names, and data import.
-    #'
-    #' @return Invisible NULL. The function does not return any value but performs evaluations that update the
-    #'         internal state of the `WorkflowScriptExporter` object. If successful, the function will complete
-    #'         without errors; otherwise, it will raise an informative error if any evaluation fails.
-    evalCodeChunks = function() {
-      for (chunkName in grep("-eval$", names(self$codeChunks), value = TRUE)) {
-        variableValue <- private$evalChunkAndValidate(
-          chunkName = chunkName,
-          expectedVarName = gsub("-eval$", "", chunkName)
-        )
-
-        switch(
-          chunkName,
-          "pathsCustomfunctions-eval" = private$evalChunkCustomFunctions(
-            pathsCustomfunctions = variableValue
-          ),
-          "scenarioNames-eval" = private$evalChunkForScenarioNames(
-            scenarioNames = variableValue
-          ),
-          "dataObserved-eval" = private$handleEvalDataImport(
-            dataObserved = variableValue,
-            chunkName = chunkName
-          ),
-          "dataObservedPK-eval" = private$handleEvalDataImport(
-            dataObserved = variableValue,
-            chunkName = chunkName
-          ),
-          "numericValues-eval" = private$handleEvalDataImport(
-            dataObserved = variableValue,
-            chunkName = chunkName
-          )
-        )
-      }
-      return(invisible())
-    },
-    #' @description
-    #' Add referenced plotting sheets to Configuration
-    #' @param projectConfiguration An object of class projectConfiguration containing information like paths.
-    #' @return Invisible NULL.
-    addEPackageConfigurationForPlotting = function(projectConfiguration) {
-      chunkText <- self$codeChunks[["runPlot-copy"]]
-
-      # get list of all referenced plot sheets
-      plotSheets <- regmatches(
-        chunkText,
-        gregexpr(
-          "configTableSheet\\s*=\\s*['\"](.*?)['\"]",
-          chunkText,
-          perl = TRUE
-        )
-      ) %>%
-        unlist() %>%
-        sub(
-          pattern = "configTableSheet\\s*=\\s*['\"](.*?)['\"]",
-          replacement = "\\1"
-        ) %>%
-        unique()
-
-      # return if no sheets are found
-      if (length(plotSheets) == 0) {
-        return(invisible())
-      }
-
-      # Get plot sheets as JSON-friendly list structures from projectConfiguration
-      reportsFile <- projectConfiguration$addOns$reportsFile
-
-      # Validate sheet names exist
-      availableSheets <- readxl::excel_sheets(reportsFile)
-      checkmate::assertNames(plotSheets, subset.of = availableSheets)
-
-      # Read plot sheets and convert to JSON format using projectConfiguration
-      configurationSheets <- list()
-      plotSheetsJson <- projectConfiguration$getConfigSheetsAsJson(
-        filePath = reportsFile,
-        sheetNames = plotSheets,
-        convertHeaders = FALSE,
-        skipDescriptionRow = FALSE
-      )
-      configurationSheets[["Reports"]] <-
-        .rfWorkbookListStructureToDataFrames(plotSheetsJson)
-
-      # For filtering common configs, we still need to read as data.tables
-      commonConfigs <- list(
-        Scenarios = list(
-          idcol = "Scenario",
-          colsToSearch = c("scenario", "scenarios", "referenceScenario")
-        ),
-        Outputs = list(
-          idcol = "OutputPathId",
-          colsToSearch = c("outputPathIds")
-        ),
-        DataGroups = list(
-          idcol = "Group",
-          colsToSearch = c("dataGroupIds", "dataGroupId")
-        ),
-        ModelParameter = list(
-          idcol = "ParameterId",
-          colsToSearch = c("parameterIds", "parameterId_Bin")
-        ),
-        TimeRange = list(idcol = "Tag")
-      )
-
-      for (commonConfigTable in names(commonConfigs)) {
-        entries <- c()
-
-        for (sheet in plotSheets) {
-          dt <- xlsxReadData(
-            wb = reportsFile,
-            sheetName = sheet,
-            skipDescriptionRow = TRUE
-          )
-
-          if (commonConfigTable == "TimeRange") {
-            timeRangeColumns <- grep(
-              pattern = "^timeRange_",
-              names(dt),
-              value = TRUE
-            )
-            if (length(timeRangeColumns) > 0) {
-              entries <- unique(c(
-                entries,
-                sub(pattern = "^timeRange_", replacement = "", timeRangeColumns)
-              ))
+          # Wait until the file exists and is not empty, or timeout after 1 minute
+          while (is.null(unlist(tail(codeChunks, 1)))) {
+            if (
+              as.numeric(difftime(Sys.time(), startTime, units = "secs")) >=
+                timeout
+            ) {
+              stop(messages$errorWorkflowScriptExporterL1FileTimeout())
             }
-          } else {
-            for (col in commonConfigs[[commonConfigTable]][["colsToSearch"]]) {
-              if (col %in% names(dt)) {
-                entries <-
-                  unique(c(
-                    entries,
-                    gsub("[()]", "", splitInputs(dt[!is.na(get(col))][[col]]))
-                  ))
-              }
-            }
+            Sys.sleep(0.1) # Check every 0.1 seconds
+            codeChunks <- knitr::read_chunk(tmpScript)
           }
+          return(codeChunks)
         }
-        if (length(entries) > 1) {
-          dtConfig <- xlsxReadData(
-            wb = reportsFile,
-            sheetName = commonConfigTable,
-            skipDescriptionRow = FALSE,
-            convertHeaders = FALSE
-          )
-          dtConfig <- rbind(
-            dtConfig[1],
-            dtConfig[
-              get(commonConfigs[[commonConfigTable]][["idcol"]]) %in% entries
-            ]
-          )
-          # Convert filtered config to JSON format using the shared logic
-          configurationSheets[["Reports"]][[commonConfigTable]] <- dtConfig
-        }
-      }
 
-      self$configurationSheets <- configurationSheets
-
-      return(invisible())
-    },
-    #' @description
-    #' Export workflow text to a file.
-    #' @param projectConfiguration An object of class projectConfiguration containing information like paths.
-    #' @return Invisible NULL.
-    exportWorkflowText = function(projectConfiguration) {
-      workflowTextLines <-
-        readLines(system.file(
+        codeChunksTemplate <- .extract(system.file(
           "templates",
-          "template_ePackageWorkflow.R",
+          "template_ePackageWorkflow.Rmd",
           package = "ospsuite.reportingframework"
         ))
 
-      workflowTextLines <- private$replaceChunkPlaceholderChunks(
-        workflowTextLines
-      )
+        chunkLabels <- list()
+        for (suffix in c("copy", "eval")) {
+          chunkLabels[[suffix]] <- grep(
+            paste0("-", suffix, "$"),
+            names(codeChunksTemplate),
+            value = TRUE
+          )
+        }
 
-      workflowText <-
-        paste(workflowTextLines, collapse = "\n")
+        codeChunks <- .extract(self$workflowRmd)
 
-      workflowText <- gsub(
-        "XXwfIdentifierXX",
-        self$wfIdentifier,
-        workflowText
-      )
-      workflowText <- gsub(
-        "XXscenarioNamesXX",
-        paste(self$scenarioNames, collapse = "', '"),
-        workflowText
-      )
-      projectDirectory <- getProjectDirectory(projectConfiguration)
-      workflowText <- gsub(
-        "XXprojectDirectoryXX",
-        fs::path_rel(projectDirectory, start = private$electronicPackageFolder),
-        workflowText
-      )
+        if (!all(unlist(chunkLabels) %in% names(codeChunks))) {
+          tmp <- setdiff(unlist(chunkLabels), names(codeChunks))
+          stop(messages$errorWorkflowScriptExporterL1MissingRequiredChunks())
+        }
 
-      workflowText <- styler::style_text(workflowText)
+        codeChunks <- codeChunks[unlist(chunkLabels)]
 
-      writeLines(
-        workflowText,
-        file.path(
-          private$electronicPackageFolder,
-          paste0("w", self$wfIdentifier, "_workflow_r.txt")
+        codeChunks <- utils::modifyList(
+          codeChunks,
+          codeChunksTemplate[chunkLabels[["replace"]]]
         )
-      )
 
-      return(invisible())
-    },
-    #' @description
-    #' Retrieve input files for the ePackage.
-    #' @param projectConfiguration An object of class projectConfiguration containing information like paths and filenames.
-    #' @return Invisible NULL.
-    addEPackageInputfilesForScenarioNames = function(projectConfiguration) {
-      inputFiles <- data.table()
+        self$codeChunks <- codeChunks
 
-      if (is.null(self$scenarioNames) | length(self$scenarioNames) == 0) {
-        stop(messages$errorWorkflowScriptExporterNoScenariosForExport())
-      }
+        return(invisible())
+      },
+      #' @description
+      #' This function evaluates the code chunks extracted from the R Markdown file associated with the workflow.
+      #' It iterates through the code chunks, validating and executing them to set up the necessary variables
+      #' for the workflow export process. The evaluation includes handling specific chunks related to custom functions,
+      #' scenario names, and data import.
+      #'
+      #' @return Invisible NULL. The function does not return any value but performs evaluations that update the
+      #'         internal state of the `WorkflowScriptExporter` object. If successful, the function will complete
+      #'         without errors; otherwise, it will raise an informative error if any evaluation fails.
+      evalCodeChunks = function() {
+        for (chunkName in grep(
+          "-eval$",
+          names(self$codeChunks),
+          value = TRUE
+        )) {
+          variableValue <- private$evalChunkAndValidate(
+            chunkName = chunkName,
+            expectedVarName = gsub("-eval$", "", chunkName)
+          )
 
-      wb <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
-      dtScenarios <- xlsxReadData(wb, "Scenarios")
-      checkmate::assertNames(
-        self$scenarioNames,
-        subset.of = dtScenarios$scenario_name
-      )
-      dtScenarios <- dtScenarios[scenario_name %in% self$scenarioNames]
+          switch(
+            chunkName,
+            "pathsCustomfunctions-eval" = private$evalChunkCustomFunctions(
+              pathsCustomfunctions = variableValue
+            ),
+            "scenarioNames-eval" = private$evalChunkForScenarioNames(
+              scenarioNames = variableValue
+            ),
+            "dataObserved-eval" = private$handleEvalDataImport(
+              dataObserved = variableValue,
+              chunkName = chunkName
+            ),
+            "dataObservedPK-eval" = private$handleEvalDataImport(
+              dataObserved = variableValue,
+              chunkName = chunkName
+            ),
+            "numericValues-eval" = private$handleEvalDataImport(
+              dataObserved = variableValue,
+              chunkName = chunkName
+            )
+          )
+        }
+        return(invisible())
+      },
+      #' @description
+      #' Add referenced plotting sheets to Configuration
+      #' @param projectConfiguration An object of class projectConfiguration containing information like paths.
+      #' @return Invisible NULL.
+      addEPackageConfigurationForPlotting = function(projectConfiguration) {
+        chunkText <- self$codeChunks[["runPlot-copy"]]
 
-      # Check if population are always used as readPopulationFromCsv
-      if (any(!is.na(dtScenarios$populationId))) {
-        readPopulationFromCSV <-
-          as.logical(dtScenarios[!is.na(populationId)]$readPopulationFromCSV)
-        if (
-          any(!(readPopulationFromCSV), na.rm = TRUE) |
-            any(is.na(readPopulationFromCSV))
-        ) {
-          stop(messages$errorWorkflowScriptExporterL2PopulationScenariosRequireExportedPopulations())
+        # get list of all referenced plot sheets
+        plotSheets <- regmatches(
+          chunkText,
+          gregexpr(
+            "configTableSheet\\s*=\\s*['\"](.*?)['\"]",
+            chunkText,
+            perl = TRUE
+          )
+        ) %>%
+          unlist() %>%
+          sub(
+            pattern = "configTableSheet\\s*=\\s*['\"](.*?)['\"]",
+            replacement = "\\1"
+          ) %>%
+          unique()
+
+        # return if no sheets are found
+        if (length(plotSheets) == 0) {
+          return(invisible())
+        }
+
+        # Get plot sheets as JSON-friendly list structures from projectConfiguration
+        reportsFile <- projectConfiguration$addOns$reportsFile
+
+        # Validate sheet names exist
+        availableSheets <- readxl::excel_sheets(reportsFile)
+        checkmate::assertNames(plotSheets, subset.of = availableSheets)
+
+        # Read plot sheets and convert to JSON format using projectConfiguration
+        configurationSheets <- list()
+        plotSheetsJson <- projectConfiguration$getConfigSheetsAsJson(
+          filePath = reportsFile,
+          sheetNames = plotSheets,
+          convertHeaders = FALSE,
+          skipDescriptionRow = FALSE
+        )
+        configurationSheets[["Reports"]] <-
+          .rfWorkbookListStructureToDataFrames(plotSheetsJson)
+
+        # For filtering common configs, we still need to read as data.tables
+        commonConfigs <- list(
+          Scenarios = list(
+            idcol = "Scenario",
+            colsToSearch = c("scenario", "scenarios", "referenceScenario")
+          ),
+          Outputs = list(
+            idcol = "OutputPathId",
+            colsToSearch = c("outputPathIds")
+          ),
+          DataGroups = list(
+            idcol = "Group",
+            colsToSearch = c("dataGroupIds", "dataGroupId")
+          ),
+          ModelParameter = list(
+            idcol = "ParameterId",
+            colsToSearch = c("parameterIds", "parameterId_Bin")
+          ),
+          TimeRange = list(idcol = "Tag")
+        )
+
+        for (commonConfigTable in names(commonConfigs)) {
+          entries <- c()
+
+          for (sheet in plotSheets) {
+            dt <- xlsxReadData(
+              wb = reportsFile,
+              sheetName = sheet,
+              skipDescriptionRow = TRUE
+            )
+
+            if (commonConfigTable == "TimeRange") {
+              timeRangeColumns <- grep(
+                pattern = "^timeRange_",
+                names(dt),
+                value = TRUE
+              )
+              if (length(timeRangeColumns) > 0) {
+                entries <- unique(c(
+                  entries,
+                  sub(
+                    pattern = "^timeRange_",
+                    replacement = "",
+                    timeRangeColumns
+                  )
+                ))
+              }
+            } else {
+              for (col in commonConfigs[[commonConfigTable]][[
+                "colsToSearch"
+              ]]) {
+                if (col %in% names(dt)) {
+                  entries <-
+                    unique(c(
+                      entries,
+                      gsub("[()]", "", splitInputs(dt[!is.na(get(col))][[col]]))
+                    ))
+                }
+              }
+            }
+          }
+          if (length(entries) > 1) {
+            dtConfig <- xlsxReadData(
+              wb = reportsFile,
+              sheetName = commonConfigTable,
+              skipDescriptionRow = FALSE,
+              convertHeaders = FALSE
+            )
+            dtConfig <- rbind(
+              dtConfig[1],
+              dtConfig[
+                get(commonConfigs[[commonConfigTable]][["idcol"]]) %in% entries
+              ]
+            )
+            # Convert filtered config to JSON format using the shared logic
+            configurationSheets[["Reports"]][[commonConfigTable]] <- dtConfig
+          }
+        }
+
+        self$configurationSheets <- configurationSheets
+
+        return(invisible())
+      },
+      #' @description
+      #' Export workflow text to a file.
+      #' @param projectConfiguration An object of class projectConfiguration containing information like paths.
+      #' @return Invisible NULL.
+      exportWorkflowText = function(projectConfiguration) {
+        workflowTextLines <-
+          readLines(system.file(
+            "templates",
+            "template_ePackageWorkflow.R",
+            package = "ospsuite.reportingframework"
+          ))
+
+        workflowTextLines <- private$replaceChunkPlaceholderChunks(
+          workflowTextLines
+        )
+
+        workflowText <-
+          paste(workflowTextLines, collapse = "\n")
+
+        workflowText <- gsub(
+          "XXwfIdentifierXX",
+          self$wfIdentifier,
+          workflowText
+        )
+        workflowText <- gsub(
+          "XXscenarioNamesXX",
+          paste(self$scenarioNames, collapse = "', '"),
+          workflowText
+        )
+        projectDirectory <- .getProjectDirectory(projectConfiguration)
+        workflowText <- gsub(
+          "XXprojectDirectoryXX",
+          fs::path_rel(
+            projectDirectory,
+            start = private$electronicPackageFolder
+          ),
+          workflowText
+        )
+
+        workflowText <- styler::style_text(workflowText)
+
+        writeLines(
+          workflowText,
+          file.path(
+            private$electronicPackageFolder,
+            paste0("w", self$wfIdentifier, "_workflow_r.txt")
+          )
+        )
+
+        return(invisible())
+      },
+      #' @description
+      #' Retrieve input files for the ePackage.
+      #' @param projectConfiguration An object of class projectConfiguration containing information like paths and filenames.
+      #' @return Invisible NULL.
+      addEPackageInputfilesForScenarioNames = function(projectConfiguration) {
+        inputFiles <- data.table()
+
+        if (is.null(self$scenarioNames) | length(self$scenarioNames) == 0) {
+          stop(messages$errorWorkflowScriptExporterNoScenariosForExport())
+        }
+
+        wb <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
+        dtScenarios <- xlsxReadData(wb, "Scenarios")
+        checkmate::assertNames(
+          self$scenarioNames,
+          subset.of = dtScenarios$scenario_name
+        )
+        dtScenarios <- dtScenarios[scenario_name %in% self$scenarioNames]
+
+        # Check if population are always used as readPopulationFromCsv
+        if (any(!is.na(dtScenarios$populationId))) {
+          readPopulationFromCSV <-
+            as.logical(dtScenarios[!is.na(populationId)]$readPopulationFromCSV)
+          if (
+            any(!(readPopulationFromCSV), na.rm = TRUE) |
+              any(is.na(readPopulationFromCSV))
+          ) {
+            stop(messages$errorWorkflowScriptExporterL2PopulationScenariosRequireExportedPopulations())
+          }
+
+          inputFiles <-
+            rbind(
+              inputFiles,
+              data.table(
+                source = file.path(
+                  projectConfiguration$populationsFolder,
+                  paste0(
+                    unique(dtScenarios[!is.na(populationId)]$populationId),
+                    ".csv"
+                  )
+                ),
+                fileType = "population"
+              )
+            )
         }
 
         inputFiles <-
@@ -374,1147 +403,1138 @@ WorkflowScriptExporter <- R6::R6Class(
             inputFiles,
             data.table(
               source = file.path(
-                projectConfiguration$populationsFolder,
-                paste0(
-                  unique(dtScenarios[!is.na(populationId)]$populationId),
-                  ".csv"
-                )
+                projectConfiguration$modelFolder,
+                unique(dtScenarios$modelFile)
               ),
-              fileType = "population"
+              fileType = "model"
             )
           )
-      }
 
-      inputFiles <-
-        rbind(
-          inputFiles,
-          data.table(
-            source = file.path(
-              projectConfiguration$modelFolder,
-              unique(dtScenarios$modelFile)
-            ),
-            fileType = "model"
+        self$inputFiles <- inputFiles
+
+        return(invisible())
+      },
+      #' @description
+      #' Get E-Package Configuration for Scenario Names.
+      #' This function retrieves the configuration data for specified scenario names from various Excel sheets
+      #' related to a project configuration.
+      #' @param projectConfiguration A list containing project configuration details, including file paths.
+      #' @return Invisible NULL.
+      addEPackageConfigurationForScenarioNames = function(
+        projectConfiguration
+      ) {
+        configurationSheets <- list()
+
+        # read and filter sheets of scenario table
+        dtScenarios <- private$addScenarioConfiguration(projectConfiguration)
+
+        # Filter Individuals
+        if (any(!is.na(dtScenarios$IndividualId))) {
+          dtIndividuals <- xlsxReadData(
+            projectConfiguration$individualsFile,
+            "IndividualBiometrics",
+            convertHeaders = FALSE
+          )
+          dtIndividuals <- dtIndividuals[
+            IndividualId %in% dtScenarios$IndividualId
+          ]
+          private$addSelectedSheets(
+            xlsfile = projectConfiguration$individualsFile,
+            xlsLabel = "Individuals",
+            selectedSheets = dtIndividuals$IndividualId
+          )
+
+          # Convert filtered individuals to JSON format
+          self$configurationSheets[["Individuals"]][["IndividualBiometrics"]] <-
+            dtIndividuals
+        }
+
+        private$addSelectedSheets(
+          xlsfile = projectConfiguration$modelParamsFile,
+          xlsLabel = "ModelParameters",
+          selectedSheets = dtScenarios$modelParameterSheets
+        )
+
+        private$addSelectedSheets(
+          xlsfile = projectConfiguration$applicationsFile,
+          xlsLabel = "Applications",
+          selectedSheets = dtScenarios$applicationProtocol
+        )
+
+        return(invisible())
+      },
+      #' @description
+      #' Export input files to the electronic package folder.
+      #' @return Invisible NULL.
+      exportInputFiles = function() {
+        inputFiles <- self$inputFiles
+
+        if (any(duplicated(inputFiles$fileName))) {
+          stop(messages$errorWorkflowScriptExporterL2DuplicateFileNames())
+        }
+
+        success <- file.copy(
+          from = inputFiles[!is.na(source)]$source,
+          to = file.path(
+            private$electronicPackageFolder,
+            inputFiles[!is.na(source)]$fileName
+          ),
+          overwrite = TRUE
+        )
+
+        if (!all(success)) {
+          stop(messages$errorWorkflowScriptExporterL2FileCopyFailed())
+        }
+
+        fwrite(
+          x = inputFiles[, c("fileName", "fileType")],
+          file = file.path(
+            private$electronicPackageFolder,
+            .ePackageInputManifestFileName(self$wfIdentifier)
           )
         )
 
-      self$inputFiles <- inputFiles
-
-      return(invisible())
-    },
-    #' @description
-    #' Get E-Package Configuration for Scenario Names.
-    #' This function retrieves the configuration data for specified scenario names from various Excel sheets
-    #' related to a project configuration.
-    #' @param projectConfiguration A list containing project configuration details, including file paths.
-    #' @return Invisible NULL.
-    addEPackageConfigurationForScenarioNames = function(projectConfiguration) {
-      configurationSheets <- list()
-
-      # read and filter sheets of scenario table
-      dtScenarios <- private$addScenarioConfiguration(projectConfiguration)
-
-      # Filter Individuals
-      if (any(!is.na(dtScenarios$IndividualId))) {
-        dtIndividuals <- xlsxReadData(
-          projectConfiguration$individualsFile,
-          "IndividualBiometrics",
-          convertHeaders = FALSE
-        )
-        dtIndividuals <- dtIndividuals[
-          IndividualId %in% dtScenarios$IndividualId
-        ]
-        private$addSelectedSheets(
-          xlsfile = projectConfiguration$individualsFile,
-          xlsLabel = "Individuals",
-          selectedSheets = dtIndividuals$IndividualId
-        )
-
-        # Convert filtered individuals to JSON format
-        self$configurationSheets[["Individuals"]][["IndividualBiometrics"]] <-
-          dtIndividuals
-      }
-
-      private$addSelectedSheets(
-        xlsfile = projectConfiguration$modelParamsFile,
-        xlsLabel = "ModelParameters",
-        selectedSheets = dtScenarios$modelParameterSheets
-      )
-
-      private$addSelectedSheets(
-        xlsfile = projectConfiguration$applicationsFile,
-        xlsLabel = "Applications",
-        selectedSheets = dtScenarios$applicationProtocol
-      )
-
-      return(invisible())
-    },
-    #' @description
-    #' Export input files to the electronic package folder.
-    #' @return Invisible NULL.
-    exportInputFiles = function() {
-      inputFiles <- self$inputFiles
-
-      if (any(duplicated(inputFiles$fileName))) {
-        stop(messages$errorWorkflowScriptExporterL2DuplicateFileNames())
-      }
-
-      success <- file.copy(
-        from = inputFiles[!is.na(source)]$source,
-        to = file.path(
+        return(invisible())
+      },
+      #' @description
+      #' Export configuration sheets to the electronic package folder.
+      #' @return Invisible NULL.
+      exportConfigSheets = function() {
+        transportPath <- file.path(
           private$electronicPackageFolder,
-          inputFiles[!is.na(source)]$fileName
-        ),
-        overwrite = TRUE
-      )
-
-      if (!all(success)) {
-        stop(messages$errorWorkflowScriptExporterL2FileCopyFailed())
-      }
-
-      fwrite(
-        x = inputFiles[, c("fileName", "fileType")],
-        file = file.path(
-          private$electronicPackageFolder,
-          ePackageInputManifestFileName(self$wfIdentifier)
+          paste0("w", self$wfIdentifier, "_config_json.txt")
         )
-      )
 
-      return(invisible())
-    },
-    #' @description
-    #' Export configuration sheets to the electronic package folder.
-    #' @return Invisible NULL.
-    exportConfigSheets = function() {
-      transportPath <- file.path(
-        private$electronicPackageFolder,
-        paste0("w", self$wfIdentifier, "_config_json.txt")
-      )
-
-      tempProjectDir <- tempfile(pattern = "workflow_config_")
-      dir.create(tempProjectDir)
-      on.exit(
-        unlink(tempProjectDir, recursive = TRUE, force = TRUE),
-        add = TRUE
-      )
-
-      initProject(
-        projectDirectory = tempProjectDir,
-        configurationDirectory = tempProjectDir,
-        overwrite = TRUE
-      )
-
-      tempProjectConfiguration <- createProjectConfiguration(
-        path = file.path(tempProjectDir, "ProjectConfiguration.xlsx"),
-        ignoreVersionCheck = TRUE
-      )
-      tempProjectConfiguration <- private$applyConfigurationSheetsToProject(
-        tempProjectConfiguration
-      )
-
-      private$pruneDataImportMapSheets(
-        projectConfiguration = tempProjectConfiguration
-      )
-
-      private$ensureSnapshotDirectories(
-        tempProjectConfiguration
-      )
-
-      invisible(utils::capture.output(
-        snapshotProjectConfigurationRF(
-          projectConfig = tempProjectConfiguration,
-          outputDir = tempProjectDir
-        ),
-        type = "output"
-      ))
-      file.copy(
-        from = file.path(tempProjectDir, "ProjectConfiguration.json"),
-        to = transportPath,
-        overwrite = TRUE
-      )
-
-      return(invisible())
-    }
-  ),
-  # active ----
-  active = list(
-    #' @field wfIdentifier Identifier of the workflow.
-    wfIdentifier = function(value) {
-      if (missing(value)) {
-        value <- private$.wfIdentifier
-      } else {
-        checkmate::assertIntegerish(
-          value,
-          lower = 1,
-          len = 1,
-          any.missing = FALSE
+        tempProjectDir <- tempfile(pattern = "workflow_config_")
+        dir.create(tempProjectDir)
+        on.exit(
+          unlink(tempProjectDir, recursive = TRUE, force = TRUE),
+          add = TRUE
         )
-      }
-      private$.wfIdentifier <- value
-    },
-    #' @field scenarioNames Relevant scenarios to export.
-    scenarioNames = function(value) {
-      if (missing(value)) {
-        value <- private$.scenarioNames
-      } else {
-        checkmate::assertCharacter(
-          value,
-          any.missing = FALSE,
-          unique = TRUE,
-          null.ok = TRUE
+
+        initProject(
+          projectDirectory = tempProjectDir,
+          configurationDirectory = tempProjectDir,
+          overwrite = TRUE
         )
-      }
-      private$.scenarioNames <- value
-    },
-    #' @field workflowRmd Input markdown file for TLF workflow.
-    workflowRmd = function(value) {
-      if (missing(value)) {
-        value <- private$.workflowRmd
-      } else {
-        checkmate::assertCharacter(
-          value,
-          any.missing = FALSE,
-          len = 1,
-          null.ok = TRUE
+
+        tempProjectConfiguration <- createProjectConfiguration(
+          path = file.path(tempProjectDir, "ProjectConfiguration.xlsx"),
+          ignoreVersionCheck = TRUE
         )
-      }
-      private$.workflowRmd <- value
-    },
-    #' @field fileNameReplacements List of file name replacements.
-    fileNameReplacements = function(value) {
-      if (missing(value)) {
-        value <- private$.fileNameReplacements
-      } else {
-        checkmate::assertCharacter(
-          value,
-          any.missing = FALSE,
-          unique = TRUE,
-          null.ok = TRUE
+        tempProjectConfiguration <- private$applyConfigurationSheetsToProject(
+          tempProjectConfiguration
         )
-        checkmate::assertIntegerish(length(value) / 2)
+
+        private$pruneDataImportMapSheets(
+          projectConfiguration = tempProjectConfiguration
+        )
+
+        private$ensureSnapshotDirectories(
+          tempProjectConfiguration
+        )
+
+        invisible(utils::capture.output(
+          snapshotProjectConfigurationRF(
+            projectConfig = tempProjectConfiguration,
+            outputDir = tempProjectDir
+          ),
+          type = "output"
+        ))
+        file.copy(
+          from = file.path(tempProjectDir, "ProjectConfiguration.json"),
+          to = transportPath,
+          overwrite = TRUE
+        )
+
+        return(invisible())
       }
-      private$.fileNameReplacements <- value
-    },
-    #' @field inputFiles Table with all input files.
-    inputFiles = function(value) {
-      if (missing(value)) {
-        value <- private$.inputFiles
-      } else {
-        if (is.data.table(private$.inputFiles)) {
-          value <- rbind(
-            private$.inputFiles,
-            private$addValidFileNames(value)
-          ) %>%
-            unique()
+    ),
+    # active ----
+    active = list(
+      #' @field wfIdentifier Identifier of the workflow.
+      wfIdentifier = function(value) {
+        if (missing(value)) {
+          value <- private$.wfIdentifier
+        } else {
+          checkmate::assertIntegerish(
+            value,
+            lower = 1,
+            len = 1,
+            any.missing = FALSE
+          )
         }
+        private$.wfIdentifier <- value
+      },
+      #' @field scenarioNames Relevant scenarios to export.
+      scenarioNames = function(value) {
+        if (missing(value)) {
+          value <- private$.scenarioNames
+        } else {
+          checkmate::assertCharacter(
+            value,
+            any.missing = FALSE,
+            unique = TRUE,
+            null.ok = TRUE
+          )
+        }
+        private$.scenarioNames <- value
+      },
+      #' @field workflowRmd Input markdown file for TLF workflow.
+      workflowRmd = function(value) {
+        if (missing(value)) {
+          value <- private$.workflowRmd
+        } else {
+          checkmate::assertCharacter(
+            value,
+            any.missing = FALSE,
+            len = 1,
+            null.ok = TRUE
+          )
+        }
+        private$.workflowRmd <- value
+      },
+      #' @field fileNameReplacements List of file name replacements.
+      fileNameReplacements = function(value) {
+        if (missing(value)) {
+          value <- private$.fileNameReplacements
+        } else {
+          checkmate::assertCharacter(
+            value,
+            any.missing = FALSE,
+            unique = TRUE,
+            null.ok = TRUE
+          )
+          checkmate::assertIntegerish(length(value) / 2)
+        }
+        private$.fileNameReplacements <- value
+      },
+      #' @field inputFiles Table with all input files.
+      inputFiles = function(value) {
+        if (missing(value)) {
+          value <- private$.inputFiles
+        } else {
+          if (is.data.table(private$.inputFiles)) {
+            value <- rbind(
+              private$.inputFiles,
+              private$addValidFileNames(value)
+            ) %>%
+              unique()
+          }
+        }
+        private$.inputFiles <- value
+      },
+      #' @field changedInputFiles Table with all changed input files.
+      changedInputFiles = function(value) {
+        if (missing(value)) {
+          value <- private$.changedInputFiles
+        } else {
+          if (is.data.table(private$.changedInputFiles)) {
+            value <- data.table::as.data.table(value)
+            requiredCols <- c("source", "fileName", "fileType")
+            missingCols <- setdiff(requiredCols, names(value))
+            if (length(missingCols) > 0) {
+              stop(
+                sprintf(
+                  "Missing required columns in changedInputFiles: %s",
+                  paste(missingCols, collapse = ", ")
+                )
+              )
+            }
+            value <- value[, ..requiredCols]
+            value[, source := as.character(source)]
+            value[, fileName := as.character(fileName)]
+            value[, fileType := as.character(fileType)]
+
+            value <- data.table::rbindlist(
+              list(private$.changedInputFiles, value),
+              use.names = TRUE,
+              fill = FALSE
+            )
+            value <- unique(value, by = requiredCols)
+          }
+        }
+        private$.changedInputFiles <- value
+      },
+      #' @field configurationSheets  A list containing configuration sheets .
+      configurationSheets = function(value) {
+        if (missing(value)) {
+          value <- private$.configurationSheets
+        } else {
+          if (is.list(private$.configurationSheets)) {
+            value <- utils::modifyList(
+              private$.configurationSheets,
+              value
+            )
+          }
+        }
+        private$.configurationSheets <- value
+      },
+      #' @field codeChunks # A list with code read in from workflowRmd .
+      codeChunks = function(value) {
+        if (missing(value)) {
+          value <- private$.codeChunks
+        } else {
+          if (is.list(private$.codeChunks)) {
+            value <- utils::modifyList(
+              private$.codeChunks,
+              value
+            )
+          }
+        }
+        private$.codeChunks <- value
       }
-      private$.inputFiles <- value
-    },
-    #' @field changedInputFiles Table with all changed input files.
-    changedInputFiles = function(value) {
-      if (missing(value)) {
-        value <- private$.changedInputFiles
-      } else {
-        if (is.data.table(private$.changedInputFiles)) {
-          value <- data.table::as.data.table(value)
-          requiredCols <- c("source", "fileName", "fileType")
-          missingCols <- setdiff(requiredCols, names(value))
-          if (length(missingCols) > 0) {
+    ),
+    # private ----
+    private = list(
+      # identifier of workflow
+      .wfIdentifier = NA,
+      # relevant scenarios to export
+      .scenarioNames = c(),
+      # input markdown file for TLF workflow
+      .workflowRmd = "",
+      # list of file name replacements
+      .fileNameReplacements = c(),
+      # directory of export
+      electronicPackageFolder = "",
+      # table with all input files
+      .inputFiles = NA,
+      # table with all changed input files
+      .changedInputFiles = NA,
+      # list with configuration sheets
+      .configurationSheets = NA,
+      # list with code read in from workflowRmd
+      .codeChunks = NA,
+      # environment used for evaluating workflow chunks
+      .chunkEvalEnv = NULL,
+      # Convert a data.table to JSON-friendly list structure (column_names + rows)
+      excelDataTableToListStructure = function(df) {
+        # Convert to simple list format
+        sheetData <- list(
+          column_names = names(df),
+          rows = list()
+        )
+
+        # Store each row
+        if (nrow(df) > 0) {
+          for (i in seq_len(nrow(df))) {
+            # Extract row as a character vector to avoid type issues during serialization
+            rowValues <- sapply(df[i, ], as.character)
+            sheetData$rows[[i]] <- as.list(rowValues)
+          }
+        }
+
+        return(sheetData)
+      },
+      # Function to add validated filenames to the list of input files
+      addValidFileNames = function(inputFiles) {
+        inputFiles[, fileName := basename(source)]
+        inputFiles[, manuallyChanged := 0]
+        # replace filename
+        if (length(self$fileNameReplacements) > 0) {
+          inputFiles[
+            fileName %in%
+              self$fileNameReplacements[seq(
+                1,
+                length(self$fileNameReplacements),
+                2
+              )],
+            `:=`(
+              fileName = self$fileNameReplacements[
+                which(fileName == self$fileNameReplacements) + 1
+              ],
+              manuallyChanged = 1
+            ),
+            by = .I
+          ]
+        }
+        # change extension
+        inputFiles[
+          fileType == "model",
+          fileName := fs::path_ext_set(path = fileName, ext = "xml")
+        ]
+        inputFiles[
+          fileType == "population",
+          fileName := .ePackagePopulationFileName(fileName)
+        ]
+        inputFiles[
+          fileType == "script",
+          fileName := .ePackageScriptFileName(fileName)
+        ]
+
+        # adjust filenames to fulfill naming requirements
+        inputFiles[,
+          fileName := .validateAndAdjustFilenames(fileName, fileType),
+          by = .I
+        ]
+
+        # list all files with changed names
+        ixChanged <- which(mapply(
+          FUN = function(source, fileName, fileType) {
+            fs::path_ext_remove(basename(source)) !=
+              fs::path_ext_remove(.changedInputReferenceFileName(
+                fileName = fileName,
+                fileType = fileType,
+                source = source
+              ))
+          },
+          source = inputFiles$source,
+          fileName = inputFiles$fileName,
+          fileType = inputFiles$fileType,
+          USE.NAMES = FALSE
+        ))
+
+        # return the change names for replacement in config sheets
+        changedInputFiles <- inputFiles[
+          ixChanged,
+          c("source", "fileName", "fileType", "manuallyChanged")
+        ]
+        changedInputFiles[,
+          fileName := mapply(
+            FUN = .changedInputReferenceFileName,
+            fileName = fileName,
+            fileType = fileType,
+            source = source,
+            USE.NAMES = FALSE
+          )
+        ]
+        changedInputFiles[, source := basename(source)]
+        # population files are refernces with ID
+        changedInputFiles[
+          fileType == "population",
+          source := fs::path_ext_remove(source)
+        ]
+        setkey(changedInputFiles, source)
+        self$changedInputFiles <-
+          changedInputFiles[, c(
+            "source",
+            "fileName",
+            "fileType"
+          )]
+
+        ixChanged <- which(
+          changedInputFiles[["manuallyChanged"]] == 0
+        )
+
+        if (length(ixChanged) > 0) {
+          warning(messages$warningWorkflowScriptExporterAdjustedFilenames())
+        }
+
+        # set source of data files to NA, as copy is not needed
+        inputFiles[fileType == "data", source := NA_character_]
+
+        return(inputFiles)
+      },
+      # Function to add scenario configuration
+      addScenarioConfiguration = function(projectConfiguration) {
+        configurationSheets <- list()
+
+        wb <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
+        dtScenarios <- xlsxReadData(wb, "Scenarios", convertHeaders = FALSE)
+        checkmate::assertNames(
+          self$scenarioNames,
+          subset.of = dtScenarios$Scenario_name
+        )
+
+        dtScenarios <- dtScenarios[Scenario_name %in% self$scenarioNames]
+        dtScenarios[
+          self$changedInputFiles,
+          ModelFile := i.fileName,
+          on = .(ModelFile = source)
+        ]
+        dtScenarios[
+          self$changedInputFiles,
+          PopulationId := fs::path_ext_remove(i.fileName),
+          on = .(PopulationId = source)
+        ]
+        configurationSheets[["Scenarios"]] <- list(Scenarios = dtScenarios)
+
+        dtPKarameter <- xlsxReadData(wb, "PKParameter", convertHeaders = FALSE)
+        dtPKarameter <- dtPKarameter[Scenario_name %in% self$scenarioNames]
+        if (nrow(dtPKarameter) > 0) {
+          configurationSheets[["Scenarios"]][["PKParameter"]] <- dtPKarameter
+
+          private$addSelectedSheets(
+            xlsfile = projectConfiguration$addOns$pKParameterFile,
+            xlsLabel = "PKParameter"
+          )
+        }
+
+        dtOutputPaths <- xlsxReadData(wb, "OutputPaths", convertHeaders = FALSE)
+        configurationSheets[["Scenarios"]][["OutputPaths"]] <- dtOutputPaths
+
+        self$configurationSheets <- configurationSheets
+
+        return(dtScenarios)
+      },
+      # Function to add selected sheets
+      addSelectedSheets = function(xlsfile, xlsLabel, selectedSheets = NULL) {
+        wb <- openxlsx::loadWorkbook(xlsfile)
+        if (is.null(selectedSheets)) {
+          selectedSheets <- wb$sheet_names
+        }
+        selectedSheets <- selectedSheets[!is.na(selectedSheets)]
+
+        configurationSheets <- list()
+
+        for (sheet in intersect(wb$sheet_names, selectedSheets)) {
+          configurationSheets[[xlsLabel]][[sheet]] <- xlsxReadData(
+            wb,
+            sheet,
+            convertHeaders = FALSE
+          )
+        }
+
+        self$configurationSheets <- configurationSheets
+        return(invisible())
+      },
+      # Replace placeholder chunks in workflow text lines
+      replaceChunkPlaceholderChunks = function(workflowTextLines) {
+        if (length(self$codeChunks) > 0) {
+          for (chunkName in c(grep(
+            "-copy$",
+            names(self$codeChunks),
+            value = TRUE
+          ))) {
+            ixStart <- grep(
+              paste0(
+                "^\\s*XXCHUNKstart\\s*-\\s*",
+                gsub("-copy$", "", chunkName),
+                "XXX\\s*$"
+              ),
+              workflowTextLines
+            )
+            ixEnd <- grep(
+              paste0(
+                "^\\s*XXCHUNKend\\s*-\\s*",
+                gsub("-copy$", "", chunkName),
+                "XXX\\s*$"
+              ),
+              workflowTextLines
+            )
+            if (length(ixStart) * length(ixEnd) == 0) {
+              stop(messages$errorWorkflowScriptExporterMissingChunkPlaceholder())
+            }
+            workflowTextLines <-
+              c(
+                workflowTextLines[seq_len(ixStart - 1)],
+                self$codeChunks[[chunkName]],
+                " ", # add empty line after each chunk insert,
+                workflowTextLines[seq(ixEnd + 1, length(workflowTextLines))]
+              )
+          }
+        }
+        # delete remaining chunk placeholders
+        workflowTextLines <- workflowTextLines[setdiff(
+          seq_len(length(workflowTextLines)),
+          grep("^\\s*XXCHUNK.*XXX\\s*$", workflowTextLines)
+        )]
+
+        return(workflowTextLines)
+      },
+      # Evaluate a chunk and validate the expected variable
+      evalChunkAndValidate = function(chunkName, expectedVarName) {
+        tryCatch(
+          expr = {
+            eval(
+              parse(text = self$codeChunks[[chunkName]]),
+              envir = private$.chunkEvalEnv
+            )
+          },
+          error = function(e) {
             stop(
               sprintf(
-                "Missing required columns in changedInputFiles: %s",
-                paste(missingCols, collapse = ", ")
+                "Error evaluating chunk '%s': %s",
+                chunkName,
+                conditionMessage(e)
               )
             )
           }
-          value <- value[, ..requiredCols]
-          value[, source := as.character(source)]
-          value[, fileName := as.character(fileName)]
-          value[, fileType := as.character(fileType)]
-
-          value <- data.table::rbindlist(
-            list(private$.changedInputFiles, value),
-            use.names = TRUE,
-            fill = FALSE
-          )
-          value <- unique(value, by = requiredCols)
-        }
-      }
-      private$.changedInputFiles <- value
-    },
-    #' @field configurationSheets  A list containing configuration sheets .
-    configurationSheets = function(value) {
-      if (missing(value)) {
-        value <- private$.configurationSheets
-      } else {
-        if (is.list(private$.configurationSheets)) {
-          value <- utils::modifyList(
-            private$.configurationSheets,
-            value
-          )
-        }
-      }
-      private$.configurationSheets <- value
-    },
-    #' @field codeChunks # A list with code read in from workflowRmd .
-    codeChunks = function(value) {
-      if (missing(value)) {
-        value <- private$.codeChunks
-      } else {
-        if (is.list(private$.codeChunks)) {
-          value <- utils::modifyList(
-            private$.codeChunks,
-            value
-          )
-        }
-      }
-      private$.codeChunks <- value
-    }
-  ),
-  # private ----
-  private = list(
-    # identifier of workflow
-    .wfIdentifier = NA,
-    # relevant scenarios to export
-    .scenarioNames = c(),
-    # input markdown file for TLF workflow
-    .workflowRmd = "",
-    # list of file name replacements
-    .fileNameReplacements = c(),
-    # directory of export
-    electronicPackageFolder = "",
-    # table with all input files
-    .inputFiles = NA,
-    # table with all changed input files
-    .changedInputFiles = NA,
-    # list with configuration sheets
-    .configurationSheets = NA,
-    # list with code read in from workflowRmd
-    .codeChunks = NA,
-    # environment used for evaluating workflow chunks
-    .chunkEvalEnv = NULL,
-    # Convert a data.table to JSON-friendly list structure (column_names + rows)
-    excelDataTableToListStructure = function(df) {
-      # Convert to simple list format
-      sheetData <- list(
-        column_names = names(df),
-        rows = list()
-      )
-
-      # Store each row
-      if (nrow(df) > 0) {
-        for (i in seq_len(nrow(df))) {
-          # Extract row as a character vector to avoid type issues during serialization
-          rowValues <- sapply(df[i, ], as.character)
-          sheetData$rows[[i]] <- as.list(rowValues)
-        }
-      }
-
-      return(sheetData)
-    },
-    # Function to add validated filenames to the list of input files
-    addValidFileNames = function(inputFiles) {
-      inputFiles[, fileName := basename(source)]
-      inputFiles[, manuallyChanged := 0]
-      # replace filename
-      if (length(self$fileNameReplacements) > 0) {
-        inputFiles[
-          fileName %in%
-            self$fileNameReplacements[seq(
-              1,
-              length(self$fileNameReplacements),
-              2
-            )],
-          `:=`(
-            fileName = self$fileNameReplacements[
-              which(fileName == self$fileNameReplacements) + 1
-            ],
-            manuallyChanged = 1
-          ),
-          by = .I
-        ]
-      }
-      # change extension
-      inputFiles[
-        fileType == "model",
-        fileName := fs::path_ext_set(path = fileName, ext = "xml")
-      ]
-      inputFiles[
-        fileType == "population",
-        fileName := ePackagePopulationFileName(fileName)
-      ]
-      inputFiles[
-        fileType == "script",
-        fileName := ePackageScriptFileName(fileName)
-      ]
-
-      # adjust filenames to fulfill naming requirements
-      inputFiles[,
-        fileName := validateAndAdjustFilenames(fileName, fileType),
-        by = .I
-      ]
-
-      # list all files with changed names
-      ixChanged <- which(mapply(
-        FUN = function(source, fileName, fileType) {
-          fs::path_ext_remove(basename(source)) !=
-            fs::path_ext_remove(changedInputReferenceFileName(
-              fileName = fileName,
-              fileType = fileType,
-              source = source
-            ))
-        },
-        source = inputFiles$source,
-        fileName = inputFiles$fileName,
-        fileType = inputFiles$fileType,
-        USE.NAMES = FALSE
-      ))
-
-      # return the change names for replacement in config sheets
-      changedInputFiles <- inputFiles[
-        ixChanged,
-        c("source", "fileName", "fileType", "manuallyChanged")
-      ]
-      changedInputFiles[,
-        fileName := mapply(
-          FUN = changedInputReferenceFileName,
-          fileName = fileName,
-          fileType = fileType,
-          source = source,
-          USE.NAMES = FALSE
         )
-      ]
-      changedInputFiles[, source := basename(source)]
-      # population files are refernces with ID
-      changedInputFiles[
-        fileType == "population",
-        source := fs::path_ext_remove(source)
-      ]
-      setkey(changedInputFiles, source)
-      self$changedInputFiles <-
-        changedInputFiles[, c(
-          "source",
-          "fileName",
-          "fileType"
-        )]
 
-      ixChanged <- which(
-        changedInputFiles[["manuallyChanged"]] == 0
-      )
-
-      if (length(ixChanged) > 0) {
-        warning(messages$warningWorkflowScriptExporterAdjustedFilenames())
-      }
-
-      # set source of data files to NA, as copy is not needed
-      inputFiles[fileType == "data", source := NA_character_]
-
-      return(inputFiles)
-    },
-    # Function to add scenario configuration
-    addScenarioConfiguration = function(projectConfiguration) {
-      configurationSheets <- list()
-
-      wb <- openxlsx::loadWorkbook(projectConfiguration$scenariosFile)
-      dtScenarios <- xlsxReadData(wb, "Scenarios", convertHeaders = FALSE)
-      checkmate::assertNames(
-        self$scenarioNames,
-        subset.of = dtScenarios$Scenario_name
-      )
-
-      dtScenarios <- dtScenarios[Scenario_name %in% self$scenarioNames]
-      dtScenarios[
-        self$changedInputFiles,
-        ModelFile := i.fileName,
-        on = .(ModelFile = source)
-      ]
-      dtScenarios[
-        self$changedInputFiles,
-        PopulationId := fs::path_ext_remove(i.fileName),
-        on = .(PopulationId = source)
-      ]
-      configurationSheets[["Scenarios"]] <- list(Scenarios = dtScenarios)
-
-      dtPKarameter <- xlsxReadData(wb, "PKParameter", convertHeaders = FALSE)
-      dtPKarameter <- dtPKarameter[Scenario_name %in% self$scenarioNames]
-      if (nrow(dtPKarameter) > 0) {
-        configurationSheets[["Scenarios"]][["PKParameter"]] <- dtPKarameter
-
-        private$addSelectedSheets(
-          xlsfile = projectConfiguration$addOns$pKParameterFile,
-          xlsLabel = "PKParameter"
-        )
-      }
-
-      dtOutputPaths <- xlsxReadData(wb, "OutputPaths", convertHeaders = FALSE)
-      configurationSheets[["Scenarios"]][["OutputPaths"]] <- dtOutputPaths
-
-      self$configurationSheets <- configurationSheets
-
-      return(dtScenarios)
-    },
-    # Function to add selected sheets
-    addSelectedSheets = function(xlsfile, xlsLabel, selectedSheets = NULL) {
-      wb <- openxlsx::loadWorkbook(xlsfile)
-      if (is.null(selectedSheets)) {
-        selectedSheets <- wb$sheet_names
-      }
-      selectedSheets <- selectedSheets[!is.na(selectedSheets)]
-
-      configurationSheets <- list()
-
-      for (sheet in intersect(wb$sheet_names, selectedSheets)) {
-        configurationSheets[[xlsLabel]][[sheet]] <- xlsxReadData(
-          wb,
-          sheet,
-          convertHeaders = FALSE
-        )
-      }
-
-      self$configurationSheets <- configurationSheets
-      return(invisible())
-    },
-    # Replace placeholder chunks in workflow text lines
-    replaceChunkPlaceholderChunks = function(workflowTextLines) {
-      if (length(self$codeChunks) > 0) {
-        for (chunkName in c(grep(
-          "-copy$",
-          names(self$codeChunks),
-          value = TRUE
-        ))) {
-          ixStart <- grep(
-            paste0(
-              "^\\s*XXCHUNKstart\\s*-\\s*",
-              gsub("-copy$", "", chunkName),
-              "XXX\\s*$"
-            ),
-            workflowTextLines
+        # Check if the expected variable exists
+        if (
+          !exists(
+            expectedVarName,
+            envir = private$.chunkEvalEnv,
+            inherits = FALSE
           )
-          ixEnd <- grep(
-            paste0(
-              "^\\s*XXCHUNKend\\s*-\\s*",
-              gsub("-copy$", "", chunkName),
-              "XXX\\s*$"
-            ),
-            workflowTextLines
-          )
-          if (length(ixStart) * length(ixEnd) == 0) {
-            stop(messages$errorWorkflowScriptExporterMissingChunkPlaceholder())
-          }
-          workflowTextLines <-
-            c(
-              workflowTextLines[seq_len(ixStart - 1)],
-              self$codeChunks[[chunkName]],
-              " ", # add empty line after each chunk insert,
-              workflowTextLines[seq(ixEnd + 1, length(workflowTextLines))]
-            )
-        }
-      }
-      # delete remaining chunk placeholders
-      workflowTextLines <- workflowTextLines[setdiff(
-        seq_len(length(workflowTextLines)),
-        grep("^\\s*XXCHUNK.*XXX\\s*$", workflowTextLines)
-      )]
-
-      return(workflowTextLines)
-    },
-    # Evaluate a chunk and validate the expected variable
-    evalChunkAndValidate = function(chunkName, expectedVarName) {
-      tryCatch(
-        expr = {
-          eval(
-            parse(text = self$codeChunks[[chunkName]]),
-            envir = private$.chunkEvalEnv
-          )
-        },
-        error = function(e) {
+        ) {
           stop(
             sprintf(
-              "Error evaluating chunk '%s': %s",
-              chunkName,
-              conditionMessage(e)
+              "Expected variable '%s' not found after evaluating chunk '%s'",
+              expectedVarName,
+              chunkName
             )
           )
         }
-      )
 
-      # Check if the expected variable exists
-      if (
-        !exists(
+        # Check if the variable is NULL or empty
+        variableValue <- get(
           expectedVarName,
           envir = private$.chunkEvalEnv,
           inherits = FALSE
         )
-      ) {
-        stop(
-          sprintf(
-            "Expected variable '%s' not found after evaluating chunk '%s'",
-            expectedVarName,
-            chunkName
+        if (is.null(variableValue) || length(variableValue) == 0) {
+          self$codeChunks <- setNames(list(NULL), chunkName)
+        }
+
+        return(variableValue)
+      },
+      # Evaluate the chunk for custom functions
+      evalChunkCustomFunctions = function(pathsCustomfunctions) {
+        # check if anything to do
+        if (
+          is.null(pathsCustomfunctions) || length(pathsCustomfunctions) == 0
+        ) {
+          return(invisible())
+        }
+
+        checkmate::assertCharacter(pathsCustomfunctions)
+        checkmate::assertFileExists(pathsCustomfunctions)
+
+        self$inputFiles <- data.table(
+          source = pathsCustomfunctions,
+          fileType = "script"
+        )
+        fileNames <- self$inputFiles[fileType == "script"]$fileName
+        contentLines <- paste0(
+          "", # source custom functions",
+          "source(file.path(projectConfiguration$configurationsFolder,'",
+          gsub("_r\\.txt$", ".R", fileNames),
+          "'))"
+        )
+        self$codeChunks <- list("pathsCustomfunctions-copy" = contentLines)
+        return(invisible())
+      },
+      # Evaluate the chunk for scenario names
+      evalChunkForScenarioNames = function(scenarioNames) {
+        # check if anything to do
+        if (is.null(scenarioNames) || length(scenarioNames) == 0) {
+          return(invisible())
+        }
+
+        checkmate::assertCharacter(scenarioNames)
+        self$scenarioNames <- scenarioNames
+
+        self$codeChunks <-
+          list(
+            "scenarioNames-copy" = paste0(
+              "", # initialize variable with list of scenarios",
+              "scenarioNames = c('",
+              paste(scenarioNames, collapse = "', '"),
+              "')"
+            )
+          )
+
+        return(invisible())
+      },
+      # Evaluate and dispatch workflow data import chunks.
+      handleEvalDataImport = function(dataObserved, chunkName) {
+        checkmate::assertDataTable(dataObserved, null.ok = TRUE)
+        spec <- private$evalDataImportSpec(chunkName)
+
+        # check if anything to do
+        if (is.null(dataObserved) || nrow(dataObserved) == 0) {
+          return(invisible())
+        }
+
+        exportContext <- private$prepareWorkflowDataExportContext()
+
+        if (spec$dataClassType == "numericValues") {
+          private$exportNumericValuesData(
+            dataObserved = dataObserved,
+            spec = spec,
+            exportContext = exportContext
+          )
+        } else {
+          private$exportObservedDataByClass(
+            dataObserved = dataObserved,
+            exportContext = exportContext
+          )
+        }
+
+        self$codeChunks <- setNames(
+          list(
+            private$buildCopyChunkForDataClass(
+              dataClassType = spec$dataClassType,
+              variableName = spec$variableName
+            )
+          ),
+          spec$copyChunkName
+        )
+
+        invisible(NULL)
+      },
+      # Define import metadata for each evaluated workflow data chunk.
+      evalDataImportSpec = function(chunkName) {
+        mapping <- list(
+          "dataObserved-eval" = list(
+            variableName = "dataObserved",
+            dataClassType = "timeprofile",
+            copyChunkName = "dataObserved-copy"
+          ),
+          "dataObservedPK-eval" = list(
+            variableName = "dataObservedPK",
+            dataClassType = "pkParameter",
+            copyChunkName = "dataObservedPK-copy"
+          ),
+          "numericValues-eval" = list(
+            variableName = "numericValues",
+            dataClassType = "numericValues",
+            copyChunkName = "numericValues-copy"
           )
         )
-      }
 
-      # Check if the variable is NULL or empty
-      variableValue <- get(
-        expectedVarName,
-        envir = private$.chunkEvalEnv,
-        inherits = FALSE
-      )
-      if (is.null(variableValue) || length(variableValue) == 0) {
-        self$codeChunks <- setNames(list(NULL), chunkName)
-      }
+        if (!(chunkName %in% names(mapping))) {
+          stop(sprintf("Unsupported data import chunk '%s'", chunkName))
+        }
 
-      return(variableValue)
-    },
-    # Evaluate the chunk for custom functions
-    evalChunkCustomFunctions = function(pathsCustomfunctions) {
-      # check if anything to do
-      if (is.null(pathsCustomfunctions) || length(pathsCustomfunctions) == 0) {
-        return(invisible())
-      }
+        return(mapping[[chunkName]])
+      },
+      # Create workflow data export context shared across handlers.
+      prepareWorkflowDataExportContext = function() {
+        analysisDataFolder <- .resolveWorkflowAnalysisDataFolder(
+          ePackageFolder = private$electronicPackageFolder,
+          create = TRUE
+        )
 
-      checkmate::assertCharacter(pathsCustomfunctions)
-      checkmate::assertFileExists(pathsCustomfunctions)
+        list(analysisDataFolder = analysisDataFolder)
+      },
+      # Export observed data classes that provide dataClass/xUnit metadata.
+      exportObservedDataByClass = function(dataObserved, exportContext) {
+        if (!("dataClass" %in% names(dataObserved))) {
+          stop("Expected column 'dataClass' in observed data import chunk")
+        }
 
-      self$inputFiles <- data.table(
-        source = pathsCustomfunctions,
-        fileType = "script"
-      )
-      fileNames <- self$inputFiles[fileType == "script"]$fileName
-      contentLines <- paste0(
-        "", # source custom functions",
-        "source(file.path(projectConfiguration$configurationsFolder,'",
-        gsub('_r\\.txt$', '.R', fileNames),
-        "'))"
-      )
-      self$codeChunks <- list("pathsCustomfunctions-copy" = contentLines)
-      return(invisible())
-    },
-    # Evaluate the chunk for scenario names
-    evalChunkForScenarioNames = function(scenarioNames) {
-      # check if anything to do
-      if (is.null(scenarioNames) || length(scenarioNames) == 0) {
-        return(invisible())
-      }
+        for (dt in split(dataObserved, by = "dataClass")) {
+          dataClass <- dt$dataClass[1]
+          xUnit <- if ("xUnit" %in% names(dt)) dt$xUnit[1] else ""
+          dt <- private$prepareObservedDataFrame(dt)
 
-      checkmate::assertCharacter(scenarioNames)
-      self$scenarioNames <- scenarioNames
+          baseName <- paste0("data_", tolower(gsub(" ", "", dataClass)))
+          fileName <- paste0(baseName, "_csv.txt")
+          dictionaryName <- paste0(gsub(" ", "", dataClass), "Dictionary")
 
-      self$codeChunks <-
-        list(
-          "scenarioNames-copy" = paste0(
-            "", # initialize variable with list of scenarios",
-            "scenarioNames = c('",
-            paste(scenarioNames, collapse = "', '"),
-            "')"
+          private$registerWorkflowDataFile(
+            dataClass = dataClass,
+            filename = fileName,
+            dictionaryName = dictionaryName
           )
-        )
 
-      return(invisible())
-    },
-    # Evaluate and dispatch workflow data import chunks.
-    handleEvalDataImport = function(dataObserved, chunkName) {
-      checkmate::assertDataTable(dataObserved, null.ok = TRUE)
-      spec <- private$evalDataImportSpec(chunkName)
-
-      # check if anything to do
-      if (is.null(dataObserved) || nrow(dataObserved) == 0) {
-        return(invisible())
-      }
-
-      exportContext <- private$prepareWorkflowDataExportContext()
-
-      if (spec$dataClassType == "numericValues") {
-        private$exportNumericValuesData(
-          dataObserved = dataObserved,
-          spec = spec,
-          exportContext = exportContext
-        )
-      } else {
-        private$exportObservedDataByClass(
-          dataObserved = dataObserved,
-          exportContext = exportContext
-        )
-      }
-
-      self$codeChunks <- setNames(
-        list(
-          private$buildCopyChunkForDataClass(
-            dataClassType = spec$dataClassType,
-            variableName = spec$variableName
+          private$addDictionaryToConfig(
+            dt = dt,
+            dataClass = dataClass,
+            xUnit = xUnit,
+            dictionaryName = dictionaryName
           )
-        ),
-        spec$copyChunkName
-      )
 
-      invisible(NULL)
-    },
-    # Define import metadata for each evaluated workflow data chunk.
-    evalDataImportSpec = function(chunkName) {
-      mapping <- list(
-        "dataObserved-eval" = list(
-          variableName = "dataObserved",
-          dataClassType = "timeprofile",
-          copyChunkName = "dataObserved-copy"
-        ),
-        "dataObservedPK-eval" = list(
-          variableName = "dataObservedPK",
-          dataClassType = "pkParameter",
-          copyChunkName = "dataObservedPK-copy"
-        ),
-        "numericValues-eval" = list(
-          variableName = "numericValues",
-          dataClassType = "numericValues",
-          copyChunkName = "numericValues-copy"
+          private$writeWorkflowDataArtifact(
+            dt = dt,
+            fileName = fileName,
+            exportContext = exportContext
+          )
+        }
+        return(invisible())
+      },
+      # Export numeric values with explicit schema handling.
+      exportNumericValuesData = function(dataObserved, spec, exportContext) {
+        checkmate::assertNames(
+          names(dataObserved),
+          must.include = c("variableName", "value", "unit", "reference")
         )
-      )
 
-      if (!(chunkName %in% names(mapping))) {
-        stop(sprintf("Unsupported data import chunk '%s'", chunkName))
-      }
-
-      return(mapping[[chunkName]])
-    },
-    # Create workflow data export context shared across handlers.
-    prepareWorkflowDataExportContext = function() {
-      analysisDataFolder <- resolveWorkflowAnalysisDataFolder(
-        ePackageFolder = private$electronicPackageFolder,
-        create = TRUE
-      )
-
-      list(analysisDataFolder = analysisDataFolder)
-    },
-    # Export observed data classes that provide dataClass/xUnit metadata.
-    exportObservedDataByClass = function(dataObserved, exportContext) {
-      if (!("dataClass" %in% names(dataObserved))) {
-        stop("Expected column 'dataClass' in observed data import chunk")
-      }
-
-      for (dt in split(dataObserved, by = "dataClass")) {
-        dataClass <- dt$dataClass[1]
-        xUnit <- if ("xUnit" %in% names(dt)) dt$xUnit[1] else ""
-        dt <- private$prepareObservedDataFrame(dt)
-
-        baseName <- paste0("data_", tolower(gsub(" ", "", dataClass)))
-        fileName <- paste0(baseName, "_csv.txt")
-        dictionaryName <- paste0(gsub(" ", "", dataClass), "Dictionary")
+        dataClass <- DATACLASS[["numericValues"]]
+        fileName <- "data_numericvalues_csv.txt"
 
         private$registerWorkflowDataFile(
           dataClass = dataClass,
           filename = fileName,
-          dictionaryName = dictionaryName
-        )
-
-        private$addDictionaryToConfig(
-          dt = dt,
-          dataClass = dataClass,
-          xUnit = xUnit,
-          dictionaryName = dictionaryName
+          addToDataImportMap = FALSE
         )
 
         private$writeWorkflowDataArtifact(
-          dt = dt,
+          dt = dataObserved[,
+            c("variableName", "value", "unit", "reference"),
+            with = FALSE
+          ],
           fileName = fileName,
           exportContext = exportContext
         )
-      }
-      return(invisible())
-    },
-    # Export numeric values with explicit schema handling.
-    exportNumericValuesData = function(dataObserved, spec, exportContext) {
-      checkmate::assertNames(
-        names(dataObserved),
-        must.include = c("variableName", "value", "unit", "reference")
-      )
 
-      dataClass <- DATACLASS[["numericValues"]]
-      fileName <- "data_numericvalues_csv.txt"
-
-      private$registerWorkflowDataFile(
-        dataClass = dataClass,
-        filename = fileName,
-        addToDataImportMap = FALSE
-      )
-
-      private$writeWorkflowDataArtifact(
-        dt = dataObserved[,
-          c("variableName", "value", "unit", "reference"),
-          with = FALSE
-        ],
-        fileName = fileName,
-        exportContext = exportContext
-      )
-
-      return(invisible())
-    },
-    # Normalize observed data payload by removing class metadata columns.
-    prepareObservedDataFrame = function(dt) {
-      colsToRemove <- intersect(
-        c("dataClass", "dataType", "xUnit"),
-        names(dt)
-      )
-
-      dt[, !colsToRemove, with = FALSE]
-    },
-    # Register one workflow data file and optionally dictionary in DataImportMap.
-    registerWorkflowDataFile = function(
-      dataClass,
-      filename,
-      dictionaryName = NULL,
-      addToDataImportMap = TRUE
-    ) {
-      if (addToDataImportMap) {
-        private$addDataFilesConfig(
-          dataClass = dataClass,
-          filename = filename,
-          dictionaryName = dictionaryName
+        return(invisible())
+      },
+      # Normalize observed data payload by removing class metadata columns.
+      prepareObservedDataFrame = function(dt) {
+        colsToRemove <- intersect(
+          c("dataClass", "dataType", "xUnit"),
+          names(dt)
         )
-      }
 
-      self$inputFiles <- data.table(
-        source = filename,
-        fileType = "data"
-      )
+        dt[, !colsToRemove, with = FALSE]
+      },
+      # Register one workflow data file and optionally dictionary in DataImportMap.
+      registerWorkflowDataFile = function(
+        dataClass,
+        filename,
+        dictionaryName = NULL,
+        addToDataImportMap = TRUE
+      ) {
+        if (addToDataImportMap) {
+          private$addDataFilesConfig(
+            dataClass = dataClass,
+            filename = filename,
+            dictionaryName = dictionaryName
+          )
+        }
 
-      return(invisible())
-    },
-    # Write one workflow data artifact into AnalysisData folder.
-    writeWorkflowDataArtifact = function(dt, fileName, exportContext) {
-      write.csv(
-        dt,
-        file = file.path(exportContext$analysisDataFolder, fileName),
-        na = "",
-        row.names = FALSE,
-        fileEncoding = "UTF-8"
-      )
+        self$inputFiles <- data.table(
+          source = filename,
+          fileType = "data"
+        )
 
-      return(invisible())
-    },
-    # Generate code inserted into copy chunks for loading exported workflow data.
-    buildCopyChunkForDataClass = function(dataClassType, variableName) {
-      if (dataClassType == "numericValues") {
-        return(c(
+        return(invisible())
+      },
+      # Write one workflow data artifact into AnalysisData folder.
+      writeWorkflowDataArtifact = function(dt, fileName, exportContext) {
+        write.csv(
+          dt,
+          file = file.path(exportContext$analysisDataFolder, fileName),
+          na = "",
+          row.names = FALSE,
+          fileEncoding = "UTF-8"
+        )
+
+        return(invisible())
+      },
+      # Generate code inserted into copy chunks for loading exported workflow data.
+      buildCopyChunkForDataClass = function(dataClassType, variableName) {
+        if (dataClassType == "numericValues") {
+          return(c(
+            "",
+            "# import numeric values from exported workflow data",
+            paste0(
+              variableName,
+              " <- data.table::fread(file.path(projectConfiguration$addOns$dataFileFolder, 'data_numericvalues_csv.txt'))"
+            )
+          ))
+        }
+
+        c(
           "",
-          "# import numeric values from exported workflow data",
+          paste0("# import ", dataClassType, " observed data"),
           paste0(
             variableName,
-            " <- data.table::fread(file.path(projectConfiguration$addOns$dataFileFolder, 'data_numericvalues_csv.txt'))"
+            " <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,"
+          ),
+          paste0(
+            "                                             dataClassType = '",
+            dataClassType,
+            "',"
+          ),
+          "                                             fileIds = NULL,",
+          "                                             spreadData = FALSE)"
+        )
+      },
+      # Add configuration for data files
+      addDataFilesConfig = function(dataClass, filename, dictionaryName) {
+        xlsLabel <- "DataImportMap"
+        sheetName <- "DataFiles"
+        # Initialize configsheet if necessary
+        if (
+          is.null(self$configurationSheets) ||
+            !(xlsLabel %in% names(self$configurationSheets))
+        ) {
+          self$configurationSheets <- setNames(list(NULL), xlsLabel)
+        }
+        if (
+          is.null(self$configurationSheets[[xlsLabel]]) ||
+            !(sheetName %in% names(self$configurationSheets[[xlsLabel]]))
+        ) {
+          configSheet <- xlsxReadData(
+            wb = system.file(
+              "templates",
+              "DataImportMap.xlsx",
+              package = "ospsuite.reportingframework"
+            ),
+            sheetName = sheetName,
+            skipDescriptionRow = FALSE,
+            convertHeaders = FALSE
           )
-        ))
-      }
+          configSheet <- configSheet[1, ]
+        } else {
+          configSheet <- data.table::as.data.table(
+            private$asWorkbookSheetData(
+              self$configurationSheets[[xlsLabel]][[sheetName]]
+            )
+          )
+        }
 
-      c(
-        "",
-        paste0("# import ", dataClassType, " observed data"),
-        paste0(
-          variableName,
-          " <- readObservedDataByDictionary(projectConfiguration = projectConfiguration,"
-        ),
-        paste0(
-          "                                             dataClassType = '",
-          dataClassType,
-          "',"
-        ),
-        "                                             fileIds = NULL,",
-        "                                             spreadData = FALSE)"
-      )
-    },
-    # Add configuration for data files
-    addDataFilesConfig = function(dataClass, filename, dictionaryName) {
-      xlsLabel <- "DataImportMap"
-      sheetName <- "DataFiles"
-      # Initialize configsheet if necessary
-      if (
-        is.null(self$configurationSheets) ||
-          !(xlsLabel %in% names(self$configurationSheets))
-      ) {
-        self$configurationSheets <- setNames(list(NULL), xlsLabel)
-      }
-      if (
-        is.null(self$configurationSheets[[xlsLabel]]) ||
-          !(sheetName %in% names(self$configurationSheets[[xlsLabel]]))
-      ) {
-        configSheet <- xlsxReadData(
+        # add new row to config sheet
+        configSheet <- rbind(
+          configSheet,
+          data.table(
+            FileIdentifier = dataClass,
+            DataFile = file.path(
+              "..",
+              paste0("Data_w", self$wfIdentifier),
+              filename
+            ),
+            Dictionary = dictionaryName,
+            DataFilter = NA_character_,
+            DataClass = dataClass
+          )
+        )
+
+        private$.configurationSheets[[xlsLabel]][[sheetName]] <- configSheet
+
+        return(invisible())
+      },
+      # Add dictionary configuration
+      addDictionaryToConfig = function(dt, xUnit, dataClass, dictionaryName) {
+        columnsWithAttributes <- unlist(lapply(dt, attr, "columnType"))
+
+        dict <- data.table(
+          TargetColumn = names(columnsWithAttributes),
+          Type = unname(columnsWithAttributes),
+          SourceColumn = names(columnsWithAttributes),
+          SourceUnit = ""
+        )
+
+        # adjust Unit
+        dict[
+          TargetColumn %in% c("xValues", names(BIOMETRICUNITS)),
+          SourceUnit := c(xUnit, unlist(BIOMETRICUNITS))[match(
+            TargetColumn,
+            c("xValues", names(BIOMETRICUNITS))
+          )]
+        ]
+
+        # adjust format
+        dictTemplate <- xlsxReadData(
           wb = system.file(
             "templates",
             "DataImportMap.xlsx",
             package = "ospsuite.reportingframework"
           ),
-          sheetName = sheetName,
+          sheetName = ifelse(
+            dataClass %in% DATACLASS[c("tpIndividual", "tpAggregated")],
+            "tpDictionary",
+            "pkDictionary"
+          ),
           skipDescriptionRow = FALSE,
           convertHeaders = FALSE
         )
-        configSheet <- configSheet[1, ]
-      } else {
-        configSheet <- data.table::as.data.table(
-          private$asWorkbookSheetData(
-            self$configurationSheets[[xlsLabel]][[sheetName]]
-          )
-        )
-      }
 
-      # add new row to config sheet
-      configSheet <- rbind(
-        configSheet,
-        data.table(
-          FileIdentifier = dataClass,
-          DataFile = file.path(
-            "..",
-            paste0("Data_w", self$wfIdentifier),
-            filename
+        dict <- merge(
+          dict,
+          dictTemplate[, c("TargetColumn", "Description")],
+          by = "TargetColumn",
+          all.x = TRUE,
+          sort = FALSE
+        )
+
+        dict <- rbind(dictTemplate[1], dict, fill = TRUE)
+
+        self$configurationSheets <- setNames(
+          list(
+            setNames(
+              list(dict),
+              dictionaryName
+            )
           ),
-          Dictionary = dictionaryName,
-          DataFilter = NA_character_,
-          DataClass = dataClass
+          "DataImportMap"
         )
-      )
 
-      private$.configurationSheets[[xlsLabel]][[sheetName]] <- configSheet
-
-      return(invisible())
-    },
-    # Add dictionary configuration
-    addDictionaryToConfig = function(dt, xUnit, dataClass, dictionaryName) {
-      columnsWithAttributes <- unlist(lapply(dt, attr, "columnType"))
-
-      dict <- data.table(
-        TargetColumn = names(columnsWithAttributes),
-        Type = unname(columnsWithAttributes),
-        SourceColumn = names(columnsWithAttributes),
-        SourceUnit = ""
-      )
-
-      # adjust Unit
-      dict[
-        TargetColumn %in% c("xValues", names(BIOMETRICUNITS)),
-        SourceUnit := c(xUnit, unlist(BIOMETRICUNITS))[match(
-          TargetColumn,
-          c("xValues", names(BIOMETRICUNITS))
-        )]
-      ]
-
-      # adjust format
-      dictTemplate <- xlsxReadData(
-        wb = system.file(
-          "templates",
-          "DataImportMap.xlsx",
-          package = "ospsuite.reportingframework"
-        ),
-        sheetName = ifelse(
-          dataClass %in% DATACLASS[c("tpIndividual", "tpAggregated")],
-          "tpDictionary",
-          "pkDictionary"
-        ),
-        skipDescriptionRow = FALSE,
-        convertHeaders = FALSE
-      )
-
-      dict <- merge(
-        dict,
-        dictTemplate[, c("TargetColumn", "Description")],
-        by = "TargetColumn",
-        all.x = TRUE,
-        sort = FALSE
-      )
-
-      dict <- rbind(dictTemplate[1], dict, fill = TRUE)
-
-      self$configurationSheets <- setNames(
-        list(
-          setNames(
-            list(dict),
-            dictionaryName
+        return(invisible())
+      },
+      # initializes configuration sheets a
+      initializeconfigurationSheets = function(projectConfiguration) {
+        wb <- openxlsx::loadWorkbook(
+          file = projectConfiguration$projectConfigurationFilePath
+        )
+        dtConfig <-
+          xlsxReadData(
+            wb = wb,
+            sheetName = wb$sheet_names[1],
+            convertHeaders = FALSE
           )
-        ),
-        "DataImportMap"
-      )
 
-      return(invisible())
-    },
-    # initializes configuration sheets a
-    initializeconfigurationSheets = function(projectConfiguration) {
-      wb <- openxlsx::loadWorkbook(
-        file = projectConfiguration$projectConfigurationFilePath
-      )
-      dtConfig <-
-        xlsxReadData(
+        projectDirectory <- .getProjectDirectory(projectConfiguration)
+        configDirW <- file.path(
+          projectDirectory,
+          .getConfigDirectoryForWorkflow(self$wfIdentifier)
+        )
+        dtConfig[
+          Property == "modelFolder",
+          Value := paste0("../Models", "_w", self$wfIdentifier)
+        ]
+        dtConfig[
+          Property == "populationsFolder",
+          Value := paste0("../Models", "_w", self$wfIdentifier, "/Populations")
+        ]
+        dtConfig[
+          Property == "outputFolder",
+          Value := fs::path_rel(
+            projectConfiguration$outputFolder,
+            start = configDirW
+          )
+        ]
+
+        configurationSheets <- list(
+          "ProjectConfiguration" = list(
+            Scenarios = dtConfig
+          )
+        )
+        self$configurationSheets <- configurationSheets
+
+        return(invisible())
+      },
+      # Maps logical workflow config labels onto actual RF workbook paths.
+      workbookPathForLabel = function(projectConfiguration, xlsLabel) {
+        switch(
+          xlsLabel,
+          "ProjectConfiguration" = projectConfiguration$projectConfigurationFilePath,
+          "Scenarios" = projectConfiguration$scenariosFile,
+          "Individuals" = projectConfiguration$individualsFile,
+          "ModelParameters" = projectConfiguration$modelParamsFile,
+          "Applications" = projectConfiguration$applicationsFile,
+          "Reports" = projectConfiguration$addOns$reportsFile,
+          "PKParameter" = projectConfiguration$addOns$pKParameterFile,
+          "DataImportMap" = projectConfiguration$addOns$dataImportMapFile,
+          stop(sprintf(
+            "Unsupported configuration workbook label: %s",
+            xlsLabel
+          ))
+        )
+      },
+      # Align workflow export payload with workbook names in a real RF project.
+      normalizeWorkbookDataForProject = function(
+        xlsLabel,
+        workbookData,
+        projectConfiguration
+      ) {
+        if (xlsLabel != "ProjectConfiguration" || length(workbookData) == 0) {
+          return(workbookData)
+        }
+
+        projectSheetName <- readxl::excel_sheets(
+          projectConfiguration$projectConfigurationFilePath
+        )[[1]]
+        names(workbookData)[[1]] <- projectSheetName
+
+        return(workbookData)
+      },
+      # Overlay the filtered workflow config onto a temporary RF project.
+      applyConfigurationSheetsToProject = function(projectConfiguration) {
+        for (xlsLabel in names(self$configurationSheets)) {
+          workbookData <- private$normalizeWorkbookDataForProject(
+            xlsLabel = xlsLabel,
+            workbookData = self$configurationSheets[[xlsLabel]],
+            projectConfiguration = projectConfiguration
+          )
+          workbookPath <- private$workbookPathForLabel(
+            projectConfiguration = projectConfiguration,
+            xlsLabel = xlsLabel
+          )
+          wb <- openxlsx::loadWorkbook(workbookPath)
+
+          for (sheetName in names(workbookData)) {
+            xlsxWriteOrAddData(
+              wb = wb,
+              sheetName = sheetName,
+              dt = private$asWorkbookSheetData(workbookData[[sheetName]])
+            )
+          }
+          openxlsx::saveWorkbook(wb = wb, file = workbookPath, overwrite = TRUE)
+        }
+
+        createProjectConfiguration(
+          path = projectConfiguration$projectConfigurationFilePath,
+          ignoreVersionCheck = TRUE
+        )
+      },
+      # Normalize one workbook sheet to tabular form for in-memory operations.
+      asWorkbookSheetData = function(sheetData) {
+        if (is.data.frame(sheetData)) {
+          return(sheetData)
+        }
+
+        if (
+          is.list(sheetData) &&
+            all(c("column_names", "rows") %in% names(sheetData))
+        ) {
+          return(.rfListStructureToDataFrame(sheetData))
+        }
+
+        stop("Unsupported workbook sheet data type.")
+      },
+      # Ensure workflow-specific folders referenced by the temp project exist.
+      ensureSnapshotDirectories = function(projectConfiguration) {
+        directories <- c(
+          suppressWarnings(projectConfiguration$modelFolder),
+          suppressWarnings(projectConfiguration$populationsFolder),
+          suppressWarnings(projectConfiguration$outputFolder),
+          suppressWarnings(projectConfiguration$dataFolder),
+          suppressWarnings(projectConfiguration$addOns$electronicPackageFolder)
+        )
+        directories <- unique(directories[
+          !is.na(directories) & nzchar(directories)
+        ])
+
+        for (directoryPath in directories) {
+          if (!dir.exists(directoryPath)) {
+            dir.create(directoryPath, recursive = TRUE, showWarnings = FALSE)
+          }
+        }
+
+        return(invisible())
+      },
+      # Keep only DataFiles and dictionary sheets referenced by DataFiles.
+      pruneDataImportMapSheets = function(projectConfiguration) {
+        dataImportMapPath <- suppressWarnings(
+          projectConfiguration$addOns$dataImportMapFile
+        )
+        if (is.null(dataImportMapPath) || !file.exists(dataImportMapPath)) {
+          return(invisible())
+        }
+
+        wb <- openxlsx::loadWorkbook(dataImportMapPath)
+        if (!("DataFiles" %in% wb$sheet_names)) {
+          return(invisible())
+        }
+
+        dataFiles <- xlsxReadData(
           wb = wb,
-          sheetName = wb$sheet_names[1],
+          sheetName = "DataFiles",
+          skipDescriptionRow = FALSE,
           convertHeaders = FALSE
         )
 
-      projectDirectory <- getProjectDirectory(projectConfiguration)
-      configDirW <- file.path(
-        projectDirectory,
-        getConfigDirectoryForWorkflow(self$wfIdentifier)
-      )
-      dtConfig[
-        Property == "modelFolder",
-        Value := paste0("../Models", "_w", self$wfIdentifier)
-      ]
-      dtConfig[
-        Property == "populationsFolder",
-        Value := paste0("../Models", "_w", self$wfIdentifier, "/Populations")
-      ]
-      dtConfig[
-        Property == "outputFolder",
-        Value := fs::path_rel(
-          projectConfiguration$outputFolder,
-          start = configDirW
-        )
-      ]
-
-      configurationSheets <- list(
-        "ProjectConfiguration" = list(
-          Scenarios = dtConfig
-        )
-      )
-      self$configurationSheets <- configurationSheets
-
-      return(invisible())
-    },
-    # Maps logical workflow config labels onto actual RF workbook paths.
-    workbookPathForLabel = function(projectConfiguration, xlsLabel) {
-      switch(
-        xlsLabel,
-        "ProjectConfiguration" = projectConfiguration$projectConfigurationFilePath,
-        "Scenarios" = projectConfiguration$scenariosFile,
-        "Individuals" = projectConfiguration$individualsFile,
-        "ModelParameters" = projectConfiguration$modelParamsFile,
-        "Applications" = projectConfiguration$applicationsFile,
-        "Reports" = projectConfiguration$addOns$reportsFile,
-        "PKParameter" = projectConfiguration$addOns$pKParameterFile,
-        "DataImportMap" = projectConfiguration$addOns$dataImportMapFile,
-        stop(sprintf("Unsupported configuration workbook label: %s", xlsLabel))
-      )
-    },
-    # Align workflow export payload with workbook names in a real RF project.
-    normalizeWorkbookDataForProject = function(
-      xlsLabel,
-      workbookData,
-      projectConfiguration
-    ) {
-      if (xlsLabel != "ProjectConfiguration" || length(workbookData) == 0) {
-        return(workbookData)
-      }
-
-      projectSheetName <- readxl::excel_sheets(
-        projectConfiguration$projectConfigurationFilePath
-      )[[1]]
-      names(workbookData)[[1]] <- projectSheetName
-
-      return(workbookData)
-    },
-    # Overlay the filtered workflow config onto a temporary RF project.
-    applyConfigurationSheetsToProject = function(projectConfiguration) {
-      for (xlsLabel in names(self$configurationSheets)) {
-        workbookData <- private$normalizeWorkbookDataForProject(
-          xlsLabel = xlsLabel,
-          workbookData = self$configurationSheets[[xlsLabel]],
-          projectConfiguration = projectConfiguration
-        )
-        workbookPath <- private$workbookPathForLabel(
-          projectConfiguration = projectConfiguration,
-          xlsLabel = xlsLabel
-        )
-        wb <- openxlsx::loadWorkbook(workbookPath)
-
-        for (sheetName in names(workbookData)) {
-          xlsxWriteOrAddData(
-            wb = wb,
-            sheetName = sheetName,
-            dt = private$asWorkbookSheetData(workbookData[[sheetName]])
-          )
+        neededSheets <- "DataFiles"
+        if ("Dictionary" %in% names(dataFiles) && nrow(dataFiles) > 1) {
+          dictionaryNames <- trimws(as.character(dataFiles[-1][["Dictionary"]]))
+          dictionaryNames <- unique(dictionaryNames[
+            !is.na(dictionaryNames) & nzchar(dictionaryNames)
+          ])
+          neededSheets <- unique(c(neededSheets, dictionaryNames))
         }
-        openxlsx::saveWorkbook(wb = wb, file = workbookPath, overwrite = TRUE)
-      }
 
-      createProjectConfiguration(
-        path = projectConfiguration$projectConfigurationFilePath,
-        ignoreVersionCheck = TRUE
-      )
-    },
-    # Normalize one workbook sheet to tabular form for in-memory operations.
-    asWorkbookSheetData = function(sheetData) {
-      if (is.data.frame(sheetData)) {
-        return(sheetData)
-      }
-
-      if (
-        is.list(sheetData) &&
-          all(c("column_names", "rows") %in% names(sheetData))
-      ) {
-        return(.rfListStructureToDataFrame(sheetData))
-      }
-
-      stop("Unsupported workbook sheet data type.")
-    },
-    # Ensure workflow-specific folders referenced by the temp project exist.
-    ensureSnapshotDirectories = function(projectConfiguration) {
-      directories <- c(
-        suppressWarnings(projectConfiguration$modelFolder),
-        suppressWarnings(projectConfiguration$populationsFolder),
-        suppressWarnings(projectConfiguration$outputFolder),
-        suppressWarnings(projectConfiguration$dataFolder),
-        suppressWarnings(projectConfiguration$addOns$electronicPackageFolder)
-      )
-      directories <- unique(directories[
-        !is.na(directories) & nzchar(directories)
-      ])
-
-      for (directoryPath in directories) {
-        if (!dir.exists(directoryPath)) {
-          dir.create(directoryPath, recursive = TRUE, showWarnings = FALSE)
+        sheetsToRemove <- setdiff(wb$sheet_names, neededSheets)
+        for (sheetName in sheetsToRemove) {
+          openxlsx::removeWorksheet(wb = wb, sheet = sheetName)
         }
-      }
 
-      return(invisible())
-    },
-    # Keep only DataFiles and dictionary sheets referenced by DataFiles.
-    pruneDataImportMapSheets = function(projectConfiguration) {
-      dataImportMapPath <- suppressWarnings(
-        projectConfiguration$addOns$dataImportMapFile
-      )
-      if (is.null(dataImportMapPath) || !file.exists(dataImportMapPath)) {
+        openxlsx::saveWorkbook(
+          wb = wb,
+          file = dataImportMapPath,
+          overwrite = TRUE
+        )
+
         return(invisible())
       }
-
-      wb <- openxlsx::loadWorkbook(dataImportMapPath)
-      if (!("DataFiles" %in% wb$sheet_names)) {
-        return(invisible())
-      }
-
-      dataFiles <- xlsxReadData(
-        wb = wb,
-        sheetName = "DataFiles",
-        skipDescriptionRow = FALSE,
-        convertHeaders = FALSE
-      )
-
-      neededSheets <- "DataFiles"
-      if ("Dictionary" %in% names(dataFiles) && nrow(dataFiles) > 1) {
-        dictionaryNames <- trimws(as.character(dataFiles[-1][["Dictionary"]]))
-        dictionaryNames <- unique(dictionaryNames[
-          !is.na(dictionaryNames) & nzchar(dictionaryNames)
-        ])
-        neededSheets <- unique(c(neededSheets, dictionaryNames))
-      }
-
-      sheetsToRemove <- setdiff(wb$sheet_names, neededSheets)
-      for (sheetName in sheetsToRemove) {
-        openxlsx::removeWorksheet(wb = wb, sheet = sheetName)
-      }
-
-      openxlsx::saveWorkbook(
-        wb = wb,
-        file = dataImportMapPath,
-        overwrite = TRUE
-      )
-
-      return(invisible())
-    }
+    )
   )
-)
 # calling function ------------
 #' @title Export Simulation Workflow
 #' @description
@@ -1696,13 +1716,13 @@ importWorkflow <- function(
   checkmate::assertIntegerish(wfIdentifier)
   configurationDirectory <- file.path(
     projectDirectory,
-    getConfigDirectoryForWorkflow(wfIdentifier = wfIdentifier)
+    .getConfigDirectoryForWorkflow(wfIdentifier = wfIdentifier)
   )
 
   if (!dir.exists(configurationDirectory)) {
     dir.create(configurationDirectory, recursive = TRUE)
   }
-  projectConfigurationNew <- importProjectConfiguration(
+  projectConfigurationNew <- .importProjectConfiguration(
     ePackageFolder = ePackageFolder,
     configurationDirectory = configurationDirectory,
     projectDirectory = projectDirectory,
@@ -1716,7 +1736,7 @@ importWorkflow <- function(
     description = "Path to the folder where data files are saved"
   )
 
-  importWorkflowFiles(projectConfigurationNew, ePackageFolder, wfIdentifier)
+  .importWorkflowFiles(projectConfigurationNew, ePackageFolder, wfIdentifier)
 
   .synchronizeScenariosOutputsWithPlots(
     projectConfiguration = projectConfigurationNew,
@@ -1743,7 +1763,8 @@ importWorkflow <- function(
 #'         If the filename does not meet the criteria, an error will be raised with an informative message.
 #'
 #' @keywords internal
-validateAndAdjustFilenames <- function(fileName, fileType) {
+#' @noRd
+.validateAndAdjustFilenames <- function(fileName, fileType) {
   # Check if the file has a valid extension
   extension <- fs::path_ext(fileName)
   if (!(extension %in% c("txt", "xml"))) {
@@ -1752,7 +1773,7 @@ validateAndAdjustFilenames <- function(fileName, fileType) {
 
   # add "_" before Uppercase Letters, that will make more readable function file names in the ePackage
   # as the final name is in lower case
-  if (fileType == 'script') {
+  if (fileType == "script") {
     fileName <- gsub("([a-z0-9])([A-Z])", "\\1_\\2", basename(fileName))
   }
 
@@ -1782,28 +1803,54 @@ validateAndAdjustFilenames <- function(fileName, fileType) {
   return(fileName)
 }
 
-ePackageInputManifestFileName <- function(wfIdentifier) {
-  paste0("w", wfIdentifier, "_input_files_csv.txt")
+#' @title Build ePackage Input Manifest File Name
+#' @description Build the workflow-specific input manifest file name.
+#' @param wfIdentifier Workflow identifier.
+#' @return Character scalar with manifest file name.
+#' @keywords internal
+#' @noRd
+.ePackageInputManifestFileName <- function(wfIdentifier) {
+  return(paste0("w", wfIdentifier, "_input_files_csv.txt"))
 }
 
-ePackagePopulationFileName <- function(fileName) {
+#' @title Build ePackage Population File Name
+#' @description Convert a population source file name to ePackage naming format.
+#' @param fileName Source file name.
+#' @return Character scalar with population file name for ePackage.
+#' @keywords internal
+#' @noRd
+.ePackagePopulationFileName <- function(fileName) {
   if (grepl("_csv\\.txt$", fileName, ignore.case = TRUE)) {
     return(fileName)
   }
 
-  paste0(fs::path_ext_remove(fileName), "_csv.txt")
+  return(paste0(fs::path_ext_remove(fileName), "_csv.txt"))
 }
 
-ePackageScriptFileName <- function(fileName) {
+#' @title Build ePackage Script File Name
+#' @description Convert a script source file name to ePackage naming format.
+#' @param fileName Source file name.
+#' @return Character scalar with script file name for ePackage.
+#' @keywords internal
+#' @noRd
+.ePackageScriptFileName <- function(fileName) {
   if (grepl("_r\\.txt$", fileName, ignore.case = TRUE)) {
     return(fileName)
   }
 
-  paste0(fs::path_ext_remove(fileName), "_r.txt")
+  return(paste0(fs::path_ext_remove(fileName), "_r.txt"))
 }
 
-changedInputReferenceFileName <- function(fileName, fileType, source) {
-  switch(
+#' @title Build Referenced Input File Name
+#' @description Build the file name expected in configuration references for a packaged input file.
+#' @param fileName File name in the ePackage.
+#' @param fileType File type (population, script, model, data).
+#' @param source Original source file path.
+#' @return Character scalar with restored reference file name.
+#' @keywords internal
+#' @noRd
+.changedInputReferenceFileName <- function(fileName, fileType, source) {
+  return(switch(
     fileType,
     "population" = paste0(
       sub("_csv\\.txt$", "", fileName, ignore.case = TRUE),
@@ -1818,22 +1865,29 @@ changedInputReferenceFileName <- function(fileName, fileType, source) {
       ))
     },
     as.character(fs::path_ext_set(path = fileName, ext = fs::path_ext(source)))
-  )
+  ))
 }
 
-resolveEPackageInputManifestPath <- function(ePackageFolder, wfIdentifier) {
+#' @title Resolve ePackage Input Manifest Path
+#' @description Resolve the input manifest path, supporting current and legacy file names.
+#' @param ePackageFolder Path to the ePackage folder.
+#' @param wfIdentifier Workflow identifier.
+#' @return Character scalar path to the manifest file.
+#' @keywords internal
+#' @noRd
+.resolveEPackageInputManifestPath <- function(ePackageFolder, wfIdentifier) {
   manifestPath <- file.path(
     ePackageFolder,
-    ePackageInputManifestFileName(wfIdentifier)
+    .ePackageInputManifestFileName(wfIdentifier)
   )
   if (file.exists(manifestPath)) {
     return(manifestPath)
   }
 
-  file.path(
+  return(file.path(
     ePackageFolder,
     paste0("w", wfIdentifier, "_input_files.csv")
-  )
+  ))
 }
 
 #' Resolve workflow AnalysisData folder
@@ -1843,7 +1897,7 @@ resolveEPackageInputManifestPath <- function(ePackageFolder, wfIdentifier) {
 #' @return Character path to the AnalysisData folder used by workflow data import/export.
 #' @keywords internal
 #' @noRd
-resolveWorkflowAnalysisDataFolder <- function(ePackageFolder, create = FALSE) {
+.resolveWorkflowAnalysisDataFolder <- function(ePackageFolder, create = FALSE) {
   checkmate::assertCharacter(ePackageFolder, len = 1, any.missing = FALSE)
   checkmate::assertFlag(create)
 
@@ -1855,8 +1909,15 @@ resolveWorkflowAnalysisDataFolder <- function(ePackageFolder, create = FALSE) {
   return(analysisDataFolder)
 }
 
-importedProjectFileName <- function(fileName, fileType) {
-  switch(
+#' @title Convert Packaged Name to Project Name
+#' @description Convert workflow packaged file names back to project-compatible names.
+#' @param fileName File name in the ePackage.
+#' @param fileType File type (population, script, model, data).
+#' @return Character scalar with converted file name.
+#' @keywords internal
+#' @noRd
+.importedProjectFileName <- function(fileName, fileType) {
+  return(switch(
     fileType,
     "population" = if (grepl("_csv\\.txt$", fileName, ignore.case = TRUE)) {
       paste0(sub("_csv\\.txt$", "", fileName, ignore.case = TRUE), ".csv")
@@ -1870,7 +1931,7 @@ importedProjectFileName <- function(fileName, fileType) {
     },
     "model" = as.character(fs::path_ext_set(fileName, ".pkml")),
     fileName
-  )
+  ))
 }
 
 
@@ -1880,11 +1941,13 @@ importedProjectFileName <- function(fileName, fileType) {
 #' It reads the configuration data from a JSON file and creates the necessary Excel sheets.
 #'
 #' @param configurationDirectory A character string representing the directory where the configuration files will be stored.
+#' @param projectDirectory A character string representing the project directory.
 #' @param ePackageFolder A character string representing the path to the electronic package folder containing the configuration.
 #' @param wfIdentifier An integer identifier for the workflow being imported.
 #' @return A character string indicating the direction of synchronization (e.g., "plotToScenario", "bothways").
 #' @keywords internal
-importProjectConfiguration <- function(
+#' @noRd
+.importProjectConfiguration <- function(
   configurationDirectory,
   projectDirectory,
   ePackageFolder,
@@ -1956,13 +2019,14 @@ importProjectConfiguration <- function(
 #' @param wfIdentifier An integer identifier for the workflow being imported.
 #' @return Invisible NULL.
 #' @keywords internal
-importWorkflowFiles <- function(
+#' @noRd
+.importWorkflowFiles <- function(
   projectConfigurationNew,
   ePackageFolder,
   wfIdentifier
 ) {
   inputFiles <- fread(
-    file = resolveEPackageInputManifestPath(
+    file = .resolveEPackageInputManifestPath(
       ePackageFolder = ePackageFolder,
       wfIdentifier = wfIdentifier
     )
@@ -1974,7 +2038,7 @@ importWorkflowFiles <- function(
   dataFileFolder <- suppressWarnings(
     projectConfigurationNew$addOns$dataFileFolder
   )
-  ePackageDataFolder <- resolveWorkflowAnalysisDataFolder(
+  ePackageDataFolder <- .resolveWorkflowAnalysisDataFolder(
     ePackageFolder = ePackageFolder
   )
 
@@ -2003,16 +2067,16 @@ importWorkflowFiles <- function(
           fileType,
           "population" = file.path(
             populationsFolder,
-            importedProjectFileName(f, fileType)
+            .importedProjectFileName(f, fileType)
           ),
           "model" = file.path(
             modelFolder,
-            importedProjectFileName(f, fileType)
+            .importedProjectFileName(f, fileType)
           ),
           "data" = file.path(projectConfigurationNew$addOns$dataFileFolder, f),
           "script" = file.path(
             projectConfigurationNew$configurationsFolder,
-            importedProjectFileName(f, fileType)
+            .importedProjectFileName(f, fileType)
           ),
         )
 
@@ -2034,7 +2098,11 @@ importWorkflowFiles <- function(
 #'
 #' @param df Data frame with columns that need type conversion
 #' @return Data frame with columns converted to appropriate types
+#' @details
+#' Converts columns to logical when values are limited to TRUE/FALSE and to numeric
+#' when conversion does not introduce invalid non-empty entries.
 #' @keywords internal
+#' @noRd
 .convertDataTypes <- function(df) {
   if (ncol(df) == 0 || nrow(df) == 0) {
     return(df)
@@ -2074,13 +2142,14 @@ importWorkflowFiles <- function(
 #' @param projectConfiguration An object containing the project configuration details.
 #' @return A character string representing the common project directory.
 #' @keywords internal
-getProjectDirectory <- function(projectConfiguration) {
-  fs::path_common(
+#' @noRd
+.getProjectDirectory <- function(projectConfiguration) {
+  return(fs::path_common(
     path = c(
       projectConfiguration$configurationsFolder,
       projectConfiguration$outputFolder
     )
-  )
+  ))
 }
 #' @title Get Configuration Directory for Workflow
 #' @description
@@ -2089,6 +2158,7 @@ getProjectDirectory <- function(projectConfiguration) {
 #' @param wfIdentifier An integer identifier for the workflow.
 #' @return A character string representing the configuration directory path for the specified workflow.
 #' @keywords internal
-getConfigDirectoryForWorkflow <- function(wfIdentifier) {
-  paste0("Scripts_w", wfIdentifier)
+#' @noRd
+.getConfigDirectoryForWorkflow <- function(wfIdentifier) {
+  return(paste0("Scripts_w", wfIdentifier))
 }

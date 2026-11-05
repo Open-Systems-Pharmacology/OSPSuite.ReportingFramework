@@ -42,7 +42,7 @@ makeBoxwhiskerPlotData <- function(
 
 test_that("getCaptionForBoxwhiskerPlot builds table caption (isPlotCaption=FALSE)", {
   plotDataPk <- makeBoxwhiskerCaptionData()
-  result <- ospsuite.reportingframework:::getCaptionForBoxwhiskerPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForBoxwhiskerPlot(
     plotDataPk = plotDataPk,
     plotCaptionAddon = NA,
     isPlotCaption = FALSE,
@@ -55,7 +55,7 @@ test_that("getCaptionForBoxwhiskerPlot builds table caption (isPlotCaption=FALSE
 
 test_that("getCaptionForBoxwhiskerPlot includes 'ratios' for ratio plots", {
   plotDataPk <- makeBoxwhiskerCaptionData()
-  result <- ospsuite.reportingframework:::getCaptionForBoxwhiskerPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForBoxwhiskerPlot(
     plotDataPk = plotDataPk,
     plotCaptionAddon = NA,
     isPlotCaption = FALSE,
@@ -66,7 +66,7 @@ test_that("getCaptionForBoxwhiskerPlot includes 'ratios' for ratio plots", {
 
 test_that("getCaptionForBoxwhiskerPlot includes scale and percentiles for plot caption", {
   plotDataPk <- makeBoxwhiskerCaptionData()
-  result <- ospsuite.reportingframework:::getCaptionForBoxwhiskerPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForBoxwhiskerPlot(
     plotDataPk = plotDataPk,
     percentiles = c(0.05, 0.5, 0.95),
     yScale = "log",
@@ -82,7 +82,7 @@ test_that("getCaptionForBoxwhiskerPlot includes scale and percentiles for plot c
 
 test_that("getCaptionForBoxwhiskerPlot appends plotCaptionAddon", {
   plotDataPk <- makeBoxwhiskerCaptionData()
-  result <- ospsuite.reportingframework:::getCaptionForBoxwhiskerPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForBoxwhiskerPlot(
     plotDataPk = plotDataPk,
     plotCaptionAddon = "See protocol.",
     isPlotCaption = FALSE,
@@ -93,7 +93,7 @@ test_that("getCaptionForBoxwhiskerPlot appends plotCaptionAddon", {
 
 test_that("getCaptionForBoxwhiskerPlot includes output name", {
   plotDataPk <- makeBoxwhiskerCaptionData(displayNameOutput = "Plasma")
-  result <- ospsuite.reportingframework:::getCaptionForBoxwhiskerPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForBoxwhiskerPlot(
     plotDataPk = plotDataPk,
     plotCaptionAddon = NA,
     isPlotCaption = FALSE,
@@ -108,7 +108,7 @@ test_that("getCaptionForBoxwhiskerPlot includes output name", {
 
 test_that("getSummaryTable returns expected columns", {
   plotDataPk <- makeBoxwhiskerPlotData()
-  result <- ospsuite.reportingframework:::getSummaryTable(
+  result <- ospsuite.reportingframework:::.getSummaryTable(
     plotDataPk = plotDataPk,
     onePlotConfig = data.table::data.table(),
     percentiles = c(0.05, 0.5, 0.95)
@@ -122,7 +122,7 @@ test_that("getSummaryTable returns expected columns", {
 
 test_that("getSummaryTable groups by scenarioShortName", {
   plotDataPk <- makeBoxwhiskerPlotData()
-  result <- ospsuite.reportingframework:::getSummaryTable(
+  result <- ospsuite.reportingframework:::.getSummaryTable(
     plotDataPk = plotDataPk,
     onePlotConfig = data.table::data.table(),
     percentiles = c(0.5)
@@ -136,7 +136,7 @@ test_that("getSummaryTable computes correct N per group", {
     values = c(1, 2, 3, 4),
     colorIndex = factor(c("A", "A", "A", "B"))
   )
-  result <- ospsuite.reportingframework:::getSummaryTable(
+  result <- ospsuite.reportingframework:::.getSummaryTable(
     plotDataPk = plotDataPk,
     onePlotConfig = data.table::data.table(),
     percentiles = c(0.5)
@@ -155,7 +155,10 @@ test_that("validateExistenceOfReferenceForRatio passes when all plots have refer
     referenceScenario = c("ref", "ref")
   )
   expect_invisible(
-    ospsuite.reportingframework:::validateExistenceOfReferenceForRatio(dt, NULL)
+    ospsuite.reportingframework:::.validateExistenceOfReferenceForRatio(
+      dt,
+      NULL
+    )
   )
 })
 
@@ -169,7 +172,7 @@ test_that("validateExistenceOfReferenceForRatio errors when a plot has no refere
     env = list2env(list(tmp = tmp), parent = baseenv())
   )
   expect_error(
-    ospsuite.reportingframework:::validateExistenceOfReferenceForRatio(
+    ospsuite.reportingframework:::.validateExistenceOfReferenceForRatio(
       dt,
       NULL
     ),
@@ -184,7 +187,10 @@ test_that("validateExistenceOfReferenceForRatio passes on empty table", {
     referenceScenario = character(0)
   )
   expect_invisible(
-    ospsuite.reportingframework:::validateExistenceOfReferenceForRatio(dt, NULL)
+    ospsuite.reportingframework:::.validateExistenceOfReferenceForRatio(
+      dt,
+      NULL
+    )
   )
 })
 
@@ -203,7 +209,7 @@ test_that("validateIsCrossOverStudy passes when scenario and reference share sam
     populationId = c("pop1", "pop1")
   )
   expect_invisible(
-    ospsuite.reportingframework:::validateIsCrossOverStudy(
+    ospsuite.reportingframework:::.validateIsCrossOverStudy(
       configTablePlots,
       pkDT
     )
@@ -221,7 +227,7 @@ test_that("validateIsCrossOverStudy errors when populations differ", {
     populationId = c("pop1", "pop2")
   )
   expect_error(
-    ospsuite.reportingframework:::validateIsCrossOverStudy(
+    ospsuite.reportingframework:::.validateIsCrossOverStudy(
       configTablePlots,
       pkDT
     ),
@@ -235,7 +241,7 @@ test_that("getCaptionForBoxwhiskerPlot handles special characters in names", {
     displayNameOutput = "Liver-Kidney",
     displayNamePKParameter = "AUC dose"
   )
-  result <- ospsuite.reportingframework:::getCaptionForBoxwhiskerPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForBoxwhiskerPlot(
     plotDataPk = plotDataPk,
     plotCaptionAddon = NA,
     isPlotCaption = FALSE,
@@ -247,7 +253,7 @@ test_that("getCaptionForBoxwhiskerPlot handles special characters in names", {
 
 test_that("getCaptionForBoxwhiskerPlot handles empty plotCaptionAddon", {
   plotDataPk <- makeBoxwhiskerCaptionData()
-  result <- ospsuite.reportingframework:::getCaptionForBoxwhiskerPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForBoxwhiskerPlot(
     plotDataPk = plotDataPk,
     plotCaptionAddon = "",
     isPlotCaption = FALSE,
@@ -259,7 +265,7 @@ test_that("getCaptionForBoxwhiskerPlot handles empty plotCaptionAddon", {
 
 test_that("getCaptionForBoxwhiskerPlot handles multiple values in data", {
   plotDataPk <- makeBoxwhiskerCaptionData(displayUnit = "µmol/l")
-  result <- ospsuite.reportingframework:::getCaptionForBoxwhiskerPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForBoxwhiskerPlot(
     plotDataPk = plotDataPk,
     plotCaptionAddon = NA,
     isPlotCaption = FALSE,

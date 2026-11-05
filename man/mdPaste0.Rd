@@ -13,6 +13,9 @@ mdPaste0(..., collapse = NULL, newlines = 1)
 
 \item{newlines}{Newlines afterwards (default 1).}
 }
+\value{
+Invisible `NULL`.
+}
 \description{
 mdPaste0
 }

@@ -26,14 +26,14 @@ dtOutputPaths <- data.table::data.table(
 
 # Unit tests
 test_that("getPlotIdForColumns works correctly", {
-  result <- getPlotIdForColumns(configTable, "outputPathIds")
+  result <- .getPlotIdForColumns(configTable, "outputPathIds")
   expect_true("plotId" %in% names(result))
   expect_equal(nrow(result), 5) # Check the number of rows
 })
 
 test_that("splitCaptionByIndividuals works correctly", {
-  dtCaption <- getPlotIdForColumns(configTable, "outputPathIds")
-  result <- splitCaptionByIndividuals(
+  dtCaption <- .getPlotIdForColumns(configTable, "outputPathIds")
+  result <- .splitCaptionByIndividuals(
     configTable,
     individualIdVector = c("1", "2"),
     dtCaption
@@ -44,8 +44,8 @@ test_that("splitCaptionByIndividuals works correctly", {
 
 
 test_that("addTimeTagsToCaption works correctly", {
-  dtCaption <- getPlotIdForColumns(configTable, "outputPathIds")
-  result <- addTimeTagsToCaption(
+  dtCaption <- .getPlotIdForColumns(configTable, "outputPathIds")
+  result <- .addTimeTagsToCaption(
     dtCaption,
     timeTags,
     splitPlotsPerTimeRange = 0
@@ -56,13 +56,13 @@ test_that("addTimeTagsToCaption works correctly", {
 })
 
 test_that("setTimeRangeFilter works correctly", {
-  result <- setTimeRangeFilter(splitPlotsPerTimeRange = 1, timeTags)
+  result <- .setTimeRangeFilter(splitPlotsPerTimeRange = 1, timeTags)
   expect_equal(length(result), 2) # Check length of filters
 })
 
 test_that("restructureApplicationTimeByScenarioIndex works correctly", {
   applicationTimes <- list(A = c(1, 2), B = c(3, 4))
-  result <- restructureApplicationTimeByScenarioIndex(
+  result <- .restructureApplicationTimeByScenarioIndex(
     applicationTimes,
     configTable
   )
@@ -70,7 +70,7 @@ test_that("restructureApplicationTimeByScenarioIndex works correctly", {
 })
 
 test_that("getOutputPathsPerScenario works correctly", {
-  result <- getOutputPathsPerScenario(configTable, dtOutputPaths)
+  result <- .getOutputPathsPerScenario(configTable, dtOutputPaths)
   expect_true(is.list(result))
   expect_equal(length(result), 2) # Check number of scenarios
 })
@@ -89,7 +89,7 @@ test_that("getObservedUnitConversionDT works correctly", {
       unitFactor = c(1000, 1)
     )
 
-  result <- getObservedUnitConversionDT(dataObserved, dtUnit)
+  result <- .getObservedUnitConversionDT(dataObserved, dtUnit)
   expect_true("unitFactor" %in% names(result))
   expect_equal(nrow(result), 2) # Check number of rows
 })
@@ -100,7 +100,7 @@ test_that("getPlotIdForColumns handles empty string column values", {
     scenario = "",
     outputPathIds = ""
   )
-  result <- getPlotIdForColumns(emptyConfig, "outputPathIds")
+  result <- .getPlotIdForColumns(emptyConfig, "outputPathIds")
   expect_true("plotId" %in% names(result))
   expect_true(nrow(result) >= 1)
 })
@@ -110,14 +110,14 @@ test_that("getPlotIdForColumns handles special characters in column values", {
     scenario = "A & B",
     outputPathIds = "Path|1,2;3"
   )
-  result <- getPlotIdForColumns(specialConfig, "outputPathIds")
+  result <- .getPlotIdForColumns(specialConfig, "outputPathIds")
   expect_true("plotId" %in% names(result))
 })
 
 # Edge case tests for splitCaptionByIndividuals
 test_that("splitCaptionByIndividuals handles empty individual vector", {
-  dtCaption <- getPlotIdForColumns(configTable, "outputPathIds")
-  result <- splitCaptionByIndividuals(
+  dtCaption <- .getPlotIdForColumns(configTable, "outputPathIds")
+  result <- .splitCaptionByIndividuals(
     configTable,
     individualIdVector = character(0),
     dtCaption
@@ -126,8 +126,8 @@ test_that("splitCaptionByIndividuals handles empty individual vector", {
 })
 
 test_that("splitCaptionByIndividuals preserves all data with single individual", {
-  dtCaption <- getPlotIdForColumns(configTable, "outputPathIds")
-  result <- splitCaptionByIndividuals(
+  dtCaption <- .getPlotIdForColumns(configTable, "outputPathIds")
+  result <- .splitCaptionByIndividuals(
     configTable,
     individualIdVector = "1",
     dtCaption
@@ -138,9 +138,9 @@ test_that("splitCaptionByIndividuals preserves all data with single individual",
 
 # Edge case tests for addTimeTagsToCaption
 test_that("addTimeTagsToCaption handles empty timeTags", {
-  dtCaption <- getPlotIdForColumns(configTable, "outputPathIds")
+  dtCaption <- .getPlotIdForColumns(configTable, "outputPathIds")
   emptyTags <- factor(character(0), ordered = TRUE)
-  result <- addTimeTagsToCaption(
+  result <- .addTimeTagsToCaption(
     dtCaption,
     emptyTags,
     splitPlotsPerTimeRange = 0
@@ -149,8 +149,8 @@ test_that("addTimeTagsToCaption handles empty timeTags", {
 })
 
 test_that("addTimeTagsToCaption handles splitPlotsPerTimeRange = 1", {
-  dtCaption <- getPlotIdForColumns(configTable, "outputPathIds")
-  result <- addTimeTagsToCaption(
+  dtCaption <- .getPlotIdForColumns(configTable, "outputPathIds")
+  result <- .addTimeTagsToCaption(
     dtCaption,
     timeTags,
     splitPlotsPerTimeRange = 1
@@ -162,25 +162,25 @@ test_that("addTimeTagsToCaption handles splitPlotsPerTimeRange = 1", {
 # Edge case tests for setTimeRangeFilter
 test_that("setTimeRangeFilter handles empty timeTags", {
   emptyTags <- factor(character(0), ordered = TRUE)
-  result <- setTimeRangeFilter(splitPlotsPerTimeRange = 1, emptyTags)
+  result <- .setTimeRangeFilter(splitPlotsPerTimeRange = 1, emptyTags)
   expect_true(is.list(result) || length(result) == 0)
 })
 
 test_that("setTimeRangeFilter handles single timeTag", {
   singleTag <- factor("SingleTag", ordered = TRUE)
-  result <- setTimeRangeFilter(splitPlotsPerTimeRange = 0, singleTag)
+  result <- .setTimeRangeFilter(splitPlotsPerTimeRange = 0, singleTag)
   expect_true(is.list(result))
 })
 
 # Edge case tests for restructureApplicationTimeByScenarioIndex
 test_that("restructureApplicationTimeByScenarioIndex handles empty applicationTimes", {
-  result <- restructureApplicationTimeByScenarioIndex(list(), configTable)
+  result <- .restructureApplicationTimeByScenarioIndex(list(), configTable)
   expect_true(is.list(result) || length(result) == 0)
 })
 
 test_that("restructureApplicationTimeByScenarioIndex handles mismatched scenarios", {
   mismatchedTimes <- list(C = c(1, 2), D = c(3, 4))
-  result <- restructureApplicationTimeByScenarioIndex(
+  result <- .restructureApplicationTimeByScenarioIndex(
     mismatchedTimes,
     configTable
   )
@@ -193,7 +193,7 @@ test_that("getOutputPathsPerScenario handles missing output paths", {
     outputPathId = character(0),
     OutputPaths = character(0)
   )
-  result <- getOutputPathsPerScenario(configTable, emptyPaths)
+  result <- .getOutputPathsPerScenario(configTable, emptyPaths)
   expect_true(is.list(result))
 })
 
@@ -202,7 +202,7 @@ test_that("getOutputPathsPerScenario with single path", {
     outputPathId = "Path1",
     OutputPaths = "model|Path1"
   )
-  result <- getOutputPathsPerScenario(configTable, singlePath)
+  result <- .getOutputPathsPerScenario(configTable, singlePath)
   expect_true(is.list(result))
 })
 
@@ -219,7 +219,7 @@ test_that("getObservedUnitConversionDT handles multiple rows", {
     displayUnit = c("g", "kg"),
     unitFactor = c(1000, 1)
   )
-  result <- getObservedUnitConversionDT(dataObserved, dtUnit)
+  result <- .getObservedUnitConversionDT(dataObserved, dtUnit)
   expect_true(data.table::is.data.table(result))
   expect_equal(nrow(result), 2)
 })

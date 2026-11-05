@@ -167,7 +167,7 @@ getScenarioDefinitions <- function(wbScenarios, wbPlots = NULL) {
     )
   } else {
     scenarios <- copy(scenariosSc)
-    scenarios[, pKParameter := NA] # nolint
+    scenarios[, pKParameter := NA]
   }
 
   setnames(scenarios, old = "scenario_name", new = "scenarioName")

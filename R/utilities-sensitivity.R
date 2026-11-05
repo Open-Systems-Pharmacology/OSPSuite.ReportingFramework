@@ -88,6 +88,8 @@ addSensitivityTable <- function(
 #' @param simulationRunOptions Optional `SimulationRunOptions` passed to the
 #'   simulation runs.
 #' @param overwrite A logical indicating whether to overwrite existing results. Defaults to TRUE.
+#' @details Runs sensitivity analysis for each selected scenario and optionally
+#'   computes scenario/reference ratios when `referenceScenario` is provided.
 #'
 #' @return NULL
 #' @export
@@ -249,7 +251,6 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   ),
   overwrite = TRUE
 ) {
-
   checkmate::assertList(scenarioList, any.missing = FALSE, names = "named")
   checkmate::assertNumeric(
     representativeQuantiles,
@@ -454,10 +455,12 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
     stop(messages$errorutilitiessensitivityNoParameterPaths(parameterPathMode))
   }
 
-  data.table(
+  sensitivityTableData <- data.table(
     parameter = gsub("\\|", " ", parameterPaths),
     parameterPath = parameterPaths
   )
+
+  return(sensitivityTableData)
 }
 
 #' Classify selected scenarios by population availability.
@@ -497,6 +500,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
 #'
 #' @param runnerType Runner kind: `"standard"` or `"representative"`.
 #' @param scenarioType Scenario type from `.sensitivityScenarioType`.
+#' @return NULL (invisible).
 #'
 #' @keywords internal
 #' @noRd
@@ -634,7 +638,6 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   modelFolder,
   referenceScenario = NULL
 ) {
-
   scenarioNames <- currentScenarioName
   if (!is.null(referenceScenario)) {
     if (identical(referenceScenario, currentScenarioName)) {
@@ -735,7 +738,6 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   pkParameterSheets,
   dtOutputPaths
 ) {
-
   pkDefinitions <- .readPKDefinitionsFromSheets(
     projectConfiguration = projectConfiguration,
     pkParameterSheets = pkParameterSheets
@@ -933,16 +935,17 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   sensitivityPopulationDT <- data.table::setDT(
     ospsuite::populationToDataFrame(sensitivityPopulation)
   )
-  if (!"perturbationFactor" %in% names(sensitivityPopulationDT) &&
-    "factor" %in% names(sensitivityPopulationDT)) {
+  if (
+    !"perturbationFactor" %in% names(sensitivityPopulationDT) &&
+      "factor" %in% names(sensitivityPopulationDT)
+  ) {
     data.table::setnames(
       sensitivityPopulationDT,
       old = "factor",
       new = "perturbationFactor"
     )
   }
-  sensitivityPopulationDT <- sensitivityPopulationDT[
-    ,
+  sensitivityPopulationDT <- sensitivityPopulationDT[,
     .(IndividualId, perturbationFactor, SensitivityParameter)
   ]
 
@@ -974,7 +977,9 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   )
 
   if (any(is.na(pkParameterDTSens$Value.base))) {
-    stop("Some perturbed rows have no matching baseline (perturbationFactor == 1) row.")
+    stop(
+      "Some perturbed rows have no matching baseline (perturbationFactor == 1) row."
+    )
   }
 
   pkParameterDTSens[, dPK := (Value - Value.base) / Value.base]
@@ -1032,7 +1037,6 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   pkParameter,
   representativeQuantiles = c(0.05, 0.5, 0.95)
 ) {
-
   checkmate::assertString(outputFolder)
   checkmate::assertString(scenarioName)
   checkmate::assertCharacter(outputPaths, any.missing = FALSE, min.len = 1)
@@ -1234,7 +1238,6 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   variationRange = 0.1,
   numberOfSteps = 2
 ) {
-
   checkmate::assertDataFrame(baselineRow, nrows = 1)
   checkmate::assertList(sensitivityParameter, min.len = 1)
   checkmate::assertNumber(variationRange, lower = 0)
@@ -1361,7 +1364,6 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   variationRange = 0.1,
   numberOfSteps = 2
 ) {
-
   populationDt <- data.table::as.data.table(
     ospsuite::populationToDataFrame(population)
   )
@@ -1484,6 +1486,202 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   return(dtPK[, keepCols, with = FALSE])
 }
 
+#' Retrieve one parameter value from an ospsuite simulation
+#'
+#' @param parPath Character model parameter path.
+#' @param simulation ospsuite simulation container.
+#' @return Numeric value if found, otherwise `NULL`.
+#' @keywords internal
+#' @noRd
+.getSensitivityParameterValue <- function(parPath, simulation) {
+  parameterResult <- ospsuite::getParameter(
+    path = parPath,
+    container = simulation,
+    stopIfNotFound = FALSE
+  )
+  if (is.null(parameterResult) || !("value" %in% names(parameterResult))) {
+    return(NULL)
+  }
+
+  return(as.numeric(parameterResult$value))
+}
+
+#' Read baseline parameter values from one scenario simulation
+#'
+#' @param sensitivityPaths Character vector of sensitivity parameter paths.
+#' @param simulation ospsuite simulation container.
+#' @param scenarioFile Character scenario file path used for warning text.
+#' @return List with named numeric list `baselineValues` and `missingPaths` vector.
+#' @keywords internal
+#' @noRd
+.readSensitivityBaselineValues <- function(
+  sensitivityPaths,
+  simulation,
+  scenarioFile
+) {
+  baselineValues <- list()
+  missingPaths <- character(0)
+
+  for (parPath in sensitivityPaths) {
+    parameterValue <- .getSensitivityParameterValue(parPath, simulation)
+    if (is.null(parameterValue)) {
+      warning(
+        sprintf(
+          "Parameter path not found in '%s': %s",
+          scenarioFile,
+          parPath
+        ),
+        call. = FALSE
+      )
+      missingPaths <- c(missingPaths, parPath)
+      baselineValues[[parPath]] <- NA_real_
+    } else {
+      baselineValues[[parPath]] <- parameterValue
+    }
+  }
+
+  return(list(
+    baselineValues = baselineValues,
+    missingPaths = missingPaths
+  ))
+}
+
+#' Assert that two baseline values are compatible
+#'
+#' @param parPath Character model parameter path.
+#' @param valueScenario1 Numeric baseline value from first scenario.
+#' @param valueScenario2 Numeric baseline value from second scenario.
+#' @return NULL (invisible) when values are compatible.
+#' @keywords internal
+#' @noRd
+.assertSensitivityBaselineCompatibility <- function(
+  parPath,
+  valueScenario1,
+  valueScenario2
+) {
+  isIncompatible <-
+    (valueScenario1 == 0 && valueScenario2 != 0) ||
+    !isTRUE(all.equal(valueScenario2 / valueScenario1, 1, tolerance = 1e-8))
+
+  if (isIncompatible) {
+    stop(sprintf(
+      "Baseline mismatch for '%s': %g vs %g",
+      parPath,
+      valueScenario1,
+      valueScenario2
+    ))
+  }
+
+  return(invisible(NULL))
+}
+
+#' Reconcile one parameter path against second-scenario baseline
+#'
+#' @param parPath Character model parameter path.
+#' @param baselineValues Named list of baseline values from first simulation.
+#' @param missingPaths Character vector of currently missing paths.
+#' @param parameterValue Numeric value found in second-scenario simulation.
+#' @return List with updated `baselineValues` and `missingPaths`.
+#' @keywords internal
+#' @noRd
+.reconcileSensitivityPathValue <- function(
+  parPath,
+  baselineValues,
+  missingPaths,
+  parameterValue
+) {
+  valueScenario1 <- baselineValues[[parPath]]
+  if (is.na(valueScenario1)) {
+    baselineValues[[parPath]] <- parameterValue
+    missingPaths <- setdiff(missingPaths, parPath)
+
+    return(list(
+      baselineValues = baselineValues,
+      missingPaths = missingPaths
+    ))
+  }
+
+  .assertSensitivityBaselineCompatibility(
+    parPath = parPath,
+    valueScenario1 = valueScenario1,
+    valueScenario2 = parameterValue
+  )
+
+  return(list(
+    baselineValues = baselineValues,
+    missingPaths = missingPaths
+  ))
+}
+
+#' Reconcile baseline values with a second scenario simulation
+#'
+#' @param sensitivityPaths Character vector of sensitivity parameter paths.
+#' @param baselineValues Named list of baseline values from first simulation.
+#' @param missingPaths Character vector of currently missing paths.
+#' @param simulation ospsuite simulation container for second scenario.
+#' @param scenarioFile Character scenario file path used for warning text.
+#' @return List with updated `baselineValues` and `missingPaths`.
+#' @keywords internal
+#' @noRd
+.reconcileSensitivityBaselineValues <- function(
+  sensitivityPaths,
+  baselineValues,
+  missingPaths,
+  simulation,
+  scenarioFile
+) {
+  for (parPath in sensitivityPaths) {
+    parameterValue <- .getSensitivityParameterValue(parPath, simulation)
+
+    if (is.null(parameterValue)) {
+      warning(
+        sprintf(
+          "Parameter path not found in '%s': %s",
+          scenarioFile,
+          parPath
+        ),
+        call. = FALSE
+      )
+      next
+    }
+
+    reconciledValues <- .reconcileSensitivityPathValue(
+      parPath = parPath,
+      baselineValues = baselineValues,
+      missingPaths = missingPaths,
+      parameterValue = parameterValue
+    )
+    baselineValues <- reconciledValues$baselineValues
+    missingPaths <- reconciledValues$missingPaths
+  }
+
+  return(list(
+    baselineValues = baselineValues,
+    missingPaths = missingPaths
+  ))
+}
+
+#' Convert baseline values to one-row baseline data.frame
+#'
+#' @param baselineValues Named list of baseline values.
+#' @return One-row data.frame with available sensitivity paths.
+#' @keywords internal
+#' @noRd
+.baselineSensitivityDataFrame <- function(baselineValues) {
+  availablePaths <- names(baselineValues)[!is.na(unlist(baselineValues))]
+  if (length(availablePaths) == 0) {
+    stop(
+      "None of the sensitivity parameter paths were found in the scenario(s)."
+    )
+  }
+
+  return(data.frame(
+    as.list(baselineValues[availablePaths]),
+    check.names = FALSE,
+    stringsAsFactors = FALSE
+  ))
+}
+
 #' Prepare a population for custom sensitivity analysis
 #'
 #' Builds a perturbed-parameter population suitable for passing to
@@ -1523,91 +1721,31 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
     loadFromCache = FALSE
   )
 
-  getParValue <- function(parPath, container) {
-    res <- ospsuite::getParameter(
-      path = parPath,
-      container = container,
-      stopIfNotFound = FALSE
-    )
-    if (is.null(res) || !("value" %in% names(res))) {
-      return(NULL)
-    }
-    return(res)
-  }
-
-  baselineValues <- list()
-  missingPaths <- character(0)
-  for (parPath in sensitivityPaths) {
-    res <- getParValue(parPath, sim1)
-    if (is.null(res)) {
-      warning(
-        sprintf(
-          "Parameter path not found in '%s': %s",
-          scenarioFiles[[1]],
-          parPath
-        ),
-        call. = FALSE
-      )
-      missingPaths <- c(missingPaths, parPath)
-      baselineValues[[parPath]] <- NA_real_
-    } else {
-      baselineValues[[parPath]] <- as.numeric(res$value)
-    }
-  }
+  baselineFromFirstScenario <- .readSensitivityBaselineValues(
+    sensitivityPaths = sensitivityPaths,
+    simulation = sim1,
+    scenarioFile = scenarioFiles[[1]]
+  )
+  baselineValues <- baselineFromFirstScenario$baselineValues
+  missingPaths <- baselineFromFirstScenario$missingPaths
 
   if (length(scenarioFiles) == 2) {
     sim2 <- ospsuite::loadSimulation(
       filePath = scenarioFiles[[2]],
       loadFromCache = FALSE
     )
-    for (parPath in sensitivityPaths) {
-      res2 <- getParValue(parPath, sim2)
-      if (is.null(res2)) {
-        warning(
-          sprintf(
-            "Parameter path not found in '%s': %s",
-            scenarioFiles[[2]],
-            parPath
-          ),
-          call. = FALSE
-        )
-      } else {
-        val2 <- as.numeric(res2$value)
-        val1 <- baselineValues[[parPath]]
-        if (is.na(val1)) {
-          baselineValues[[parPath]] <- val2
-          missingPaths <- setdiff(missingPaths, parPath)
-        } else if (val1 == 0 && val2 != 0) {
-          stop(sprintf(
-            "Baseline mismatch for '%s': %g vs %g",
-            parPath,
-            val1,
-            val2
-          ))
-        } else if (!isTRUE(all.equal(val2 / val1, 1, tolerance = 1e-8))) {
-          stop(sprintf(
-            "Baseline mismatch for '%s': %g vs %g",
-            parPath,
-            val1,
-            val2
-          ))
-        }
-      }
-    }
-  }
-
-  availablePaths <- names(baselineValues)[!is.na(unlist(baselineValues))]
-  if (length(availablePaths) == 0) {
-    stop(
-      "None of the sensitivity parameter paths were found in the scenario(s)."
+    baselineFromBothScenarios <- .reconcileSensitivityBaselineValues(
+      sensitivityPaths = sensitivityPaths,
+      baselineValues = baselineValues,
+      missingPaths = missingPaths,
+      simulation = sim2,
+      scenarioFile = scenarioFiles[[2]]
     )
+    baselineValues <- baselineFromBothScenarios$baselineValues
+    missingPaths <- baselineFromBothScenarios$missingPaths
   }
 
-  baselineRow <- data.frame(
-    as.list(baselineValues[availablePaths]),
-    check.names = FALSE,
-    stringsAsFactors = FALSE
-  )
+  baselineRow <- .baselineSensitivityDataFrame(baselineValues)
 
   return(.buildSensitivityPopulationFromBaselineRow(
     baselineRow = baselineRow,

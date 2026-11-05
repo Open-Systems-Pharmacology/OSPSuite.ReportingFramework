@@ -224,9 +224,12 @@ test_that("buildSensitivityPopulationFromBaselineRow accepts data.frame input", 
 
   expect_s3_class(result, "Population")
   expect_equal(result$allParameterPaths, c("P1|CL", "P2|V"))
-  expect_setequal(result$allCovariateNames, c("SensitivityParameter", "perturbationFactor"))
+  expect_setequal(
+    result$allCovariateNames,
+    c("SensitivityParameter", "perturbationFactor")
+  )
   expect_equal(
-    as.double(result$getCovariateValues(covariateName = 'perturbationFactor')),
+    as.double(result$getCovariateValues(covariateName = "perturbationFactor")),
     c(1, 0.9090909, 1.1),
     tolerance = 1e-6
   )
@@ -321,7 +324,10 @@ test_that(".prepareRepresentativeSensitivityPopulation keeps one individual and 
 
   expect_setequal(
     unique(representativePopulation$allCovariateNames),
-    unique(c(pop$allCovariateNames, c("perturbationFactor", "SensitivityParameter")))
+    unique(c(
+      pop$allCovariateNames,
+      c("perturbationFactor", "SensitivityParameter")
+    ))
   )
 
   dtRepresentativePopulation <- ospsuite::populationToDataFrame(
@@ -338,7 +344,12 @@ test_that(".prepareRepresentativeSensitivityPopulation keeps one individual and 
 
   expect_equal(
     nonUniqueCols,
-    c("IndividualId", "perturbationFactor", "SensitivityParameter", "Organism|Hematocrit")
+    c(
+      "IndividualId",
+      "perturbationFactor",
+      "SensitivityParameter",
+      "Organism|Hematocrit"
+    )
   )
   expect_equal(representativePopulation$count, 5)
 })

@@ -14,12 +14,14 @@ validateTimeProfilesConfig(
 \arguments{
 \item{configTable}{Plot configuration table.}
 
-\item{dataObserved}{A `data.table` (formatted as produced by `readObservedDataByDictionary`)
-or `DataCombined` object containing the observed data to be plotted.}
+\item{dataObserved}{Optional observed dataset used for group/id validation.}
 
-\item{scenarioResults}{A list containing simulated scenario results.}
+\item{scenarioResults}{Named list of loaded scenario results.}
 
-\item{...}{Additional arguments passed to `ospsuite.plots::plotTimeprofile`.}
+\item{...}{Additional validation arguments forwarded to helper validators.}
+}
+\value{
+NULL (invisible).
 }
 \description{
 Validation of config table for time profiles plots

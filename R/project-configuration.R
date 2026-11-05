@@ -35,14 +35,13 @@
   }
   dtConfiguration <- xlsxReadData(wb = wb, sheetName = targetSheet)
   if (REPORTING_FRAMEWORK_VERSION_PROPERTY %in% dtConfiguration$property) {
-    # nolint: object_usage_linter
     return(invisible(NULL))
   }
 
   dtConfiguration <- rbind(
     dtConfiguration,
     data.table(
-      property = REPORTING_FRAMEWORK_VERSION_PROPERTY, # nolint: object_usage_linter
+      property = REPORTING_FRAMEWORK_VERSION_PROPERTY,
       value = .currentReportingFrameworkVersion(),
       description = .reportingFrameworkVersionDescription()
     )

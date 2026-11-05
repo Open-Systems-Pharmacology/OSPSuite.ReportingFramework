@@ -1,4 +1,4 @@
-﻿#' Upgrade an esqlabsR Project to a ReportingFramework Project
+#' Upgrade an esqlabsR Project to a ReportingFramework Project
 #'
 #' @description Adds reporting-framework-specific configuration and template files
 #'   to a project directory. This is the second step in the two-step project
@@ -72,8 +72,7 @@ upgradeToReportingFramework <- function(
   xlsxWriteData(wb = configWb, sheetName = "esqlabsR", dt = dtConfiguration)
   .applyTemplateAddonsSheet(configWb, templateConfigurationWb)
   openxlsx::saveWorkbook(configWb, configXlsxDest, overwrite = TRUE)
-  .stampReportingFrameworkVersion(path = configXlsxDest) # nolint: object_usage_linter
-
+  .stampReportingFrameworkVersion(path = configXlsxDest)
   oldConfigurationFolder <- .resolveConfigurationFolder(
     dtConfigurationOriginal,
     configurationDirectory
@@ -271,7 +270,7 @@ createProjectConfiguration <- function(
 
   addOnProperties <- trimws(as.character(dtAddOnsExisting$Property))
   isReportingFramework <- any(
-    addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY & # nolint: object_usage_linter
+    addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY &
       !is.na(dtAddOnsExisting$Value) &
       nzchar(as.character(dtAddOnsExisting$Value)),
     na.rm = TRUE
@@ -708,25 +707,25 @@ createProjectConfiguration <- function(
 
   addOnProperties <- trimws(as.character(dtTemplateAddOns$Property))
   if (
-    any(addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY, na.rm = TRUE) # nolint: object_usage_linter
+    any(addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY, na.rm = TRUE)
   ) {
     versionIndex <- which(
-      addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY # nolint: object_usage_linter
+      addOnProperties == REPORTING_FRAMEWORK_VERSION_PROPERTY
     )[[1]]
     dtTemplateAddOns[
       versionIndex,
       c("Value", "Description")
     ] <- list(
-      .currentReportingFrameworkVersion(), # nolint: object_usage_linter
-      .reportingFrameworkVersionDescription() # nolint: object_usage_linter
+      .currentReportingFrameworkVersion(),
+      .reportingFrameworkVersionDescription()
     )
   } else {
     dtTemplateAddOns <- rbind(
       dtTemplateAddOns,
       data.frame(
-        Property = REPORTING_FRAMEWORK_VERSION_PROPERTY, # nolint: object_usage_linter
-        Value = .currentReportingFrameworkVersion(), # nolint: object_usage_linter
-        Description = .reportingFrameworkVersionDescription(), # nolint: object_usage_linter
+        Property = REPORTING_FRAMEWORK_VERSION_PROPERTY,
+        Value = .currentReportingFrameworkVersion(),
+        Description = .reportingFrameworkVersionDescription(),
         stringsAsFactors = FALSE
       )
     )

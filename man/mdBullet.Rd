@@ -16,6 +16,11 @@ mdBullet0(..., bullet = "-", level = 1)
 
 \item{level}{Indentation level (default 1).}
 }
+\value{
+Invisible `NULL`.
+
+Invisible `NULL`.
+}
 \description{
 Insert bulleted item with indentation.
 

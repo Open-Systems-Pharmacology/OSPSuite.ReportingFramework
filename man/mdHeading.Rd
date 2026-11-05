@@ -14,6 +14,9 @@ mdHeading(..., level = 1, newlines = 2)
 
 \item{newlines}{Newlines after heading (default 2).}
 }
+\value{
+Invisible `NULL`.
+}
 \description{
 mdHeading
 Insert heading with specified level (1-6).

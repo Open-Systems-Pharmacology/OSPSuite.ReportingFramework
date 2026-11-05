@@ -237,7 +237,7 @@ test_that("validateCommonInputs errors on non-numeric variationRange", {
       variationRange = "bad",
       numberOfSteps = 2L
     ),
-    'variationRange'
+    "variationRange"
   )
 })
 
@@ -516,11 +516,11 @@ test_that("factors vector is symmetric around 1", {
   factors <- sort(unique(c(p, 1 / p, 1)))
 
   # For each factor > 1, there should be a corresponding factor < 1
-  factors_gt_1 <- factors[factors > 1]
-  factors_lt_1 <- factors[factors < 1]
+  factorsGt1 <- factors[factors > 1]
+  factorsLt1 <- factors[factors < 1]
 
-  for (f in factors_gt_1) {
-    expect_true(any(abs(factors_lt_1 - (1 / f)) < 1e-10))
+  for (f in factorsGt1) {
+    expect_true(any(abs(factorsLt1 - (1 / f)) < 1e-10))
   }
 })
 

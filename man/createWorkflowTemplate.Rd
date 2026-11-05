@@ -6,6 +6,9 @@
 \usage{
 createWorkflowTemplate()
 }
+\value{
+Invisibly returns a new RStudio document object.
+}
 \description{
 Opens the workflow template as new document
 }

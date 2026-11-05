@@ -1,4 +1,8 @@
-makeFileLinter <- function(checkFile) {
+.isTestFile <- function(filePath) {
+    grepl("(^|[/\\\\])tests[/\\\\]testthat([/\\\\]|$)", filePath)
+}
+
+makeFileLinter <- function(checkFile, skipTests = FALSE) {
     seenFiles <- new.env(parent = emptyenv())
 
     lintr::Linter(function(sourceExpression) {
@@ -12,6 +16,11 @@ makeFileLinter <- function(checkFile) {
         }
 
         seenFiles[[filePath]] <- TRUE
+
+        if (skipTests && .isTestFile(filePath)) {
+            return(list())
+        }
+
         checkFile(filePath)
     })
 }
@@ -272,7 +281,7 @@ roxygenRequiredLinter <- function() {
         }
 
         lints
-    })
+    }, skipTests = TRUE)
 }
 
 roxygenDetailsForComplexLinter <- function(limit = 10L) {
@@ -306,7 +315,7 @@ roxygenDetailsForComplexLinter <- function(limit = 10L) {
         }
 
         lints
-    })
+    }, skipTests = TRUE)
 }
 
 internalFunctionRulesLinter <- function() {
@@ -370,7 +379,7 @@ internalFunctionRulesLinter <- function() {
         }
 
         lints
-    })
+    }, skipTests = TRUE)
 }
 
 internalFunctionReturnLinter <- function() {
@@ -406,5 +415,5 @@ internalFunctionReturnLinter <- function() {
         }
 
         lints
-    })
+    }, skipTests = TRUE)
 }

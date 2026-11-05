@@ -9,7 +9,8 @@
 #'
 #' @return A data.table containing the aggregated simulated time profiles for all scenarios.
 #' @keywords internal
-loadScenarioTimeProfiles <- function(
+#' @noRd
+.loadScenarioTimeProfiles <- function(
   projectConfiguration,
   simulatedResults,
   outputPathsPerScenario,
@@ -37,7 +38,7 @@ loadScenarioTimeProfiles <- function(
     }
     dtSimulated <- rbind(
       dtSimulated,
-      getSimulatedTimeprofile(
+      .getSimulatedTimeprofile(
         simulatedResult = simulatedResults[[scenarioName]],
         outputPaths = outputPathsPerScenario[[scenarioName]],
         aggregationFun = aggregationFun,
@@ -59,7 +60,8 @@ loadScenarioTimeProfiles <- function(
 #' @param dtOutputs A data.table containing output specifications.
 #' @return A data.table with unit conversion factors per output path, ready for merging with time profile data.
 #' @keywords internal
-getUnitConversionDT <- function(dtSimulated, dtOutputs) {
+#' @noRd
+.getUnitConversionDT <- function(dtSimulated, dtOutputs) {
   checkmate::assertDataTable(dtSimulated)
   checkmate::assertDataTable(dtOutputs)
   dtUnit <- dtSimulated %>%
@@ -100,7 +102,8 @@ getUnitConversionDT <- function(dtSimulated, dtOutputs) {
 #' @param simulatedResults List with simulation results
 #' @return A list containing the start and end times of applications for each scenario.
 #' @keywords internal
-getApplicationTimes <- function(outputPathsPerScenario, simulatedResults) {
+#' @noRd
+.getApplicationTimes <- function(outputPathsPerScenario, simulatedResults) {
   applicationTimes <- list()
 
   for (scenarioName in names(outputPathsPerScenario)) {
@@ -128,7 +131,7 @@ getApplicationTimes <- function(outputPathsPerScenario, simulatedResults) {
           length(applicationStartTimes) > 1,
           applicationStartTimes[2],
           Inf
-        ) # nolint: line_length
+        )
       )
   }
   return(applicationTimes)
@@ -146,7 +149,8 @@ getApplicationTimes <- function(outputPathsPerScenario, simulatedResults) {
 #'
 #' @return A data.table with the processed time profile data.
 #' @keywords internal
-getSimulatedTimeprofile <- function(
+#' @noRd
+.getSimulatedTimeprofile <- function(
   simulatedResult,
   outputPaths,
   aggregationFun,
@@ -193,7 +197,7 @@ getSimulatedTimeprofile <- function(
       ) %>%
       dplyr::mutate(dataClass = DATACLASS$tpTwinPop)
   } else if (dplyr::n_distinct(dt$IndividualId) > 1) {
-    dt <- performAggregation(
+    dt <- .performAggregation(
       dataToAggregate = dt,
       aggregationFun = aggregationFun,
       aggrCriteria = c("xValues", "paths", "dimension", "yUnit", "molWeight")
@@ -226,7 +230,8 @@ getSimulatedTimeprofile <- function(
 #' @param dtUnit A data.table with unit conversion factors.
 #' @return A data.table with y-columns scaled to the display unit.
 #' @keywords internal
-convertYunit <- function(timeprofile, dtUnit) {
+#' @noRd
+.convertYunit <- function(timeprofile, dtUnit) {
   identifier <- intersect(names(dtUnit), names(timeprofile))
   timeprofile <- timeprofile %>%
     merge(
@@ -247,7 +252,7 @@ convertYunit <- function(timeprofile, dtUnit) {
   yErrorType <- timeprofile$yErrorType[1]
   if (
     !is.null(yErrorType) &&
-      !is.na(yErrorType) && # nolint: line_length
+      !is.na(yErrorType) &&
       yErrorType == ospsuite::DataErrorType$ArithmeticStdDev
   ) {
     columnsToScale <- c(columnsToScale, "yErrorValues")
@@ -283,7 +288,8 @@ convertYunit <- function(timeprofile, dtUnit) {
 #' @param timeOffset An optional time offset to be applied after conversion (default is 0).
 #' @return A data.table with the time values converted and shifted.
 #' @keywords internal
-convertAndShiftTimeUnits <- function(
+#' @noRd
+.convertAndShiftTimeUnits <- function(
   timeprofile,
   targetTimeUnit,
   timeOffset = 0
@@ -319,7 +325,8 @@ convertAndShiftTimeUnits <- function(
 #'         individual IDs. If no IDs are provided, the original `timeprofile` is returned.
 #'
 #' @keywords internal
-filterIndividualID <- function(timeprofile, individualList) {
+#' @noRd
+.filterIndividualID <- function(timeprofile, individualList) {
   if (
     !is.na(individualList) &&
       "individualId" %in% names(timeprofile) &&

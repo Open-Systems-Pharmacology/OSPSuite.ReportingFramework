@@ -29,7 +29,7 @@ options(rmarkdown.html_vignette.check_title = FALSE)
 
 ```{r loadProject, echo=FALSE, eval=TRUE}
 ggplot2::theme_set(theme_osp())
-options(knitr.kable.NA = '')
+options(knitr.kable.NA = "")
 
 runPlotTheme <- ggplot2::theme(
   legend.position = "top",

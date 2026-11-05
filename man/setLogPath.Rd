@@ -12,6 +12,9 @@ file logging is disabled.}
 
 \item{logFileName}{character string with the log file name.}
 }
+\value{
+NULL (invisible).
+}
 \description{
 Configures file logging through the `ospsuite.utils` logging backend and
 overrides the default `log.txt` target with a caller-defined file name.

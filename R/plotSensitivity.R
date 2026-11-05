@@ -19,8 +19,6 @@ plotSensitivity <- function(
 ) {
   checkmate::assertNumber(significantDigits, lower = 1, finite = TRUE)
 
-
-
   if (!"referenceScenario" %in% names(onePlotConfig)) {
     onePlotConfig$referenceScenario <- NA_character_
   }
@@ -77,7 +75,6 @@ plotSensitivity <- function(
         size = 2.5
       ) +
       labs(color = "Scenario", shape = "Representative")
-
   } else {
     plotObject <- plotObject +
       geom_col(
@@ -110,7 +107,7 @@ plotSensitivity <- function(
     max(nFacets, 1) /
     5 ## value by experience
 
-  plotObject <- addFacets(
+  plotObject <- .addFacets(
     plotObject = plotObject,
     facetScale = "fixed",
     facetAspectRatio = facetAspectRatio,
@@ -169,12 +166,12 @@ plotSensitivity <- function(
 #' @return A data table containing the prepared data for the sensitivity plot.
 #'
 #' @keywords internal
+#' @noRd
 .prepareSensitivityPlotData <- function(
   onePlotConfig,
   projectConfiguration,
   scenarioList
 ) {
-
   pkDefinitions <- .getPKParameterOverview(projectConfiguration) %>%
     .[, c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")]
 
@@ -222,8 +219,8 @@ plotSensitivity <- function(
         filteredData <- merge(
           cL,
           rawSensitivityData,
-          by.x = c('pKParameter', 'outputPath'),
-          by.y = c('PKParameter', 'QuantityPath')
+          by.x = c("pKParameter", "outputPath"),
+          by.y = c("PKParameter", "QuantityPath")
         )[
           abs(sens) >= threshold,
           .(
@@ -239,7 +236,7 @@ plotSensitivity <- function(
             RepresentativeQuantile
           )
         ] |>
-          setnames('SensitivityParameter', 'sensitivityParameter')
+          setnames("SensitivityParameter", "sensitivityParameter")
 
         return(filteredData)
       }
@@ -273,7 +270,7 @@ plotSensitivity <- function(
     "outputPathId",
     "pKParameter"
   )])
-  dtPlotTag[, plotTag := generatePlotTag(.I)]
+  dtPlotTag[, plotTag := .generatePlotTag(.I)]
   plotData <- merge(
     plotData,
     dtPlotTag,
@@ -309,12 +306,12 @@ plotSensitivity <- function(
 #'
 #' @return A string containing the generated caption for the sensitivity plot.
 #' @keywords internal
+#' @noRd
 .getCaptionForSensitivityPlot <- function(
   plotData,
   projectConfiguration,
   plotCaptionAddon
 ) {
-
   dtCaption <- plotData %>%
     dplyr::select(c(
       "plotTag",
@@ -329,13 +326,13 @@ plotSensitivity <- function(
     )
 
   captiontext <- paste(
-    captionPrefixSimulated(),
+    .captionPrefixSimulated(),
     "Sensitivity of",
-    pasteFigureTags(dtCaption, captionColumn = "displayNamePKParameter"),
+    .pasteFigureTags(dtCaption, captionColumn = "displayNamePKParameter"),
     "for",
-    pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"),
+    .pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"),
     "for",
-    pasteFigureTags(dtCaption, captionColumn = "scenarioLongName"),
+    .pasteFigureTags(dtCaption, captionColumn = "scenarioLongName"),
     "sorted by absolute sensitivity."
   )
 
@@ -343,8 +340,8 @@ plotSensitivity <- function(
   thresholdValues <- thresholdValues[!is.na(thresholdValues)]
   thresholdValues <- thresholdValues[thresholdValues > 0]
   if (length(thresholdValues) > 0) {
-    thresholdText <- concatWithAnd(format(thresholdValues, trim = TRUE))
-    captiontext <- addCaptionTextAddon(
+    thresholdText <- .concatWithAnd(format(thresholdValues, trim = TRUE))
+    captiontext <- .addCaptionTextAddon(
       captiontext,
       paste(
         "Filtering threshold (absolute sensitivity): >=",
@@ -373,11 +370,11 @@ plotSensitivity <- function(
       ratioPair := paste0(scenarioLongName, " / ", referenceScenarioLongName)
     ]
 
-    captiontext <- addCaptionTextAddon(
+    captiontext <- .addCaptionTextAddon(
       captiontext,
       paste(
         "Ratio mode (scenario/reference):",
-        pasteFigureTags(ratioCaptionData, captionColumn = "ratioPair")
+        .pasteFigureTags(ratioCaptionData, captionColumn = "ratioPair")
       )
     )
   }
@@ -396,20 +393,29 @@ plotSensitivity <- function(
           nzchar(plotData$representativeStratum)
       ]
     )
-    captiontext <- addCaptionTextAddon(
+    captiontext <- .addCaptionTextAddon(
       captiontext,
       paste(
         "Representative strata:",
-        concatWithAnd(representativeCaption)
+        .concatWithAnd(representativeCaption)
       )
     )
   }
 
-  captiontext <- addCaptionTextAddon(captiontext, plotCaptionAddon[1])
+  captiontext <- .addCaptionTextAddon(captiontext, plotCaptionAddon[1])
 
   return(captiontext)
 }
 
+#' Resolve sensitivity result file path
+#'
+#' @param projectConfiguration Project configuration object.
+#' @param scenarioName Scenario name.
+#' @param sensitivitysheet Name of the sensitivity sheet.
+#' @param referenceScenario Optional reference scenario for ratio sensitivity.
+#' @return Character path to the sensitivity result file.
+#' @keywords internal
+#' @noRd
 .getSensitivityResultFilePath <- function(
   projectConfiguration,
   scenarioName,
@@ -425,7 +431,7 @@ plotSensitivity <- function(
     return(representativeFile)
   }
 
-  file.path(
+  sensitivityFile <- file.path(
     projectConfiguration$outputFolder,
     EXPORTDIR$sensitivityResults,
     .sensitivityAnalysisName(
@@ -434,6 +440,8 @@ plotSensitivity <- function(
       referenceScenario = referenceScenario
     )
   )
+
+  return(sensitivityFile)
 }
 
 
@@ -471,7 +479,10 @@ plotSensitivity <- function(
   }
 
   exportTable[,
-    Sensitivity := base::signif(Sensitivity, digits = significantDigits)
+    Sensitivity := janitor::signif_half_up(
+      Sensitivity,
+      digits = significantDigits
+    )
   ]
 
   return(exportTable)
@@ -487,6 +498,7 @@ plotSensitivity <- function(
 #'
 #' @return A `data.table` containing the merged PK parameter data along with associated scenario names.
 #' @keywords internal
+#' @noRd
 .getPKParameterOverview <- function(projectConfiguration) {
   pkParameterSheets <- unique(splitInputs(configEnv$scenarios$pKParameter))
   pkSheets <- .readPKDefinitionsFromSheets(
@@ -503,6 +515,7 @@ plotSensitivity <- function(
 #' and ensures the configuration adheres to specified criteria. It also checks for file existence in the output folder.
 #'
 #' @param configTable A data.table containing the configuration for sensitivity analysis.
+#' @param scenarioList Named list of loaded scenario results.
 #' @param ... Additional arguments passed to other functions.
 #'
 #' @return A validated data frame containing the configuration table for sensitivity plots.
@@ -518,7 +531,7 @@ validateSensitivityConfig <- function(configTable, scenarioList, ...) {
     configTablePlots[, referenceScenario := NA_character_]
   }
 
-  validateOutputIdsForPlot()
+  .validateOutputIdsForPlot()
 
   validateConfigTablePlots(
     configTablePlots = configTablePlots,

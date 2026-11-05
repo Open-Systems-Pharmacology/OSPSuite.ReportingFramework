@@ -23,7 +23,8 @@
 #'
 #' @return A function that performs the specified aggregation. The returned function accepts a numeric vector and returns a list containing the aggregated values and error types.
 #' @keywords internal
-getAggregationFunction <- function(
+#' @noRd
+.getAggregationFunction <- function(
   aggregationFlag,
   percentiles,
   customFunction,
@@ -69,7 +70,7 @@ getAggregationFunction <- function(
       len = 3,
       sorted = TRUE
     )
-    yErroryType <- getErrorTypeForPercentiles(
+    yErroryType <- .getErrorTypeForPercentiles(
       percentiles,
       legendsize = legendsize
     )
@@ -101,7 +102,8 @@ getAggregationFunction <- function(
 #' @return A character string with the error type for the given percentiles,
 #' formatted according to the specified legendsize.
 #' @keywords internal
-getErrorTypeForPercentiles <- function(percentiles, legendsize) {
+#' @noRd
+.getErrorTypeForPercentiles <- function(percentiles, legendsize) {
   mName <- formatPercentiles(percentiles[2], suffix = " percentile")
 
   yMaxTxt <- formatPercentiles(percentiles[3], suffix = " percentile")
@@ -137,7 +139,8 @@ getErrorTypeForPercentiles <- function(percentiles, legendsize) {
 #' @return A data.table containing aggregated results with counts (`numberOfIndividuals`),
 #' aggregated values, and the number of measurements below the lower limit of quantification (`nBelowLLOQ`).
 #' @keywords internal
-performAggregation <- function(dataToAggregate, aggregationFun, aggrCriteria) {
+#' @noRd
+.performAggregation <- function(dataToAggregate, aggregationFun, aggrCriteria) {
   checkmate::assertNames(aggrCriteria, subset.of = names(dataToAggregate))
 
   aggregatedData <- dataToAggregate[,
@@ -174,7 +177,8 @@ performAggregation <- function(dataToAggregate, aggregationFun, aggrCriteria) {
 #' @return A character vector of length 2 containing descriptors for mean and range,
 #' based on the specified error type.
 #' @keywords internal
-getErrorLabels <- function(yErrorType) {
+#' @noRd
+.getErrorLabels <- function(yErrorType) {
   errorLabels <-
     switch(
       yErrorType,
@@ -201,7 +205,8 @@ getErrorLabels <- function(yErrorType) {
 #'
 #' @return A data.table containing the aggregated variance results, including the aggregated values and error types.
 #' @keywords internal
-getAggregatedVariance <- function(
+#' @noRd
+.getAggregatedVariance <- function(
   dt,
   aggregationFun,
   valueColumn,
@@ -261,7 +266,8 @@ getAggregatedVariance <- function(
 #'
 #'
 #' @keywords internal
-calculateAggregationWithCIBYGroup <- function(
+#' @noRd
+.calculateAggregationWithCIBYGroup <- function(
   dt,
   aggregationFun,
   confLevel = 0.9,

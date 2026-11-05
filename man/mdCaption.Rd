@@ -15,6 +15,9 @@ mdCaption(subfolder, captionFile, captionPrefix, captionStyle = NULL)
 
 \item{captionStyle}{Custom style (optional).}
 }
+\value{
+Invisible `NULL`.
+}
 \description{
 Add caption with optional custom style.
 }

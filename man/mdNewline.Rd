@@ -9,6 +9,9 @@ mdNewline(n = 1)
 \arguments{
 \item{n}{Number of new lines (default 1).}
 }
+\value{
+Invisible `NULL`.
+}
 \description{
 mdNewline
 }

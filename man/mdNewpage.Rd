@@ -7,6 +7,9 @@ Insert page break and newline.}
 \usage{
 mdNewpage()
 }
+\value{
+Invisible `NULL`.
+}
 \description{
 mdNewpage
 Insert page break and newline.

@@ -23,17 +23,23 @@ makeCaptionData <- function(
 
 makeDistributionVsDemographicsConfig <- function(
   parameterIds = "age",
-  parameterId_Bin = "weight",
+  parameterIdBin = "weight",
   modeOfBinning = "Equal Width Binning",
-  numberOfBins = "10"
+  numberOfBins = "10",
+  ...
 ) {
+  dots <- list(...)
+  if (!is.null(dots[["parameterId_Bin"]])) {
+    parameterIdBin <- dots[["parameterId_Bin"]]
+  }
+
   data.table::data.table(
     level = c(1, NA),
     header = c("Plot configuration", NA),
     plotName = c(NA, "Plot1"),
     parameterIds = c(NA, parameterIds),
     scenario = c(NA, "scenario1"),
-    parameterId_Bin = c(NA, parameterId_Bin),
+    parameterId_Bin = c(NA, parameterIdBin),
     modeOfBinning = c(NA, modeOfBinning),
     plotCaptionAddon = c(NA, NA),
     colorLegend = c(NA, NA),
@@ -388,7 +394,7 @@ test_that("validateDistributionVsDemographicsConfig rejects duplicated custom br
     )
 
     expect_error(
-      ospsuite.reportingframework:::validateParameterID(
+      ospsuite.reportingframework:::.validateParameterID(
         configTablePlots = configTablePlots,
         pkParameterDT = makePkParameterDT()
       ),
@@ -413,7 +419,7 @@ test_that("validateDistributionVsDemographicsConfig rejects duplicated custom br
     )
 
     expect_no_error(
-      ospsuite.reportingframework:::validateParameterID(
+      ospsuite.reportingframework:::.validateParameterID(
         configTablePlots = configTablePlots,
         pkParameterDT = makePkParameterDT()
       )
@@ -467,7 +473,7 @@ test_that("getExportTableForRanges handles plot data without scenarioType", {
     )
   }
 
-  result <- ospsuite.reportingframework:::getExportTableForRanges(
+  result <- ospsuite.reportingframework:::.getExportTableForRanges(
     plotObject = plotObject,
     aggregationFun = aggregationFun,
     xLabel = "Age"
@@ -480,7 +486,7 @@ test_that("getExportTableForRanges handles plot data without scenarioType", {
 })
 
 test_that("getCaptionForDemographicPlot builds histogram caption", {
-  result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForDemographicPlot(
     idData = makeCaptionData(),
     valueLabel = "Weight",
     binLabel = NULL,
@@ -494,7 +500,7 @@ test_that("getCaptionForDemographicPlot builds histogram caption", {
 })
 
 test_that("getCaptionForDemographicPlot builds range plot caption with bin", {
-  result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForDemographicPlot(
     idData = makeCaptionData(),
     valueLabel = "Weight",
     binLabel = "Age",
@@ -507,7 +513,7 @@ test_that("getCaptionForDemographicPlot builds range plot caption with bin", {
 })
 
 test_that("getCaptionForDemographicPlot appends plotCaptionAddon", {
-  result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForDemographicPlot(
     idData = makeCaptionData(),
     valueLabel = "Weight",
     binLabel = NULL,
@@ -518,7 +524,7 @@ test_that("getCaptionForDemographicPlot appends plotCaptionAddon", {
 })
 
 test_that("getCaptionForDemographicPlot omits scale text when valueScale is NULL", {
-  result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForDemographicPlot(
     idData = makeCaptionData(),
     valueLabel = "Weight",
     binLabel = NULL,
@@ -529,7 +535,7 @@ test_that("getCaptionForDemographicPlot omits scale text when valueScale is NULL
 })
 
 test_that("getCaptionForDemographicPlot includes output name when present", {
-  result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForDemographicPlot(
     idData = makeCaptionData(displayNameOutput = "AUC"),
     valueLabel = "PK",
     binLabel = "Age",
@@ -544,13 +550,13 @@ test_that("getCaptionForDemographicPlot includes output name when present", {
 # ---------------------------------------------------------------------------
 
 test_that("getFootnoteLinesForRangePlots formats single label", {
-  result <- ospsuite.reportingframework:::getFootnoteLinesForRangePlots("mean")
+  result <- ospsuite.reportingframework:::.getFootnoteLinesForRangePlots("mean")
   expect_match(result, "mean")
   expect_match(result, "\\.")
 })
 
 test_that("getFootnoteLinesForRangePlots formats two labels with 'and'", {
-  result <- ospsuite.reportingframework:::getFootnoteLinesForRangePlots(c(
+  result <- ospsuite.reportingframework:::.getFootnoteLinesForRangePlots(c(
     "mean",
     "SD"
   ))
@@ -558,7 +564,7 @@ test_that("getFootnoteLinesForRangePlots formats two labels with 'and'", {
 })
 
 test_that("getFootnoteLinesForRangePlots formats three labels", {
-  result <- ospsuite.reportingframework:::getFootnoteLinesForRangePlots(c(
+  result <- ospsuite.reportingframework:::.getFootnoteLinesForRangePlots(c(
     "5th",
     "50th",
     "95th"
@@ -583,7 +589,7 @@ makeFacetData <- function(plotTags, scenarios, outputNames = NULL) {
 test_that("getNFacetsForDemographics returns NULL for single plotTag", {
   dt <- makeFacetData(rep("A", 4), rep("sc1", 4))
   expect_null(
-    ospsuite.reportingframework:::getNFacetsForDemographics(
+    ospsuite.reportingframework:::.getNFacetsForDemographics(
       dt,
       isRangePlot = FALSE
     )
@@ -593,7 +599,7 @@ test_that("getNFacetsForDemographics returns NULL for single plotTag", {
 test_that("getNFacetsForDemographics returns 1 for range plot with multiple tags", {
   dt <- makeFacetData(c("A", "B"), c("sc1", "sc2"))
   expect_equal(
-    ospsuite.reportingframework:::getNFacetsForDemographics(
+    ospsuite.reportingframework:::.getNFacetsForDemographics(
       dt,
       isRangePlot = TRUE
     ),
@@ -604,7 +610,7 @@ test_that("getNFacetsForDemographics returns 1 for range plot with multiple tags
 test_that("getNFacetsForDemographics uses nMaxFacetRows for histogram", {
   dt <- makeFacetData(c("A", "B", "C", "D"), c("s1", "s2", "s3", "s4"))
   expect_equal(
-    ospsuite.reportingframework:::getNFacetsForDemographics(
+    ospsuite.reportingframework:::.getNFacetsForDemographics(
       dt,
       isRangePlot = FALSE,
       nMaxFacetRows = 2
@@ -620,7 +626,7 @@ test_that("getNFacetsForDemographics uses output count with multiple outputs and
     outputNames = c("out1", "out2", "out1", "out2")
   )
   expect_equal(
-    ospsuite.reportingframework:::getNFacetsForDemographics(
+    ospsuite.reportingframework:::.getNFacetsForDemographics(
       dt,
       isRangePlot = FALSE,
       nMaxFacetRows = 2
@@ -635,7 +641,7 @@ test_that("getNFacetsForDemographics uses output count with multiple outputs and
 
 test_that("setPlotTag assigns 'A' when no faceting identifier present", {
   dt <- data.table::data.table(scenario = c("s1", "s1"), value = c(1, 2))
-  result <- ospsuite.reportingframework:::setPlotTag(
+  result <- ospsuite.reportingframework:::.setPlotTag(
     dt,
     asRangePlot = TRUE,
     usePKParameter = FALSE
@@ -649,7 +655,7 @@ test_that("setPlotTag creates one tag per scenario for histograms", {
     scenario = c("s1", "s1", "s2", "s2"),
     value = 1:4
   )
-  result <- ospsuite.reportingframework:::setPlotTag(
+  result <- ospsuite.reportingframework:::.setPlotTag(
     dt,
     asRangePlot = FALSE,
     usePKParameter = FALSE
@@ -662,7 +668,7 @@ test_that("setPlotTag creates one tag per output when usePKParameter and range p
     displayNameOutput = c("AUC", "AUC", "Cmax", "Cmax"),
     value = 1:4
   )
-  result <- ospsuite.reportingframework:::setPlotTag(
+  result <- ospsuite.reportingframework:::.setPlotTag(
     dt,
     asRangePlot = TRUE,
     usePKParameter = TRUE
@@ -679,7 +685,7 @@ test_that("getCaptionForDemographicPlot handles multiple scenarios", {
     makeCaptionData(scenarioLongName = "Adults", plotTag = "A"),
     makeCaptionData(scenarioLongName = "Children", plotTag = "B")
   )
-  result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForDemographicPlot(
     idData = idData,
     valueLabel = "Weight",
     binLabel = NULL,
@@ -691,7 +697,7 @@ test_that("getCaptionForDemographicPlot handles multiple scenarios", {
 })
 
 test_that("getCaptionForDemographicPlot handles special characters in labels", {
-  result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForDemographicPlot(
     idData = makeCaptionData(),
     valueLabel = "Weight (kg)",
     binLabel = "Age (years)",
@@ -703,7 +709,7 @@ test_that("getCaptionForDemographicPlot handles special characters in labels", {
 })
 
 test_that("getCaptionForDemographicPlot handles empty plotCaptionAddon", {
-  result <- ospsuite.reportingframework:::getCaptionForDemographicPlot(
+  result <- ospsuite.reportingframework:::.getCaptionForDemographicPlot(
     idData = makeCaptionData(),
     valueLabel = "Weight",
     binLabel = NULL,
@@ -714,7 +720,7 @@ test_that("getCaptionForDemographicPlot handles empty plotCaptionAddon", {
 })
 
 test_that("getFootnoteLinesForRangePlots handles single item with period", {
-  result <- ospsuite.reportingframework:::getFootnoteLinesForRangePlots(
+  result <- ospsuite.reportingframework:::.getFootnoteLinesForRangePlots(
     "median"
   )
   expect_true(grepl("\\.", result))
@@ -722,7 +728,7 @@ test_that("getFootnoteLinesForRangePlots handles single item with period", {
 })
 
 test_that("getFootnoteLinesForRangePlots handles multiple items formatting", {
-  result <- ospsuite.reportingframework:::getFootnoteLinesForRangePlots(c(
+  result <- ospsuite.reportingframework:::.getFootnoteLinesForRangePlots(c(
     "Min",
     "Max"
   ))
@@ -731,7 +737,7 @@ test_that("getFootnoteLinesForRangePlots handles multiple items formatting", {
 })
 
 test_that("getFootnoteLinesForRangePlots handles four items", {
-  result <- ospsuite.reportingframework:::getFootnoteLinesForRangePlots(c(
+  result <- ospsuite.reportingframework:::.getFootnoteLinesForRangePlots(c(
     "p1",
     "p2",
     "p3",
@@ -742,7 +748,7 @@ test_that("getFootnoteLinesForRangePlots handles four items", {
 
 test_that("getNFacetsForDemographics returns NULL for single facet", {
   dt <- makeFacetData("A", "scenario1")
-  result <- ospsuite.reportingframework:::getNFacetsForDemographics(
+  result <- ospsuite.reportingframework:::.getNFacetsForDemographics(
     dt,
     isRangePlot = FALSE
   )
@@ -754,7 +760,7 @@ test_that("getNFacetsForDemographics respects nMaxFacetRows parameter", {
     c("A", "B", "C"),
     c("s1", "s2", "s3")
   )
-  result <- ospsuite.reportingframework:::getNFacetsForDemographics(
+  result <- ospsuite.reportingframework:::.getNFacetsForDemographics(
     dt,
     isRangePlot = FALSE,
     nMaxFacetRows = 1
@@ -768,7 +774,7 @@ test_that("setPlotTag preserves all columns in data", {
     value = c(1, 2),
     group = c("A", "B")
   )
-  result <- ospsuite.reportingframework:::setPlotTag(
+  result <- ospsuite.reportingframework:::.setPlotTag(
     dt,
     asRangePlot = TRUE,
     usePKParameter = FALSE
@@ -783,7 +789,7 @@ test_that("setPlotTag generates sequential plot tags", {
     scenario = c("s1", "s2", "s3", "s4"),
     value = 1:4
   )
-  result <- ospsuite.reportingframework:::setPlotTag(
+  result <- ospsuite.reportingframework:::.setPlotTag(
     dt,
     asRangePlot = FALSE,
     usePKParameter = FALSE
@@ -805,7 +811,7 @@ test_that("setPlotTag generates sequential plot tags", {
 
 test_that("plotDistributionVsDemographics rejects customFunction that is not a function", {
   expect_error(
-    getAggregationFunction(
+    .getAggregationFunction(
       aggregationFlag = "Custom",
       percentiles = c(0.05, 0.5, 0.95),
       customFunction = "not a function",
@@ -817,7 +823,7 @@ test_that("plotDistributionVsDemographics rejects customFunction that is not a f
 
 test_that("plotDistributionVsDemographics rejects NULL customFunction when aggregationFlag is Custom", {
   expect_error(
-    getAggregationFunction(
+    .getAggregationFunction(
       aggregationFlag = "Custom",
       percentiles = c(0.05, 0.5, 0.95),
       customFunction = NULL,
@@ -827,7 +833,7 @@ test_that("plotDistributionVsDemographics rejects NULL customFunction when aggre
   )
 })
 
-test_that("getAggregationFunction accepts valid custom function returning required fields", {
+test_that(".getAggregationFunction accepts valid custom function returning required fields", {
   customFun <- function(y) {
     list(
       yValues = mean(y),
@@ -837,7 +843,7 @@ test_that("getAggregationFunction accepts valid custom function returning requir
     )
   }
 
-  result <- getAggregationFunction(
+  result <- .getAggregationFunction(
     aggregationFlag = "Custom",
     percentiles = c(0.05, 0.5, 0.95),
     customFunction = customFun,
@@ -889,9 +895,9 @@ test_that("plotHistograms validates scenarioList type check with non-Scenario ob
 # Numeric Bounds Edge Case Tests (Phase 2)
 # ---------------------------------------------------------------------------
 
-test_that("getAggregationFunction rejects percentiles with NaN", {
+test_that(".getAggregationFunction rejects percentiles with NaN", {
   expect_error(
-    getAggregationFunction(
+    .getAggregationFunction(
       aggregationFlag = "Percentiles",
       percentiles = c(0.05, NaN, 0.95),
       customFunction = NULL,
@@ -901,9 +907,9 @@ test_that("getAggregationFunction rejects percentiles with NaN", {
   )
 })
 
-test_that("getAggregationFunction rejects percentiles with Inf", {
+test_that(".getAggregationFunction rejects percentiles with Inf", {
   expect_error(
-    getAggregationFunction(
+    .getAggregationFunction(
       aggregationFlag = "Percentiles",
       percentiles = c(0.05, 0.5, Inf),
       customFunction = NULL,
@@ -913,9 +919,9 @@ test_that("getAggregationFunction rejects percentiles with Inf", {
   )
 })
 
-test_that("getAggregationFunction rejects percentiles outside [0, 1]", {
+test_that(".getAggregationFunction rejects percentiles outside [0, 1]", {
   expect_error(
-    getAggregationFunction(
+    .getAggregationFunction(
       aggregationFlag = "Percentiles",
       percentiles = c(-0.05, 0.5, 0.95),
       customFunction = NULL,
@@ -925,9 +931,9 @@ test_that("getAggregationFunction rejects percentiles outside [0, 1]", {
   )
 })
 
-test_that("getAggregationFunction rejects unsorted percentiles", {
+test_that(".getAggregationFunction rejects unsorted percentiles", {
   expect_error(
-    getAggregationFunction(
+    .getAggregationFunction(
       aggregationFlag = "Percentiles",
       percentiles = c(0.95, 0.5, 0.05),
       customFunction = NULL,
@@ -937,9 +943,9 @@ test_that("getAggregationFunction rejects unsorted percentiles", {
   )
 })
 
-test_that("getAggregationFunction rejects duplicate percentiles", {
+test_that(".getAggregationFunction rejects duplicate percentiles", {
   expect_error(
-    getAggregationFunction(
+    .getAggregationFunction(
       aggregationFlag = "Percentiles",
       percentiles = c(0.05, 0.05, 0.95),
       customFunction = NULL,
@@ -949,9 +955,9 @@ test_that("getAggregationFunction rejects duplicate percentiles", {
   )
 })
 
-test_that("getAggregationFunction rejects wrong number of percentiles", {
+test_that(".getAggregationFunction rejects wrong number of percentiles", {
   expect_error(
-    getAggregationFunction(
+    .getAggregationFunction(
       aggregationFlag = "Percentiles",
       percentiles = c(0.05, 0.95),
       customFunction = NULL,
@@ -965,10 +971,10 @@ test_that("getAggregationFunction rejects wrong number of percentiles", {
 # Cross-Parameter Validation Tests (Phase 2)
 # ---------------------------------------------------------------------------
 
-test_that("getAggregationFunction with Percentiles validates legendsize is 2 or 3", {
+test_that(".getAggregationFunction with Percentiles validates legendsize is 2 or 3", {
   # Test with invalid legendsize - should error at legend generation
   expect_error(
-    getAggregationFunction(
+    .getAggregationFunction(
       aggregationFlag = "Percentiles",
       percentiles = c(0.05, 0.5, 0.95),
       customFunction = NULL,
@@ -978,9 +984,9 @@ test_that("getAggregationFunction with Percentiles validates legendsize is 2 or 
   )
 })
 
-test_that("getAggregationFunction with Percentiles accepts valid legendsize", {
+test_that(".getAggregationFunction with Percentiles accepts valid legendsize", {
   # Test with legendsize = 2
-  fun2 <- getAggregationFunction(
+  fun2 <- .getAggregationFunction(
     aggregationFlag = "Percentiles",
     percentiles = c(0.05, 0.5, 0.95),
     customFunction = NULL,
@@ -989,7 +995,7 @@ test_that("getAggregationFunction with Percentiles accepts valid legendsize", {
   expect_true(is.function(fun2))
 
   # Test with legendsize = 3
-  fun3 <- getAggregationFunction(
+  fun3 <- .getAggregationFunction(
     aggregationFlag = "Percentiles",
     percentiles = c(0.05, 0.5, 0.95),
     customFunction = NULL,

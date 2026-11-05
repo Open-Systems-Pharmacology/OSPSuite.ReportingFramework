@@ -9,6 +9,9 @@ setShowLogMessages(verbose = TRUE)
 \arguments{
 \item{verbose}{boolean, if true log messages will be shown}
 }
+\value{
+NULL (invisible).
+}
 \description{
 Toggle display of log messages on the console
 }
