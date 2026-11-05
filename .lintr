@@ -22,7 +22,7 @@ linters: local({
     roxygenRequiredLinter = roxygenRequiredLinter(),
     roxygenDetailsForComplexLinter = roxygenDetailsForComplexLinter(limit = 10),
     internalFunctionRulesLinter = internalFunctionRulesLinter(),
-    internalFunctionReturnLinter = internalFunctionReturnLinter()
+    functionReturnLinter = functionReturnLinter()
   )
  })
 exclusions: list(
