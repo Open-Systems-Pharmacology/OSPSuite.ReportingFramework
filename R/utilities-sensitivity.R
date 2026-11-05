@@ -523,9 +523,19 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
     )
   }
 
+  if (runnerType == "standard" && scenarioType == "mixed") {
+    stop(messages$errorutilitiessensitivityMixedScenariosForStandardRunner())
+  }
+
   if (runnerType == "representative" && scenarioType == "individual") {
     stop(
       messages$errorutilitiessensitivityIndividualScenariosForRepresentativeRunner()
+    )
+  }
+
+  if (runnerType == "representative" && scenarioType == "mixed") {
+    stop(
+      messages$errorutilitiessensitivityMixedScenariosForRepresentativeRunner()
     )
   }
 

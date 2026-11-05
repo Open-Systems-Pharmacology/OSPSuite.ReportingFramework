@@ -188,6 +188,104 @@ test_that("runRepresentativeSensitivityAnalysisForScenarios errors for individua
   )
 })
 
+test_that("runSensitivityAnalysisForScenarios errors for mixed scenarios", {
+  local_mocked_bindings(
+    getScenarioDefinitions = function(...) {
+      data.table::data.table(
+        scenarioName = c("ScenarioPop", "ScenarioInd"),
+        pKParameter = c(NA_character_, NA_character_),
+        modelFile = c("a.pkml", "b.pkml")
+      )
+    },
+    getOutputPathIds = function(...) {
+      data.table::data.table(
+        outputPathId = character(),
+        outputPath = character()
+      )
+    },
+    xlsxReadData = function(...) {
+      data.table::data.table(
+        parameter = "Clearance",
+        parameterPath = "P1|CL"
+      )
+    },
+    .package = "ospsuite.reportingframework"
+  )
+
+  projectConfiguration <- list(
+    addOns = list(
+      sensitivityFile = "SensitivityParameter.xlsx",
+      reportsFile = "Reports.xlsx"
+    ),
+    outputFolder = withr::local_tempdir(),
+    scenariosFile = "Scenarios.xlsx",
+    modelFolder = "Models"
+  )
+
+  expect_error(
+    ospsuite.reportingframework::runSensitivityAnalysisForScenarios(
+      projectConfiguration = projectConfiguration,
+      scenarioList = list(
+        ScenarioPop = list(population = structure(list(), class = "Population")),
+        ScenarioInd = list(simulation = "sim")
+      ),
+      scenarioNames = c("ScenarioPop", "ScenarioInd"),
+      sensitivitysheet = "Sensitivity",
+      overwrite = FALSE
+    ),
+    "requires only individual scenarios"
+  )
+})
+
+test_that("runRepresentativeSensitivityAnalysisForScenarios errors for mixed scenarios", {
+  local_mocked_bindings(
+    getScenarioDefinitions = function(...) {
+      data.table::data.table(
+        scenarioName = c("ScenarioPop", "ScenarioInd"),
+        pKParameter = c(NA_character_, NA_character_),
+        modelFile = c("a.pkml", "b.pkml")
+      )
+    },
+    getOutputPathIds = function(...) {
+      data.table::data.table(
+        outputPathId = character(),
+        outputPath = character()
+      )
+    },
+    xlsxReadData = function(...) {
+      data.table::data.table(
+        parameter = "Clearance",
+        parameterPath = "P1|CL"
+      )
+    },
+    .package = "ospsuite.reportingframework"
+  )
+
+  projectConfiguration <- list(
+    addOns = list(
+      sensitivityFile = "SensitivityParameter.xlsx",
+      reportsFile = "Reports.xlsx"
+    ),
+    outputFolder = withr::local_tempdir(),
+    scenariosFile = "Scenarios.xlsx",
+    modelFolder = "Models"
+  )
+
+  expect_error(
+    ospsuite.reportingframework:::runRepresentativeSensitivityAnalysisForScenarios(
+      projectConfiguration = projectConfiguration,
+      scenarioList = list(
+        ScenarioPop = list(population = structure(list(), class = "Population")),
+        ScenarioInd = list(simulation = "sim")
+      ),
+      scenarioNames = c("ScenarioPop", "ScenarioInd"),
+      sensitivitysheet = "Sensitivity",
+      overwrite = FALSE
+    ),
+    "requires only population scenarios"
+  )
+})
+
 
 test_that("asSensitivityParameterList groups rows by parameter label", {
   sensitivityParameter <-

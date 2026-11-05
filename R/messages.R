@@ -1211,6 +1211,34 @@ messages$errorutilitiessensitivityIndividualScenariosForRepresentativeRunner <- 
   )
 }
 
+messages$errorutilitiessensitivityMixedScenariosForStandardRunner <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(
+      paste0(
+        "Selected scenarios include both population and individual scenarios. ",
+        "'runSensitivityAnalysisForScenarios()' requires only individual scenarios."
+      )
+    ),
+    envir = env
+  )
+}
+
+messages$errorutilitiessensitivityMixedScenariosForRepresentativeRunner <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(
+      paste0(
+        "Selected scenarios include both population and individual scenarios. ",
+        "'runRepresentativeSensitivityAnalysisForScenarios()' requires only population scenarios."
+      )
+    ),
+    envir = env
+  )
+}
+
 messages$errorutilitiessensitivityReferenceScenarioMustDiffer <- function(
   env = parent.frame()
 ) {
