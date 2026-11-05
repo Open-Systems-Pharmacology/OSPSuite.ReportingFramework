@@ -292,14 +292,16 @@ plotPKBoxwhisker <- function(
     return(r)
   }
 
-  dtExport <- plotDataPk %>%
-    .[,
-      as.list(statFun(value)),
-      by = intersect(
-        c("scenarioShortName", "colorIndex", "plotTag"),
-        names(plotDataPk)
-      )
-    ]
+  dtExport <- plotDataPk |>
+    (\(dt) {
+      dt[,
+        as.list(statFun(value)),
+        by = intersect(
+          c("scenarioShortName", "colorIndex", "plotTag"),
+          names(plotDataPk)
+        )
+      ]
+    })()
 
   return(dtExport)
 }
@@ -384,7 +386,7 @@ plotPKBoxwhisker <- function(
       "displayNameOutput",
       "plotTag",
       "displayNamePKParameter"
-    )] %>%
+    )] |>
     unique()
 
   captiontext <- paste(
@@ -557,7 +559,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
 
   tmp <- configTablePlots[
     as.logical(plot_Ratio) == FALSE & as.logical(plot_Absolute) == FALSE
-  ] %>%
+  ] |>
     unique()
   if (nrow(tmp) > 0) {
     print(tmp)
@@ -574,7 +576,7 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
   tmp <- configTablePlots[
     as.logical(plot_Ratio) == TRUE & !is.na(referenceScenario),
     c("plotName", "scenario", "referenceScenario")
-  ] %>%
+  ] |>
     unique()
   .validateIsCrossOverStudy(
     configTablePlots = tmp,
@@ -600,14 +602,14 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
 #' @keywords internal
 #' @noRd
 .validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
-  configTablePlots <- configTablePlots %>%
+  configTablePlots <- configTablePlots |>
     merge(
-      pkParameterDT[, c("scenario", "populationId")] %>%
+      pkParameterDT[, c("scenario", "populationId")] |>
         unique(),
       by = "scenario",
-    ) %>%
+    ) |>
     merge(
-      pkParameterDT[, c("scenario", "populationId")] %>%
+      pkParameterDT[, c("scenario", "populationId")] |>
         unique(),
       by.x = "referenceScenario",
       by.y = "scenario",
@@ -720,11 +722,13 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(
   dt <- pkParameterDT[,
     .(pkParameters = paste(unique(pkParameter), collapse = ", ")),
     by = outputPathId
-  ] %>%
-    .[,
-      .(outputPathIds = paste(unique(outputPathId), collapse = ", ")),
-      by = pkParameters
-    ]
+  ] |>
+    (\(dt) {
+      dt[,
+        .(outputPathIds = paste(unique(outputPathId), collapse = ", ")),
+        by = pkParameters
+      ]
+    })()
 
   # Create a new data.table with all combinations of pkParameters and scenario names
   dtNewConfig <- dt[,

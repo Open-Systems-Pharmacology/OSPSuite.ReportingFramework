@@ -234,7 +234,7 @@ plotHistograms <- function(
   colorVector
 ) {
   if (usePKParameter) {
-    onePlotConfigIdentifier <- copy(onePlotConfig) %>%
+    onePlotConfigIdentifier <- copy(onePlotConfig) |>
       setnames("parameterIds", "pkParameters")
     onePlotConfigIdentifier <- rbind(
       onePlotConfigIdentifier[, !("referenceScenario"), with = FALSE],
@@ -242,9 +242,9 @@ plotHistograms <- function(
         !is.na(referenceScenario),
         !("scenario"),
         with = FALSE
-      ] %>%
+      ] |>
         setnames("referenceScenario", "scenario")
-    ) %>%
+    ) |>
       unique()
 
     plotData <- .mergePKParameterWithConfigTable(
@@ -291,17 +291,17 @@ plotHistograms <- function(
       # for the facet plots reference scenario has to be duplicated
       plotData <-
         rbind(
-          plotData[!(scenario %in% onePlotConfig$referenceScenario)] %>%
-            .[, scenarioType := names(colorVector)[1]],
+          plotData[!(scenario %in% onePlotConfig$referenceScenario)] |>
+            (\(dt) dt[, scenarioType := names(colorVector)[1]])(),
           merge(
             onePlotConfig[, c("scenario", "referenceScenario")],
             plotData[scenario %in% onePlotConfig$referenceScenario],
             by.x = "referenceScenario",
             by.y = "scenario",
             allow.cartesian = TRUE
-          ) %>%
-            .[, referenceScenario := NULL] %>%
-            .[, scenarioType := names(colorVector)[2]]
+          ) |>
+            (\(dt) dt[, referenceScenario := NULL])() |>
+            (\(dt) dt[, scenarioType := names(colorVector)[2]])()
         )
     } else {
       plotData[, scenarioType := names(colorVector)[1]]
@@ -583,8 +583,8 @@ plotHistograms <- function(
     "parameterIds",
     "scenarioShortName",
     "scenarioLongName"
-  )] %>%
-    .separateAndTrimColumn(columnName = "parameterIds") %>%
+  )] |>
+    .separateAndTrimColumn(columnName = "parameterIds") |>
     merge(configEnv$modelParameter, by = "parameterId")
 
   # load parameter_id values
@@ -657,8 +657,8 @@ plotHistograms <- function(
   onePlotConfigIdentifier <- onePlotConfig[, c(
     "scenario",
     "parameterId_Bin"
-  )] %>%
-    setnames(old = "parameterId_Bin", new = "parameterId") %>%
+  )] |>
+    setnames(old = "parameterId_Bin", new = "parameterId") |>
     merge(configEnv$modelParameter, by = "parameterId")
 
   scenarioNames <- unique(onePlotConfigIdentifier$scenario)
@@ -672,14 +672,14 @@ plotHistograms <- function(
     }),
     use.names = TRUE,
     fill = TRUE
-  ) %>%
+  ) |>
     setnames(old = "parameterId", new = "parameterId_Bin")
 
   if (all(is.na(plotData$value)) & "categoricValue" %in% names(plotData)) {
     stop(messages$errorplotDemographicsCategoricalXAxisNotAllowed())
   }
 
-  plotData <- plotData %>%
+  plotData <- plotData |>
     merge(
       plotDataBin,
       by = c("scenario", "individualId"),
@@ -715,8 +715,8 @@ plotHistograms <- function(
     plotTagIdentifier <- c("scenario", plotTagIdentifier)
   }
   if (length(plotTagIdentifier) > 0) {
-    dtPlotTag <- plotData[, .SD, .SDcols = plotTagIdentifier] %>%
-      unique() %>%
+    dtPlotTag <- plotData[, .SD, .SDcols = plotTagIdentifier] |>
+      unique() |>
       setorderv(plotTagIdentifier)
     dtPlotTag[, plotTag := .generatePlotTag(.I)]
     plotData <- merge(plotData, dtPlotTag, by = plotTagIdentifier)
@@ -827,7 +827,7 @@ plotHistograms <- function(
 ) {
   dtPop <- ospsuite::populationToDataFrame(
     scenarioList[[scenarioName]]$population
-  ) %>%
+  ) |>
     setDT()
   modelPaths <- unique(onePlotConfigIdentifier$modelPath)
 
@@ -837,7 +837,7 @@ plotHistograms <- function(
 
   dtPop <- dtPop[, .SD, .SDcols = c("IndividualId", modelPaths)][,
     scenario := scenarioName
-  ] %>%
+  ] |>
     setnames("IndividualId", "individualId")
 
   numericColumns <- setdiff(
@@ -928,7 +928,7 @@ plotHistograms <- function(
       idData[, c(
         "displayNameOutput",
         "plotTag"
-      )] %>%
+      )] |>
       unique()
 
     outputText <- paste(
@@ -957,7 +957,7 @@ plotHistograms <- function(
       idData[, c(
         "scenarioLongName",
         "plotTag"
-      )] %>%
+      )] |>
       unique()
 
     scenarioText <- paste(
@@ -1227,7 +1227,7 @@ validateDistributionVsDemographicsConfig <- function(
   missingByScenario <- lapply(scenarioNames, function(scenarioName) {
     dtPop <- ospsuite::populationToDataFrame(
       scenarioList[[scenarioName]]$population
-    ) %>%
+    ) |>
       setDT()
 
     availablePaths <- names(dtPop)
@@ -1321,7 +1321,7 @@ validateDistributionVsDemographicsConfig <- function(
     lapply(scenarioNames, function(scenarioName) {
       dtPop <- ospsuite::populationToDataFrame(
         scenarioList[[scenarioName]]$population
-      ) %>%
+      ) |>
         setDT()
       availableDefinitions <- parameterDefinitions[
         parameterDefinitions$modelPath %in% names(dtPop),
@@ -1657,11 +1657,13 @@ addDefaultConfigForDistributionsVsDemographics <- function(
     dt <- pkParameterDT[,
       .(parameterIds = paste(unique(pkParameter), collapse = ", ")),
       by = outputPathId
-    ] %>%
-      .[,
-        .(outputPathIds = paste(unique(outputPathId), collapse = ", ")),
-        by = parameterIds
-      ]
+    ] |>
+      (\(dt) {
+        dt[,
+          .(outputPathIds = paste(unique(outputPathId), collapse = ", ")),
+          by = parameterIds
+        ]
+      })()
     dt[, configId := .I]
 
     # Create a new data.table with all combinations of pkParameters and scenario names

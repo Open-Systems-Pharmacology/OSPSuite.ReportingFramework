@@ -42,7 +42,7 @@ getDataGroups <- function(wbPlots) {
     wb = wbPlots,
     sheetName = "DataGroups",
     skipDescriptionRow = TRUE
-  ) %>%
+  ) |>
     setnames(old = "displayName", new = "displayNameData")
 
   dtDataGroups$group <- factor(
@@ -68,7 +68,7 @@ getOutputPathIds <- function(wbPlots) {
     wb = wbPlots,
     sheetName = "Outputs",
     skipDescriptionRow = TRUE
-  ) %>%
+  ) |>
     setnames(old = "displayName", new = "displayNameOutput")
 
   dtOutputPaths[, displayUnit := as.character(displayUnit)]
@@ -121,7 +121,7 @@ getModelParameterDefinitions <- function(wbPlots) {
     wb = wbPlots,
     sheetName = "ModelParameter",
     skipDescriptionRow = TRUE,
-  ) %>%
+  ) |>
     setnames(old = "displayName", new = "displayNameModelParameter")
 
   dtParameter[is.na(displayUnit), displayUnit := ""]
@@ -177,7 +177,7 @@ getScenarioDefinitions <- function(wbScenarios, wbPlots = NULL) {
       wb = wbPlots,
       sheetName = "Scenarios",
       skipDescriptionRow = FALSE
-    ) %>%
+    ) |>
       setnames("scenario", "scenarioName")
 
     scenarios <- merge(

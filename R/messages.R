@@ -198,7 +198,7 @@ messages$errorplotPKBoxwhiskerMultipleCombinationsPerPlot <- function(
   eval(
     quote(paste(
       "Per plot only one combination of scenario, outputPathId and pkParameter is allowed. Please check plot",
-      paste(tmp$plotName %>% unique(), collapse = ", ")
+      paste(tmp$plotName |> unique(), collapse = ", ")
     )),
     envir = env
   )

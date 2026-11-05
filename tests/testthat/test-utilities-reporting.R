@@ -33,8 +33,8 @@ test_that("Rendering", {
   dt <- data.table(
     x = rnorm(1000),
     class = sample(c("Female", "Male"), size = 1000, replace = TRUE)
-  ) %>%
-    .[, as.list(quantile(x)), by = "class"]
+  ) |>
+    (\(dt) dt[, as.list(quantile(x)), by = "class"])()
 
   qmdPlotManager$addAndExportTable(
     table = dt,

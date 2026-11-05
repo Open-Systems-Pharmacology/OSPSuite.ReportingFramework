@@ -89,19 +89,19 @@ readObservedDataByDictionary <- function(
         dataFilter = d$dataFilter,
         dict = tmpdict,
         dictionaryName = d$dictionary
-      ) %>%
+      ) |>
         dplyr::mutate(dataClass = d$dataClass),
       fill = TRUE
     )
     # Get unique dictionary for columnType
     tmpdict <-
-      tmpdict %>%
-      dplyr::select(c("targetColumn", "type")) %>%
+      tmpdict |>
+      dplyr::select(c("targetColumn", "type")) |>
       unique()
 
     dict <- utils::modifyList(
       dict,
-      as.list(tmpdict$type) %>%
+      as.list(tmpdict$type) |>
         stats::setNames(tmpdict$targetColumn)
     )
   }
@@ -614,7 +614,7 @@ validateObservedData <- function(dataDT, dataClassType) {
   }
 
   # Reduce to defined columns
-  data <- data %>%
+  data <- data |>
     dplyr::select(unique(dict$targetColumn))
 
   # Add time unit
@@ -707,11 +707,11 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
     )
   ))
 
-  dtDataGroupIdsNew <- dataDT %>%
-    dplyr::select(dplyr::all_of(colsSelected)) %>%
-    unique() %>%
-    dplyr::mutate(studyId = as.character(studyId)) %>%
-    dplyr::mutate(group = as.character(group)) %>%
+  dtDataGroupIdsNew <- dataDT |>
+    dplyr::select(dplyr::all_of(colsSelected)) |>
+    unique() |>
+    dplyr::mutate(studyId = as.character(studyId)) |>
+    dplyr::mutate(group = as.character(group)) |>
     dplyr::mutate(displayName = as.character(group))
 
   dtDataGroupIdsNew <-
@@ -760,8 +760,8 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
   dtOutputPathsNew <- dataDT[
     !(outputPathId %in% dtOutputPaths$outputPathId),
     c("outputPathId")
-  ] %>%
-    unique() %>%
+  ] |>
+    unique() |>
     dplyr::mutate(outputPathId = as.character(outputPathId))
 
   if (nrow(dtOutputPathsNew) > 0) {
@@ -814,7 +814,7 @@ addBiometricsToConfig <- function(
   }
 
   biometrics <-
-    dataDT %>%
+    dataDT |>
     dplyr::select(
       c(
         "individualId",
@@ -822,7 +822,7 @@ addBiometricsToConfig <- function(
           unlist(lapply(dataDT, attr, "columnType")) == "biometrics"
         ]
       )
-    ) %>%
+    ) |>
     unique()
 
   for (col in names(biometrics)) {
@@ -918,12 +918,12 @@ convertDataTableToDataCombined <- function(dataDT) {
   groupBy <- .getColumnsForColumnType(dt = dataDT, columnTypes = "identifier")
 
   # Use a copy to keep the data.table outside the function unchanged
-  dataDT <- data.table::copy(dataDT) %>%
-    dplyr::group_by_at(dplyr::vars(dplyr::all_of(groupBy))) %>%
-    dplyr::mutate(.groupBy = paste(!!!dplyr::syms(groupBy), sep = "_")) %>%
+  dataDT <- data.table::copy(dataDT) |>
+    dplyr::group_by_at(dplyr::vars(dplyr::all_of(groupBy))) |>
+    dplyr::mutate(.groupBy = paste(!!!dplyr::syms(groupBy), sep = "_")) |>
     dplyr::ungroup()
 
-  groupedData <- dataDT %>%
+  groupedData <- dataDT |>
     dplyr::group_split(.groupBy)
 
   # Create a named list with.groupBy as names
@@ -987,9 +987,9 @@ convertDataTableToDataCombined <- function(dataDT) {
       dt = groupData,
       columnTypes = c("covariate", "biometrics", "identifier")
     )
-  metaData <- groupData %>%
-    dplyr::select(dplyr::all_of(metaColumns)) %>%
-    unique() %>%
+  metaData <- groupData |>
+    dplyr::select(dplyr::all_of(metaColumns)) |>
+    unique() |>
     as.list()
   for (col in metaColumns) {
     dataSet$addMetaData(name = col, value = as.character(metaData[[col]]))
@@ -1010,7 +1010,7 @@ convertDataTableToDataCombined <- function(dataDT) {
 #' @export
 #' @family observed data processing
 convertDataCombinedToDataTable <- function(datacombined) {
-  dataDT <- datacombined$toDataFrame() %>%
+  dataDT <- datacombined$toDataFrame() |>
     data.table::setDT()
 
   # Delete columns not needed
@@ -1260,12 +1260,14 @@ aggregateObservedDataGroups <- function(
     lapply(.SD, function(x) length(unique(x))),
     by = identifier,
     .SDcols = colsToCheck
-  ] %>%
-    .[, lapply(.SD, function(x) all(x == 1)), .SDcols = colsToCheck] %>%
+  ] |>
+    (\(dt) {
+      dt[, lapply(.SD, function(x) all(x == 1)), .SDcols = colsToCheck]
+    })() |>
     unlist()
 
-  tmp <- dataObserved %>%
-    dplyr::select(dplyr::all_of(c(identifier, colsToCheck[columnISUnique]))) %>%
+  tmp <- dataObserved |>
+    dplyr::select(dplyr::all_of(c(identifier, colsToCheck[columnISUnique]))) |>
     unique()
 
   aggregatedData <- merge(
@@ -1301,11 +1303,11 @@ aggregateObservedDataGroups <- function(
         ),
         "tpDictionary",
         skipDescriptionRow = TRUE
-      ) %>%
-      dplyr::select(c("targetColumn", "type")) %>%
+      ) |>
+      dplyr::select(c("targetColumn", "type")) |>
       unique()
     dict <-
-      as.list(tmpdict$type) %>%
+      as.list(tmpdict$type) |>
       stats::setNames(tmpdict$targetColumn)
   }
 

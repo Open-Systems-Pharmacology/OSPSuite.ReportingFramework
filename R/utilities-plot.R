@@ -284,7 +284,7 @@ runPlot <- function(
                     plotList[["unusedDataRows"]],
                     plotListiRow[["unusedDataRows"]],
                     fill = TRUE
-                  ) %>%
+                  ) |>
                   unique()
                 plotListiRow[["unusedDataRows"]] <- NULL
               }
@@ -369,7 +369,7 @@ runPlot <- function(
         by.y = "scenarioName",
         all.x = TRUE,
         sort = FALSE
-      ) %>%
+      ) |>
       data.table::setnames(
         old = c("longName", "shortName"),
         c("scenarioLongName", "scenarioShortName")
@@ -946,7 +946,7 @@ validateHeaders <- function(configTable) {
   if (
     any(
       !is.na(
-        configTableHeader %>%
+        configTableHeader |>
           dplyr::select(setdiff(
             names(configTableHeader),
             c("level", "header")
@@ -1312,7 +1312,7 @@ validateAtleastOneEntry <- function(configTablePlots, columnVector) {
 
   if (nrow(dt) > 0) {
     print(
-      dt[, c("plotName", "colorLegend")] %>%
+      dt[, c("plotName", "colorLegend")] |>
         unique()
     )
     stop(messages$errorutilitiesplotL2InvalidColorLegendFormat())

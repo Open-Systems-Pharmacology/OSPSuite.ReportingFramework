@@ -142,7 +142,7 @@
   onePlotConfig <- .separateAndTrimColumn(
     data = onePlotConfig,
     columnName = "outputPathIds"
-  ) %>%
+  ) |>
     .separateAndTrimColumn(columnName = "pkParameters")
   # use empty string for grouping
   onePlotConfig[is.na(scenarioGroup), scenarioGroup := ""]
@@ -725,9 +725,9 @@ plotPKForestPointEstimateOfRatios <- function(
       skip_absent = TRUE
     )
 
-  dataObservedPK <- dataObservedPK %>%
+  dataObservedPK <- dataObservedPK |>
     merge(
-      onePlotConfig[, c("dataGroupId", "pkParameter", "outputPathId")] %>%
+      onePlotConfig[, c("dataGroupId", "pkParameter", "outputPathId")] |>
         unique(),
       by = c("dataGroupId", "pkParameter", "outputPathId")
     )
@@ -760,7 +760,7 @@ plotPKForestPointEstimateOfRatios <- function(
         "outputPathId",
         "scenario",
         "referenceScenario"
-      )] %>%
+      )] |>
         unique(),
       pkParameterDT = pkParameterDT,
       asRatio = ratioMode == "individualRatios"
@@ -772,7 +772,7 @@ plotPKForestPointEstimateOfRatios <- function(
           "pkParameter",
           "outputPathId",
           "scenario"
-        )] %>%
+        )] |>
           unique(),
         pkParameterDT = pkParameterDT
       ),
@@ -781,8 +781,8 @@ plotPKForestPointEstimateOfRatios <- function(
           "pkParameter",
           "outputPathId",
           "referenceScenario"
-        )] %>%
-          unique() %>%
+        )] |>
+          unique() |>
           setnames(old = "referenceScenario", new = "scenario"),
         pkParameterDT = pkParameterDT
       )
@@ -962,7 +962,7 @@ plotPKForestPointEstimateOfRatios <- function(
           valueColumn = "value",
           identifier = c("pkParameter", "outputPathId", "scenario"),
           direction = "x"
-        ) %>%
+        ) |>
           .checkPrecision()
       }
     )
@@ -971,11 +971,11 @@ plotPKForestPointEstimateOfRatios <- function(
       "outputPathId",
       "scenario",
       "referenceScenario"
-    )]) %>%
+    )]) |>
       merge(
         results[["base"]],
         by = c("scenario", "pkParameter", "outputPathId")
-      ) %>%
+      ) |>
       merge(
         results[["reference"]],
         by.x = c("referenceScenario", "pkParameter", "outputPathId"),
@@ -1004,7 +1004,7 @@ plotPKForestPointEstimateOfRatios <- function(
       valueColumn = "value",
       identifier = c("pkParameter", "outputPathId", "scenario"),
       direction = "x"
-    ) %>%
+    ) |>
       .checkPrecision()
   }
 
@@ -1070,7 +1070,7 @@ plotPKForestPointEstimateOfRatios <- function(
     "scenario",
     "referenceScenario",
     "dataGroupId"
-  )] %>%
+  )] |>
     unique()
 
   plotData <- merge(
@@ -1089,11 +1089,11 @@ plotPKForestPointEstimateOfRatios <- function(
 
   # add observedData
   if (!is.null(dataObservedPK) && nrow(dataObservedPK) > 0) {
-    tmp <- dataObservedPK %>%
+    tmp <- dataObservedPK |>
       merge(
         configToFilter,
         by = c("dataGroupId", "pkParameter", "outputPathId")
-      ) %>%
+      ) |>
       dplyr::select(dplyr::any_of(names(plotData)))
     plotData <- rbind(plotData, tmp, fill = TRUE)
   }
@@ -1113,7 +1113,7 @@ plotPKForestPointEstimateOfRatios <- function(
 .addDescriptions <- function(plotData, onePlotConfig, pkParameterDT) {
   plotData <- merge(
     plotData,
-    onePlotConfig[, c("scenario", "scenarioShortName", "scenarioGroup")] %>%
+    onePlotConfig[, c("scenario", "scenarioShortName", "scenarioGroup")] |>
       unique(),
     by = "scenario"
   )
@@ -1137,19 +1137,19 @@ plotPKForestPointEstimateOfRatios <- function(
       "outputPathId",
       "displayNameOutput",
       "displayUnit"
-    )] %>%
+    )] |>
       unique(),
     by = "outputPathId"
   )
 
   # add PK parameter details
-  plotData <- plotData %>%
+  plotData <- plotData |>
     merge(
       pkParameterDT[, c(
         "pkParameter",
         "displayNamePKParameter",
         "displayUnitPKParameter"
-      )] %>%
+      )] |>
         unique(),
       by = c("pkParameter")
     )
@@ -1407,7 +1407,7 @@ plotPKForestPointEstimateOfRatios <- function(
     plotData[, c(
       "displayNameOutput",
       "plotTag"
-    )] %>%
+    )] |>
     unique()
 
   if (ratioMode == "none") {
@@ -1522,15 +1522,15 @@ plotPKForestPointEstimateOfRatios <- function(
     return("none")
   }
 
-  pkParameterDTScenarios <- pkParameterDT[, c("scenario", "populationId")] %>%
+  pkParameterDTScenarios <- pkParameterDT[, c("scenario", "populationId")] |>
     unique()
 
   dtPop <- merge(
-    onePlotConfig[, c("plotName", "scenario", "referenceScenario")] %>%
+    onePlotConfig[, c("plotName", "scenario", "referenceScenario")] |>
       unique(),
     pkParameterDTScenarios,
     by = "scenario"
-  ) %>%
+  ) |>
     merge(
       pkParameterDTScenarios,
       by.x = "referenceScenario",

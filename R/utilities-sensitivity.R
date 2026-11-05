@@ -701,8 +701,8 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
         sheetName = sheetName,
         skipDescriptionRow = TRUE
       )
-    }) %>%
-      data.table::rbindlist(fill = TRUE, use.names = TRUE) %>%
+    }) |>
+      data.table::rbindlist(fill = TRUE, use.names = TRUE) |>
       .separateAndTrimColumn(columnName = "outputPathIds")
   )
 }
@@ -719,7 +719,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   }
 
   return(
-    pkDefinitions %>%
+    pkDefinitions |>
       setnames(
         old = c("name", "displayName", "displayUnit"),
         new = c(
@@ -747,9 +747,9 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   pkDefinitions <- .readPKDefinitionsFromSheets(
     projectConfiguration = projectConfiguration,
     pkParameterSheets = pkParameterSheets
-  ) %>%
-    .normalizedPKDefinitionsForSensitivity() %>%
-    setnames(old = "pKParameter", new = "pKParameterName") %>%
+  ) |>
+    .normalizedPKDefinitionsForSensitivity() |>
+    setnames(old = "pKParameter", new = "pKParameterName") |>
     merge(
       dtOutputPaths[, c("outputPathId", "outputPath")],
       by = "outputPathId",

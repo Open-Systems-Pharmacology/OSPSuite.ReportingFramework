@@ -297,12 +297,12 @@ test_that("groupDataByIdentifier function test", {
   expect_s3_class(groupedData, "list")
   expect_true(
     length(groupedData) ==
-      dataObserved %>%
+      dataObserved |>
         dplyr::select(ospsuite.reportingframework:::.getColumnsForColumnType(
           dataObserved,
           columnTypes = "identifier"
-        )) %>%
-        unique() %>%
+        )) |>
+        unique() |>
         nrow()
   )
 })

@@ -187,12 +187,12 @@ WorkflowScriptExporter <- # nolint: cyclocomp_linter, object_name_linter
             chunkText,
             perl = TRUE
           )
-        ) %>%
-          unlist() %>%
+        ) |>
+          unlist() |>
           sub(
             pattern = "configTableSheet\\s*=\\s*['\"](.*?)['\"]",
             replacement = "\\1"
-          ) %>%
+          ) |>
           unique()
 
         # return if no sheets are found
@@ -618,7 +618,7 @@ WorkflowScriptExporter <- # nolint: cyclocomp_linter, object_name_linter
             value <- rbind(
               private$.inputFiles,
               private$addValidFileNames(value)
-            ) %>%
+            ) |>
               unique()
           }
         }
@@ -926,7 +926,7 @@ WorkflowScriptExporter <- # nolint: cyclocomp_linter, object_name_linter
         }
         # delete remaining chunk placeholders
         workflowTextLines <- workflowTextLines[setdiff(
-          seq_len(length(workflowTextLines)),
+          seq_along(workflowTextLines),
           grep("^\\s*XXCHUNK.*XXX\\s*$", workflowTextLines)
         )]
 

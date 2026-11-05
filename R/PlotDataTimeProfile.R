@@ -125,11 +125,11 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
               individualList = configList$individualIds
             )
 
-            observedDataTmp <- observedDataTmp %>%
+            observedDataTmp <- observedDataTmp |>
               dplyr::select(dplyr::any_of(.getColumnsForColumnType(
                 dataObserved,
                 columnTypes = c("identifier", "timeprofile")
-              ))) %>%
+              ))) |>
               dplyr::mutate(scenarioIndex = scenarioIndex)
 
             # Convert y units and time units
@@ -192,7 +192,7 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
           1
         ])
 
-        configTable <- data.table::copy(self$configTable) %>%
+        configTable <- data.table::copy(self$configTable) |>
           dplyr::select(
             "scenarioIndex",
             "outputPathIds",
@@ -241,13 +241,13 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
         private$.nColorPerPlotID <- dtCaption[,
           .(N = dplyr::n_distinct(outputPathId)),
           by = c("plotTag", "counter")
-        ]$N %>%
+        ]$N |>
           max()
 
         private$.nDataGroupPerPlotID <- dtCaption[,
           .(N = length(strsplit(dataGroupIds, ",")[[1]])),
           by = c("dataGroupIds", "counter")
-        ]$N %>%
+        ]$N |>
           max()
 
         for (fieldName in c(".dataObserved", ".dataSimulated")) {
@@ -633,8 +633,8 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
           get(identifier) %in% private[[dataToMatch]][[identifierData]]
         ]
 
-        identifierLevels <- private[[tableName]][[identifier]] %>%
-          as.character() %>%
+        identifierLevels <- private[[tableName]][[identifier]] |>
+          as.character() |>
           unique()
 
         private[[tableName]][[identifier]] <-
@@ -674,14 +674,14 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
           outputs <- gsub("[()]", "", splitInputs(configList$outputPathIds))
           outputPaths <- private$.dtOutputPaths[
             outputPathId %in% outputs
-          ]$outputPath %>%
+          ]$outputPath |>
             unique()
 
           for (ScenarioField in c("scenario", "referenceScenario")) {
             if (!is.na(configList[[ScenarioField]])) {
               timeprofile <- dtSimulated[
                 scenario == configList[[ScenarioField]]
-              ] %>%
+              ] |>
                 dplyr::mutate(
                   scenarioIndex = scenarioIndex,
                   scenario = NULL,
@@ -965,8 +965,8 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
       data.table::setDF(data.table::copy(configTable)),
       !!col,
       sep = ",\\s*|(?<=\\)),\\s*|\\s(?=\\()"
-    ) %>%
-    data.table::setDT() %>%
+    ) |>
+    data.table::setDT() |>
     data.table::setnames(
       old = col,
       new = colNew
@@ -980,7 +980,7 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
   dtCaption[, (colNew) := trimws(gsub("[()]", "", get(colNew)))]
 
   return(
-    dtCaption %>%
+    dtCaption |>
       dplyr::select(!c("nBracketOpen", "nBracketClosed", "countAdd"))
   )
 }
@@ -1003,7 +1003,7 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
   # avoid warning for global variable
   individualIds <- plotId <- NULL
 
-  tmp <- data.table::copy(configTable) %>%
+  tmp <- data.table::copy(configTable) |>
     data.table::setDT()
   tmp[,
     individualIds := gsub(
@@ -1024,16 +1024,16 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
     allow.cartesian = TRUE
   )
 
-  tmpCount <- dtCaptionMerge %>%
-    dplyr::select(c("plotId.O", "plotId.Ind")) %>%
-    unique() %>%
+  tmpCount <- dtCaptionMerge |>
+    dplyr::select(c("plotId.O", "plotId.Ind")) |>
+    unique() |>
     data.table::setorderv(c("plotId.Ind", "plotId.O"))
 
   tmpCount[, plotId := .I]
 
-  dtCaptionMerge <- dtCaptionMerge %>%
-    merge(tmpCount, by = c("plotId.O", "plotId.Ind"), sort = FALSE) %>%
-    dplyr::select(!c("plotId.O", "plotId.Ind")) %>%
+  dtCaptionMerge <- dtCaptionMerge |>
+    merge(tmpCount, by = c("plotId.O", "plotId.Ind"), sort = FALSE) |>
+    dplyr::select(!c("plotId.O", "plotId.Ind")) |>
     data.table::setorderv(c("plotId"))
 
   return(dtCaptionMerge)
@@ -1066,7 +1066,7 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
     data.table::rbindlist(lapply(
       timeTags,
       function(tag) {
-        dtCaption %>%
+        dtCaption |>
           dplyr::mutate(timeRangeTag = tag)
       }
     ))
@@ -1170,12 +1170,12 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
           "outputPathIds"
         ),
         function(x) {
-          outputs <- x %>%
-            unique() %>%
-            gsub(pattern = "[()]", replacement = "") %>%
-            splitInputs() %>%
+          outputs <- x |>
+            unique() |>
+            gsub(pattern = "[()]", replacement = "") |>
+            splitInputs() |>
             unique()
-          outputPaths <- dtOutputPaths[outputPathId %in% outputs]$outputPath %>%
+          outputPaths <- dtOutputPaths[outputPathId %in% outputs]$outputPath |>
             unique()
           return(outputPaths)
         }
@@ -1198,11 +1198,11 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
   # avoid warnings for global variables
   unitFactor <- NULL
 
-  dtUnitObserved <- dataObserved %>%
-    dplyr::select(c("outputPathId", "yUnit")) %>%
-    unique() %>%
+  dtUnitObserved <- dataObserved |>
+    dplyr::select(c("outputPathId", "yUnit")) |>
+    unique() |>
     merge(
-      dtUnit %>% dplyr::select(-c("unitFactor", "yUnit")),
+      dtUnit |> dplyr::select(-c("unitFactor", "yUnit")),
       by = "outputPathId"
     )
   dtUnitObserved[,
@@ -1331,11 +1331,11 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
     labels = timeTags$captionText
   )
 
-  dtCaption <- dtCaption %>%
+  dtCaption <- dtCaption |>
     merge(
-      dtOutputPaths %>% dplyr::select("outputPathId", "displayNameOutput"),
+      dtOutputPaths |> dplyr::select("outputPathId", "displayNameOutput"),
       by = "outputPathId"
-    ) %>%
+    ) |>
     dplyr::select(dplyr::any_of(c(
       "scenarioIndex",
       "outputPathId",
@@ -1421,15 +1421,15 @@ PlotDataTimeProfile <- # nolint: cyclocomp_linter, object_name_linter
     must.include = c("xValues", "yValues", identifier)
   )
   # make sure to exclude nas and sorting is correct
-  dtSimulated <- data.table::copy(dtSimulated) %>%
-    dplyr::select(dplyr::all_of(c("xValues", "yValues", identifier))) %>%
+  dtSimulated <- data.table::copy(dtSimulated) |>
+    dplyr::select(dplyr::all_of(c("xValues", "yValues", identifier))) |>
     data.table::setorderv(c("xValues", identifier))
   dtSimulated <- dtSimulated[!is.nan(xValues) & !is.nan(yValues)]
 
   dtObserved[, predicted := NA_real_]
 
   for (iRow in seq_len(nrow(dtObserved))) {
-    dtSimulatedGroup <- dtSimulated %>%
+    dtSimulatedGroup <- dtSimulated |>
       merge(dtObserved[iRow, .SD, .SDcols = identifier], by = identifier)
 
     if (nrow(dtSimulatedGroup) == 0) {

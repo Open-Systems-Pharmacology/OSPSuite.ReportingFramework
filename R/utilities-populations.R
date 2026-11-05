@@ -55,16 +55,16 @@ setupVirtualTwinPopConfig <- function(
       dtTwinPops <- xlsxReadData(
         projectConfiguration$scenariosFile,
         sheetName = "Scenarios"
-      ) %>%
-        data.table::setnames("populationId", "populationName") %>%
-        dplyr::mutate("dataGroups" = "") %>%
+      ) |>
+        data.table::setnames("populationId", "populationName") |>
+        dplyr::mutate("dataGroups" = "") |>
         dplyr::select(c(
           "populationName",
           "dataGroups",
           "individualId",
           "modelParameterSheets",
           "applicationProtocol"
-        )) %>%
+        )) |>
         dplyr::filter(FALSE)
     }
   } else {
@@ -90,10 +90,12 @@ setupVirtualTwinPopConfig <- function(
   dtTwinPopsNew <- dataObserved[
     group %in% groups,
     c("group", "individualId")
-  ] %>%
-    unique() %>%
-    .[, .(dataGroups = paste(group, collapse = ", ")), by = "individualId"] %>%
-    .[, populationName := gsub(", ", "_", dataGroups)]
+  ] |>
+    unique() |>
+    (\(dt) {
+      dt[, .(dataGroups = paste(group, collapse = ", ")), by = "individualId"]
+    })() |>
+    (\(dt) dt[, populationName := gsub(", ", "_", dataGroups)])()
 
   ospsuite.utils::logInfo(messages$infoAddVirtualTwinPopulationConfig())
   writeTableToLog(dtTwinPopsNew[, .N, by = "populationName"])
@@ -321,7 +323,7 @@ exportVirtualTwinPopulations <- function(
     )
   }
 
-  poptable <- ospsuite::populationToDataFrame(population$population) %>%
+  poptable <- ospsuite::populationToDataFrame(population$population) |>
     data.table::setDT()
   poptable <- .applyCustomParametersToPopulationTable(
     poptable = poptable,
@@ -761,7 +763,7 @@ exportRandomPopulations <- function(
       tmp <- esqlabsR::readParametersFromXLS(
         paramsXLSpath = paramsXLSpath,
         sheets = sheet
-      ) %>%
+      ) |>
         data.table::as.data.table()
 
       if (nrow(tmp) > 0) {
@@ -855,8 +857,8 @@ exportRandomPopulations <- function(
     )
   )
 
-  tmp <- biomForInd %>%
-    dplyr::select(dplyr::any_of(dtSelection$pName)) %>%
+  tmp <- biomForInd |>
+    dplyr::select(dplyr::any_of(dtSelection$pName)) |>
     data.table::setnames(
       old = dtSelection$pName,
       new = dtSelection$paths,

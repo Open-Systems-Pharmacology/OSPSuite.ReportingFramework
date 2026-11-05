@@ -43,7 +43,7 @@
         outputPaths = outputPathsPerScenario[[scenarioName]],
         aggregationFun = aggregationFun,
         individualMatch = individualMatch
-      ) %>%
+      ) |>
         dplyr::mutate(scenario = scenarioName),
       fill = TRUE
     )
@@ -64,11 +64,11 @@
 .getUnitConversionDT <- function(dtSimulated, dtOutputs) {
   checkmate::assertDataTable(dtSimulated)
   checkmate::assertDataTable(dtOutputs)
-  dtUnit <- dtSimulated %>%
-    dplyr::select("paths", "dimension", "yUnit", "molWeight") %>%
-    unique() %>%
+  dtUnit <- dtSimulated |>
+    dplyr::select("paths", "dimension", "yUnit", "molWeight") |>
+    unique() |>
     merge(
-      dtOutputs %>%
+      dtOutputs |>
         dplyr::select("outputPathId", "displayUnit", "outputPath"),
       by.x = "paths",
       by.y = "outputPath"
@@ -115,12 +115,12 @@
           function(x) {
             x$startTime$value
           }
-        ) %>%
+        ) |>
           unlist()
       }
-    ) %>%
-      unlist() %>%
-      unique() %>%
+    ) |>
+      unlist() |>
+      unique() |>
       sort()
 
     applicationTimes[[scenarioName]] <-
@@ -164,7 +164,7 @@
   dt <- ospsuite::simulationResultsToDataFrame(
     simulationResults = simulatedResult$results,
     quantitiesOrPaths = outputPaths
-  ) %>%
+  ) |>
     data.table::setDT()
   # Add molWeight column if not present (ospsuite may not provide it)
   if (!("molWeight" %in% names(dt))) {
@@ -179,7 +179,7 @@
   )
   # Aggregate if needed
   if (!is.null(individualMatch)) {
-    dt <- dt %>%
+    dt <- dt |>
       dplyr::select(c(
         "IndividualId",
         "xValues",
@@ -188,23 +188,23 @@
         "dimension",
         "yUnit",
         "molWeight"
-      )) %>%
-      merge(individualMatch, by.x = "IndividualId", by.y = "individualId") %>%
-      dplyr::mutate(IndividualId = NULL) %>%
+      )) |>
+      merge(individualMatch, by.x = "IndividualId", by.y = "individualId") |>
+      dplyr::mutate(IndividualId = NULL) |>
       data.table::setnames(
         old = "observedIndividualId",
         new = "individualId"
-      ) %>%
+      ) |>
       dplyr::mutate(dataClass = DATACLASS$tpTwinPop)
   } else if (dplyr::n_distinct(dt$IndividualId) > 1) {
     dt <- .performAggregation(
       dataToAggregate = dt,
       aggregationFun = aggregationFun,
       aggrCriteria = c("xValues", "paths", "dimension", "yUnit", "molWeight")
-    ) %>%
+    ) |>
       dplyr::mutate(dataClass = DATACLASS$tpAggregated)
   } else {
-    dt <- dt %>%
+    dt <- dt |>
       dplyr::select(c(
         "xValues",
         "yValues",
@@ -212,11 +212,11 @@
         "dimension",
         "yUnit",
         "molWeight"
-      )) %>%
+      )) |>
       dplyr::mutate(dataClass = DATACLASS$tpIndividual)
   }
 
-  dt <- dt %>%
+  dt <- dt |>
     dplyr::mutate(dataType = "simulated")
 
   return(dt)
@@ -233,9 +233,9 @@
 #' @noRd
 .convertYunit <- function(timeprofile, dtUnit) {
   identifier <- intersect(names(dtUnit), names(timeprofile))
-  timeprofile <- timeprofile %>%
+  timeprofile <- timeprofile |>
     merge(
-      dtUnit %>%
+      dtUnit |>
         dplyr::select(unique(c(
           identifier,
           "outputPathId",
@@ -264,7 +264,7 @@
   ]
 
   # delete columns not needed any more
-  timeprofile <- timeprofile %>%
+  timeprofile <- timeprofile |>
     dplyr::select(
       -dplyr::any_of(c(
         "paths",

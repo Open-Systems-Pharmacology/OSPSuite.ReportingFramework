@@ -506,11 +506,11 @@ plotTimeProfiles <- function(
   mapSimulatedAndObserved <- data.table(
     simulated = as.character(
       plotData$data[dataType == "simulated"]$colorIndex
-    ) %>%
+    ) |>
       unique(),
     observed = as.character(
       plotData$data[dataType == "observed"]$colorIndex
-    ) %>%
+    ) |>
       unique(),
     color = plotData$scaleVectors$colour,
     fill = plotData$scaleVectors$fill
@@ -1086,7 +1086,7 @@ plotTimeProfiles <- function(
       paste0(
         "Data source: [",
         paste(
-          dtDataReference$reference %>%
+          dtDataReference$reference |>
             unique(),
           collapse = ", "
         ),
@@ -1369,7 +1369,7 @@ validateTimeProfilesConfig <- function(
     {
       if (
         !all(sapply(
-          configTablePlots %>%
+          configTablePlots |>
             dplyr::select(dplyr::all_of(timeRangeColumns)),
           function(x) {
             valid <- x %in%
@@ -1673,7 +1673,7 @@ addDefaultConfigForTimeProfilePlots <- function(
   ]
   data.table::setnames(tmp, old = c("defaultScenario"), new = c("scenario"))
 
-  dtNewConfig <- dtNewConfig %>%
+  dtNewConfig <- dtNewConfig |>
     merge(tmp, by = "scenario", all.x = TRUE, sort = FALSE)
 
   dtNewConfig[!is.na(dataGroupIds), individualIds := "*"]

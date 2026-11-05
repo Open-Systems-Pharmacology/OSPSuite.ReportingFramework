@@ -179,7 +179,7 @@ formatPercentiles <- function(
     } else {
       paste0(p, "th", suffix)
     }
-  }) %>%
+  }) |>
     unlist()
 }
 

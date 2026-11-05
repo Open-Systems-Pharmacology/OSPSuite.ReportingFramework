@@ -172,16 +172,18 @@ plotSensitivity <- function(
   projectConfiguration,
   scenarioList
 ) {
-  pkDefinitions <- .getPKParameterOverview(projectConfiguration) %>%
-    .[, c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")]
+  pkDefinitions <- .getPKParameterOverview(projectConfiguration) |>
+    (\(dt) {
+      dt[, c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")]
+    })()
 
-  onePlotConfig <- onePlotConfig %>%
-    .separateAndTrimColumn("pKParameters") %>%
-    .separateAndTrimColumn("outputPathIds") %>%
+  onePlotConfig <- onePlotConfig |>
+    .separateAndTrimColumn("pKParameters") |>
+    .separateAndTrimColumn("outputPathIds") |>
     merge(
       pkDefinitions,
       by = c("pKParameter")
-    ) %>%
+    ) |>
     merge(configEnv$outputPaths, by = "outputPathId")
 
   if (!"referenceScenario" %in% names(onePlotConfig)) {
@@ -312,14 +314,14 @@ plotSensitivity <- function(
   projectConfiguration,
   plotCaptionAddon
 ) {
-  dtCaption <- plotData %>%
+  dtCaption <- plotData |>
     dplyr::select(c(
       "plotTag",
       "outputPathId",
       "displayNamePKParameter",
       "scenarioLongName"
-    )) %>%
-    unique() %>%
+    )) |>
+    unique() |>
     merge(
       configEnv$outputPaths[, c("outputPathId", "displayNameOutput")],
       by = "outputPathId"
@@ -465,13 +467,13 @@ plotSensitivity <- function(
       "RepresentativeQuantile",
       "sensitivityParameter",
       "sens"
-    )] %>%
+    )] |>
       setnames(
         old = c("RepresentativeQuantile", "sensitivityParameter", "sens"),
         new = c("Representative", "Parameter", "Sensitivity")
       ))
   } else {
-    exportTable <- plotDataTag[, c("sensitivityParameter", "sens")] %>%
+    exportTable <- plotDataTag[, c("sensitivityParameter", "sens")] |>
       setnames(
         old = c("sensitivityParameter", "sens"),
         new = c("Parameter", "Sensitivity")
@@ -504,7 +506,7 @@ plotSensitivity <- function(
   pkSheets <- .readPKDefinitionsFromSheets(
     projectConfiguration = projectConfiguration,
     pkParameterSheets = pkParameterSheets
-  ) %>%
+  ) |>
     .normalizedPKDefinitionsForSensitivity()
 
   return(pkSheets)
