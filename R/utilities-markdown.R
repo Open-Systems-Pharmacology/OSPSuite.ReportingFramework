@@ -7,7 +7,7 @@ mdNewline <- function(n = 1) {
   for (i in seq_len(n)) {
     cat("  \n")
   }
-  invisible(NULL)
+  return(invisible(NULL))
 }
 
 #' mdPaste
@@ -21,7 +21,7 @@ mdNewline <- function(n = 1) {
 mdPaste <- function(..., sep = " ", collapse = NULL, newlines = 1) {
   cat(paste(..., sep = sep, collapse = collapse))
   mdNewline(newlines)
-  invisible(NULL)
+  return(invisible(NULL))
 }
 
 #' mdPaste0
@@ -34,7 +34,7 @@ mdPaste <- function(..., sep = " ", collapse = NULL, newlines = 1) {
 mdPaste0 <- function(..., collapse = NULL, newlines = 1) {
   cat(paste0(..., collapse = collapse))
   mdNewline(newlines)
-  invisible(NULL)
+  return(invisible(NULL))
 }
 
 
@@ -46,6 +46,8 @@ mdPaste0 <- function(..., collapse = NULL, newlines = 1) {
 mdNewpage <- function() {
   mdNewline(2)
   mdPaste("\\newpage", newlines = 2)
+
+  return(invisible(NULL))
 }
 
 #' mdHeading
@@ -60,6 +62,8 @@ mdHeading <- function(..., level = 1, newlines = 2) {
   checkmate::assert_int(level, lower = 1, upper = 6)
   mdNewline(3)
   mdPaste(paste0(rep("#", level), collapse = ""), ..., newlines = newlines)
+
+  return(invisible(NULL))
 }
 
 #' Insert bulleted item with indentation.
@@ -78,6 +82,8 @@ mdBullet <- function(..., bullet = "-", level = 1) {
     NULL
   }
   mdPaste(prefix, bullet, ..., newlines = 2)
+
+  return(invisible(NULL))
 }
 
 #' Insert bulleted item using paste0.
@@ -96,6 +102,8 @@ mdBullet0 <- function(..., bullet = "-", level = 1) {
     NULL
   }
   mdPaste0(prefix, bullet, " ", ..., newlines = 2)
+
+  return(invisible(NULL))
 }
 
 
@@ -133,7 +141,8 @@ mdFigure <- function(
   if (addNewPage) {
     mdNewpage()
   }
-  invisible()
+
+  return(invisible())
 }
 
 
@@ -148,6 +157,8 @@ mdFigure <- function(
 mdLink <- function(label, filename, folder, prefix = "") {
   mdPaste0(prefix, "[", label, "](", file.path(folder, filename), ")  ")
   mdNewline()
+
+  return(invisible(NULL))
 }
 
 #' Insert table from CSV with caption.
@@ -198,7 +209,8 @@ mdTable <- function(
   if (addNewPage) {
     mdNewpage()
   }
-  invisible()
+
+  return(invisible())
 }
 
 #' Add footnote lines from file.
@@ -225,7 +237,8 @@ mdFootNote <- function(subfolder, footNoteFile, footNoteCustomStyle = NULL) {
       }
     }
   }
-  invisible()
+
+  return(invisible())
 }
 
 
@@ -255,7 +268,8 @@ mdCaption <- function(
     mdPaste0("**", caption, "**")
   }
   mdNewline()
-  invisible()
+
+  return(invisible())
 }
 
 #' Validate figure/table input files and styles.

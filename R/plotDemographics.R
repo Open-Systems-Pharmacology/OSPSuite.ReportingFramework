@@ -1143,6 +1143,8 @@ validateDistributionVsDemographicsConfig <- function(
   )
 
   .validateColorLegend(dt = configTablePlots[!is.na(referenceScenario)])
+
+  return(invisible())
 }
 
 #' Validate configured demographic parameter existence in populations
@@ -1424,6 +1426,8 @@ validateHistogramsConfig <- function(configTable, ...) {
   .validateParameterID(configTablePlots, ...)
 
   .validateColorLegend(dt = configTablePlots[!is.na(referenceScenario)])
+
+  return(invisible())
 }
 
 #' Validate Parameter ID
@@ -1531,14 +1535,14 @@ addDefaultConfigForHistograms <- function(
   sheetName = "Histograms",
   overwrite = FALSE
 ) {
-  .addDefaultDemographicPlots(
+  return(.addDefaultDemographicPlots(
     projectConfiguration = projectConfiguration,
     pkParameterDT = pkParameterDT,
     sheetName = sheetName,
     overwrite = overwrite,
     asRangePlot = FALSE,
     templateSheet = "Histograms"
-  )
+  ))
 }
 #' Add Default Configuration for for distribution vs demographics plots
 #'
@@ -1574,14 +1578,14 @@ addDefaultConfigForDistributionsVsDemographics <- function(
   sheetName = "DistributionVsRange",
   overwrite = FALSE
 ) {
-  .addDefaultDemographicPlots(
+  return(.addDefaultDemographicPlots(
     projectConfiguration = projectConfiguration,
     pkParameterDT = pkParameterDT,
     sheetName = sheetName,
     overwrite = overwrite,
     asRangePlot = TRUE,
     templateSheet = "DistributionVsRange"
-  )
+  ))
 }
 #' Add Default Configuration for Pediatric Demography Plots
 #'

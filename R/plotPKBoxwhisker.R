@@ -759,4 +759,6 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(
     projectConfiguration$addOns$reportsFile,
     overwrite = TRUE
   )
+
+  return(invisible())
 }

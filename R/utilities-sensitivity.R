@@ -213,6 +213,8 @@ runSensitivityAnalysisForScenarios <-
         }
       }
     }
+
+    return(invisible(NULL))
   }
 
 #' Run representative-individual sensitivity analysis for population scenarios

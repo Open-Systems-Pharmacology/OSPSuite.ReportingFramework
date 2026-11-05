@@ -1035,6 +1035,8 @@ convertDataCombinedToDataTable <- function(datacombined) {
   ) {
     stop(messages$errorutilitiesdataL4IndividualDataMissingMetaId())
   }
+
+  return(dataDT)
 }
 
 # Data aggregation ------------

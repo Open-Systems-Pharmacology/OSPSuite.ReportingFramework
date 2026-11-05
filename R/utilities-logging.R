@@ -97,6 +97,8 @@ setShowLogMessages <- function(verbose = TRUE) {
   } else {
     logger::log_threshold(logger::WARN, index = 1)
   }
+
+  return(invisible())
 }
 
 #' Save session information to the log

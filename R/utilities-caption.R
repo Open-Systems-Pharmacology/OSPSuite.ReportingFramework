@@ -167,7 +167,7 @@ formatPercentiles <- function(
   suffix = "",
   allAsPercentiles = FALSE
 ) {
-  lapply(percentiles * 100, function(p) {
+  return(lapply(percentiles * 100, function(p) {
     if (p == 0 & !allAsPercentiles) {
       "min"
     } else if (p == 50 & !allAsPercentiles) {
@@ -180,7 +180,7 @@ formatPercentiles <- function(
       paste0(p, "th", suffix)
     }
   }) |>
-    unlist()
+    unlist())
 }
 
 #' Generate a Plot Tag

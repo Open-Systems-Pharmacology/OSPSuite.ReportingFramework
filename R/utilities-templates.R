@@ -12,6 +12,8 @@ openWorkflowTemplate <- function() {
     "sendToConsole",
     "ospsuite.reportingframework::createWorkflowTemplate()"
   )
+
+  return(invisible(NULL))
 }
 
 #' Opens the  template for figure creation as new document
@@ -24,6 +26,8 @@ openFigureTemplate <- function() {
     "sendToConsole",
     "ospsuite.reportingframework::createDocumentFromTemplate(template = 'template_plot.R')"
   )
+
+  return(invisible(NULL))
 }
 
 #' Opens the  template for figure creation as new document
@@ -36,6 +40,8 @@ openEPackageTemplate <- function() {
     "sendToConsole",
     "ospsuite.reportingframework::createDocumentFromTemplate(template = 'template_ePackageWorkflow.Rmd')"
   )
+
+  return(invisible(NULL))
 }
 
 
@@ -45,7 +51,7 @@ openEPackageTemplate <- function() {
 #' @export
 #' @family Addins Support
 createWorkflowTemplate <- function() {
-  ospsuite.reportingframework::createDocumentFromTemplate(
+  return(invisible(ospsuite.reportingframework::createDocumentFromTemplate(
     template = "template_workflow.R",
     templatePath = getOption(
       "OSPSuite.RF.PathForWorkflowTemplate",
@@ -54,7 +60,7 @@ createWorkflowTemplate <- function() {
         package = "ospsuite.reportingframework"
       )
     )
-  )
+  )))
 }
 
 
@@ -82,8 +88,8 @@ createDocumentFromTemplate <- function(
     readLines(templateFile) # Read the content of the template file
   templateText <-
     paste(templateContent, collapse = "\n")
-  invisible(rstudioapi::documentNew(
+  return(invisible(rstudioapi::documentNew(
     text = templateText,
     type = type
-  ))
+  )))
 }
