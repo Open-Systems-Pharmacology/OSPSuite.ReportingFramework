@@ -68,7 +68,6 @@ plotDistributionVsDemographics <- function(
   ...
 ) {
   # initialize data.table variables
-  value <- categoricValue <- NULL
 
   checkmate::assertFlag(asStepPlot)
   checkmate::assertNumeric(facetAspectRatio, lower = 0, finite = TRUE, len = 1)
@@ -237,7 +236,6 @@ prepareDemographicPlotData <- function(
   colorVector
 ) {
   # initialize to avoid linter messages
-  scenarioType <- referenceScenario <- scenario <- NULL
 
   if (usePKParameter) {
     onePlotConfigIdentifier <- copy(onePlotConfig) %>%
@@ -343,7 +341,6 @@ generateHistograms <- function(
   ...
 ) {
   # initialize to avoid linter messages
-  scenarioType <- value <- categoricValue <- parameterId <- NULL
 
   plotList <- list()
   for (pid in splitInputs(onePlotConfig$parameterIds)) {
@@ -436,7 +433,6 @@ generateRangePlots <- function(
   ...
 ) {
   # initialize to avoid linter messages
-  plotTag <- scenarioType <- value <- value.bin <- parameterId <- NULL # nolint
 
   # convert aggregation function to the form expected by plotRangeDistribution
   statFun <- function(y) {
@@ -455,10 +451,10 @@ generateRangePlots <- function(
     ))
   }
   if (onePlotConfig$modeOfBinning[1] == BINNINGMODE$breaks) {
-    breaks <- eval(parse(text = onePlotConfig$numberOfBins[1]))
-    numberOfBins <- length(breaks) - 1
+    binBreaks <- eval(parse(text = onePlotConfig$numberOfBins[1]))
+    numberOfBins <- length(binBreaks) - 1
   } else {
-    breaks <- NA
+    binBreaks <- NA
     numberOfBins <- as.double(onePlotConfig$numberOfBins[1])
   }
 
@@ -471,7 +467,6 @@ generateRangePlots <- function(
     ylabelUnit <- idData$displayUnit[1]
 
     # initialize dtExport (will be the set only once per pid)
-    dtExport <- NULL
 
     for (yscale in splitInputs(onePlotConfig$yScale[1])) {
       plotObject <-
@@ -480,7 +475,7 @@ generateRangePlots <- function(
           mapping = aes(x = value.bin, y = value, groupby = scenarioType),
           modeOfBinning = onePlotConfig$modeOfBinning[1],
           numberOfBins = numberOfBins,
-          breaks = breaks,
+          breaks = binBreaks,
           yScale = yscale,
           yScaleArgs = getXorYlimits(
             onePlotConfig,
@@ -580,7 +575,6 @@ generateRangePlots <- function(
 #' @keywords internal
 loadDemographicParameters <- function(onePlotConfig, scenarioList) {
   # initialize to avoid linter messages
-  referenceScenario <- NULL
 
   onePlotConfigIdentifier <- onePlotConfig[, c(
     "scenario",
@@ -711,7 +705,6 @@ addDemographicsToBin <- function(
 #' @keywords internal
 setPlotTag <- function(plotData, asRangePlot, usePKParameter) {
   # initialize to avoid linter messages
-  plotTag <- NULL
 
   plotTagIdentifier <- c()
   if (usePKParameter) {
@@ -743,7 +736,6 @@ setPlotTag <- function(plotData, asRangePlot, usePKParameter) {
 #' @keywords internal
 getExportTableForRanges <- function(plotObject, aggregationFun, xLabel) {
   # initialize to avoid linter messages
-  bin <- .bin <- scenarioType <- yErrorType <- value <- breaks <- NULL
 
   plotData <- setDT(copy(plotObject$data))
   if (!("scenarioType" %in% names(plotData))) {
@@ -779,7 +771,8 @@ getExportTableForRanges <- function(plotObject, aggregationFun, xLabel) {
 
   border <- plotObject$border
 
-  border[, bin := paste(breaks, "-", shift(breaks, type = "lead"))]
+  borderBreaks <- border[["breaks"]]
+  border[, bin := paste(borderBreaks, "-", data.table::shift(borderBreaks, type = "lead"))]
   border <- border[!duplicated(.bin)]
 
   dtExport <- merge(
@@ -826,7 +819,6 @@ loadPopulationParameterForScenario <- function(
   onePlotConfigIdentifier
 ) {
   # initialize to avoid linter messages
-  modelPath <- value <- categoricValue <- scenario <- NULL
 
   dtPop <- ospsuite::populationToDataFrame(
     scenarioList[[scenarioName]]$population
@@ -1040,7 +1032,6 @@ validateDistributionVsDemographicsConfig <- function(
   ...
 ) {
   # initialize to avoid linter messages
-  modeOfBinning <- referenceScenario <- NULL
 
   configTablePlots <- validateHeaders(configTable)
 
@@ -1328,7 +1319,6 @@ validateDistributionVsDemographicsConfig <- function(
 #' @family functions to generate histograms
 validateHistogramsConfig <- function(configTable, ...) {
   # initialize variable to avoid messages
-  referenceScenario <- NULL
 
   configTablePlots <- validateHeaders(configTable)
 
@@ -1572,9 +1562,6 @@ addDefaultDemographicPlots <- function(
   templateSheet
 ) {
   # initialize to avoid linter messages
-  scenarioName <- outputPathIds <- outputPathId <- parameterIds <- NULL
-  xScale <- pkParameter <- populationId <- NULL
-  ID <- NULL # nolint
 
   # this function stops in valid runs
   .stopHelperFunction()
@@ -1634,12 +1621,12 @@ addDefaultDemographicPlots <- function(
         .(outputPathIds = paste(unique(outputPathId), collapse = ", ")),
         by = parameterIds
       ]
-    dt[, ID := .I]
+    dt[, configId := .I]
 
     # Create a new data.table with all combinations of pkParameters and scenario names
     dtNewConfigPK <- dt[,
       .(
-        plotName = paste0("pkparameter", ID),
+        plotName = paste0("pkparameter", configId),
         scenarios = paste(scenarios$scenarioName, collapse = ", "),
         facetScale = "fixed"
       ),

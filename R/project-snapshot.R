@@ -115,8 +115,8 @@
 #' @keywords internal
 #' @noRd
 .rfSnapshotJsonPath <- function(xlsxPath, outputDir = NULL) {
-  dir <- if (is.null(outputDir)) dirname(xlsxPath) else outputDir
-  return(file.path(dir, sub("\\.xlsx$", ".json", basename(xlsxPath))))
+  outputDirectory <- if (is.null(outputDir)) dirname(xlsxPath) else outputDir
+  return(file.path(outputDirectory, sub("\\.xlsx$", ".json", basename(xlsxPath))))
 }
 
 #' Check whether an add-on workbook entry should be restored

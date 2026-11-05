@@ -15,7 +15,6 @@ setupVirtualTwinPopConfig <- function(
   groups = NULL
 ) {
   # avoid warning for global variable
-  populationName <- dataGroups <- group <- NULL
 
   checkmate::assertCharacter(groups, any.missing = FALSE, null.ok = TRUE)
 
@@ -139,7 +138,6 @@ exportVirtualTwinPopulations <- function(
   populationNames = NULL
 ) {
   # Initialize variables used for data.tables
-  populationName <- individualId <- NULL
   checkmate::assertCharacter(
     populationNames,
     any.missing = FALSE,
@@ -250,7 +248,6 @@ exportVirtualTwinPopulations <- function(
 #' @keywords internal
 #' @noRd
 .warnOnSuspiciousFemaleProportions <- function(dtPops) {
-  proportionOfFemales <- NULL
   suspiciousRows <- dtPops[proportionOfFemales > 0 & proportionOfFemales <= 1]
   if (nrow(suspiciousRows) == 0) {
     return(invisible(NULL))
@@ -437,7 +434,6 @@ exportRandomPopulations <- function(
 #' @noRd
 .setCustomParamsToPopulation <- function(scenario) {
   # avoid warning for global variable
-  paths <- dimension <- values <- NULL
 
   checkmate::assertClass(scenario, classes = "Scenario")
   if (
@@ -544,7 +540,6 @@ exportRandomPopulations <- function(
   sim
 ) {
   # initialize variable to avoid messages
-  individualId <- IndividualId <- NULL # nolint
 
   # Use foreach for parallel processing
   resultsList <- lapply(dtIndividualBiometrics$individualId, function(indId) {
@@ -637,7 +632,6 @@ exportRandomPopulations <- function(
   sim
 ) {
   # avoid warnings during check
-  paths <- NULL
 
   popParameters <- rbind(
     .convertBiomForIndStatics(biomForInd, sim),
@@ -747,7 +741,6 @@ exportRandomPopulations <- function(
   sim
 ) {
   # avoid warnings for global variables during check
-  paths <- dimension <- values <- sheet <- NULL
 
   wb <- openxlsx::loadWorkbook(paramsXLSpath)
   sheets <- intersect(openxlsx::sheets(wb), sheets)
@@ -848,7 +841,6 @@ exportRandomPopulations <- function(
 #' @noRd
 .convertBiomForIndStatics <- function(biomForInd, sim) {
   # avoid messages for global variables during check
-  paths <- NULL
 
   dtSelection <- data.table(
     pName = c(

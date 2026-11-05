@@ -118,8 +118,6 @@ generateBoxwhiskerPlotForPlotType <- function(
   asRatio,
   ...
 ) {
-  # initialize to avoid linter messages
-  plotName <- NULL
 
   # Prepare data for plotting
   plotData <- prepareDataForPKBoxplot(
@@ -237,8 +235,6 @@ prepareDataForPKBoxplot <- function(
   colorVector,
   asRatio
 ) {
-  # initialize to avoid linter messages
-  displayNameOutput <- plotTag <- pkParameter <- plotName <- NULL
 
   plotData <- .mergePKParameterWithConfigTable(
     onePlotConfig = onePlotConfig,
@@ -268,8 +264,6 @@ prepareDataForPKBoxplot <- function(
 #' @return A data.table summarizing the plot data.
 #' @keywords internal
 getSummaryTable <- function(plotDataPk, onePlotConfig, percentiles) {
-  # initialize to avoid linter messages
-  value <- NULL
 
   # add names of box whisker limits to ggplot for use in function getBoxWhiskerLimits
   statFun <- function(y) {
@@ -324,8 +318,6 @@ prepareTableForExport <- function(
   plotCaptionAddon,
   plotDataPk
 ) {
-  # initialize to avoid linter messages
-  colorIndex <- scenarioShortName <- scenario <- NULL
 
   # reorder
   setorderv(dtExport, "scenarioShortName")
@@ -437,8 +429,6 @@ createBaseBoxWhisker <- function(
   onePlotConfig,
   ...
 ) {
-  # initialize to avoid linter messages
-  colorIndex <- value <- scenarioShortName <- NULL
 
   # Define the mapping for aes() based on asRatio
   aesMapping <- aes(x = scenarioShortName, y = value)
@@ -499,9 +489,6 @@ createBaseBoxWhisker <- function(
 #' @family plot configuration validation function
 #' @family functions to generate box whisker plots
 validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
-  # initialize to avoid linter messages
-  plot_Ratio <- plot_Absolute <- NULL # nolint
-  referenceScenario <- NULL
 
   configTablePlots <- validateHeaders(configTable)
   validateOutputIdsForPlot()
@@ -610,8 +597,6 @@ validatePKBoxwhiskerConfig <- function(configTable, pkParameterDT, ...) {
 #'         execution if the validation fails.
 #' @keywords internal
 validateIsCrossOverStudy <- function(configTablePlots, pkParameterDT) {
-  # initialize to avoid linter messages
-  populationId <- populationIdReference <- NULL
 
   configTablePlots <- configTablePlots %>%
     merge(
@@ -652,8 +637,6 @@ validateExistenceOfReferenceForRatio <- function(
   configTablePlots,
   pkParameterDT
 ) {
-  # initialize to avoid linter messages
-  plotName <- referenceScenario <- NULL
 
   if (nrow(configTablePlots) == 0) {
     return(invisible())
@@ -709,8 +692,6 @@ addDefaultConfigForPKBoxwhsikerPlots <- function(
   sheetName = "PKParameter_Boxplot",
   overwrite = FALSE
 ) {
-  # initialize to avoid linter messages
-  pkParameter <- pkParameters <- outputPathIds <- outputPathId <- scenarioName <- NULL
 
   # this function stops in valid runs
   .stopHelperFunction()

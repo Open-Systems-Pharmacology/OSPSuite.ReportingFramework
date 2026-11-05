@@ -319,9 +319,6 @@ readConfigTableForPlot <- function(
   inputs,
   plotNames
 ) {
-  longName <- plotName <- scenarioName <- scenarioLongName <- NULL
-  referenceScenarioLongName <- NULL
-
   if (is.null(sheetName)) {
     return(NULL)
   }
@@ -337,9 +334,9 @@ readConfigTableForPlot <- function(
   if ("plotName" %in% names(configTable) && !is.null(plotNames)) {
     checkmate::assertNames(
       plotNames,
-      subset.of = configTable[!is.na(plotName)]$plotName
+      subset.of = configTable[!is.na(configTable$plotName)]$plotName
     )
-    configTable <- configTable[plotName %in% plotNames]
+    configTable <- configTable[configTable$plotName %in% plotNames]
   }
   # add scenario names
   if ("scenarios" %in% names(configTable)) {
@@ -364,10 +361,10 @@ readConfigTableForPlot <- function(
       )
 
     if ("scenarioName" %in% names(configTable)) {
-      configTable[
-        !is.na(scenarioName) & scenarioName != "",
-        scenarioLongName := scenarioName
-      ]
+      scenarioNameSet <- !is.na(configTable$scenarioName) &
+        configTable$scenarioName != ""
+      configTable[["scenarioLongName"]][scenarioNameSet] <-
+        configTable$scenarioName[scenarioNameSet]
     }
   }
 
@@ -427,13 +424,11 @@ addFacets <- function(
   nFacetColumns
 ) {
   checkmate::assertClass(plotObject, "gg")
-  # avoid warnings for global variables during check
-  plotTag <- NULL
-
-  facetValues <- NULL
-  if (!is.null(plotObject$data) && "plotTag" %in% names(plotObject$data)) {
-    facetValues <- plotObject$data$plotTag
-    facetValues <- facetValues[!is.na(facetValues) & facetValues != ""]
+  facetValues <- if (!is.null(plotObject$data) && "plotTag" %in% names(plotObject$data)) {
+    values <- plotObject$data$plotTag
+    values[!is.na(values) & values != ""]
+  } else {
+    character(0)
   }
   nFacets <- length(unique(facetValues))
 
@@ -443,7 +438,7 @@ addFacets <- function(
   if (!is.null(nFacetColumns) && nFacets > 1) {
     plotObject <- plotObject +
       ggplot2::facet_wrap(
-        facets = ggplot2::vars(plotTag),
+        facets = ggplot2::vars(.data$plotTag),
         scales = facetScale,
         ncol = nFacetColumns
       ) +
@@ -484,9 +479,6 @@ addFacets <- function(
   scenarioColumn = "scenario",
   outputColumn = "displayNameOutput"
 ) {
-  # initialize to avoid data.table notes
-  facetValues <- scenarioValues <- outputValues <- NULL
-
   checkmate::assertDataFrame(data)
   strategy <- match.arg(strategy)
   checkmate::assertInt(nMaxFacetRows, lower = 1)
@@ -674,17 +666,18 @@ getScaleVector <- function(namesOfScaleVector, listOfValues) {
   )
   checkmate::assertList(listOfValues)
 
-  scaleVector <- NULL
-  for (values in listOfValues) {
-    if (!is.null(values) && !any(is.na(values))) {
-      scaleVector <- values
-      break
-    }
-  }
+  candidateValues <- Filter(
+    f = function(values) {
+      !is.null(values) && !any(is.na(values))
+    },
+    x = listOfValues
+  )
 
-  if (is.null(scaleVector)) {
+  if (length(candidateValues) == 0) {
     stop(messages$errorutilitiesplotInvalidScaleVectorValues())
   }
+
+  scaleVector <- candidateValues[[1]]
 
   names(scaleVector) <- namesOfScaleVector
 
@@ -897,10 +890,7 @@ validateConfigTableForPlots <- function(configTable, ...) {
 #' @return configuration table without header lines
 #' @export
 validateHeaders <- function(configTable) {
-  # avoid warning for global variable
-  level <- NULL
-
-  configTableHeader <- configTable[!is.na(level)]
+  configTableHeader <- configTable[!is.na(configTable$level)]
   checkmate::assertIntegerish(
     configTableHeader$level,
     lower = 1,
@@ -922,7 +912,7 @@ validateHeaders <- function(configTable) {
     stop(messages$errorutilitiesplotL2HeaderRowsHaveNonEmptyColumns())
   }
 
-  configTablePlots <- configTable[is.na(level)]
+  configTablePlots <- configTable[is.na(configTable$level)]
   if (
     !all(configTablePlots[,
       lapply(.SD, function(x) {
@@ -1170,9 +1160,6 @@ validateAtleastOneEntry <- function(configTablePlots, columnVector) {
 #'
 #' @keywords internal
 validateOutputIdsForPlot <- function() {
-  # avoid warning for global variable
-  outputPathId <- NULL
-
   checkmate::assertFactor(
     configEnv$outputPaths$outputPathId,
     any.missing = FALSE,
@@ -1198,7 +1185,7 @@ validateOutputIdsForPlot <- function() {
       lapply(.SD, function(x) {
         length(unique(x))
       }),
-      by = outputPathId,
+      by = "outputPathId",
       .SDcols = uniqueColumns
     ]
   for (col in uniqueColumns) {
@@ -1259,10 +1246,7 @@ validateDataGroupIdsForPlot <- function() {
 #'
 #' @keywords internal
 validateColorLegend <- function(dt) {
-  # initialize variable to avoid messages
-  colorLegend <- NULL
-
-  dt <- dt[!grepl("\\|", colorLegend)]
+  dt <- dt[!grepl("\\|", dt$colorLegend)]
 
   if (nrow(dt) > 0) {
     print(

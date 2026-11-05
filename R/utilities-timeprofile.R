@@ -17,23 +17,23 @@ loadScenarioTimeProfiles <- function(
 ) {
   dtSimulated <- data.table()
   for (scenarioName in names(outputPathsPerScenario)) {
-    individualMatch <- NULL
-    if (
+    individualMatch <- if (
       "Population" %in%
         class(simulatedResults[[scenarioName]]$population) &&
         !is.null(simulatedResults[[scenarioName]]$population) &&
         "ObservedIndividualId" %in%
           simulatedResults[[scenarioName]]$population$allCovariateNames
     ) {
-      individualMatch <-
-        data.table(
-          individualId = simulatedResults[[
-            scenarioName
-          ]]$population$allIndividualIds,
-          observedIndividualId = simulatedResults[[
-            scenarioName
-          ]]$population$getCovariateValues("ObservedIndividualId")
-        )
+      data.table(
+        individualId = simulatedResults[[
+          scenarioName
+        ]]$population$allIndividualIds,
+        observedIndividualId = simulatedResults[[
+          scenarioName
+        ]]$population$getCovariateValues("ObservedIndividualId")
+      )
+    } else {
+      NULL
     }
     dtSimulated <- rbind(
       dtSimulated,
@@ -62,8 +62,6 @@ loadScenarioTimeProfiles <- function(
 getUnitConversionDT <- function(dtSimulated, dtOutputs) {
   checkmate::assertDataTable(dtSimulated)
   checkmate::assertDataTable(dtOutputs)
-  # avoid warning for global variable
-  unitFactor <- NULL
   dtUnit <- dtSimulated %>%
     dplyr::select("paths", "dimension", "yUnit", "molWeight") %>%
     unique() %>%
@@ -74,24 +72,22 @@ getUnitConversionDT <- function(dtSimulated, dtOutputs) {
       by.y = "outputPath"
     )
 
-  dtUnit[,
-    unitFactor := mapply(
-      function(dimension, yUnit, displayUnit, molWeight) {
-        ospsuite::toUnit(
-          quantityOrDimension = dimension,
-          values = 1,
-          sourceUnit = yUnit,
-          targetUnit = displayUnit,
-          molWeight = as.numeric(molWeight),
-          molWeightUnit = "g/mol"
-        )
-      },
-      dtUnit$dimension,
-      dtUnit$yUnit,
-      dtUnit$displayUnit,
-      dtUnit$molWeight
-    )
-  ]
+  dtUnit[["unitFactor"]] <- mapply(
+    function(dimension, yUnit, displayUnit, molWeight) {
+      ospsuite::toUnit(
+        quantityOrDimension = dimension,
+        values = 1,
+        sourceUnit = yUnit,
+        targetUnit = displayUnit,
+        molWeight = as.numeric(molWeight),
+        molWeightUnit = "g/mol"
+      )
+    },
+    dtUnit$dimension,
+    dtUnit$yUnit,
+    dtUnit$displayUnit,
+    dtUnit$molWeight
+  )
 
   return(dtUnit)
 }
@@ -156,9 +152,6 @@ getSimulatedTimeprofile <- function(
   aggregationFun,
   individualMatch
 ) {
-  # avoid warnings for global variables during check
-  molWeight <- NULL
-
   # reduce list of outputPaths to available paths
   outputPaths <- intersect(
     outputPaths,
@@ -171,7 +164,7 @@ getSimulatedTimeprofile <- function(
     data.table::setDT()
   # Add molWeight column if not present (ospsuite may not provide it)
   if (!("molWeight" %in% names(dt))) {
-    dt[, molWeight := NA_real_]
+    dt$molWeight <- NA_real_
   }
 
   # Rename columns
@@ -234,9 +227,6 @@ getSimulatedTimeprofile <- function(
 #' @return A data.table with y-columns scaled to the display unit.
 #' @keywords internal
 convertYunit <- function(timeprofile, dtUnit) {
-  # Initialize variables used for data.tables
-  yErrorValues <- unitFactor <- NULL
-
   identifier <- intersect(names(dtUnit), names(timeprofile))
   timeprofile <- timeprofile %>%
     merge(
@@ -262,8 +252,9 @@ convertYunit <- function(timeprofile, dtUnit) {
   ) {
     columnsToScale <- c(columnsToScale, "yErrorValues")
   }
+  scaleFactor <- timeprofile[["unitFactor"]]
   timeprofile[,
-    (columnsToScale) := lapply(.SD, function(x) x * unitFactor),
+    (columnsToScale) := lapply(.SD, function(x) x * scaleFactor),
     .SDcols = columnsToScale
   ]
 
@@ -299,22 +290,17 @@ convertAndShiftTimeUnits <- function(
 ) {
   checkmate::assertString(targetTimeUnit)
   checkmate::assertNumber(timeOffset)
-  # avoid warnings during check
-  xValues <- xUnit <- NULL
+  sourceTimeUnit <- unique(timeprofile[["xUnit"]])
 
-  sourceTimeUnit <- unique(timeprofile$xUnit)
+  timeprofile[["xValues"]] <- ospsuite::toUnit(
+    quantityOrDimension = "Time",
+    sourceUnit = sourceTimeUnit,
+    values = as.double(timeprofile[["xValues"]]),
+    targetUnit = targetTimeUnit
+  )
+  timeprofile[["xUnit"]] <- targetTimeUnit
 
-  timeprofile[,
-    xValues := ospsuite::toUnit(
-      quantityOrDimension = "Time",
-      sourceUnit = sourceTimeUnit,
-      values = as.double(xValues),
-      targetUnit = targetTimeUnit
-    )
-  ]
-  timeprofile[, xUnit := targetTimeUnit]
-
-  timeprofile[, xValues := xValues - timeOffset]
+  timeprofile[["xValues"]] <- timeprofile[["xValues"]] - timeOffset
 
   return(timeprofile)
 }
@@ -334,9 +320,6 @@ convertAndShiftTimeUnits <- function(
 #'
 #' @keywords internal
 filterIndividualID <- function(timeprofile, individualList) {
-  # Initialize variables used for data.tables
-  individualId <- NULL
-
   if (
     !is.na(individualList) &&
       "individualId" %in% names(timeprofile) &&
@@ -344,7 +327,7 @@ filterIndividualID <- function(timeprofile, individualList) {
   ) {
     individualIds <- gsub("[()]", "", splitInputs(individualList))
     if (any(individualIds != "*")) {
-      timeprofile <- timeprofile[individualId %in% individualIds, ]
+      timeprofile <- timeprofile[timeprofile$individualId %in% individualIds, ]
     }
   }
   return(timeprofile)

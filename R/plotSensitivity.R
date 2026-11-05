@@ -19,9 +19,8 @@ plotSensitivity <- function(
 ) {
   checkmate::assertNumber(significantDigits, lower = 1, finite = TRUE)
 
-  # initialize variable to avoid messages
-  sens <- parameterName <- NULL
-  representativeStratum <- scenarioShortName <- NULL
+
+
   if (!"referenceScenario" %in% names(onePlotConfig)) {
     onePlotConfig$referenceScenario <- NA_character_
   }
@@ -78,6 +77,7 @@ plotSensitivity <- function(
         size = 2.5
       ) +
       labs(color = "Scenario", shape = "Representative")
+
   } else {
     plotObject <- plotObject +
       geom_col(
@@ -174,11 +174,6 @@ plotSensitivity <- function(
   projectConfiguration,
   scenarioList
 ) {
-  # initialize variable to avoid messages
-  sens <- plotTag <- NULL
-  PKParameter <- QuantityPath <- NULL
-  representativeStratum <- plotFacetLabel <- NULL
-  referenceScenarioLongName <- scenarioName <- longName <- NULL
 
   pkDefinitions <- .getPKParameterOverview(projectConfiguration) %>%
     .[, c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")]
@@ -319,8 +314,6 @@ plotSensitivity <- function(
   projectConfiguration,
   plotCaptionAddon
 ) {
-  referenceScenarioLongName <- scenarioLongName <- NULL
-  ratioPair <- NULL
 
   dtCaption <- plotData %>%
     dplyr::select(c(
@@ -457,7 +450,6 @@ plotSensitivity <- function(
 #' @keywords internal
 #' @noRd
 .formatSensitivityExportTable <- function(plotDataTag, significantDigits = 3) {
-  Sensitivity <- NULL
   checkmate::assertNumber(significantDigits, lower = 1, finite = TRUE)
 
   if (any(!is.na(plotDataTag$RepresentativeQuantile))) {
@@ -518,9 +510,6 @@ plotSensitivity <- function(
 #' @family plot configuration validation function
 #' @family functions to generate sensitivity plots
 validateSensitivityConfig <- function(configTable, scenarioList, ...) {
-  scenario <- sensitivityParameterSheet <- isRepresentativeMode <- N <- NULL
-  plotName <- referenceScenario <- resultFile <- resultFileExists <- NULL
-
   extraArgs <- list(...)
   projectConfiguration <- extraArgs$projectConfiguration
   configTablePlots <- validateHeaders(configTable)

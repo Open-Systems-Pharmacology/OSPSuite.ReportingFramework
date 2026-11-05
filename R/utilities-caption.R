@@ -47,27 +47,29 @@ pasteFigureTags <- function(
 ) {
   checkmate::assertDataFrame(dtCaption)
   checkmate::assertNames(names(dtCaption), must.include = captionColumn)
-  # avoid warning for global variable
-  plotTag <- NULL
 
   if (dplyr::n_distinct(dtCaption[[captionColumn]]) == 1) {
     captionText <- as.character(unique(dtCaption[[captionColumn]]))
   } else {
-    captionTextVector <- dtCaption[,
-      .(
-        tags = paste0(
-          get(captionColumn),
+    captionGroups <- split(dtCaption, dtCaption[[captionColumn]])
+    captionTextVector <- vapply(
+      captionGroups,
+      function(groupData) {
+        paste0(
+          groupData[[captionColumn]][1],
           " (",
-          paste(unique(plotTag), collapse = ", "),
+          paste(unique(groupData[["plotTag"]]), collapse = ", "),
           ")"
         )
-      ),
-      by = captionColumn
-    ]$tags
+      },
+      FUN.VALUE = character(1)
+    )
 
-    allTags <- dtCaption[, .(
-      tags = paste0(" \\(", paste(unique(plotTag), collapse = ", "), "\\)")
-    )]$tags
+    allTags <- paste0(
+      " \\(",
+      paste(unique(dtCaption[["plotTag"]]), collapse = ", "),
+      "\\)"
+    )
 
     captionTextVector <- gsub(allTags, "", captionTextVector)
 

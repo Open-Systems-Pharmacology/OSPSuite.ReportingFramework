@@ -890,7 +890,6 @@ PlotDataTimeProfile <- R6::R6Class(
     },
     # Add columns required by ospsuite plotting functions
     addDimensionColumns = function(dt) {
-      yUnit <- xDimension <- yDimension <- molWeight <- NULL
 
       if (
         !("xDimension" %in% names(dt)) &&
@@ -937,7 +936,6 @@ PlotDataTimeProfile <- R6::R6Class(
 #' @keywords internal
 getPlotIdForColumns <- function(configTable, col) {
   # avoid warning for global variable
-  nBracketOpen <- nBracketClosed <- countAdd <- plotId <- NULL
 
   colNew <- sub("s$", "", col)
   colNew <- paste0(tolower(substring(colNew, 1, 1)), substring(colNew, 2))
@@ -983,7 +981,6 @@ splitCaptionByIndividuals <- function(
   dtCaption
 ) {
   # avoid warning for global variable
-  individualIds <- plotId <- NULL
 
   tmp <- data.table::copy(configTable) %>%
     data.table::setDT()
@@ -1032,7 +1029,11 @@ splitCaptionByIndividuals <- function(
 #' @keywords internal
 addTimeTagsToCaption <- function(dtCaption, timeTags, splitPlotsPerTimeRange) {
   # avoid warnings for global variables
-  timeRangeTag <- plotId <- NULL
+
+  if (length(timeTags) == 0) {
+    dtCaption$timeRangeTag <- factor(character(nrow(dtCaption)), levels = levels(timeTags), ordered = TRUE)
+    return(dtCaption)
+  }
 
   dtCaption <-
     data.table::rbindlist(lapply(
@@ -1125,7 +1126,6 @@ restructureApplicationTimeByScenarioIndex <- function(
 #' @keywords internal
 getOutputPathsPerScenario <- function(configTable, dtOutputPaths) {
   # avoid warning for global variable
-  outputPathId <- NULL
 
   outputPathsPerScenario <- list()
   for (scenarioType in c("scenario", "referenceScenario")) {
@@ -1163,7 +1163,6 @@ getOutputPathsPerScenario <- function(configTable, dtOutputPaths) {
 #' @keywords internal
 getObservedUnitConversionDT <- function(dataObserved, dtUnit) {
   # avoid warnings for global variables
-  unitFactor <- NULL
 
   dtUnitObserved <- dataObserved %>%
     dplyr::select(c("outputPathId", "yUnit")) %>%
@@ -1206,7 +1205,6 @@ addTimeRangeTagsToData <- function(
   timeTags
 ) {
   # avoid warnings for global variables
-  xValues <- timeRangeTag <- scenarioIndex <- NULL
 
   dt <- data.table()
   for (col in timeRangeColumns) {
@@ -1276,7 +1274,6 @@ finalizeCaptionTable <- function(
   nMaxFacetRows
 ) {
   # Initialize variables used for data.tables
-  counter <- plotId <- plotTag <- NULL
 
   maxPlotId <- nFacetColumns * nMaxFacetRows
 
@@ -1343,7 +1340,6 @@ finalizeCaptionTable <- function(
 #' @keywords internal
 updateDtCaption <- function(dtCaption, configTable) {
   # avoid warning for global variable
-  individualIds <- scenarioIndex <- individualId <- NULL # nolint: object_name_linter
 
   if (!any(configTable[!is.na(individualIds)]$individualIds == "(*)")) {
     return(dtCaption)
@@ -1371,7 +1367,6 @@ updateDtCaption <- function(dtCaption, configTable) {
 #' @keywords internal
 addPredictedValues <- function(dtObserved, dtSimulated, identifier) {
   # initialize variables used for data.table to avoid messages during checks
-  xValues <- predicted <- yValues <- diffY <- y <- NULL
 
   checkmate::assertCharacter(identifier, any.missing = FALSE)
   checkmate::assertDataTable(dtObserved)

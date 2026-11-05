@@ -138,9 +138,6 @@ getErrorTypeForPercentiles <- function(percentiles, legendsize) {
 #' aggregated values, and the number of measurements below the lower limit of quantification (`nBelowLLOQ`).
 #' @keywords internal
 performAggregation <- function(dataToAggregate, aggregationFun, aggrCriteria) {
-  # avoid warning for global variable
-  lloq <- LLOQFlag <- yValues <- NULL # nolint: object_name_linter
-
   checkmate::assertNames(aggrCriteria, subset.of = names(dataToAggregate))
 
   aggregatedData <- dataToAggregate[,
@@ -273,9 +270,6 @@ calculateAggregationWithCIBYGroup <- function(
   valueColumn = "value",
   direction = "y"
 ) {
-  # initialize variable to avoid messages
-  yErrorType <- NULL
-
   # Check if the identifiers are present in the data.table
   checkmate::assertNames(c(identifier, valueColumn), subset.of = names(dt))
 

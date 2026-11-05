@@ -224,9 +224,9 @@ test_that("buildSensitivityPopulationFromBaselineRow accepts data.frame input", 
 
   expect_s3_class(result, "Population")
   expect_equal(result$allParameterPaths, c("P1|CL", "P2|V"))
-  expect_setequal(result$allCovariateNames, c("SensitivityParameter", "factor"))
+  expect_setequal(result$allCovariateNames, c("SensitivityParameter", "perturbationFactor"))
   expect_equal(
-    as.double(result$getCovariateValues(covariateName = 'factor')),
+    as.double(result$getCovariateValues(covariateName = 'perturbationFactor')),
     c(1, 0.9090909, 1.1),
     tolerance = 1e-6
   )
@@ -321,7 +321,7 @@ test_that(".prepareRepresentativeSensitivityPopulation keeps one individual and 
 
   expect_setequal(
     unique(representativePopulation$allCovariateNames),
-    unique(c(pop$allCovariateNames, c("factor", "SensitivityParameter")))
+    unique(c(pop$allCovariateNames, c("perturbationFactor", "SensitivityParameter")))
   )
 
   dtRepresentativePopulation <- ospsuite::populationToDataFrame(
@@ -338,7 +338,7 @@ test_that(".prepareRepresentativeSensitivityPopulation keeps one individual and 
 
   expect_equal(
     nonUniqueCols,
-    c("IndividualId", "factor", "SensitivityParameter", "Organism|Hematocrit")
+    c("IndividualId", "perturbationFactor", "SensitivityParameter", "Organism|Hematocrit")
   )
   expect_equal(representativePopulation$count, 5)
 })
@@ -591,7 +591,7 @@ test_that(".calculateSensitivities computes summary sensitivity with mocked depe
     populationToDataFrame = function(...) {
       data.table::data.table(
         IndividualId = c(1L, 2L),
-        factor = c(1, 1.1),
+        perturbationFactor = c(1, 1.1),
         SensitivityParameter = c("", "CL")
       )
     },

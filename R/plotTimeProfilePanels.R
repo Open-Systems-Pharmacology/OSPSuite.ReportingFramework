@@ -154,8 +154,6 @@ plotTimeProfiles <- function(
   ...
 ) {
   # initialize data.table variables
-  dataType <- yErrorType <- dataClass <- NULL
-  .Id <- NULL # nolint
   checkmate::assertIntegerish(nMaxFacetRows, lower = 1, len = 1)
   checkmate::assertDouble(facetAspectRatio, lower = 0, len = 1)
 
@@ -487,7 +485,6 @@ isPlotTypeNeededAndPossible <- function(plotType, plotData) {
 #' @keywords internal
 getMapSimulatedAndObserved <- function(plotData) {
   # initialize data.table variables
-  dataType <- NULL
 
   if (!plotData$hasObservedData()) {
     return(NULL)
@@ -526,7 +523,6 @@ checkAndAdjustYlimits <- function(
   plotCounter
 ) {
   # initialize data.table variables
-  yUnit <- yValues <- lloq <- xValues <- yMin <- yErrorValues <- NULL
 
   if (plotType != "TP") {
     return(NULL)
@@ -570,7 +566,7 @@ checkAndAdjustYlimits <- function(
   # make sure no observed data are missed by setting y limits
   if (!is.null(ylimits) && nrow(observedData) > 0) {
     if (
-      any(observedData$yValues <= ylimits[1]) || # nolint: indentation_linter
+      any(observedData$yValues <= ylimits[1], na.rm = TRUE) || # nolint: indentation_linter
         any(
           observedData$yValues >= # nolint: indentation_linter
             ylimits[2],
@@ -649,7 +645,7 @@ getGroupbyMapping <- function(plotData, plotType, dataType = 'observed') {
   )
 
   # avoid warning for global variable
-  colorIndex <- shapeIndex <- NULL
+  shapeMapping <- NULL
 
   # Base (groupby) mapping — this is all that "simulated" ever needs
   if (
@@ -671,7 +667,6 @@ getGroupbyMapping <- function(plotData, plotType, dataType = 'observed') {
     } else if (plotData$useShapeIndex()) {
       shapeMapping <- ggplot2::aes(shape = shapeIndex)
     } else {
-      shapeMapping <- NULL
     }
 
     if (!is.null(shapeMapping)) {
@@ -865,7 +860,6 @@ getCaptionForPlot <- function(
     choices = c("TP", "PvO", "ResvT", "ResvO", "ResH", "QQ")
   )
   # avoid warning for global variable
-  counter <- NULL
   dtCaption <-
     plotData$dtCaption[
       eval(parse(text = plotData$timeRangeTagFilter[[timeRangeFilter]])) &
@@ -942,7 +936,8 @@ getFootNoteLines <- function(dataObserved, dtDataReference) {
     return(NULL)
   }
 
-  footnoteLines <- NULL
+  footnoteLines <- character(0)
+
   if (any(dataObserved$dataClass == DATACLASS$tpAggregated)) {
     errorLabels <- getErrorLabels(dataObserved$yErrorType[1])
 
@@ -1027,7 +1022,6 @@ validateTimeProfilesConfig <- function(
   ...
 ) {
   # avoid warning for global variable
-  individualId <- invalid <- colorLegend <- outputPathIds <- referenceScenario <- NULL
 
   configTablePlots <- validateHeaders(configTable)
   validateOutputIdsForPlot()
@@ -1180,7 +1174,6 @@ validateUnitConsistency <- function(
   configTablePlots
 ) {
   # avoid warning for global variable
-  outputPathId <- NULL
 
   # check if more than two different units are combined in one panel
   configTableList <- split(configTablePlots, by = "plotName")
@@ -1271,7 +1264,6 @@ validateOutputPathIdFormat <- function(
   column = "outputPathIds"
 ) {
   # avoid warning for global variable
-  nBracketOpen <- nBracketClosed <- NULL
 
   tmp <- configTablePlots[,
     .(
@@ -1300,8 +1292,6 @@ validateOutputPathIdFormat <- function(
 #' @keywords internal
 validateVirtualTwinPop <- function(configTablePlots, scenarioResults) {
   # avoid warning for global variable
-  dataGroupIds <- individualIds <- scenario <- referenceScenario <- NULL
-  plot_TimeProfiles <- NULL # nolint
 
   popScenarios <- scenarioResults[unlist(lapply(
     scenarioResults,
@@ -1406,7 +1396,6 @@ addDefaultConfigForTimeProfilePlots <- function(
   overwrite = FALSE
 ) {
   # avoid warnings for global variables during check
-  scenarioName <- NULL
 
   # this function stops in valid runs
   .stopHelperFunction()
@@ -1521,7 +1510,6 @@ createNewConfig <- function(scenarios, dataObserved) {
 #' @keywords internal
 mergeDataGroups <- function(dtNewConfig, dtDataGroups, dataObserved) {
   # initialize data.table variables
-  outputPathIds <- scenario <- group <- individualIds <- NULL
 
   tmp <- dtDataGroups[,
     .(dataGroupIds = paste(as.character(group), collapse = ", ")),

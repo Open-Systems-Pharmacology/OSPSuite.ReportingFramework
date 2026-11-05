@@ -137,7 +137,6 @@ plotPKForest <- function(
   labelWrapWidth = 2
 ) {
   # initialize to avoid linter messages
-  scenarioGroup <- referenceScenario <- NULL
 
   # separates the comma separate inputs to rows
   onePlotConfig <- .separateAndTrimColumn(
@@ -803,7 +802,6 @@ prepareDataForPKForest <- function(
 #' @keywords internal
 adjustForestDataPerGroup <- function(dataGroup, onePlotConfig) {
   # initialize to avoid linter messages
-  outputPathId <- plotTag <- NULL
   tmp <- dataGroup[,
     .N,
     by = c(
@@ -870,7 +868,6 @@ aggregatePointEstimate <- function(
   aggregationFlag
 ) {
   # initialize to avoid linter messages
-  xValues <- xMin <- xMax <- xValues.reference <- xMin.reference <- xMax.reference <- NULL # nolint
   if (ratioMode == "ratioOfPopulation") {
     results <- lapply(
       pkParameterFiltered,
@@ -952,7 +949,6 @@ aggregatePointEstimate <- function(
 #' @keywords internal
 checkPrecision <- function(dt) {
   # initialize to avoid linter messages
-  xMin <- xMax <- xValues <- precision <- NULL
 
   dt[, precision := (xMax - xMin) / xValues]
 
@@ -985,7 +981,6 @@ checkPrecision <- function(dt) {
 #' @keywords internal
 addObservedData <- function(plotData, dataObservedPK, onePlotConfig) {
   # initialize to avoid linter messages
-  dataType <- NULL
 
   plotData[, dataType := "simulated"]
   # add datagroupId
@@ -1036,7 +1031,6 @@ addObservedData <- function(plotData, dataObservedPK, onePlotConfig) {
 #' @keywords internal
 addDescriptions <- function(plotData, onePlotConfig, pkParameterDT) {
   # initialize to avoid linter messages
-  pkParameter <- NULL
 
   plotData <- merge(
     plotData,
@@ -1131,7 +1125,6 @@ getTableLabelsForPKForest <- function(plotData) {
 #' @keywords internal
 getMappingForForestPlots <- function(plotData, columnList) {
   # initialize variable to avoid messages
-  xErrorValues <- xMax <- xMin <- dataType <- xValues <- NULL
 
   mapping <- aes(x = xValues, y = get(columnList$yColumn), groupby = dataType)
 
@@ -1203,7 +1196,6 @@ getColumnSelectionForPKForest <- function(plotData, ratioMode) {
   if (uniqueN(plotData$plotTag) > 1) {
     columnList$xFacetColumn <- "plotTag"
   } else {
-    columnList$xFacetColumn <- NULL
   }
   return(columnList)
 }
@@ -1289,7 +1281,6 @@ adjustPkForestPlotObject <- function(
 #' @keywords internal
 addPrecisisonRemark <- function(combinedObject, asPointeEstimate, plotData) {
   # initialize to avoid linter messages
-  dataType <- NULL
 
   if (!asPointeEstimate) {
     return(combinedObject)
@@ -1333,7 +1324,6 @@ getCaptionForForestPlot <- function(
   ratioMode
 ) {
   # initialize to avoid linter messages
-  scenarioShortName <- N <- NULL # nolint
 
   dtCaption <-
     plotData[, c(
@@ -1730,7 +1720,6 @@ addDefaultConfigForPKForestPlots <- function(
   overwrite = FALSE
 ) {
   # avoid warnings for global variables during check
-  scenarioName <- outputPathId <- outputPathIds <- pkParameter <- pkParameters <- NULL
 
   # this function stops in valid runs
   .stopHelperFunction()

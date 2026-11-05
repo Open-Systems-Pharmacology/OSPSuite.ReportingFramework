@@ -64,9 +64,6 @@ getDataGroups <- function(wbPlots) {
 #' @export
 #' @family get identifier
 getOutputPathIds <- function(wbPlots) {
-  # initialize variable to avoid messages
-  displayUnit <- NULL
-
   dtOutputPaths <- xlsxReadData(
     wb = wbPlots,
     sheetName = "Outputs",
@@ -120,9 +117,6 @@ getTimeRangeTags <- function(wbPlots) {
 #' @export
 #' @family get identifier
 getModelParameterDefinitions <- function(wbPlots) {
-  # initialize variable to avoid messages
-  displayUnit <- NULL
-
   dtParameter <- xlsxReadData(
     wb = wbPlots,
     sheetName = "ModelParameter",
@@ -151,9 +145,6 @@ getModelParameterDefinitions <- function(wbPlots) {
 #' @export
 #' @family get identifier
 getScenarioDefinitions <- function(wbScenarios, wbPlots = NULL) {
-  # initialize global parameter to avoid message
-  pKParameter <- NULL
-
   scenariosSc <- xlsxReadData(
     wb = wbScenarios,
     sheetName = "Scenarios",

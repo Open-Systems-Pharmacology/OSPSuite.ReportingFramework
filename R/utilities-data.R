@@ -25,9 +25,6 @@ readObservedDataByDictionary <- function(
   dataClassType = c("timeprofile", "pkParameter", "numericValues"),
   fileIds = NULL
 ) {
-  # avoid warning for global variable
-  individualId <- outputPathId <- dataType <- fileIdentifier <- dataClass <- NULL
-
   dataClassType <- match.arg(dataClassType)
 
   wb <- openxlsx::loadWorkbook(
@@ -191,9 +188,6 @@ readObservedDataByDictionary <- function(
 #' @keywords internal
 #' @noRd
 .readNumericValuesFromDataFiles <- function(wb, dataList) {
-  # initialize variable to avoid messages
-  variableName <- NULL
-
   defaultSheetName <- "NumericValues"
   numericValues <- data.table::data.table(
     variableName = character(),
@@ -237,9 +231,6 @@ readObservedDataByDictionary <- function(
 #' @keywords internal
 #' @noRd
 .readNumericValuesSheet <- function(wb, sheetName) {
-  # avoid warnings for global variables during check
-  variableName <- value <- unit <- reference <- NULL
-
   tmpData <- xlsxReadData(
     wb = wb,
     sheetName = sheetName,
@@ -409,9 +400,6 @@ validateObservedData <- function(dataDT, dataClassType) {
   }
 
   validateDataUnit <- function(colIdentifier, colUnit) {
-    # initialize variable to avoid messages
-    nUnit <- NULL
-
     unitCounts <- dataDT[, .(nUnit = uniqueN(get(colUnit))), by = colIdentifier]
     ambiguousUnits <- unitCounts[nUnit > 1]
 
@@ -491,9 +479,6 @@ validateObservedData <- function(dataDT, dataClassType) {
 #' @keywords internal
 #' @noRd
 readDataDictionary <- function(dictionaryFile, sheet, data, dataClass) {
-  # Initialize variables used for data.tables
-  sourceColumn <- filter <- NULL
-
   dict <- xlsxReadData(
     wb = dictionaryFile,
     sheetName = sheet,
@@ -558,7 +543,7 @@ readDataDictionary <- function(dictionaryFile, sheet, data, dataClass) {
     )
   }
 
-  tmp <- dict[is.na(sourceColumn) & is.na(filter), ]
+  tmp <- dict[is.na(sourceColumn) & is.na(dict$filter), ]
   if (nrow(tmp) > 0) {
     stop(messages$errorutilitiesdataDictionarySourceOrFilterMissing())
   }
@@ -584,9 +569,6 @@ readDataDictionary <- function(dictionaryFile, sheet, data, dataClass) {
 #' @keywords internal
 #' @noRd
 convertDataByDictionary <- function(data, dataFilter, dict, dictionaryName) {
-  # Initialize variables used for data.tables
-  targetColumn <- sourceColumn <- xUnit <- filter <- type <- NULL
-
   # Execute data filter
   if (!is.na(dataFilter) & dataFilter != "") {
     data <- data[eval(parse(text = dataFilter))]
@@ -594,7 +576,7 @@ convertDataByDictionary <- function(data, dataFilter, dict, dictionaryName) {
 
   # Execute all filters
   if (any(!is.na(dict$filter))) {
-    dictFilters <- dict[!is.na(filter)]
+    dictFilters <- dict[!is.na(dict$filter)]
 
     for (myFilter in split(dictFilters, seq_len(nrow(dictFilters)))) {
       tryCatch(
@@ -658,9 +640,6 @@ convertDataByDictionary <- function(data, dataFilter, dict, dictionaryName) {
 #' @keywords internal
 #' @noRd
 convertBiometrics <- function(data, dict, dictionaryName) {
-  # Initialize variables used for data.tables
-  targetColumn <- gender <- NULL
-
   for (col in intersect(names(BIOMETRICUNITS), dict$targetColumn)) {
     unitFactor <- ospsuite::toUnit(
       quantityOrDimension = ospsuite::getDimensionForUnit(BIOMETRICUNITS[[
@@ -712,9 +691,6 @@ convertBiometrics <- function(data, dict, dictionaryName) {
 #' @export
 #' @family observed data processing
 updateDataGroupId <- function(projectConfiguration, dataDT) {
-  # Initialize variables used for data.tables
-  studyId <- group <- NULL
-
   wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$reportsFile)
 
   dtDataGroupIds <- xlsxReadData(wb = wb, sheetName = "DataGroups")
@@ -775,9 +751,6 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
 #' @export
 #' @family observed data processing
 updateOutputPathId <- function(projectConfiguration, dataDT) {
-  # Initialize variables used for data.tables
-  outputPathId <- NULL
-
   wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$reportsFile)
   dtOutputPaths <- xlsxReadData(wb = wb, sheetName = "Outputs")
 
@@ -936,7 +909,6 @@ convertDataTableToDataCombined <- function(dataDT) {
 #' @keywords internal
 groupDataByIdentifier <- function(dataDT) {
   checkmate::assert_disjunct(names(dataDT), ".groupBy")
-  .groupBy <- NULL
 
   # Group data by identifier
   groupBy <- getColumnsForColumnType(dt = dataDT, columnTypes = "identifier")
@@ -965,9 +937,6 @@ groupDataByIdentifier <- function(dataDT) {
 #' @return An object of class `DataSet`.
 #' @keywords internal
 createDataSets <- function(groupData) {
-  # Initialize variables used for data.tables
-  lloq <- NULL
-
   groupData <- data.table::as.data.table(groupData)
   groupName <- groupData$.groupBy[1]
   dataSet <- ospsuite::DataSet$new(groupName)
@@ -1035,9 +1004,6 @@ addMetaDataToDataSet <- function(dataSet, groupData) {
 #' @export
 #' @family observed data processing
 convertDataCombinedToDataTable <- function(datacombined) {
-  # Initialize variables used for data.tables
-  dataClass <- yErrorValues <- NULL
-
   dataDT <- datacombined$toDataFrame() %>%
     data.table::setDT()
 
@@ -1173,9 +1139,6 @@ aggregateObservedDataGroups <- function(
 #' @keywords internal
 #' @noRd
 prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
-  # avoid warning for global variable
-  group <- NULL
-
   if ("DataCombined" %in% class(dataObserved)) {
     dataObserved <- convertDataCombinedToDataTable(dataObserved)
   }
@@ -1234,16 +1197,13 @@ checkLLOQ <- function(
   lloqCheckColumns1of2,
   aggregationFlag
 ) {
-  # initialize data.table variables
-  nBelowLLOQ <- numberOfIndividuals <- NULL
-
   if (
     aggregationFlag != "Custom" &
       (!is.null(lloqCheckColumns2of3) | !is.null(lloqCheckColumns1of2))
   ) {
     warning(messages$warningutilitiesdataL4UnusedAggregationCheckColumns())
-    lloqCheckColumns2of3 <- NULL
-    lloqCheckColumns1of2 <- NULL
+    lloqCheckColumns2of3 <- character(0)
+    lloqCheckColumns1of2 <- character(0)
   }
 
   if (aggregationFlag %in% ospsuite::DataErrorType) {
@@ -1417,9 +1377,6 @@ convertIdentifierColumns <- function(dt, identifierCols) {
 #' @keywords internal
 #' @noRd
 getIndividualDataGroups <- function(dataObserved, groups, minN = 2) {
-  # avoid warnings for global variables
-  individualId <- dataClass <- dataType <- N <- NULL # nolint: object_name_linter
-
   tmp <-
     dataObserved[,
       .(N = dplyr::n_distinct(individualId)),

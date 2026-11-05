@@ -1,5 +1,5 @@
 # Example data for testing
-configTable <- data.table(
+configTable <- data.table::data.table(
   scenario = c("A", "A", "B", "B"),
   scenarioIndex = c(1, 2, 3, 4),
   individualIds = c("1,2", "3", "*", "4"),
@@ -18,7 +18,7 @@ timeTags <- factor(
   ordered = TRUE
 )
 
-dtOutputPaths <- data.table(
+dtOutputPaths <- data.table::data.table(
   outputPathId = c("Path1", "Path2", "Path3"),
   OutputPaths = c("model|Path1", "model|Path2", "model|Path3")
 )
@@ -76,12 +76,12 @@ test_that("getOutputPathsPerScenario works correctly", {
 })
 
 test_that("getObservedUnitConversionDT works correctly", {
-  dataObserved <- data.table(
+  dataObserved <- data.table::data.table(
     outputPathId = c("Path1", "Path2"),
     yUnit = c("g", "kg")
   )
   dtUnit <-
-    data.table(
+    data.table::data.table(
       outputPathId = c("Path1", "Path2"),
       dimension = c("Mass", "Mass"),
       yUnit = c("kg", "kg"),
@@ -96,7 +96,7 @@ test_that("getObservedUnitConversionDT works correctly", {
 
 # Edge case tests for getPlotIdForColumns
 test_that("getPlotIdForColumns handles empty string column values", {
-  emptyConfig <- data.table(
+  emptyConfig <- data.table::data.table(
     scenario = "",
     outputPathIds = ""
   )
@@ -106,7 +106,7 @@ test_that("getPlotIdForColumns handles empty string column values", {
 })
 
 test_that("getPlotIdForColumns handles special characters in column values", {
-  specialConfig <- data.table(
+  specialConfig <- data.table::data.table(
     scenario = "A & B",
     outputPathIds = "Path|1,2;3"
   )
@@ -145,7 +145,7 @@ test_that("addTimeTagsToCaption handles empty timeTags", {
     emptyTags,
     splitPlotsPerTimeRange = 0
   )
-  expect_true(is.data.table(result))
+  expect_true(data.table::is.data.table(result))
 })
 
 test_that("addTimeTagsToCaption handles splitPlotsPerTimeRange = 1", {
@@ -189,7 +189,7 @@ test_that("restructureApplicationTimeByScenarioIndex handles mismatched scenario
 
 # Edge case tests for getOutputPathsPerScenario
 test_that("getOutputPathsPerScenario handles missing output paths", {
-  emptyPaths <- data.table(
+  emptyPaths <- data.table::data.table(
     outputPathId = character(0),
     OutputPaths = character(0)
   )
@@ -198,7 +198,7 @@ test_that("getOutputPathsPerScenario handles missing output paths", {
 })
 
 test_that("getOutputPathsPerScenario with single path", {
-  singlePath <- data.table(
+  singlePath <- data.table::data.table(
     outputPathId = "Path1",
     OutputPaths = "model|Path1"
   )
@@ -208,11 +208,11 @@ test_that("getOutputPathsPerScenario with single path", {
 
 # Edge case tests for getObservedUnitConversionDT
 test_that("getObservedUnitConversionDT handles multiple rows", {
-  dataObserved <- data.table(
+  dataObserved <- data.table::data.table(
     outputPathId = c("Path1", "Path2"),
     yUnit = c("g", "kg")
   )
-  dtUnit <- data.table(
+  dtUnit <- data.table::data.table(
     outputPathId = c("Path1", "Path2"),
     dimension = c("Mass", "Mass"),
     yUnit = c("kg", "kg"),
@@ -220,6 +220,6 @@ test_that("getObservedUnitConversionDT handles multiple rows", {
     unitFactor = c(1000, 1)
   )
   result <- getObservedUnitConversionDT(dataObserved, dtUnit)
-  expect_true(is.data.table(result))
+  expect_true(data.table::is.data.table(result))
   expect_equal(nrow(result), 2)
 })

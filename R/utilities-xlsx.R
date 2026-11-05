@@ -698,9 +698,6 @@ setHeadersToLowerCase <- function(dt) {
   projectConfiguration,
   direction = c("bothways", "scenarioToPlot", "plotToScenario")
 ) {
-  # initialize variable to avoid messages
-  outputPath <- outputPathPl <- outputPathSc <- NULL
-
   direction <- match.arg(direction)
 
   # Load the workbooks for scenarios and plots

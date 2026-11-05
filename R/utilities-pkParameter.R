@@ -18,9 +18,6 @@ calculatePKParameterForScenarios <- function(
   projectConfiguration,
   scenarioResults
 ) {
-  # initialize parameter to avoid linter message
-  pKParameter <- scenarioName <- NULL
-
   checkmate::assertClass(
     projectConfiguration,
     classes = "ProjectConfigurationRF"
@@ -265,9 +262,6 @@ calculatePKParameterForScenarios <- function(
 #' @export
 #' @family scenario management
 loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
-  # initialize variable to avoid messages
-  pKParameter <- scenarioName <- NULL
-
   checkmate::assertList(
     scenarioListOrResult,
     any.missing = FALSE,
@@ -326,9 +320,6 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
   pkParameterSheets,
   projectConfiguration
 ) {
-  # initialize variable to avoid messages
-  unitFactor <- value <- NULL
-
   dtPkAnalyses <- .loadPkAnalysisRawData(
     projectConfiguration = projectConfiguration,
     scenarioName = scenarioName,
@@ -405,9 +396,6 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
   scenarioName,
   scenarioSimulation
 ) {
-  # initialize variables to avoid messages
-  unit <- NULL
-
   outputFolder <- file.path(
     projectConfiguration$outputFolder,
     EXPORTDIR$pKAnalysisResults
@@ -456,9 +444,6 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
   dtPkAnalyses,
   dtPkParameterDefinition
 ) {
-  # Initialize variables to avoid linter messages
-  outputPathIds <- molweight <- outputPath <- NULL
-
   # Select relevant columns from dtOutputPaths and merge with dtPkAnalyses
   # This creates a dataset (dtO) that contains output path IDs and their associated parameters
   dtO <- dtOutputPaths %>%
@@ -566,9 +551,6 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
   colorVector = NULL,
   asRatio = FALSE
 ) {
-  # initialize to avoid linter messages
-  isReference <- isReference <- colorIndex <- referenceScenario <- scenario <- NULL
-
   onePlotConfig <- data.table::copy(onePlotConfig)
   for (col in intersect(
     names(onePlotConfig),
@@ -659,9 +641,6 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
 #' @keywords internal
 #' @noRd
 .setValueToRatio <- function(mergedData, pkParameterDT) {
-  # initialize variable to avoid messages
-  valueBase <- valueReference <- value <- NULL
-
   mergedData <- merge(
     mergedData,
     pkParameterDT[, c(

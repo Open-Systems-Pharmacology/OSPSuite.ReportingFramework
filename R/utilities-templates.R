@@ -4,6 +4,7 @@
 #' To customize it save the file with name "template_workflow.R" in your template directory and
 #' set the path to the template via option `options(OSPSuite.RF.PathForWorkflowTemplate = 'myTemplateDirectory')`
 #'
+#' @return Invisibly returns `NULL` after triggering the template command in RStudio.
 #' @export
 #' @family Addins Support
 openWorkflowTemplate <- function() {
@@ -15,6 +16,7 @@ openWorkflowTemplate <- function() {
 
 #' Opens the  template for figure creation as new document
 #'
+#' @return Invisibly returns `NULL` after triggering the template command in RStudio.
 #' @export
 #' @family Addins Support
 openFigureTemplate <- function() {
@@ -26,6 +28,7 @@ openFigureTemplate <- function() {
 
 #' Opens the  template for figure creation as new document
 #'
+#' @return Invisibly returns `NULL` after triggering the template command in RStudio.
 #' @export
 #' @family Addins Support
 openEPackageTemplate <- function() {
@@ -38,6 +41,7 @@ openEPackageTemplate <- function() {
 
 #' Opens the workflow template as new document
 #'
+#' @return Invisibly returns a new RStudio document object.
 #' @export
 #' @family Addins Support
 createWorkflowTemplate <- function() {
@@ -58,6 +62,7 @@ createWorkflowTemplate <- function() {
 #'
 #' @param template name of template script
 #' @param templatePath  path of template script
+#' @return Invisibly returns a new RStudio document object.
 #'
 #' @export
 #' @family Addins Support

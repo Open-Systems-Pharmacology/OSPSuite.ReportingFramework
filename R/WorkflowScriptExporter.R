@@ -1919,7 +1919,6 @@ importProjectConfiguration <- function(
     file.remove(restoreXlsxPath)
   }
 
-  rPCf <- NULL
   invisible(utils::capture.output(
     {
       rPCf <- withCallingHandlers(
