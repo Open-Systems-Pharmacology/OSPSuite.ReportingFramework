@@ -310,6 +310,50 @@ test_that("setValueToRatio divides base values by reference values", {
   expect_equal(result$value, 2)
 })
 
+# .mergePKParameterWithConfigTable -------------------------------------------
+
+test_that(".mergePKParameterWithConfigTable handles missing referenceScenario", {
+  configEnv <- get0("configEnv", envir = .GlobalEnv, inherits = FALSE)
+  mockEnv <- if (is.null(configEnv)) new.env(parent = emptyenv()) else configEnv
+  oldOutputPaths <- mockEnv$outputPaths
+  on.exit(mockEnv$outputPaths <- oldOutputPaths, add = TRUE)
+  mockEnv$outputPaths <- data.table::data.table(
+    outputPathId = "Output-1",
+    displayNameOutput = "Plasma concentration"
+  )
+  assign("configEnv", mockEnv, envir = .GlobalEnv)
+
+  onePlotConfig <- data.table::data.table(
+    plotName = "PK plot",
+    scenario = "S1",
+    pkParameter = "AUC_tEnd",
+    outputPathId = "Output-1",
+    scenarioShortName = "S1",
+    scenarioLongName = "Scenario 1"
+  )
+
+  pkParameterDT <- data.table::data.table(
+    scenario = "S1",
+    pkParameter = "AUC_tEnd",
+    individualId = 1L,
+    value = 100,
+    outputPathId = "Output-1"
+  )
+
+  colorVector <- c(base = "#111111", reference = "#222222")
+
+  result <- .mergePKParameterWithConfigTable(
+    onePlotConfig = onePlotConfig,
+    pkParameterDT = pkParameterDT,
+    colorVector = colorVector,
+    asRatio = FALSE
+  )
+
+  expect_equal(nrow(result), 1L)
+  expect_false(result$isReference)
+  expect_equal(as.character(result$colorIndex), "base")
+})
+
 # .loadPkAnalysisRawData -----------------------------------------------------
 
 test_that(".loadPkAnalysisRawData returns a data.table with 14 PK parameters", {

@@ -585,10 +585,15 @@ loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
   if (asRatio) {
     mergedData <- .setValueToRatio(mergedData, pkParameterDT)
   } else if (!is.null(colorVector)) {
-    mergedData[,
-      isReference := scenario %in% referenceScenario,
-      by = c("plotName")
-    ]
+    if ("referenceScenario" %in% names(mergedData)) {
+      mergedData[,
+        isReference := scenario %in% referenceScenario,
+        by = c("plotName")
+      ]
+      mergedData[is.na(isReference), isReference := FALSE]
+    } else {
+      mergedData[, isReference := FALSE]
+    }
     mergedData[,
       colorIndex := ifelse(
         isReference == TRUE,
