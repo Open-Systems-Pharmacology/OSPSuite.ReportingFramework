@@ -45,7 +45,8 @@ Imports:
     foreach,
     boot,
     doParallel,
-    jsonlite
+    jsonlite,
+    janitor
 Depends:
     esqlabsR,
     ospsuite.plots,
