@@ -740,30 +740,34 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
     dir.create(scenarioTempFolder)
 
     scenarioFiles <- stats::setNames(
-      vapply(seq_along(scenarioNames), function(i) {
-        oneScenarioName <- scenarioNames[[i]]
-        oneScenario <- scenarioList[[oneScenarioName]]
-        if (is.null(oneScenario$simulation)) {
-          stop(messages$errorutilitiessensitivityScenarioSimulationMissing(
-            oneScenarioName
-          ))
-        }
+      vapply(
+        seq_along(scenarioNames),
+        function(i) {
+          oneScenarioName <- scenarioNames[[i]]
+          oneScenario <- scenarioList[[oneScenarioName]]
+          if (is.null(oneScenario$simulation)) {
+            stop(messages$errorutilitiessensitivityScenarioSimulationMissing(
+              oneScenarioName
+            ))
+          }
 
-        fileNameSafeScenario <- gsub(
-          "[^A-Za-z0-9_-]",
-          "_",
-          oneScenarioName
-        )
-        scenarioFilePath <- file.path(
-          scenarioTempFolder,
-          sprintf("%02d_%s.pkml", i, fileNameSafeScenario)
-        )
-        ospsuite::saveSimulation(
-          simulation = oneScenario$simulation,
-          filePath = scenarioFilePath
-        )
-        scenarioFilePath
-      }, character(1)),
+          fileNameSafeScenario <- gsub(
+            "[^A-Za-z0-9_-]",
+            "_",
+            oneScenarioName
+          )
+          scenarioFilePath <- file.path(
+            scenarioTempFolder,
+            sprintf("%02d_%s.pkml", i, fileNameSafeScenario)
+          )
+          ospsuite::saveSimulation(
+            simulation = oneScenario$simulation,
+            filePath = scenarioFilePath
+          )
+          scenarioFilePath
+        },
+        character(1)
+      ),
       scenarioNames
     )
     attr(scenarioFiles, "tempFolder") <- scenarioTempFolder
@@ -1683,9 +1687,15 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   valueScenario1,
   valueScenario2
 ) {
-  isIncompatible <-
-    (valueScenario1 == 0 && valueScenario2 != 0) ||
+  bothBaselinesZero <- isTRUE(valueScenario1 == 0 && valueScenario2 == 0)
+
+  isIncompatible <- if (bothBaselinesZero) {
+    FALSE
+  } else if (isTRUE(valueScenario1 == 0)) {
+    TRUE
+  } else {
     !isTRUE(all.equal(valueScenario2 / valueScenario1, 1, tolerance = 1e-8))
+  }
 
   if (isIncompatible) {
     stop(sprintf(

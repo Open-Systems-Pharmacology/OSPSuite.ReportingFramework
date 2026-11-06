@@ -873,3 +873,30 @@ test_that(".ensureRepresentativeSensitivityPrerequisites runs scenarios only whe
   )
   expect_false(called)
 })
+
+test_that(".assertSensitivityBaselineCompatibility handles zero and non-zero baselines", {
+  expect_silent(
+    ospsuite.reportingframework:::.assertSensitivityBaselineCompatibility(
+      parPath = "P1|CL",
+      valueScenario1 = 0,
+      valueScenario2 = 0
+    )
+  )
+
+  expect_error(
+    ospsuite.reportingframework:::.assertSensitivityBaselineCompatibility(
+      parPath = "P1|CL",
+      valueScenario1 = 0,
+      valueScenario2 = 1
+    ),
+    "Baseline mismatch"
+  )
+
+  expect_silent(
+    ospsuite.reportingframework:::.assertSensitivityBaselineCompatibility(
+      parPath = "P1|CL",
+      valueScenario1 = 1,
+      valueScenario2 = 1
+    )
+  )
+})
