@@ -186,6 +186,11 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
 #' @param overwrite Logical value indicating whether an existing target sheet
 #'   should be overwritten.
 #'
+#' @details
+#' For copies within the same workbook, the function clones missing target
+#' sheets to retain formatting. For cross-workbook copies, it transfers table
+#' content by reading from source and writing into the target sheet.
+#'
 #' @return An invisible NULL value. The function performs an action (copy a
 #'   sheet between workbooks).
 #'
@@ -214,21 +219,20 @@ copyConfigSheet <- function(
   checkmate::assertCharacter(targetSheetName, len = 1)
   checkmate::assertFlag(overwrite)
 
-  if (!file.exists(sourceFile)) {
-    stop(messages$errorutilitiesxlsxCopySourceFileMissing())
-  }
-  if (!file.exists(targetFile)) {
-    stop(messages$errorutilitiesxlsxCopyTargetFileMissing())
-  }
+  .assertCopyConfigSheetFilesExist(
+    sourceFile = sourceFile,
+    targetFile = targetFile
+  )
 
   wbSource <- openxlsx::loadWorkbook(sourceFile)
   if (!(sourceSheetName %in% wbSource$sheet_names)) {
     stop(messages$errorutilitiesxlsxCopySourceSheetMissing())
   }
 
-  sameWorkbook <-
-    normalizePath(sourceFile, winslash = "/") ==
-      normalizePath(targetFile, winslash = "/")
+  sameWorkbook <- .isSameWorkbookPath(
+    sourceFile = sourceFile,
+    targetFile = targetFile
+  )
 
   wbTarget <- if (sameWorkbook) wbSource else openxlsx::loadWorkbook(targetFile)
 
@@ -242,38 +246,101 @@ copyConfigSheet <- function(
     return(invisible())
   }
 
+  .copyConfigSheetContent(
+    wbSource = wbSource,
+    sourceSheetName = sourceSheetName,
+    wbTarget = wbTarget,
+    targetSheetName = targetSheetName,
+    targetSheetExists = targetSheetExists,
+    sameWorkbook = sameWorkbook
+  )
+
+  openxlsx::saveWorkbook(wb = wbTarget, file = targetFile, overwrite = TRUE)
+
+  return(invisible())
+}
+
+#' Assert source and target files exist for sheet copy.
+#'
+#' @param sourceFile Path to source workbook.
+#' @param targetFile Path to target workbook.
+#' @return NULL (invisible).
+#' @keywords internal
+#' @noRd
+.assertCopyConfigSheetFilesExist <- function(sourceFile, targetFile) {
+  if (!file.exists(sourceFile)) {
+    stop(messages$errorutilitiesxlsxCopySourceFileMissing())
+  }
+  if (!file.exists(targetFile)) {
+    stop(messages$errorutilitiesxlsxCopyTargetFileMissing())
+  }
+  return(invisible(NULL))
+}
+
+#' Determine whether two workbook paths point to the same file.
+#'
+#' @param sourceFile Path to source workbook.
+#' @param targetFile Path to target workbook.
+#' @return Logical flag indicating whether both paths resolve to the same file.
+#' @keywords internal
+#' @noRd
+.isSameWorkbookPath <- function(sourceFile, targetFile) {
+  return(
+    normalizePath(sourceFile, winslash = "/") ==
+      normalizePath(targetFile, winslash = "/")
+  )
+}
+
+#' Copy one configuration sheet into a target workbook object.
+#'
+#' @param wbSource Source workbook object.
+#' @param sourceSheetName Source sheet name.
+#' @param wbTarget Target workbook object.
+#' @param targetSheetName Target sheet name.
+#' @param targetSheetExists Logical flag for target sheet presence.
+#' @param sameWorkbook Logical flag indicating source and target workbook identity.
+#' @return NULL (invisible).
+#' @keywords internal
+#' @noRd
+.copyConfigSheetContent <- function(
+  wbSource,
+  sourceSheetName,
+  wbTarget,
+  targetSheetName,
+  targetSheetExists,
+  sameWorkbook
+) {
   if (sameWorkbook && !targetSheetExists) {
     openxlsx::cloneWorksheet(
       wb = wbTarget,
       clonedSheet = sourceSheetName,
       sheetName = targetSheetName
     )
-  } else {
-    sourceData <- xlsxReadData(
-      wb = wbSource,
-      sheetName = sourceSheetName,
-      convertHeaders = FALSE,
-      emptyAsNA = FALSE
-    )
-
-    if (targetSheetExists) {
-      xlsxWriteData(
-        wb = wbTarget,
-        sheetName = targetSheetName,
-        dt = sourceData
-      )
-    } else {
-      xlsxAddSheet(
-        wb = wbTarget,
-        sheetName = targetSheetName,
-        dt = sourceData
-      )
-    }
+    return(invisible(NULL))
   }
 
-  openxlsx::saveWorkbook(wb = wbTarget, file = targetFile, overwrite = TRUE)
+  sourceData <- xlsxReadData(
+    wb = wbSource,
+    sheetName = sourceSheetName,
+    convertHeaders = FALSE,
+    emptyAsNA = FALSE
+  )
 
-  return(invisible())
+  if (targetSheetExists) {
+    xlsxWriteData(
+      wb = wbTarget,
+      sheetName = targetSheetName,
+      dt = sourceData
+    )
+    return(invisible(NULL))
+  }
+
+  xlsxAddSheet(
+    wb = wbTarget,
+    sheetName = targetSheetName,
+    dt = sourceData
+  )
+  return(invisible(NULL))
 }
 
 #' Read data from a worksheet

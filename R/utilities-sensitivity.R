@@ -518,6 +518,10 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
 #'
 #' @param runnerType Runner kind: `"standard"` or `"representative"`.
 #' @param scenarioType Scenario type from `.sensitivityScenarioType`.
+#'
+#' @details
+#' This function computes the invalid runner/scenario combinations and raises
+#' a dedicated error message for each unsupported pair.
 #' @return NULL (invisible).
 #'
 #' @keywords internal
@@ -529,29 +533,43 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
   checkmate::assertChoice(runnerType, c("standard", "representative"))
   checkmate::assertChoice(scenarioType, c("population", "individual", "mixed"))
 
-  if (runnerType == "standard" && scenarioType == "population") {
-    stop(
-      messages$errorutilitiessensitivityPopulationScenariosForStandardRunner()
-    )
-  }
-
-  if (runnerType == "standard" && scenarioType == "mixed") {
-    stop(messages$errorutilitiessensitivityMixedScenariosForStandardRunner())
-  }
-
-  if (runnerType == "representative" && scenarioType == "individual") {
-    stop(
-      messages$errorutilitiessensitivityIndividualScenariosForRepresentativeRunner()
-    )
-  }
-
-  if (runnerType == "representative" && scenarioType == "mixed") {
-    stop(
-      messages$errorutilitiessensitivityMixedScenariosForRepresentativeRunner()
-    )
+  invalidCombinationMessage <- .sensitivityRunnerScenarioCompatibilityMessage(
+    runnerType = runnerType,
+    scenarioType = scenarioType
+  )
+  if (!is.null(invalidCombinationMessage)) {
+    stop(invalidCombinationMessage)
   }
 
   return(invisible(NULL))
+}
+
+#' Resolve message for invalid runner/scenario combinations.
+#'
+#' @param runnerType Runner kind.
+#' @param scenarioType Scenario type.
+#' @return A message string for invalid combinations, or NULL.
+#' @keywords internal
+#' @noRd
+.sensitivityRunnerScenarioCompatibilityMessage <- function(
+  runnerType,
+  scenarioType
+) {
+  if (runnerType == "standard") {
+    return(switch(
+      scenarioType,
+      population = messages$errorutilitiessensitivityPopulationScenariosForStandardRunner(),
+      mixed = messages$errorutilitiessensitivityMixedScenariosForStandardRunner(),
+      NULL
+    ))
+  }
+
+  return(switch(
+    scenarioType,
+    individual = messages$errorutilitiessensitivityIndividualScenariosForRepresentativeRunner(),
+    mixed = messages$errorutilitiessensitivityMixedScenariosForRepresentativeRunner(),
+    NULL
+  ))
 }
 
 #' Validate sensitivity inputs and ensure output folder exists.

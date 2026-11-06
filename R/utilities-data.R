@@ -19,6 +19,12 @@
 #'   files. This mode is intended for exploratory runs and is blocked during
 #'   valid runs. Default is `FALSE`.
 #'
+#' @details
+#' The import pipeline is split into discrete stages: selecting configured
+#' files by class, importing each file by its dictionary mapping, applying
+#' dictionary-based conversions, validating the combined output, and optionally
+#' propagating discovered identifiers into configuration workbooks.
+#'
 #' @return A `data.table` containing the processed data based on the dictionary. The structure includes relevant columns defined in the data dictionary.
 #' @export
 #' @family observed data processing
@@ -38,24 +44,7 @@ readObservedDataByDictionary <- function(
   wb <- openxlsx::loadWorkbook(
     projectConfiguration$addOns$dataImportMapFile
   )
-  dataList <- xlsxReadData(
-    wb = wb,
-    sheetName = "DataFiles",
-    skipDescriptionRow = TRUE
-  )
-  checkmate::assertCharacter(dataList$dataClass, any.missing = FALSE)
-  dataList <- switch(
-    dataClassType,
-    timeprofile = dataList[
-      dataClass %in% grep("^tp", unlist(DATACLASS), value = TRUE)
-    ],
-    pkParameter = dataList[
-      dataClass %in% grep("^pk", unlist(DATACLASS), value = TRUE)
-    ],
-    numericValues = dataList[
-      dataClass %in% DATACLASS[["numericValues"]]
-    ]
-  )
+  dataList <- .observedDataListByClass(wb = wb, dataClassType = dataClassType)
   if (nrow(dataList) == 0) {
     stop(messages$errorutilitiesdataNoDataFilesDefined())
   }
@@ -70,150 +59,45 @@ readObservedDataByDictionary <- function(
   }
 
   if (!debugMode) {
-    checkmate::assertFileExists(fs::path_abs(
-      start = projectConfiguration$projectConfigurationDirPath,
-      path = dataList$dataFile
-    ))
-    checkmate::assertNames(dataList$dictionary, subset.of = wb$sheet_names)
-  }
-
-  # Loop through selected data files
-  dataDT <- data.table()
-  dict <- list()
-  for (d in split(dataList, seq_len(nrow(dataList)))) {
-    imported <- tryCatch(
-      {
-        dataFilePath <- fs::path_abs(
-          start = projectConfiguration$projectConfigurationDirPath,
-          path = d$dataFile
-        )
-        if (!file.exists(dataFilePath)) {
-          stop(messages$errorutilitiesdataDebugFileNotFound())
-        }
-        if (!(d$dictionary %in% wb$sheet_names)) {
-          stop(messages$errorutilitiesdataDebugDictionarySheetMissing())
-        }
-
-        tmpData <- data.table::fread(dataFilePath)
-
-        tmpdict <- .readDataDictionary(
-          dictionaryFile = projectConfiguration$addOns$dataImportMapFile,
-          sheet = d$dictionary,
-          data = tmpData,
-          dataClass = d$dataClass
-        )
-
-        converted <- .convertDataByDictionary(
-          data = tmpData,
-          dataFilter = d$dataFilter,
-          dict = tmpdict,
-          dictionaryName = d$dictionary,
-          debugMode = debugMode
-        ) |>
-          dplyr::mutate(dataClass = d$dataClass)
-
-        tmpdict <-
-          tmpdict |>
-          dplyr::select(c("targetColumn", "type")) |>
-          unique()
-
-        list(
-          data = converted,
-          dict = as.list(tmpdict$type) |>
-            stats::setNames(tmpdict$targetColumn)
-        )
-      },
-      error = function(err) {
-        if (!debugMode) {
-          stop(err)
-        }
-        warning(messages$warningutilitiesdataDebugImportFileFailed())
-        NULL
-      }
+    .assertObservedDataFilesAndDictionaries(
+      projectConfiguration = projectConfiguration,
+      dataList = dataList,
+      wb = wb
     )
-
-    if (is.null(imported)) {
-      next
-    }
-
-    dataDT <- rbind(dataDT, imported$data, fill = TRUE)
-    dict <- utils::modifyList(dict, imported$dict)
   }
+
+  importedData <- .importObservedDataFromDataList(
+    projectConfiguration = projectConfiguration,
+    dataList = dataList,
+    wb = wb,
+    debugMode = debugMode
+  )
+  dataDT <- importedData$dataDT
+  dict <- importedData$dict
 
   if (nrow(dataDT) == 0) {
-    if (debugMode) {
-      warning(messages$warningutilitiesdataDebugNoRowsImported())
-      return(dataDT)
-    }
-    stop(messages$errorutilitiesdataNoDataFilesDefined())
+    return(.handleEmptyObservedDataImport(
+      dataDT = dataDT,
+      debugMode = debugMode
+    ))
   }
 
   dataDT[, dataType := "observed"]
 
   dataDT <- .setDataTypeAttributes(dataDT, dict)
 
-  if (debugMode) {
-    tryCatch(
-      {
-        validateObservedData(dataDT = dataDT, dataClassType)
-      },
-      error = function(err) {
-        warning(messages$warningutilitiesdataDebugValidationFailed())
-      }
-    )
-  } else {
-    validateObservedData(dataDT = dataDT, dataClassType)
-  }
+  .validateObservedDataByMode(
+    dataDT = dataDT,
+    dataClassType = dataClassType,
+    debugMode = debugMode
+  )
 
   # Spread data to other tables
   if (spreadData) {
-    # Define a list of functions and their arguments
-    functionCalls <- list(
-      list(
-        func = updateDataGroupId,
-        args = list(
-          projectConfiguration = projectConfiguration,
-          dataDT = dataDT
-        ),
-        functionCall = "updateDataGroupId(projectConfiguration = projectConfiguration, dataDT = dataObserved)"
-      ),
-      list(
-        func = updateOutputPathId,
-        args = list(
-          projectConfiguration = projectConfiguration,
-          dataDT = dataDT
-        ),
-        functionCall = "updateOutputPathId(projectConfiguration = projectConfiguration, dataDT = dataObserved)"
-      ),
-      list(
-        func = addBiometricsToConfig,
-        args = list(
-          dataDT = dataDT,
-          projectConfiguration = projectConfiguration
-        ),
-        functionCall = "addBiometricsToConfig(projectConfiguration = projectConfiguration, dataDT = dataObserved)"
-      ),
-      list(
-        func = setupVirtualTwinPopConfig,
-        args = list(
-          projectConfiguration = projectConfiguration,
-          dataObserved = dataDT
-        ),
-        functionCall = "setupVirtualTwinPopConfig(projectConfiguration = projectConfiguration, dataObserved = dataObserved)"
-      )
+    .spreadObservedDataToConfig(
+      projectConfiguration = projectConfiguration,
+      dataDT = dataDT
     )
-
-    # Loop through each function call
-    for (call in functionCalls) {
-      tryCatch(
-        {
-          do.call(call$func, call$args)
-        },
-        error = function(err) {
-          warning(messages$warningutilitiesdataExecutionFailedRetryManually())
-        }
-      )
-    }
   }
 
   # Logging
@@ -228,6 +112,255 @@ readObservedDataByDictionary <- function(
   ])
 
   return(dataDT)
+}
+
+#' Select configured DataFiles rows for one observed data class.
+#'
+#' @param wb Workbook object containing the DataFiles sheet.
+#' @param dataClassType One of `"timeprofile"`, `"pkParameter"`, or `"numericValues"`.
+#' @return Filtered `data.table` of DataFiles entries.
+#' @keywords internal
+#' @noRd
+.observedDataListByClass <- function(wb, dataClassType) {
+  dataList <- xlsxReadData(
+    wb = wb,
+    sheetName = "DataFiles",
+    skipDescriptionRow = TRUE
+  )
+  checkmate::assertCharacter(dataList$dataClass, any.missing = FALSE)
+
+  return(switch(
+    dataClassType,
+    timeprofile = dataList[
+      dataClass %in% grep("^tp", unlist(DATACLASS), value = TRUE)
+    ],
+    pkParameter = dataList[
+      dataClass %in% grep("^pk", unlist(DATACLASS), value = TRUE)
+    ],
+    numericValues = dataList[
+      dataClass %in% DATACLASS[["numericValues"]]
+    ]
+  ))
+}
+
+#' Assert input files and dictionary sheets exist for strict observed-data import.
+#'
+#' @param projectConfiguration A project configuration object.
+#' @param dataList DataFiles subset selected for import.
+#' @param wb Workbook object containing dictionary sheets.
+#' @return NULL (invisible).
+#' @keywords internal
+#' @noRd
+.assertObservedDataFilesAndDictionaries <- function(
+  projectConfiguration,
+  dataList,
+  wb
+) {
+  checkmate::assertFileExists(fs::path_abs(
+    start = projectConfiguration$projectConfigurationDirPath,
+    path = dataList$dataFile
+  ))
+  checkmate::assertNames(dataList$dictionary, subset.of = wb$sheet_names)
+  return(invisible(NULL))
+}
+
+#' Import and convert all selected observed-data files.
+#'
+#' @param projectConfiguration A project configuration object.
+#' @param dataList DataFiles subset selected for import.
+#' @param wb Workbook object containing dictionary sheets.
+#' @param debugMode Logical value controlling warning-vs-error behavior.
+#' @return Named list with `dataDT` and merged `dict`.
+#' @keywords internal
+#' @noRd
+.importObservedDataFromDataList <- function(
+  projectConfiguration,
+  dataList,
+  wb,
+  debugMode
+) {
+  dataDT <- data.table()
+  dict <- list()
+
+  for (d in split(dataList, seq_len(nrow(dataList)))) {
+    imported <- .importObservedDataFile(
+      projectConfiguration = projectConfiguration,
+      dataRow = d,
+      wb = wb,
+      debugMode = debugMode
+    )
+
+    if (is.null(imported)) {
+      next
+    }
+
+    dataDT <- rbind(dataDT, imported$data, fill = TRUE)
+    dict <- utils::modifyList(dict, imported$dict)
+  }
+
+  return(list(dataDT = dataDT, dict = dict))
+}
+
+#' Import and convert one observed-data file row.
+#'
+#' @param projectConfiguration A project configuration object.
+#' @param dataRow A single-row DataFiles `data.table`.
+#' @param wb Workbook object containing dictionary sheets.
+#' @param debugMode Logical value controlling warning-vs-error behavior.
+#' @return A list with converted `data` and typed `dict`, or NULL in debug mode.
+#' @keywords internal
+#' @noRd
+.importObservedDataFile <- function(
+  projectConfiguration,
+  dataRow,
+  wb,
+  debugMode
+) {
+  resultList <- tryCatch(
+    {
+      dataFilePath <- fs::path_abs(
+        start = projectConfiguration$projectConfigurationDirPath,
+        path = dataRow$dataFile
+      )
+      if (!file.exists(dataFilePath)) {
+        stop(messages$errorutilitiesdataDebugFileNotFound())
+      }
+      if (!(dataRow$dictionary %in% wb$sheet_names)) {
+        stop(messages$errorutilitiesdataDebugDictionarySheetMissing())
+      }
+
+      tmpData <- data.table::fread(dataFilePath)
+
+      tmpdict <- .readDataDictionary(
+        dictionaryFile = projectConfiguration$addOns$dataImportMapFile,
+        sheet = dataRow$dictionary,
+        data = tmpData,
+        dataClass = dataRow$dataClass
+      )
+
+      converted <- .convertDataByDictionary(
+        data = tmpData,
+        dataFilter = dataRow$dataFilter,
+        dict = tmpdict,
+        dictionaryName = dataRow$dictionary,
+        debugMode = debugMode
+      ) |>
+        dplyr::mutate(dataClass = dataRow$dataClass)
+
+      tmpdict <-
+        tmpdict |>
+        dplyr::select(c("targetColumn", "type")) |>
+        unique()
+
+      list(
+        data = converted,
+        dict = as.list(tmpdict$type) |>
+          stats::setNames(tmpdict$targetColumn)
+      )
+    },
+    error = function(err) {
+      if (!debugMode) {
+        stop(err)
+      }
+      warning(messages$warningutilitiesdataDebugImportFileFailed())
+      NULL
+    }
+  )
+  return(resultList)
+}
+
+#' Handle empty observed-data imports.
+#'
+#' @param dataDT Imported observed-data table.
+#' @param debugMode Logical value controlling warning-vs-error behavior.
+#' @return Empty `data.table` in debug mode; otherwise an error is thrown.
+#' @keywords internal
+#' @noRd
+.handleEmptyObservedDataImport <- function(dataDT, debugMode) {
+  if (debugMode) {
+    warning(messages$warningutilitiesdataDebugNoRowsImported())
+    return(dataDT)
+  }
+  stop(messages$errorutilitiesdataNoDataFilesDefined())
+  return(invisible())
+}
+
+#' Validate observed data with debug-aware error handling.
+#'
+#' @param dataDT Imported observed-data table.
+#' @param dataClassType Selected data class type.
+#' @param debugMode Logical value controlling warning-vs-error behavior.
+#' @return NULL (invisible).
+#' @keywords internal
+#' @noRd
+.validateObservedDataByMode <- function(dataDT, dataClassType, debugMode) {
+  if (debugMode) {
+    tryCatch(
+      {
+        validateObservedData(dataDT = dataDT, dataClassType)
+      },
+      error = function(err) {
+        warning(messages$warningutilitiesdataDebugValidationFailed())
+      }
+    )
+    return(invisible(NULL))
+  }
+
+  validateObservedData(dataDT = dataDT, dataClassType)
+  return(invisible(NULL))
+}
+
+#' Spread imported observed-data identifiers into configuration workbooks.
+#'
+#' @param projectConfiguration A project configuration object.
+#' @param dataDT Imported observed-data table.
+#' @return NULL (invisible).
+#' @keywords internal
+#' @noRd
+.spreadObservedDataToConfig <- function(projectConfiguration, dataDT) {
+  functionCalls <- list(
+    list(
+      func = updateDataGroupId,
+      args = list(
+        projectConfiguration = projectConfiguration,
+        dataDT = dataDT
+      )
+    ),
+    list(
+      func = updateOutputPathId,
+      args = list(
+        projectConfiguration = projectConfiguration,
+        dataDT = dataDT
+      )
+    ),
+    list(
+      func = addBiometricsToConfig,
+      args = list(
+        dataDT = dataDT,
+        projectConfiguration = projectConfiguration
+      )
+    ),
+    list(
+      func = setupVirtualTwinPopConfig,
+      args = list(
+        projectConfiguration = projectConfiguration,
+        dataObserved = dataDT
+      )
+    )
+  )
+
+  for (call in functionCalls) {
+    tryCatch(
+      {
+        do.call(call$func, call$args)
+      },
+      error = function(err) {
+        warning(messages$warningutilitiesdataExecutionFailedRetryManually())
+      }
+    )
+  }
+
+  return(invisible(NULL))
 }
 
 #' Read scalar numeric values from sheets configured in DataFiles
