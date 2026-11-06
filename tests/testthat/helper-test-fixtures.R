@@ -29,9 +29,9 @@
   includeIndividualsFile = FALSE,
   includeScenariosFile = FALSE
 ) {
-  projectConfigurationDirPath <- tempdir()
   projectDir <- tempfile(pattern = projectDirPrefix)
   dir.create(projectDir, recursive = TRUE, showWarnings = FALSE)
+  projectConfigurationDirPath <- projectDir
   tutorialDir <- system.file(
     "extdata",
     "Tutorial",
@@ -56,6 +56,21 @@
     sheet = "DataFiles"
   )
   dataImportMap <- dataImportMap[-1, , drop = FALSE]
+  dataImportMap$dataFile <- file.path("Data", basename(dataImportMap$dataFile))
+
+  wb <- openxlsx::loadWorkbook(file.path(projectDir, "DataImportMap.xlsx"))
+  openxlsx::writeData(
+    wb = wb,
+    sheet = "DataFiles",
+    x = dataImportMap,
+    startRow = 3,
+    colNames = FALSE
+  )
+  openxlsx::saveWorkbook(
+    wb = wb,
+    file = file.path(projectDir, "DataImportMap.xlsx"),
+    overwrite = TRUE
+  )
 
   dataDir <- file.path(projectDir, "Data")
   dir.create(dataDir, recursive = TRUE, showWarnings = FALSE)
@@ -66,34 +81,6 @@
   file.copy(
     from = file.path(tutorialDir, dataFiles),
     to = file.path(dataDir, dataFiles),
-    overwrite = TRUE
-  )
-
-  # Stage tutorial CSVs where DataFiles paths resolve from projectConfigurationDirPath.
-  configuredDataFiles <- trimws(as.character(stats::na.omit(dataImportMap$dataFile)))
-  configuredDataFiles <- configuredDataFiles[nzchar(configuredDataFiles)]
-
-  sourceByName <- stats::setNames(file.path(tutorialDir, dataFiles), dataFiles)
-  configuredBasenames <- basename(configuredDataFiles)
-  missingSources <- setdiff(unique(configuredBasenames), names(sourceByName))
-  if (length(missingSources) > 0) {
-    stop(paste("Missing tutorial source files:", paste(missingSources, collapse = ", ")))
-  }
-
-  targetDataFiles <- normalizePath(
-    file.path(projectConfigurationDirPath, configuredDataFiles),
-    winslash = "/",
-    mustWork = FALSE
-  )
-
-  targetDataDirs <- unique(dirname(targetDataFiles))
-  for (targetDataDir in targetDataDirs) {
-    dir.create(targetDataDir, recursive = TRUE, showWarnings = FALSE)
-  }
-
-  file.copy(
-    from = unname(sourceByName[configuredBasenames]),
-    to = targetDataFiles,
     overwrite = TRUE
   )
 
