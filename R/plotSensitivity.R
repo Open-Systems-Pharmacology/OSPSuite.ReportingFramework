@@ -89,7 +89,7 @@ plotSensitivity <- function(
       y = "Sensitivity",
       x = ""
     ) +
-    scale_x_discrete(limits = rev(unique(plotData$parameterName))) +
+    scale_x_discrete(limits = rev(unique(plotData$sensitivityParameter))) +
     ospsuite.plots::theme_osp() +
     theme(
       legend.position = "top",
@@ -103,7 +103,7 @@ plotSensitivity <- function(
     facetColumn = "plotTag"
   )
   nFacets <- ifelse(is.null(nFacetColumns), 1, nFacetColumns)
-  facetAspectRatio <- length(levels(plotData$parameterName)) /
+  facetAspectRatio <- length(levels(plotData$sensitivityParameter)) /
     max(nFacets, 1) /
     5 ## value by experience
 

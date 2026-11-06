@@ -792,3 +792,88 @@ test_that("prepareSensitivityPlotData exposes representative strata in facet lab
     c("p5", "p50")
   )
 })
+
+test_that("plotSensitivity uses positive panel heights for standard and representative plots", {
+  mockPlotData <- function(withRepresentatives = FALSE) {
+    representativeColumn <- if (withRepresentatives) {
+      c("p5", "p50")
+    } else {
+      c(NA_character_, NA_character_)
+    }
+
+    sensitivityLevels <- c("P2|V", "P1|CL")
+    data.table::data.table(
+      sens = c(0.3, 0.2),
+      sensitivityParameter = factor(
+        c("P1|CL", "P2|V"),
+        levels = sensitivityLevels,
+        ordered = TRUE
+      ),
+      threshold = 0,
+      outputPathId = factor("plasma", levels = "plasma", ordered = TRUE),
+      pKParameter = factor("AUC", levels = "AUC", ordered = TRUE),
+      displayNamePKParameter = "AUC",
+      scenarioShortName = factor("S-A", levels = "S-A", ordered = TRUE),
+      scenarioLongName = "Adults",
+      referenceScenarioLongName = NA_character_,
+      RepresentativeQuantile = representativeColumn,
+      plotTag = factor("A", levels = "A", ordered = TRUE)
+    )
+  }
+
+  panelNullWeights <- function(plotObject) {
+    plotGrob <- ggplot2::ggplotGrob(plotObject)
+    panelRows <- unique(plotGrob$layout$t[grepl("^panel", plotGrob$layout$name)])
+    panelHeights <- as.character(plotGrob$heights[panelRows])
+    nullHeights <- panelHeights[grepl("null$", panelHeights)]
+
+    as.numeric(sub("null$", "", nullHeights))
+  }
+
+  runAndExtractPanelWeights <- function(withRepresentatives = FALSE) {
+    sensitivityResult <- tempfile(fileext = ".csv")
+    file.create(sensitivityResult)
+
+    local_mocked_bindings(
+      .prepareSensitivityPlotData = function(...) {
+        mockPlotData(withRepresentatives = withRepresentatives)
+      },
+      .getSensitivityResultFilePath = function(...) {
+        sensitivityResult
+      },
+      .getCaptionForSensitivityPlot = function(...) {
+        "caption"
+      },
+      .package = "ospsuite.reportingframework"
+    )
+
+    plotList <- ospsuite.reportingframework::plotSensitivity(
+      projectConfiguration = list(
+        outputFolder = tempdir(),
+        addOns = list(sensitivityFile = tempfile(fileext = ".xlsx"))
+      ),
+      onePlotConfig = data.table::data.table(
+        plotName = "Sensitivity Plot",
+        plotCaptionAddon = NA_character_,
+        scenario = "ScenarioA",
+        scenarioShortName = "S-A",
+        scenarioLongName = "Adults",
+        outputPathIds = "plasma",
+        pKParameters = "AUC",
+        sensitivityParameterSheet = "default",
+        threshold = 0
+      ),
+      scenarioList = list(ScenarioA = list(simulation = "unused"))
+    )
+
+    panelNullWeights(plotList[[1]])
+  }
+
+  standardWeights <- runAndExtractPanelWeights(withRepresentatives = FALSE)
+  representativeWeights <- runAndExtractPanelWeights(withRepresentatives = TRUE)
+
+  expect_true(length(standardWeights) > 0)
+  expect_true(length(representativeWeights) > 0)
+  expect_true(all(!is.na(standardWeights) & standardWeights > 0))
+  expect_true(all(!is.na(representativeWeights) & representativeWeights > 0))
+})
