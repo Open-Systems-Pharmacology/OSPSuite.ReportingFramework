@@ -197,6 +197,155 @@ test_that("xlsxWriteOrAddData updates existing sheets and adds missing sheets", 
   )
 })
 
+test_that("copyConfigSheet copies data to a new target sheet", {
+  td <- withr::local_tempdir()
+  sourceFile <- file.path(td, "Source.xlsx")
+  targetFile <- file.path(td, "Target.xlsx")
+
+  wbSource <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbSource, "Scenarios")
+  openxlsx::writeData(
+    wbSource,
+    "Scenarios",
+    data.table::data.table(Name = c("A", "B"), Value = c(1, 2))
+  )
+  openxlsx::saveWorkbook(wbSource, sourceFile, overwrite = TRUE)
+
+  wbTarget <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbTarget, "Meta")
+  openxlsx::writeData(wbTarget, "Meta", data.table::data.table(Id = 1))
+  openxlsx::saveWorkbook(wbTarget, targetFile, overwrite = TRUE)
+
+  copyConfigSheet(
+    sourceFile = sourceFile,
+    sourceSheetName = "Scenarios",
+    targetFile = targetFile,
+    targetSheetName = "ScenariosCopy"
+  )
+
+  wbResult <- openxlsx::loadWorkbook(targetFile)
+  expect_true("ScenariosCopy" %in% wbResult$sheet_names)
+  expect_equal(
+    xlsxReadData(
+      wb = wbResult,
+      sheetName = "ScenariosCopy",
+      convertHeaders = FALSE,
+      emptyAsNA = FALSE
+    ),
+    data.table::data.table(Name = c("A", "B"), Value = c(1, 2))
+  )
+})
+
+test_that("copyConfigSheet warns when target exists and overwrite is FALSE", {
+  td <- withr::local_tempdir()
+  sourceFile <- file.path(td, "Source.xlsx")
+  targetFile <- file.path(td, "Target.xlsx")
+
+  wbSource <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbSource, "Scenarios")
+  openxlsx::writeData(
+    wbSource,
+    "Scenarios",
+    data.table::data.table(Value = "new")
+  )
+  openxlsx::saveWorkbook(wbSource, sourceFile, overwrite = TRUE)
+
+  wbTarget <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbTarget, "Scenarios")
+  openxlsx::writeData(
+    wbTarget,
+    "Scenarios",
+    data.table::data.table(Value = "old")
+  )
+  openxlsx::saveWorkbook(wbTarget, targetFile, overwrite = TRUE)
+
+  expect_warning(
+    copyConfigSheet(
+      sourceFile = sourceFile,
+      sourceSheetName = "Scenarios",
+      targetFile = targetFile,
+      targetSheetName = "Scenarios",
+      overwrite = FALSE
+    )
+  )
+
+  wbResult <- openxlsx::loadWorkbook(targetFile)
+  expect_equal(
+    xlsxReadData(
+      wb = wbResult,
+      sheetName = "Scenarios",
+      convertHeaders = FALSE,
+      emptyAsNA = FALSE
+    ),
+    data.table::data.table(Value = "old")
+  )
+})
+
+test_that("copyConfigSheet overwrites target sheet when requested", {
+  td <- withr::local_tempdir()
+  sourceFile <- file.path(td, "Source.xlsx")
+  targetFile <- file.path(td, "Target.xlsx")
+
+  wbSource <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbSource, "Scenarios")
+  openxlsx::writeData(
+    wbSource,
+    "Scenarios",
+    data.table::data.table(Value = "new")
+  )
+  openxlsx::saveWorkbook(wbSource, sourceFile, overwrite = TRUE)
+
+  wbTarget <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbTarget, "Scenarios")
+  openxlsx::writeData(
+    wbTarget,
+    "Scenarios",
+    data.table::data.table(Value = "old")
+  )
+  openxlsx::saveWorkbook(wbTarget, targetFile, overwrite = TRUE)
+
+  copyConfigSheet(
+    sourceFile = sourceFile,
+    sourceSheetName = "Scenarios",
+    targetFile = targetFile,
+    targetSheetName = "Scenarios",
+    overwrite = TRUE
+  )
+
+  wbResult <- openxlsx::loadWorkbook(targetFile)
+  expect_equal(
+    xlsxReadData(
+      wb = wbResult,
+      sheetName = "Scenarios",
+      convertHeaders = FALSE,
+      emptyAsNA = FALSE
+    ),
+    data.table::data.table(Value = "new")
+  )
+})
+
+test_that("copyConfigSheet errors for missing source sheet", {
+  td <- withr::local_tempdir()
+  sourceFile <- file.path(td, "Source.xlsx")
+  targetFile <- file.path(td, "Target.xlsx")
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Available")
+  openxlsx::writeData(wb, "Available", data.table::data.table(Value = 1))
+  openxlsx::saveWorkbook(wb, sourceFile, overwrite = TRUE)
+  openxlsx::saveWorkbook(wb, targetFile, overwrite = TRUE)
+
+  expect_error(
+    copyConfigSheet(
+      sourceFile = sourceFile,
+      sourceSheetName = "Missing",
+      targetFile = targetFile,
+      targetSheetName = "Any"
+    ),
+    "does not exist in source workbook"
+  )
+})
+
 # Unit tests for the xlsxAddDataUsingTemplate function
 test_that("xlsxAddDataUsingTemplate works correctly", {
   # Load the workbook for testing

@@ -172,6 +172,110 @@ xlsxCloneAndSet <- function(wb, clonedSheet, sheetName, dt) {
   return(invisible())
 }
 
+#' Copy a configuration sheet between workbooks
+#'
+#' Copies one worksheet from a source workbook into a target workbook.
+#' If source and target are the same workbook and the target sheet does not
+#' exist, the function clones the sheet to preserve formatting.
+#'
+#' @param sourceFile Path to the source xlsx workbook.
+#' @param sourceSheetName A character string specifying the source sheet name.
+#' @param targetFile Path to the target xlsx workbook. Defaults to `sourceFile`.
+#' @param targetSheetName A character string specifying the target sheet name.
+#'   Defaults to `sourceSheetName`.
+#' @param overwrite Logical value indicating whether an existing target sheet
+#'   should be overwritten.
+#'
+#' @return An invisible NULL value. The function performs an action (copy a
+#'   sheet between workbooks).
+#'
+#' @examples
+#' \dontrun{
+#' copyConfigSheet(
+#'   sourceFile = "Scenarios.xlsx",
+#'   sourceSheetName = "Scenarios",
+#'   targetFile = "Reports.xlsx",
+#'   targetSheetName = "Scenarios"
+#' )
+#' }
+#'
+#' @export
+#' @family function to read from and write to xlsx
+copyConfigSheet <- function(
+  sourceFile,
+  sourceSheetName,
+  targetFile = sourceFile,
+  targetSheetName = sourceSheetName,
+  overwrite = FALSE
+) {
+  checkmate::assertCharacter(sourceFile, len = 1)
+  checkmate::assertCharacter(sourceSheetName, len = 1)
+  checkmate::assertCharacter(targetFile, len = 1)
+  checkmate::assertCharacter(targetSheetName, len = 1)
+  checkmate::assertFlag(overwrite)
+
+  if (!file.exists(sourceFile)) {
+    stop(messages$errorutilitiesxlsxCopySourceFileMissing())
+  }
+  if (!file.exists(targetFile)) {
+    stop(messages$errorutilitiesxlsxCopyTargetFileMissing())
+  }
+
+  wbSource <- openxlsx::loadWorkbook(sourceFile)
+  if (!(sourceSheetName %in% wbSource$sheet_names)) {
+    stop(messages$errorutilitiesxlsxCopySourceSheetMissing())
+  }
+
+  sameWorkbook <-
+    normalizePath(sourceFile, winslash = "/") ==
+      normalizePath(targetFile, winslash = "/")
+
+  wbTarget <- if (sameWorkbook) wbSource else openxlsx::loadWorkbook(targetFile)
+
+  if (sameWorkbook && sourceSheetName == targetSheetName) {
+    return(invisible())
+  }
+
+  targetSheetExists <- targetSheetName %in% wbTarget$sheet_names
+  if (targetSheetExists && !overwrite) {
+    warning(messages$warningutilitiesxlsxCopyTargetSheetExists())
+    return(invisible())
+  }
+
+  if (sameWorkbook && !targetSheetExists) {
+    openxlsx::cloneWorksheet(
+      wb = wbTarget,
+      clonedSheet = sourceSheetName,
+      sheetName = targetSheetName
+    )
+  } else {
+    sourceData <- xlsxReadData(
+      wb = wbSource,
+      sheetName = sourceSheetName,
+      convertHeaders = FALSE,
+      emptyAsNA = FALSE
+    )
+
+    if (targetSheetExists) {
+      xlsxWriteData(
+        wb = wbTarget,
+        sheetName = targetSheetName,
+        dt = sourceData
+      )
+    } else {
+      xlsxAddSheet(
+        wb = wbTarget,
+        sheetName = targetSheetName,
+        dt = sourceData
+      )
+    }
+  }
+
+  openxlsx::saveWorkbook(wb = wbTarget, file = targetFile, overwrite = TRUE)
+
+  return(invisible())
+}
+
 #' Read data from a worksheet
 #'
 #' This function wraps `openxlsx::read.xlsx` and returns the data as a `data.table`.

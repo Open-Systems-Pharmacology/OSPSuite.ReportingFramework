@@ -1358,6 +1358,33 @@ messages$errorutilitiesxlsxL1AmbiguousHeaderNames <- function(
   )
 }
 
+messages$errorutilitiesxlsxCopySourceFileMissing <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(paste("Source file", sourceFile, "does not exist.")),
+    envir = env
+  )
+}
+
+messages$errorutilitiesxlsxCopyTargetFileMissing <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(paste("Target file", targetFile, "does not exist.")),
+    envir = env
+  )
+}
+
+messages$errorutilitiesxlsxCopySourceSheetMissing <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(paste("Sheet", sourceSheetName, "does not exist in source workbook.")),
+    envir = env
+  )
+}
+
 messages$warningutilitiesxlsxExistingSheetWillBeCleared <- function(
   env = parent.frame()
 ) {
@@ -1365,6 +1392,19 @@ messages$warningutilitiesxlsxExistingSheetWillBeCleared <- function(
     quote(paste(
       sheetName,
       "already exists. Existing content will be cleared."
+    )),
+    envir = env
+  )
+}
+
+messages$warningutilitiesxlsxCopyTargetSheetExists <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(paste(
+      "Sheet",
+      targetSheetName,
+      "already exists in target workbook. Set overwrite = TRUE to replace it."
     )),
     envir = env
   )
