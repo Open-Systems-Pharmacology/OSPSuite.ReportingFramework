@@ -506,6 +506,16 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
 
 #' Assert runner choice matches selected scenario type.
 #'
+#' Enforces valid runner and scenario combinations before running sensitivity
+#' workflows. The accepted combinations are:
+#' - `"standard"` with `"individual"`
+#' - `"representative"` with `"population"`
+#'
+#' All mixed selections (`"mixed"`) are rejected because the sensitivity
+#' pipeline requires one consistent execution mode for all selected scenarios.
+#' Invalid combinations stop with a dedicated, user-facing error message from
+#' `messages` to explain which runner/scenario setup is unsupported.
+#'
 #' @param runnerType Runner kind: `"standard"` or `"representative"`.
 #' @param scenarioType Scenario type from `.sensitivityScenarioType`.
 #' @return NULL (invisible).
