@@ -28,7 +28,6 @@ linters: local({
         )),
         cyclocomp_linter = cyclocomp_linter(complexity_limit = 15),
         roxygenRequiredLinter = roxygenRequiredLinter(),
-        roxygenDetailsForComplexLinter = roxygenDetailsForComplexLinter(limit = 10),
         internalFunctionRulesLinter = internalFunctionRulesLinter(),
         functionReturnLinter = functionReturnLinter()
       ),

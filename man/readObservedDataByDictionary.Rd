@@ -8,7 +8,8 @@ readObservedDataByDictionary(
   projectConfiguration,
   spreadData = TRUE,
   dataClassType = c("timeprofile", "pkParameter", "numericValues"),
-  fileIds = NULL
+  fileIds = NULL,
+  debugMode = FALSE
 )
 }
 \arguments{
@@ -23,6 +24,11 @@ configuration workbook is modified.}
 \item{dataClassType}{A character string indicating the type of data class to process. Options are "timeprofile", "pkParameter", or "numericValues".}
 
 \item{fileIds}{A character vector with file identifiers to be selected, if NULL (default) all are selected.}
+
+\item{debugMode}{Logical. If `TRUE`, import errors are downgraded to warnings
+on a per-file basis where possible, and processing continues with remaining
+files. This mode is intended for exploratory runs and is blocked during
+valid runs. Default is `FALSE`.}
 }
 \value{
 A `data.table` containing the processed data based on the dictionary. The structure includes relevant columns defined in the data dictionary.
@@ -31,6 +37,12 @@ A `data.table` containing the processed data based on the dictionary. The struct
 This function reads and processes data based on the provided project configuration.
 Depending on `spreadData`, it can also propagate identifiers and metadata into
 reporting-configuration workbooks.
+}
+\details{
+The import pipeline is split into discrete stages: selecting configured
+files by class, importing each file by its dictionary mapping, applying
+dictionary-based conversions, validating the combined output, and optionally
+propagating discovered identifiers into configuration workbooks.
 }
 \seealso{
 Other observed data processing:

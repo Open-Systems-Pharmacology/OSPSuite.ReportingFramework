@@ -30,6 +30,7 @@ xlsxAddSheet(wb, "NewSheet", data)
 }
 \seealso{
 Other function to read from and write to xlsx:
+\code{\link[=copyConfigSheet]{copyConfigSheet()}},
 \code{\link[=setHeadersToLowerCase]{setHeadersToLowerCase()}},
 \code{\link[=splitInputs]{splitInputs()}},
 \code{\link[=xlsxAddDataUsingTemplate]{xlsxAddDataUsingTemplate()}},

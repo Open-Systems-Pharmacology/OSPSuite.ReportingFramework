@@ -23,6 +23,7 @@ print(names(dtLower)) # Result: c("firstname", "lastname")
 }
 \seealso{
 Other function to read from and write to xlsx:
+\code{\link[=copyConfigSheet]{copyConfigSheet()}},
 \code{\link[=splitInputs]{splitInputs()}},
 \code{\link[=xlsxAddDataUsingTemplate]{xlsxAddDataUsingTemplate()}},
 \code{\link[=xlsxAddSheet]{xlsxAddSheet()}},
