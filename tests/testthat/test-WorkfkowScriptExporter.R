@@ -308,9 +308,15 @@ test_that("WorkflowScriptExporter exports numeric values via evalCodeChunks", {
 
   exporter$evalCodeChunks()
 
+  numericValuesFile <- "w71_data_numericvalues_csv.txt"
+
   expect_true("numericValues-copy" %in% names(exporter$codeChunks))
   expect_true(any(grepl(
-    "data.table::fread(file.path(projectConfiguration$addOns$dataFileFolder, 'data_numericvalues_csv.txt'))",
+    paste0(
+      "data.table::fread(file.path(projectConfiguration$addOns$dataFileFolder, '",
+      numericValuesFile,
+      "'))"
+    ),
     exporter$codeChunks[["numericValues-copy"]],
     fixed = TRUE
   )))
@@ -318,7 +324,7 @@ test_that("WorkflowScriptExporter exports numeric values via evalCodeChunks", {
   analysisDataFolder <- .resolveWorkflowAnalysisDataFolder(ePackageDir)
   expect_true(file.exists(file.path(
     analysisDataFolder,
-    "data_numericvalues_csv.txt"
+    numericValuesFile
   )))
 
   if ("DataImportMap" %in% names(exporter$configurationSheets)) {
@@ -331,7 +337,7 @@ test_that("WorkflowScriptExporter exports numeric values via evalCodeChunks", {
   }
 
   expect_true(any(
-    exporter$inputFiles$fileName == "data_numericvalues_csv.txt" &
+    exporter$inputFiles$fileName == numericValuesFile &
       exporter$inputFiles$fileType == "data"
   ))
 })

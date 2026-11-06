@@ -1033,6 +1033,7 @@ WorkflowScriptExporter <- # nolint: cyclocomp_linter, object_name_linter
       handleEvalDataImport = function(dataObserved, chunkName) {
         checkmate::assertDataTable(dataObserved, null.ok = TRUE)
         spec <- private$evalDataImportSpec(chunkName)
+        numericValuesFileName <- NULL
 
         # check if anything to do
         if (is.null(dataObserved) || nrow(dataObserved) == 0) {
@@ -1042,7 +1043,7 @@ WorkflowScriptExporter <- # nolint: cyclocomp_linter, object_name_linter
         exportContext <- private$prepareWorkflowDataExportContext()
 
         if (spec$dataClassType == "numericValues") {
-          private$exportNumericValuesData(
+          numericValuesFileName <- private$exportNumericValuesData(
             dataObserved = dataObserved,
             spec = spec,
             exportContext = exportContext
@@ -1058,7 +1059,8 @@ WorkflowScriptExporter <- # nolint: cyclocomp_linter, object_name_linter
           list(
             private$buildCopyChunkForDataClass(
               dataClassType = spec$dataClassType,
-              variableName = spec$variableName
+              variableName = spec$variableName,
+              numericValuesFileName = numericValuesFileName
             )
           ),
           spec$copyChunkName
@@ -1145,7 +1147,11 @@ WorkflowScriptExporter <- # nolint: cyclocomp_linter, object_name_linter
         )
 
         dataClass <- DATACLASS[["numericValues"]]
-        fileName <- "data_numericvalues_csv.txt"
+        fileName <- paste0(
+          "w",
+          self$wfIdentifier,
+          "_data_numericvalues_csv.txt"
+        )
 
         private$registerWorkflowDataFile(
           dataClass = dataClass,
@@ -1162,7 +1168,7 @@ WorkflowScriptExporter <- # nolint: cyclocomp_linter, object_name_linter
           exportContext = exportContext
         )
 
-        return(invisible())
+        return(fileName)
       },
       # Normalize observed data payload by removing class metadata columns.
       prepareObservedDataFrame = function(dt) {
@@ -1208,14 +1214,26 @@ WorkflowScriptExporter <- # nolint: cyclocomp_linter, object_name_linter
         return(invisible())
       },
       # Generate code inserted into copy chunks for loading exported workflow data.
-      buildCopyChunkForDataClass = function(dataClassType, variableName) {
+      buildCopyChunkForDataClass = function(
+        dataClassType,
+        variableName,
+        numericValuesFileName = NULL
+      ) {
         if (dataClassType == "numericValues") {
+          dataFileName <- if (is.null(numericValuesFileName)) {
+            "data_numericvalues_csv.txt"
+          } else {
+            numericValuesFileName
+          }
+
           return(c(
             "",
             "# import numeric values from exported workflow data",
             paste0(
               variableName,
-              " <- data.table::fread(file.path(projectConfiguration$addOns$dataFileFolder, 'data_numericvalues_csv.txt'))"
+              " <- data.table::fread(file.path(projectConfiguration$addOns$dataFileFolder, '",
+              dataFileName,
+              "'))"
             )
           ))
         }
@@ -1608,7 +1626,7 @@ exportSimulationWorkflowToEPackage <- function(
 #' evaluates the code chunks, and executes a series of operations to prepare the workflow for export.
 #' This includes generating workflow text, retrieving input files, configuring scenario details, and exporting necessary files.
 #' For observed time profile and PK-parameter data, export includes workflow-specific `DataImportMap` entries and dictionaries.
-#' Numeric values are exported as `data_numericvalues_csv.txt` and loaded directly by the exported workflow script.
+#' Numeric values are exported as `w{wfIdentifier}_data_numericvalues_csv.txt` and loaded directly by the exported workflow script.
 #' During export, `DataImportMap.xlsx` is pruned to include only `DataFiles` and dictionaries referenced there.
 #'
 #' @param projectConfiguration An object of class `projectConfiguration` that contains various configuration details,
@@ -1695,7 +1713,7 @@ exportTLFWorkflowToEPackage <- function(
 #' scenarios with plots. The function ensures that the necessary directories exist and that the
 #' configuration is set up correctly for further processing.
 #' Files listed in the workflow input manifest are restored, including workflow data files (for example
-#' `data_numericvalues_csv.txt`) into the workflow-specific data folder used by the exported script.
+#' `w{wfIdentifier}_data_numericvalues_csv.txt`) into the workflow-specific data folder used by the exported script.
 #'
 #' @param projectDirectory A character string representing the path to the project directory where
 #'                         the workflow will be imported.

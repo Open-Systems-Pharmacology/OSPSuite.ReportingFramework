@@ -25,7 +25,7 @@ It initializes the project configuration, retrieves relevant project files, and 
 scenarios with plots. The function ensures that the necessary directories exist and that the
 configuration is set up correctly for further processing.
 Files listed in the workflow input manifest are restored, including workflow data files (for example
-`data_numericvalues_csv.txt`) into the workflow-specific data folder used by the exported script.
+`w{wfIdentifier}_data_numericvalues_csv.txt`) into the workflow-specific data folder used by the exported script.
 }
 \seealso{
 Other electronic package:
