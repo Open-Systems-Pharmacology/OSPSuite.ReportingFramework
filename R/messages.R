@@ -807,9 +807,9 @@ messages$warningutilitiesdataDebugImportFileFailed <- function(
   eval(
     quote(paste(
       "Debug mode: failed to import fileIdentifier",
-      d$fileIdentifier,
+      dataRow$fileIdentifier,
       "(dataFile:",
-      d$dataFile,
+      dataRow$dataFile,
       ").",
       "Message:",
       conditionMessage(err)

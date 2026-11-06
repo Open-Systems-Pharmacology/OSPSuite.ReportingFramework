@@ -88,6 +88,23 @@ dataObserved <- suppressWarnings(readObservedDataByDictionary(
   projectConfiguration
 }
 
+.makeDebugModeMissingFileProjectConfiguration <- function() {
+  projectConfiguration <- .makeTutorialDataProjectConfiguration(
+    projectDirPrefix = "rf_debug_missing_file_",
+    includeIndividualsFile = TRUE,
+    includeScenariosFile = TRUE
+  )
+
+  missingFile <- file.path(
+    projectConfiguration$projectConfigurationDirPath,
+    "Data",
+    "timeprofiles_study1234_iv.csv"
+  )
+  unlink(missingFile)
+
+  projectConfiguration
+}
+
 
 test_that("It should read and process data based on the provided project configuration", {
   expect_true(
@@ -236,6 +253,34 @@ test_that("readObservedDataByDictionary continues in debug mode", {
       debugMode = TRUE
     )
   )
+
+  expect_s3_class(dataObservedDebug, "data.table")
+  expect_gt(nrow(dataObservedDebug), 0)
+})
+
+test_that("readObservedDataByDictionary warns and continues for missing files in debug mode", {
+  withr::local_options(list(OSPSuite.RF.stopHelperFunction = FALSE))
+  projectConfigurationDebug <- .makeDebugModeMissingFileProjectConfiguration()
+
+  warningsCaught <- character(0)
+  dataObservedDebug <- withCallingHandlers(
+    readObservedDataByDictionary(
+      projectConfiguration = projectConfigurationDebug,
+      spreadData = FALSE,
+      dataClassType = "timeprofile",
+      debugMode = TRUE
+    ),
+    warning = function(w) {
+      warningsCaught <<- c(warningsCaught, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  expect_true(any(grepl(
+    "failed to import fileIdentifier",
+    warningsCaught,
+    fixed = TRUE
+  )))
 
   expect_s3_class(dataObservedDebug, "data.table")
   expect_gt(nrow(dataObservedDebug), 0)

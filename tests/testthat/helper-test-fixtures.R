@@ -56,7 +56,15 @@
     sheet = "DataFiles"
   )
   dataImportMap <- dataImportMap[-1, , drop = FALSE]
-  dataImportMap$dataFile <- file.path("Data", basename(dataImportMap$dataFile))
+  dataFileColumn <- if ("dataFile" %in% names(dataImportMap)) {
+    "dataFile"
+  } else {
+    "DataFile"
+  }
+  dataImportMap[[dataFileColumn]] <- file.path(
+    "Data",
+    basename(as.character(dataImportMap[[dataFileColumn]]))
+  )
 
   wb <- openxlsx::loadWorkbook(file.path(projectDir, "DataImportMap.xlsx"))
   openxlsx::writeData(
