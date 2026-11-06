@@ -15,8 +15,7 @@ validateGroupConsistency(dt, valueColumns, groupingColumns = "plotName")
 Default is 'plotName'.}
 }
 \value{
-Returns NULL (invisible) if all checks pass. Raises an error if any value
-        column contains inconsistent values within a group.
+invisible(NULL). Raises an error if any value column contains inconsistent values within a group.
 }
 \description{
 This function checks whether specified columns in a data table have consistent values

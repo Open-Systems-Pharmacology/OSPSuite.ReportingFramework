@@ -27,37 +27,59 @@ options(rmarkdown.html_vignette.check_title = FALSE)
 
 ![Populations within the reporting framework](images/Population.png)
 
-The package recognizes two kinds of populations:
+The package supports two population workflows:
 
-### Random Population
+- Use **Virtual Twin Population** when observed individual biometrics are available.
+- Use **Random Population** when you want synthetic populations generated from demographic ranges.
 
-This population is created from ranges of population characteristics, such as age and body weight, along with a set of parameters defined by a distribution. A set of n individuals are then generated randomly within the given ranges. This is how a population is defined in the OSPSuite context.
-
-The 'Random Population' can be configured using the `Demographics` sheet in the `Population.xlsx`. The population identifier is specified in the column `PopulationName`. For each population, a sheet named after the population name with distributed parameters can be provided.
-
-The package `ospsuite.reportingframework` includes a function, `exportRandomPopulations`, to export the population as a CSV file, which is then saved in `<rootdirectory>/Models/Populations`. See the function help for more details.
-
-In the scenario setup, you can use the `PopulationName` as `PopulationId` and set the column `ReadPopulationFromCSV` to 1 (TRUE). (With `ReadPopulationFromCSV = 0 (FALSE)`, the population will be generated anew during the scenario setup. The usage of the distributed parameters is not yet implemented this way; only the demographics will be considered. Additionally, since it is currently not possible to set a seed, each scenario setup will produce a new population.)
+Both workflows export CSV population files to `<rootdirectory>/Models/Populations`.
 
 ### Virtual Twin Population
 
-Virtual twins are simulated populations that closely mirror the characteristics of your observed data. They consist of a collection of individuals generated with the known biometrics extracted from the observed data. For all unknown parameters, the mean value of an individual defined by these characteristics is used.
+Virtual twins are generated from observed individual biometrics. Known biometrics are taken from observed data, and missing characteristics are completed from model defaults.
 
-During the data import via the `readObservedDataByDictionary` function, a sheet named `VirtualTwinPopulation` is added to the `Individual.xlsx` with the following columns:
+When data are imported with `readObservedDataByDictionary()`, the sheet `VirtualTwinPopulation` is added to `Individual.xlsx` automatically. If observed data are loaded by another route, create this configuration explicitly:
 
-- *`PopulationName`*: Identifier for the population.
-- *`DataGroups`*: List of data groups (used for informational purposes only).
-- *`IndividualId`*: Identifier of the individual, referencing the `IndividualId` of the observed data and linking to the `Individual.xlsx`.
-- *`ModelParameterSheets`*: Reference to the sheet in `ModelParameters.xlsx`.
-- *`ApplicationProtocol`*: Reference to the sheet in `ApplicationProtocol.xlsx`.
+```{r, eval=FALSE}
+setupVirtualTwinPopConfig(
+  projectConfiguration = projectConfiguration,
+  dataObserved = dataObserved
+)
+```
 
-If you do not use `readObservedDataByDictionary` for data import, you can add the sheet by calling `setupVirtualTwinPopConfig(projectConfiguration, dataObserved)`, which configures the virtual twin population based on the observed data.
+You can then export one or more configured virtual twin populations:
 
-With this sheet, you define which individuals belong to which virtual population. The configuration of the individuals is saved in the tables `Individual.xlsx`, `ModelParameters.xlsx`, and `ApplicationProtocol.xlsx`.
+```{r, eval=FALSE}
+exportVirtualTwinPopulations(
+  projectConfiguration = projectConfiguration,
+  modelFile = "MyModel.pkml",
+  overwrite = FALSE,
+  populationNames = NULL
+)
+```
 
-The function `exportVirtualTwinPopulations` is called to export this population to a CSV table in `<rootdirectory>/Models/Populations`. It includes an additional column, `ObservedIndividualId`, which contains the individual identifier which relates to the observed data.
+This export adds `ObservedIndividualId` to preserve the mapping to observed individuals.
 
-The scenario setup is the same as for the 'Random Population': use the `PopulationName` as 'PopulationId' and set the column 'ReadPopulationFromCSV' to TRUE. Note that `ReadPopulationFromCSV = FALSE` is not possible for this type of population.
+Use `PopulationName` as `PopulationId` in scenario setup and set `ReadPopulationFromCSV = TRUE`.
 
-If the same parameters are addressed by the Population and the Scenario setup (e.g., by referencing different ModelParameter sheets), the scenario setup will overwrite the setup of the population.
+If the same parameters are set by both population and scenario configuration, scenario settings take precedence.
+
+### Random Population
+
+Random populations are generated from demographic ranges (for example age and body weight) and optional parameter distributions.
+
+Configure random populations in the `Demographics` sheet of `Population.xlsx`.
+Population identifiers are defined in `PopulationName`. Optional per-population parameter sheets can define distributed parameters.
+
+```{r, eval=FALSE}
+exportRandomPopulations(
+  projectConfiguration = projectConfiguration,
+  populationNames = NULL,
+  overwrite = FALSE
+)
+```
+
+The `customParameters` argument can be used to set model-specific parameter values that are not defined in the demographics table.
+
+In the scenario setup, you can use the `PopulationName` as `PopulationId` and set the column `ReadPopulationFromCSV` to 1 (TRUE). (With `ReadPopulationFromCSV = 0 (FALSE)`, the population will be generated anew during the scenario setup. The usage of the distributed parameters is not yet implemented this way; only the demographics will be considered. Additionally, since it is currently not possible to set a seed, each scenario setup will produce a new population.)
 

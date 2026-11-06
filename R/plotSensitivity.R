@@ -5,62 +5,119 @@
 #' @param projectConfiguration A list containing project configuration settings, including file paths and parameters.
 #' @param onePlotConfig A data frame containing the configuration for a single plot.
 #' @param scenarioList A list of scenarios for which the sensitivity analysis will be performed.
+#' @param significantDigits Number of significant digits used for sensitivity values
+#'   in exported tables.
 #'
 #' @return A list of plots and tables, where each entry corresponds to a generated sensitivity plot or its data.
 #' @export
 #' @family plot functions
-plotSensitivity <- function(projectConfiguration,
-                            onePlotConfig,
-                            scenarioList) {
-  # initialize variable to avoid messages
-  sens <- parameterName <- NULL
+plotSensitivity <- function(
+  projectConfiguration,
+  onePlotConfig,
+  scenarioList,
+  significantDigits = 3
+) {
+  checkmate::assertNumber(significantDigits, lower = 1, finite = TRUE)
 
+  if (!"referenceScenario" %in% names(onePlotConfig)) {
+    onePlotConfig$referenceScenario <- NA_character_
+  }
+  if (!"referenceScenarioLongName" %in% names(onePlotConfig)) {
+    onePlotConfig$referenceScenarioLongName <- NA_character_
+  }
+  resultFileConfig <- unique(data.table::as.data.table(onePlotConfig)[, c(
+    "scenario",
+    "sensitivityParameterSheet",
+    "referenceScenario"
+  )])
+  resultFiles <- mapply(
+    FUN = function(scenarioName, sensitivitySheet, referenceScenario) {
+      .getSensitivityResultFilePath(
+        projectConfiguration = projectConfiguration,
+        scenarioName = scenarioName,
+        sensitivitysheet = sensitivitySheet,
+        referenceScenario = referenceScenario
+      )
+    },
+    scenarioName = resultFileConfig$scenario,
+    sensitivitySheet = resultFileConfig$sensitivityParameterSheet,
+    referenceScenario = resultFileConfig$referenceScenario,
+    SIMPLIFY = TRUE,
+    USE.NAMES = FALSE
+  )
   checkmate::assertFileExists(
-    x = file.path(
-      projectConfiguration$outputFolder, EXPORTDIR$sensitivityResults,
-      unique(sensitivityAnalyisName(
-        onePlotConfig$scenario,
-        onePlotConfig$sensitivityParameterSheet
-      ))
-    ),
+    x = resultFiles,
     .var.name = "sensitivityResult file"
   )
 
-
-  plotData <- prepareSensitivityPlotData(
+  plotData <- .prepareSensitivityPlotData(
     onePlotConfig,
     projectConfiguration,
     scenarioList
   )
 
+  hasRepresentativeStrata <-
+    any(!is.na(plotData$RepresentativeQuantile))
+
   plotObject <- ggplotWithWatermark(plotData) +
-    geom_col(aes(x = parameterName, y = sens),
-      fill = "grey",
-      position = "dodge"
-    ) +
+    geom_hline(yintercept = 0, color = "grey70")
+
+  if (hasRepresentativeStrata) {
+    plotObject <- plotObject +
+      geom_point(
+        aes(
+          x = sensitivityParameter,
+          y = sens,
+          color = scenarioShortName,
+          shape = RepresentativeQuantile
+        ),
+        position = position_dodge(width = 0.7),
+        size = 2.5
+      ) +
+      labs(color = "Scenario", shape = "Representative")
+  } else {
+    plotObject <- plotObject +
+      geom_col(
+        aes(x = sensitivityParameter, y = sens),
+        fill = "grey",
+        position = "dodge"
+      ) +
+      scale_fill_grey(start = 0.7, end = 0)
+  }
+  plotObject <- plotObject +
     labs(
       y = "Sensitivity",
       x = ""
     ) +
-    scale_x_discrete(limits = rev(unique(plotData$parameterName))) +
+    scale_x_discrete(limits = rev(unique(plotData$sensitivityParameter))) +
+    ospsuite.plots::theme_osp() +
     theme(
       legend.position = "top",
-      legend.direction = "vertical",
-      legend.title = element_blank()
+      legend.direction = "vertical"
     ) +
-    scale_fill_grey(start = 0.7, end = 0) +
     coord_flip()
 
-  plotObject <- addFacets(plotObject,
-    "fixed",
-    facetAspectRatio = length(levels(plotData$parameterName)) / length(levels(plotData$plotTag)) / 5,
-    nFacetColumns = length(levels(plotData$plotTag))
+  nFacetColumns <- .getFacetColumns(
+    data = plotData,
+    strategy = "allInOneRow",
+    facetColumn = "plotTag"
+  )
+  nFacets <- ifelse(is.null(nFacetColumns), 1, nFacetColumns)
+  facetAspectRatio <- length(levels(plotData$sensitivityParameter)) /
+    max(nFacets, 1) /
+    5 ## value by experience
+
+  plotObject <- .addFacets(
+    plotObject = plotObject,
+    facetScale = "fixed",
+    facetAspectRatio = facetAspectRatio,
+    nFacetColumns = nFacetColumns
   )
 
   # Prepare for export
   plotObject <- setExportAttributes(
     object = plotObject,
-    caption = getCaptionForSensitivityPlot(
+    caption = .getCaptionForSensitivityPlot(
       plotData = plotData,
       projectConfiguration = projectConfiguration,
       plotCaptionAddon = onePlotConfig$plotCaptionAddon[1]
@@ -71,19 +128,20 @@ plotSensitivity <- function(projectConfiguration,
   plotList <- list(plotObject)
   names(plotList) <- onePlotConfig$plotName[1]
 
-
   # Export table
   for (plotDataTag in split(plotData, by = "plotTag")) {
-    tableKey <- paste(onePlotConfig$plotName[1], plotDataTag$plotTag[1], sep = "-")
-
+    tableKey <- paste(
+      onePlotConfig$plotName[1],
+      plotDataTag$plotTag[1],
+      sep = "-"
+    )
 
     plotDataTag <- setExportAttributes(
-      object = plotDataTag[, c("parameterName", "sens")] %>%
-        setnames(
-          old = c("parameterName", "sens"),
-          new = c("Parameter", "Sensitivity")
-        ),
-      caption = getCaptionForSensitivityPlot(
+      object = .formatSensitivityExportTable(
+        plotDataTag,
+        significantDigits = significantDigits
+      ),
+      caption = .getCaptionForSensitivityPlot(
         plotData = plotDataTag,
         projectConfiguration = projectConfiguration,
         plotCaptionAddon = onePlotConfig$plotCaptionAddon[1]
@@ -93,12 +151,8 @@ plotSensitivity <- function(projectConfiguration,
     plotList[[tableKey]] <- plotDataTag
   }
 
-
-
-
   return(plotList)
 }
-
 
 
 #' Prepare Sensitivity Plot Data
@@ -112,88 +166,85 @@ plotSensitivity <- function(projectConfiguration,
 #' @return A data table containing the prepared data for the sensitivity plot.
 #'
 #' @keywords internal
-prepareSensitivityPlotData <- function(onePlotConfig,
-                                       projectConfiguration,
-                                       scenarioList) {
-  # initialize variable to avoid messages
-  sens <- pKParameter <- outputPathId <- plotTag <- parameterPath <- NULL
+#' @noRd
+.prepareSensitivityPlotData <- function(
+  onePlotConfig,
+  projectConfiguration,
+  scenarioList
+) {
+  pkDefinitions <- .getPKParameterOverview(projectConfiguration) |>
+    (\(dt) {
+      dt[, c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")]
+    })()
 
-  pkDefinitions <- getPKParameterOverview(projectConfiguration) %>%
-    .[, c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")]
-
-  onePlotConfig <- onePlotConfig %>%
-    separateAndTrimColumn("pKParameters") %>%
-    separateAndTrimColumn("outputPathIds") %>%
+  onePlotConfig <- onePlotConfig |>
+    .separateAndTrimColumn("pKParameters") |>
+    .separateAndTrimColumn("outputPathIds") |>
     merge(
       pkDefinitions,
       by = c("pKParameter")
-    ) %>%
+    ) |>
     merge(configEnv$outputPaths, by = "outputPathId")
+
+  if (!"referenceScenario" %in% names(onePlotConfig)) {
+    onePlotConfig$referenceScenario <- NA_character_
+  }
+  if (!"referenceScenarioLongName" %in% names(onePlotConfig)) {
+    onePlotConfig$referenceScenarioLongName <- NA_character_
+  }
+
+  scenarioShortNameLevels <- unique(onePlotConfig$scenarioShortName)
+
+  sensitivityParameterDt <- xlsxReadData(
+    wb = file.path(projectConfiguration$addOns$sensitivityFile),
+    sheetName = onePlotConfig$sensitivityParameterSheet[1]
+  )
 
   plotData <- data.table()
 
   for (configLine in split(onePlotConfig, by = "scenario")) {
-    sensitivityResults <- ospsuite::importSensitivityAnalysisResultsFromCSV(
-      simulation = scenarioList[[configLine$scenario[1]]]$simulation,
-      filePaths = file.path(
-        projectConfiguration$outputFolder,
-        EXPORTDIR$sensitivityResults,
-        sensitivityAnalyisName(configLine$scenario[1], configLine$sensitivityParameterSheet[1])
-      )
-    )
-
-    plotDataLine <-
-      lapply(split(configLine, seq(1, nrow(configLine))), function(cL) {
-        data.table(
-          sens = lapply(
-            sensitivityResults$allPKParameterSensitivitiesFor(
-              pkParameterName = cL$pKParameter,
-              outputPath = cL$outputPath,
-              totalSensitivityThreshold = cL$threshold
-            ), getElement, "value"
-          ) %>%
-            unlist(),
-          parameterInternal = lapply(
-            sensitivityResults$allPKParameterSensitivitiesFor(
-              pkParameterName = cL$pKParameter,
-              outputPath = cL$outputPath,
-              totalSensitivityThreshold = cL$threshold
-            ), getElement, "parameterName"
-          ) %>%
-            unlist(),
-          outputPathId = cL$outputPathId,
-          pKParameter = cL$pKParameter,
-          displayNamePKParameter = cL$displayNamePKParameter,
-          scenarioLongName = cL$scenarioLongName
+    plotDataLine <- lapply(
+      split(configLine, seq(1, nrow(configLine))),
+      function(cL) {
+        sensitivityResultFile <- .getSensitivityResultFilePath(
+          projectConfiguration = projectConfiguration,
+          scenarioName = cL$scenario[1],
+          sensitivitysheet = cL$sensitivityParameterSheet[1],
+          referenceScenario = cL$referenceScenario[1]
         )
-      })
+        rawSensitivityData <- fread(file = sensitivityResultFile)
 
-    nameDictionary <-
-      merge(
-        fread(file = file.path(
-          projectConfiguration$outputFolder,
-          EXPORTDIR$sensitivityResults,
-          sensitivityAnalyisName(configLine$scenario[1], configLine$sensitivityParameterSheet[1])
-        ))[, c("ParameterPath", "Parameter")] %>%
-          unique() %>%
-          setnames(
-            old = c("ParameterPath", "Parameter"),
-            new = c("parameterPath", "parameter")
-          ),
-        xlsxReadData(
-          wb = file.path(projectConfiguration$addOns$sensitivityFile),
-          sheetName = configLine$sensitivityParameterSheet[1]
-        ),
-        by = "parameterPath",
-        suffixes = c("Internal", "Name")
-      ) %>%
-      .[, parameterPath := NULL]
+        if (!"RepresentativeQuantile" %chin% names(rawSensitivityData)) {
+          rawSensitivityData[, RepresentativeQuantile := NA_character_]
+        }
 
+        filteredData <- merge(
+          cL,
+          rawSensitivityData,
+          by.x = c("pKParameter", "outputPath"),
+          by.y = c("PKParameter", "QuantityPath")
+        )[
+          abs(sens) >= threshold,
+          .(
+            sens,
+            SensitivityParameter,
+            threshold,
+            outputPathId,
+            pKParameter,
+            displayNamePKParameter,
+            scenarioShortName,
+            scenarioLongName,
+            referenceScenarioLongName,
+            RepresentativeQuantile
+          )
+        ] |>
+          setnames("SensitivityParameter", "sensitivityParameter")
+
+        return(filteredData)
+      }
+    )
     plotDataLine <-
-      merge(rbindlist(plotDataLine),
-        nameDictionary,
-        by = "parameterInternal"
-      )
+      rbindlist(plotDataLine)
 
     plotData <- rbind(
       plotData,
@@ -201,14 +252,46 @@ prepareSensitivityPlotData <- function(onePlotConfig,
     )
   }
 
-  plotData$outputPathId <- factor(plotData$outputPathId, levels = unique(plotData$outputPathId), ordered = TRUE)
-  plotData$pKParameter <- factor(plotData$pKParameter, levels = rev(unique(plotData$pKParameter)), ordered = TRUE)
-  plotData[, plotTag := generatePlotTag((as.numeric(outputPathId) - 1) * length(levels(plotData$pKParameter)) +
-    as.numeric(pKParameter))]
-  plotData$plotTag <- factor(plotData$plotTag, ordered = TRUE, levels = sort(unique(plotData$plotTag)))
+  plotData$outputPathId <- factor(
+    plotData$outputPathId,
+    levels = unique(plotData$outputPathId),
+    ordered = TRUE
+  )
+  plotData$pKParameter <- factor(
+    plotData$pKParameter,
+    levels = rev(unique(plotData$pKParameter)),
+    ordered = TRUE
+  )
+  plotData$scenarioShortName <- factor(
+    plotData$scenarioShortName,
+    levels = scenarioShortNameLevels,
+    ordered = TRUE
+  )
+
+  dtPlotTag <- unique(plotData[, c(
+    "outputPathId",
+    "pKParameter"
+  )])
+  dtPlotTag[, plotTag := .generatePlotTag(.I)]
+  plotData <- merge(
+    plotData,
+    dtPlotTag,
+    by = c("outputPathId", "pKParameter"),
+    all.x = TRUE,
+    sort = FALSE
+  )
+  plotData$plotTag <- factor(
+    plotData$plotTag,
+    ordered = TRUE,
+    levels = unique(dtPlotTag$plotTag)
+  )
 
   plotData <- plotData[order(-abs(sens))]
-  plotData$parameterName <- factor(plotData$parameterName, levels = rev(unique(plotData$parameterName)), ordered = TRUE)
+  plotData$sensitivityParameter <- factor(
+    plotData$sensitivityParameter,
+    levels = rev(unique(plotData$sensitivityParameter)),
+    ordered = TRUE
+  )
 
   return(plotData)
 }
@@ -216,36 +299,195 @@ prepareSensitivityPlotData <- function(onePlotConfig,
 #' Get Caption for Sensitivity Plot
 #'
 #' Generates a caption for the sensitivity plot based on the plot data and project configuration.
+#' If the configured sensitivity threshold is greater than 0, the caption
+#' includes the applied absolute sensitivity filter.
 #'
 #' @param plotData A data table containing the data for the sensitivity plot.
 #' @param projectConfiguration A list containing project configuration settings.
 #' @param plotCaptionAddon An optional string to be added to the caption.
 #'
 #' @return A string containing the generated caption for the sensitivity plot.
-
 #' @keywords internal
-getCaptionForSensitivityPlot <- function(plotData, projectConfiguration, plotCaptionAddon) {
-  dtCaption <- plotData %>%
-    dplyr::select(c("plotTag", "outputPathId", "pKParameter", "scenarioLongName")) %>%
-    unique() %>%
-    merge(configEnv$outputPaths[, c("outputPathId", "displayNameOutput")],
+#' @noRd
+.getCaptionForSensitivityPlot <- function(
+  plotData,
+  projectConfiguration,
+  plotCaptionAddon
+) {
+  dtCaption <- plotData |>
+    dplyr::select(c(
+      "plotTag",
+      "outputPathId",
+      "displayNamePKParameter",
+      "scenarioLongName"
+    )) |>
+    unique() |>
+    merge(
+      configEnv$outputPaths[, c("outputPathId", "displayNameOutput")],
       by = "outputPathId"
     )
 
-
-  captiontext <- paste0(
+  captiontext <- paste(
+    .captionPrefixSimulated(),
     "Sensitivity of",
-    pasteFigureTags(dtCaption, captionColumn = "pKParameter"),
+    .pasteFigureTags(dtCaption, captionColumn = "displayNamePKParameter"),
     "for",
-    pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"),
+    .pasteFigureTags(dtCaption, captionColumn = "displayNameOutput"),
     "for",
-    pasteFigureTags(dtCaption, captionColumn = "scenarioLongName"),
+    .pasteFigureTags(dtCaption, captionColumn = "scenarioLongName"),
     "sorted by absolute sensitivity."
   )
 
-  captiontext <- addCaptionTextAddon(captiontext, plotCaptionAddon[1])
+  thresholdValues <- unique(plotData$threshold)
+  thresholdValues <- thresholdValues[!is.na(thresholdValues)]
+  thresholdValues <- thresholdValues[thresholdValues > 0]
+  if (length(thresholdValues) > 0) {
+    thresholdText <- .concatWithAnd(format(thresholdValues, trim = TRUE))
+    captiontext <- .addCaptionTextAddon(
+      captiontext,
+      paste(
+        "Filtering threshold (absolute sensitivity): >=",
+        thresholdText
+      )
+    )
+  }
+
+  if (
+    "referenceScenarioLongName" %in%
+      names(plotData) &&
+      any(
+        !is.na(plotData$referenceScenarioLongName) &
+          nzchar(plotData$referenceScenarioLongName)
+      )
+  ) {
+    ratioCaptionData <- unique(plotData[
+      !is.na(referenceScenarioLongName) & nzchar(referenceScenarioLongName),
+      c(
+        "plotTag",
+        "scenarioLongName",
+        "referenceScenarioLongName"
+      )
+    ])
+    ratioCaptionData[,
+      ratioPair := paste0(scenarioLongName, " / ", referenceScenarioLongName)
+    ]
+
+    captiontext <- .addCaptionTextAddon(
+      captiontext,
+      paste(
+        "Ratio mode (scenario/reference):",
+        .pasteFigureTags(ratioCaptionData, captionColumn = "ratioPair")
+      )
+    )
+  }
+
+  if (
+    "representativeStratum" %in%
+      names(plotData) &&
+      any(
+        !is.na(plotData$representativeStratum) &
+          nzchar(plotData$representativeStratum)
+      )
+  ) {
+    representativeCaption <- unique(
+      plotData$representativeStratum[
+        !is.na(plotData$representativeStratum) &
+          nzchar(plotData$representativeStratum)
+      ]
+    )
+    captiontext <- .addCaptionTextAddon(
+      captiontext,
+      paste(
+        "Representative strata:",
+        .concatWithAnd(representativeCaption)
+      )
+    )
+  }
+
+  captiontext <- .addCaptionTextAddon(captiontext, plotCaptionAddon[1])
 
   return(captiontext)
+}
+
+#' Resolve sensitivity result file path
+#'
+#' @param projectConfiguration Project configuration object.
+#' @param scenarioName Scenario name.
+#' @param sensitivitysheet Name of the sensitivity sheet.
+#' @param referenceScenario Optional reference scenario for ratio sensitivity.
+#' @return Character path to the sensitivity result file.
+#' @keywords internal
+#' @noRd
+.getSensitivityResultFilePath <- function(
+  projectConfiguration,
+  scenarioName,
+  sensitivitysheet,
+  referenceScenario = NULL
+) {
+  representativeFile <- file.path(
+    projectConfiguration$outputFolder,
+    EXPORTDIR$sensitivityResults,
+    .representativeSensitivityAnalysisName(scenarioName, sensitivitysheet)
+  )
+  if (file.exists(representativeFile)) {
+    return(representativeFile)
+  }
+
+  sensitivityFile <- file.path(
+    projectConfiguration$outputFolder,
+    EXPORTDIR$sensitivityResults,
+    .sensitivityAnalysisName(
+      scenarioName,
+      sensitivitysheet,
+      referenceScenario = referenceScenario
+    )
+  )
+
+  return(sensitivityFile)
+}
+
+
+#' Format Sensitivity Export Table
+#'
+#' Formats a sensitivity table for export and rounds sensitivity values to a fixed number
+#' of significant digits.
+#'
+#' @param plotDataTag A `data.table` containing sensitivity plot data for one plot tag.
+#' @param significantDigits Number of significant digits for exported sensitivity
+#'   values.
+#'
+#' @return A formatted `data.table` with export-ready column names.
+#' @keywords internal
+#' @noRd
+.formatSensitivityExportTable <- function(plotDataTag, significantDigits = 3) {
+  checkmate::assertNumber(significantDigits, lower = 1, finite = TRUE)
+
+  if (any(!is.na(plotDataTag$RepresentativeQuantile))) {
+    exportTable <- (plotDataTag[, c(
+      "RepresentativeQuantile",
+      "sensitivityParameter",
+      "sens"
+    )] |>
+      setnames(
+        old = c("RepresentativeQuantile", "sensitivityParameter", "sens"),
+        new = c("Representative", "Parameter", "Sensitivity")
+      ))
+  } else {
+    exportTable <- plotDataTag[, c("sensitivityParameter", "sens")] |>
+      setnames(
+        old = c("sensitivityParameter", "sens"),
+        new = c("Parameter", "Sensitivity")
+      )
+  }
+
+  exportTable[,
+    Sensitivity := janitor::signif_half_up(
+      Sensitivity,
+      digits = significantDigits
+    )
+  ]
+
+  return(exportTable)
 }
 
 #' Get PK Parameter Overview
@@ -258,29 +500,14 @@ getCaptionForSensitivityPlot <- function(plotData, projectConfiguration, plotCap
 #'
 #' @return A `data.table` containing the merged PK parameter data along with associated scenario names.
 #' @keywords internal
-getPKParameterOverview <- function(projectConfiguration) {
-  # initialize variable to avoid messages
-  pKParameter <- descriptions <- NULL
-
+#' @noRd
+.getPKParameterOverview <- function(projectConfiguration) {
   pkParameterSheets <- unique(splitInputs(configEnv$scenarios$pKParameter))
-  pkSheets <- stats::setNames(
-    lapply(pkParameterSheets, function(sheet) {
-      xlsxReadData(
-        wb = projectConfiguration$addOns$pKParameterFile,
-        sheetName = sheet,
-        skipDescriptionRow = TRUE
-      )
-    }),
-    pkParameterSheets
-  ) %>%
-    rbindlist(idcol = "pKParameter") %>%
-    .[, descriptions := NULL] %>%
-    .[, pKParameter := NULL] %>%
-    setnames(
-      old = c("name", "displayName", "displayUnit"),
-      new = c("pKParameter", "displayNamePKParameter", "displayUnitPKParameter")
-    ) %>%
-    separateAndTrimColumn(columnName = "outputPathIds")
+  pkSheets <- .readPKDefinitionsFromSheets(
+    projectConfiguration = projectConfiguration,
+    pkParameterSheets = pkParameterSheets
+  ) |>
+    .normalizedPKDefinitionsForSensitivity()
 
   return(pkSheets)
 }
@@ -290,17 +517,23 @@ getPKParameterOverview <- function(projectConfiguration) {
 #' and ensures the configuration adheres to specified criteria. It also checks for file existence in the output folder.
 #'
 #' @param configTable A data.table containing the configuration for sensitivity analysis.
+#' @param scenarioList Named list of loaded scenario results.
 #' @param ... Additional arguments passed to other functions.
 #'
 #' @return A validated data frame containing the configuration table for sensitivity plots.
 #' @export
 #' @family plot configuration validation function
 #' @family functions to generate sensitivity plots
-validateSensitivityConfig <- function(configTable, ...) {
+validateSensitivityConfig <- function(configTable, scenarioList, ...) {
+  extraArgs <- list(...)
+  projectConfiguration <- extraArgs$projectConfiguration
   configTablePlots <- validateHeaders(configTable)
 
-  validateOutputIdsForPlot()
-  validateDataGroupIdsForPlot()
+  if (!"referenceScenario" %in% names(configTablePlots)) {
+    configTablePlots[, referenceScenario := NA_character_]
+  }
+
+  .validateOutputIdsForPlot()
 
   validateConfigTablePlots(
     configTablePlots = configTablePlots,
@@ -308,20 +541,24 @@ validateSensitivityConfig <- function(configTable, ...) {
       "plotName",
       "scenario",
       "scenarioLongName",
+      "scenarioShortName",
       "outputPathIds",
       "pKParameters",
       "sensitivityParameterSheet"
     ),
-    charactersWithMissing = NULL,
-    numericColumns = c(
-      "threshold"
-    ),
+    charactersWithMissing = c("referenceScenario"),
+    numericColumns = NULL,
     logicalColumns = NULL,
     numericRangeColumns = NULL,
     subsetList = list(
       scenario = list(
         cols = c("scenario"),
         allowedValues = configEnv$scenarios$scenarioName
+      ),
+      referenceScenario = list(
+        cols = c("referenceScenario"),
+        allowedValues = configEnv$scenarios$scenarioName,
+        splitAllowed = FALSE
       ),
       outputPathIds = list(
         cols = c("outputPathIds"),
@@ -330,6 +567,13 @@ validateSensitivityConfig <- function(configTable, ...) {
     )
   )
 
+  checkmate::assertNumeric(
+    configTablePlots$threshold,
+    lower = 0,
+    finite = TRUE,
+    any.missing = FALSE,
+    .var.name = "Plot configuration column threshold"
+  )
 
   validateGroupConsistency(
     dt = configTablePlots,
@@ -338,6 +582,58 @@ validateSensitivityConfig <- function(configTable, ...) {
       "threshold"
     )
   )
+
+  popScenarios <- names(scenarioList)[unlist(lapply(
+    scenarioList,
+    function(scenarioList) {
+      (!is.null(scenarioList$population) &&
+        "Population" %in% class(scenarioList$population))
+    }
+  ))]
+
+  configTablePlots[, isRepresentativeMode := scenario %chin% popScenarios]
+
+  nonRepresentativeDuplicates <-
+    configTablePlots[,
+      .N,
+      by = c("plotName", "scenario", "isRepresentativeMode")
+    ][isRepresentativeMode == FALSE & N > 1]
+
+  if (nrow(nonRepresentativeDuplicates) > 0) {
+    stop(messages$errorplotSensitivityMultipleRowsPerScenario())
+  }
+
+  if (!is.null(projectConfiguration)) {
+    resultFileCheck <- unique(configTablePlots[, c(
+      "plotName",
+      "scenario",
+      "sensitivityParameterSheet",
+      "referenceScenario"
+    )])
+    resultFileCheck[,
+      resultFile := mapply(
+        FUN = function(scenarioName, sensitivitySheet, referenceScenarioName) {
+          .getSensitivityResultFilePath(
+            projectConfiguration = projectConfiguration,
+            scenarioName = scenarioName,
+            sensitivitysheet = sensitivitySheet,
+            referenceScenario = referenceScenarioName
+          )
+        },
+        scenarioName = scenario,
+        sensitivitySheet = sensitivityParameterSheet,
+        referenceScenarioName = referenceScenario,
+        SIMPLIFY = TRUE,
+        USE.NAMES = FALSE
+      )
+    ]
+    resultFileCheck[, resultFileExists := file.exists(resultFile)]
+
+    missingResultFiles <- resultFileCheck[resultFileExists == FALSE]
+    if (nrow(missingResultFiles) > 0) {
+      stop(messages$errorplotSensitivityMissingResultFile())
+    }
+  }
 
   return(configTable)
 }

@@ -4,7 +4,6 @@
 # enabling users to effectively process pharmacokinetic data, export populations,
 # run simulations, conduct sensitivity analysis, and generate output plots and reports.
 
-
 # Typically, this file is saved in <Rootdirectory>/Scripts/ReportingFramework
 
 # Initialization  ----------------------------------------------------------
@@ -13,26 +12,68 @@ library(ospsuite.reportingframework)
 
 # Set graphic defaults
 # (see vignette(package = 'ospsuite.plots', topic = 'ospsuite_plots'))
-ospsuite.plots::setDefaults()
-theme_update(legend.position = 'top')
+ggplot2::theme_set(theme_osp())
 options(knitr.kable.NA = '')
+
+runPlotTheme <- ggplot2::theme(
+  legend.position = "top",
+  legend.title = ggplot2::element_blank()
+)
 
 # Set this to TRUE if you want to execute the workflow as a final valid run.
 # (see ?setWorkflowOptions)
-setWorkflowOptions(isValidRun = FALSE)
+# If isValidRun is NULL (default), setWorkflowOptions() derives the value
+# from the QCpassed environment variable.
+# Example:
+#   Sys.setenv(QCpassed = "TRUE")  # valid run
+#   Sys.setenv(QCpassed = "FALSE") # exploratory run
+setWorkflowOptions()
 
 # Setup project structure -------------------------------------------------
 # Create project directory and initialize the structure
-# (see ?initProject and https://esqlabs.github.io/esqlabsR/articles/esqlabsR.html)
-initProject()
+# This script should be run from the project root directory.
+# If running from this script's location, use: setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+# and then setwd("../../..")  or use here::here() for reliable path handling.
 
-# Get paths of all relevant project files and folders
-projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
-  path = file.path("ProjectConfiguration.xlsx")
+# Initialize the project (creates base structure and JSON snapshot)
+# When called from project root, defaults will place ProjectConfiguration.xlsx in Scripts/ReportingFramework
+# Set keepEsqlabsRStructure = TRUE if you want to preserve the original
+# esqlabsR layout instead of switching to the ReportingFramework default layout.
+initProject(
+  overwrite = TRUE,
+  keepEsqlabsRStructure = FALSE
 )
 
-# Initialize log file
-initLogfunction(projectConfiguration)
+# Configuration in Git ------------------------------------------------------
+# *.xlsx configuration files are local working files and should not be versioned.
+# In configuration folders, initProject() creates/updates .gitignore to ignore *.xlsx.
+# Commit ProjectConfiguration.json to Git and use it as the source of truth.
+
+# Get paths of all relevant project files and folders
+# The ProjectConfiguration.xlsx is now at Scripts/ReportingFramework/ProjectConfiguration.xlsx
+projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
+  path = file.path("Scripts", "ReportingFramework", "ProjectConfiguration.xlsx")
+)
+# initialize the logging
+setLogPath(
+  logFolder = file.path(projectConfiguration$outputFolder, "logs"),
+  logFileName = "workflow.log"
+)
+
+# After editing configuration tables, refresh the JSON snapshot.
+# Commit Scripts/ReportingFramework/ProjectConfiguration.json.
+# snapshotProjectConfigurationRF(
+#   projectConfiguration,
+#   outputDir = file.path("Scripts", "ReportingFramework")
+# )
+
+# To recreate configuration from JSON (e.g., CI/new machine), use:
+# projectConfiguration <- restoreProjectConfigurationRF(
+#   snapshotFilePath = file.path(
+#     "Scripts", "ReportingFramework", "ProjectConfiguration.json"
+#   ),
+#   outputDir = file.path("Scripts", "ReportingFramework")
+# )
 
 # 1) Read Observed Data -------------------------------------------------------
 # Read observed data as data.table
@@ -62,7 +103,7 @@ dataObserved <- readObservedDataByDictionary(
 
 # 3) Simulations ------------------------------------------------------
 # Set up the scenario list
-scenarioList <- createScenarios.wrapped(
+scenarioList <- createScenariosWrapped(
   projectConfiguration = projectConfiguration,
   scenarioNames = NULL
 )
@@ -100,6 +141,7 @@ runPlot(
   nameOfplotFunction = "plotTimeProfiles",
   projectConfiguration = projectConfiguration,
   configTableSheet = "TimeProfiles",
+  theme = runPlotTheme,
   inputs = list(
     dataObserved = dataObserved,
     scenarioResults = scenarioResults
@@ -109,15 +151,23 @@ runPlot(
 # 6) Create Report Document --------------------------------------------------
 # (see vignette(package = 'ospsuite.reportingframework', topic = 'Plot_and_Report_Generation'))
 # Adjust the input variables as necessary
-mergeRmds(
+mergeQmds(
   projectConfiguration = projectConfiguration,
   newName = "appendix",
   title = "Appendix",
-  sourceRmds = c("Demographics", "TimeProfile", "PKParameter", "DDIRatio", "myFigures")
+  sourceRmds = c(
+    "Demographics",
+    "TimeProfile",
+    "PKParameter",
+    "DDIRatio",
+    "myFigures"
+  )
 )
 
 # Render the report to Word format
-renderWord(fileName = file.path(projectConfiguration$outputFolder, "appendix.Rmd"))
+renderWord(
+  fileName = file.path(projectConfiguration$outputFolder, "appendix.Rmd")
+)
 
 # Finalize Workflow -----------------------------------------------------
 addMessageToLog("Finalizing workflow")

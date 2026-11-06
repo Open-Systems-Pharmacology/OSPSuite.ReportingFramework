@@ -23,11 +23,16 @@
 #'
 #' @param isValidRun A logical value indicating if the run is valid. If TRUE,
 #'        options are set for a valid run; if FALSE, options are set for an invalid run.
+#'        If NULL, the value is derived from the `QCpassed` environment variable.
+#' @return Returns invisibly.
 #'
 #' @export
 #' @family project initialization
 setWorkflowOptions <- function(isValidRun = NULL) {
-  checkmate::assertLogical(isValidRun)
+  if (is.null(isValidRun)) {
+    isValidRun <- getQCpassedEnvironmentVariable()
+  }
+  checkmate::assertLogical(isValidRun, len = 1)
 
   # set options to enable watermarks
   options(ospsuite.plots.watermark_enabled = !isValidRun)
@@ -37,7 +42,6 @@ setWorkflowOptions <- function(isValidRun = NULL) {
 
   # stop helper functions
   options(OSPSuite.RF.stopHelperFunction = isValidRun)
-
 
   return(invisible())
 }
@@ -63,12 +67,16 @@ setWorkflowOptions <- function(isValidRun = NULL) {
 #' getQCpassedEnvironmentVariable() # Should return FALSE and issue a warning
 #' }
 getQCpassedEnvironmentVariable <- function() {
-  qCpassed <- suppressWarnings(as.logical(as.double(Sys.getenv(x = "QCpassed"))))
+  qCpassed <- suppressWarnings(as.logical(as.double(Sys.getenv(
+    x = "QCpassed"
+  ))))
   # check if QCpassed was set as TRUE or FALSE
-  if (is.na(qCpassed)) qCpassed <- as.logical(Sys.getenv(x = "QCpassed"))
+  if (is.na(qCpassed)) {
+    qCpassed <- as.logical(Sys.getenv(x = "QCpassed"))
+  }
   # add warning message for unset or corrupt variable, set to default to avoid further messages
   if (is.na(qCpassed)) {
-    warning("Environment Variable 'QCpassed' not found, empty or a non logical, set 'QCpassed' to FALSE")
+    warning(messages$warningutilitiesworkflowQcPassedInvalid())
     Sys.setenv(QCpassed = 0)
     qCpassed <- FALSE
   }
@@ -84,21 +92,23 @@ getQCpassedEnvironmentVariable <- function() {
 #' @details
 #' The function retrieves the option `OSPSuite.RF.stopHelperFunction` to determine if helper functions
 #' are allowed during a valid run. If the option is not initialized, it prompts the user to call
-#' `executeAsValidRun(isValidRun)`.
+#' `setWorkflowOptions(isValidRun)`.
 #'
 #' Stops execution with an error message if called during a valid run or if the option is not set.
 #'
+#' @return Returns invisibly.
 #' @keywords internal
-stopHelperFunction <- function() {
+#' @noRd
+.stopHelperFunction <- function() {
   stopHelperFunction <- getOption("OSPSuite.RF.stopHelperFunction")
 
   if (is.null(stopHelperFunction)) {
-    stop("Option stopHelperFunction to control valid runs is not initialized. Please call `executeAsValidRun(isValidRun)`")
+    stop(messages$errorutilitiesworkflowOptionsNotInitialized())
   }
 
   if (stopHelperFunction) {
-    callingFunction <- as.character(sys.call(-1)) # Get the calling function
-    stop(paste("You are using a helper function, which is not allowed during a valid run. Called from:", callingFunction))
+    callingFunction <- deparse(sys.call(-1))
+    stop(messages$errorutilitiesworkflowHelperFunctionNotAllowed())
   }
 
   return(invisible())

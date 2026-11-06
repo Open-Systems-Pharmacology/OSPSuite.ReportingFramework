@@ -1,0 +1,296 @@
+# inst/validity.yml
+#
+# Workbook-level validity configuration for templates in inst/templates.
+# Each non-empty header is explicitly listed. Header names are matched exactly
+# and case-sensitively against row 1.
+#
+# validity: list
+#   Creates a list validation for the complete column (row 2 to Excel's last row).
+#   Configure either values: or valuesFunction:, but not both.
+#   Blank entries are allowed; non-list entries produce an information message only.
+#
+# validity: none
+#   Explicitly declares that the column is intentionally not list-validated.
+#   Running the update script removes any existing data validation from that column.
+#
+# Excel list validation itself does not distinguish upper/lower case for manually
+# typed values, although this configuration and all header matching do.
+
+workbooks:
+  Reports.xlsx:
+    sheets:
+      Scenarios:
+        Scenario: {validity: none}
+        LongName: {validity: none}
+        ShortName: {validity: none}
+
+      DataGroups:
+        Group: {validity: none}
+        StudyId: {validity: none}
+        StudyArm: {validity: none}
+        DisplayName: {validity: none}
+        Reference: {validity: none}
+        DefaultScenario: {validity: none}
+        Shape:
+          validity: list
+          valuesFunction: shapeValues
+          prompt: "Select shape."
+      Outputs:
+        OutputPathId: {validity: none}
+        OutputPath: {validity: none}
+        DisplayName: {validity: none}
+        DisplayUnit: {validity: none}
+        Color: {validity: none}
+        Fill: {validity: none}
+
+      ModelParameter:
+        ParameterId: {validity: none}
+        ModelPath: {validity: none}
+        DisplayName: {validity: none}
+        DisplayUnit: {validity: none}
+
+      TimeProfiles:
+        Level: {validity: none}
+        Header: {validity: none}
+        PlotName: {validity: none}
+        Scenario: {validity: none}
+        DataGroupIds: {validity: none}
+        OutputPathIds: {validity: none}
+        IndividualIds: {validity: none}
+        ScenarioName: {validity: none}
+        plotCaptionAddon: {validity: none}
+        TimeUnit: {validity: none}
+        TimeOffset: {validity: none}
+        ReferenceScenario: {validity: none}
+        TimeOffset_Reference: {validity: none}
+        ColorLegend: {validity: none}
+        TimeRange_total: {validity: none}
+        TimeRange_firstApplication: {validity: none}
+        TimeRange_lastApplication: {validity: none}
+        yScale:
+          validity: list
+          valuesFunction: axisScaleValues
+          prompt: "Recommended y-axis scale.."
+        SplitPlotsPerTimeRange:
+          validity: list
+          valuesFunction: yesNoValues
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+        nFacetColumns: {validity: none}
+        FacetScale:
+          validity: list
+          valuesFunction: facetScaleValues
+          prompt: "Recommended facet scale."
+        Plot_TimeProfiles:
+          validity: list
+          valuesFunction: yesNoValues
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+        ylimit_linear: {validity: none}
+        ylimit_log: {validity: none}
+        Plot_PredictedVsObserved:
+          validity: list
+          valuesFunction: yesNoValues
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+        FoldDistance_PvO: {validity: none}
+        Plot_ResidualsAsHistogram:
+          validity: list
+          valuesFunction: yesNoValues
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+        Plot_ResidualsVsTime:
+          validity: list
+          valuesFunction: yesNoValues
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+        Plot_ResidualsVsObserved:
+          validity: list
+          valuesFunction: yesNoValues
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+        Plot_QQ:
+          validity: list
+          valuesFunction: yesNoValues
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+
+      TimeRange:
+        Tag: {validity: none}
+        CaptionText: {validity: none}
+        TimeLabel: {validity: none}
+        TimeShift: {validity: none}
+
+      PKParameter_Boxplot:
+        Level: {validity: none}
+        Header: {validity: none}
+        PlotName: {validity: none}
+        Scenario: {validity: none}
+        ReferenceScenario: {validity: none}
+        ColorLegend: {validity: none}
+        PkParameters: {validity: none}
+        OutputPathIds: {validity: none}
+        plotCaptionAddon: {validity: none}
+        yScale:
+          validity: list
+          valuesFunction: axisScaleValues
+          prompt: "Recommended y-axis scale."
+        ylimit_linear: {validity: none}
+        ylimit_log: {validity: none}
+        FacetScale:
+          validity: list
+          valuesFunction: facetScaleValues
+          prompt: "Recommended facet scale."
+        Plot_Absolute:
+          validity: list
+          valuesFunction: yesNoValues
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+        Plot_Ratio:
+          validity: list
+          valuesFunction: yesNoValues
+          prompt: "Use 1 for TRUE and 0 for FALSE."
+
+      PKParameter_Forest:
+        Level: {validity: none}
+        Header: {validity: none}
+        PlotName: {validity: none}
+        ScenarioGroup: {validity: none}
+        Scenario: {validity: none}
+        ReferenceScenario: {validity: none}
+        PkParameters: {validity: none}
+        OutputPathIds: {validity: none}
+        plotCaptionAddon: {validity: none}
+        DataGroupId: {validity: none}
+        xScale:
+          validity: list
+          valuesFunction: axisScaleValues
+          prompt: "Recommended x-axis scale."
+        xlimit_linear: {validity: none}
+        xlimit_log: {validity: none}
+        FacetScale:
+          validity: list
+          valuesFunction: facetScaleValues
+          prompt: "Recommended facet scale."
+
+      Histograms:
+        Level: {validity: none}
+        Header: {validity: none}
+        PlotName: {validity: none}
+        Scenario: {validity: none}
+        ReferenceScenario: {validity: none}
+        ColorLegend: {validity: none}
+        ParameterIds: {validity: none}
+        OutputPathIds: {validity: none}
+        plotCaptionAddon: {validity: none}
+        xScale:
+          validity: list
+          valuesFunction: axisScaleValues
+          prompt: "Recommended x-axis scale."
+        xlimit_linear: {validity: none}
+        xlimit_log: {validity: none}
+        FacetScale:
+          validity: list
+          valuesFunction: facetScaleValues
+          prompt: "Recommended facet scale."
+
+      DistributionVsRange:
+        Level: {validity: none}
+        Header: {validity: none}
+        PlotName: {validity: none}
+        Scenarios: {validity: none}
+        ReferenceScenario: {validity: none}
+        ColorLegend: {validity: none}
+        ParameterIds: {validity: none}
+        OutputPathIds: {validity: none}
+        ParameterId_Bin: {validity: none}
+        ModeOfBinning:
+          validity: list
+          valuesFunction: modeOfBinningValues
+          prompt: "Recommended binning mode."
+        NumberOfBins: {validity: none}
+        plotCaptionAddon: {validity: none}
+        yScale:
+          validity: list
+          valuesFunction: axisScaleValues
+          prompt: "Recommended y-axis scale."
+        ylimit_linear: {validity: none}
+        ylimit_log: {validity: none}
+        FacetScale:
+          validity: list
+          valuesFunction: facetScaleValues
+          prompt: "Recommended facet scale."
+
+      SensitivityPlots:
+        Level: {validity: none}
+        Header: {validity: none}
+        PlotName: {validity: none}
+        Scenario: {validity: none}
+        OutputPathIds: {validity: none}
+        SensitivityParameterSheet: {validity: none}
+        PKParameters: {validity: none}
+        Threshold: {validity: none}
+        plotCaptionAddon: {validity: none}
+
+  DataImportMap.xlsx:
+    sheets:
+      # Some columns contain user-specific paths, R expressions, source field
+      # names, units, and free text. They are intentionally mixed and skipped.
+      DataFiles:
+        FileIdentifier: {validity: none}
+        DataFile: {validity: none}
+        Dictionary: {validity: none}
+        DataFilter: {validity: none}
+        DataClass:
+          validity: list
+          valuesFunction: dataclassValues
+          prompt: "Recommended data class."
+      tpDictionary:
+        TargetColumn: {validity: none}
+        Type:
+          validity: list
+          valuesFunction: dictionaryTypeValues
+        SourceColumn: {validity: none}
+        SourceUnit: {validity: none}
+        Filter: {validity: none}
+        FilterValue: {validity: mixed}
+        Description: {validity: none}
+      pkDictionary:
+        TargetColumn: {validity: none}
+        Type:
+          validity: list
+          valuesFunction: dictionaryTypeValues
+        SourceColumn: {validity: none}
+        SourceUnit: {validity: none}
+        Filter: {validity: none}
+        FilterValue: {validity: mixed}
+        Description: {validity: none}
+      NumericValues:
+        VariableName: {validity: none}
+        Value: {validity: none}
+        Unit: {validity: none}
+        Reference: {validity: none}
+        Comment: {validity: none}
+
+  PKParameter.xlsx:
+    sheets:
+      Template:
+        Name: {validity: none}
+        DisplayName: {validity: none}
+        DisplayUnit: {validity: mixed}
+        OutputPathIds: {validity: none}
+        Descriptions: {validity: none}
+
+      Userdef PK Parameter:
+        Name: {validity: none}
+        Standard PK parameter:
+          validity: list
+          valuesFunction: standardPkParameterValues
+          prompt: "Recommended standard PK parameter."
+        Display Unit: {validity: none}
+        StartTime [min]: {validity: mixed}
+        StartApplicationIndex: {validity: mixed}
+        StartTimeOffset [min]: {validity: mixed}
+        EndTime [min]: {validity: mixed}
+        EndApplicationIndex: {validity: mixed}
+        EndTimeOffset [min]: {validity: mixed}
+        NormalizationFactor: {validity: none}
+        ConcentrationThreshold [µmol/l]: {validity: mixed}
+
+  SensitivityParameter.xlsx:
+    sheets:
+      Template:
+        Parameter: {validity: none}
+        ParameterPath: {validity: none}

@@ -28,12 +28,14 @@ xlsxWriteData(wb, "ExistingSheet", data)
 
 }
 \seealso{
-Other function to read from and write to xlsx: 
-\code{\link{setHeadersToLowerCase}()},
-\code{\link{splitInputs}()},
-\code{\link{xlsxAddDataUsingTemplate}()},
-\code{\link{xlsxAddSheet}()},
-\code{\link{xlsxCloneAndSet}()},
-\code{\link{xlsxReadData}()}
+Other function to read from and write to xlsx:
+\code{\link[=copyConfigSheet]{copyConfigSheet()}},
+\code{\link[=setHeadersToLowerCase]{setHeadersToLowerCase()}},
+\code{\link[=splitInputs]{splitInputs()}},
+\code{\link[=xlsxAddDataUsingTemplate]{xlsxAddDataUsingTemplate()}},
+\code{\link[=xlsxAddSheet]{xlsxAddSheet()}},
+\code{\link[=xlsxCloneAndSet]{xlsxCloneAndSet()}},
+\code{\link[=xlsxReadData]{xlsxReadData()}},
+\code{\link[=xlsxWriteOrAddData]{xlsxWriteOrAddData()}}
 }
 \concept{function to read from and write to xlsx}

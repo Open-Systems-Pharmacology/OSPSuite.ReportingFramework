@@ -14,25 +14,27 @@ validateTimeProfilesConfig(
 \arguments{
 \item{configTable}{Plot configuration table.}
 
-\item{dataObserved}{A `data.table` (formatted as produced by `readObservedDataByDictionary`)
-or `DataCombined` object containing the observed data to be plotted.}
+\item{dataObserved}{Optional observed dataset used for group/id validation.}
 
-\item{scenarioResults}{A list containing simulated scenario results.}
+\item{scenarioResults}{Named list of loaded scenario results.}
 
-\item{...}{Additional arguments passed to `ospsuite.plots::plotTimeprofile`.}
+\item{...}{Additional validation arguments forwarded to helper validators.}
+}
+\value{
+NULL (invisible).
 }
 \description{
 Validation of config table for time profiles plots
 }
 \seealso{
-Other plot configuration validation function: 
-\code{\link{validateDistributionVsDemographicsConfig}()},
-\code{\link{validateHistogramsConfig}()},
-\code{\link{validatePKBoxwhiskerConfig}()},
-\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
-\code{\link{validatePKForestAggregatedRatiosConfig}()},
-\code{\link{validatePKForestPointEstimateOfAbsoluteValuesConfig}()},
-\code{\link{validatePKForestPointEstimateOfRatiosConfig}()},
-\code{\link{validateSensitivityConfig}()}
+Other plot configuration validation function:
+\code{\link[=validateDistributionVsDemographicsConfig]{validateDistributionVsDemographicsConfig()}},
+\code{\link[=validateHistogramsConfig]{validateHistogramsConfig()}},
+\code{\link[=validatePKBoxwhiskerConfig]{validatePKBoxwhiskerConfig()}},
+\code{\link[=validatePKForestAggregatedAbsoluteValuesConfig]{validatePKForestAggregatedAbsoluteValuesConfig()}},
+\code{\link[=validatePKForestAggregatedRatiosConfig]{validatePKForestAggregatedRatiosConfig()}},
+\code{\link[=validatePKForestPointEstimateOfAbsoluteValuesConfig]{validatePKForestPointEstimateOfAbsoluteValuesConfig()}},
+\code{\link[=validatePKForestPointEstimateOfRatiosConfig]{validatePKForestPointEstimateOfRatiosConfig()}},
+\code{\link[=validateSensitivityConfig]{validateSensitivityConfig()}}
 }
 \concept{plot configuration validation function}

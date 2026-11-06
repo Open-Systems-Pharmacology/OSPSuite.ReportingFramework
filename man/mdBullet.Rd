@@ -2,33 +2,41 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{mdBullet}
 \alias{mdBullet}
-\title{Insert a bulleted item, making sure that there are sufficient newlines to build a bulleted list}
+\alias{mdBullet0}
+\title{Insert bulleted item with indentation.}
 \usage{
 mdBullet(..., bullet = "-", level = 1)
+
+mdBullet0(..., bullet = "-", level = 1)
 }
 \arguments{
-\item{...}{passed to `mdPaste`}
+\item{...}{Bullet content.}
 
-\item{bullet}{`character` type of bullet}
+\item{bullet}{Bullet character (default "-").}
 
-\item{level}{`integer`, specifies the indentation level. `level=1` has no indentation}
+\item{level}{Indentation level (default 1).}
+}
+\value{
+Invisible `NULL`.
+
+Invisible `NULL`.
 }
 \description{
-Insert a bulleted item, making sure that there are sufficient newlines to build a bulleted list
+Insert bulleted item with indentation.
+
+Insert bulleted item using paste0.
 }
 \seealso{
-Other markdown helper function: 
-\code{\link{addFiguresAndTables}()},
-\code{\link{mdBullet0}()},
-\code{\link{mdCaption}()},
-\code{\link{mdFigure}()},
-\code{\link{mdFootNote}()},
-\code{\link{mdHeading}()},
-\code{\link{mdLink}()},
-\code{\link{mdNewline}()},
-\code{\link{mdNewpage}()},
-\code{\link{mdPaste}()},
-\code{\link{mdPaste0}()},
-\code{\link{mdTable}()}
+Other markdown helper function:
+\code{\link[=mdCaption]{mdCaption()}},
+\code{\link[=mdFigure]{mdFigure()}},
+\code{\link[=mdFootNote]{mdFootNote()}},
+\code{\link[=mdHeading]{mdHeading()}},
+\code{\link[=mdLink]{mdLink()}},
+\code{\link[=mdNewline]{mdNewline()}},
+\code{\link[=mdNewpage]{mdNewpage()}},
+\code{\link[=mdPaste]{mdPaste()}},
+\code{\link[=mdPaste0]{mdPaste0()}},
+\code{\link[=mdTable]{mdTable()}}
 }
 \concept{markdown helper function}

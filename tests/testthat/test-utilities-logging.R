@@ -1,102 +1,143 @@
-# testProject was set up by setup.R
+withoutConsoleLogging <- function(expr) {
+  oldLogThreshold <- logger::log_threshold(index = 1)
+  on.exit(logger::log_threshold(oldLogThreshold, index = 1), add = TRUE)
+  logger::log_threshold(logger::FATAL, index = 1)
 
-# Unit tests for initLogfunction
-test_that("initLogfunction creates default log file folder when logFileFolder is NULL", {
-  expect_true(dir.exists(file.path(projectConfiguration$outputFolder, "Logs")))
+  force(expr)
+}
+
+# Unit tests for addMessageToLog
+test_that("addMessageToLog logs messages successfully", {
+  withoutConsoleLogging({
+    expect_no_error(addMessageToLog("Test message"))
+  })
 })
 
-#  tests for `writeToLog`
-test_that("writeToLog appends log message to file", {
-  logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
+test_that("setLogPath writes to the configured log file", {
+  logFolder <- file.path(tempdir(), "rf-custom-log")
+  logFile <- "workflow.log"
+  logPath <- file.path(logFolder, logFile)
 
-  filename <- "test.log"
-  type <- "Info"
-  msg <- "Test log message"
-  writeToLog(type, msg, filename)
-  suppressWarnings(logFile <- readLines(file.path(logFileFolder, filename)))
-  expect_true(length(logFile) > 0)
-  expect_equal(grep(paste0(type, ": ", msg), utils::tail(logFile, 1)), expected = 1)
+  unlink(logFolder, recursive = TRUE, force = TRUE)
+  on.exit(unlink(logFolder, recursive = TRUE, force = TRUE), add = TRUE)
+  on.exit(ospsuite.utils::setLogFolder(NULL), add = TRUE)
+
+  expect_no_error(setLogPath(logFolder = logFolder, logFileName = logFile))
+
+  withoutConsoleLogging({
+    addMessageToLog("Custom path message")
+  })
+
+  expect_true(file.exists(logPath))
+  expect_true(any(grepl(
+    "Custom path message",
+    readLines(logPath),
+    fixed = TRUE
+  )))
 })
 
+test_that("saveSessionInfo writes a separate file in the configured log folder", {
+  logFolder <- file.path(tempdir(), "rf-session-log")
+  sessionFile <- "custom-session-info.log"
+  sessionPath <- file.path(logFolder, sessionFile)
+
+  unlink(logFolder, recursive = TRUE, force = TRUE)
+  on.exit(unlink(logFolder, recursive = TRUE, force = TRUE), add = TRUE)
+  on.exit(ospsuite.utils::setLogFolder(NULL), add = TRUE)
+
+  expect_no_error(setLogPath(
+    logFolder = logFolder,
+    logFileName = "workflow.log"
+  ))
+  expect_no_error(saveSessionInfo(fileName = sessionFile))
+
+  expect_true(file.exists(sessionPath))
+  expect_true(any(grepl("R version", readLines(sessionPath), fixed = TRUE)))
+})
+
+test_that("saveSessionInfo requires a configured log folder", {
+  ospsuite.utils::setLogFolder(NULL)
+
+  expect_error(
+    saveSessionInfo(),
+    "No log folder configured"
+  )
+})
 
 # Unit tests errors and warnings
-test_that("captureLog function catches only messages to display", {
-  # set logging folder explicitly to avoid crashes for very long file names
-  initLogfunction(
-    projectConfiguration = projectConfiguration,
-    verbose = FALSE,
-    loggingFolder = tempdir()
-  )
+test_that("captureLog function catches messages and errors", {
+  withoutConsoleLogging({
+    # Test message capture
+    expect_no_error(captureLog(expr = message("Test info message")))
 
-  logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
+    # Test warning capture
+    expect_no_error(captureLog(expr = warning("Test warning message")))
 
-  captureLog(expr = warning("Warning message"))
-  suppressWarnings(logFile <- readLines(file.path(logFileFolder, "run.log")))
-  expect_true(length(grep("Warning message", logFile)) > 0) # The message should be logged
+    # Test error capture
+    invisible(capture.output(
+      errorResult <- tryCatch(
+        captureLog(expr = stop("Test error message")),
+        error = identity
+      ),
+      type = "message"
+    ))
 
-  expect_error(captureLog(expr = stop("Error message")))
-  suppressWarnings(logFile <- readLines(file.path(logFileFolder, "run.log")))
-  expect_true(length(grep("Error message", logFile)) > 0) # The message should be logged
+    expect_s3_class(errorResult, "error")
+    expect_equal(conditionMessage(errorResult), "Test error message")
+  })
 })
 
-test_that("saveSessionInfo writes session info to log file", {
-  # Set up log function
-  suppressMessages(initLogfunction(
-    projectConfiguration = projectConfiguration, ,
-    loggingFolder = tempdir()
-  ))
+# Unit tests for setShowLogMessages
+test_that("setShowLogMessages controls verbosity", {
+  # Set to non-verbose
+  expect_no_error(setShowLogMessages(FALSE))
 
-  # Call the saveSessionInfo function
-  saveSessionInfo()
-
-  # Check if the log file was created and contains the session info
-  logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
-
-  suppressWarnings(logContent <- readLines(file.path(logFileFolder, "SessionInfo.log")))
-  expect_true(length(logContent) > 0, "Log file was created")
-  expect_true(any(grepl("Session Info", logContent)), "Session Info was written to log file")
+  # Set to verbose
+  expect_no_error(setShowLogMessages(TRUE))
 })
 
+# Unit tests for writeTableToLog
+test_that("writeTableToLog logs data frames successfully", {
+  exampleData <- data.table(x = 1:5, y = letters[1:5])
 
-# Test for verbose = FALSE
-test_that("captureLog Logs messages when verbose is TRUE", {
-  myMessage <- "Test message"
-
-  initLogfunction(
-    projectConfiguration = projectConfiguration, verbose = FALSE,
-    loggingFolder = tempdir()
-  )
-  setShowLogMessages(TRUE)
-  output <- utils::capture.output(captureLog(message(myMessage)), type = "message")
-
-  expect_true(output == myMessage)
-})
-
-
-exampleData <- data.table(x = 1:5, y = letters[1:5])
-
-test_that("writeTableToLog function works as expected", {
-  setShowLogMessages(FALSE)
   # Call the function with example data
-  writeTableToLog(exampleData, filename = "table.log")
-
-  # Verify that the log file has been created
-  # Check if the log file was created and contains the session info
-  logFileFolder <- getOption("OSPSuite.RF.logFileFolder")
-
-  suppressWarnings(logContent <- readLines(file.path(logFileFolder, "table.log")))
-  expect_true(length(logContent) > 0, "Log file was created")
+  withoutConsoleLogging({
+    expect_no_error(writeTableToLog(exampleData))
+  })
 })
 
 test_that("captureLog executes finallyExpression", {
-  # Call captureLog with an expression that generates an error
-  expect_warning(expect_error(captureLog(expr = stop("This is an error"), finallyExpression = warning("finallyExecuted"))))
+  withoutConsoleLogging({
+    state <- new.env(parent = emptyenv())
+    state$finallyExecuted <- FALSE
 
+    invisible(capture.output(
+      errorResult <- tryCatch(
+        captureLog(
+          expr = stop("This is an error"),
+          finallyExpression = {
+            state$finallyExecuted <- TRUE
+          }
+        ),
+        error = identity
+      ),
+      type = "message"
+    ))
 
-  # Call captureLog with a successful expression
-  expect_warning(captureLog(expr = {
-    a <- 1
-  }, finallyExpression = {
-    warning("finallyExecuted")
-  }))
+    expect_s3_class(errorResult, "error")
+    expect_equal(conditionMessage(errorResult), "This is an error")
+    expect_true(state$finallyExecuted)
+
+    state$finallyExecuted <- FALSE
+
+    expect_no_error(captureLog(
+      expr = {
+        a <- 1
+      },
+      finallyExpression = {
+        state$finallyExecuted <- TRUE
+      }
+    ))
+    expect_true(state$finallyExecuted)
+  })
 })

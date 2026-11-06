@@ -3,144 +3,516 @@
 #' Read data by dictionary
 #'
 #' This function reads and processes data based on the provided project configuration.
+#' Depending on `spreadData`, it can also propagate identifiers and metadata into
+#' reporting-configuration workbooks.
 #'
 #' @param projectConfiguration An object containing project configuration details, including the path to the data importer configuration file.
-#' @param spreadData If TRUE, information derived from observed data, such as identifiers and biometrics, is spread to other tables.
-#' @param dataClassType A character string indicating the type of data class to process. Options are "timeprofile" or "pkParameter".
+#' @param spreadData If `TRUE`, information derived from observed data is spread
+#'   to configuration workbooks: `Reports.xlsx` (`DataGroups`, `Outputs`, and
+#'   synchronized `Scenarios`) and `Individuals.xlsx` (`IndividualBiometrics`,
+#'   `VirtualTwinPopulation`). If `FALSE`, import remains read-only and no
+#'   configuration workbook is modified.
+#' @param dataClassType A character string indicating the type of data class to process. Options are "timeprofile", "pkParameter", or "numericValues".
 #' @param fileIds A character vector with file identifiers to be selected, if NULL (default) all are selected.
+#' @param debugMode Logical. If `TRUE`, import errors are downgraded to warnings
+#'   on a per-file basis where possible, and processing continues with remaining
+#'   files. This mode is intended for exploratory runs and is blocked during
+#'   valid runs. Default is `FALSE`.
+#'
+#' @details
+#' The import pipeline is split into discrete stages: selecting configured
+#' files by class, importing each file by its dictionary mapping, applying
+#' dictionary-based conversions, validating the combined output, and optionally
+#' propagating discovered identifiers into configuration workbooks.
 #'
 #' @return A `data.table` containing the processed data based on the dictionary. The structure includes relevant columns defined in the data dictionary.
 #' @export
 #' @family observed data processing
-readObservedDataByDictionary <- function(projectConfiguration,
-                                         spreadData = TRUE,
-                                         dataClassType = c("timeprofile", "pkParameter"),
-                                         fileIds = NULL) {
-  # avoid warning for global variable
-  individualId <- outputPathId <- dataType <- fileIdentifier <- dataClass <- NULL
-
+readObservedDataByDictionary <- function(
+  projectConfiguration,
+  spreadData = TRUE,
+  dataClassType = c("timeprofile", "pkParameter", "numericValues"),
+  fileIds = NULL,
+  debugMode = FALSE
+) {
   dataClassType <- match.arg(dataClassType)
+  checkmate::assertFlag(debugMode)
+  if (debugMode) {
+    .stopHelperFunction()
+  }
 
-
-  wb <- openxlsx::loadWorkbook(projectConfiguration$dataImporterConfigurationFile)
-  dataList <- xlsxReadData(
-    wb = wb,
-    sheetName = "DataFiles",
-    skipDescriptionRow = TRUE
+  wb <- openxlsx::loadWorkbook(
+    projectConfiguration$addOns$dataImportMapFile
   )
-  checkmate::assertCharacter(dataList$dataClass, any.missing = FALSE)
-  dataList <- switch(dataClassType,
-    timeprofile = dataList[dataClass %in% grep("^tp", unlist(DATACLASS), value = TRUE)],
-    pkParameter = dataList[dataClass %in% grep("^pk", unlist(DATACLASS), value = TRUE)]
-  )
-  if (nrow(dataList) == 0) stop(paste("no datafiles defined for", dataClassType))
+  dataList <- .observedDataListByClass(wb = wb, dataClassType = dataClassType)
+  if (nrow(dataList) == 0) {
+    stop(messages$errorutilitiesdataNoDataFilesDefined())
+  }
 
   if (!is.null(fileIds)) {
     checkmate::assertNames(fileIds, subset.of = dataList$fileIdentifier)
     dataList <- dataList[fileIdentifier %in% fileIds]
   }
 
+  if (dataClassType == "numericValues") {
+    return(.readNumericValuesFromDataFiles(wb = wb, dataList = dataList))
+  }
+
+  if (!debugMode) {
+    .assertObservedDataFilesAndDictionaries(
+      projectConfiguration = projectConfiguration,
+      dataList = dataList,
+      wb = wb
+    )
+  }
+
+  importedData <- .importObservedDataFromDataList(
+    projectConfiguration = projectConfiguration,
+    dataList = dataList,
+    wb = wb,
+    debugMode = debugMode
+  )
+  dataDT <- importedData$dataDT
+  dict <- importedData$dict
+
+  if (nrow(dataDT) == 0) {
+    return(.handleEmptyObservedDataImport(
+      dataDT = dataDT,
+      debugMode = debugMode
+    ))
+  }
+
+  dataDT[, dataType := "observed"]
+
+  dataDT <- .setDataTypeAttributes(dataDT, dict)
+
+  .validateObservedDataByMode(
+    dataDT = dataDT,
+    dataClassType = dataClassType,
+    debugMode = debugMode
+  )
+
+  # Spread data to other tables
+  if (spreadData) {
+    .spreadObservedDataToConfig(
+      projectConfiguration = projectConfiguration,
+      dataDT = dataDT
+    )
+  }
+
+  # Logging
+  ospsuite.utils::logInfo("Observed Data:")
+  writeTableToLog(dataDT[,
+    .(
+      "No of data points" = .N,
+      "No of individuals" = dplyr::n_distinct(individualId),
+      "No of outputs" = dplyr::n_distinct(outputPathId)
+    ),
+    by = c("group")
+  ])
+
+  return(dataDT)
+}
+
+#' Select configured DataFiles rows for one observed data class.
+#'
+#' @param wb Workbook object containing the DataFiles sheet.
+#' @param dataClassType One of `"timeprofile"`, `"pkParameter"`, or `"numericValues"`.
+#' @return Filtered `data.table` of DataFiles entries.
+#' @keywords internal
+#' @noRd
+.observedDataListByClass <- function(wb, dataClassType) {
+  dataList <- xlsxReadData(
+    wb = wb,
+    sheetName = "DataFiles",
+    skipDescriptionRow = TRUE
+  )
+  checkmate::assertCharacter(dataList$dataClass, any.missing = FALSE)
+
+  return(switch(
+    dataClassType,
+    timeprofile = dataList[
+      dataClass %in% grep("^tp", unlist(DATACLASS), value = TRUE)
+    ],
+    pkParameter = dataList[
+      dataClass %in% grep("^pk", unlist(DATACLASS), value = TRUE)
+    ],
+    numericValues = dataList[
+      dataClass %in% DATACLASS[["numericValues"]]
+    ]
+  ))
+}
+
+#' Assert input files and dictionary sheets exist for strict observed-data import.
+#'
+#' @param projectConfiguration A project configuration object.
+#' @param dataList DataFiles subset selected for import.
+#' @param wb Workbook object containing dictionary sheets.
+#' @return NULL (invisible).
+#' @keywords internal
+#' @noRd
+.assertObservedDataFilesAndDictionaries <- function(
+  projectConfiguration,
+  dataList,
+  wb
+) {
   checkmate::assertFileExists(fs::path_abs(
     start = projectConfiguration$projectConfigurationDirPath,
     path = dataList$dataFile
   ))
   checkmate::assertNames(dataList$dictionary, subset.of = wb$sheet_names)
+  return(invisible(NULL))
+}
 
-  # Loop through selected data files
+#' Import and convert all selected observed-data files.
+#'
+#' @param projectConfiguration A project configuration object.
+#' @param dataList DataFiles subset selected for import.
+#' @param wb Workbook object containing dictionary sheets.
+#' @param debugMode Logical value controlling warning-vs-error behavior.
+#' @return Named list with `dataDT` and merged `dict`.
+#' @keywords internal
+#' @noRd
+.importObservedDataFromDataList <- function(
+  projectConfiguration,
+  dataList,
+  wb,
+  debugMode
+) {
   dataDT <- data.table()
   dict <- list()
+
   for (d in split(dataList, seq_len(nrow(dataList)))) {
-    tmpData <- data.table::fread(fs::path_abs(
-      start = projectConfiguration$projectConfigurationDirPath,
-      path = d$dataFile
-    ))
-
-    tmpdict <- readDataDictionary(
-      dictionaryFile = projectConfiguration$dataImporterConfigurationFile,
-      sheet = d$dictionary,
-      data = tmpData,
-      dataClass = d$dataClass
+    imported <- .importObservedDataFile(
+      projectConfiguration = projectConfiguration,
+      dataRow = d,
+      wb = wb,
+      debugMode = debugMode
     )
 
-    dataDT <- rbind(dataDT,
-      convertDataByDictionary( # nolint indentation_linter
+    if (is.null(imported)) {
+      next
+    }
+
+    dataDT <- rbind(dataDT, imported$data, fill = TRUE)
+    dict <- utils::modifyList(dict, imported$dict)
+  }
+
+  return(list(dataDT = dataDT, dict = dict))
+}
+
+#' Import and convert one observed-data file row.
+#'
+#' @param projectConfiguration A project configuration object.
+#' @param dataRow A single-row DataFiles `data.table`.
+#' @param wb Workbook object containing dictionary sheets.
+#' @param debugMode Logical value controlling warning-vs-error behavior.
+#' @return A list with converted `data` and typed `dict`, or NULL in debug mode.
+#' @keywords internal
+#' @noRd
+.importObservedDataFile <- function(
+  projectConfiguration,
+  dataRow,
+  wb,
+  debugMode
+) {
+  resultList <- tryCatch(
+    {
+      dataFilePath <- fs::path_abs(
+        start = projectConfiguration$projectConfigurationDirPath,
+        path = dataRow$dataFile
+      )
+      if (!file.exists(dataFilePath)) {
+        stop(messages$errorutilitiesdataDebugFileNotFound())
+      }
+      if (!(dataRow$dictionary %in% wb$sheet_names)) {
+        stop(messages$errorutilitiesdataDebugDictionarySheetMissing())
+      }
+
+      tmpData <- data.table::fread(dataFilePath)
+
+      tmpdict <- .readDataDictionary(
+        dictionaryFile = projectConfiguration$addOns$dataImportMapFile,
+        sheet = dataRow$dictionary,
         data = tmpData,
-        dataFilter = d$dataFilter,
-        dict = tmpdict,
-        dictionaryName = d$dictionary
-      ) %>%
-        dplyr::mutate(dataClass = d$dataClass),
-      fill = TRUE
-    )
-    # Get unique dictionary for columnType
-    tmpdict <-
-      tmpdict %>%
-      dplyr::select(c("targetColumn", "type")) %>%
-      unique()
+        dataClass = dataRow$dataClass
+      )
 
-    dict <- utils::modifyList(
-      dict,
-      as.list(tmpdict$type) %>%
-        stats::setNames(tmpdict$targetColumn)
+      converted <- .convertDataByDictionary(
+        data = tmpData,
+        dataFilter = dataRow$dataFilter,
+        dict = tmpdict,
+        dictionaryName = dataRow$dictionary,
+        debugMode = debugMode
+      ) |>
+        dplyr::mutate(dataClass = dataRow$dataClass)
+
+      tmpdict <-
+        tmpdict |>
+        dplyr::select(c("targetColumn", "type")) |>
+        unique()
+
+      list(
+        data = converted,
+        dict = as.list(tmpdict$type) |>
+          stats::setNames(tmpdict$targetColumn)
+      )
+    },
+    error = function(err) {
+      if (!debugMode) {
+        stop(err)
+      }
+      warning(messages$warningutilitiesdataDebugImportFileFailed())
+      NULL
+    }
+  )
+  return(resultList)
+}
+
+#' Handle empty observed-data imports.
+#'
+#' @param dataDT Imported observed-data table.
+#' @param debugMode Logical value controlling warning-vs-error behavior.
+#' @return Empty `data.table` in debug mode; otherwise an error is thrown.
+#' @keywords internal
+#' @noRd
+.handleEmptyObservedDataImport <- function(dataDT, debugMode) {
+  if (debugMode) {
+    warning(messages$warningutilitiesdataDebugNoRowsImported())
+    return(dataDT)
+  }
+  stop(messages$errorutilitiesdataNoDataFilesDefined())
+  return(invisible())
+}
+
+#' Validate observed data with debug-aware error handling.
+#'
+#' @param dataDT Imported observed-data table.
+#' @param dataClassType Selected data class type.
+#' @param debugMode Logical value controlling warning-vs-error behavior.
+#' @return NULL (invisible).
+#' @keywords internal
+#' @noRd
+.validateObservedDataByMode <- function(dataDT, dataClassType, debugMode) {
+  if (debugMode) {
+    tryCatch(
+      {
+        validateObservedData(dataDT = dataDT, dataClassType)
+      },
+      error = function(err) {
+        warning(messages$warningutilitiesdataDebugValidationFailed())
+      }
+    )
+    return(invisible(NULL))
+  }
+
+  validateObservedData(dataDT = dataDT, dataClassType)
+  return(invisible(NULL))
+}
+
+#' Spread imported observed-data identifiers into configuration workbooks.
+#'
+#' @param projectConfiguration A project configuration object.
+#' @param dataDT Imported observed-data table.
+#' @return NULL (invisible).
+#' @keywords internal
+#' @noRd
+.spreadObservedDataToConfig <- function(projectConfiguration, dataDT) {
+  functionCalls <- list(
+    list(
+      func = updateDataGroupId,
+      args = list(
+        projectConfiguration = projectConfiguration,
+        dataDT = dataDT
+      )
+    ),
+    list(
+      func = updateOutputPathId,
+      args = list(
+        projectConfiguration = projectConfiguration,
+        dataDT = dataDT
+      )
+    ),
+    list(
+      func = addBiometricsToConfig,
+      args = list(
+        dataDT = dataDT,
+        projectConfiguration = projectConfiguration
+      )
+    ),
+    list(
+      func = setupVirtualTwinPopConfig,
+      args = list(
+        projectConfiguration = projectConfiguration,
+        dataObserved = dataDT
+      )
+    )
+  )
+
+  for (call in functionCalls) {
+    tryCatch(
+      {
+        do.call(call$func, call$args)
+      },
+      error = function(err) {
+        warning(messages$warningutilitiesdataExecutionFailedRetryManually())
+      }
     )
   }
 
-  dataDT[, dataType := "observed"]
+  return(invisible(NULL))
+}
 
-  dataDT <- setDataTypeAttributes(dataDT, dict)
+#' Read scalar numeric values from sheets configured in DataFiles
+#'
+#' @param wb Workbook object containing DataFiles and numeric values sheets.
+#' @param dataList DataFiles subset containing rows with numeric values data class.
+#'
+#' @details
+#' Iterates over each row in `dataList`, resolves the source sheet name,
+#' validates sheet existence, and appends normalized scalar rows from each
+#' sheet into one combined table.
+#'
+#' @return A `data.table` with columns `variableName`, `value`, `unit`, and `reference`.
+#' @keywords internal
+#' @noRd
+.readNumericValuesFromDataFiles <- function(wb, dataList) {
+  defaultSheetName <- "NumericValues"
+  numericValues <- data.table::data.table(
+    variableName = character(),
+    value = numeric(),
+    unit = character(),
+    reference = character()
+  )
 
-  validateObservedData(dataDT = dataDT, dataClassType)
+  for (d in split(dataList, seq_len(nrow(dataList)))) {
+    sheetName <- defaultSheetName
+    if (
+      "dictionary" %in% names(d) && !is.na(d$dictionary) && nzchar(d$dictionary)
+    ) {
+      sheetName <- d$dictionary
+    }
 
-  # Spread data to other tables
-  if (spreadData) {
-    # Define a list of functions and their arguments
-    functionCalls <- list(
-      list(
-        func = updateDataGroupId, args = list(projectConfiguration = projectConfiguration, dataDT = dataDT),
-        functionCall = "updateDataGroupId(projectConfiguration = projectConfiguration, dataDT = dataObserved)"
-      ),
-      list(
-        func = updateOutputPathId, args = list(projectConfiguration = projectConfiguration, dataDT = dataDT),
-        functionCall = "updateOutputPathId(projectConfiguration = projectConfiguration, dataDT = dataObserved)"
-      ),
-      list(
-        func = addBiometricsToConfig, args = list(dataDT = dataDT, projectConfiguration = projectConfiguration),
-        functionCall = "addBiometricsToConfig(projectConfiguration = projectConfiguration, dataDT = dataObserved)"
-      ),
-      list(
-        func = setupVirtualTwinPopConfig, args = list(projectConfiguration = projectConfiguration, dataObserved = dataDT),
-        functionCall = "setupVirtualTwinPopConfig(projectConfiguration = projectConfiguration, dataObserved = dataObserved)"
-      )
+    if (!(sheetName %in% wb$sheet_names)) {
+      stop(messages$errorutilitiesdataNumericValuesSheetMissing())
+    }
+
+    numericValues <- rbind(
+      numericValues,
+      .readNumericValuesSheet(wb = wb, sheetName = sheetName),
+      fill = TRUE
     )
+  }
 
-    # Loop through each function call
-    for (call in functionCalls) {
-      tryCatch(
-        {
-          do.call(call$func, call$args)
-        },
-        error = function(err) {
-          warning(paste(
-            "Error during execution of", call$functionCall,
-            "\nMessage:", conditionMessage(err),
-            "\nAre all relevant xlsx files closed? Retry manually."
-          ))
-        }
-      )
+  if (any(duplicated(numericValues$variableName))) {
+    stop(messages$errorutilitiesdataDuplicateVariableNames())
+  }
+
+  return(numericValues)
+}
+
+#' Read scalar numeric values from one sheet
+#'
+#' @param wb Workbook object.
+#' @param sheetName Name of the sheet to import.
+#'
+#' @return A `data.table` with normalized scalar values.
+#' @keywords internal
+#' @noRd
+.readNumericValuesSheet <- function(wb, sheetName) {
+  tmpData <- xlsxReadData(
+    wb = wb,
+    sheetName = sheetName,
+    skipDescriptionRow = TRUE
+  )
+
+  checkmate::assertNames(
+    names(tmpData),
+    must.include = c("variableName", "value", "unit", "reference"),
+    .var.name = paste("Numeric values sheet", sheetName)
+  )
+
+  tmpData <- tmpData[,
+    c("variableName", "value", "unit", "reference"),
+    with = FALSE
+  ]
+
+  tmpData[, variableName := trimws(as.character(variableName))]
+  tmpData[, value := suppressWarnings(as.numeric(value))]
+  tmpData[, unit := as.character(unit)]
+  tmpData[, reference := as.character(reference)]
+
+  tmpData <- tmpData[
+    !((is.na(variableName) | variableName == "") &
+      is.na(value) &
+      is.na(unit) &
+      is.na(reference))
+  ]
+
+  if (any(is.na(tmpData$variableName) | tmpData$variableName == "")) {
+    stop(messages$errorutilitiesdataMissingVariableNames())
+  }
+  if (any(is.na(tmpData$value))) {
+    stop(messages$errorutilitiesdataNonNumericValues())
+  }
+
+  return(tmpData[])
+}
+
+#' Get one numeric value by variable name
+#'
+#' Retrieves one numeric scalar from a table imported with
+#' `readObservedDataByDictionary(dataClassType = "numericValues")`.
+#'
+#' @param numericValues A `data.table` with at least columns
+#'   `variableName` and `value`.
+#' @param variableName Name of the variable to retrieve.
+#' @param expectedUnit Optional expected unit. If provided, the function checks
+#'   that the imported unit matches this value.
+#'
+#' @return A numeric scalar.
+#' @export
+#' @family observed data processing
+getNumericValue <- function(numericValues, variableName, expectedUnit = NULL) {
+  checkmate::assertDataTable(numericValues)
+  checkmate::assertNames(
+    names(numericValues),
+    must.include = c("variableName", "value")
+  )
+  checkmate::assertString(variableName, min.chars = 1)
+  checkmate::assertString(expectedUnit, null.ok = TRUE)
+
+  variableNameInput <- variableName
+  selectedRows <- numericValues[variableName == variableNameInput]
+  if (nrow(selectedRows) == 0) {
+    stop(paste("numericValues does not contain variableName", variableName))
+  }
+  if (nrow(selectedRows) > 1) {
+    stop(paste("Multiple entries found for variableName", variableName))
+  }
+
+  if (!is.null(expectedUnit)) {
+    checkmate::assertNames(names(selectedRows), must.include = c("unit"))
+    if (
+      is.na(selectedRows$unit[[1]]) || selectedRows$unit[[1]] != expectedUnit
+    ) {
+      stop(paste(
+        "Unit mismatch for",
+        variableName,
+        ": expected",
+        expectedUnit,
+        "but got",
+        selectedRows$unit[[1]]
+      ))
     }
   }
 
-  # Logging
-  writeToLog(type = "Info", "Observed Data:")
-  writeTableToLog(dataDT[, .(
-    "No of data points" = .N,
-    "No of individuals" = dplyr::n_distinct(individualId),
-    "No of outputs" = dplyr::n_distinct(outputPathId)
-  ),
-  by = c("group")
-  ])
+  value <- suppressWarnings(as.numeric(selectedRows$value[[1]]))
+  if (is.na(value)) {
+    stop(paste("Value for", variableName, "is missing or non-numeric"))
+  }
 
-  return(dataDT)
+  return(value)
 }
 #' Validate Observed Data
 #'
@@ -179,17 +551,14 @@ validateObservedData <- function(dataDT, dataClassType) {
   # Check column Identifier
   columnsWithAttributes <- lapply(dataDT, attr, "columnType")
   columnsWithAttributes <-
-    names(columnsWithAttributes)[unlist(lapply(columnsWithAttributes, function(col) {
-      !is.null(col)
-    }))]
+    names(columnsWithAttributes)[unlist(lapply(
+      columnsWithAttributes,
+      function(col) {
+        !is.null(col)
+      }
+    ))]
   if (!all(names(dataDT) %in% columnsWithAttributes)) {
-    warning(
-      paste0(
-        'Some data columns have no attribute: "',
-        paste(setdiff(names(dataDT), columnsWithAttributes), collapse = '", "'),
-        '"'
-      )
-    )
+    warning(messages$warningutilitiesdataMissingColumnAttributes())
   }
 
   # Check data validity
@@ -199,52 +568,50 @@ validateObservedData <- function(dataDT, dataClassType) {
       names(dataDT)
     )
   if (any(duplicated(dataDT, by = colIdentifier))) {
-    stop(
-      paste(
-        "Data must be unique in columns",
-        paste(colIdentifier, collapse = ", ")
-      )
-    )
+    stop(messages$errorutilitiesdataDuplicateRowsInIdentifierColumns())
   }
   for (col in setdiff(
     names(dataDT),
     c(
-      "lloq", "yUnit",
-      "yErrorValues", "yErrorType", "nBelowLLOQ",
-      "unit", "errorValues", "errorType" # columns for pkParameter
+      "lloq",
+      "yUnit",
+      "yErrorValues",
+      "yErrorType",
+      "nBelowLLOQ",
+      "unit",
+      "errorValues",
+      "errorType" # columns for pkParameter
     )
   )) {
     if (any(is.na(dataDT[[col]]) | dataDT[[col]] == "")) {
-      warning(paste("Data contains NAs or empty values in column", col))
+      warning(messages$warningutilitiesdataColumnContainsMissingValues())
     }
   }
 
   validateDataUnit <- function(colIdentifier, colUnit) {
-    # initialize variable to avoid messages
-    nUnit <- NULL
-
     unitCounts <- dataDT[, .(nUnit = uniqueN(get(colUnit))), by = colIdentifier]
     ambiguousUnits <- unitCounts[nUnit > 1]
 
     if (nrow(ambiguousUnits) > 0) {
       unitSummary <- dataDT[,
-        .(units = paste("units:", gsub(
-          "NA", "emptyString",
-          paste(unique(get(colUnit)),
-            collapse = ", "
+        .(
+          units = paste(
+            "units:",
+            gsub(
+              "NA",
+              "emptyString",
+              paste(unique(get(colUnit)), collapse = ", ")
+            )
           )
-        ))),
+        ),
         by = colIdentifier
       ]
       tmp <- merge(ambiguousUnits, unitSummary, by = colIdentifier)
-
-      summaryString <- paste(apply(tmp[, !"nUnit", with = FALSE], 1, function(x) {
-        paste(x, collapse = " ")
-      }), collapse = " | ")
-      warning(paste(
-        "Ambiguous units:", summaryString,
-        "\nPlease check if this acceptable, e.g. pkParameter as ratio and absolute values."
-      ))
+      summaryString <- paste(
+        apply(tmp, 1, function(row) paste(row, collapse = " ")),
+        collapse = "; "
+      )
+      warning(messages$warningutilitiesdataL3AmbiguousUnits())
     }
   }
 
@@ -266,10 +633,23 @@ validateObservedData <- function(dataDT, dataClassType) {
 
   if (dataClassType == "timeprofile") {
     validateDataUnit(colIdentifier = c("outputPathId"), colUnit = "yUnit")
-    validateErrorType(errorTypeCol = "yErrorType", errorValuesCol = "yErrorValues", minCol = "yMin", maxCol = "yMax")
+    validateErrorType(
+      errorTypeCol = "yErrorType",
+      errorValuesCol = "yErrorValues",
+      minCol = "yMin",
+      maxCol = "yMax"
+    )
   } else if (dataClassType == "pkParameter") {
-    validateDataUnit(colIdentifier = c("outputPathId", "pkParameter"), colUnit = "unit")
-    validateErrorType(errorTypeCol = "errorType", errorValuesCol = "errorValues", minCol = "minValue", maxCol = "maxValue")
+    validateDataUnit(
+      colIdentifier = c("outputPathId", "pkParameter"),
+      colUnit = "unit"
+    )
+    validateErrorType(
+      errorTypeCol = "errorType",
+      errorValuesCol = "errorValues",
+      minCol = "minValue",
+      maxCol = "maxValue"
+    )
   }
 
   return(invisible())
@@ -286,14 +666,13 @@ validateObservedData <- function(dataDT, dataClassType) {
 #'
 #' @return A `data.table` containing the data dictionary.
 #' @keywords internal
-readDataDictionary <- function(dictionaryFile,
-                               sheet,
-                               data,
-                               dataClass) {
-  # Initialize variables used for data.tables
-  sourceColumn <- filter <- NULL
-
-  dict <- xlsxReadData(wb = dictionaryFile, sheetName = sheet, skipDescriptionRow = TRUE)
+#' @noRd
+.readDataDictionary <- function(dictionaryFile, sheet, data, dataClass) {
+  dict <- xlsxReadData(
+    wb = dictionaryFile,
+    sheetName = sheet,
+    skipDescriptionRow = TRUE
+  )
 
   if (dataClass == DATACLASS$tpIndividual) {
     checkmate::assertNames(
@@ -306,7 +685,8 @@ readDataDictionary <- function(dictionaryFile,
         "xValues",
         "yValues",
         "yUnit"
-      ), .var.name = paste("Check for missing targetColumns in dictionary", sheet)
+      ),
+      .var.name = paste("Check for missing targetColumns in dictionary", sheet)
     )
   } else if (dataClass == DATACLASS$tpAggregated) {
     checkmate::assertNames(
@@ -320,7 +700,8 @@ readDataDictionary <- function(dictionaryFile,
         "yUnit",
         "yErrorType",
         "nBelowLLOQ"
-      ), .var.name = paste("Check for missing targetColumns in dictionary", sheet)
+      ),
+      .var.name = paste("Check for missing targetColumns in dictionary", sheet)
     )
   } else if (dataClass == DATACLASS$pkIndividual) {
     checkmate::assertNames(
@@ -332,7 +713,8 @@ readDataDictionary <- function(dictionaryFile,
         "outputPathId",
         "values",
         "unit"
-      ), .var.name = paste("Check for missing targetColumns in dictionary", sheet)
+      ),
+      .var.name = paste("Check for missing targetColumns in dictionary", sheet)
     )
   } else if (dataClass == DATACLASS$pkAggregated) {
     checkmate::assertNames(
@@ -345,16 +727,14 @@ readDataDictionary <- function(dictionaryFile,
         "unit",
         "errorType",
         "numberOfIndividuals"
-      ), .var.name = paste("Check for missing targetColumns in dictionary", sheet)
+      ),
+      .var.name = paste("Check for missing targetColumns in dictionary", sheet)
     )
   }
 
-  tmp <- dict[is.na(sourceColumn) & is.na(filter), ]
+  tmp <- dict[is.na(sourceColumn) & is.na(dict$filter), ]
   if (nrow(tmp) > 0) {
-    stop(paste0(
-      'Either sourceColumn or Filter on sourceColumn has to be filled in dictionary "', sheet,
-      '" for targetColumn(s) "', paste(tmp$targetColumn, collapse = '", "'), '"'
-    ))
+    stop(messages$errorutilitiesdataDictionarySourceOrFilterMissing())
   }
 
   checkmate::assertNames(
@@ -374,21 +754,26 @@ readDataDictionary <- function(dictionaryFile,
 #' @param dataFilter The filter to be applied to the data.
 #' @param dict The dictionary to be used for conversion.
 #' @param dictionaryName The name of the dictionary.
+#' @param debugMode Logical. If `TRUE`, filter-evaluation errors are converted
+#'   to warnings and import continues.
 #' @return A `data.table` containing the converted data.
 #' @keywords internal
-convertDataByDictionary <- function(data,
-                                    dataFilter,
-                                    dict,
-                                    dictionaryName) {
-  # Initialize variables used for data.tables
-  targetColumn <- sourceColumn <- xUnit <- filter <- type <- NULL
-
+#' @noRd
+.convertDataByDictionary <- function(
+  data,
+  dataFilter,
+  dict,
+  dictionaryName,
+  debugMode = FALSE
+) {
   # Execute data filter
-  if (!is.na(dataFilter) & dataFilter != "") data <- data[eval(parse(text = dataFilter))]
+  if (!is.na(dataFilter) & dataFilter != "") {
+    data <- data[eval(parse(text = dataFilter))]
+  }
 
   # Execute all filters
   if (any(!is.na(dict$filter))) {
-    dictFilters <- dict[!is.na(filter)]
+    dictFilters <- dict[!is.na(dict$filter)]
 
     for (myFilter in split(dictFilters, seq_len(nrow(dictFilters)))) {
       tryCatch(
@@ -399,14 +784,11 @@ convertDataByDictionary <- function(data,
           ]
         },
         error = function(err) {
-          warning(paste0(
-            "tpDictionary: '", dictionaryName,
-            "'; targetColumn: '", myFilter$targetColumn,
-            "'; filter: '", myFilter$filter,
-            "'; filterValue: '", myFilter$filterValue,
-            "'"
-          ))
-          stop(conditionMessage(err))
+          warning(messages$warningutilitiesdataDictionaryFilterContext())
+          if (!debugMode) {
+            stop(messages$errorutilitiesdataFilterEvaluationFailed())
+          }
+          warning(messages$warningutilitiesdataDebugFilterEvaluationFailed())
         }
       )
     }
@@ -423,11 +805,13 @@ convertDataByDictionary <- function(data,
 
   # Create new columns for duplicated old names; do not use setnames as source columns may not be unique
   for (iRow in seq_len(nrow(dictColumns))) {
-    data[, (dictColumns$targetColumn[iRow]) := data[[dictColumns$sourceColumn[iRow]]]]
+    data[,
+      (dictColumns$targetColumn[iRow]) := data[[dictColumns$sourceColumn[iRow]]]
+    ]
   }
 
   # Reduce to defined columns
-  data <- data %>%
+  data <- data |>
     dplyr::select(unique(dict$targetColumn))
 
   # Add time unit
@@ -436,29 +820,31 @@ convertDataByDictionary <- function(data,
   }
 
   # Transfer identifier to character without commas
-  data <- convertIdentifierColumns(
+  data <- .convertIdentifierColumns(
     dt = data,
     identifierCols = dict[type == "identifier"]$targetColumn
   )
 
-  data <- convertBiometrics(data, dict)
+  data <- .convertBiometrics(data, dict)
 
   return(data)
 }
 
 #' Converts biometric columns to default unit
 #'
-#' @inheritParams convertDataByDictionary
+#' @param data The input `data.table`.
+#' @param dict The dictionary used for conversion.
+#' @param dictionaryName The dictionary name used for error messages.
 #'
 #' @return A `data.table` with converted columns.
 #' @keywords internal
-convertBiometrics <- function(data, dict, dictionaryName) {
-  # Initialize variables used for data.tables
-  targetColumn <- gender <- NULL
-
+#' @noRd
+.convertBiometrics <- function(data, dict, dictionaryName) {
   for (col in intersect(names(BIOMETRICUNITS), dict$targetColumn)) {
     unitFactor <- ospsuite::toUnit(
-      quantityOrDimension = ospsuite::getDimensionForUnit(BIOMETRICUNITS[[col]]),
+      quantityOrDimension = ospsuite::getDimensionForUnit(BIOMETRICUNITS[[
+        col
+      ]]),
       values = 1,
       targetUnit = BIOMETRICUNITS[[col]],
       sourceUnit = dict[targetColumn == col]$sourceUnit[1]
@@ -474,10 +860,12 @@ convertBiometrics <- function(data, dict, dictionaryName) {
     data[, gender := ifelse(gender == "F", "FEMALE", gender)]
     data[, gender := toupper(gender)]
 
-    data[, gender := ifelse(gender != "MALE" & gender != "FEMALE", "UNKNOWN", gender)]
+    data[,
+      gender := ifelse(gender != "MALE" & gender != "FEMALE", "UNKNOWN", gender)
+    ]
 
     if (any(data$gender == "UNKNOWN")) {
-      warning(paste("Unknown gender in data set"))
+      warning(messages$warningutilitiesdataUnknownGender())
     }
   }
 
@@ -503,10 +891,7 @@ convertBiometrics <- function(data, dict, dictionaryName) {
 #' @export
 #' @family observed data processing
 updateDataGroupId <- function(projectConfiguration, dataDT) {
-  # Initialize variables used for data.tables
-  studyId <- group <- NULL
-
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+  wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$reportsFile)
 
   dtDataGroupIds <- xlsxReadData(wb = wb, sheetName = "DataGroups")
   identifierCols <- intersect(c("group", "studyId", "studyArm"), names(dataDT))
@@ -514,29 +899,34 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
   colsSelected <- unique(c(
     identifierCols,
     setdiff(
-      getColumnsForColumnType(dt = dataDT, columnTypes = "metadata"),
+      .getColumnsForColumnType(dt = dataDT, columnTypes = "metadata"),
       c("compartment", "molecule", "organ")
     )
   ))
 
-  dtDataGroupIdsNew <- dataDT %>%
-    dplyr::select(dplyr::all_of(colsSelected)) %>%
-    unique() %>%
-    dplyr::mutate(studyId = as.character(studyId)) %>%
-    dplyr::mutate(group = as.character(group)) %>%
+  dtDataGroupIdsNew <- dataDT |>
+    dplyr::select(dplyr::all_of(colsSelected)) |>
+    unique() |>
+    dplyr::mutate(studyId = as.character(studyId)) |>
+    dplyr::mutate(group = as.character(group)) |>
     dplyr::mutate(displayName = as.character(group))
 
   dtDataGroupIdsNew <-
     dtDataGroupIdsNew[!(group %in% dtDataGroupIds$group)]
 
   if (nrow(dtDataGroupIdsNew) > 0) {
-    dtDataGroupIds <- rbind(dtDataGroupIds,
-      dtDataGroupIdsNew, # nolint indentation_linter
+    dtDataGroupIds <- rbind(
+      dtDataGroupIds,
+      dtDataGroupIdsNew,
       fill = TRUE
     )
 
     xlsxWriteData(wb = wb, sheetName = "DataGroups", dt = dtDataGroupIds)
-    openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+    openxlsx::saveWorkbook(
+      wb,
+      projectConfiguration$addOns$reportsFile,
+      overwrite = TRUE
+    )
   }
 
   return(invisible())
@@ -561,26 +951,31 @@ updateDataGroupId <- function(projectConfiguration, dataDT) {
 #' @export
 #' @family observed data processing
 updateOutputPathId <- function(projectConfiguration, dataDT) {
-  # Initialize variables used for data.tables
-  outputPathId <- NULL
-
-  wb <- openxlsx::loadWorkbook(projectConfiguration$plotsFile)
+  wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$reportsFile)
   dtOutputPaths <- xlsxReadData(wb = wb, sheetName = "Outputs")
 
-  dtOutputPathsNew <- dataDT[!(outputPathId %in% dtOutputPaths$outputPathId), c("outputPathId")] %>%
-    unique() %>%
+  dtOutputPathsNew <- dataDT[
+    !(outputPathId %in% dtOutputPaths$outputPathId),
+    c("outputPathId")
+  ] |>
+    unique() |>
     dplyr::mutate(outputPathId = as.character(outputPathId))
 
   if (nrow(dtOutputPathsNew) > 0) {
-    dtOutputPaths <- rbind(dtOutputPaths,
-      dtOutputPathsNew, # nolint indentation_linter
+    dtOutputPaths <- rbind(
+      dtOutputPaths,
+      dtOutputPathsNew,
       fill = TRUE
     )
 
     xlsxWriteData(wb = wb, sheetName = "Outputs", dt = dtOutputPaths)
-    openxlsx::saveWorkbook(wb, projectConfiguration$plotsFile, overwrite = TRUE)
+    openxlsx::saveWorkbook(
+      wb,
+      projectConfiguration$addOns$reportsFile,
+      overwrite = TRUE
+    )
 
-    synchronizeScenariosWithPlots(projectConfiguration)
+    .synchronizeScenariosWithPlots(projectConfiguration)
   }
 
   return(invisible())
@@ -591,9 +986,14 @@ updateOutputPathId <- function(projectConfiguration, dataDT) {
 #' @param projectConfiguration Object of class `ProjectConfiguration` containing information on paths and file names
 #' @param dataDT A `data.table` with observed data.
 #' @param overwrite If TRUE, existing rows will be overwritten.
+#' @return Returns invisibly.
 #' @export
 #' @family observed data processing
-addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALSE) {
+addBiometricsToConfig <- function(
+  projectConfiguration,
+  dataDT,
+  overwrite = FALSE
+) {
   if (!("individualId" %in% names(dataDT))) {
     return(invisible())
   }
@@ -602,46 +1002,70 @@ addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALS
 
   wb <- openxlsx::loadWorkbook(projectConfiguration$individualsFile)
 
-  dtIndividualBiometrics <- xlsxReadData(wb = wb, sheetName = "IndividualBiometrics")
+  dtIndividualBiometrics <- xlsxReadData(
+    wb = wb,
+    sheetName = "IndividualBiometrics"
+  )
   if (overwrite) {
     dtIndividualBiometrics <- dtIndividualBiometrics[1, ]
   }
 
   biometrics <-
-    dataDT %>%
+    dataDT |>
     dplyr::select(
       c(
         "individualId",
-        names(dataDT)[unlist(lapply(dataDT, attr, "columnType")) == "biometrics"]
+        names(dataDT)[
+          unlist(lapply(dataDT, attr, "columnType")) == "biometrics"
+        ]
       )
-    ) %>%
+    ) |>
     unique()
 
   for (col in names(biometrics)) {
-    newName <- grep(col, names(dtIndividualBiometrics), ignore.case = TRUE, value = TRUE)
+    newName <- grep(
+      col,
+      names(dtIndividualBiometrics),
+      ignore.case = TRUE,
+      value = TRUE
+    )
     if (newName != "") {
       data.table::setnames(biometrics, old = col, new = newName)
     }
   }
 
-  if (!("species" %in% names(biometrics))) biometrics[["species"]] <- ospsuite::Species$Human
+  if (!("species" %in% names(biometrics))) {
+    biometrics[["species"]] <- ospsuite::Species$Human
+  }
 
   # Merge old and new tables
   dtIndividualBiometrics <-
-    rbind(dtIndividualBiometrics,
-      biometrics, # nolint indentation_linter
+    rbind(
+      dtIndividualBiometrics,
+      biometrics,
       fill = TRUE
     )
 
   # If overwrite FALSE take original located at the top, otherwise take new rows located at the bottom
   dtIndividualBiometrics <-
-    dtIndividualBiometrics[!duplicated(dtIndividualBiometrics,
-      by = "individualId",
-      fromLast = overwrite
-    )]
-  xlsxWriteData(wb = wb, sheetName = "IndividualBiometrics", dt = dtIndividualBiometrics)
+    dtIndividualBiometrics[
+      !duplicated(
+        dtIndividualBiometrics,
+        by = "individualId",
+        fromLast = overwrite
+      )
+    ]
+  xlsxWriteData(
+    wb = wb,
+    sheetName = "IndividualBiometrics",
+    dt = dtIndividualBiometrics
+  )
 
-  openxlsx::saveWorkbook(wb, projectConfiguration$individualsFile, overwrite = TRUE)
+  openxlsx::saveWorkbook(
+    wb,
+    projectConfiguration$individualsFile,
+    overwrite = TRUE
+  )
 
   return(invisible())
 }
@@ -660,13 +1084,13 @@ addBiometricsToConfig <- function(projectConfiguration, dataDT, overwrite = FALS
 convertDataTableToDataCombined <- function(dataDT) {
   validateObservedData(dataDT = dataDT, dataClassType = "timeprofile")
 
-  groupedData <- groupDataByIdentifier(dataDT = dataDT)
+  groupedData <- .groupDataByIdentifier(dataDT = dataDT)
 
   dataCombined <- ospsuite::DataCombined$new()
 
   for (groupData in groupedData) {
-    dataSet <- createDataSets(groupData)
-    dataSet <- addMetaDataToDataSet(dataSet, groupData)
+    dataSet <- .createDataSets(groupData)
+    dataSet <- .addMetaDataToDataSet(dataSet, groupData)
 
     dataCombined$addDataSets(
       dataSets = dataSet,
@@ -683,20 +1107,20 @@ convertDataTableToDataCombined <- function(dataDT) {
 #'
 #' @return A list with grouped data.
 #' @keywords internal
-groupDataByIdentifier <- function(dataDT) {
+#' @noRd
+.groupDataByIdentifier <- function(dataDT) {
   checkmate::assert_disjunct(names(dataDT), ".groupBy")
-  .groupBy <- NULL
 
   # Group data by identifier
-  groupBy <- getColumnsForColumnType(dt = dataDT, columnTypes = "identifier")
+  groupBy <- .getColumnsForColumnType(dt = dataDT, columnTypes = "identifier")
 
   # Use a copy to keep the data.table outside the function unchanged
-  dataDT <- data.table::copy(dataDT) %>%
-    dplyr::group_by_at(dplyr::vars(dplyr::all_of(groupBy))) %>%
-    dplyr::mutate(.groupBy = paste(!!!dplyr::syms(groupBy), sep = "_")) %>%
+  dataDT <- data.table::copy(dataDT) |>
+    dplyr::group_by_at(dplyr::vars(dplyr::all_of(groupBy))) |>
+    dplyr::mutate(.groupBy = paste(!!!dplyr::syms(groupBy), sep = "_")) |>
     dplyr::ungroup()
 
-  groupedData <- dataDT %>%
+  groupedData <- dataDT |>
     dplyr::group_split(.groupBy)
 
   # Create a named list with.groupBy as names
@@ -713,10 +1137,8 @@ groupDataByIdentifier <- function(dataDT) {
 #'
 #' @return An object of class `DataSet`.
 #' @keywords internal
-createDataSets <- function(groupData) {
-  # Initialize variables used for data.tables
-  lloq <- NULL
-
+#' @noRd
+.createDataSets <- function(groupData) {
   groupData <- data.table::as.data.table(groupData)
   groupName <- groupData$.groupBy[1]
   dataSet <- ospsuite::DataSet$new(groupName)
@@ -726,30 +1148,20 @@ createDataSets <- function(groupData) {
   )
 
   if (dplyr::n_distinct(groupData$yUnit) > 1) {
-    stop(paste(
-      "DataDT to combinedData: y Unit for dataset",
-      groupName, "is not unique"
-    ))
+    stop(messages$errorutilitiesdataL4NonUniqueYUnit())
   }
   dataSet$yDimension <- ospsuite::getDimensionForUnit(groupData$yUnit[1])
   dataSet$yUnit <- groupData$yUnit[1]
 
   if (dplyr::n_distinct(groupData$xUnit) > 1) {
-    stop(paste(
-      "DataDT to combinedData: x Unit for dataset",
-      groupName, "is not unique"
-    ))
+    stop(messages$errorutilitiesdataL4NonUniqueXUnit())
   }
   dataSet$xUnit <- groupData$xUnit[1]
 
   if (any(!is.na(groupData$lloq))) {
     lLOQ <- groupData[!is.na(lloq)]$lloq
     if (dplyr::n_distinct(lLOQ) > 1) {
-      warning(paste(
-        "DataDT to combinedData: More than one LLOQ for dataset",
-        groupName,
-        "is set to minimal"
-      ))
+      warning(messages$warningutilitiesdataL4MultipleLloqMinimal())
     }
     lLOQ <- min(lLOQ)
     dataSet$LLOQ <- lLOQ
@@ -765,15 +1177,16 @@ createDataSets <- function(groupData) {
 #'
 #' @return A `DataSet` with observed data with added metadata.
 #' @keywords internal
-addMetaDataToDataSet <- function(dataSet, groupData) {
+#' @noRd
+.addMetaDataToDataSet <- function(dataSet, groupData) {
   metaColumns <-
-    getColumnsForColumnType(
+    .getColumnsForColumnType(
       dt = groupData,
       columnTypes = c("covariate", "biometrics", "identifier")
     )
-  metaData <- groupData %>%
-    dplyr::select(dplyr::all_of(metaColumns)) %>%
-    unique() %>%
+  metaData <- groupData |>
+    dplyr::select(dplyr::all_of(metaColumns)) |>
+    unique() |>
     as.list()
   for (col in metaColumns) {
     dataSet$addMetaData(name = col, value = as.character(metaData[[col]]))
@@ -794,24 +1207,33 @@ addMetaDataToDataSet <- function(dataSet, groupData) {
 #' @export
 #' @family observed data processing
 convertDataCombinedToDataTable <- function(datacombined) {
-  # Initialize variables used for data.tables
-  dataClass <- yErrorValues <- NULL
-
-  dataDT <- datacombined$toDataFrame() %>%
+  dataDT <- datacombined$toDataFrame() |>
     data.table::setDT()
 
   # Delete columns not needed
-  dataDT <- dataDT[, which(colSums(is.na(dataDT)) != nrow(dataDT)), with = FALSE]
+  dataDT <- dataDT[,
+    which(colSums(is.na(dataDT)) != nrow(dataDT)),
+    with = FALSE
+  ]
 
   # Set DataClass
-  dataDT[, dataClass := ifelse(any(!is.na(yErrorValues)), DATACLASS$tpAggregated, DATACLASS$tpIndividual),
+  dataDT[,
+    dataClass := ifelse(
+      any(!is.na(yErrorValues)),
+      DATACLASS$tpAggregated,
+      DATACLASS$tpIndividual
+    ),
     by = "group"
-  ] # nolint indentation_linter
+  ]
 
-  if (any(dataDT$dataClass == DATACLASS$tpIndividual) &&
-    !("individualId" %in% names(dataDT))) { # nolint indentation_linter
-    stop("IndividualData needs meta data individualId")
+  if (
+    any(dataDT$dataClass == DATACLASS$tpIndividual) &&
+      !("individualId" %in% names(dataDT))
+  ) {
+    stop(messages$errorutilitiesdataL4IndividualDataMissingMetaId())
   }
+
+  return(dataDT)
 }
 
 # Data aggregation ------------
@@ -856,20 +1278,24 @@ convertDataCombinedToDataTable <- function(datacombined) {
 #' @return A `data.table` containing aggregated observed data.
 #' @export
 #' @family observed data processing
-aggregateObservedDataGroups <- function(dataObserved,
-                                        groups = NULL,
-                                        aggregationFlag = c(
-                                          "GeometricStdDev",
-                                          "ArithmeticStdDev",
-                                          "Percentiles",
-                                          "Custom"
-                                        ),
-                                        percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1, 3, 5)],
-                                        groupSuffix = "aggregated",
-                                        customFunction = NULL,
-                                        lloqCheckColumns2of3 = NULL,
-                                        lloqCheckColumns1of2 = NULL) {
-  dataToAggregate <- prepareDataForAggregation(
+aggregateObservedDataGroups <- function(
+  dataObserved,
+  groups = NULL,
+  aggregationFlag = c(
+    "GeometricStdDev",
+    "ArithmeticStdDev",
+    "Percentiles",
+    "Custom"
+  ),
+  percentiles = getOspsuite.plots.option(
+    optionKey = OptionKeys$defaultPercentiles
+  ),
+  groupSuffix = "aggregated",
+  customFunction = NULL,
+  lloqCheckColumns2of3 = NULL,
+  lloqCheckColumns1of2 = NULL
+) {
+  dataToAggregate <- .prepareDataForAggregation(
     dataObserved = dataObserved,
     groups = groups,
     groupSuffix = groupSuffix
@@ -879,25 +1305,29 @@ aggregateObservedDataGroups <- function(dataObserved,
   }
 
   aggregationFlag <- match.arg(aggregationFlag)
-  aggregationFun <- getAggregationFunction(aggregationFlag, percentiles, customFunction)
+  aggregationFun <- .getAggregationFunction(
+    aggregationFlag,
+    percentiles,
+    customFunction
+  )
 
-  aggregatedData <- performAggregation(
+  aggregatedData <- .performAggregation(
     dataToAggregate = dataToAggregate,
     aggregationFun = aggregationFun,
     aggrCriteria = c("group", "outputPathId", "xValues")
   )
 
-  aggregatedData <- checkLLOQ(
+  aggregatedData <- .checkLLOQ(
     aggregatedData = aggregatedData,
     lloqCheckColumns2of3 = lloqCheckColumns2of3,
     lloqCheckColumns1of2 = lloqCheckColumns1of2,
     aggregationFlag = aggregationFlag
   )
 
-  aggregatedData <- addUniqueColumns(dataToAggregate, aggregatedData)
+  aggregatedData <- .addUniqueColumns(dataToAggregate, aggregatedData)
   aggregatedData$dataClass <- DATACLASS$tpAggregated
 
-  aggregatedData <- setDataTypeAttributes(aggregatedData)
+  aggregatedData <- .setDataTypeAttributes(aggregatedData)
 
   return(aggregatedData)
 }
@@ -905,39 +1335,50 @@ aggregateObservedDataGroups <- function(dataObserved,
 #' Prepares data for aggregation
 #'
 #' @inheritParams aggregateObservedDataGroups
+#' @param dataObserved A `data.table` with observed data to aggregate.
+#' @param groups A character vector with group names to aggregate.
+#' @param groupSuffix A suffix appended to the aggregated group name.
 #'
 #' @return Prepared data for aggregation as a `data.table`.
 #' @keywords internal
-prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
-  # avoid warning for global variable
-  group <- NULL
-
+#' @noRd
+.prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
   if ("DataCombined" %in% class(dataObserved)) {
     dataObserved <- convertDataCombinedToDataTable(dataObserved)
   }
 
   checkmate::assertDataTable(dataObserved, min.rows = 1)
-  checkmate::assertNames(names(dataObserved),
+  checkmate::assertNames(
+    names(dataObserved),
     must.include = c(
-      "xValues", "yValues", "lloq",
-      "individualId", "outputPathId", "group",
-      "dataType", "dataClass"
+      "xValues",
+      "yValues",
+      "lloq",
+      "individualId",
+      "outputPathId",
+      "group",
+      "dataType",
+      "dataClass"
     )
   )
-  checkmate::assertChoice(unique(dataObserved$dataClass), choices = DATACLASS$tpIndividual)
+  checkmate::assertChoice(
+    unique(dataObserved$dataClass),
+    choices = DATACLASS$tpIndividual
+  )
 
-  groups <- getIndividualDataGroups(dataObserved, groups)
+  groups <- .getIndividualDataGroups(dataObserved, groups)
 
   if (length(groups) == 0) {
-    warning("No groups available for aggregation")
+    warning(messages$warningutilitiesdataL4NoGroupsForAggregation())
     return(NULL)
   }
 
   dataToAggregate <- dataObserved[group %in% groups]
   dataToAggregate[, group := paste(group, groupSuffix, sep = "_")]
 
-  checkmate::assertNames(unique(dataToAggregate$group),
-    disjunct.from = unique(dataObserved$group), # nolint indentation_linter
+  checkmate::assertNames(
+    unique(dataToAggregate$group),
+    disjunct.from = unique(dataObserved$group),
     .var.name = "new group names"
   )
 
@@ -947,19 +1388,26 @@ prepareDataForAggregation <- function(dataObserved, groups, groupSuffix) {
 #' Sets values which do not match the LLOQ criteria to NA
 #'
 #' @param aggregatedData A `data.table` with aggregated data.
-#' @inheritParams aggregateObservedDataGroups
+#' @param lloqCheckColumns2of3 Columns set to NA when more than 2/3 are below LLOQ.
+#' @param lloqCheckColumns1of2 Columns set to NA when more than 1/2 are below LLOQ.
+#' @param aggregationFlag Aggregation method flag.
 #'
 #' @return Updated aggregated data `data.table`.
 #' @keywords internal
-checkLLOQ <- function(aggregatedData, lloqCheckColumns2of3, lloqCheckColumns1of2, aggregationFlag) {
-  # initialize data.table variables
-  nBelowLLOQ <- numberOfIndividuals <- NULL
-
-  if (aggregationFlag != "Custom" &
-    (!is.null(lloqCheckColumns2of3) | !is.null(lloqCheckColumns1of2))) {
-    warning(paste("input variable lloqCheckColumns2of3 and lloqCheckColumns1of2 are not used for aggregationFlag", aggregationFlag))
-    lloqCheckColumns2of3 <- NULL
-    lloqCheckColumns1of2 <- NULL
+#' @noRd
+.checkLLOQ <- function(
+  aggregatedData,
+  lloqCheckColumns2of3,
+  lloqCheckColumns1of2,
+  aggregationFlag
+) {
+  if (
+    aggregationFlag != "Custom" &
+      (!is.null(lloqCheckColumns2of3) | !is.null(lloqCheckColumns1of2))
+  ) {
+    warning(messages$warningutilitiesdataL4UnusedAggregationCheckColumns())
+    lloqCheckColumns2of3 <- character(0)
+    lloqCheckColumns1of2 <- character(0)
   }
 
   if (aggregationFlag %in% ospsuite::DataErrorType) {
@@ -968,23 +1416,27 @@ checkLLOQ <- function(aggregatedData, lloqCheckColumns2of3, lloqCheckColumns1of2
     lloqCheckColumns1of2 <- c("yValues", "yMin", "yMax")
   } else {
     if (is.null(lloqCheckColumns2of3) & is.null(lloqCheckColumns1of2)) {
-      stop("For custom aggregation please provide lloqCheckColumns2of3 or lloqCheckColumns1of2")
+      stop(messages$errorutilitiesdataL4AggregationCheckColumnsMissing())
     }
   }
 
   if (length(lloqCheckColumns2of3) > 0) {
-    aggregatedData[, (lloqCheckColumns2of3) := lapply(.SD, function(x) {
-      ifelse((nBelowLLOQ / numberOfIndividuals) > (2 / 3), NA, x)
-    }),
-    .SDcols = lloqCheckColumns2of3, by = .I
+    aggregatedData[,
+      (lloqCheckColumns2of3) := lapply(.SD, function(x) {
+        ifelse((nBelowLLOQ / numberOfIndividuals) > (2 / 3), NA, x)
+      }),
+      .SDcols = lloqCheckColumns2of3,
+      by = .I
     ]
   }
 
   if (length(lloqCheckColumns1of2) > 0) {
-    aggregatedData[, (lloqCheckColumns1of2) := lapply(.SD, function(x) {
-      ifelse((nBelowLLOQ / numberOfIndividuals) > (1 / 2), NA, x)
-    }),
-    .SDcols = lloqCheckColumns1of2, by = .I
+    aggregatedData[,
+      (lloqCheckColumns1of2) := lapply(.SD, function(x) {
+        ifelse((nBelowLLOQ / numberOfIndividuals) > (1 / 2), NA, x)
+      }),
+      .SDcols = lloqCheckColumns1of2,
+      by = .I
     ]
   }
 
@@ -998,23 +1450,28 @@ checkLLOQ <- function(aggregatedData, lloqCheckColumns2of3, lloqCheckColumns1of2
 #'
 #' @return The updated aggregated data as a `data.table`.
 #' @keywords internal
-addUniqueColumns <- function(dataObserved, aggregatedData) {
+#' @noRd
+.addUniqueColumns <- function(dataObserved, aggregatedData) {
   identifier <- c("group", "outputPathId")
 
   colsToCheck <- setdiff(names(dataObserved), identifier)
-  columnISUnique <- dataObserved[, lapply(.SD, function(x) length(unique(x))),
-    by = identifier, # nolint indentation_linter
+  columnISUnique <- dataObserved[,
+    lapply(.SD, function(x) length(unique(x))),
+    by = identifier,
     .SDcols = colsToCheck
-  ] %>%
-    .[, lapply(.SD, function(x) all(x == 1)), .SDcols = colsToCheck] %>%
+  ] |>
+    (\(dt) {
+      dt[, lapply(.SD, function(x) all(x == 1)), .SDcols = colsToCheck]
+    })() |>
     unlist()
 
-  tmp <- dataObserved %>%
-    dplyr::select(dplyr::all_of(c(identifier, colsToCheck[columnISUnique]))) %>%
+  tmp <- dataObserved |>
+    dplyr::select(dplyr::all_of(c(identifier, colsToCheck[columnISUnique]))) |>
     unique()
 
-  aggregatedData <- merge(aggregatedData,
-    tmp, # nolint indentation_linter
+  aggregatedData <- merge(
+    aggregatedData,
+    tmp,
     by = identifier,
     all.x = TRUE
   )
@@ -1032,23 +1489,24 @@ addUniqueColumns <- function(dataObserved, aggregatedData) {
 #'
 #' @return A `data.table` with attributes.
 #' @keywords internal
-setDataTypeAttributes <- function(dataDT, dict = NULL) {
+#' @noRd
+.setDataTypeAttributes <- function(dataDT, dict = NULL) {
   if (is.null(dict)) {
     tmpdict <-
       xlsxReadData(
         wb = system.file(
           "templates",
-          "DataImportConfiguration.xlsx",
+          "DataImportMap.xlsx",
           package = "ospsuite.reportingframework",
           mustWork = TRUE
         ),
         "tpDictionary",
         skipDescriptionRow = TRUE
-      ) %>%
-      dplyr::select(c("targetColumn", "type")) %>%
+      ) |>
+      dplyr::select(c("targetColumn", "type")) |>
       unique()
     dict <-
-      as.list(tmpdict$type) %>%
+      as.list(tmpdict$type) |>
       stats::setNames(tmpdict$targetColumn)
   }
 
@@ -1082,7 +1540,8 @@ setDataTypeAttributes <- function(dataDT, dict = NULL) {
 #'
 #' @return A vector with column names.
 #' @keywords internal
-getColumnsForColumnType <- function(dt, columnTypes) {
+#' @noRd
+.getColumnsForColumnType <- function(dt, columnTypes) {
   columnsWithAttributes <- unlist(lapply(dt, attr, "columnType"))
 
   columnNames <-
@@ -1099,11 +1558,12 @@ getColumnsForColumnType <- function(dt, columnTypes) {
 #' @param identifierCols A character vector specifying the columns to be updated.
 #' @return The updated `data.table`.
 #' @keywords internal
-convertIdentifierColumns <- function(dt, identifierCols) {
+#' @noRd
+.convertIdentifierColumns <- function(dt, identifierCols) {
   for (col in identifierCols) {
     dt[[col]] <- as.character(dt[[col]])
     if (any(grepl(",", dt[[col]]))) {
-      warning(paste("Warning: Column", col, "commas were replaced by _"))
+      warning(messages$warningutilitiesdataL4ColumnCommasReplaced())
     }
     dt[[col]] <- gsub(",", "_", dt[[col]])
   }
@@ -1115,33 +1575,33 @@ convertIdentifierColumns <- function(dt, identifierCols) {
 #' aggregation or "Virtual Twin population" creation
 #'
 #' @inheritParams aggregateObservedDataGroups
+#' @param dataObserved A `data.table` with observed data.
+#' @param groups A character vector with group names.
 #' @param minN The minimal number needed for a group.
 #'
 #' @return A vector with suitable group Ids.
 #' @keywords internal
-getIndividualDataGroups <- function(dataObserved, groups, minN = 2) {
-  # avoid warnings for global variables
-  individualId <- dataClass <- dataType <- N <- NULL # nolint object_name_linter
-
+#' @noRd
+.getIndividualDataGroups <- function(dataObserved, groups, minN = 2) {
   tmp <-
-    dataObserved[, .(N = dplyr::n_distinct(individualId)),
+    dataObserved[,
+      .(N = dplyr::n_distinct(individualId)),
       by = c("group", "dataClass", "dataType")
-    ] # nolint indentation_linter
-  groupsAvailable <- unique(tmp[dataClass == DATACLASS$tpIndividual &
-    dataType == "observed" &
-    N >= minN]$group)
-
+    ]
+  groupsAvailable <- unique(
+    tmp[
+      dataClass == DATACLASS$tpIndividual &
+        dataType == "observed" &
+        N >= minN
+    ]$group
+  )
 
   if (is.null(groups)) {
     groups <- groupsAvailable
   } else {
     unsuitableGroups <- setdiff(groups, groupsAvailable)
     if (length(unsuitableGroups) > 0) {
-      warning(paste(
-        "Groups", paste(unsuitableGroups, collapse = ", "), "are not suited for grouping.",
-        "Check if they are available in data, have more then", minN, "Individuals or
-                    if they are have data class", DATACLASS$tpIndividual
-      ))
+      warning(messages$warningutilitiesdataL4UnsuitableGroupsForAggregation())
     }
     groups <- intersect(groups, groupsAvailable)
   }

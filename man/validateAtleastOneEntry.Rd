@@ -11,6 +11,9 @@ validateAtleastOneEntry(configTablePlots, columnVector)
 
 \item{columnVector}{vector of columns to check}
 }
+\value{
+invisible(NULL). Throws an error if validation fails.
+}
 \description{
 check if at least one of the following columns is selected
 }

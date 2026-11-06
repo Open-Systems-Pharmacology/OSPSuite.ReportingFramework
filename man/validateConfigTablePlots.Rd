@@ -31,6 +31,9 @@ validateConfigTablePlots(
 list(cols = 'vector with columns',
 allowedValues = vector with allowed values)}
 }
+\value{
+invisible(NULL). Throws an error if validation fails.
+}
 \description{
 validate types of plot configuration tables
 }

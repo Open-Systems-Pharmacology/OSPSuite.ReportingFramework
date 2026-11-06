@@ -1,0 +1,520 @@
+#' @title QmdPlotManager
+#' @docType class
+#' @description Manages the creation and writing of .qmd files for plots.
+#' @keywords internal
+QmdPlotManager <- # nolint: cyclocomp_linter, object_name_linter
+  R6::R6Class(
+    "QmdPlotManager",
+    inherit = ospsuite.utils::Printable,
+    cloneable = TRUE,
+    # public ----
+    public = list(
+      #' @description
+      #' Initialize a new instance of the class.
+      #' @param qmdfolder Folder where the .qmd file should be saved.
+      #' @param qmdName A character string for the name of the .qmd file (without extension).
+      #' @param suppressExport A logical value indicating whether to suppress export. Default is FALSE.
+      #' @param nameOfplotFunction The name of the plot-function as character.
+      #' @param digitsOfSignificance Number of significant digits to display in tables.
+      #'     #'
+      #' @return An instance of the QmdPlotManager object.
+      initialize = function(
+        qmdfolder,
+        qmdName,
+        nameOfplotFunction,
+        suppressExport = FALSE,
+        digitsOfSignificance = 3
+      ) {
+        private$.qmdfolder <- qmdfolder
+        self$suppressExport <- suppressExport
+        self$validateConfigTableFunction <- .validateConfigTableForPlots
+        self$digitsOfSignificance <- digitsOfSignificance
+
+        if (!suppressExport) {
+          if (is.null(qmdName)) {
+            stop(messages$errorQmdPlotManagerInvalidFileOrSubfolderName())
+          }
+          tools::file_path_sans_ext(qmdName)
+
+          private$.qmdName <- qmdName
+
+          checkmate::assert_path_for_output(
+            file.path(private$.qmdfolder, private$.qmdName),
+            overwrite = TRUE
+          )
+
+          if (!dir.exists(file.path(private$.qmdfolder, private$.qmdName))) {
+            dir.create(
+              file.path(private$.qmdfolder, private$.qmdName),
+              recursive = TRUE
+            )
+          }
+        }
+
+        checkmate::assertCharacter(nameOfplotFunction)
+        if (
+          !exists(
+            nameOfplotFunction,
+            where = globalenv(),
+            mode = "function"
+          )
+        ) {
+          stop(messages$errorQmdPlotManagerMissingPlotFunction())
+        }
+        self$plotFunction <- get(nameOfplotFunction)
+
+        # Generate the name of the validation function based on the string name of plotFunction
+        nameOfValidationFunction <- paste0(
+          gsub("^plot", "validate", nameOfplotFunction),
+          "Config"
+        )
+
+        # Check if the validation function exists
+        if (
+          exists(
+            nameOfValidationFunction,
+            where = globalenv(),
+            mode = "function"
+          )
+        ) {
+          self$validateConfigTableFunction <- get(
+            nameOfValidationFunction
+          )
+        } else {
+          # otherwise use default function
+          message(messages$infoQmdPlotManagerNoValidationFunction())
+          self$validateConfigTableFunction <- .validateConfigTableForPlots
+        }
+
+        # add start of qmd
+        private$.qmdLines <- private$.startQmd(qmdfolder)
+
+        return(self)
+      },
+      #' @description
+      #' Write the .qmd file.
+      #' @param fileName Name of the .qmd file. If NULL, the file name will default to the subfolder name.
+      #' @return NULL. This function writes the .qmd file to the specified location and returns nothing.
+      writeQmd = function(fileName = NULL) {
+        if (private$.suppressExport) {
+          return(invisible())
+        }
+
+        if (is.null(fileName)) {
+          fileName <- paste0(private$.qmdName, ".qmd")
+        }
+
+        checkmate::assertPathForOutput(
+          fileName,
+          extension = "qmd",
+          overwrite = TRUE
+        )
+        if (basename(fileName) != fileName) {
+          stop(messages$errorQmdPlotManagerFileNameMustBeBasename())
+        }
+
+        private$.closeFigureKeys()
+        writeLines(
+          text = private$.qmdLines,
+          con = file.path(private$.qmdfolder, fileName),
+          sep = "\n"
+        )
+
+        return(invisible())
+      },
+      #' @description
+      #' Insert a heading with a specified level.
+      #' @param ... Arguments passed to `mdPaste`.
+      #' @param level The header level, i.e., the number of `#`s. Defaults to 1.
+      #' @param newlines The number of newlines inserted after the heading. Defaults to 2.
+      #' @return NULL. The function modifies the internal qmd lines.
+      addHeader = function(..., level = 1, newlines = 2) {
+        private$.appendStructural(utils::capture.output(mdHeading(
+          ...,
+          level = level,
+          newlines = newlines
+        )))
+      },
+      #' @description
+      #' Insert line endings and start a new line.
+      #' @param n Number of new lines. Defaults to 1.
+      #' @return NULL. The function modifies the internal qmd lines.
+      addNewline = function(n = 1) {
+        private$.appendStructural(utils::capture.output(mdNewline(n = n)))
+      },
+      #' @description
+      #' Insert a page break and a newline.
+      #' @return NULL. The function modifies the internal qmd lines.
+      addNewpage = function() {
+        private$.appendStructural(utils::capture.output(mdNewpage()))
+      },
+      #' @description
+      #' Export a list of plots.
+      #' @param plotList A list of plots to export.
+      #' @return NULL. The function exports the plots to the specified location.
+      exportPlotList = function(plotList) {
+        if (private$.suppressExport) {
+          return(invisible())
+        }
+        for (key in names(plotList)) {
+          obj <- plotList[[key]]
+          caption <- attr(obj, "caption")
+          if (is.null(caption)) {
+            warning(messages$warningQmdPlotManagerMissingCaption())
+            caption <- "Missing"
+          }
+
+          if (is.ggplot(obj) | "CombinedPlot" %in% class(obj)) {
+            self$addAndExportFigure(
+              plotObject = obj,
+              caption = caption,
+              figureKey = key,
+              footNoteLines = attr(obj, "footNoteLines"),
+              exportArguments = attr(obj, "exportArguments")
+            )
+          } else if (is.data.table(obj)) {
+            self$addAndExportTable(
+              table = obj,
+              caption = caption,
+              tableKey = key,
+              footNoteLines = attr(obj, "footNoteLines")
+            )
+          }
+        }
+      },
+      #' @description
+      #' Add and export a figure with caption and footnote.
+      #' @param plotObject A ggplot object to export.
+      #' @param figureKey A key used to generate file names; it should be unique for the folder.
+      #' @param caption A character string for the caption text.
+      #' @param footNoteLines A character string for figure footnotes.
+      #' @param exportArguments additional arguments passed on to ospsuite.plots::export
+      #' @param ... Additional parameters passed to `ospsuite.plots::exportPlot()`.
+      #' @return NULL. The function exports the figure and its metadata.
+      addAndExportFigure = function(
+        plotObject,
+        caption,
+        figureKey,
+        footNoteLines = NULL,
+        exportArguments = NULL
+      ) {
+        private$.checkKeyIsUnique(key = figureKey)
+
+        if (private$.suppressExport) {
+          return(invisible())
+        }
+        exportArguments <- private$.checkAndAdjustExportArguments(
+          plotObject,
+          exportArguments
+        )
+        do.call(
+          what = ospsuite.plots::exportPlot,
+          args = c(
+            list(
+              plotObject = plotObject,
+              filepath = file.path(
+                private$.qmdfolder,
+                private$.qmdName
+              ),
+              filename = figureKey
+            ),
+            exportArguments
+          )
+        )
+
+        private$.exportLines(
+          textLines = caption,
+          key = figureKey,
+          extension = ".caption"
+        )
+
+        private$.exportLines(
+          textLines = footNoteLines,
+          key = figureKey,
+          extension = ".footnote"
+        )
+
+        private$.addKeyToList(key = figureKey, type = "figure")
+      },
+      #' @description
+      #' Add and export tables with caption and footnote.
+      #' @param table A data.table object to export.
+      #' @param tableKey A key used to generate filenames; it should be unique for the folder.
+      #' @param caption A character string for the caption text.
+      #' @param footNoteLines A character string for table footnotes.
+      #' @return NULL. The function exports the table and its metadata.
+      addAndExportTable = function(
+        table,
+        caption,
+        tableKey,
+        footNoteLines = NULL
+      ) {
+        private$.checkKeyIsUnique(key = tableKey)
+        checkmate::assertCharacter(names(table), unique = TRUE)
+
+        if (private$.suppressExport) {
+          return(invisible())
+        }
+        # export
+        utils::write.csv(
+          x = table,
+          file = file.path(
+            private$.qmdfolder,
+            private$.qmdName,
+            paste0(gsub("[<>:\"/\\\\|?*]", "_", tableKey), ".csv")
+          ),
+          na = "",
+          row.names = FALSE,
+          fileEncoding = "UTF-8"
+        )
+
+        private$.exportLines(
+          textLines = caption,
+          key = tableKey,
+          extension = ".caption"
+        )
+
+        private$.exportLines(
+          textLines = footNoteLines,
+          key = tableKey,
+          extension = ".footnote"
+        )
+
+        private$.addKeyToList(key = tableKey, type = "table")
+      }
+    ),
+    # active ----
+    active = list(
+      #' @field digitsOfSignificance Digits for significance in table display.
+      digitsOfSignificance = function(value) {
+        if (missing(value)) {
+          value <- private$.digitsOfSignificance
+        } else {
+          checkmate::assertInt(
+            value,
+            lower = 1,
+            .var.name = digitsOfSignificance
+          )
+          if (private$.digitsOfSignificance != value) {
+            private$.closeFigureKeys()
+          }
+        }
+        private$.digitsOfSignificance <- value
+      },
+      #' @field configTable Configuration table.
+      configTable = function(value) {
+        if (missing(value)) {
+          value <- private$.configTable
+        } else {
+          checkmate::assertDataTable(value, null.ok = TRUE)
+        }
+        private$.configTable <- value
+      },
+      #' @field plotFunction Function to create plot list.
+      plotFunction = function(value) {
+        if (missing(value)) {
+          return(private$.plotFunction) # Return the stored function
+        } else {
+          checkmate::assertFunction(value) # Ensure the value is a function
+          private$.plotFunction <- value # Store the function directly
+        }
+      },
+      #' @field validateConfigTableFunction Function to read config table.
+      validateConfigTableFunction = function(value) {
+        if (missing(value)) {
+          return(private$.validateConfigTableFunction) # Return the stored function
+        } else {
+          checkmate::assertFunction(value) # Ensure the value is a function
+          private$.validateConfigTableFunction <- value # Store the function directly
+        }
+      },
+      #' @field suppressExport A logical value indicating whether to suppress export.
+      suppressExport = function(value) {
+        if (missing(value)) {
+          return(private$.suppressExport) # Return the stored function
+        } else {
+          checkmate::assertFlag(value) # Ensure the value is a function
+          private$.suppressExport <- value # Store the function directly
+        }
+      }
+    ),
+    # private ----
+    private = list(
+      # the final qmds in lines
+      .qmdLines = c(),
+      # folder where .qmd is saved
+      .qmdfolder = NULL,
+      # subfolder of qmdfolder where figures are saved
+      .qmdName = NULL,
+      # digits for table display
+      .digitsOfSignificance = 3,
+      # boolean to tell, if last entry was a Key
+      .keyCollectionIsOpen = FALSE,
+      # boolean to tell, if last entry was a Key
+      .listOfKeys = c(),
+      # boolean to tell, if last entry was a Key
+      .listOfALLKeys = c(),
+      # configuration table use to build Object
+      .configTable = NULL,
+      # Identifier observed data use to build Object
+      .dataObserved = c(),
+      # boolean, if true export is suppressed
+      .suppressExport = FALSE,
+      # plotfunction function to createPlotList
+      .plotFunction = NULL,
+      # function to readConfigtable
+      .validateConfigTableFunction = NULL,
+      # function to initialize qmdLines
+      .startQmd = function(qmdfolder) {
+        return(.startQmd())
+      },
+      # switches keyCollectionIsOpen to FALSE, and call functions for figure settings
+      .closeFigureKeys = function() {
+        if (!private$.keyCollectionIsOpen) {
+          return()
+        }
+
+        dev <- ospsuite.plots::getOspsuite.plots.option(
+          optionKey = ospsuite.plots::OptionKeys$exportDevice
+        )
+        chunks <- c("  ")
+
+        for (key in names(private$.listOfKeys)) {
+          type <- private$.listOfKeys[[key]]
+          captionPath <- file.path(
+            private$.qmdfolder,
+            private$.qmdName,
+            paste0(key, ".caption")
+          )
+          caption <- if (file.exists(captionPath)) {
+            gsub(
+              '"',
+              '\\\\"',
+              paste(
+                readLines(captionPath, warn = FALSE),
+                collapse = " "
+              )
+            )
+          } else {
+            ""
+          }
+          sanitizedKey <- gsub("[^a-zA-Z0-9_-]", "-", key)
+
+          if (type == "figure") {
+            chunks <- c(
+              chunks,
+              "```{r}",
+              paste0("#| label: fig-", sanitizedKey),
+              paste0('#| fig-cap: "', caption, '"'),
+              paste0(
+                'knitr::include_graphics("',
+                private$.qmdName,
+                "/",
+                key,
+                ".",
+                dev,
+                '")'
+              ),
+              "```",
+              "```{r}",
+              "#| output: asis",
+              paste0(
+                'ospsuite.reportingframework::mdFootNote(subfolder = "',
+                private$.qmdName,
+                '", footNoteFile = "',
+                key,
+                '.footnote", footNoteCustomStyle = params$customStyles$FigureFootnote)'
+              ),
+              "```",
+              "\\newpage",
+              "  "
+            )
+          } else {
+            chunks <- c(
+              chunks,
+              "```{r}",
+              paste0("#| label: tbl-", sanitizedKey),
+              paste0('#| tbl-cap: "', caption, '"'),
+              paste0(
+                'dt <- data.table::fread("',
+                private$.qmdName,
+                "/",
+                key,
+                '.csv")'
+              ),
+              "numeric_cols <- names(dt)[sapply(dt, function(x) is.numeric(x) & !is.integer(x))]",
+              paste0(
+                "if (length(numeric_cols) > 0) dt[, (numeric_cols) := signif(.SD, ",
+                self$digitsOfSignificance,
+                "), .SDcols = numeric_cols]"
+              ),
+              "knitr::kable(dt)",
+              "```",
+              "```{r}",
+              "#| output: asis",
+              paste0(
+                'ospsuite.reportingframework::mdFootNote(subfolder = "',
+                private$.qmdName,
+                '", footNoteFile = "',
+                key,
+                '.footnote", footNoteCustomStyle = params$customStyles$TableFootnote)'
+              ),
+              "```",
+              "\\newpage",
+              "  "
+            )
+          }
+        }
+
+        private$.qmdLines <- append(private$.qmdLines, chunks)
+        private$.keyCollectionIsOpen <- FALSE
+        private$.listOfKeys <- c()
+
+        return(invisible())
+      },
+      # ensures .closeFigureKeys invariant is maintained for all structural append operations
+      .appendStructural = function(lines) {
+        private$.closeFigureKeys()
+        private$.qmdLines <- append(private$.qmdLines, lines)
+      },
+      # writes caption and footnotes
+      .exportLines = function(textLines, key, extension) {
+        if (is.null(textLines)) {
+          return(invisible())
+        }
+        writeLines(
+          text = textLines,
+          con = file.path(
+            private$.qmdfolder,
+            private$.qmdName,
+            paste0(key, extension)
+          )
+        )
+
+        return(invisible())
+      },
+      # add key to lists
+      .addKeyToList = function(key, type) {
+        private$.keyCollectionIsOpen <- TRUE
+        private$.listOfKeys <- c(
+          private$.listOfKeys,
+          stats::setNames(type, key)
+        )
+        private$.listOfALLKeys <- c(private$.listOfALLKeys, key)
+      },
+      # only export if key is unique
+      .checkKeyIsUnique = function(key) {
+        if (key %in% private$.listOfALLKeys) {
+          stop(messages$errorQmdPlotManagerDuplicateKey())
+        }
+      },
+      # adjust height if necessary
+      .checkAndAdjustExportArguments = function(plotObject, exportArguments) {
+        if (is.null(exportArguments)) {
+          return(exportArguments)
+        }
+
+        return(exportArguments)
+      }
+    )
+  )

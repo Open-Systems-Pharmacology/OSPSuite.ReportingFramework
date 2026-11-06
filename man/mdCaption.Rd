@@ -2,35 +2,36 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{mdCaption}
 \alias{mdCaption}
-\title{add Caption to .Rmd}
+\title{Add caption with optional custom style.}
 \usage{
 mdCaption(subfolder, captionFile, captionPrefix, captionStyle = NULL)
 }
 \arguments{
-\item{subfolder}{The folder where the file is located relative to Rmd}
+\item{subfolder}{Folder location.}
 
-\item{captionFile}{file containing caption}
+\item{captionFile}{Caption file.}
 
-\item{captionPrefix}{'a character which starts the caption like 'Figure 1:'}
+\item{captionPrefix}{Prefix (e.g., "Figure 1:").}
 
-\item{captionStyle}{'custom-style for captions'}
+\item{captionStyle}{Custom style (optional).}
+}
+\value{
+Invisible `NULL`.
 }
 \description{
-add Caption to .Rmd
+Add caption with optional custom style.
 }
 \seealso{
-Other markdown helper function: 
-\code{\link{addFiguresAndTables}()},
-\code{\link{mdBullet}()},
-\code{\link{mdBullet0}()},
-\code{\link{mdFigure}()},
-\code{\link{mdFootNote}()},
-\code{\link{mdHeading}()},
-\code{\link{mdLink}()},
-\code{\link{mdNewline}()},
-\code{\link{mdNewpage}()},
-\code{\link{mdPaste}()},
-\code{\link{mdPaste0}()},
-\code{\link{mdTable}()}
+Other markdown helper function:
+\code{\link[=mdBullet]{mdBullet()}},
+\code{\link[=mdFigure]{mdFigure()}},
+\code{\link[=mdFootNote]{mdFootNote()}},
+\code{\link[=mdHeading]{mdHeading()}},
+\code{\link[=mdLink]{mdLink()}},
+\code{\link[=mdNewline]{mdNewline()}},
+\code{\link[=mdNewpage]{mdNewpage()}},
+\code{\link[=mdPaste]{mdPaste()}},
+\code{\link[=mdPaste0]{mdPaste0()}},
+\code{\link[=mdTable]{mdTable()}}
 }
 \concept{markdown helper function}

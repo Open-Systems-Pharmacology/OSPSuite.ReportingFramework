@@ -2,33 +2,34 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{mdFootNote}
 \alias{mdFootNote}
-\title{add footnote lines}
+\title{Add footnote lines from file.}
 \usage{
 mdFootNote(subfolder, footNoteFile, footNoteCustomStyle = NULL)
 }
 \arguments{
-\item{subfolder}{The folder where the file is located relative to Rmd}
+\item{subfolder}{Folder location.}
 
-\item{footNoteFile}{file containing footnotes}
+\item{footNoteFile}{Footnote file.}
 
-\item{footNoteCustomStyle}{a character describing custom style footnotes}
+\item{footNoteCustomStyle}{Custom style (optional).}
+}
+\value{
+Invisible `NULL`.
 }
 \description{
-add footnote lines
+Add footnote lines from file.
 }
 \seealso{
-Other markdown helper function: 
-\code{\link{addFiguresAndTables}()},
-\code{\link{mdBullet}()},
-\code{\link{mdBullet0}()},
-\code{\link{mdCaption}()},
-\code{\link{mdFigure}()},
-\code{\link{mdHeading}()},
-\code{\link{mdLink}()},
-\code{\link{mdNewline}()},
-\code{\link{mdNewpage}()},
-\code{\link{mdPaste}()},
-\code{\link{mdPaste0}()},
-\code{\link{mdTable}()}
+Other markdown helper function:
+\code{\link[=mdBullet]{mdBullet()}},
+\code{\link[=mdCaption]{mdCaption()}},
+\code{\link[=mdFigure]{mdFigure()}},
+\code{\link[=mdHeading]{mdHeading()}},
+\code{\link[=mdLink]{mdLink()}},
+\code{\link[=mdNewline]{mdNewline()}},
+\code{\link[=mdNewpage]{mdNewpage()}},
+\code{\link[=mdPaste]{mdPaste()}},
+\code{\link[=mdPaste0]{mdPaste0()}},
+\code{\link[=mdTable]{mdTable()}}
 }
 \concept{markdown helper function}

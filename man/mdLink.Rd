@@ -2,35 +2,36 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{mdLink}
 \alias{mdLink}
-\title{mdLink}
+\title{Insert markdown link.}
 \usage{
 mdLink(label, filename, folder, prefix = "")
 }
 \arguments{
-\item{label}{The text to display as the link.}
+\item{label}{Link display text.}
 
-\item{filename}{The file to link to.}
+\item{filename}{File to link to.}
 
-\item{folder}{The folder where the file is located.}
+\item{folder}{Folder location.}
 
-\item{prefix}{An optional prefix to place in front of the link. Defaults to "".}
+\item{prefix}{Optional prefix (default "").}
+}
+\value{
+Invisible `NULL`.
 }
 \description{
-Insert a link to another file, and a newline.
+Insert markdown link.
 }
 \seealso{
-Other markdown helper function: 
-\code{\link{addFiguresAndTables}()},
-\code{\link{mdBullet}()},
-\code{\link{mdBullet0}()},
-\code{\link{mdCaption}()},
-\code{\link{mdFigure}()},
-\code{\link{mdFootNote}()},
-\code{\link{mdHeading}()},
-\code{\link{mdNewline}()},
-\code{\link{mdNewpage}()},
-\code{\link{mdPaste}()},
-\code{\link{mdPaste0}()},
-\code{\link{mdTable}()}
+Other markdown helper function:
+\code{\link[=mdBullet]{mdBullet()}},
+\code{\link[=mdCaption]{mdCaption()}},
+\code{\link[=mdFigure]{mdFigure()}},
+\code{\link[=mdFootNote]{mdFootNote()}},
+\code{\link[=mdHeading]{mdHeading()}},
+\code{\link[=mdNewline]{mdNewline()}},
+\code{\link[=mdNewpage]{mdNewpage()}},
+\code{\link[=mdPaste]{mdPaste()}},
+\code{\link[=mdPaste0]{mdPaste0()}},
+\code{\link[=mdTable]{mdTable()}}
 }
 \concept{markdown helper function}
