@@ -185,8 +185,20 @@ runSensitivityAnalysisForScenarios <-
             dtScenarios = runnerData$dtScenarios,
             currentScenarioName = currentScenarioName,
             modelFolder = projectConfiguration$modelFolder,
+            scenarioList = scenarioList,
             referenceScenario = referenceScenario
           )
+          scenarioFilesTempFolder <- attr(
+            scenarioFiles,
+            "tempFolder",
+            exact = TRUE
+          )
+          if (!is.null(scenarioFilesTempFolder)) {
+            on.exit(
+              unlink(scenarioFilesTempFolder, recursive = TRUE, force = TRUE),
+              add = TRUE
+            )
+          }
 
           pkDefinitions <- .getPKDefinitionsForSensitivity(
             projectConfiguration = projectConfiguration,
@@ -320,8 +332,20 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
         dtScenarios = runnerData$dtScenarios,
         currentScenarioName = currentScenarioName,
         modelFolder = projectConfiguration$modelFolder,
+        scenarioList = scenarioList,
         referenceScenario = NULL
       )
+      scenarioFilesTempFolder <- attr(
+        scenarioFiles,
+        "tempFolder",
+        exact = TRUE
+      )
+      if (!is.null(scenarioFilesTempFolder)) {
+        on.exit(
+          unlink(scenarioFilesTempFolder, recursive = TRUE, force = TRUE),
+          add = TRUE
+        )
+      }
 
       pkDefinitions <- .getPKDefinitionsForSensitivity(
         projectConfiguration = projectConfiguration,
@@ -674,14 +698,20 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
 #' @param dtScenarios Data table with scenario definitions.
 #' @param currentScenarioName Character scenario name to evaluate.
 #' @param modelFolder Character folder containing PKML files.
+#' @param scenarioList Optional named list of scenarios containing configured
+#'   simulations. When provided, simulation objects are serialized to temporary
+#'   PKML files and returned for sensitivity execution.
 #' @param referenceScenario Optional reference scenario name.
-#' @return Named character vector of PKML file paths.
+#' @return Named character vector of PKML file paths. When paths are generated
+#'   from configured simulations, the return value has a `tempFolder`
+#'   attribute for cleanup.
 #' @keywords internal
 #' @noRd
 .getScenarioFilesForSensitivity <- function(
   dtScenarios,
   currentScenarioName,
   modelFolder,
+  scenarioList = NULL,
   referenceScenario = NULL
 ) {
   scenarioNames <- currentScenarioName
@@ -690,6 +720,54 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
       stop(messages$errorutilitiessensitivityReferenceScenarioMustDiffer())
     }
     scenarioNames <- c(referenceScenario, currentScenarioName)
+  }
+
+  if (!is.null(scenarioList)) {
+    checkmate::assertList(
+      scenarioList,
+      any.missing = FALSE,
+      names = "named"
+    )
+
+    missingScenarios <- setdiff(scenarioNames, names(scenarioList))
+    if (length(missingScenarios) > 0) {
+      stop(messages$errorutilitiessensitivityScenarioMissingInScenarioList(
+        missingScenarios[[1]]
+      ))
+    }
+
+    scenarioTempFolder <- tempfile(pattern = "sensitivity-scenarios-")
+    dir.create(scenarioTempFolder)
+
+    scenarioFiles <- stats::setNames(
+      vapply(seq_along(scenarioNames), function(i) {
+        oneScenarioName <- scenarioNames[[i]]
+        oneScenario <- scenarioList[[oneScenarioName]]
+        if (is.null(oneScenario$simulation)) {
+          stop(messages$errorutilitiessensitivityScenarioSimulationMissing(
+            oneScenarioName
+          ))
+        }
+
+        fileNameSafeScenario <- gsub(
+          "[^A-Za-z0-9_-]",
+          "_",
+          oneScenarioName
+        )
+        scenarioFilePath <- file.path(
+          scenarioTempFolder,
+          sprintf("%02d_%s.pkml", i, fileNameSafeScenario)
+        )
+        ospsuite::saveSimulation(
+          simulation = oneScenario$simulation,
+          filePath = scenarioFilePath
+        )
+        scenarioFilePath
+      }, character(1)),
+      scenarioNames
+    )
+    attr(scenarioFiles, "tempFolder") <- scenarioTempFolder
+    return(scenarioFiles)
   }
 
   modelFiles <- lapply(scenarioNames, function(oneScenarioName) {

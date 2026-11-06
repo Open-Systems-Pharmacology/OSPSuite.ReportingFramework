@@ -226,7 +226,9 @@ test_that("runSensitivityAnalysisForScenarios errors for mixed scenarios", {
     ospsuite.reportingframework::runSensitivityAnalysisForScenarios(
       projectConfiguration = projectConfiguration,
       scenarioList = list(
-        ScenarioPop = list(population = structure(list(), class = "Population")),
+        ScenarioPop = list(
+          population = structure(list(), class = "Population")
+        ),
         ScenarioInd = list(simulation = "sim")
       ),
       scenarioNames = c("ScenarioPop", "ScenarioInd"),
@@ -275,7 +277,9 @@ test_that("runRepresentativeSensitivityAnalysisForScenarios errors for mixed sce
     ospsuite.reportingframework:::runRepresentativeSensitivityAnalysisForScenarios(
       projectConfiguration = projectConfiguration,
       scenarioList = list(
-        ScenarioPop = list(population = structure(list(), class = "Population")),
+        ScenarioPop = list(
+          population = structure(list(), class = "Population")
+        ),
         ScenarioInd = list(simulation = "sim")
       ),
       scenarioNames = c("ScenarioPop", "ScenarioInd"),
@@ -502,6 +506,44 @@ test_that(".getScenarioFilesForSensitivity returns scenario files and supports r
   expect_equal(unname(files), file.path("Models", c("ref.pkml", "trt.pkml")))
 })
 
+test_that(".getScenarioFilesForSensitivity serializes configured simulations from scenarioList", {
+  dtScenarios <- data.table::data.table(
+    scenarioName = c("ref", "trt"),
+    modelFile = c("ref.pkml", "trt.pkml")
+  )
+
+  savedSimulationIds <- character(0)
+  local_mocked_bindings(
+    saveSimulation = function(simulation, filePath) {
+      savedSimulationIds <<- c(savedSimulationIds, simulation$id)
+      file.create(filePath)
+      invisible(NULL)
+    },
+    .package = "ospsuite"
+  )
+
+  files <- ospsuite.reportingframework:::.getScenarioFilesForSensitivity(
+    dtScenarios = dtScenarios,
+    currentScenarioName = "trt",
+    modelFolder = "Models",
+    scenarioList = list(
+      ref = list(simulation = list(id = "configured-ref")),
+      trt = list(simulation = list(id = "configured-trt"))
+    ),
+    referenceScenario = "ref"
+  )
+
+  expect_equal(names(files), c("ref", "trt"))
+  expect_equal(savedSimulationIds, c("configured-ref", "configured-trt"))
+  expect_true(all(file.exists(unname(files))))
+  expect_true(all(grepl("sensitivity-scenarios-", dirname(unname(files)))))
+  expect_false(any(
+    unname(files) %in% file.path("Models", c("ref.pkml", "trt.pkml"))
+  ))
+
+  unlink(attr(files, "tempFolder"), recursive = TRUE, force = TRUE)
+})
+
 test_that(".getScenarioFilesForSensitivity validates incompatible or ambiguous inputs", {
   dtScenarios <- data.table::data.table(
     scenarioName = c("trt", "trt"),
@@ -525,6 +567,28 @@ test_that(".getScenarioFilesForSensitivity validates incompatible or ambiguous i
       modelFolder = "Models"
     ),
     "exactly one modelFile"
+  )
+
+  expect_error(
+    ospsuite.reportingframework:::.getScenarioFilesForSensitivity(
+      dtScenarios = dtScenarios,
+      currentScenarioName = "trt",
+      modelFolder = "Models",
+      scenarioList = list(),
+      referenceScenario = NULL
+    ),
+    "not available in scenarioList"
+  )
+
+  expect_error(
+    ospsuite.reportingframework:::.getScenarioFilesForSensitivity(
+      dtScenarios = dtScenarios,
+      currentScenarioName = "trt",
+      modelFolder = "Models",
+      scenarioList = list(trt = list()),
+      referenceScenario = NULL
+    ),
+    "does not contain a configured simulation"
   )
 })
 

@@ -649,7 +649,11 @@ messages$errorutilitiesdataDebugDictionarySheetMissing <- function(
   env = parent.frame()
 ) {
   eval(
-    quote(paste("Dictionary sheet", d$dictionary, "does not exist in DataImportMap.")),
+    quote(paste(
+      "Dictionary sheet",
+      d$dictionary,
+      "does not exist in DataImportMap."
+    )),
     envir = env
   )
 }
@@ -1313,6 +1317,40 @@ messages$errorutilitiessensitivityReferenceScenarioMustDiffer <- function(
 ) {
   eval(
     quote("referenceScenario must differ from the current scenario."),
+    envir = env
+  )
+}
+
+messages$errorutilitiessensitivityScenarioMissingInScenarioList <- function(
+  scenarioName,
+  env = parent.frame()
+) {
+  eval(
+    substitute(
+      paste0(
+        "Scenario '",
+        scenarioName,
+        "' is not available in scenarioList."
+      ),
+      list(scenarioName = scenarioName)
+    ),
+    envir = env
+  )
+}
+
+messages$errorutilitiessensitivityScenarioSimulationMissing <- function(
+  scenarioName,
+  env = parent.frame()
+) {
+  eval(
+    substitute(
+      paste0(
+        "Scenario '",
+        scenarioName,
+        "' does not contain a configured simulation."
+      ),
+      list(scenarioName = scenarioName)
+    ),
     envir = env
   )
 }
