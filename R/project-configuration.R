@@ -345,7 +345,7 @@ ProjectConfigurationRF <- # nolint: object_name_linter
         private$.writeReportingFrameworkVersion()
         invisible(NULL)
       },
-      .writeToConfigXlsx = function(propertyToSet, value, description) {
+      .writeToConfigXlsx = function(propertyToSet, valueToSet, descriptionToSet) {
         configPath <- self$baseProjectconfiguration$projectConfigurationFilePath
         wb <- openxlsx::loadWorkbook(configPath)
         targetSheet <- if ("addons" %in% wb$sheet_names) {
@@ -372,16 +372,16 @@ ProjectConfigurationRF <- # nolint: object_name_linter
             dtConfiguration,
             data.table(
               property = propertyToSet,
-              value = value,
-              description = description
+              value = valueToSet,
+              description = descriptionToSet
             )
           )
         } else {
           dtConfiguration[
             property == propertyToSet,
             `:=`(
-              value = value,
-              description = description
+              value = valueToSet,
+              description = descriptionToSet
             )
           ]
         }
@@ -495,23 +495,23 @@ ProjectConfigurationRF <- # nolint: object_name_linter
         dtConfiguration <- xlsxReadData(wb = wb, sheetName = targetSheet)
         for (i in seq_len(nrow(addOnRows))) {
           propertyToSet <- addOnRows$Property[[i]]
-          value <- addOnRows$Value[[i]]
-          description <- addOnRows$Description[[i]]
+          valueToSet <- addOnRows$Value[[i]]
+          descriptionToSet <- addOnRows$Description[[i]]
           if (!(propertyToSet %in% dtConfiguration$property)) {
             dtConfiguration <- rbind(
               dtConfiguration,
               data.table(
                 property = propertyToSet,
-                value = value,
-                description = description
+                value = valueToSet,
+                description = descriptionToSet
               )
             )
           } else {
             dtConfiguration[
               property == propertyToSet,
               `:=`(
-                value = value,
-                description = description
+                value = valueToSet,
+                description = descriptionToSet
               )
             ]
           }
