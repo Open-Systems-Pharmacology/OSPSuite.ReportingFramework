@@ -62,6 +62,32 @@ dataObserved <- suppressWarnings(readObservedDataByDictionary(
   )
 }
 
+.makeDebugModeProjectConfiguration <- function() {
+  projectConfiguration <- .makeTutorialDataProjectConfiguration(
+    projectDirPrefix = "rf_debug_mode_",
+    includeIndividualsFile = TRUE,
+    includeScenariosFile = TRUE
+  )
+
+  # Ensure one configured DataFile has an invalid filter so debug mode can skip it.
+  wb <- openxlsx::loadWorkbook(projectConfiguration$addOns$dataImportMapFile)
+  dataFiles <- xlsxReadData(
+    wb = wb,
+    sheetName = "DataFiles",
+    skipDescriptionRow = TRUE,
+    convertHeaders = FALSE
+  )
+  dataFiles$DataFilter[1] <- "invalid_filter("
+  openxlsx::writeData(wb = wb, sheet = "DataFiles", x = dataFiles)
+  openxlsx::saveWorkbook(
+    wb = wb,
+    file = projectConfiguration$addOns$dataImportMapFile,
+    overwrite = TRUE
+  )
+
+  projectConfiguration
+}
+
 
 test_that("It should read and process data based on the provided project configuration", {
   expect_true(
@@ -183,6 +209,50 @@ test_that("It should error for non-numeric values in numeric sheet", {
       dataClassType = "numericValues"
     ),
     "non-numeric"
+  )
+})
+
+test_that("readObservedDataByDictionary errors in normal mode for missing files", {
+  projectConfigurationDebug <- .makeDebugModeProjectConfiguration()
+
+  expect_error(
+    readObservedDataByDictionary(
+      projectConfiguration = projectConfigurationDebug,
+      spreadData = FALSE,
+      dataClassType = "timeprofile"
+    )
+  )
+})
+
+test_that("readObservedDataByDictionary continues in debug mode", {
+  withr::local_options(list(OSPSuite.RF.stopHelperFunction = FALSE))
+  projectConfigurationDebug <- .makeDebugModeProjectConfiguration()
+
+  expect_warning(
+    dataObservedDebug <- readObservedDataByDictionary(
+      projectConfiguration = projectConfigurationDebug,
+      spreadData = FALSE,
+      dataClassType = "timeprofile",
+      debugMode = TRUE
+    )
+  )
+
+  expect_s3_class(dataObservedDebug, "data.table")
+  expect_gt(nrow(dataObservedDebug), 0)
+})
+
+test_that("readObservedDataByDictionary blocks debug mode during valid runs", {
+  withr::local_options(list(OSPSuite.RF.stopHelperFunction = TRUE))
+  projectConfigurationDebug <- .makeDebugModeProjectConfiguration()
+
+  expect_error(
+    readObservedDataByDictionary(
+      projectConfiguration = projectConfigurationDebug,
+      spreadData = FALSE,
+      dataClassType = "timeprofile",
+      debugMode = TRUE
+    ),
+    "not allowed during a valid run"
   )
 })
 

@@ -55,6 +55,7 @@ The `readObservedDataByDictionary` function reads and processes observed data ba
 - `spreadData`: If `TRUE`, imported metadata is propagated to configuration tables (`Individuals.xlsx` and `Reports.xlsx`). If `FALSE`, import is read-only and no configuration workbook is modified.
 - `dataClassType`: Data class to import (`"timeprofile"`, `"pkParameter"`, or `"numericValues"`).
 - `fileIds`: Optional subset of file identifiers from the `DataFiles` sheet.
+- `debugMode`: If `TRUE`, import tries to continue when individual files fail to import and reports failures as warnings. Use for troubleshooting dictionary/filter issues. Default is `FALSE`.
 
 Typical usage pattern:
 
@@ -82,9 +83,19 @@ numericValues <- readObservedDataByDictionary(
   fileIds = NULL,
   spreadData = FALSE
 )
+
+# Troubleshooting mode: continue when one file fails and inspect warnings
+dataObservedDebug <- readObservedDataByDictionary(
+  projectConfiguration = projectConfiguration,
+  dataClassType = "timeprofile",
+  debugMode = TRUE,
+  spreadData = FALSE
+)
 ```
 
 In most workflows, `dataObserved` and `dataObservedPK` are imported with separate calls as shown above.
+
+When `debugMode = TRUE`, failed files are skipped and processing continues with remaining files where possible. This mode is intended for diagnostics and should not replace fixing the underlying dictionary/filter configuration.
 
 ## AI-Assisted Data Import Setup
 

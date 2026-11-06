@@ -636,6 +636,24 @@ messages$errorutilitiesdataFilterEvaluationFailed <- function(
   eval(quote(conditionMessage(err)), envir = env)
 }
 
+messages$errorutilitiesdataDebugFileNotFound <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(paste("Data file", d$dataFile, "does not exist.")),
+    envir = env
+  )
+}
+
+messages$errorutilitiesdataDebugDictionarySheetMissing <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(paste("Dictionary sheet", d$dictionary, "does not exist in DataImportMap.")),
+    envir = env
+  )
+}
+
 messages$errorutilitiesdataL4NonUniqueYUnit <- function(env = parent.frame()) {
   eval(
     quote(paste(
@@ -774,6 +792,57 @@ messages$warningutilitiesdataDictionaryFilterContext <- function(
       "'; filterValue: '",
       myFilter$filterValue,
       "'"
+    )),
+    envir = env
+  )
+}
+
+messages$warningutilitiesdataDebugImportFileFailed <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(paste(
+      "Debug mode: failed to import fileIdentifier",
+      d$fileIdentifier,
+      "(dataFile:",
+      d$dataFile,
+      ").",
+      "Message:",
+      conditionMessage(err)
+    )),
+    envir = env
+  )
+}
+
+messages$warningutilitiesdataDebugNoRowsImported <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote("Debug mode: no rows were imported from DataFiles."),
+    envir = env
+  )
+}
+
+messages$warningutilitiesdataDebugValidationFailed <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(paste("Debug mode: validation failed:", conditionMessage(err))),
+    envir = env
+  )
+}
+
+messages$warningutilitiesdataDebugFilterEvaluationFailed <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(paste(
+      "Debug mode: filter evaluation failed and was skipped for targetColumn",
+      myFilter$targetColumn,
+      "in dictionary",
+      dictionaryName,
+      "Message:",
+      conditionMessage(err)
     )),
     envir = env
   )
@@ -1380,7 +1449,11 @@ messages$errorutilitiesxlsxCopySourceSheetMissing <- function(
   env = parent.frame()
 ) {
   eval(
-    quote(paste("Sheet", sourceSheetName, "does not exist in source workbook.")),
+    quote(paste(
+      "Sheet",
+      sourceSheetName,
+      "does not exist in source workbook."
+    )),
     envir = env
   )
 }

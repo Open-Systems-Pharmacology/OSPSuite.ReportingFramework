@@ -107,6 +107,7 @@ getQCpassedEnvironmentVariable <- function() {
   }
 
   if (stopHelperFunction) {
+    callingFunction <- deparse(sys.call(-1))
     stop(messages$errorutilitiesworkflowHelperFunctionNotAllowed())
   }
 

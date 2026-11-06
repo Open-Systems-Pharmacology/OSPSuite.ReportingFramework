@@ -14,6 +14,10 @@
 #'   configuration workbook is modified.
 #' @param dataClassType A character string indicating the type of data class to process. Options are "timeprofile", "pkParameter", or "numericValues".
 #' @param fileIds A character vector with file identifiers to be selected, if NULL (default) all are selected.
+#' @param debugMode Logical. If `TRUE`, import errors are downgraded to warnings
+#'   on a per-file basis where possible, and processing continues with remaining
+#'   files. This mode is intended for exploratory runs and is blocked during
+#'   valid runs. Default is `FALSE`.
 #'
 #' @return A `data.table` containing the processed data based on the dictionary. The structure includes relevant columns defined in the data dictionary.
 #' @export
@@ -22,9 +26,14 @@ readObservedDataByDictionary <- function(
   projectConfiguration,
   spreadData = TRUE,
   dataClassType = c("timeprofile", "pkParameter", "numericValues"),
-  fileIds = NULL
+  fileIds = NULL,
+  debugMode = FALSE
 ) {
   dataClassType <- match.arg(dataClassType)
+  checkmate::assertFlag(debugMode)
+  if (debugMode) {
+    .stopHelperFunction()
+  }
 
   wb <- openxlsx::loadWorkbook(
     projectConfiguration$addOns$dataImportMapFile
@@ -60,57 +69,101 @@ readObservedDataByDictionary <- function(
     return(.readNumericValuesFromDataFiles(wb = wb, dataList = dataList))
   }
 
-  checkmate::assertFileExists(fs::path_abs(
-    start = projectConfiguration$projectConfigurationDirPath,
-    path = dataList$dataFile
-  ))
-  checkmate::assertNames(dataList$dictionary, subset.of = wb$sheet_names)
+  if (!debugMode) {
+    checkmate::assertFileExists(fs::path_abs(
+      start = projectConfiguration$projectConfigurationDirPath,
+      path = dataList$dataFile
+    ))
+    checkmate::assertNames(dataList$dictionary, subset.of = wb$sheet_names)
+  }
 
   # Loop through selected data files
   dataDT <- data.table()
   dict <- list()
   for (d in split(dataList, seq_len(nrow(dataList)))) {
-    tmpData <- data.table::fread(fs::path_abs(
-      start = projectConfiguration$projectConfigurationDirPath,
-      path = d$dataFile
-    ))
+    imported <- tryCatch(
+      {
+        dataFilePath <- fs::path_abs(
+          start = projectConfiguration$projectConfigurationDirPath,
+          path = d$dataFile
+        )
+        if (!file.exists(dataFilePath)) {
+          stop(messages$errorutilitiesdataDebugFileNotFound())
+        }
+        if (!(d$dictionary %in% wb$sheet_names)) {
+          stop(messages$errorutilitiesdataDebugDictionarySheetMissing())
+        }
 
-    tmpdict <- .readDataDictionary(
-      dictionaryFile = projectConfiguration$addOns$dataImportMapFile,
-      sheet = d$dictionary,
-      data = tmpData,
-      dataClass = d$dataClass
+        tmpData <- data.table::fread(dataFilePath)
+
+        tmpdict <- .readDataDictionary(
+          dictionaryFile = projectConfiguration$addOns$dataImportMapFile,
+          sheet = d$dictionary,
+          data = tmpData,
+          dataClass = d$dataClass
+        )
+
+        converted <- .convertDataByDictionary(
+          data = tmpData,
+          dataFilter = d$dataFilter,
+          dict = tmpdict,
+          dictionaryName = d$dictionary,
+          debugMode = debugMode
+        ) |>
+          dplyr::mutate(dataClass = d$dataClass)
+
+        tmpdict <-
+          tmpdict |>
+          dplyr::select(c("targetColumn", "type")) |>
+          unique()
+
+        list(
+          data = converted,
+          dict = as.list(tmpdict$type) |>
+            stats::setNames(tmpdict$targetColumn)
+        )
+      },
+      error = function(err) {
+        if (!debugMode) {
+          stop(err)
+        }
+        warning(messages$warningutilitiesdataDebugImportFileFailed())
+        NULL
+      }
     )
 
-    dataDT <- rbind(
-      dataDT,
-      .convertDataByDictionary(
-        data = tmpData,
-        dataFilter = d$dataFilter,
-        dict = tmpdict,
-        dictionaryName = d$dictionary
-      ) |>
-        dplyr::mutate(dataClass = d$dataClass),
-      fill = TRUE
-    )
-    # Get unique dictionary for columnType
-    tmpdict <-
-      tmpdict |>
-      dplyr::select(c("targetColumn", "type")) |>
-      unique()
+    if (is.null(imported)) {
+      next
+    }
 
-    dict <- utils::modifyList(
-      dict,
-      as.list(tmpdict$type) |>
-        stats::setNames(tmpdict$targetColumn)
-    )
+    dataDT <- rbind(dataDT, imported$data, fill = TRUE)
+    dict <- utils::modifyList(dict, imported$dict)
+  }
+
+  if (nrow(dataDT) == 0) {
+    if (debugMode) {
+      warning(messages$warningutilitiesdataDebugNoRowsImported())
+      return(dataDT)
+    }
+    stop(messages$errorutilitiesdataNoDataFilesDefined())
   }
 
   dataDT[, dataType := "observed"]
 
   dataDT <- .setDataTypeAttributes(dataDT, dict)
 
-  validateObservedData(dataDT = dataDT, dataClassType)
+  if (debugMode) {
+    tryCatch(
+      {
+        validateObservedData(dataDT = dataDT, dataClassType)
+      },
+      error = function(err) {
+        warning(messages$warningutilitiesdataDebugValidationFailed())
+      }
+    )
+  } else {
+    validateObservedData(dataDT = dataDT, dataClassType)
+  }
 
   # Spread data to other tables
   if (spreadData) {
@@ -568,10 +621,18 @@ validateObservedData <- function(dataDT, dataClassType) {
 #' @param dataFilter The filter to be applied to the data.
 #' @param dict The dictionary to be used for conversion.
 #' @param dictionaryName The name of the dictionary.
+#' @param debugMode Logical. If `TRUE`, filter-evaluation errors are converted
+#'   to warnings and import continues.
 #' @return A `data.table` containing the converted data.
 #' @keywords internal
 #' @noRd
-.convertDataByDictionary <- function(data, dataFilter, dict, dictionaryName) {
+.convertDataByDictionary <- function(
+  data,
+  dataFilter,
+  dict,
+  dictionaryName,
+  debugMode = FALSE
+) {
   # Execute data filter
   if (!is.na(dataFilter) & dataFilter != "") {
     data <- data[eval(parse(text = dataFilter))]
@@ -591,7 +652,10 @@ validateObservedData <- function(dataDT, dataClassType) {
         },
         error = function(err) {
           warning(messages$warningutilitiesdataDictionaryFilterContext())
-          stop(messages$errorutilitiesdataFilterEvaluationFailed())
+          if (!debugMode) {
+            stop(messages$errorutilitiesdataFilterEvaluationFailed())
+          }
+          warning(messages$warningutilitiesdataDebugFilterEvaluationFailed())
         }
       )
     }
