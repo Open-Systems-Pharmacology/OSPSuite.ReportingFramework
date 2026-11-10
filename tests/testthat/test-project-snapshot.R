@@ -368,3 +368,42 @@ test_that("rf workbook list structures are converted to named data frames", {
   expect_equal(nrow(result$EmptySheet), 0)
   expect_equal(names(result$EmptySheet), "OnlyColumn")
 })
+
+test_that("restoreProjectConfigurationRF preserves snapshotted configurations folder layout", {
+  d <- file.path(tempdir(), "snap_test_11")
+  unlink(d, recursive = TRUE)
+  dir.create(d)
+
+  ospsuite.reportingframework::initProject(
+    projectDirectory = d,
+    configurationDirectory = d,
+    overwrite = TRUE,
+    keepEsqlabsRStructure = TRUE
+  )
+  pc1 <- ospsuite.reportingframework::createProjectConfiguration(
+    file.path(d, "ProjectConfiguration.xlsx")
+  )
+
+  ospsuite.reportingframework::snapshotProjectConfigurationRF(
+    pc1,
+    outputDir = d
+  )
+
+  r <- file.path(tempdir(), "snap_rest_11")
+  unlink(r, recursive = TRUE)
+  dir.create(r)
+
+  pc2 <- ospsuite.reportingframework::restoreProjectConfigurationRF(
+    file.path(d, "ProjectConfiguration.json"),
+    outputDir = r
+  )
+
+  expectedConfigDir <- fs::path_abs(
+    pc2$configurationsFolder,
+    start = r
+  )
+  expect_true(dir.exists(expectedConfigDir))
+
+  pkPath <- pc2$addOns[["pKParameterFile"]]
+  expect_true(file.exists(pkPath))
+})

@@ -164,20 +164,24 @@
 #' Write all addon .xlsx files captured in a JSON snapshot back to disk.
 #' @param addonsDf data.frame of the addons sheet (Property/Value columns).
 #' @param configData Full JSON config list (contains per-addon sheet data).
-#' @param outputDir Directory to write xlsx files into.
+#' @param configurationsFolder Base folder used to resolve relative add-on workbook paths.
 #' @return Invisible `NULL`.
 #' @keywords internal
 #' @details Workbook eligibility and workbook writing are delegated to helpers so
 #'   this function only coordinates restoring referenced add-on workbooks.
 #' @noRd
-.rfRestoreAddonXlsxFiles <- function(addonsDf, configData, outputDir) {
+.rfRestoreAddonXlsxFiles <- function(
+  addonsDf,
+  configData,
+  configurationsFolder
+) {
   for (i in seq_len(nrow(addonsDf))) {
     prop <- addonsDf$Property[i]
     val <- addonsDf$Value[i]
     if (.rfShouldRestoreAddonWorkbook(prop, val, configData)) {
       .rfWriteAddonWorkbook(
         workbookData = configData[[prop]],
-        xlsxFilePath = file.path(outputDir, val)
+        xlsxFilePath = fs::path_abs(val, start = configurationsFolder)
       )
     }
   }
@@ -333,29 +337,65 @@ restoreProjectConfigurationRF <- function(jsonPath, outputDir = NULL, ...) {
     ...
   )
 
-  # esqlabsR restores xlsx files into file.path(effectiveOutputDir, "Configurations")
-  # but ReportingFramework expects them directly in effectiveOutputDir
+  xlsxPath <- file.path(
+    effectiveOutputDir,
+    sub("\\.json$", ".xlsx", basename(jsonPath))
+  )
+  restoredProjectConfiguration <- esqlabsR::ProjectConfiguration$new(
+    projectConfigurationFilePath = xlsxPath,
+    ignoreVersionCheck = TRUE
+  )
+  restoredConfigurationsDir <- fs::path_abs(
+    restoredProjectConfiguration$configurationsFolder,
+    start = effectiveOutputDir
+  )
+
+  # esqlabsR restores xlsx files into file.path(effectiveOutputDir, "Configurations").
+  # Preserve the snapshotted layout by moving only when needed.
   esqlabsConfigDir <- file.path(effectiveOutputDir, "Configurations")
-  if (dir.exists(esqlabsConfigDir)) {
+  restoredConfigurationsFolderName <- basename(
+    as.character(fs::path_norm(restoredConfigurationsDir))
+  )
+  sameConfigurationDir <- tolower(as.character(fs::path_norm(
+    esqlabsConfigDir
+  ))) ==
+    tolower(as.character(fs::path_norm(restoredConfigurationsDir)))
+  shouldMoveRestoredWorkbooks <-
+    dir.exists(esqlabsConfigDir) &&
+    !sameConfigurationDir &&
+    tolower(restoredConfigurationsFolderName) != "configurations"
+  if (shouldMoveRestoredWorkbooks) {
+    if (!dir.exists(restoredConfigurationsDir)) {
+      dir.create(
+        restoredConfigurationsDir,
+        recursive = TRUE,
+        showWarnings = FALSE
+      )
+    }
+
     xlsfiles <- list.files(
       path = esqlabsConfigDir,
       pattern = "\\.xlsx$",
       full.names = TRUE
     )
     for (xls in xlsfiles) {
-      file.copy(
+      copyCreated <- file.copy(
         from = xls,
-        to = file.path(effectiveOutputDir, basename(xls)),
+        to = file.path(restoredConfigurationsDir, basename(xls)),
         overwrite = TRUE
       )
+      if (!isTRUE(copyCreated)) {
+        stop(messages$errorprojectsnapshotRestoreWorkbookCopyFailed(
+          sourceWorkbookPath = xls,
+          destinationWorkbookPath = file.path(
+            restoredConfigurationsDir,
+            basename(xls)
+          )
+        ))
+      }
     }
     unlink(esqlabsConfigDir, recursive = TRUE, force = TRUE)
   }
-
-  xlsxPath <- file.path(
-    effectiveOutputDir,
-    sub("\\.json$", ".xlsx", basename(jsonPath))
-  )
 
   if ("projectConfigurationAddons" %in% names(configData)) {
     # reconstruct addons sheet from {column_names, rows} structure
@@ -369,11 +409,15 @@ restoreProjectConfigurationRF <- function(jsonPath, outputDir = NULL, ...) {
     openxlsx::writeData(wb, sheet = "addons", x = addonsDf)
     openxlsx::saveWorkbook(wb, xlsxPath, overwrite = TRUE)
 
-    .rfRestoreAddonXlsxFiles(addonsDf, configData, effectiveOutputDir)
+    .rfRestoreAddonXlsxFiles(
+      addonsDf = addonsDf,
+      configData = configData,
+      configurationsFolder = restoredConfigurationsDir
+    )
   }
 
   pcRF <- createProjectConfiguration(
-path = xlsxPath,
+    path = xlsxPath,
     ignoreVersionCheck = TRUE
   )
   return(invisible(pcRF))

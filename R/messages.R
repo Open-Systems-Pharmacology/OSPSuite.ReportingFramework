@@ -520,6 +520,18 @@ messages$errorprojectconfigurationRestoreFailed <- function(
   )
 }
 
+messages$errorprojectsnapshotRestoreWorkbookCopyFailed <- function(
+  sourceWorkbookPath,
+  destinationWorkbookPath
+) {
+  paste(
+    "Failed to copy restored workbook",
+    sourceWorkbookPath,
+    "to",
+    destinationWorkbookPath
+  )
+}
+
 messages$errorQmdPlotManagerInvalidFileOrSubfolderName <- function(
   env = parent.frame()
 ) {
