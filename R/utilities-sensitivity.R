@@ -816,6 +816,9 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
     min.len = 1
   )
 
+  # Preserve empty output-path definitions ("all outputs") during splitting.
+  allOutputsToken <- "__ALL_OUTPUT_PATHS__"
+
   return(
     lapply(splitInputs(pkParameterSheets), function(sheetName) {
       xlsxReadData(
@@ -825,8 +828,77 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
       )
     }) |>
       data.table::rbindlist(fill = TRUE, use.names = TRUE) |>
-      .separateAndTrimColumn(columnName = "outputPathIds")
+      dplyr::mutate(
+        outputPathIds = as.character(outputPathIds),
+        outputPathIds = dplyr::if_else(
+          is.na(outputPathIds) | !nzchar(trimws(outputPathIds)),
+          allOutputsToken,
+          outputPathIds
+        )
+      ) |>
+      tidyr::separate_rows(outputPathIds, sep = ",") |>
+      dplyr::mutate(
+        outputPathIds = trimws(outputPathIds),
+        outputPathIds = dplyr::if_else(
+          outputPathIds == allOutputsToken,
+          NA_character_,
+          outputPathIds
+        )
+      ) |>
+      data.table::as.data.table() |>
+      setnames(old = "outputPathIds", new = "outputPathId")
   )
+}
+
+#' Expand empty PK output-path identifiers for sensitivity workflows.
+#'
+#' Empty output-path identifiers are treated as "all configured outputs" and
+#' expanded to one row per configured `outputPathId`.
+#'
+#' @param pkDefinitions Data table with PK definition rows.
+#' @param dtOutputPaths Data table with configured output path identifiers.
+#' @return Data table with empty `outputPathId` values expanded.
+#' @keywords internal
+#' @noRd
+.expandEmptyOutputPathIdsForSensitivity <- function(
+  pkDefinitions,
+  dtOutputPaths
+) {
+  if (!("outputPathId" %in% names(pkDefinitions))) {
+    return(pkDefinitions)
+  }
+
+  configuredOutputPathIds <- dtOutputPaths[
+    !is.na(outputPathId) & nzchar(as.character(outputPathId))
+  ][, unique(as.character(outputPathId))]
+
+  if (length(configuredOutputPathIds) == 0) {
+    return(pkDefinitions)
+  }
+
+  expandedDefinitions <- data.table::copy(data.table::as.data.table(
+    pkDefinitions
+  ))
+  emptyOutputPathRows <- is.na(expandedDefinitions$outputPathId) |
+    !nzchar(as.character(expandedDefinitions$outputPathId))
+
+  if (!any(emptyOutputPathRows)) {
+    return(expandedDefinitions)
+  }
+
+  expandedByRow <- lapply(seq_len(nrow(expandedDefinitions)), function(i) {
+    oneRow <- data.table::copy(expandedDefinitions[i])
+    if (
+      is.na(oneRow$outputPathId[[1]]) ||
+        !nzchar(as.character(oneRow$outputPathId[[1]]))
+    ) {
+      oneRow <- oneRow[rep(1, length(configuredOutputPathIds))]
+      oneRow[, outputPathId := configuredOutputPathIds]
+    }
+    oneRow
+  })
+
+  return(data.table::rbindlist(expandedByRow, use.names = TRUE, fill = TRUE))
 }
 
 #' Normalize PK definition column names for sensitivity workflows.
@@ -870,6 +942,7 @@ runRepresentativeSensitivityAnalysisForScenarios <- function(
     projectConfiguration = projectConfiguration,
     pkParameterSheets = pkParameterSheets
   ) |>
+    .expandEmptyOutputPathIdsForSensitivity(dtOutputPaths = dtOutputPaths) |>
     .normalizedPKDefinitionsForSensitivity() |>
     setnames(old = "pKParameter", new = "pKParameterName") |>
     merge(

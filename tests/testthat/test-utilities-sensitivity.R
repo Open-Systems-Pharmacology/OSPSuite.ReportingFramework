@@ -664,6 +664,48 @@ test_that(".getPKDefinitionsForSensitivity errors when no valid rows remain", {
   )
 })
 
+test_that(".getPKDefinitionsForSensitivity expands empty outputPathIds to all outputs", {
+  local_mocked_bindings(
+    xlsxReadData = function(...) {
+      data.table::data.table(
+        name = c("AUC", "Cmax", "Tmax", "Cmin"),
+        displayName = c(
+          "AUC display",
+          "Cmax display",
+          "Tmax display",
+          "Cmin display"
+        ),
+        displayUnit = c("mg*h/L", "mg/L", "h", "mg/L"),
+        descriptions = c("", "", "", ""),
+        outputPathIds = c(NA_character_, "op2", "", "   ")
+      )
+    },
+    .package = "ospsuite.reportingframework"
+  )
+
+  definitions <- ospsuite.reportingframework:::.getPKDefinitionsForSensitivity(
+    projectConfiguration = list(addOns = list(pKParameterFile = "unused.xlsx")),
+    pkParameterSheets = "PK",
+    dtOutputPaths = data.table::data.table(
+      outputPathId = c("op1", "op2"),
+      outputPath = c("Organism|Plasma", "Organism|Liver")
+    )
+  )
+
+  expect_true(all(c("pKParameterName", "outputPath") %in% names(definitions)))
+  expect_equal(nrow(definitions), 7)
+
+  aucPaths <- definitions[pKParameterName == "AUC", unique(outputPath)]
+  tmaxPaths <- definitions[pKParameterName == "Tmax", unique(outputPath)]
+  cminPaths <- definitions[pKParameterName == "Cmin", unique(outputPath)]
+  cmaxPaths <- definitions[pKParameterName == "Cmax", unique(outputPath)]
+
+  expect_setequal(aucPaths, c("Organism|Plasma", "Organism|Liver"))
+  expect_setequal(tmaxPaths, c("Organism|Plasma", "Organism|Liver"))
+  expect_setequal(cminPaths, c("Organism|Plasma", "Organism|Liver"))
+  expect_setequal(cmaxPaths, "Organism|Liver")
+})
+
 test_that(".readPKDefinitionsFromSheets filters invalid sheet names and separates outputPathIds", {
   capturedSheets <- character(0)
 
