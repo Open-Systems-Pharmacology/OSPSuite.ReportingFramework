@@ -468,7 +468,9 @@ createProjectConfiguration <- function(
 #' @return `TRUE` when every source entry exists at target and files match.
 #' @keywords internal
 #' @noRd
-.isDirectoryTransferComplete <- function(sourceDir, targetDir) {
+# Guard-style early returns keep transfer checks explicit; cyclocomp is intentional here.
+.isDirectoryTransferComplete <- # nolint: cyclocomp_linter
+  function(sourceDir, targetDir) {
   if (!dir.exists(sourceDir)) {
     return(TRUE)
   }
