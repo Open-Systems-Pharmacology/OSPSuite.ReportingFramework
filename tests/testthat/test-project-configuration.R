@@ -201,6 +201,62 @@ test_that("an error is raised when no RF version is stored", {
   )
 })
 
+test_that("failed loading restores legacy workbook content", {
+  configPath <- withr::local_tempfile(fileext = ".xlsx")
+  file.copy(
+    system.file(
+      "templates",
+      "ProjectConfiguration.xlsx",
+      package = "ospsuite.reportingframework"
+    ),
+    configPath,
+    overwrite = TRUE
+  )
+
+  wb <- openxlsx::loadWorkbook(configPath)
+  firstSheet <- wb$sheet_names[[1]]
+  dtBase <- xlsxReadData(
+    wb,
+    sheetName = firstSheet,
+    convertHeaders = FALSE,
+    emptyAsNA = FALSE
+  )
+  dtBase <- rbind(
+    dtBase,
+    data.frame(
+      Property = "legacyAddonFoo",
+      Value = "foo.xlsx",
+      Description = "legacy add-on",
+      stringsAsFactors = FALSE
+    )
+  )
+  dtBase$Value[dtBase$Property == "esqlabsRVersion"] <- "0.0.0"
+  xlsxWriteData(wb, sheetName = firstSheet, dt = dtBase)
+  openxlsx::addWorksheet(wb, "extra_metadata")
+  openxlsx::writeData(wb, sheet = "extra_metadata", x = data.frame(id = 1L))
+  openxlsx::saveWorkbook(wb, configPath, overwrite = TRUE)
+
+  sheetsBefore <- openxlsx::getSheetNames(configPath)
+
+  expect_error(
+    createProjectConfiguration(path = configPath, ignoreVersionCheck = FALSE),
+    regexp = "esqlabsR version mismatch"
+  )
+
+  sheetsAfter <- openxlsx::getSheetNames(configPath)
+  expect_equal(sheetsAfter, sheetsBefore)
+
+  wbAfter <- openxlsx::loadWorkbook(configPath)
+  firstSheetAfter <- wbAfter$sheet_names[[1]]
+  dtAfter <- xlsxReadData(
+    wbAfter,
+    sheetName = firstSheetAfter,
+    convertHeaders = FALSE,
+    emptyAsNA = FALSE
+  )
+  expect_true("legacyAddonFoo" %in% dtAfter$Property)
+})
+
 # initProject integration -------------------------------------------------
 
 test_that("initProject stamps the RF version in the addons sheet only", {

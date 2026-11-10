@@ -248,7 +248,33 @@ ProjectConfigurationRF <- # nolint: object_name_linter
             drop = FALSE
           ]
           backupPath <- tempfile(fileext = ".xlsx")
-          file.copy(projectConfigurationFilePath, backupPath, overwrite = TRUE)
+          backupCreated <- file.copy(
+            projectConfigurationFilePath,
+            backupPath,
+            overwrite = TRUE
+          )
+          if (!isTRUE(backupCreated)) {
+            stop(messages$errorprojectconfigurationBackupFailed(
+              projectConfigurationFilePath = projectConfigurationFilePath,
+              backupPath = backupPath
+            ))
+          }
+          on.exit({
+            if (file.exists(backupPath)) {
+              restored <- file.copy(
+                backupPath,
+                projectConfigurationFilePath,
+                overwrite = TRUE
+              )
+              if (!isTRUE(restored)) {
+                stop(messages$errorprojectconfigurationRestoreFailed(
+                  projectConfigurationFilePath = projectConfigurationFilePath,
+                  backupPath = backupPath
+                ))
+              }
+              unlink(backupPath)
+            }
+          }, add = TRUE)
           private$.writeStandardConfigToXlsx(
             standardData,
             projectConfigurationFilePath
@@ -259,11 +285,6 @@ ProjectConfigurationRF <- # nolint: object_name_linter
           projectConfigurationFilePath = projectConfigurationFilePath,
           ignoreVersionCheck = ignoreVersionCheck
         )
-
-        if (hasAddOns) {
-          file.copy(backupPath, projectConfigurationFilePath, overwrite = TRUE)
-          unlink(backupPath)
-        }
 
         invisible(NULL)
       },

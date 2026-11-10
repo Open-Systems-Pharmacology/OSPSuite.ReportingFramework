@@ -496,6 +496,30 @@ messages$errorprojectconfigurationAbortedByUser <- function(
   eval(quote("Aborted by user."), envir = env)
 }
 
+messages$errorprojectconfigurationBackupFailed <- function(
+  projectConfigurationFilePath,
+  backupPath
+) {
+  paste(
+    "Failed to create backup for project configuration file",
+    projectConfigurationFilePath,
+    "at",
+    backupPath
+  )
+}
+
+messages$errorprojectconfigurationRestoreFailed <- function(
+  projectConfigurationFilePath,
+  backupPath
+) {
+  paste(
+    "Failed to restore project configuration file",
+    projectConfigurationFilePath,
+    "from backup",
+    backupPath
+  )
+}
+
 messages$errorQmdPlotManagerInvalidFileOrSubfolderName <- function(
   env = parent.frame()
 ) {
