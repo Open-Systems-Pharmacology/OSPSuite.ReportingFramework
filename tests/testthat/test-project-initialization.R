@@ -104,6 +104,11 @@ test_that("upgradeToReportingFramework applies RF defaults when requested", {
   )
   expect_true(file.exists(oldScenarios))
 
+  customDataDir <- file.path(configurationDirectory, "MyCustomData")
+  dir.create(customDataDir, recursive = TRUE)
+  customDataFile <- file.path(customDataDir, "source.csv")
+  writeLines("id,value\n1,42", customDataFile)
+
   upgradeToReportingFramework(
     configurationDirectory = configurationDirectory,
     overwrite = TRUE,
@@ -176,6 +181,13 @@ test_that("upgradeToReportingFramework applies RF defaults when requested", {
       "*.xlsx"
   ))
 
+  expect_true(file.exists(customDataFile))
+  expect_equal(
+    readLines(customDataFile, warn = FALSE),
+    c("id,value", "1,42")
+  )
+  expect_false(dir.exists(file.path(configurationDirectory, "Configurations")))
+
   remainingLegacyDirs <- list.dirs(
     file.path(configurationDirectory, "Configurations"),
     recursive = FALSE,
@@ -185,6 +197,41 @@ test_that("upgradeToReportingFramework applies RF defaults when requested", {
     remainingLegacyDirs != file.path(configurationDirectory, "Configurations")
   ]
   expect_length(remainingLegacyDirs, 0)
+})
+
+test_that("upgradeToReportingFramework keeps legacy folder when transfer is incomplete", {
+  rootDirectory <- withr::local_tempdir()
+  configurationDirectory <- file.path(
+    rootDirectory,
+    "Root",
+    "Scripts",
+    "ReportingFramework"
+  )
+  dir.create(configurationDirectory, recursive = TRUE)
+
+  esqlabsR::initProject(
+    destination = configurationDirectory,
+    overwrite = TRUE
+  )
+
+  legacyFile <- file.path(
+    configurationDirectory,
+    "Configurations",
+    "LegacyOnly.csv"
+  )
+  writeLines("legacy", legacyFile)
+  destinationFile <- file.path(configurationDirectory, "LegacyOnly.csv")
+  writeLines("different", destinationFile)
+
+  upgradeToReportingFramework(
+    configurationDirectory = configurationDirectory,
+    overwrite = FALSE,
+    keepEsqlabsRStructure = FALSE
+  )
+
+  expect_true(dir.exists(file.path(configurationDirectory, "Configurations")))
+  expect_true(file.exists(legacyFile))
+  expect_equal(readLines(destinationFile, warn = FALSE), "different")
 })
 
 test_that("upgradeToReportingFramework is idempotent", {

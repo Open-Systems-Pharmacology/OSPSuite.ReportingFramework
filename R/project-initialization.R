@@ -462,6 +462,56 @@ createProjectConfiguration <- function(
   return(invisible(NULL))
 }
 
+#' Verify that a legacy directory content exists in the new target location
+#' @param sourceDir Source legacy directory.
+#' @param targetDir Target directory used for migrated content.
+#' @return `TRUE` when every source entry exists at target and files match.
+#' @keywords internal
+#' @noRd
+.isDirectoryTransferComplete <- function(sourceDir, targetDir) {
+  if (!dir.exists(sourceDir)) {
+    return(TRUE)
+  }
+  if (!dir.exists(targetDir)) {
+    return(FALSE)
+  }
+
+  entries <- list.files(
+    sourceDir,
+    recursive = TRUE,
+    all.files = TRUE,
+    include.dirs = TRUE,
+    no.. = TRUE
+  )
+  if (length(entries) == 0) {
+    return(TRUE)
+  }
+
+  for (entry in entries) {
+    srcPath <- file.path(sourceDir, entry)
+    dstPath <- file.path(targetDir, entry)
+
+    if (dir.exists(srcPath)) {
+      if (!dir.exists(dstPath)) {
+        return(FALSE)
+      }
+      next
+    }
+
+    if (!file.exists(dstPath)) {
+      return(FALSE)
+    }
+
+    srcHash <- unname(tools::md5sum(srcPath))
+    dstHash <- unname(tools::md5sum(dstPath))
+    if (!identical(srcHash, dstHash)) {
+      return(FALSE)
+    }
+  }
+
+  return(TRUE)
+}
+
 #' Copy individual configuration files listed under *File properties
 #' @param oldFile Absolute path to the original file.
 #' @param newFile Absolute path to the target file.
@@ -562,7 +612,7 @@ createProjectConfiguration <- function(
   return(invisible(NULL))
 }
 
-#' Delete all subdirectories in legacy configurations folder
+#' Delete migrated legacy configuration directory after verified transfer
 #' @param dtConfigOld Original esqlabsR configuration table.
 #' @param dtConfigNew Updated RF configuration table.
 #' @param configurationDirectory Base directory of the configuration workbook.
@@ -586,14 +636,12 @@ createProjectConfiguration <- function(
   if (!dir.exists(oldFolderAbs) || identical(oldFolderAbs, newFolderAbs)) {
     return(invisible(NULL))
   }
-  dirsToDelete <- setdiff(
-    list.dirs(newFolderAbs, recursive = FALSE, full.names = TRUE),
-    newFolderAbs
-  )
 
-  if (length(dirsToDelete) > 0) {
-    unlink(dirsToDelete, recursive = TRUE, force = TRUE)
+  if (!.isDirectoryTransferComplete(oldFolderAbs, newFolderAbs)) {
+    return(invisible(NULL))
   }
+
+  unlink(oldFolderAbs, recursive = TRUE, force = TRUE)
 
   return(invisible(NULL))
 }
