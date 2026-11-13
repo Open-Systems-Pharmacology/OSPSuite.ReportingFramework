@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities-markdown.R
 \name{mdTable}
 \alias{mdTable}
-\title{mdTable}
+\title{Insert table from CSV with caption.}
 \usage{
 mdTable(
   tableNumber,
@@ -17,43 +17,41 @@ mdTable(
 )
 }
 \arguments{
-\item{tableNumber}{number of table for caption prefix}
+\item{tableNumber}{Table number for prefix.}
 
-\item{tableCsv}{path of .csv file}
+\item{tableCsv}{CSV file path.}
 
-\item{captionFile}{file containing caption}
+\item{captionFile}{Caption file.}
 
-\item{footNoteFile}{file containing footnotes}
+\item{footNoteFile}{Footnote file.}
 
-\item{subfolder}{The folder where the file is located relative to Rmd}
+\item{subfolder}{Folder location.}
 
-\item{customStyles}{list of custom styles usable for figure and table captions and footnotes}
+\item{customStyles}{Custom styles list.}
 
-\item{digitsOfSignificance}{significance digits to display (default 3)}
+\item{digitsOfSignificance}{Significant digits (default 3).}
 
-\item{addNewPage}{boolean if TRUE (default) new page is added after}
+\item{addNewPage}{Add page break after (default TRUE).}
 
-\item{...}{passed to `knitr::kable`}
+\item{...}{Passed to `knitr::kable`.}
 }
 \value{
-`x`, invisibly
+Invisible `NULL`.
 }
 \description{
-Insert a table into a markdown document. Essentially a wrapper for `knitr::kable` with `format = "markdown"` and newlines.
+Insert table from CSV with caption.
 }
 \seealso{
-Other markdown helper function: 
-\code{\link{addFiguresAndTables}()},
-\code{\link{mdBullet}()},
-\code{\link{mdBullet0}()},
-\code{\link{mdCaption}()},
-\code{\link{mdFigure}()},
-\code{\link{mdFootNote}()},
-\code{\link{mdHeading}()},
-\code{\link{mdLink}()},
-\code{\link{mdNewline}()},
-\code{\link{mdNewpage}()},
-\code{\link{mdPaste}()},
-\code{\link{mdPaste0}()}
+Other markdown helper function:
+\code{\link[=mdBullet]{mdBullet()}},
+\code{\link[=mdCaption]{mdCaption()}},
+\code{\link[=mdFigure]{mdFigure()}},
+\code{\link[=mdFootNote]{mdFootNote()}},
+\code{\link[=mdHeading]{mdHeading()}},
+\code{\link[=mdLink]{mdLink()}},
+\code{\link[=mdNewline]{mdNewline()}},
+\code{\link[=mdNewpage]{mdNewpage()}},
+\code{\link[=mdPaste]{mdPaste()}},
+\code{\link[=mdPaste0]{mdPaste0()}}
 }
 \concept{markdown helper function}

@@ -23,11 +23,11 @@ based on project configuration and a list of scenarios. It processes each
 scenario and returns the results as a data.table.
 }
 \seealso{
-Other scenario management: 
-\code{\link{calculatePKParameterForScenarios}()},
-\code{\link{createScenarios.wrapped}()},
-\code{\link{loadScenarioResultsToFramework}()},
-\code{\link{runAndSaveScenarios}()},
-\code{\link{runOrLoadScenarios}()}
+Other scenario management:
+\code{\link[=calculatePKParameterForScenarios]{calculatePKParameterForScenarios()}},
+\code{\link[=createScenariosWrapped]{createScenariosWrapped()}},
+\code{\link[=loadScenarioResultsToFramework]{loadScenarioResultsToFramework()}},
+\code{\link[=runAndSaveScenarios]{runAndSaveScenarios()}},
+\code{\link[=runOrLoadScenarios]{runOrLoadScenarios()}}
 }
 \concept{scenario management}

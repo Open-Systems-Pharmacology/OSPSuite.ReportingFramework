@@ -18,19 +18,19 @@ NULL (invisible).
 Validates the configuration table for histogram plots.
 }
 \seealso{
-Other plot configuration validation function: 
-\code{\link{validateDistributionVsDemographicsConfig}()},
-\code{\link{validatePKBoxwhiskerConfig}()},
-\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
-\code{\link{validatePKForestAggregatedRatiosConfig}()},
-\code{\link{validatePKForestPointEstimateOfAbsoluteValuesConfig}()},
-\code{\link{validatePKForestPointEstimateOfRatiosConfig}()},
-\code{\link{validateSensitivityConfig}()},
-\code{\link{validateTimeProfilesConfig}()}
+Other plot configuration validation function:
+\code{\link[=validateDistributionVsDemographicsConfig]{validateDistributionVsDemographicsConfig()}},
+\code{\link[=validatePKBoxwhiskerConfig]{validatePKBoxwhiskerConfig()}},
+\code{\link[=validatePKForestAggregatedAbsoluteValuesConfig]{validatePKForestAggregatedAbsoluteValuesConfig()}},
+\code{\link[=validatePKForestAggregatedRatiosConfig]{validatePKForestAggregatedRatiosConfig()}},
+\code{\link[=validatePKForestPointEstimateOfAbsoluteValuesConfig]{validatePKForestPointEstimateOfAbsoluteValuesConfig()}},
+\code{\link[=validatePKForestPointEstimateOfRatiosConfig]{validatePKForestPointEstimateOfRatiosConfig()}},
+\code{\link[=validateSensitivityConfig]{validateSensitivityConfig()}},
+\code{\link[=validateTimeProfilesConfig]{validateTimeProfilesConfig()}}
 
-Other functions to generate histograms: 
-\code{\link{addDefaultConfigForDistributionsVsDemographics}()},
-\code{\link{plotHistograms}()}
+Other functions to generate histograms:
+\code{\link[=addDefaultConfigForDistributionsVsDemographics]{addDefaultConfigForDistributionsVsDemographics()}},
+\code{\link[=plotHistograms]{plotHistograms()}}
 }
 \concept{functions to generate histograms}
 \concept{plot configuration validation function}

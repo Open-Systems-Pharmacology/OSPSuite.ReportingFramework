@@ -3,158 +3,290 @@
 \docType{class}
 \name{ProjectConfigurationRF}
 \alias{ProjectConfigurationRF}
-\title{ProjectConfiguration}
+\title{ProjectConfigurationRF}
 \description{
-An object storing configuration used project-wide
+An object storing configuration used project-wide, composed of
+  an esqlabsR project configuration and reporting-framework add-ons.
 }
 \seealso{
-Other project initialization: 
-\code{\link{createProjectConfiguration}()},
-\code{\link{getQCpassedEnvironmentVariable}()},
-\code{\link{initProject}()},
-\code{\link{setWorkflowOptions}()}
+Other project initialization:
+\code{\link[=createAIPromptFromTask]{createAIPromptFromTask()}},
+\code{\link[=createAIWorkflowPrompt]{createAIWorkflowPrompt()}},
+\code{\link[=createProjectConfiguration]{createProjectConfiguration()}},
+\code{\link[=exportWorkflowContext]{exportWorkflowContext()}},
+\code{\link[=getQCpassedEnvironmentVariable]{getQCpassedEnvironmentVariable()}},
+\code{\link[=initProject]{initProject()}},
+\code{\link[=restoreProjectConfigurationRF]{restoreProjectConfigurationRF()}},
+\code{\link[=setWorkflowOptions]{setWorkflowOptions()}},
+\code{\link[=snapshotProjectConfigurationRF]{snapshotProjectConfigurationRF()}},
+\code{\link[=upgradeToReportingFramework]{upgradeToReportingFramework()}},
+\code{\link[=validateWorkflowForAI]{validateWorkflowForAI()}}
 }
 \concept{project initialization}
-\section{Super class}{
-\code{\link[esqlabsR:ProjectConfiguration]{esqlabsR::ProjectConfiguration}} -> \code{ProjectConfigurationRF}
+\section{Public fields}{
+  \if{html}{\out{<div class="r6-fields">}}
+  \describe{
+    \item{\code{baseProjectconfiguration}}{esqlabsR project configuration object
+Initialize}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Active bindings}{
-\if{html}{\out{<div class="r6-active-bindings">}}
-\describe{
-\item{\code{addOns}}{list with non default configurations}
-}
-\if{html}{\out{</div>}}
+  \if{html}{\out{<div class="r6-active-bindings">}}
+  \describe{
+    \item{\code{modelFolder}}{Path to the folder containing model files. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{configurationsFolder}}{Path to the folder containing configuration files. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{modelParamsFile}}{Path to the model parameters file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{individualsFile}}{Path to the individuals file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{populationsFile}}{Path to the populations file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{populationsFolder}}{Path to the folder containing population files. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{scenariosFile}}{Path to the scenarios file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{applicationsFile}}{Path to the applications file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{plotsFile}}{Path to the plots configuration file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{parameterIdentificationFile}}{Path to the parameter identification file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{dataFolder}}{Path to the folder containing observed data files. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{dataFile}}{Path to the observed data file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{dataImporterConfigurationFile}}{Path to the data importer configuration file. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{outputFolder}}{Path to the folder where outputs are written. Delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{esqlabsRVersion}}{Version of the `esqlabsR` package stored in the project configuration. Read-only; delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{projectConfigurationDirPath}}{Absolute path to the directory containing the project configuration file. Read-only; delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{modified}}{Logical flag indicating whether the project configuration has been modified since it was last saved. Read-only; delegated to the base `esqlabsR::ProjectConfiguration`.}
+
+    \item{\code{projectConfigurationFilePath}}{Path to the project configuration file.}
+
+    \item{\code{addOns}}{list with non default configurations}
+
+    \item{\code{ospsuiteReportingFrameworkVersion}}{Version of the reporting framework
+package stored in the project configuration. Read-only.}
+  }
+  \if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-ProjectConfigurationRF-new}{\code{ProjectConfigurationRF$new()}}
-\item \href{#method-ProjectConfigurationRF-print}{\code{ProjectConfigurationRF$print()}}
-\item \href{#method-ProjectConfigurationRF-addAddOnFileToConfiguration}{\code{ProjectConfigurationRF$addAddOnFileToConfiguration()}}
-\item \href{#method-ProjectConfigurationRF-addAddOnFolderToConfiguration}{\code{ProjectConfigurationRF$addAddOnFolderToConfiguration()}}
-\item \href{#method-ProjectConfigurationRF-clone}{\code{ProjectConfigurationRF$clone()}}
+  \itemize{
+    \item \href{#method-ProjectConfigurationRF-initialize}{\code{ProjectConfigurationRF$new()}}
+    \item \href{#method-ProjectConfigurationRF-print}{\code{ProjectConfigurationRF$print()}}
+    \item \href{#method-ProjectConfigurationRF-save}{\code{ProjectConfigurationRF$save()}}
+    \item \href{#method-ProjectConfigurationRF-addAddOnFileToConfiguration}{\code{ProjectConfigurationRF$addAddOnFileToConfiguration()}}
+    \item \href{#method-ProjectConfigurationRF-addAddOnFolderToConfiguration}{\code{ProjectConfigurationRF$addAddOnFolderToConfiguration()}}
+    \item \href{#method-ProjectConfigurationRF-getConfigSheetAsJson}{\code{ProjectConfigurationRF$getConfigSheetAsJson()}}
+    \item \href{#method-ProjectConfigurationRF-getConfigSheetsAsJson}{\code{ProjectConfigurationRF$getConfigSheetsAsJson()}}
+    \item \href{#method-ProjectConfigurationRF-copy}{\code{ProjectConfigurationRF$copy()}}
+  }
 }
-}
-\if{html}{\out{
-<details open><summary>Inherited methods</summary>
-<ul>
-<li><span class="pkg-link" data-pkg="esqlabsR" data-topic="ProjectConfiguration" data-id="save"><a href='../../esqlabsR/html/ProjectConfiguration.html#method-ProjectConfiguration-save'><code>esqlabsR::ProjectConfiguration$save()</code></a></span></li>
-</ul>
-</details>
-}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ProjectConfigurationRF-new"></a>}}
-\if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-new}{}}}
-\subsection{Method \code{new()}}{
-Initializes the ProjectConfiguration object with a specified configuration file path.
-
-
-Adds new line to configuration xlsx
-
-
-Read configuration from file
-Initialize
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ProjectConfigurationRF$new(projectConfigurationFilePath = character())}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{projectConfigurationFilePath}}{A string representing the path to the
-project configuration file.
+\if{html}{\out{<a id="method-ProjectConfigurationRF-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-initialize}{}}}
+\subsection{\code{ProjectConfigurationRF$new()}}{
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{ProjectConfigurationRF$new(
+  projectConfigurationFilePath = character(),
+  ignoreVersionCheck = FALSE
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{projectConfigurationFilePath}}{A string representing the path to the
+project configuration file.}
+      \item{\code{ignoreVersionCheck}}{If `TRUE`, skip the version mismatch check when
+  loading the configuration file. Defaults to `FALSE`.
 Print}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ProjectConfigurationRF-print"></a>}}
 \if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-print}{}}}
-\subsection{Method \code{print()}}{
-print prints a summary of the Project Configuration.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ProjectConfigurationRF$print(className = TRUE)}\if{html}{\out{</div>}}
+\subsection{\code{ProjectConfigurationRF$print()}}{
+  print prints a summary of the Project Configuration.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{ProjectConfigurationRF$print(className = TRUE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{className}}{Whether to print the name of the class at the beginning. default to TRUE.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{className}}{Whether to print the name of the class at the beginning. default to TRUE.}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ProjectConfigurationRF-save"></a>}}
+\if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-save}{}}}
+\subsection{\code{ProjectConfigurationRF$save()}}{
+  Export ProjectConfiguration object to ProjectConfiguration.xlsx
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{ProjectConfigurationRF$save(path = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{a string representing the path or file name where to save the file.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ProjectConfigurationRF-addAddOnFileToConfiguration"></a>}}
 \if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-addAddOnFileToConfiguration}{}}}
-\subsection{Method \code{addAddOnFileToConfiguration()}}{
-Adds an add-on file to the project configuration.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ProjectConfigurationRF$addAddOnFileToConfiguration(
+\subsection{\code{ProjectConfigurationRF$addAddOnFileToConfiguration()}}{
+  Adds an add-on file to the project configuration.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{ProjectConfigurationRF$addAddOnFileToConfiguration(
   property,
   value,
   description,
   templatePath
-)}\if{html}{\out{</div>}}
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{property}}{A string representing the name of the property to add.}
+      \item{\code{value}}{A string representing the basename of the file to add.}
+      \item{\code{description}}{A string providing a description of the property.}
+      \item{\code{templatePath}}{A string representing the path of the file to add.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{property}}{A string representing the name of the property to add.}
-
-\item{\code{value}}{A string representing the basename of the file to add.}
-
-\item{\code{description}}{A string providing a description of the property.}
-
-\item{\code{templatePath}}{A string representing the path of the file to add.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ProjectConfigurationRF-addAddOnFolderToConfiguration"></a>}}
 \if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-addAddOnFolderToConfiguration}{}}}
-\subsection{Method \code{addAddOnFolderToConfiguration()}}{
-Adds an add-on file to the project configuration.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ProjectConfigurationRF$addAddOnFolderToConfiguration(
+\subsection{\code{ProjectConfigurationRF$addAddOnFolderToConfiguration()}}{
+  Adds an add-on folder to the project configuration.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{ProjectConfigurationRF$addAddOnFolderToConfiguration(
   property,
   value,
   description
-)}\if{html}{\out{</div>}}
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{property}}{A string representing the name of the property to add.}
+      \item{\code{value}}{A string representing the path of the value to add.}
+      \item{\code{description}}{A string providing a description of the property.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{property}}{A string representing the name of the property to add.}
-
-\item{\code{value}}{A string representing the path of the value to add.}
-
-\item{\code{description}}{A string providing a description of the property.}
-
-\item{\code{templatePath}}{A string representing the path of the template file.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-ProjectConfigurationRF-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ProjectConfigurationRF$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\if{html}{\out{<a id="method-ProjectConfigurationRF-getConfigSheetAsJson"></a>}}
+\if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-getConfigSheetAsJson}{}}}
+\subsection{\code{ProjectConfigurationRF$getConfigSheetAsJson()}}{
+  Get a configuration sheet as a JSON-friendly list structure.
+Reads an xlsx sheet and converts it to a list with column names and rows.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{ProjectConfigurationRF$getConfigSheetAsJson(
+  filePath,
+  sheetName,
+  convertHeaders = TRUE,
+  skipDescriptionRow = FALSE
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{filePath}}{A string representing the path to the xlsx file.}
+      \item{\code{sheetName}}{A string representing the sheet name to read.}
+      \item{\code{convertHeaders}}{Logical flag to convert header names (default: TRUE).}
+      \item{\code{skipDescriptionRow}}{Logical flag to skip the description row (default: FALSE).}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A named list with:
+  - `column_names`: Character vector of column names
+  - `rows`: List of rows, where each row is a list of character values
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ProjectConfigurationRF-getConfigSheetsAsJson"></a>}}
+\if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-getConfigSheetsAsJson}{}}}
+\subsection{\code{ProjectConfigurationRF$getConfigSheetsAsJson()}}{
+  Get multiple configuration sheets as JSON-friendly list structures.
+Reads multiple xlsx sheets and converts them to named list format.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{ProjectConfigurationRF$getConfigSheetsAsJson(
+  filePath,
+  sheetNames = NULL,
+  convertHeaders = TRUE,
+  skipDescriptionRow = FALSE
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{filePath}}{A string representing the path to the xlsx file.}
+      \item{\code{sheetNames}}{A character vector of sheet names to read. If NULL, reads all sheets.}
+      \item{\code{convertHeaders}}{Logical flag to convert header names (default: TRUE).}
+      \item{\code{skipDescriptionRow}}{Logical flag to skip the description row (default: FALSE).}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A named list where each element corresponds to a sheet and contains
+  the structure returned by `getConfigSheetAsJson()`.
+  }
 }
-\if{html}{\out{</div>}}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-ProjectConfigurationRF-copy"></a>}}
+\if{latex}{\out{\hypertarget{method-ProjectConfigurationRF-copy}{}}}
+\subsection{\code{ProjectConfigurationRF$copy()}}{
+  Creates a copy of this object.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{ProjectConfigurationRF$copy(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-}
+
 }

@@ -4,7 +4,12 @@
 \alias{plotSensitivity}
 \title{Plot Sensitivity Function}
 \usage{
-plotSensitivity(projectConfiguration, onePlotConfig, scenarioList)
+plotSensitivity(
+  projectConfiguration,
+  onePlotConfig,
+  scenarioList,
+  significantDigits = 3
+)
 }
 \arguments{
 \item{projectConfiguration}{A list containing project configuration settings, including file paths and parameters.}
@@ -12,6 +17,9 @@ plotSensitivity(projectConfiguration, onePlotConfig, scenarioList)
 \item{onePlotConfig}{A data frame containing the configuration for a single plot.}
 
 \item{scenarioList}{A list of scenarios for which the sensitivity analysis will be performed.}
+
+\item{significantDigits}{Number of significant digits used for sensitivity values
+in exported tables.}
 }
 \value{
 A list of plots and tables, where each entry corresponds to a generated sensitivity plot or its data.
@@ -20,16 +28,16 @@ A list of plots and tables, where each entry corresponds to a generated sensitiv
 Generates sensitivity plots based on the provided project configuration and scenario list.
 }
 \seealso{
-Other plot functions: 
-\code{\link{addDefaultConfigForPKForestPlots}()},
-\code{\link{addDefaultConfigForTimeProfilePlots}()},
-\code{\link{plotDistributionVsDemographics}()},
-\code{\link{plotHistograms}()},
-\code{\link{plotPKBoxwhisker}()},
-\code{\link{plotPKForestAggregatedAbsoluteValues}()},
-\code{\link{plotPKForestAggregatedRatios}()},
-\code{\link{plotPKForestPointEstimateOfAbsoluteValues}()},
-\code{\link{plotPKForestPointEstimateOfRatios}()},
-\code{\link{plotTimeProfiles}()}
+Other plot functions:
+\code{\link[=addDefaultConfigForPKForestPlots]{addDefaultConfigForPKForestPlots()}},
+\code{\link[=addDefaultConfigForTimeProfilePlots]{addDefaultConfigForTimeProfilePlots()}},
+\code{\link[=plotDistributionVsDemographics]{plotDistributionVsDemographics()}},
+\code{\link[=plotHistograms]{plotHistograms()}},
+\code{\link[=plotPKBoxwhisker]{plotPKBoxwhisker()}},
+\code{\link[=plotPKForestAggregatedAbsoluteValues]{plotPKForestAggregatedAbsoluteValues()}},
+\code{\link[=plotPKForestAggregatedRatios]{plotPKForestAggregatedRatios()}},
+\code{\link[=plotPKForestPointEstimateOfAbsoluteValues]{plotPKForestPointEstimateOfAbsoluteValues()}},
+\code{\link[=plotPKForestPointEstimateOfRatios]{plotPKForestPointEstimateOfRatios()}},
+\code{\link[=plotTimeProfiles]{plotTimeProfiles()}}
 }
 \concept{plot functions}

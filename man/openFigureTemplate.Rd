@@ -6,14 +6,17 @@
 \usage{
 openFigureTemplate()
 }
+\value{
+Invisibly returns `NULL` after triggering the template command in RStudio.
+}
 \description{
 Opens the  template for figure creation as new document
 }
 \seealso{
-Other Addins Support: 
-\code{\link{createDocumentFromTemplate}()},
-\code{\link{createWorkflowTemplate}()},
-\code{\link{openEPackageTemplate}()},
-\code{\link{openWorkflowTemplate}()}
+Other Addins Support:
+\code{\link[=createDocumentFromTemplate]{createDocumentFromTemplate()}},
+\code{\link[=createWorkflowTemplate]{createWorkflowTemplate()}},
+\code{\link[=openEPackageTemplate]{openEPackageTemplate()}},
+\code{\link[=openWorkflowTemplate]{openWorkflowTemplate()}}
 }
 \concept{Addins Support}

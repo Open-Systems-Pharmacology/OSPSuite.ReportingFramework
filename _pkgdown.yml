@@ -27,13 +27,13 @@ articles:
       - DataImport_by_Dictionary
       - PK_Parameter
       - Population
-      - Electronic_Package
       - Plot_and_Report_Generation
+      - Sensitivity_Analysis
+      - Electronic_Package
   - title: Tutorials
     navbar: Tutorials
     desc: Tutorials
     contents:
-      - Workflow
       - Tutorial_Timeprofiles
 
 figures:
@@ -69,7 +69,7 @@ reference:
       - has_concept("plot configuration validation function")
   - title: "Report generation"
     contents:
-      - matches("mergeRmds")
+      - matches("mergeQmds")
       - matches("renderWord")
       - matches("runPlot")
       - matches("setExportAttributes")
@@ -87,14 +87,15 @@ reference:
     contents:
       - has_concept("get identifier")
   - title: "Addin support"
-    desc: "Functions to support Addin"
+    desc: "Functions to support template addins"
     contents:
       - has_concept("Addins Support")
+  - title: "Sensitivity analysis"
+    desc: "Functions for configuring and running sensitivity workflows."
+    contents:
+      - has_concept("sensitivity analysis")
   - title: "Miscellaneous"
     contents:
-      - matches("runSensitivityAnalysisForScenarios")
-      - matches("addSensitivityTable")
-      - matches("TestProjectBuilder")
       - matches("^validate")
       - matches("formatPercentiles")
   - title: "Constants"
@@ -102,11 +103,6 @@ reference:
     contents:
       - has_concept("enumerations")
   - title: "Markdown helpers"
-    desc: "Functions that supports writing of a murkdown document"
+    desc: "Functions that supports writing of a markdown document"
     contents:
       - has_concept("markdown helper function")
-  - title: "Temporary functions"
-    desc: "Functions that will be moved to ospsuite.utils"
-    contents:
-      - matches("^ospsuite_")
-      - matches("addPredictedValues")
