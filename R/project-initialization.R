@@ -561,6 +561,103 @@ createProjectConfiguration <- function(
 #' @return Invisible `NULL`.
 #' @keywords internal
 #' @noRd
+.createdEntriesByEsqlabs <- function(preInitSnapshot, postEsqlabsInitSnapshot) {
+  preEntries <- unique(preInitSnapshot$relativePath)
+  postEntries <- unique(postEsqlabsInitSnapshot$relativePath)
+  return(setdiff(postEntries, preEntries))
+}
+
+#' Resolve required relative paths for cleanup skip logic
+#' @param projectDirectory Absolute path to project root.
+#' @param configurationDirectory Absolute configuration directory.
+#' @return Character vector of required relative paths.
+#' @keywords internal
+#' @noRd
+.requiredRelativePathsForCleanup <- function(
+  projectDirectory,
+  configurationDirectory
+) {
+  requiredPaths <- .rfRequiredPaths(projectDirectory, configurationDirectory)
+  requiredRelativePaths <- fs::path_rel(requiredPaths, start = projectDirectory)
+  requiredRelativePaths <- unique(requiredRelativePaths[
+    !is.na(requiredRelativePaths) & requiredRelativePaths != "."
+  ])
+  return(requiredRelativePaths)
+}
+
+#' Resolve removable snapshot entry state
+#' @param entry Relative path under project root.
+#' @param currentByPath Split current snapshot by relative path.
+#' @param postByPath Split post-init snapshot by relative path.
+#' @param projectDirectory Absolute path to project root.
+#' @param projectDirectoryNormalized Normalized project directory path.
+#' @return List with `currentEntry`, `postEntry`, and `absPath`, or `NULL`.
+#' @keywords internal
+#' @noRd
+.resolveRemovableSnapshotEntry <- function(
+  entry,
+  currentByPath,
+  postByPath,
+  projectDirectory,
+  projectDirectoryNormalized
+) {
+  currentEntry <- currentByPath[[entry]]
+  postEntry <- postByPath[[entry]]
+  if (is.null(currentEntry) || is.null(postEntry)) {
+    return(NULL)
+  }
+
+  absPath <- fs::path_abs(entry, start = projectDirectory)
+  absPathNormalized <- normalizePath(absPath, winslash = "/", mustWork = FALSE)
+  if (!startsWith(absPathNormalized, projectDirectoryNormalized)) {
+    return(NULL)
+  }
+
+  return(list(
+    currentEntry = currentEntry,
+    postEntry = postEntry,
+    absPath = absPath
+  ))
+}
+
+#' Remove removable entry if unchanged and safe
+#' @param absPath Absolute path to removable entry.
+#' @param currentEntry Current snapshot row for entry.
+#' @param postEntry Post-init snapshot row for entry.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.removeRemovableSnapshotEntry <- function(absPath, currentEntry, postEntry) {
+  if (!isTRUE(currentEntry$isDirectory[[1]])) {
+    if (!identical(currentEntry$fileHash[[1]], postEntry$fileHash[[1]])) {
+      return(invisible(NULL))
+    }
+    if (file.exists(absPath)) {
+      unlink(absPath, force = TRUE)
+    }
+    return(invisible(NULL))
+  }
+
+  if (!dir.exists(absPath)) {
+    return(invisible(NULL))
+  }
+
+  dirEntries <- list.files(absPath, all.files = TRUE, no.. = TRUE)
+  if (length(dirEntries) == 0) {
+    unlink(absPath, recursive = TRUE, force = TRUE)
+  }
+
+  return(invisible(NULL))
+}
+
+#' Remove unneeded esqlabsR initialization artifacts after RF upgrade
+#' @param projectDirectory Absolute path to project root.
+#' @param configurationDirectory Absolute configuration directory.
+#' @param preInitSnapshot Tree snapshot before esqlabsR initialization.
+#' @param postEsqlabsInitSnapshot Tree snapshot immediately after esqlabsR initialization.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
 .cleanupEsqlabsInitArtifacts <- function(
   projectDirectory,
   configurationDirectory,
@@ -578,21 +675,22 @@ createProjectConfiguration <- function(
     return(invisible(NULL))
   }
 
-  preEntries <- unique(preInitSnapshot$relativePath)
-  postEntries <- unique(postEsqlabsInitSnapshot$relativePath)
-  createdByEsqlabs <- setdiff(postEntries, preEntries)
+  createdByEsqlabs <- .createdEntriesByEsqlabs(
+    preInitSnapshot,
+    postEsqlabsInitSnapshot
+  )
   if (length(createdByEsqlabs) == 0) {
     return(invisible(NULL))
   }
 
-  requiredPaths <- .rfRequiredPaths(projectDirectory, configurationDirectory)
-  requiredRelativePaths <- fs::path_rel(
-    requiredPaths,
-    start = projectDirectory
+  requiredRelativePaths <- .requiredRelativePathsForCleanup(
+    projectDirectory,
+    configurationDirectory
   )
-  requiredRelativePaths <- unique(requiredRelativePaths[
-    !is.na(requiredRelativePaths) & requiredRelativePaths != "."
-  ])
+  removableEntries <- setdiff(createdByEsqlabs, requiredRelativePaths)
+  if (length(removableEntries) == 0) {
+    return(invisible(NULL))
+  }
 
   currentByPath <- split(currentSnapshot, currentSnapshot$relativePath)
   postByPath <- split(
@@ -600,42 +698,23 @@ createProjectConfiguration <- function(
     postEsqlabsInitSnapshot$relativePath
   )
 
-  for (entry in sort(createdByEsqlabs, decreasing = TRUE)) {
-    if (entry %in% requiredRelativePaths) {
-      next
-    }
-    currentEntry <- currentByPath[[entry]]
-    postEntry <- postByPath[[entry]]
-    if (is.null(currentEntry) || is.null(postEntry)) {
-      next
-    }
-
-    absPath <- fs::path_abs(entry, start = projectDirectory)
-    absPathNormalized <- normalizePath(
-      absPath,
-      winslash = "/",
-      mustWork = FALSE
+  for (entry in sort(removableEntries, decreasing = TRUE)) {
+    entryState <- .resolveRemovableSnapshotEntry(
+      entry = entry,
+      currentByPath = currentByPath,
+      postByPath = postByPath,
+      projectDirectory = projectDirectory,
+      projectDirectoryNormalized = projectDirectoryNormalized
     )
-    if (!startsWith(absPathNormalized, projectDirectoryNormalized)) {
+    if (is.null(entryState)) {
       next
     }
 
-    if (!isTRUE(currentEntry$isDirectory[[1]])) {
-      if (!identical(currentEntry$fileHash[[1]], postEntry$fileHash[[1]])) {
-        next
-      }
-      if (file.exists(absPath)) {
-        unlink(absPath, force = TRUE)
-      }
-      next
-    }
-
-    if (dir.exists(absPath)) {
-      dirEntries <- list.files(absPath, all.files = TRUE, no.. = TRUE)
-      if (length(dirEntries) == 0) {
-        unlink(absPath, recursive = TRUE, force = TRUE)
-      }
-    }
+    .removeRemovableSnapshotEntry(
+      absPath = entryState$absPath,
+      currentEntry = entryState$currentEntry,
+      postEntry = entryState$postEntry
+    )
   }
 
   return(invisible(NULL))
@@ -1045,51 +1124,101 @@ createProjectConfiguration <- function(
 #' @return Updated template rows.
 #' @keywords internal
 #' @noRd
-.applyAnalysisSubfolderToTemplateRows <- function(
+.canApplyAnalysisSubfolderToTemplateRows <- function(
   templateRows,
   analysisSubfolderName
 ) {
-  if (
-    identical(analysisSubfolderName, "ReportingFramework") ||
-      !("Property" %in% names(templateRows)) ||
-      !("Value" %in% names(templateRows))
-  ) {
-    return(templateRows)
-  }
+  return(
+    !identical(analysisSubfolderName, "ReportingFramework") &&
+      ("Property" %in% names(templateRows)) &&
+      ("Value" %in% names(templateRows))
+  )
+}
 
+#' Return row index for output folder property
+#' @param templateRows Template rows from the `esqlabsR` sheet.
+#' @return Row index as integer scalar or `NA_integer_`.
+#' @keywords internal
+#' @noRd
+.outputFolderRowIndex <- function(templateRows) {
   outputIndex <- which(templateRows$Property == "outputFolder")
   if (length(outputIndex) == 0) {
-    return(templateRows)
+    return(NA_integer_)
   }
 
-  idx <- outputIndex[[1]]
-  outputFolderValue <- .normalizeConfigValue(templateRows$Value[[idx]])
-  if (!nzchar(outputFolderValue)) {
-    return(templateRows)
-  }
+  return(outputIndex[[1]])
+}
 
+#' Replace trailing ReportingFramework segment in output folder
+#' @param outputFolderValue Output folder path from template rows.
+#' @param analysisSubfolderName Name of the analysis subfolder.
+#' @return Updated output folder path.
+#' @keywords internal
+#' @noRd
+.replaceOutputFolderTerminalSegment <- function(
+  outputFolderValue,
+  analysisSubfolderName
+) {
   pathParts <- strsplit(outputFolderValue, "[/\\\\]+")[[1]]
   if (length(pathParts) == 0) {
-    return(templateRows)
+    return(outputFolderValue)
   }
 
   nonEmptyParts <- which(nzchar(pathParts))
   if (length(nonEmptyParts) == 0) {
-    return(templateRows)
+    return(outputFolderValue)
   }
 
   lastPartIndex <- nonEmptyParts[[length(nonEmptyParts)]]
   if (!identical(pathParts[[lastPartIndex]], "ReportingFramework")) {
-    return(templateRows)
+    return(outputFolderValue)
   }
 
   pathParts[[lastPartIndex]] <- analysisSubfolderName
-  separator <- if (grepl("\\\\", outputFolderValue) && !grepl("/", outputFolderValue)) {
+  separator <- if (
+    grepl("\\\\", outputFolderValue) && !grepl("/", outputFolderValue)
+  ) {
     "\\\\"
   } else {
     "/"
   }
-  templateRows$Value[[idx]] <- paste(pathParts, collapse = separator)
+
+  return(paste(pathParts, collapse = separator))
+}
+
+#' Apply analysis subfolder substitutions to template rows
+#' @param templateRows Template rows from the `esqlabsR` sheet.
+#' @param analysisSubfolderName Name of the analysis subfolder.
+#' @return Updated template rows.
+#' @keywords internal
+#' @noRd
+.applyAnalysisSubfolderToTemplateRows <- function(
+  templateRows,
+  analysisSubfolderName
+) {
+  if (!.canApplyAnalysisSubfolderToTemplateRows(templateRows, analysisSubfolderName)) {
+    return(templateRows)
+  }
+
+  outputIndex <- .outputFolderRowIndex(templateRows)
+  if (is.na(outputIndex)) {
+    return(templateRows)
+  }
+
+  outputFolderValue <- .normalizeConfigValue(templateRows$Value[[outputIndex]])
+  if (!nzchar(outputFolderValue)) {
+    return(templateRows)
+  }
+
+  updatedOutputFolder <- .replaceOutputFolderTerminalSegment(
+    outputFolderValue,
+    analysisSubfolderName
+  )
+  if (identical(updatedOutputFolder, outputFolderValue)) {
+    return(templateRows)
+  }
+
+  templateRows$Value[[outputIndex]] <- updatedOutputFolder
 
   return(templateRows)
 }
