@@ -1,3 +1,23 @@
+.cleanupSnapshotTestPopulationArtifacts <- function() {
+  populationsTempDir <- file.path(dirname(tempdir()), "Models", "Populations")
+  if (!dir.exists(populationsTempDir)) {
+    return(invisible())
+  }
+
+  stalePopulationFiles <- list.files(
+    path = populationsTempDir,
+    pattern = "^RestoredPopulation(_.*)?\\.csv$",
+    full.names = TRUE
+  )
+  if (length(stalePopulationFiles) > 0) {
+    unlink(stalePopulationFiles, force = TRUE)
+  }
+
+  invisible()
+}
+
+.cleanupSnapshotTestPopulationArtifacts()
+
 test_that("snapshotProjectConfigurationRF creates JSON with RF metadata", {
   d <- file.path(tempdir(), "snap_test_1")
   unlink(d, recursive = TRUE)
@@ -406,4 +426,86 @@ test_that("restoreProjectConfigurationRF preserves snapshotted configurations fo
 
   pkPath <- pc2$addOns[["pKParameterFile"]]
   expect_true(file.exists(pkPath))
+})
+
+test_that("restoreProjectConfigurationRF moves restored populations out of staging", {
+  d <- file.path(tempdir(), "snap_test_12")
+  unlink(d, recursive = TRUE)
+  dir.create(d)
+
+  ospsuite.reportingframework::initProject(
+    projectDirectory = d,
+    configurationDirectory = d,
+    overwrite = TRUE,
+    keepEsqlabsRStructure = FALSE
+  )
+  pc1 <- ospsuite.reportingframework::createProjectConfiguration(
+    file.path(d, "ProjectConfiguration.xlsx")
+  )
+
+  sourcePopulationDir <- fs::path_abs(
+    pc1$populationsFolder,
+    start = d
+  )
+  if (!dir.exists(sourcePopulationDir)) {
+    dir.create(sourcePopulationDir, recursive = TRUE)
+  }
+  .cleanupSnapshotTestPopulationArtifacts()
+
+  populationFileName <- paste0(
+    "RestoredPopulation_",
+    as.integer(Sys.time()),
+    ".csv"
+  )
+  sourcePopulationFile <- file.path(
+    sourcePopulationDir,
+    populationFileName
+  )
+  withr::defer(
+    unlink(sourcePopulationFile, force = TRUE),
+    envir = parent.frame()
+  )
+
+  tutorialPopulationFile <- file.path(
+    system.file("extdata", "Tutorial", package = "ospsuite.reportingframework"),
+    "study_1234_population.csv"
+  )
+  expect_true(file.exists(tutorialPopulationFile))
+  copiedSourcePopulation <- file.copy(
+    from = tutorialPopulationFile,
+    to = sourcePopulationFile,
+    overwrite = TRUE
+  )
+  expect_true(isTRUE(copiedSourcePopulation))
+
+  ospsuite.reportingframework::snapshotProjectConfigurationRF(
+    pc1,
+    outputDir = d
+  )
+
+  r <- file.path(tempdir(), "snap_rest_12")
+  unlink(r, recursive = TRUE)
+  dir.create(r)
+
+  pc2 <- ospsuite.reportingframework::restoreProjectConfigurationRF(
+    file.path(d, "ProjectConfiguration.json"),
+    outputDir = r
+  )
+
+  restoredPopulationDir <- fs::path_abs(
+    pc2$populationsFolder,
+    start = r
+  )
+  restoredPopulationFile <- file.path(
+    restoredPopulationDir,
+    populationFileName
+  )
+
+  expect_true(file.exists(restoredPopulationFile))
+  expect_equal(
+    readLines(restoredPopulationFile, warn = FALSE),
+    readLines(tutorialPopulationFile, warn = FALSE)
+  )
+  expect_false(dir.exists(file.path(r, "Configurations", "PopulationsCSV")))
+  expect_false(dir.exists(file.path(r, "Configurations")))
 })

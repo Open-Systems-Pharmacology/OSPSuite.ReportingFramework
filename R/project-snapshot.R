@@ -379,21 +379,90 @@ restoreProjectConfigurationRF <- function(jsonPath, outputDir = NULL, ...) {
       full.names = TRUE
     )
     for (xls in xlsfiles) {
+      destinationWorkbookPath <- file.path(
+        restoredConfigurationsDir,
+        basename(xls)
+      )
       copyCreated <- file.copy(
         from = xls,
-        to = file.path(restoredConfigurationsDir, basename(xls)),
+        to = destinationWorkbookPath,
         overwrite = TRUE
       )
       if (!isTRUE(copyCreated)) {
         stop(messages$errorprojectsnapshotRestoreWorkbookCopyFailed(
           sourceWorkbookPath = xls,
-          destinationWorkbookPath = file.path(
-            restoredConfigurationsDir,
-            basename(xls)
-          )
+          destinationWorkbookPath = destinationWorkbookPath
+        ))
+      }
+      if (!file.exists(destinationWorkbookPath)) {
+        stop(messages$errorprojectsnapshotRestoreTransferVerificationFailed(
+          sourceFilePath = xls,
+          destinationFilePath = destinationWorkbookPath
         ))
       }
     }
+
+    esqlabsPopulationsDir <- file.path(esqlabsConfigDir, "PopulationsCSV")
+    restoredPopulationsDir <- fs::path_abs(
+      restoredProjectConfiguration$populationsFolder,
+      start = effectiveOutputDir
+    )
+    if (dir.exists(esqlabsPopulationsDir)) {
+      if (!dir.exists(restoredPopulationsDir)) {
+        dir.create(
+          restoredPopulationsDir,
+          recursive = TRUE,
+          showWarnings = FALSE
+        )
+      }
+
+      populationFiles <- list.files(
+        path = esqlabsPopulationsDir,
+        recursive = TRUE,
+        full.names = TRUE,
+        include.dirs = FALSE,
+        all.files = TRUE,
+        no.. = TRUE
+      )
+
+      for (populationFilePath in populationFiles) {
+        relativePopulationPath <- as.character(fs::path_rel(
+          populationFilePath,
+          start = esqlabsPopulationsDir
+        ))
+        destinationPopulationPath <- file.path(
+          restoredPopulationsDir,
+          relativePopulationPath
+        )
+        destinationPopulationDirectory <- dirname(destinationPopulationPath)
+        if (!dir.exists(destinationPopulationDirectory)) {
+          dir.create(
+            destinationPopulationDirectory,
+            recursive = TRUE,
+            showWarnings = FALSE
+          )
+        }
+
+        copyCreated <- file.copy(
+          from = populationFilePath,
+          to = destinationPopulationPath,
+          overwrite = TRUE
+        )
+        if (!isTRUE(copyCreated)) {
+          stop(messages$errorprojectsnapshotRestorePopulationCopyFailed(
+            sourcePopulationPath = populationFilePath,
+            destinationPopulationPath = destinationPopulationPath
+          ))
+        }
+        if (!file.exists(destinationPopulationPath)) {
+          stop(messages$errorprojectsnapshotRestoreTransferVerificationFailed(
+            sourceFilePath = populationFilePath,
+            destinationFilePath = destinationPopulationPath
+          ))
+        }
+      }
+    }
+
     unlink(esqlabsConfigDir, recursive = TRUE, force = TRUE)
   }
 

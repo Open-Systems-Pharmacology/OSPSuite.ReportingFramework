@@ -464,6 +464,52 @@ test_that("initProject forwards keepEsqlabsRStructure to upgradeToReportingFrame
 })
 
 
+test_that("initProject does not reinitialize existing RF project when overwrite is TRUE", {
+  rootDirectory <- withr::local_tempdir()
+  projectDirectory <- file.path(rootDirectory, "Root")
+
+  initProject(
+    projectDirectory = projectDirectory,
+    overwrite = TRUE
+  )
+
+  configurationDirectory <- file.path(
+    projectDirectory,
+    "Scripts",
+    "ReportingFramework"
+  )
+  configPath <- file.path(configurationDirectory, "ProjectConfiguration.xlsx")
+
+  configWb <- openxlsx::loadWorkbook(configPath)
+  dtConfig <- xlsxReadData(
+    wb = configWb,
+    sheetName = "esqlabsR",
+    convertHeaders = FALSE,
+    emptyAsNA = FALSE
+  )
+  dtConfig[dtConfig$Property == "outputFolder", "Value"] <-
+    "Outputs/DoNotOverwrite"
+  xlsxWriteData(wb = configWb, sheetName = "esqlabsR", dt = dtConfig)
+  openxlsx::saveWorkbook(configWb, configPath, overwrite = TRUE)
+
+  initProject(
+    projectDirectory = projectDirectory,
+    overwrite = TRUE
+  )
+
+  dtAfter <- xlsxReadData(
+    wb = configPath,
+    sheetName = "esqlabsR",
+    convertHeaders = FALSE,
+    emptyAsNA = FALSE
+  )
+  expect_equal(
+    trimws(dtAfter$Value[dtAfter$Property == "outputFolder"][[1]]),
+    "Outputs/DoNotOverwrite"
+  )
+})
+
+
 test_that("createProjectConfiguration returns the expected classes", {
   configurationDirectory <- withr::local_tempdir()
   sourceConfiguration <- system.file(

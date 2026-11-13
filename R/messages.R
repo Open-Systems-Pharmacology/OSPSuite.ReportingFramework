@@ -532,6 +532,30 @@ messages$errorprojectsnapshotRestoreWorkbookCopyFailed <- function(
   )
 }
 
+messages$errorprojectsnapshotRestorePopulationCopyFailed <- function(
+  sourcePopulationPath,
+  destinationPopulationPath
+) {
+  paste(
+    "Failed to copy restored population file",
+    sourcePopulationPath,
+    "to",
+    destinationPopulationPath
+  )
+}
+
+messages$errorprojectsnapshotRestoreTransferVerificationFailed <- function(
+  sourceFilePath,
+  destinationFilePath
+) {
+  paste(
+    "Failed to verify restored file transfer from",
+    sourceFilePath,
+    "to",
+    destinationFilePath
+  )
+}
+
 messages$errorQmdPlotManagerInvalidFileOrSubfolderName <- function(
   env = parent.frame()
 ) {

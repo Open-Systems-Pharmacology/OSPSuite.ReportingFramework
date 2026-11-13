@@ -222,13 +222,6 @@ setWorkflowOptions()
 analysisSubfolderName <- "ReportingFramework"
 projectDirectory <- file.path("..", "..")
 configurationDirectory <- "."
-if (!identical(basename(dirname(getwd())), "Scripts")) {
-  warning(
-    "The workflow should run from Scripts/<analysisSubfolderName>. ",
-    "Current directory is: ",
-    getwd()
-  )
-}
 initProject(
   projectDirectory = projectDirectory,
   configurationDirectory = configurationDirectory,

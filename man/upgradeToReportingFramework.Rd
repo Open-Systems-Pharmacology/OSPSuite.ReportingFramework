@@ -20,11 +20,14 @@ configuration directory to be set up. Defaults to the current working directory.
 
 \item{analysisSubfolderName}{Name of the analysis subfolder used for
 initialization defaults. This value updates ReportingFramework-specific
-template defaults such as \code{outputFolder} when
-\code{keepEsqlabsRStructure = FALSE}. Defaults to \code{"ReportingFramework"}.}
+template defaults such as `outputFolder` when
+`keepEsqlabsRStructure = FALSE`. Defaults to `"ReportingFramework"`.}
 
 \item{overwrite}{A logical value indicating whether to overwrite existing files.
-Defaults to \code{FALSE}.}
+Defaults to \code{FALSE}. If an existing ReportingFramework project is
+detected in `configurationDirectory`, the upstream
+`esqlabsR::initProject()` step is skipped to avoid destructive
+reinitialization.}
 
 \item{keepEsqlabsRStructure}{If `TRUE` (default), keep the existing esqlabsR
 directory/layout values and only add reporting-framework-specific components.

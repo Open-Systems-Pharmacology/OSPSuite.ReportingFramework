@@ -16,7 +16,10 @@
 #'   template defaults such as `outputFolder` when
 #'   `keepEsqlabsRStructure = FALSE`. Defaults to `"ReportingFramework"`.
 #' @param overwrite A logical value indicating whether to overwrite existing files.
-#'   Defaults to \code{FALSE}.
+#'   Defaults to \code{FALSE}. If an existing ReportingFramework project is
+#'   detected in `configurationDirectory`, the upstream
+#'   `esqlabsR::initProject()` step is skipped to avoid destructive
+#'   reinitialization.
 #' @param keepEsqlabsRStructure If `TRUE` (default), keep the existing esqlabsR
 #'   directory/layout values and only add reporting-framework-specific components.
 #'   If `FALSE`, apply reporting framework default configuration values and transfer
@@ -193,18 +196,24 @@ initProject <- function(
   }
   configurationDirectory <- fs::path_abs(configurationDirectory)
 
+  hasExistingReportingFrameworkProject <-
+    .isExistingReportingFrameworkProject(configurationDirectory)
+
   preInitSnapshot <- .snapshotProjectTree(projectDirectory)
   startedFromEmptyConfigurationDirectory <-
     .isMissingOrEmptyDirectory(configurationDirectory)
+  postEsqlabsInitSnapshot <- preInitSnapshot
 
   if (!dir.exists(configurationDirectory)) {
     dir.create(configurationDirectory, recursive = TRUE, showWarnings = FALSE)
   }
-  esqlabsR::initProject(
-    destination = configurationDirectory,
-    overwrite = overwrite
-  )
-  postEsqlabsInitSnapshot <- .snapshotProjectTree(projectDirectory)
+  if (!hasExistingReportingFrameworkProject) {
+    esqlabsR::initProject(
+      destination = configurationDirectory,
+      overwrite = overwrite
+    )
+    postEsqlabsInitSnapshot <- .snapshotProjectTree(projectDirectory)
+  }
 
   upgradeToReportingFramework(
     configurationDirectory = configurationDirectory,
@@ -323,6 +332,30 @@ createProjectConfiguration <- function(
   )
 
   return(isReportingFramework)
+}
+
+#' Check if configuration directory already contains an RF project
+#' @param configurationDirectory Path to the project configuration directory.
+#' @return `TRUE` when `ProjectConfiguration.xlsx` exists and has RF add-on
+#'   metadata, otherwise `FALSE`.
+#' @keywords internal
+#' @noRd
+.isExistingReportingFrameworkProject <- function(configurationDirectory) {
+  configurationDirectory <- fs::path_abs(configurationDirectory)
+  configXlsxPath <- file.path(configurationDirectory, "ProjectConfiguration.xlsx")
+  if (!file.exists(configXlsxPath)) {
+    return(FALSE)
+  }
+
+  configWb <- tryCatch(
+    openxlsx::loadWorkbook(configXlsxPath),
+    error = function(...) NULL
+  )
+  if (is.null(configWb)) {
+    return(FALSE)
+  }
+
+  return(.isReportingFrameworkProject(configWb))
 }
 
 #' Get single non-addons configuration sheet name
@@ -1196,7 +1229,12 @@ createProjectConfiguration <- function(
   templateRows,
   analysisSubfolderName
 ) {
-  if (!.canApplyAnalysisSubfolderToTemplateRows(templateRows, analysisSubfolderName)) {
+  if (
+    !.canApplyAnalysisSubfolderToTemplateRows(
+      templateRows,
+      analysisSubfolderName
+    )
+  ) {
     return(templateRows)
   }
 
