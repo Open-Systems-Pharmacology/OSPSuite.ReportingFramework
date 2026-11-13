@@ -418,3 +418,34 @@ test_that("WorkflowScriptExporter prunes DataImportMap to required sheets", {
   expect_true("RequiredDictionary" %in% sheetNames)
   expect_false("UnusedDictionary" %in% sheetNames)
 })
+
+test_that("WorkflowScriptExporter normalizes exported configurationsFolder to root layout", {
+  projectDir <- withr::local_tempdir(pattern = "workflow_config_layout_")
+
+  initProject(
+    projectDirectory = projectDir,
+    configurationDirectory = projectDir,
+    overwrite = TRUE,
+    keepEsqlabsRStructure = TRUE
+  )
+
+  pc <- createProjectConfiguration(
+    path = file.path(projectDir, "ProjectConfiguration.xlsx"),
+    ignoreVersionCheck = TRUE
+  )
+
+  exporter <- WorkflowScriptExporter$new(
+    projectConfiguration = pc,
+    wfIdentifier = 73,
+    scenarioNames = c("scenario1")
+  )
+
+  exportedConfig <- exporter$configurationSheets[["ProjectConfiguration"]][[1]]
+  expect_equal(
+    trimws(as.character(exportedConfig[
+      exportedConfig$Property == "configurationsFolder",
+      "Value"
+    ][[1]])),
+    "."
+  )
+})

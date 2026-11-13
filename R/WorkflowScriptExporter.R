@@ -1392,6 +1392,10 @@ WorkflowScriptExporter <- # nolint: cyclocomp_linter, object_name_linter
           Value := paste0("../Models", "_w", self$wfIdentifier, "/Populations")
         ]
         dtConfig[
+          Property == "configurationsFolder",
+          Value := "."
+        ]
+        dtConfig[
           Property == "outputFolder",
           Value := fs::path_rel(
             projectConfiguration$outputFolder,

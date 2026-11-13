@@ -237,6 +237,244 @@
   return(configData)
 }
 
+#' Resolve a path relative to restore output directory
+#' @param pathValue Relative or absolute path value.
+#' @param outputDir Restore output directory.
+#' @return Normalized absolute path.
+#' @keywords internal
+#' @noRd
+.rfResolvePathFromOutputDir <- function(pathValue, outputDir) {
+  resolvedPath <- as.character(pathValue)
+  isAbsolutePath <- grepl("^([A-Za-z]:|/|\\\\)", resolvedPath)
+  if (!isAbsolutePath) {
+    resolvedPath <- file.path(outputDir, resolvedPath)
+  }
+
+  return(normalizePath(resolvedPath, winslash = "/", mustWork = FALSE))
+}
+
+#' Ensure a directory exists
+#' @param directoryPath Directory path to create when missing.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.rfEnsureDirectoryExists <- function(directoryPath) {
+  if (!dir.exists(directoryPath)) {
+    dir.create(directoryPath, recursive = TRUE, showWarnings = FALSE)
+  }
+
+  return(invisible(NULL))
+}
+
+#' Copy a restored file and verify the transfer
+#' @param sourceFilePath Source file path.
+#' @param destinationFilePath Destination file path.
+#' @param copyFailureMessage Error message used when file copy fails.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.rfCopyAndVerifyRestoredFile <- function(
+  sourceFilePath,
+  destinationFilePath,
+  copyFailureMessage
+) {
+  copyCreated <- file.copy(
+    from = sourceFilePath,
+    to = destinationFilePath,
+    overwrite = TRUE
+  )
+  if (!isTRUE(copyCreated)) {
+    stop(copyFailureMessage)
+  }
+  if (!file.exists(destinationFilePath)) {
+    stop(messages$errorprojectsnapshotRestoreTransferVerificationFailed(
+      sourceFilePath = sourceFilePath,
+      destinationFilePath = destinationFilePath
+    ))
+  }
+
+  return(invisible(NULL))
+}
+
+#' Move restored workbooks from staging Configurations to destination
+#' @param stagingConfigurationsDir Path to staging Configurations directory.
+#' @param restoredConfigurationsDir Destination configurations directory.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.rfTransferRestoredWorkbooks <- function(
+  stagingConfigurationsDir,
+  restoredConfigurationsDir
+) {
+  xlsxFiles <- list.files(
+    path = stagingConfigurationsDir,
+    pattern = "\\.xlsx$",
+    full.names = TRUE
+  )
+
+  for (xlsxFilePath in xlsxFiles) {
+    destinationWorkbookPath <- file.path(
+      restoredConfigurationsDir,
+      basename(xlsxFilePath)
+    )
+    .rfCopyAndVerifyRestoredFile(
+      sourceFilePath = xlsxFilePath,
+      destinationFilePath = destinationWorkbookPath,
+      copyFailureMessage = messages$errorprojectsnapshotRestoreWorkbookCopyFailed(
+        sourceWorkbookPath = xlsxFilePath,
+        destinationWorkbookPath = destinationWorkbookPath
+      )
+    )
+  }
+
+  return(invisible(NULL))
+}
+
+#' Move restored population CSVs from staging Configurations to destination
+#' @param stagingConfigurationsDir Path to staging Configurations directory.
+#' @param restoredPopulationsDir Destination populations directory.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.rfTransferRestoredPopulations <- function(
+  stagingConfigurationsDir,
+  restoredPopulationsDir
+) {
+  stagingPopulationsDir <- file.path(stagingConfigurationsDir, "PopulationsCSV")
+  if (!dir.exists(stagingPopulationsDir)) {
+    return(invisible(NULL))
+  }
+
+  .rfEnsureDirectoryExists(restoredPopulationsDir)
+
+  populationFiles <- list.files(
+    path = stagingPopulationsDir,
+    recursive = TRUE,
+    full.names = TRUE,
+    include.dirs = FALSE,
+    all.files = TRUE,
+    no.. = TRUE
+  )
+
+  for (populationFilePath in populationFiles) {
+    relativePopulationPath <- as.character(fs::path_rel(
+      populationFilePath,
+      start = stagingPopulationsDir
+    ))
+    destinationPopulationPath <- file.path(
+      restoredPopulationsDir,
+      relativePopulationPath
+    )
+    .rfEnsureDirectoryExists(dirname(destinationPopulationPath))
+
+    .rfCopyAndVerifyRestoredFile(
+      sourceFilePath = populationFilePath,
+      destinationFilePath = destinationPopulationPath,
+      copyFailureMessage = messages$errorprojectsnapshotRestorePopulationCopyFailed(
+        sourcePopulationPath = populationFilePath,
+        destinationPopulationPath = destinationPopulationPath
+      )
+    )
+  }
+
+  return(invisible(NULL))
+}
+
+#' Determine whether restored artifacts need relocation from staging folder
+#' @param stagingConfigurationsDir Staging Configurations folder created by esqlabsR restore.
+#' @param restoredConfigurationsDir Destination configurations folder.
+#' @return `TRUE` when staged artifacts should be relocated.
+#' @keywords internal
+#' @noRd
+.rfShouldRelocateRestoredArtifacts <- function(
+  stagingConfigurationsDir,
+  restoredConfigurationsDir
+) {
+  sameConfigurationsDir <- tolower(as.character(fs::path_norm(
+    stagingConfigurationsDir
+  ))) ==
+    tolower(as.character(fs::path_norm(restoredConfigurationsDir)))
+
+  return(dir.exists(stagingConfigurationsDir) && !sameConfigurationsDir)
+}
+
+#' Relocate restored artifacts from default staging Configurations folder
+#' @param restoredProjectConfiguration Restored base esqlabsR project configuration.
+#' @param effectiveOutputDir Directory used for restore output.
+#' @return Normalized destination configurations directory.
+#' @keywords internal
+#' @noRd
+.rfRelocateRestoredConfigurationArtifacts <- function(
+  restoredProjectConfiguration,
+  effectiveOutputDir
+) {
+  restoredConfigurationsDir <- .rfResolvePathFromOutputDir(
+    restoredProjectConfiguration$configurationsFolder,
+    effectiveOutputDir
+  )
+  stagingConfigurationsDir <- file.path(effectiveOutputDir, "Configurations")
+
+  if (
+    !.rfShouldRelocateRestoredArtifacts(
+      stagingConfigurationsDir = stagingConfigurationsDir,
+      restoredConfigurationsDir = restoredConfigurationsDir
+    )
+  ) {
+    return(restoredConfigurationsDir)
+  }
+
+  .rfEnsureDirectoryExists(restoredConfigurationsDir)
+  .rfTransferRestoredWorkbooks(
+    stagingConfigurationsDir = stagingConfigurationsDir,
+    restoredConfigurationsDir = restoredConfigurationsDir
+  )
+  .rfTransferRestoredPopulations(
+    stagingConfigurationsDir = stagingConfigurationsDir,
+    restoredPopulationsDir = .rfResolvePathFromOutputDir(
+      restoredProjectConfiguration$populationsFolder,
+      effectiveOutputDir
+    )
+  )
+
+  unlink(stagingConfigurationsDir, recursive = TRUE, force = TRUE)
+  return(restoredConfigurationsDir)
+}
+
+#' Restore RF addons sheet and referenced add-on workbooks
+#' @param configData Restored JSON snapshot content.
+#' @param xlsxPath Restored ProjectConfiguration workbook path.
+#' @param restoredConfigurationsDir Destination configurations directory.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.rfRestoreProjectConfigurationAddons <- function(
+  configData,
+  xlsxPath,
+  restoredConfigurationsDir
+) {
+  if (!("projectConfigurationAddons" %in% names(configData))) {
+    return(invisible(NULL))
+  }
+
+  addonsDf <- .rfListStructureToDataFrame(
+    configData$projectConfigurationAddons
+  )
+  wb <- openxlsx::loadWorkbook(xlsxPath)
+  if (!("addons" %in% wb$sheet_names)) {
+    openxlsx::addWorksheet(wb, "addons")
+  }
+  openxlsx::writeData(wb, sheet = "addons", x = addonsDf)
+  openxlsx::saveWorkbook(wb, xlsxPath, overwrite = TRUE)
+
+  .rfRestoreAddonXlsxFiles(
+    addonsDf = addonsDf,
+    configData = configData,
+    configurationsFolder = restoredConfigurationsDir
+  )
+
+  return(invisible(NULL))
+}
+
 # public functions --------------------------------------------------------
 
 #' Snapshot a ReportingFramework project configuration to JSON
@@ -345,150 +583,15 @@ restoreProjectConfigurationRF <- function(jsonPath, outputDir = NULL, ...) {
     projectConfigurationFilePath = xlsxPath,
     ignoreVersionCheck = TRUE
   )
-  resolvePathFromOutputDir <- function(pathValue, outputDir) {
-    resolvedPath <- as.character(pathValue)
-    isAbsolutePath <- grepl("^([A-Za-z]:|/|\\\\\\\\)", resolvedPath)
-    if (!isAbsolutePath) {
-      resolvedPath <- file.path(outputDir, resolvedPath)
-    }
-    return(normalizePath(resolvedPath, winslash = "/", mustWork = FALSE))
-  }
-
-  restoredConfigurationsDir <- resolvePathFromOutputDir(
-    restoredProjectConfiguration$configurationsFolder,
-    effectiveOutputDir
+  restoredConfigurationsDir <- .rfRelocateRestoredConfigurationArtifacts(
+    restoredProjectConfiguration = restoredProjectConfiguration,
+    effectiveOutputDir = effectiveOutputDir
   )
-
-  # esqlabsR restores xlsx files into file.path(effectiveOutputDir, "Configurations").
-  # Preserve the snapshotted layout by moving only when needed.
-  esqlabsConfigDir <- file.path(effectiveOutputDir, "Configurations")
-  sameConfigurationDir <- tolower(as.character(fs::path_norm(
-    esqlabsConfigDir
-  ))) ==
-    tolower(as.character(fs::path_norm(restoredConfigurationsDir)))
-  shouldMoveRestoredWorkbooks <-
-    dir.exists(esqlabsConfigDir) &&
-    !sameConfigurationDir
-  if (shouldMoveRestoredWorkbooks) {
-    if (!dir.exists(restoredConfigurationsDir)) {
-      dir.create(
-        restoredConfigurationsDir,
-        recursive = TRUE,
-        showWarnings = FALSE
-      )
-    }
-
-    xlsfiles <- list.files(
-      path = esqlabsConfigDir,
-      pattern = "\\.xlsx$",
-      full.names = TRUE
-    )
-    for (xls in xlsfiles) {
-      destinationWorkbookPath <- file.path(
-        restoredConfigurationsDir,
-        basename(xls)
-      )
-      copyCreated <- file.copy(
-        from = xls,
-        to = destinationWorkbookPath,
-        overwrite = TRUE
-      )
-      if (!isTRUE(copyCreated)) {
-        stop(messages$errorprojectsnapshotRestoreWorkbookCopyFailed(
-          sourceWorkbookPath = xls,
-          destinationWorkbookPath = destinationWorkbookPath
-        ))
-      }
-      if (!file.exists(destinationWorkbookPath)) {
-        stop(messages$errorprojectsnapshotRestoreTransferVerificationFailed(
-          sourceFilePath = xls,
-          destinationFilePath = destinationWorkbookPath
-        ))
-      }
-    }
-
-    esqlabsPopulationsDir <- file.path(esqlabsConfigDir, "PopulationsCSV")
-    restoredPopulationsDir <- resolvePathFromOutputDir(
-      restoredProjectConfiguration$populationsFolder,
-      effectiveOutputDir
-    )
-    if (dir.exists(esqlabsPopulationsDir)) {
-      if (!dir.exists(restoredPopulationsDir)) {
-        dir.create(
-          restoredPopulationsDir,
-          recursive = TRUE,
-          showWarnings = FALSE
-        )
-      }
-
-      populationFiles <- list.files(
-        path = esqlabsPopulationsDir,
-        recursive = TRUE,
-        full.names = TRUE,
-        include.dirs = FALSE,
-        all.files = TRUE,
-        no.. = TRUE
-      )
-
-      for (populationFilePath in populationFiles) {
-        relativePopulationPath <- as.character(fs::path_rel(
-          populationFilePath,
-          start = esqlabsPopulationsDir
-        ))
-        destinationPopulationPath <- file.path(
-          restoredPopulationsDir,
-          relativePopulationPath
-        )
-        destinationPopulationDirectory <- dirname(destinationPopulationPath)
-        if (!dir.exists(destinationPopulationDirectory)) {
-          dir.create(
-            destinationPopulationDirectory,
-            recursive = TRUE,
-            showWarnings = FALSE
-          )
-        }
-
-        copyCreated <- file.copy(
-          from = populationFilePath,
-          to = destinationPopulationPath,
-          overwrite = TRUE
-        )
-        if (!isTRUE(copyCreated)) {
-          stop(messages$errorprojectsnapshotRestorePopulationCopyFailed(
-            sourcePopulationPath = populationFilePath,
-            destinationPopulationPath = destinationPopulationPath
-          ))
-        }
-        if (!file.exists(destinationPopulationPath)) {
-          stop(messages$errorprojectsnapshotRestoreTransferVerificationFailed(
-            sourceFilePath = populationFilePath,
-            destinationFilePath = destinationPopulationPath
-          ))
-        }
-      }
-    }
-
-    unlink(esqlabsConfigDir, recursive = TRUE, force = TRUE)
-  }
-
-  if ("projectConfigurationAddons" %in% names(configData)) {
-    # reconstruct addons sheet from {column_names, rows} structure
-    addonsDf <- .rfListStructureToDataFrame(
-      configData$projectConfigurationAddons
-    )
-    wb <- openxlsx::loadWorkbook(xlsxPath)
-    if (!("addons" %in% wb$sheet_names)) {
-      openxlsx::addWorksheet(wb, "addons")
-    }
-    openxlsx::writeData(wb, sheet = "addons", x = addonsDf)
-    openxlsx::saveWorkbook(wb, xlsxPath, overwrite = TRUE)
-
-    .rfRestoreAddonXlsxFiles(
-      addonsDf = addonsDf,
-      configData = configData,
-      configurationsFolder = restoredConfigurationsDir
-    )
-  }
+  .rfRestoreProjectConfigurationAddons(
+    configData = configData,
+    xlsxPath = xlsxPath,
+    restoredConfigurationsDir = restoredConfigurationsDir
+  )
 
   pcRF <- createProjectConfiguration(
     path = xlsxPath,

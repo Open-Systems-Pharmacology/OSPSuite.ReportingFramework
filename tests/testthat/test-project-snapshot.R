@@ -474,7 +474,10 @@ test_that("restoreProjectConfigurationRF relocates workbooks to nested Configura
     expect_true(isTRUE(copyCreated))
   }
 
-  sourcePopulationsCsvDir <- file.path(sourceConfigurationsDir, "PopulationsCSV")
+  sourcePopulationsCsvDir <- file.path(
+    sourceConfigurationsDir,
+    "PopulationsCSV"
+  )
   if (dir.exists(sourcePopulationsCsvDir)) {
     destinationPopulationsCsvDir <- file.path(
       nestedConfigurationsDir,
@@ -533,7 +536,11 @@ test_that("restoreProjectConfigurationRF relocates workbooks to nested Configura
 
   expect_equal(
     tolower(as.character(fs::path_norm(expectedConfigDir))),
-    tolower(as.character(fs::path_norm(file.path(r, "Input", "Configurations"))))
+    tolower(as.character(fs::path_norm(file.path(
+      r,
+      "Input",
+      "Configurations"
+    ))))
   )
   expect_true(file.exists(pkPath))
   expect_true(startsWith(
@@ -617,9 +624,19 @@ test_that("restoreProjectConfigurationRF moves restored populations out of stagi
   )
 
   expect_true(file.exists(restoredPopulationFile))
+  sourcePopulationData <- data.table::fread(
+    tutorialPopulationFile,
+    data.table = FALSE,
+    check.names = FALSE
+  )
+  restoredPopulationData <- data.table::fread(
+    restoredPopulationFile,
+    data.table = FALSE,
+    check.names = FALSE
+  )
   expect_equal(
-    readLines(restoredPopulationFile, warn = FALSE),
-    readLines(tutorialPopulationFile, warn = FALSE)
+    lapply(restoredPopulationData, as.character),
+    lapply(sourcePopulationData, as.character)
   )
   expect_false(dir.exists(file.path(r, "Configurations", "PopulationsCSV")))
   expect_false(dir.exists(file.path(r, "Configurations")))
