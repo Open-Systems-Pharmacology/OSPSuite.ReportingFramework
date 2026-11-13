@@ -113,25 +113,23 @@ dataObserved <- rbind(dataObserved,
 
 ## Introduction
 
-This guide walks you through generating time profile plots using the `{ospsuite.reportingframework}` package, step by step from a single simulated individual through to a fully assembled Word report.
+This tutorial shows the end-to-end time-profile workflow for `ospsuite.reportingframework`, from project setup to plot/report generation.
 
-### Example Study
+Vignettes used in this tutorial:
 
-Throughout the tutorial, we work with a synthetic crossover pharmacokinetic study (Study 1234) in which a small molecule was administered to multiple subjects via two routes:
+- `vignette("Workflow", package = "ospsuite.reportingframework")`
+- `vignette("Plot_and_Report_Generation", package = "ospsuite.reportingframework")`
+- `vignette("Data_import_by_dictionary", package = "ospsuite.reportingframework")`
+- `vignette("Population", package = "ospsuite.reportingframework")`
 
-- **IV**: a single 1 mg intravenous infusion over 5 minutes (`iv_1_mg_5_min.pkml`)
-- **PO**: a single 3 mg oral solution (`po_3_mg_solution.pkml`)
+Function help pages used throughout:
 
-Because this is a crossover design, the same subjects appear in both the IV and PO groups. Observed concentration–time data are provided in `timeprofiles_study1234_iv.csv` and `timeprofiles_study1234_po.csv`.
-
-Each section of the tutorial adds one layer of complexity — virtual twin populations, random populations, a reference scenario, custom time-range windows — and ends with packaging everything into a Word report. In each section, the rendered configuration table shows exactly what to edit in Excel before running the corresponding `runPlot()` call.
-
-## Prerequisites
-Before you begin, ensure you have installed the `ospsuite.reportingframework` package. Familiarity with R, RStudio, and basic Excel operations will help you follow the steps.
+- `?initProject`, `?setWorkflowOptions`, `?createScenariosWrapped`
+- `?readObservedDataByDictionary`, `?runPlot`, `?mergeQmds`, `?renderWord`
 
 ## Package Materials
 
-The package contains the following materials used for the tutorial:
+Tutorial inputs and final example outputs are available in package extdata:
 
 - Data files used for the tutorial: `timeprofiles_study1234_iv.csv`, `timeprofiles_study1234_po.csv`
 - Final configuration tables: `DataImportMap.xlsx`, `Individuals.xlsx`, `Populations.xlsx`, `Scenarios.xlsx`, `Reports.xlsx`
@@ -160,49 +158,48 @@ print(system.file(
 ## Table of Contents
 
 1. [Setting Up the Project and Basic Simulations](#1-setting-up-the-project-and-basic-simulations)  
-   Learn how to set up your project, save a template workflow, and initialize the project structure for time profile plotting.
+  Set up project structure and run a first scenario.
 
 2. [Adding virtual twin populations](#2-adding-virtual-twin-populations)  
-   Discover how to define and export virtual twin populations for more refined simulations.
+  Add and simulate virtual twin populations.
 
 3. [Adding Random Populations and Use of Aggregated Data](#3-adding-random-populations-and-use-of-aggregated-data)  
-   Understand how to aggregate individual data and work with aggregated random populations for comparative analysis.
+  Aggregate observed data and compare to random populations.
 
 4. [Adding Reference Scenarios](#4-adding-reference-scenarios)  
-   Learn how to overlay a reference scenario on a plot to compare two conditions side by side.
+  Add reference scenarios for side-by-side comparison.
 
 5. [Adding plots with different time ranges](#5-adding-plots-with-different-time-ranges)  
-   Explore how to visualize pharmacokinetic data across various time ranges to reveal different drug behavior aspects.
+  Configure plots for different time windows.
 
 6. [Report Creation](#6-report-creation)  
-   Learn how to merge plots into a report and render it as a Word document.
+  Merge and render the final report.
 
 ## 1) Setting Up the Project and Basic Simulations
 
 ### Step 1: Save Template Workflow
 
-- Select your project directory (`<rootDirectory>`). In this directory, the reporting framework
-folder structure will be established (if not already existing).
-- Define an analysis subfolder name (for example `ReportingFramework` or `RF_Analysis`).
-- Verify or create the subfolder `<rootDirectory>/Scripts/<analysisSubfolderName>` (referred to as `<configurationDirectory>` throughout this tutorial).
-- Open RStudio and navigate to the Addins menu.
-- Select "Open Template Workflow" to create a new workflow file. Save the template in the `<configurationDirectory>` as `workflow.R`. At the top of the workflow file, you can add a description of the purpose of your workflow.
+- Create/select `<rootDirectory>`.
+- Create/select `<rootDirectory>/Scripts/<analysisSubfolderName>`.
+- In RStudio Addins, run "Open Template Workflow" and save as `workflow.R` in that folder.
+
+For full setup context, see `vignette("Workflow", package = "ospsuite.reportingframework")`.
 
 ### Step 2: Initialize Project Structure
 
-Execute the first lines (listed below) of your workflow. This will:
-
-- Change the working directory to the workflow file location.
-- Set some graphic defaults.
-- Set some options to switch between final valid runs and preliminary runs, such as watermarks.
-- Initialize the project directory.
-- Create or update `.gitignore` files in configuration folders so `*.xlsx` files are ignored by Git.
-- Load the project configuration.
-- Set up a logfile to catch messages.
+Execute the initialization block from your workflow. It sets plotting defaults, initializes the project structure, loads the configuration, and configures logging.
 
 ```{r print-template_workflow_initialization}
-# Initialization  ----------------------------------------------------------
-# Load necessary libraries and source project-specific code
+# Workflow template for ospsuite.reportingframework.
+#
+# Quick documentation entry points:
+# - Workflow vignette: vignette("Workflow", package = "ospsuite.reportingframework")
+# - Plot/report vignette: vignette("Plot_and_Report_Generation", package = "ospsuite.reportingframework")
+# - Sensitivity vignette: vignette("Sensitivity_Analysis", package = "ospsuite.reportingframework")
+# - Function help: ?initProject, ?setWorkflowOptions, ?runPlot, ?mergeQmds
+
+# Initialization -------------------------------------------------------------
+# Load package and set plotting/report defaults.
 library(ospsuite.reportingframework)
 
 # Set graphic defaults
@@ -215,19 +212,34 @@ runPlotTheme <- ggplot2::theme(
   legend.title = ggplot2::element_blank()
 )
 
-# Set this to TRUE if you want to execute the workflow as a final valid run.
-# (see ?setWorkflowOptions)
-setWorkflowOptions(isValidRun = FALSE)
+# Run mode: see ?setWorkflowOptions.
+# If isValidRun is NULL (default), QCpassed environment variable is used.
+setWorkflowOptions()
 
-# Setup project structure -------------------------------------------------
-# Create project directory and initialize the structure
-# (see ?initProject)
+# Setup project structure ----------------------------------------------------
+# Initialize project structure and configuration snapshot.
+# See ?initProject for layout options and arguments.
 analysisSubfolderName <- "ReportingFramework"
-initProject(analysisSubfolderName = analysisSubfolderName)
+projectDirectory <- file.path("..", "..")
+configurationDirectory <- "."
+if (!identical(basename(dirname(getwd())), "Scripts")) {
+  warning(
+    "The workflow should run from Scripts/<analysisSubfolderName>. ",
+    "Current directory is: ",
+    getwd()
+  )
+}
+initProject(
+  projectDirectory = projectDirectory,
+  configurationDirectory = configurationDirectory,
+  analysisSubfolderName = analysisSubfolderName,
+  overwrite = TRUE,
+  keepEsqlabsRStructure = FALSE
+)
 
-# Get paths of all relevant project files and folders
+# Load project configuration from ProjectConfiguration.xlsx.
 projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
-  path = file.path("Scripts", analysisSubfolderName, "ProjectConfiguration.xlsx")
+  path = file.path(configurationDirectory, "ProjectConfiguration.xlsx")
 )
 # For older ProjectConfiguration.xlsx files without a stored framework version,
 # use ignoreVersionCheck = TRUE (see ?createProjectConfiguration).
@@ -239,16 +251,14 @@ setLogPath(
 
 ```
 
-For a short overview of the logging helpers used in workflows, see the
-**[Workflow](Workflow.html)** vignette section on logging and diagnostics.
+For logging helpers and diagnostics, see **[Workflow](Workflow.html)**.
 
 When loading an existing project configuration that was created before version tracking was introduced, pass `ignoreVersionCheck = TRUE` to `createProjectConfiguration()` or update the file once with `projectConfiguration$save()`.
 
 ### Configuration in Git: Save JSON Snapshot
 
-Configuration Excel files are intended as editable working files and are ignored by Git in configuration folders. The shareable/versioned representation is `ProjectConfiguration.json`.
-
-After changing configuration tables, create or refresh the JSON snapshot:
+Keep `*.xlsx` files local and commit `ProjectConfiguration.json`.
+After changing configuration tables, refresh the JSON snapshot:
 
 ```{r save-config-json, eval = FALSE}
 projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
@@ -896,8 +906,9 @@ This tutorial covered the core time profile plotting workflow:
 - Splitting plots across custom time-range windows
 - Assembling all plots into a Word report
 
-For next steps, see the other vignettes in this package:
+Other package vignettes:
 
-- **[Data Import by Dictionary](DataImport_by_Dictionary.html)** — detailed data import and dictionary configuration
-- **[Population](Population.html)** — population configuration and export options
-- **[Workflow](Workflow.html)** — the full workflow script structure and options
+- **[OSPSuite Reporting Framework](OSPSuite_ReportingFramework.html)** — package overview and entry points
+- **[PK Parameter](PK_Parameter.html)** — PK parameter calculation and configuration
+- **[Sensitivity Analysis](Sensitivity_Analysis.html)** — sensitivity workflows, including ratio and representative-population modes
+- **[Electronic Package](Electronic_Package.html)** — assembling and validating reporting deliverables
