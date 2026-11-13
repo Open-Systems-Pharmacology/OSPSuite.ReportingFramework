@@ -6,7 +6,8 @@
 \usage{
 initProject(
   projectDirectory = ".",
-  configurationDirectory = file.path(projectDirectory, "Scripts", "ReportingFramework"),
+  configurationDirectory = NULL,
+  analysisSubfolderName = "ReportingFramework",
   templatePath = system.file("templates", package = "ospsuite.reportingframework"),
   overwrite = FALSE,
   keepEsqlabsRStructure = FALSE
@@ -17,8 +18,11 @@ initProject(
 passed to \code{esqlabsR::initProject()}. Defaults to the current working directory.}
 
 \item{configurationDirectory}{A character string specifying the path to the RF
-configuration subdirectory. Defaults to \code{"Scripts/ReportingFramework"} relative
-to \code{projectDirectory}.}
+configuration subdirectory. If omitted, defaults to
+\code{file.path(projectDirectory, "Scripts", analysisSubfolderName)}.}
+
+\item{analysisSubfolderName}{Name of the analysis subfolder used to build
+default script and output paths. Defaults to \code{"ReportingFramework"}.}
 
 \item{templatePath}{Path to the RF template files. Defaults to the package templates.}
 

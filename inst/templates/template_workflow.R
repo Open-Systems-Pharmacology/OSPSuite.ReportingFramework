@@ -4,7 +4,8 @@
 # enabling users to effectively process pharmacokinetic data, export populations,
 # run simulations, conduct sensitivity analysis, and generate output plots and reports.
 
-# Typically, this file is saved in <Rootdirectory>/Scripts/ReportingFramework
+# Typically, this file is saved in
+# <RootDirectory>/Scripts/<analysisSubfolderName>
 
 # Initialization  ----------------------------------------------------------
 # Load necessary libraries and source project-specific code
@@ -31,48 +32,73 @@ setWorkflowOptions()
 
 # Setup project structure -------------------------------------------------
 # Create project directory and initialize the structure
-# This script should be run from the project root directory.
-# If running from this script's location, use: setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-# and then setwd("../../..")  or use here::here() for reliable path handling.
+# This workflow is expected to be saved in Scripts/<analysisSubfolderName>.
+# In interactive RStudio sessions, set the working directory to the folder
+# containing this workflow file.
+if (
+  interactive() &&
+    requireNamespace("rstudioapi", quietly = TRUE) &&
+    rstudioapi::isAvailable()
+) {
+  activeDocPath <- rstudioapi::getActiveDocumentContext()$path
+  if (nzchar(activeDocPath)) {
+    setwd(dirname(activeDocPath))
+  }
+}
 
 # Initialize the project (creates base structure and JSON snapshot)
-# When called from project root, defaults will place ProjectConfiguration.xlsx in Scripts/ReportingFramework
+# Derive analysisSubfolderName from the current working directory.
+# The project directory is two levels up from Scripts/<analysisSubfolderName>.
 # Set keepEsqlabsRStructure = TRUE if you want to preserve the original
 # esqlabsR layout instead of switching to the ReportingFramework default layout.
+analysisSubfolderName <- basename(getwd())
+projectDirectory <- file.path("..", "..")
+configurationDirectory <- "."
+if (!identical(basename(dirname(getwd())), "Scripts")) {
+  warning(
+    "The workflow should run from Scripts/<analysisSubfolderName>. ",
+    "Current directory is: ",
+    getwd()
+  )
+}
 initProject(
+  projectDirectory = projectDirectory,
+  configurationDirectory = configurationDirectory,
+  analysisSubfolderName = analysisSubfolderName,
   overwrite = TRUE,
   keepEsqlabsRStructure = FALSE
 )
 
 # Configuration in Git ------------------------------------------------------
 # *.xlsx configuration files are local working files and should not be versioned.
-# In configuration folders, initProject() creates/updates .gitignore to ignore *.xlsx.
+# In configuration folders, initProject() creates or updates .gitignore to
+# ignore *.xlsx.
 # Commit ProjectConfiguration.json to Git and use it as the source of truth.
 
 # Get paths of all relevant project files and folders
-# By default, ProjectConfiguration.xlsx is at Scripts/ReportingFramework/ProjectConfiguration.xlsx
+# ProjectConfiguration.xlsx is in the current configuration directory.
 projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
-  path = file.path("Scripts", "ReportingFramework", "ProjectConfiguration.xlsx")
+  path = file.path("ProjectConfiguration.xlsx")
 )
-# initialize the logging
+# Initialize logging
 setLogPath(
   logFolder = file.path(projectConfiguration$outputFolder, "logs"),
   logFileName = "workflow.log"
 )
 
 # After editing configuration tables, refresh the JSON snapshot.
-# Commit Scripts/ReportingFramework/ProjectConfiguration.json.
+# Commit Scripts/<analysisSubfolderName>/ProjectConfiguration.json.
 # snapshotProjectConfigurationRF(
 #   projectConfiguration,
-#   outputDir = file.path("Scripts", "ReportingFramework")
+#   outputDir = configurationDirectory
 # )
 
 # To recreate configuration from JSON (e.g., CI/new machine), use:
 # projectConfiguration <- restoreProjectConfigurationRF(
 #   snapshotFilePath = file.path(
-#     "Scripts", "ReportingFramework", "ProjectConfiguration.json"
+#     configurationDirectory, "ProjectConfiguration.json"
 #   ),
-#   outputDir = file.path("Scripts", "ReportingFramework")
+#   outputDir = configurationDirectory
 # )
 
 # 1) Read Observed Data -------------------------------------------------------
@@ -135,8 +161,9 @@ pkParameterDT <- loadPKParameter(
 
 # 5) Create Output Plots -----------------------------------------------------
 # (see vignette(package = 'ospsuite.reportingframework', topic = 'Plot_and_Report_Generation'))
-# Add your different plot functions below; the following is an exemplary call for the time profile plot function.
-# You can use addDefaultConfigForTimeProfilePlots to start the configuration table
+# Add your plot function calls below; the following is an example for
+# time-profile plots. You can use addDefaultConfigForTimeProfilePlots()
+# to initialize the corresponding configuration table.
 runPlot(
   nameOfplotFunction = "plotTimeProfiles",
   projectConfiguration = projectConfiguration,

@@ -112,6 +112,19 @@ setWorkflowOptions(isValidRun = FALSE)
 setWorkflowOptions(isValidRun = TRUE)
 ```
 
+Initialize the project structure. By default, `analysisSubfolderName = "ReportingFramework"` creates `Scripts/ReportingFramework` and `Outputs/ReportingFramework`. Set a custom name if you want multiple analyses that share the same project-level models and data folders.
+
+```{r, echo=TRUE, eval=FALSE}
+analysisSubfolderName <- "RF_Analysis"
+initProject(
+  projectDirectory = ".",
+  analysisSubfolderName = analysisSubfolderName,
+  keepEsqlabsRStructure = FALSE
+)
+
+configurationDirectory <- file.path("Scripts", analysisSubfolderName)
+```
+
 Create and load the project configuration from the project workbook path:
 
 ```{r, echo=TRUE, eval=FALSE}

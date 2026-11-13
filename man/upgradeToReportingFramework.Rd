@@ -7,6 +7,7 @@
 upgradeToReportingFramework(
   configurationDirectory = ".",
   templatePath = system.file("templates", package = "ospsuite.reportingframework"),
+  analysisSubfolderName = "ReportingFramework",
   overwrite = FALSE,
   keepEsqlabsRStructure = TRUE
 )
@@ -16,6 +17,11 @@ upgradeToReportingFramework(
 configuration directory to be set up. Defaults to the current working directory.}
 
 \item{templatePath}{Path to the RF template files. Defaults to the package templates.}
+
+\item{analysisSubfolderName}{Name of the analysis subfolder used for
+initialization defaults. This value updates ReportingFramework-specific
+template defaults such as \code{outputFolder} when
+\code{keepEsqlabsRStructure = FALSE}. Defaults to \code{"ReportingFramework"}.}
 
 \item{overwrite}{A logical value indicating whether to overwrite existing files.
 Defaults to \code{FALSE}.}

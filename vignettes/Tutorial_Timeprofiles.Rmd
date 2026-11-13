@@ -38,11 +38,12 @@ runPlotTheme <- ggplot2::theme(
 
 
 rootDirectory <- file.path(tempdir(), "testProject")
-configurationDirectory <- file.path(rootDirectory, "Scripts", "ReportingFramework")
+analysisSubfolderName <- "ReportingFramework"
+configurationDirectory <- file.path(rootDirectory, "Scripts", analysisSubfolderName)
 
 initProject(
   projectDirectory = rootDirectory,
-  configurationDirectory = configurationDirectory
+  analysisSubfolderName = analysisSubfolderName
 )
 
 projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
@@ -182,7 +183,8 @@ print(system.file(
 
 - Select your project directory (`<rootDirectory>`). In this directory, the reporting framework
 folder structure will be established (if not already existing).
-- Verify or create the subfolder `<rootDirectory>/Scripts/ReportingFramework` (referred to as `<configurationDirectory>` throughout this tutorial).
+- Define an analysis subfolder name (for example `ReportingFramework` or `RF_Analysis`).
+- Verify or create the subfolder `<rootDirectory>/Scripts/<analysisSubfolderName>` (referred to as `<configurationDirectory>` throughout this tutorial).
 - Open RStudio and navigate to the Addins menu.
 - Select "Open Template Workflow" to create a new workflow file. Save the template in the `<configurationDirectory>` as `workflow.R`. At the top of the workflow file, you can add a description of the purpose of your workflow.
 
@@ -220,11 +222,12 @@ setWorkflowOptions(isValidRun = FALSE)
 # Setup project structure -------------------------------------------------
 # Create project directory and initialize the structure
 # (see ?initProject)
-initProject()
+analysisSubfolderName <- "ReportingFramework"
+initProject(analysisSubfolderName = analysisSubfolderName)
 
 # Get paths of all relevant project files and folders
 projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
-  path = file.path("Scripts", "ReportingFramework", "ProjectConfiguration.xlsx")
+  path = file.path("Scripts", analysisSubfolderName, "ProjectConfiguration.xlsx")
 )
 # For older ProjectConfiguration.xlsx files without a stored framework version,
 # use ignoreVersionCheck = TRUE (see ?createProjectConfiguration).
@@ -281,7 +284,7 @@ You have now the complete project structure with all configuration files. Copy t
 Open the `<configurationDirectory>/DataImportMap.xlsx`.
 
 
-- List in the sheet `DataFiles` your available data. The paths should be relative to the configuration table which is in `<rootDirectory>/Scripts/ReportingFramework`, the data are saved in `<rootDirectory>/Data`, so the correct path is `../../Data`.
+- List in the sheet `DataFiles` your available data. The paths should be relative to the configuration table which is in `<rootDirectory>/Scripts/<analysisSubfolderName>`, the data are saved in `<rootDirectory>/Data`, so the correct path is `../../Data`.
 - Each file gets a file identifier, which can be used as a filter in the `readObservedDataByDictionary` function.
 - As dictionary, select `tpDictionary`.
 - We do not need a filter, so ensure the column `DataFilter` is empty.
@@ -404,7 +407,7 @@ scenarioResults <- runAndSaveScenarios(
 )
 ```
 
-The results are saved in `<rootDirectory>/Outputs/ReportingFramework/SimulationResults`.
+The results are saved in `<rootDirectory>/Outputs/<analysisSubfolderName>/SimulationResults`.
 
 ### Step 6: Configure and Generate Plots
 

@@ -26,9 +26,12 @@ options(knitr.kable.NA = '')
 setWorkflowOptions(isValidRun = FALSE)
 
 # Setup project structure
-# This workflow file is saved in Scripts/ReportingFramework (the configurationDirectory).
-# initProject() is called with configurationDirectory = "." so the structure is
-# created relative to the current working directory.
+# This workflow file is saved in Scripts/<analysisSubfolderName>
+# (the configurationDirectory). In this template we call initProject()
+# with configurationDirectory = "." so the structure is created relative
+# to the current working directory.
+# If you initialize from project root instead, you can use for example:
+# initProject(analysisSubfolderName = "RF_Analysis")
 # (see ?initProject)
 initProject(configurationDirectory = ".")
 

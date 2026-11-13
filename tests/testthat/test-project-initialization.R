@@ -388,6 +388,44 @@ test_that("initProject initializes and upgrades project in one call", {
 })
 
 
+test_that("initProject supports a custom analysisSubfolderName", {
+  rootDirectory <- withr::local_tempdir()
+  projectDirectory <- file.path(rootDirectory, "Root")
+  analysisSubfolderName <- "RF_Analysis"
+
+  initProject(
+    projectDirectory = projectDirectory,
+    analysisSubfolderName = analysisSubfolderName,
+    overwrite = TRUE
+  )
+
+  configurationDirectory <- file.path(
+    projectDirectory,
+    "Scripts",
+    analysisSubfolderName
+  )
+  configPath <- file.path(configurationDirectory, "ProjectConfiguration.xlsx")
+  expect_true(file.exists(configPath))
+
+  dtConfig <- xlsxReadData(
+    wb = configPath,
+    sheetName = "esqlabsR",
+    convertHeaders = FALSE,
+    emptyAsNA = FALSE
+  )
+  outputFolderValue <- trimws(dtConfig$Value[dtConfig$Property == "outputFolder"][[1]])
+  expect_true(grepl("RF_Analysis$", outputFolderValue))
+
+  expect_true(dir.exists(file.path(
+    rootDirectory,
+    "Root",
+    "Outputs",
+    analysisSubfolderName
+  )))
+  expect_true(dir.exists(file.path(rootDirectory, "Root", "Models")))
+})
+
+
 test_that("initProject forwards keepEsqlabsRStructure to upgradeToReportingFramework", {
   rootDirectory <- withr::local_tempdir()
   projectDirectory <- file.path(rootDirectory, "Root")

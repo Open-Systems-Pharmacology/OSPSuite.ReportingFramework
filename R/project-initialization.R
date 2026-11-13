@@ -11,6 +11,10 @@
 #' @param configurationDirectory A character string specifying the path to the RF
 #'   configuration directory to be set up. Defaults to the current working directory.
 #' @param templatePath Path to the RF template files. Defaults to the package templates.
+#' @param analysisSubfolderName Name of the analysis subfolder used for
+#'   initialization defaults. This value updates ReportingFramework-specific
+#'   template defaults such as `outputFolder` when
+#'   `keepEsqlabsRStructure = FALSE`. Defaults to `"ReportingFramework"`.
 #' @param overwrite A logical value indicating whether to overwrite existing files.
 #'   Defaults to \code{FALSE}.
 #' @param keepEsqlabsRStructure If `TRUE` (default), keep the existing esqlabsR
@@ -28,11 +32,19 @@ upgradeToReportingFramework <- function(
     "templates",
     package = "ospsuite.reportingframework"
   ),
+  analysisSubfolderName = "ReportingFramework",
   overwrite = FALSE,
   keepEsqlabsRStructure = TRUE
 ) {
   configurationDirectory <- fs::path_abs(configurationDirectory)
   checkmate::assertDirectoryExists(templatePath)
+  checkmate::assertString(analysisSubfolderName, min.chars = 1)
+  if (grepl("[/\\\\]", analysisSubfolderName)) {
+    stop(
+      "analysisSubfolderName must not contain path separators.",
+      call. = FALSE
+    )
+  }
   checkmate::assertFlag(keepEsqlabsRStructure)
 
   configXlsxDest <- .projectConfigurationPath(configurationDirectory)
@@ -60,7 +72,8 @@ upgradeToReportingFramework <- function(
       templateConfigurationWb = templateConfigurationWb,
       configurationDirectory = configurationDirectory,
       overwrite = overwrite,
-      transferInitializedFiles = TRUE
+      transferInitializedFiles = TRUE,
+      analysisSubfolderName = analysisSubfolderName
     )
   }
   if ("esqlabsRVersion" %in% dtConfiguration$Property) {
@@ -136,8 +149,10 @@ upgradeToReportingFramework <- function(
 #' @param projectDirectory A character string specifying the root project directory
 #'   passed to \code{esqlabsR::initProject()}. Defaults to the current working directory.
 #' @param configurationDirectory A character string specifying the path to the RF
-#'   configuration subdirectory. Defaults to \code{"Scripts/ReportingFramework"} relative
-#'   to \code{projectDirectory}.
+#'   configuration subdirectory. If omitted, defaults to
+#'   \code{file.path(projectDirectory, "Scripts", analysisSubfolderName)}.
+#' @param analysisSubfolderName Name of the analysis subfolder used to build
+#'   default script and output paths. Defaults to \code{"ReportingFramework"}.
 #' @param templatePath Path to the RF template files. Defaults to the package templates.
 #' @param overwrite A logical value indicating whether to overwrite existing files.
 #'   Defaults to \code{FALSE}.
@@ -151,11 +166,8 @@ upgradeToReportingFramework <- function(
 #' @family project initialization
 initProject <- function(
   projectDirectory = ".",
-  configurationDirectory = file.path(
-    projectDirectory,
-    "Scripts",
-    "ReportingFramework"
-  ),
+  configurationDirectory = NULL,
+  analysisSubfolderName = "ReportingFramework",
   templatePath = system.file(
     "templates",
     package = "ospsuite.reportingframework"
@@ -163,7 +175,22 @@ initProject <- function(
   overwrite = FALSE,
   keepEsqlabsRStructure = FALSE
 ) {
+  checkmate::assertString(analysisSubfolderName, min.chars = 1)
+  if (grepl("[/\\\\]", analysisSubfolderName)) {
+    stop(
+      "analysisSubfolderName must not contain path separators.",
+      call. = FALSE
+    )
+  }
+
   projectDirectory <- fs::path_abs(projectDirectory)
+  if (is.null(configurationDirectory)) {
+    configurationDirectory <- file.path(
+      projectDirectory,
+      "Scripts",
+      analysisSubfolderName
+    )
+  }
   configurationDirectory <- fs::path_abs(configurationDirectory)
 
   preInitSnapshot <- .snapshotProjectTree(projectDirectory)
@@ -182,6 +209,7 @@ initProject <- function(
   upgradeToReportingFramework(
     configurationDirectory = configurationDirectory,
     templatePath = templatePath,
+    analysisSubfolderName = analysisSubfolderName,
     overwrite = overwrite,
     keepEsqlabsRStructure = keepEsqlabsRStructure
   )
@@ -926,6 +954,8 @@ createProjectConfiguration <- function(
 #' @param overwrite Logical flag controlling overwrite behavior.
 #' @param transferInitializedFiles Logical flag indicating whether initialized
 #'   files should be copied into the RF layout.
+#' @param analysisSubfolderName Name of the analysis subfolder used to update
+#'   template folder defaults.
 #' @return Updated `esqlabsR` configuration table.
 #' @keywords internal
 #' @noRd
@@ -934,7 +964,8 @@ createProjectConfiguration <- function(
   templateConfigurationWb,
   configurationDirectory,
   overwrite,
-  transferInitializedFiles = FALSE
+  transferInitializedFiles = FALSE,
+  analysisSubfolderName = "ReportingFramework"
 ) {
   dtConfiguration <- .readConfigSheet(configWb, "esqlabsR")
   dtConfigurationOriginal <- dtConfiguration
@@ -961,6 +992,10 @@ createProjectConfiguration <- function(
     ,
     drop = FALSE
   ]
+  templateRows <- .applyAnalysisSubfolderToTemplateRows(
+    templateRows = templateRows,
+    analysisSubfolderName = analysisSubfolderName
+  )
   if (nrow(templateRows) > 0) {
     dtConfiguration[
       match(templateRows$Property, dtConfiguration$Property),
@@ -1002,6 +1037,61 @@ createProjectConfiguration <- function(
 
   xlsxWriteData(wb = configWb, sheetName = "esqlabsR", dt = dtConfiguration)
   return(dtConfiguration)
+}
+
+#' Apply analysis subfolder substitutions to template rows
+#' @param templateRows Template rows from the `esqlabsR` sheet.
+#' @param analysisSubfolderName Name of the analysis subfolder.
+#' @return Updated template rows.
+#' @keywords internal
+#' @noRd
+.applyAnalysisSubfolderToTemplateRows <- function(
+  templateRows,
+  analysisSubfolderName
+) {
+  if (
+    identical(analysisSubfolderName, "ReportingFramework") ||
+      !("Property" %in% names(templateRows)) ||
+      !("Value" %in% names(templateRows))
+  ) {
+    return(templateRows)
+  }
+
+  outputIndex <- which(templateRows$Property == "outputFolder")
+  if (length(outputIndex) == 0) {
+    return(templateRows)
+  }
+
+  idx <- outputIndex[[1]]
+  outputFolderValue <- .normalizeConfigValue(templateRows$Value[[idx]])
+  if (!nzchar(outputFolderValue)) {
+    return(templateRows)
+  }
+
+  pathParts <- strsplit(outputFolderValue, "[/\\\\]+")[[1]]
+  if (length(pathParts) == 0) {
+    return(templateRows)
+  }
+
+  nonEmptyParts <- which(nzchar(pathParts))
+  if (length(nonEmptyParts) == 0) {
+    return(templateRows)
+  }
+
+  lastPartIndex <- nonEmptyParts[[length(nonEmptyParts)]]
+  if (!identical(pathParts[[lastPartIndex]], "ReportingFramework")) {
+    return(templateRows)
+  }
+
+  pathParts[[lastPartIndex]] <- analysisSubfolderName
+  separator <- if (grepl("\\\\", outputFolderValue) && !grepl("/", outputFolderValue)) {
+    "\\\\"
+  } else {
+    "/"
+  }
+  templateRows$Value[[idx]] <- paste(pathParts, collapse = separator)
+
+  return(templateRows)
 }
 
 #' Apply template addons sheet
