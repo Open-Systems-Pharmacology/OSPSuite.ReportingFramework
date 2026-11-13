@@ -50,7 +50,7 @@ initProject(
 # Commit ProjectConfiguration.json to Git and use it as the source of truth.
 
 # Get paths of all relevant project files and folders
-# The ProjectConfiguration.xlsx is now at Scripts/ReportingFramework/ProjectConfiguration.xlsx
+# By default, ProjectConfiguration.xlsx is at Scripts/ReportingFramework/ProjectConfiguration.xlsx
 projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
   path = file.path("Scripts", "ReportingFramework", "ProjectConfiguration.xlsx")
 )
@@ -136,7 +136,7 @@ pkParameterDT <- loadPKParameter(
 # 5) Create Output Plots -----------------------------------------------------
 # (see vignette(package = 'ospsuite.reportingframework', topic = 'Plot_and_Report_Generation'))
 # Add your different plot functions below; the following is an exemplary call for the time profile plot function.
-# YOu can use addDefaultConfigForTimeProfilePlots to start the configuration table
+# You can use addDefaultConfigForTimeProfilePlots to start the configuration table
 runPlot(
   nameOfplotFunction = "plotTimeProfiles",
   projectConfiguration = projectConfiguration,

@@ -163,7 +163,13 @@ initProject <- function(
   overwrite = FALSE,
   keepEsqlabsRStructure = FALSE
 ) {
+  projectDirectory <- fs::path_abs(projectDirectory)
   configurationDirectory <- fs::path_abs(configurationDirectory)
+
+  preInitSnapshot <- .snapshotProjectTree(projectDirectory)
+  startedFromEmptyConfigurationDirectory <-
+    .isMissingOrEmptyDirectory(configurationDirectory)
+
   if (!dir.exists(configurationDirectory)) {
     dir.create(configurationDirectory, recursive = TRUE, showWarnings = FALSE)
   }
@@ -171,12 +177,24 @@ initProject <- function(
     destination = configurationDirectory,
     overwrite = overwrite
   )
+  postEsqlabsInitSnapshot <- .snapshotProjectTree(projectDirectory)
+
   upgradeToReportingFramework(
     configurationDirectory = configurationDirectory,
     templatePath = templatePath,
     overwrite = overwrite,
     keepEsqlabsRStructure = keepEsqlabsRStructure
   )
+
+  if (!keepEsqlabsRStructure && startedFromEmptyConfigurationDirectory) {
+    .cleanupEsqlabsInitArtifacts(
+      projectDirectory = projectDirectory,
+      configurationDirectory = configurationDirectory,
+      preInitSnapshot = preInitSnapshot,
+      postEsqlabsInitSnapshot = postEsqlabsInitSnapshot
+    )
+    .removeLegacyEsqlabsRDirectories(configurationDirectory)
+  }
 
   # Create initial JSON snapshot of the project configuration
   pc <- createProjectConfiguration(
@@ -314,6 +332,30 @@ createProjectConfiguration <- function(
   return(invisible(NULL))
 }
 
+#' Remove known legacy esqlabsR directories from RF configuration root
+#' @param configurationDirectory Absolute path to RF configuration directory.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.removeLegacyEsqlabsRDirectories <- function(configurationDirectory) {
+  configurationDirectory <- fs::path_abs(configurationDirectory)
+  legacyDirectories <- c(
+    "Data",
+    "Models",
+    "Results",
+    "PopulationsCSV"
+  )
+
+  for (legacyDirectory in legacyDirectories) {
+    legacyPath <- file.path(configurationDirectory, legacyDirectory)
+    if (dir.exists(legacyPath)) {
+      unlink(legacyPath, recursive = TRUE, force = TRUE)
+    }
+  }
+
+  return(invisible(NULL))
+}
+
 #' Resolve template esqlabsR sheet name
 #' @param templateConfigurationWb Workbook object for template configuration.
 #' @return Template sheet name used as esqlabsR source.
@@ -340,6 +382,235 @@ createProjectConfiguration <- function(
     convertHeaders = FALSE,
     emptyAsNA = FALSE
   ))
+}
+
+#' Check whether a directory is missing or empty
+#' @param directoryPath Path to directory.
+#' @return `TRUE` if path does not exist or contains no entries.
+#' @keywords internal
+#' @noRd
+.isMissingOrEmptyDirectory <- function(directoryPath) {
+  directoryPath <- fs::path_abs(directoryPath)
+  if (!dir.exists(directoryPath)) {
+    return(TRUE)
+  }
+
+  entries <- list.files(
+    directoryPath,
+    all.files = TRUE,
+    no.. = TRUE
+  )
+
+  return(length(entries) == 0)
+}
+
+#' Create a recursive snapshot of a project tree
+#' @param rootDirectory Absolute path to project root.
+#' @return Data frame with relative path, directory flag, and file hash.
+#' @keywords internal
+#' @noRd
+.snapshotProjectTree <- function(rootDirectory) {
+  rootDirectory <- fs::path_abs(rootDirectory)
+  if (!dir.exists(rootDirectory)) {
+    return(data.frame(
+      relativePath = character(),
+      isDirectory = logical(),
+      fileHash = character(),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  entries <- list.files(
+    rootDirectory,
+    recursive = TRUE,
+    all.files = TRUE,
+    include.dirs = TRUE,
+    no.. = TRUE,
+    full.names = FALSE
+  )
+
+  if (length(entries) == 0) {
+    return(data.frame(
+      relativePath = character(),
+      isDirectory = logical(),
+      fileHash = character(),
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  absoluteEntries <- file.path(rootDirectory, entries)
+  isDirectory <- dir.exists(absoluteEntries)
+  fileHash <- rep(NA_character_, length(entries))
+  fileIndex <- which(!isDirectory)
+  if (length(fileIndex) > 0) {
+    fileHash[fileIndex] <- unname(tools::md5sum(absoluteEntries[fileIndex]))
+  }
+
+  return(data.frame(
+    relativePath = entries,
+    isDirectory = isDirectory,
+    fileHash = fileHash,
+    stringsAsFactors = FALSE
+  ))
+}
+
+#' Build keep-list for files and folders required by RF configuration
+#' @param projectDirectory Absolute path to project root.
+#' @param configurationDirectory Absolute configuration directory.
+#' @return Character vector of absolute paths that must not be deleted.
+#' @keywords internal
+#' @noRd
+.rfRequiredPaths <- function(projectDirectory, configurationDirectory) {
+  projectDirectory <- fs::path_abs(projectDirectory)
+  configurationDirectory <- fs::path_abs(configurationDirectory)
+
+  requiredPaths <- c(projectDirectory, configurationDirectory)
+  configXlsxPath <- .projectConfigurationPath(configurationDirectory)
+  requiredPaths <- c(requiredPaths, configXlsxPath)
+
+  configWb <- openxlsx::loadWorkbook(configXlsxPath)
+  dtConfiguration <- .readConfigSheet(configWb, "esqlabsR")
+  configFolder <- .resolveConfigurationFolder(
+    dtConfiguration,
+    configurationDirectory
+  )
+  requiredPaths <- c(requiredPaths, configFolder)
+
+  rfTemplateWorkbooks <- c(
+    "DataImportMap.xlsx",
+    "Reports.xlsx",
+    "PKParameter.xlsx",
+    "SensitivityParameter.xlsx",
+    "Scenarios.xlsx"
+  )
+  requiredPaths <- c(
+    requiredPaths,
+    file.path(configFolder, rfTemplateWorkbooks)
+  )
+
+  folderProperties <- grep(
+    "Folder$",
+    dtConfiguration$Property,
+    value = TRUE
+  )
+  for (prop in unique(folderProperties)) {
+    folderValue <- .normalizeConfigValue(dtConfiguration$Value[
+      dtConfiguration$Property == prop
+    ])
+    if (nzchar(folderValue)) {
+      requiredPaths <- c(
+        requiredPaths,
+        fs::path_abs(folderValue, start = configurationDirectory)
+      )
+    }
+  }
+
+  fileProperties <- grep("File$", dtConfiguration$Property, value = TRUE)
+  for (prop in unique(fileProperties)) {
+    filePath <- .resolveConfiguredFilePath(
+      dtConfiguration,
+      configurationDirectory,
+      prop
+    )
+    if (!is.na(filePath)) {
+      requiredPaths <- c(requiredPaths, filePath)
+    }
+  }
+
+  scenariosPath <- .resolveScenarioPath(dtConfiguration, configFolder)
+  if (!is.na(scenariosPath)) {
+    requiredPaths <- c(requiredPaths, scenariosPath)
+  }
+
+  return(unique(fs::path_abs(requiredPaths)))
+}
+
+#' Remove unneeded esqlabsR initialization artifacts after RF upgrade
+#' @param projectDirectory Absolute path to project root.
+#' @param configurationDirectory Absolute configuration directory.
+#' @param preInitSnapshot Tree snapshot before esqlabsR initialization.
+#' @param postEsqlabsInitSnapshot Tree snapshot immediately after esqlabsR initialization.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.cleanupEsqlabsInitArtifacts <- function(
+  projectDirectory,
+  configurationDirectory,
+  preInitSnapshot,
+  postEsqlabsInitSnapshot
+) {
+  projectDirectory <- fs::path_abs(projectDirectory)
+  projectDirectoryNormalized <- normalizePath(
+    projectDirectory,
+    winslash = "/",
+    mustWork = FALSE
+  )
+  currentSnapshot <- .snapshotProjectTree(projectDirectory)
+  if (nrow(currentSnapshot) == 0 || nrow(postEsqlabsInitSnapshot) == 0) {
+    return(invisible(NULL))
+  }
+
+  preEntries <- unique(preInitSnapshot$relativePath)
+  postEntries <- unique(postEsqlabsInitSnapshot$relativePath)
+  createdByEsqlabs <- setdiff(postEntries, preEntries)
+  if (length(createdByEsqlabs) == 0) {
+    return(invisible(NULL))
+  }
+
+  requiredPaths <- .rfRequiredPaths(projectDirectory, configurationDirectory)
+  requiredRelativePaths <- fs::path_rel(
+    requiredPaths,
+    start = projectDirectory
+  )
+  requiredRelativePaths <- unique(requiredRelativePaths[
+    !is.na(requiredRelativePaths) & requiredRelativePaths != "."
+  ])
+
+  currentByPath <- split(currentSnapshot, currentSnapshot$relativePath)
+  postByPath <- split(
+    postEsqlabsInitSnapshot,
+    postEsqlabsInitSnapshot$relativePath
+  )
+
+  for (entry in sort(createdByEsqlabs, decreasing = TRUE)) {
+    if (entry %in% requiredRelativePaths) {
+      next
+    }
+    currentEntry <- currentByPath[[entry]]
+    postEntry <- postByPath[[entry]]
+    if (is.null(currentEntry) || is.null(postEntry)) {
+      next
+    }
+
+    absPath <- fs::path_abs(entry, start = projectDirectory)
+    absPathNormalized <- normalizePath(
+      absPath,
+      winslash = "/",
+      mustWork = FALSE
+    )
+    if (!startsWith(absPathNormalized, projectDirectoryNormalized)) {
+      next
+    }
+
+    if (!isTRUE(currentEntry$isDirectory[[1]])) {
+      if (!identical(currentEntry$fileHash[[1]], postEntry$fileHash[[1]])) {
+        next
+      }
+      if (file.exists(absPath)) {
+        unlink(absPath, force = TRUE)
+      }
+      next
+    }
+
+    if (dir.exists(absPath)) {
+      dirEntries <- list.files(absPath, all.files = TRUE, no.. = TRUE)
+      if (length(dirEntries) == 0) {
+        unlink(absPath, recursive = TRUE, force = TRUE)
+      }
+    }
+  }
+
+  return(invisible(NULL))
 }
 
 #' Normalize configuration value
@@ -471,48 +742,48 @@ createProjectConfiguration <- function(
 # Guard-style early returns keep transfer checks explicit; cyclocomp is intentional here.
 .isDirectoryTransferComplete <- # nolint: cyclocomp_linter
   function(sourceDir, targetDir) {
-  if (!dir.exists(sourceDir)) {
-    return(TRUE)
-  }
-  if (!dir.exists(targetDir)) {
-    return(FALSE)
-  }
+    if (!dir.exists(sourceDir)) {
+      return(TRUE)
+    }
+    if (!dir.exists(targetDir)) {
+      return(FALSE)
+    }
 
-  entries <- list.files(
-    sourceDir,
-    recursive = TRUE,
-    all.files = TRUE,
-    include.dirs = TRUE,
-    no.. = TRUE
-  )
-  if (length(entries) == 0) {
-    return(TRUE)
-  }
+    entries <- list.files(
+      sourceDir,
+      recursive = TRUE,
+      all.files = TRUE,
+      include.dirs = TRUE,
+      no.. = TRUE
+    )
+    if (length(entries) == 0) {
+      return(TRUE)
+    }
 
-  for (entry in entries) {
-    srcPath <- file.path(sourceDir, entry)
-    dstPath <- file.path(targetDir, entry)
+    for (entry in entries) {
+      srcPath <- file.path(sourceDir, entry)
+      dstPath <- file.path(targetDir, entry)
 
-    if (dir.exists(srcPath)) {
-      if (!dir.exists(dstPath)) {
+      if (dir.exists(srcPath)) {
+        if (!dir.exists(dstPath)) {
+          return(FALSE)
+        }
+        next
+      }
+
+      if (!file.exists(dstPath)) {
         return(FALSE)
       }
-      next
+
+      srcHash <- unname(tools::md5sum(srcPath))
+      dstHash <- unname(tools::md5sum(dstPath))
+      if (!identical(srcHash, dstHash)) {
+        return(FALSE)
+      }
     }
 
-    if (!file.exists(dstPath)) {
-      return(FALSE)
-    }
-
-    srcHash <- unname(tools::md5sum(srcPath))
-    dstHash <- unname(tools::md5sum(dstPath))
-    if (!identical(srcHash, dstHash)) {
-      return(FALSE)
-    }
+    return(TRUE)
   }
-
-  return(TRUE)
-}
 
 #' Copy individual configuration files listed under *File properties
 #' @param oldFile Absolute path to the original file.

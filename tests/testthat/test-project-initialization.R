@@ -339,9 +339,52 @@ test_that("initProject initializes and upgrades project in one call", {
     "ReportingFramework"
   )))
 
+  modelFiles <- list.files(
+    file.path(rootDirectory, "Root", "Models"),
+    recursive = TRUE,
+    all.files = TRUE,
+    no.. = TRUE,
+    include.dirs = FALSE
+  )
+  populationFiles <- list.files(
+    file.path(rootDirectory, "Root", "Models", "Populations"),
+    recursive = TRUE,
+    all.files = TRUE,
+    no.. = TRUE,
+    include.dirs = FALSE
+  )
+  outputFiles <- list.files(
+    file.path(rootDirectory, "Root", "Outputs", "ReportingFramework"),
+    recursive = TRUE,
+    all.files = TRUE,
+    no.. = TRUE,
+    include.dirs = FALSE
+  )
+  dataFiles <- list.files(
+    file.path(rootDirectory, "Root", "Data"),
+    recursive = TRUE,
+    all.files = TRUE,
+    no.. = TRUE,
+    include.dirs = FALSE
+  )
+
+  expect_length(modelFiles, 0)
+  expect_length(populationFiles, 0)
+  expect_length(outputFiles, 0)
+  expect_length(dataFiles, 0)
+
   gitignoreFile <- file.path(configurationDirectory, ".gitignore")
   expect_true(file.exists(gitignoreFile))
   expect_true(any(trimws(readLines(gitignoreFile, warn = FALSE)) == "*.xlsx"))
+
+  # initProject deletes all esqlabsR directories
+  expect_false(dir.exists(file.path(
+    rootDirectory,
+    "Root",
+    "Scripts",
+    "ReportingFramework",
+    "PopulationsCSV"
+  )))
 })
 
 

@@ -98,7 +98,7 @@ The first step in the workflow is to initialize the project. This includes:
 
 - Loading necessary libraries.
 - Setting the workflow options.
-- Setting up the project directory and configuration files using the project structure of `{esqlabsR}`.
+- Setting up the project directory and configuration files by initializing with `{esqlabsR}` and upgrading to ReportingFramework defaults (unless `keepEsqlabsRStructure = TRUE`).
 - Creating or updating `.gitignore` files in configuration folders so `*.xlsx` configuration files are ignored by Git.
 - Initializing the log file.
 
