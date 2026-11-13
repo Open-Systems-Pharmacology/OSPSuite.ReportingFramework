@@ -345,25 +345,30 @@ restoreProjectConfigurationRF <- function(jsonPath, outputDir = NULL, ...) {
     projectConfigurationFilePath = xlsxPath,
     ignoreVersionCheck = TRUE
   )
-  restoredConfigurationsDir <- fs::path_abs(
+  resolvePathFromOutputDir <- function(pathValue, outputDir) {
+    resolvedPath <- as.character(pathValue)
+    isAbsolutePath <- grepl("^([A-Za-z]:|/|\\\\\\\\)", resolvedPath)
+    if (!isAbsolutePath) {
+      resolvedPath <- file.path(outputDir, resolvedPath)
+    }
+    return(normalizePath(resolvedPath, winslash = "/", mustWork = FALSE))
+  }
+
+  restoredConfigurationsDir <- resolvePathFromOutputDir(
     restoredProjectConfiguration$configurationsFolder,
-    start = effectiveOutputDir
+    effectiveOutputDir
   )
 
   # esqlabsR restores xlsx files into file.path(effectiveOutputDir, "Configurations").
   # Preserve the snapshotted layout by moving only when needed.
   esqlabsConfigDir <- file.path(effectiveOutputDir, "Configurations")
-  restoredConfigurationsFolderName <- basename(
-    as.character(fs::path_norm(restoredConfigurationsDir))
-  )
   sameConfigurationDir <- tolower(as.character(fs::path_norm(
     esqlabsConfigDir
   ))) ==
     tolower(as.character(fs::path_norm(restoredConfigurationsDir)))
   shouldMoveRestoredWorkbooks <-
     dir.exists(esqlabsConfigDir) &&
-    !sameConfigurationDir &&
-    tolower(restoredConfigurationsFolderName) != "configurations"
+    !sameConfigurationDir
   if (shouldMoveRestoredWorkbooks) {
     if (!dir.exists(restoredConfigurationsDir)) {
       dir.create(
@@ -403,9 +408,9 @@ restoreProjectConfigurationRF <- function(jsonPath, outputDir = NULL, ...) {
     }
 
     esqlabsPopulationsDir <- file.path(esqlabsConfigDir, "PopulationsCSV")
-    restoredPopulationsDir <- fs::path_abs(
+    restoredPopulationsDir <- resolvePathFromOutputDir(
       restoredProjectConfiguration$populationsFolder,
-      start = effectiveOutputDir
+      effectiveOutputDir
     )
     if (dir.exists(esqlabsPopulationsDir)) {
       if (!dir.exists(restoredPopulationsDir)) {

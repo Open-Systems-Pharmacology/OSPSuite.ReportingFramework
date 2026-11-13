@@ -428,6 +428,121 @@ test_that("restoreProjectConfigurationRF preserves snapshotted configurations fo
   expect_true(file.exists(pkPath))
 })
 
+test_that("restoreProjectConfigurationRF relocates workbooks to nested Configurations folder", {
+  d <- file.path(tempdir(), "snap_test_11_nested")
+  unlink(d, recursive = TRUE)
+  dir.create(d)
+
+  ospsuite.reportingframework::initProject(
+    projectDirectory = d,
+    configurationDirectory = d,
+    overwrite = TRUE,
+    keepEsqlabsRStructure = TRUE
+  )
+
+  configPath <- file.path(d, "ProjectConfiguration.xlsx")
+  configWorkbook <- openxlsx::loadWorkbook(configPath)
+  configTable <- openxlsx::read.xlsx(configPath, sheet = "esqlabsR")
+  sourceConfigurationsFolder <- trimws(configTable$Value[
+    configTable$Property == "configurationsFolder"
+  ][[1]])
+  configTable[
+    configTable$Property == "configurationsFolder",
+    "Value"
+  ] <- "Input/Configurations"
+  openxlsx::writeData(configWorkbook, sheet = "esqlabsR", x = configTable)
+  openxlsx::saveWorkbook(configWorkbook, configPath, overwrite = TRUE)
+
+  sourceConfigurationsDir <- fs::path_abs(sourceConfigurationsFolder, start = d)
+  nestedConfigurationsDir <- file.path(d, "Input", "Configurations")
+  dir.create(nestedConfigurationsDir, recursive = TRUE, showWarnings = FALSE)
+
+  sourceWorkbookPaths <- list.files(
+    path = sourceConfigurationsDir,
+    pattern = "\\.xlsx$",
+    full.names = TRUE
+  )
+  sourceWorkbookPaths <- sourceWorkbookPaths[
+    basename(sourceWorkbookPaths) != "ProjectConfiguration.xlsx"
+  ]
+  for (sourceWorkbookPath in sourceWorkbookPaths) {
+    copyCreated <- file.copy(
+      from = sourceWorkbookPath,
+      to = file.path(nestedConfigurationsDir, basename(sourceWorkbookPath)),
+      overwrite = TRUE
+    )
+    expect_true(isTRUE(copyCreated))
+  }
+
+  sourcePopulationsCsvDir <- file.path(sourceConfigurationsDir, "PopulationsCSV")
+  if (dir.exists(sourcePopulationsCsvDir)) {
+    destinationPopulationsCsvDir <- file.path(
+      nestedConfigurationsDir,
+      "PopulationsCSV"
+    )
+    populationCsvPaths <- list.files(
+      path = sourcePopulationsCsvDir,
+      recursive = TRUE,
+      full.names = TRUE,
+      include.dirs = FALSE
+    )
+    for (populationCsvPath in populationCsvPaths) {
+      relativePopulationPath <- as.character(fs::path_rel(
+        populationCsvPath,
+        start = sourcePopulationsCsvDir
+      ))
+      destinationPopulationPath <- file.path(
+        destinationPopulationsCsvDir,
+        relativePopulationPath
+      )
+      dir.create(
+        dirname(destinationPopulationPath),
+        recursive = TRUE,
+        showWarnings = FALSE
+      )
+      copyCreated <- file.copy(
+        from = populationCsvPath,
+        to = destinationPopulationPath,
+        overwrite = TRUE
+      )
+      expect_true(isTRUE(copyCreated))
+    }
+  }
+
+  pc1 <- ospsuite.reportingframework::createProjectConfiguration(configPath)
+  ospsuite.reportingframework::snapshotProjectConfigurationRF(
+    pc1,
+    outputDir = d
+  )
+
+  r <- file.path(tempdir(), "snap_rest_11_nested")
+  unlink(r, recursive = TRUE)
+  dir.create(r)
+
+  pc2 <- ospsuite.reportingframework::restoreProjectConfigurationRF(
+    file.path(d, "ProjectConfiguration.json"),
+    outputDir = r
+  )
+
+  expectedConfigDir <- fs::path_abs(
+    pc2$configurationsFolder,
+    start = r
+  )
+  pkPath <- pc2$addOns[["pKParameterFile"]]
+  stagedPkPath <- file.path(r, "Configurations", basename(pkPath))
+
+  expect_equal(
+    tolower(as.character(fs::path_norm(expectedConfigDir))),
+    tolower(as.character(fs::path_norm(file.path(r, "Input", "Configurations"))))
+  )
+  expect_true(file.exists(pkPath))
+  expect_true(startsWith(
+    tolower(as.character(fs::path_norm(pkPath))),
+    tolower(as.character(fs::path_norm(expectedConfigDir)))
+  ))
+  expect_false(file.exists(stagedPkPath))
+})
+
 test_that("restoreProjectConfigurationRF moves restored populations out of staging", {
   d <- file.path(tempdir(), "snap_test_12")
   unlink(d, recursive = TRUE)
