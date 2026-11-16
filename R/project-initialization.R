@@ -16,10 +16,7 @@
 #'   template defaults such as `outputFolder` when
 #'   `keepEsqlabsRStructure = FALSE`. Defaults to `"ReportingFramework"`.
 #' @param overwrite A logical value indicating whether to overwrite existing files.
-#'   Defaults to \code{FALSE}. If an existing ReportingFramework project is
-#'   detected in `configurationDirectory`, the upstream
-#'   `esqlabsR::initProject()` step is skipped to avoid destructive
-#'   reinitialization.
+#'   Defaults to \code{FALSE}.
 #' @param keepEsqlabsRStructure If `TRUE` (default), keep the existing esqlabsR
 #'   directory/layout values and only add reporting-framework-specific components.
 #'   If `FALSE`, apply reporting framework default configuration values and transfer
@@ -158,7 +155,10 @@ upgradeToReportingFramework <- function(
 #'   default script and output paths. Defaults to \code{"ReportingFramework"}.
 #' @param templatePath Path to the RF template files. Defaults to the package templates.
 #' @param overwrite A logical value indicating whether to overwrite existing files.
-#'   Defaults to \code{FALSE}.
+#'   Defaults to \code{FALSE}. If an existing ReportingFramework project is
+#'   detected in `configurationDirectory`, the upstream
+#'   `esqlabsR::initProject()` step is skipped to avoid destructive
+#'   reinitialization.
 #' @param keepEsqlabsRStructure If `TRUE`, preserve the esqlabsR directory and
 #'   workbook layout when calling `upgradeToReportingFramework()`. Defaults to
 #'   `FALSE` so a freshly initialized project uses the ReportingFramework
@@ -196,22 +196,23 @@ initProject <- function(
   }
   configurationDirectory <- fs::path_abs(configurationDirectory)
 
-  hasExistingReportingFrameworkProject <-
-    .isExistingReportingFrameworkProject(configurationDirectory)
+  initializationMode <- .resolveProjectInitializationMode(
+    configurationDirectory
+  )
+  didRunEsqlabsInitialization <- FALSE
 
   preInitSnapshot <- .snapshotProjectTree(projectDirectory)
-  startedFromEmptyConfigurationDirectory <-
-    .isMissingOrEmptyDirectory(configurationDirectory)
   postEsqlabsInitSnapshot <- preInitSnapshot
 
   if (!dir.exists(configurationDirectory)) {
     dir.create(configurationDirectory, recursive = TRUE, showWarnings = FALSE)
   }
-  if (!hasExistingReportingFrameworkProject) {
+  if (initializationMode$shouldRunEsqlabsInitialization) {
     esqlabsR::initProject(
       destination = configurationDirectory,
       overwrite = overwrite
     )
+    didRunEsqlabsInitialization <- TRUE
     postEsqlabsInitSnapshot <- .snapshotProjectTree(projectDirectory)
   }
 
@@ -223,15 +224,14 @@ initProject <- function(
     keepEsqlabsRStructure = keepEsqlabsRStructure
   )
 
-  if (!keepEsqlabsRStructure && startedFromEmptyConfigurationDirectory) {
-    .cleanupEsqlabsInitArtifacts(
-      projectDirectory = projectDirectory,
-      configurationDirectory = configurationDirectory,
-      preInitSnapshot = preInitSnapshot,
-      postEsqlabsInitSnapshot = postEsqlabsInitSnapshot
-    )
-    .removeLegacyEsqlabsRDirectories(configurationDirectory)
-  }
+  .runPostInitializationCleanup(
+    keepEsqlabsRStructure = keepEsqlabsRStructure,
+    didRunEsqlabsInitialization = didRunEsqlabsInitialization,
+    projectDirectory = projectDirectory,
+    configurationDirectory = configurationDirectory,
+    preInitSnapshot = preInitSnapshot,
+    postEsqlabsInitSnapshot = postEsqlabsInitSnapshot
+  )
 
   # Create initial JSON snapshot of the project configuration
   pc <- createProjectConfiguration(
@@ -342,7 +342,10 @@ createProjectConfiguration <- function(
 #' @noRd
 .isExistingReportingFrameworkProject <- function(configurationDirectory) {
   configurationDirectory <- fs::path_abs(configurationDirectory)
-  configXlsxPath <- file.path(configurationDirectory, "ProjectConfiguration.xlsx")
+  configXlsxPath <- file.path(
+    configurationDirectory,
+    "ProjectConfiguration.xlsx"
+  )
   if (!file.exists(configXlsxPath)) {
     return(FALSE)
   }
@@ -356,6 +359,57 @@ createProjectConfiguration <- function(
   }
 
   return(.isReportingFrameworkProject(configWb))
+}
+
+#' Resolve initialization mode for project bootstrap
+#' @param configurationDirectory Path to the project configuration directory.
+#' @return Named list with `hasExistingReportingFrameworkProject` and
+#'   `shouldRunEsqlabsInitialization` flags.
+#' @keywords internal
+#' @noRd
+.resolveProjectInitializationMode <- function(configurationDirectory) {
+  configurationDirectory <- fs::path_abs(configurationDirectory)
+  hasExistingReportingFrameworkProject <-
+    .isExistingReportingFrameworkProject(configurationDirectory)
+
+  return(list(
+    hasExistingReportingFrameworkProject = hasExistingReportingFrameworkProject,
+    shouldRunEsqlabsInitialization = !hasExistingReportingFrameworkProject
+  ))
+}
+
+#' Run post-initialization cleanup for esqlabsR artifacts
+#' @param keepEsqlabsRStructure Logical flag from `initProject()`.
+#' @param didRunEsqlabsInitialization Logical flag indicating whether
+#'   `esqlabsR::initProject()` was executed.
+#' @param projectDirectory Absolute path to project root.
+#' @param configurationDirectory Absolute configuration directory.
+#' @param preInitSnapshot Tree snapshot before esqlabsR initialization.
+#' @param postEsqlabsInitSnapshot Tree snapshot immediately after esqlabsR initialization.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.runPostInitializationCleanup <- function(
+  keepEsqlabsRStructure,
+  didRunEsqlabsInitialization,
+  projectDirectory,
+  configurationDirectory,
+  preInitSnapshot,
+  postEsqlabsInitSnapshot
+) {
+  if (keepEsqlabsRStructure || !didRunEsqlabsInitialization) {
+    return(invisible(NULL))
+  }
+
+  .cleanupEsqlabsInitArtifacts(
+    projectDirectory = projectDirectory,
+    configurationDirectory = configurationDirectory,
+    preInitSnapshot = preInitSnapshot,
+    postEsqlabsInitSnapshot = postEsqlabsInitSnapshot
+  )
+  .removeLegacyEsqlabsRDirectories(configurationDirectory)
+
+  return(invisible(NULL))
 }
 
 #' Get single non-addons configuration sheet name
@@ -443,26 +497,6 @@ createProjectConfiguration <- function(
     convertHeaders = FALSE,
     emptyAsNA = FALSE
   ))
-}
-
-#' Check whether a directory is missing or empty
-#' @param directoryPath Path to directory.
-#' @return `TRUE` if path does not exist or contains no entries.
-#' @keywords internal
-#' @noRd
-.isMissingOrEmptyDirectory <- function(directoryPath) {
-  directoryPath <- fs::path_abs(directoryPath)
-  if (!dir.exists(directoryPath)) {
-    return(TRUE)
-  }
-
-  entries <- list.files(
-    directoryPath,
-    all.files = TRUE,
-    no.. = TRUE
-  )
-
-  return(length(entries) == 0)
 }
 
 #' Create a recursive snapshot of a project tree

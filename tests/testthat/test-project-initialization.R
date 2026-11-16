@@ -413,7 +413,9 @@ test_that("initProject supports a custom analysisSubfolderName", {
     convertHeaders = FALSE,
     emptyAsNA = FALSE
   )
-  outputFolderValue <- trimws(dtConfig$Value[dtConfig$Property == "outputFolder"][[1]])
+  outputFolderValue <- trimws(dtConfig$Value[
+    dtConfig$Property == "outputFolder"
+  ][[1]])
   expect_true(grepl("RF_Analysis$", outputFolderValue))
 
   expect_true(dir.exists(file.path(
@@ -507,6 +509,31 @@ test_that("initProject does not reinitialize existing RF project when overwrite 
     trimws(dtAfter$Value[dtAfter$Property == "outputFolder"][[1]]),
     "Outputs/DoNotOverwrite"
   )
+})
+
+
+test_that("initProject cleans esqlabsR artifacts with pre-existing workflow file", {
+  rootDirectory <- withr::local_tempdir()
+  projectDirectory <- file.path(rootDirectory, "Root")
+  configurationDirectory <- file.path(
+    projectDirectory,
+    "Scripts",
+    "ReportingFramework"
+  )
+  dir.create(configurationDirectory, recursive = TRUE)
+
+  workflowPath <- file.path(configurationDirectory, "workflow.R")
+  workflowContent <- "# existing workflow template"
+  writeLines(workflowContent, workflowPath)
+
+  initProject(
+    projectDirectory = projectDirectory,
+    overwrite = TRUE
+  )
+
+  expect_true(file.exists(workflowPath))
+  expect_equal(readLines(workflowPath, warn = FALSE), workflowContent)
+  expect_false(dir.exists(file.path(configurationDirectory, "PopulationsCSV")))
 })
 
 
