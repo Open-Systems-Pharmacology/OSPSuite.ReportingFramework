@@ -178,6 +178,7 @@ initProject <- function(
   overwrite = FALSE,
   keepEsqlabsRStructure = FALSE
 ) {
+  
   checkmate::assertString(analysisSubfolderName, min.chars = 1)
   if (grepl("[/\\\\]", analysisSubfolderName)) {
     stop(
@@ -201,7 +202,7 @@ initProject <- function(
   )
   didRunEsqlabsInitialization <- FALSE
 
-  preInitSnapshot <- .snapshotProjectTree(projectDirectory)
+  preInitSnapshot <- .snapshotProjectTree(configurationDirectory)
   postEsqlabsInitSnapshot <- preInitSnapshot
 
   if (!dir.exists(configurationDirectory)) {
@@ -213,7 +214,7 @@ initProject <- function(
       overwrite = overwrite
     )
     didRunEsqlabsInitialization <- TRUE
-    postEsqlabsInitSnapshot <- .snapshotProjectTree(projectDirectory)
+    postEsqlabsInitSnapshot <- .snapshotProjectTree(configurationDirectory)
   }
 
   upgradeToReportingFramework(
@@ -227,7 +228,7 @@ initProject <- function(
   .runPostInitializationCleanup(
     keepEsqlabsRStructure = keepEsqlabsRStructure,
     didRunEsqlabsInitialization = didRunEsqlabsInitialization,
-    projectDirectory = projectDirectory,
+    snapshotRootDirectory = configurationDirectory,
     configurationDirectory = configurationDirectory,
     preInitSnapshot = preInitSnapshot,
     postEsqlabsInitSnapshot = postEsqlabsInitSnapshot
@@ -382,7 +383,7 @@ createProjectConfiguration <- function(
 #' @param keepEsqlabsRStructure Logical flag from `initProject()`.
 #' @param didRunEsqlabsInitialization Logical flag indicating whether
 #'   `esqlabsR::initProject()` was executed.
-#' @param projectDirectory Absolute path to project root.
+#' @param snapshotRootDirectory Absolute path to the snapshot root.
 #' @param configurationDirectory Absolute configuration directory.
 #' @param preInitSnapshot Tree snapshot before esqlabsR initialization.
 #' @param postEsqlabsInitSnapshot Tree snapshot immediately after esqlabsR initialization.
@@ -392,7 +393,7 @@ createProjectConfiguration <- function(
 .runPostInitializationCleanup <- function(
   keepEsqlabsRStructure,
   didRunEsqlabsInitialization,
-  projectDirectory,
+  snapshotRootDirectory,
   configurationDirectory,
   preInitSnapshot,
   postEsqlabsInitSnapshot
@@ -402,7 +403,7 @@ createProjectConfiguration <- function(
   }
 
   .cleanupEsqlabsInitArtifacts(
-    projectDirectory = projectDirectory,
+    snapshotRootDirectory = snapshotRootDirectory,
     configurationDirectory = configurationDirectory,
     preInitSnapshot = preInitSnapshot,
     postEsqlabsInitSnapshot = postEsqlabsInitSnapshot
@@ -635,17 +636,23 @@ createProjectConfiguration <- function(
 }
 
 #' Resolve required relative paths for cleanup skip logic
-#' @param projectDirectory Absolute path to project root.
+#' @param snapshotRootDirectory Absolute path to snapshot root.
 #' @param configurationDirectory Absolute configuration directory.
 #' @return Character vector of required relative paths.
 #' @keywords internal
 #' @noRd
 .requiredRelativePathsForCleanup <- function(
-  projectDirectory,
+  snapshotRootDirectory,
   configurationDirectory
 ) {
-  requiredPaths <- .rfRequiredPaths(projectDirectory, configurationDirectory)
-  requiredRelativePaths <- fs::path_rel(requiredPaths, start = projectDirectory)
+  requiredPaths <- .rfRequiredPaths(
+    projectDirectory = snapshotRootDirectory,
+    configurationDirectory = configurationDirectory
+  )
+  requiredRelativePaths <- fs::path_rel(
+    requiredPaths,
+    start = snapshotRootDirectory
+  )
   requiredRelativePaths <- unique(requiredRelativePaths[
     !is.na(requiredRelativePaths) & requiredRelativePaths != "."
   ])
@@ -656,8 +663,8 @@ createProjectConfiguration <- function(
 #' @param entry Relative path under project root.
 #' @param currentByPath Split current snapshot by relative path.
 #' @param postByPath Split post-init snapshot by relative path.
-#' @param projectDirectory Absolute path to project root.
-#' @param projectDirectoryNormalized Normalized project directory path.
+#' @param snapshotRootDirectory Absolute path to snapshot root.
+#' @param snapshotRootDirectoryNormalized Normalized snapshot root path.
 #' @return List with `currentEntry`, `postEntry`, and `absPath`, or `NULL`.
 #' @keywords internal
 #' @noRd
@@ -665,8 +672,8 @@ createProjectConfiguration <- function(
   entry,
   currentByPath,
   postByPath,
-  projectDirectory,
-  projectDirectoryNormalized
+  snapshotRootDirectory,
+  snapshotRootDirectoryNormalized
 ) {
   currentEntry <- currentByPath[[entry]]
   postEntry <- postByPath[[entry]]
@@ -674,9 +681,9 @@ createProjectConfiguration <- function(
     return(NULL)
   }
 
-  absPath <- fs::path_abs(entry, start = projectDirectory)
+  absPath <- fs::path_abs(entry, start = snapshotRootDirectory)
   absPathNormalized <- normalizePath(absPath, winslash = "/", mustWork = FALSE)
-  if (!startsWith(absPathNormalized, projectDirectoryNormalized)) {
+  if (!startsWith(absPathNormalized, snapshotRootDirectoryNormalized)) {
     return(NULL)
   }
 
@@ -718,7 +725,7 @@ createProjectConfiguration <- function(
 }
 
 #' Remove unneeded esqlabsR initialization artifacts after RF upgrade
-#' @param projectDirectory Absolute path to project root.
+#' @param snapshotRootDirectory Absolute path to snapshot root.
 #' @param configurationDirectory Absolute configuration directory.
 #' @param preInitSnapshot Tree snapshot before esqlabsR initialization.
 #' @param postEsqlabsInitSnapshot Tree snapshot immediately after esqlabsR initialization.
@@ -726,18 +733,18 @@ createProjectConfiguration <- function(
 #' @keywords internal
 #' @noRd
 .cleanupEsqlabsInitArtifacts <- function(
-  projectDirectory,
+  snapshotRootDirectory,
   configurationDirectory,
   preInitSnapshot,
   postEsqlabsInitSnapshot
 ) {
-  projectDirectory <- fs::path_abs(projectDirectory)
-  projectDirectoryNormalized <- normalizePath(
-    projectDirectory,
+  snapshotRootDirectory <- fs::path_abs(snapshotRootDirectory)
+  snapshotRootDirectoryNormalized <- normalizePath(
+    snapshotRootDirectory,
     winslash = "/",
     mustWork = FALSE
   )
-  currentSnapshot <- .snapshotProjectTree(projectDirectory)
+  currentSnapshot <- .snapshotProjectTree(snapshotRootDirectory)
   if (nrow(currentSnapshot) == 0 || nrow(postEsqlabsInitSnapshot) == 0) {
     return(invisible(NULL))
   }
@@ -751,7 +758,7 @@ createProjectConfiguration <- function(
   }
 
   requiredRelativePaths <- .requiredRelativePathsForCleanup(
-    projectDirectory,
+    snapshotRootDirectory,
     configurationDirectory
   )
   removableEntries <- setdiff(createdByEsqlabs, requiredRelativePaths)
@@ -770,8 +777,8 @@ createProjectConfiguration <- function(
       entry = entry,
       currentByPath = currentByPath,
       postByPath = postByPath,
-      projectDirectory = projectDirectory,
-      projectDirectoryNormalized = projectDirectoryNormalized
+      snapshotRootDirectory = snapshotRootDirectory,
+      snapshotRootDirectoryNormalized = snapshotRootDirectoryNormalized
     )
     if (is.null(entryState)) {
       next
