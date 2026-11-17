@@ -1,14 +1,14 @@
 # internal helpers --------------------------------------------------------
 
 #' Convert a single xlsx sheet to the list structure used in JSON snapshots
-#' @param filePath Path to the xlsx workbook.
+#' @param wb Workbook object or path to the xlsx workbook.
 #' @param sheetName Sheet name to read.
 #' @return Named list with `column_names` and `rows`.
 #' @keywords internal
 #' @noRd
-.rfExcelSheetToListStructure <- function(filePath, sheetName) {
+.rfExcelSheetToListStructure <- function(wb, sheetName) {
   df <- xlsxReadData(
-    wb = filePath,
+    wb = wb,
     sheetName = sheetName,
     convertHeaders = FALSE,
     emptyAsNA = FALSE
@@ -31,10 +31,11 @@
 #' @keywords internal
 #' @noRd
 .rfExcelFileToListStructure <- function(filePath) {
-  sheets <- readxl::excel_sheets(filePath)
+  wb <- openxlsx::loadWorkbook(filePath)
+  sheets <- wb$sheet_names
   sheets <- setdiff(sheets, "_Validity")
   return(stats::setNames(
-    lapply(sheets, function(s) .rfExcelSheetToListStructure(filePath, s)),
+    lapply(sheets, function(s) .rfExcelSheetToListStructure(wb, s)),
     sheets
   ))
 }
@@ -192,29 +193,36 @@
 #' @param configData Snapshot list being assembled.
 #' @param row One row from `projectConfigurationAddons`.
 #' @param configurationsFolder Base folder used to resolve relative add-on paths.
-#' @return Updated snapshot list.
+#' @param workbookCache Named list cache for parsed workbook structures.
+#' @return Named list with updated `configData` and `workbookCache`.
 #' @keywords internal
 #' @noRd
 .rfAddReferencedAddonWorkbook <- function(
   configData,
   row,
-  configurationsFolder
+  configurationsFolder,
+  workbookCache
 ) {
   prop <- row[["Property"]]
   val <- row[["Value"]]
   if (
     is.null(val) || is.na(val) || !grepl("\\.xlsx$", val, ignore.case = TRUE)
   ) {
-    return(configData)
+    return(list(configData = configData, workbookCache = workbookCache))
   }
 
   absPath <- fs::path_abs(val, start = configurationsFolder)
   if (!file.exists(absPath)) {
-    return(configData)
+    return(list(configData = configData, workbookCache = workbookCache))
   }
 
-  configData[[prop]] <- .rfExcelFileToListStructure(absPath)
-  return(configData)
+  cacheKey <- normalizePath(absPath, winslash = "/", mustWork = FALSE)
+  if (is.null(workbookCache[[cacheKey]])) {
+    workbookCache[[cacheKey]] <- .rfExcelFileToListStructure(absPath)
+  }
+
+  configData[[prop]] <- workbookCache[[cacheKey]]
+  return(list(configData = configData, workbookCache = workbookCache))
 }
 
 #' Add referenced add-on workbooks to snapshot data
@@ -226,12 +234,17 @@
 #'   `.rfAddReferencedAddonWorkbook()` to keep this wrapper linear.
 #' @noRd
 .rfAddReferencedAddonWorkbooks <- function(configData, configurationsFolder) {
+  workbookCache <- list()
+
   for (row in configData$projectConfigurationAddons$rows) {
-    configData <- .rfAddReferencedAddonWorkbook(
+    addOnWorkbookState <- .rfAddReferencedAddonWorkbook(
       configData = configData,
       row = row,
-      configurationsFolder = configurationsFolder
+      configurationsFolder = configurationsFolder,
+      workbookCache = workbookCache
     )
+    configData <- addOnWorkbookState$configData
+    workbookCache <- addOnWorkbookState$workbookCache
   }
 
   return(configData)

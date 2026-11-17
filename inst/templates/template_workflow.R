@@ -50,7 +50,8 @@ initProject(
   configurationDirectory = configurationDirectory,
   analysisSubfolderName = analysisSubfolderName,
   overwrite = TRUE,
-  keepEsqlabsRStructure = FALSE
+  keepEsqlabsRStructure = FALSE,
+  createSnapshot = FALSE
 )
 
 # Configuration in Git -------------------------------------------------------

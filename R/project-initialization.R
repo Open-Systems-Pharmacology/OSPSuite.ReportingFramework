@@ -163,6 +163,9 @@ upgradeToReportingFramework <- function(
 #'   workbook layout when calling `upgradeToReportingFramework()`. Defaults to
 #'   `FALSE` so a freshly initialized project uses the ReportingFramework
 #'   default structure.
+#' @param createSnapshot If `TRUE` (default), create an initial
+#'   `ProjectConfiguration.json` snapshot after initialization. Set to `FALSE`
+#'   to skip snapshot generation for faster setup.
 #'
 #' @return Invisible NULL.
 #' @export
@@ -176,9 +179,11 @@ initProject <- function(
     package = "ospsuite.reportingframework"
   ),
   overwrite = FALSE,
-  keepEsqlabsRStructure = FALSE
+  keepEsqlabsRStructure = FALSE,
+  createSnapshot = TRUE
 ) {
   checkmate::assertString(analysisSubfolderName, min.chars = 1)
+  checkmate::assertFlag(createSnapshot)
   if (grepl("[/\\\\]", analysisSubfolderName)) {
     stop(
       "analysisSubfolderName must not contain path separators.",
@@ -233,12 +238,14 @@ initProject <- function(
     postEsqlabsInitSnapshot = postEsqlabsInitSnapshot
   )
 
-  # Create initial JSON snapshot of the project configuration
   pc <- createProjectConfiguration(
     path = file.path(configurationDirectory, "ProjectConfiguration.xlsx"),
     ignoreVersionCheck = FALSE
   )
-  snapshotProjectConfigurationRF(projectConfig = pc)
+  if (createSnapshot) {
+    # Create initial JSON snapshot of the project configuration
+    snapshotProjectConfigurationRF(projectConfig = pc)
+  }
 
   .ensureConfigurationGitignore(c(
     configurationDirectory,
