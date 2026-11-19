@@ -16,11 +16,11 @@ A `data.table` with data group IDs.
 This function loads the properties for data groups from the specified workbook.
 }
 \seealso{
-Other get identifier: 
-\code{\link{getModelParameterDefinitions}()},
-\code{\link{getOutputPathIds}()},
-\code{\link{getScenarioDefinitions}()},
-\code{\link{getTimeRangeTags}()},
-\code{\link{loadConfigTableEnvironment}()}
+Other get identifier:
+\code{\link[=getModelParameterDefinitions]{getModelParameterDefinitions()}},
+\code{\link[=getOutputPathIds]{getOutputPathIds()}},
+\code{\link[=getScenarioDefinitions]{getScenarioDefinitions()}},
+\code{\link[=getTimeRangeTags]{getTimeRangeTags()}},
+\code{\link[=loadConfigTableEnvironment]{loadConfigTableEnvironment()}}
 }
 \concept{get identifier}

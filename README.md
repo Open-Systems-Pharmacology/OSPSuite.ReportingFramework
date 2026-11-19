@@ -30,13 +30,7 @@ This is the beta release of the  `{ospsuite.reportingframework}`. We welcome you
 
 ## Installation
 
-# OSPSuite.ReportingFramework
-
-Framework to create R workflows which configures simulations, runs them plots results and creates a report
-
-## Installation
-
-The `{ospsuite.reportingframework}` package is compatible with version 2.10 and higher of R. Please follow the installation instructions below:
+The package `DESCRIPTION` currently declares `R (>= 2.10)`. Please follow the installation instructions below:
 
 ### From GitHub <img src=https://avatars.githubusercontent.com/github width=15px></img>
 
@@ -111,6 +105,56 @@ install.packages("rstudioapi")
 install.packages("cowplot")
 ```
 
+## AI-assisted workflow support
+
+The package includes helper functions to support users working with AI assistants.
+
+### Generate AI-ready prompts
+
+```r
+# Create project configuration first
+projectConfiguration <- createProjectConfiguration(
+  path = file.path("ProjectConfiguration.xlsx")
+)
+
+# Generic workflow prompt
+prompt <- createAIWorkflowPrompt(
+  projectConfiguration = projectConfiguration,
+  task = "create-workflow"
+)
+
+# Task-specific prompt presets
+promptImport <- createAIPromptFromTask(
+  projectConfiguration = projectConfiguration,
+  task = "import-data"
+)
+```
+
+Supported task presets in `createAIPromptFromTask()`:
+
+- `"create-workflow"`
+- `"import-data"`
+- `"build-plots"`
+- `"debug-run"`
+
+### Export compact context for AI tools
+
+```r
+exportWorkflowContext(
+  projectConfiguration = projectConfiguration,
+  file = "workflow-context.json"
+)
+```
+
+### Validate configuration before running AI-generated code
+
+```r
+validation <- validateWorkflowForAI(projectConfiguration)
+validation$ok
+validation$errors
+validation$warnings
+```
+
 ## MS-Word reports
 
 It is possible to convert markdown reports to MS-Word (`.docx` format) from the `{ospsuite.reportingframework}` package.
@@ -138,6 +182,8 @@ Before getting started please read the [contribution
 guidelines](https://github.com/Open-Systems-Pharmacology/Suite/blob/master/CONTRIBUTING.md).
 If you are contributing code, please be familiar with the [coding
 standards](https://github.com/Open-Systems-Pharmacology/Suite/blob/master/CODING_STANDARDS_R.md).
+
+Integration tests for this package are maintained separately at [ReportingFramework-Test-Reports](https://github.com/Open-Systems-Pharmacology/ReportingFramework-Test-Reports).
 
 ## License
 

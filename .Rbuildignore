@@ -17,3 +17,5 @@
 ^\.lintr
 ^codecov\.yml$
 ^pkgdown$
+^\.vscode$
+^inst/.*/\.~lock\..*#$

@@ -21,7 +21,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::lintr, local::.
+          extra-packages: any::lintr, any::cyclocomp, local::.
           needs: lint
 
       - name: Lint
@@ -29,5 +29,4 @@ jobs:
           lintr::lint_package()
         shell: Rscript {0}
         env:
-          LINTR_ERROR_ON_LINT: false
-          
+          LINTR_ERROR_ON_LINT: true

@@ -1,70 +1,97 @@
-# Purpose: Tutorial workflow
+# Tutorial workflow for ospsuite.reportingframework.
 #
+# Typical location:
+# <RootDirectory>/Scripts/<analysisSubfolderName>
+#
+# Quick documentation entry points:
+# - Workflow vignette: vignette("Workflow", package = "ospsuite.reportingframework")
+# - Plot/report vignette: vignette("Plot_and_Report_Generation", package = "ospsuite.reportingframework")
+# - Data import vignette: vignette("Data_import_by_dictionary", package = "ospsuite.reportingframework")
+# - Population vignette: vignette("Population", package = "ospsuite.reportingframework")
 
-# Typically This file is saved in <Rootdirectory>\Scripts\ReportingFramework
-
-# set working directory to  workflow file location, (only if working interactively)
-if (interactive() && rstudioapi::isAvailable()) {
-  # Get the active document path in RStudio
-  activeDocPath <- rstudioapi::getActiveDocumentContext()$path
-  setwd(dirname(activeDocPath))
-}
-
-
-# Initialization
-# load libraries and source project specific code
+# Initialization -------------------------------------------------------------
+# Load package and set plotting/report defaults.
 library(ospsuite.reportingframework)
 
-# set graphic
-# (see vignette(package = 'ospsuite.plots',topic = 'ospsuite_plots'))
-ospsuite.plots::setDefaults()
-theme_update(legend.position = 'top')
+# Set graphic defaults
+ggplot2::theme_set(ospsuite.plots::theme_osp())
 options(knitr.kable.NA = '')
 
-# Set this to TRUE if you want to execute the workflow as a final valid run.
-# It then won't set watermarks to figures and does not skip failing plot generations
-# (see vignette OSPSuite_ReportingFramework)
-setWorkflowOptions(isValidRun = FALSE)
-
-# Setup project structure
-# creates project directory
-# (see help initProject and https://esqlabs.github.io/esqlabsR/articles/esqlabsR.html)
-# if you go with the default structure
-# this workflow file should be saved in Scripts/ReportingFramework,
-initProject()
-
-# get paths of all relevant project files
-projectConfiguration <-
-  ospsuite.reportingframework::createProjectConfiguration(
-    path =  file.path("ProjectConfiguration.xlsx"))
-
-initLogfunction(projectConfiguration)
-
-
-# 1) Read observedData -------------------------------------------------------
-# (see vignette(package = 'ospsuite.reportingframework',topic = 'Data_import_by_dictionary'))
-
-# read data as data.table
-dataObserved <- readObservedDataByDictionary(projectConfiguration = projectConfiguration)
-
-# add aggregated  groups of data
-dataObserved <- rbind(dataObserved,
-                      aggregateObservedDataGroups(
-                        dataObserved = dataObserved,
-                        groups = c("1234_iv","1234_po")
-                      ),
-                      fill = TRUE
+runPlotTheme <- ggplot2::theme(
+  legend.position = "top",
+  legend.title = ggplot2::element_blank()
 )
-# for the manually added groups the configuration sheet in Plot.xlsx has to be updated
+
+# Run mode: see ?setWorkflowOptions.
+# If isValidRun is NULL (default), QCpassed environment variable is used.
+setWorkflowOptions()
+
+# Setup project structure ----------------------------------------------------
+# In interactive RStudio sessions, set wd to this file's folder.
+if (
+  interactive() &&
+    requireNamespace("rstudioapi", quietly = TRUE) &&
+    rstudioapi::isAvailable()
+) {
+  activeDocPath <- rstudioapi::getActiveDocumentContext()$path
+  if (nzchar(activeDocPath)) {
+    setwd(dirname(activeDocPath))
+  }
+}
+
+# Initialize project structure and configuration snapshot.
+analysisSubfolderName <- basename(getwd())
+projectDirectory <- file.path("..", "..")
+configurationDirectory <- "."
+if (!identical(basename(dirname(getwd())), "Scripts")) {
+  warning(
+    "The workflow should run from Scripts/<analysisSubfolderName>. ",
+    "Current directory is: ",
+    getwd()
+  )
+}
+initProject(
+  projectDirectory = projectDirectory,
+  configurationDirectory = configurationDirectory,
+  analysisSubfolderName = analysisSubfolderName,
+  overwrite = TRUE,
+  keepEsqlabsRStructure = FALSE
+)
+
+# Load project configuration from ProjectConfiguration.xlsx.
+projectConfiguration <- ospsuite.reportingframework::createProjectConfiguration(
+  path = file.path("ProjectConfiguration.xlsx")
+)
+
+# Initialize logging
+setLogPath(
+  logFolder = file.path(projectConfiguration$outputFolder, "logs"),
+  logFileName = "workflow.log"
+)
+
+# 1) Read observed data ------------------------------------------------------
+# Docs: vignette("Data_import_by_dictionary", package = "ospsuite.reportingframework")
+dataObserved <- readObservedDataByDictionary(
+  projectConfiguration = projectConfiguration
+)
+
+# Add aggregated groups and register them in Reports.xlsx.
+dataObserved <- rbind(
+  dataObserved,
+  aggregateObservedDataGroups(
+    dataObserved = dataObserved,
+    groups = c("1234_iv", "1234_po")
+  ),
+  fill = TRUE
+)
 updateDataGroupId(projectConfiguration, dataObserved)
 
-# 2) Export populations -------------------------------------------------------
-# (see vignette Simulation_setup)
-
+# 2) Export populations ------------------------------------------------------
+# Docs: vignette("Population", package = "ospsuite.reportingframework")
 exportVirtualTwinPopulations(
   projectConfiguration = projectConfiguration,
   populationNames = NULL,
-  modelFile = "po 3 mg (solution).pkml",
+  modelFile = "po_3_mg_solution.pkml",
   overwrite = FALSE
 )
 
@@ -74,14 +101,12 @@ exportRandomPopulations(
   overwrite = FALSE
 )
 
-
-# 3) Simulations ------------------------------------------------------
-# (see  vignette Simulation_setup)
-scenarioList <-
-  createScenarios.wrapped(
-    projectConfiguration = projectConfiguration,
-    scenarioNames = NULL
-  )
+# 3) Simulations -------------------------------------------------------------
+# Docs: vignette("Tutorial_Timeprofiles", package = "ospsuite.reportingframework")
+scenarioList <- createScenariosWrapped(
+  projectConfiguration = projectConfiguration,
+  scenarioNames = NULL
+)
 
 scenarioResults <- runAndSaveScenarios(
   projectConfiguration = projectConfiguration,
@@ -91,40 +116,35 @@ scenarioResults <- runAndSaveScenarios(
   )
 )
 
-# 5) Create Output Plots -----------------------------------------------------
-# (see vignette OSPSuite_ReportingFramework.Rmd  section  Plot Functionality)
-
-addDefaultConfigForTimeProfilePlots(
-  projectConfiguration = projectConfiguration,
-  sheetName = "TimeProfiles",
-  overwrite = FALSE
-)
-
-
+# 4) Create output plots -----------------------------------------------------
+# Docs: vignette("Tutorial_Timeprofiles", package = "ospsuite.reportingframework")
 runPlot(
   nameOfplotFunction = "plotTimeProfiles",
   projectConfiguration = projectConfiguration,
   configTableSheet = "TimeProfiles",
+  theme = runPlotTheme,
   inputs = list(
     dataObserved = dataObserved,
     scenarioResults = scenarioResults,
-    referenceScaleVector = list('1mg iv simulation' = 'grey'),
-    xScaleArgs = list(limits = c(NA,NA))
+    referenceScaleVector = list("1mg iv simulation" = "grey"),
+    xScaleArgs = list(limits = c(NA, NA))
   )
 )
 
-# 6) Create Report document --------------------------------------------------
-mergeRmds(
+# 5) Create report document --------------------------------------------------
+mergeQmds(
   projectConfiguration = projectConfiguration,
   newName = "TutorialPlots",
   title = "Plots generated by tutorial",
   sourceRmds = c("TimeProfiles")
 )
 
-renderWord(fileName = file.path(projectConfiguration$outputFolder, "TutorialPlots.Rmd"))
+renderWord(
+  fileName = file.path(projectConfiguration$outputFolder, "TutorialPlots.Rmd")
+)
 
-# finalize workflow---------------------
-addMessageToLog("finalize workflow")
+# Finalize workflow ----------------------------------------------------------
+addMessageToLog("Finalizing workflow")
 
-# save Session Infos including the loaded packages and R version, into a log file
+# Save session info (package versions, R version) to log.
 saveSessionInfo()

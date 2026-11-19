@@ -24,25 +24,25 @@ NULL (invisible).
 Validates the configuration for PK forest plots with absolute values and confidence intervals.
 }
 \seealso{
-Other plot configuration validation function: 
-\code{\link{validateDistributionVsDemographicsConfig}()},
-\code{\link{validateHistogramsConfig}()},
-\code{\link{validatePKBoxwhiskerConfig}()},
-\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
-\code{\link{validatePKForestAggregatedRatiosConfig}()},
-\code{\link{validatePKForestPointEstimateOfRatiosConfig}()},
-\code{\link{validateSensitivityConfig}()},
-\code{\link{validateTimeProfilesConfig}()}
+Other plot configuration validation function:
+\code{\link[=validateDistributionVsDemographicsConfig]{validateDistributionVsDemographicsConfig()}},
+\code{\link[=validateHistogramsConfig]{validateHistogramsConfig()}},
+\code{\link[=validatePKBoxwhiskerConfig]{validatePKBoxwhiskerConfig()}},
+\code{\link[=validatePKForestAggregatedAbsoluteValuesConfig]{validatePKForestAggregatedAbsoluteValuesConfig()}},
+\code{\link[=validatePKForestAggregatedRatiosConfig]{validatePKForestAggregatedRatiosConfig()}},
+\code{\link[=validatePKForestPointEstimateOfRatiosConfig]{validatePKForestPointEstimateOfRatiosConfig()}},
+\code{\link[=validateSensitivityConfig]{validateSensitivityConfig()}},
+\code{\link[=validateTimeProfilesConfig]{validateTimeProfilesConfig()}}
 
-Other functions to generate forest plots: 
-\code{\link{addDefaultConfigForPKForestPlots}()},
-\code{\link{plotPKForestAggregatedAbsoluteValues}()},
-\code{\link{plotPKForestAggregatedRatios}()},
-\code{\link{plotPKForestPointEstimateOfAbsoluteValues}()},
-\code{\link{plotPKForestPointEstimateOfRatios}()},
-\code{\link{validatePKForestAggregatedAbsoluteValuesConfig}()},
-\code{\link{validatePKForestAggregatedRatiosConfig}()},
-\code{\link{validatePKForestPointEstimateOfRatiosConfig}()}
+Other functions to generate forest plots:
+\code{\link[=addDefaultConfigForPKForestPlots]{addDefaultConfigForPKForestPlots()}},
+\code{\link[=plotPKForestAggregatedAbsoluteValues]{plotPKForestAggregatedAbsoluteValues()}},
+\code{\link[=plotPKForestAggregatedRatios]{plotPKForestAggregatedRatios()}},
+\code{\link[=plotPKForestPointEstimateOfAbsoluteValues]{plotPKForestPointEstimateOfAbsoluteValues()}},
+\code{\link[=plotPKForestPointEstimateOfRatios]{plotPKForestPointEstimateOfRatios()}},
+\code{\link[=validatePKForestAggregatedAbsoluteValuesConfig]{validatePKForestAggregatedAbsoluteValuesConfig()}},
+\code{\link[=validatePKForestAggregatedRatiosConfig]{validatePKForestAggregatedRatiosConfig()}},
+\code{\link[=validatePKForestPointEstimateOfRatiosConfig]{validatePKForestPointEstimateOfRatiosConfig()}}
 }
 \concept{functions to generate forest plots}
 \concept{plot configuration validation function}

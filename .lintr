@@ -1,20 +1,44 @@
-linters: linters = linters_with_defaults(
-    object_name_linter = NULL,
-    line_length_linter = NULL,
-    object_length_linter = NULL,
-    brace_linter = NULL,
-    paren_body_linter = NULL,
-    trailing_whitespace_linter = NULL,
-    trailing_blank_lines_linter = NULL,
-    spaces_left_parentheses_linter = NULL,
-    infix_spaces_linter = NULL,
-    vector_logic_linter = NULL,
-    indentation_linter = NULL,
-    return_linter = NULL,
-    object_name_linter(styles = c("camelCase", "symbols")))
+linters: local({
+  source("tools/custom-linters.R")
+  defaultLinters <- names(get("default_linters", asNamespace("lintr")))
+  returnLinterOverride <- if ("return_linter" %in% defaultLinters) {
+    list(return_linter = NULL)
+  } else {
+    list()
+  }
+  do.call(
+    linters_with_defaults,
+    c(
+      list(
+        object_usage_linter = NULL,
+        line_length_linter = NULL,
+        object_length_linter = NULL,
+        brace_linter = NULL,
+        paren_body_linter = NULL,
+        trailing_whitespace_linter = NULL,
+        trailing_blank_lines_linter = NULL,
+        spaces_left_parentheses_linter = NULL,
+        infix_spaces_linter = NULL,
+        vector_logic_linter = NULL,
+        indentation_linter = NULL,
+        object_name_linter = object_name_linter(styles = c("camelCase", "symbols")),
+        undesirable_function_linter = undesirable_function_linter(c(
+          "round" = "Use janitor::round_half_up() instead of round().",
+          "signif" = "Use janitor::signif_half_up() instead of signif()."
+        )),
+        cyclocomp_linter = cyclocomp_linter(complexity_limit = 15),
+        roxygenRequiredLinter = roxygenRequiredLinter(),
+        internalFunctionRulesLinter = internalFunctionRulesLinter(),
+        functionReturnLinter = functionReturnLinter()
+      ),
+      returnLinterOverride
+    )
+  )
+ })
 exclusions: list(
   "inst/templates",
   "inst/doc",
-  "inst/extdata/Tutorial"
-  )
+  "inst/extdata/Tutorial",
+  "data-raw"
+ )
 encoding: "UTF-8"

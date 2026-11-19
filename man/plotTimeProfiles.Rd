@@ -12,7 +12,7 @@ plotTimeProfiles(
   nMaxFacetRows = 4,
   facetAspectRatio = 0.5,
   aggregationFlag = c("GeometricStdDev", "ArithmeticStdDev", "Percentiles", "Custom"),
-  percentiles = getOspsuite.plots.option(optionKey = OptionKeys$Percentiles)[c(1, 3, 5)],
+  percentiles = getOspsuite.plots.option(optionKey = OptionKeys$defaultPercentiles),
   customFunction = NULL,
   checkForUnusedData = FALSE,
   referenceScaleVector = list(),
@@ -155,16 +155,16 @@ plotList <- runPlot(
 
 }
 \seealso{
-Other plot functions: 
-\code{\link{addDefaultConfigForPKForestPlots}()},
-\code{\link{addDefaultConfigForTimeProfilePlots}()},
-\code{\link{plotDistributionVsDemographics}()},
-\code{\link{plotHistograms}()},
-\code{\link{plotPKBoxwhisker}()},
-\code{\link{plotPKForestAggregatedAbsoluteValues}()},
-\code{\link{plotPKForestAggregatedRatios}()},
-\code{\link{plotPKForestPointEstimateOfAbsoluteValues}()},
-\code{\link{plotPKForestPointEstimateOfRatios}()},
-\code{\link{plotSensitivity}()}
+Other plot functions:
+\code{\link[=addDefaultConfigForPKForestPlots]{addDefaultConfigForPKForestPlots()}},
+\code{\link[=addDefaultConfigForTimeProfilePlots]{addDefaultConfigForTimeProfilePlots()}},
+\code{\link[=plotDistributionVsDemographics]{plotDistributionVsDemographics()}},
+\code{\link[=plotHistograms]{plotHistograms()}},
+\code{\link[=plotPKBoxwhisker]{plotPKBoxwhisker()}},
+\code{\link[=plotPKForestAggregatedAbsoluteValues]{plotPKForestAggregatedAbsoluteValues()}},
+\code{\link[=plotPKForestAggregatedRatios]{plotPKForestAggregatedRatios()}},
+\code{\link[=plotPKForestPointEstimateOfAbsoluteValues]{plotPKForestPointEstimateOfAbsoluteValues()}},
+\code{\link[=plotPKForestPointEstimateOfRatios]{plotPKForestPointEstimateOfRatios()}},
+\code{\link[=plotSensitivity]{plotSensitivity()}}
 }
 \concept{plot functions}
