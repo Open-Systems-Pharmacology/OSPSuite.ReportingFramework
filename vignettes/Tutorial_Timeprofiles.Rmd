@@ -307,11 +307,11 @@ knitr::kable(tmp[DataClass == DATACLASS$tpIndividual])
 ```
 
 - Match existing columns of the datasets when available.
-- For `individualId` and `group`, concatenate existing columns using the columns `Filter` and `FilterValue`.
+- For `individualId` and `group`, concatenate existing columns by setting `ValueExpr` to the corresponding expression and `ConditionExpr` to `TRUE` (or leave empty).
 - For the 'time profile' columns, use the source columns `Time`, `DV`, `DVUNIT`, and `LLOQ`.
 - For `biometrics` columns, use the source columns `Age`, `WGHT0`, `HGHT0`, and `SEX`.
-- Set `population` to `European_ICRP_2002` by the filter option.
-- Metadata `route` is available; `dose` and `outputPathId` are set via the filter option, each occupying a separate row in the dictionary.
+- Set `population` to `European_ICRP_2002` by using `ConditionExpr` and `ValueExpr` rules.
+- Metadata `route` is available; `dose` and `outputPathId` are set by dedicated `ConditionExpr`/`ValueExpr` rules, each occupying a separate row in the dictionary.
 
 
 ```{r configData-Dictionary, echo=FALSE, eval = TRUE}

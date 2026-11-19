@@ -501,6 +501,101 @@ rebuildPkParameterTemplateDisplayUnitValidations <- function(
   validityRow
 }
 
+getDictionaryTargetRows <- function(workbook, sheetName, targetColumns) {
+  targetColumnIndex <- getHeaderColumn(workbook, sheetName, "TargetColumn")
+  targetData <- openxlsx::readWorkbook(
+    workbook,
+    sheet = sheetName,
+    cols = targetColumnIndex,
+    rows = 2L:excelMaxRow,
+    colNames = FALSE,
+    check.names = FALSE
+  )
+  if (nrow(targetData) == 0L) {
+    return(integer())
+  }
+
+  targetValues <- tolower(trimws(as.character(targetData[[1L]])))
+  targetRows <- which(targetValues %in% tolower(targetColumns)) + 1L
+  targetRows <- targetRows[!is.na(targetRows)]
+  unique(as.integer(targetRows))
+}
+
+applyListValidationToRows <- function(
+  workbook,
+  sheetName,
+  headerName,
+  rowIndexes,
+  rangeName
+) {
+  if (length(rowIndexes) == 0L) {
+    return(invisible(NULL))
+  }
+
+  columnIndex <- getHeaderColumn(workbook, sheetName, headerName)
+  openxlsx::dataValidation(
+    workbook,
+    sheet = sheetName,
+    cols = columnIndex,
+    rows = rowIndexes,
+    type = "list",
+    value = rangeName,
+    allowBlank = TRUE,
+    showInputMsg = TRUE,
+    showErrorMsg = TRUE
+  )
+
+  return(invisible(NULL))
+}
+
+rebuildDataImportMapValueExprValidations <- function(workbook, validityRow) {
+  specs <- list(
+    list(
+      rangeName = makeRangeName("dictionaryErrorTypeValues"),
+      values = dictionaryErrorTypeValues(),
+      targetColumns = c("errorType", "yErrorType")
+    ),
+    list(
+      rangeName = makeRangeName("dictionaryPopulationValues"),
+      values = dictionaryPopulationValues(),
+      targetColumns = c("population")
+    )
+  )
+
+  for (spec in specs) {
+    validityRow <- writeValidityRange(
+      workbook,
+      spec$rangeName,
+      spec$values,
+      validityRow
+    )
+  }
+
+  for (sheetName in c("tpDictionary", "pkDictionary")) {
+    if (!(sheetName %in% openxlsx::sheets(workbook))) {
+      next
+    }
+
+    for (spec in specs) {
+      rowIndexes <- getDictionaryTargetRows(
+        workbook = workbook,
+        sheetName = sheetName,
+        targetColumns = spec$targetColumns
+      )
+
+      applyListValidationToRows(
+        workbook = workbook,
+        sheetName = sheetName,
+        headerName = "ValueExpr",
+        rowIndexes = rowIndexes,
+        rangeName = spec$rangeName
+      )
+    }
+  }
+
+  return(validityRow)
+}
+
 # Apply a list-based validation rule to a column in a worksheet.
 # Stores validation values in a hidden worksheet and creates an Excel named range.
 # @param workbook openxlsx workbook object
@@ -663,6 +758,13 @@ refreshWorkbook <- function(templateFile, rules) {
     )
   }
 
+  if (identical(rules[[1L]]$workbookName, "DataImportMap.xlsx")) {
+    validityRow <- rebuildDataImportMapValueExprValidations(
+      workbook,
+      validityRow
+    )
+  }
+
   openxlsx::setColWidths(
     workbook,
     sheet = validitySheet,
@@ -696,6 +798,14 @@ shapeValues <- function() {
 
 dictionaryTypeValues <- function() {
   c("identifier", "timeprofile", "biometrics", "covariate", "metadata")
+}
+
+dictionaryErrorTypeValues <- function() {
+  unname(unlist(ospsuite::DataErrorType))
+}
+
+dictionaryPopulationValues <- function() {
+  names(ospsuite::HumanPopulation)
 }
 
 pkParameterConcentrationUnitValues <- function() {

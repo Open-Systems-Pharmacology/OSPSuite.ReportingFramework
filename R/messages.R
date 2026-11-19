@@ -675,12 +675,12 @@ messages$errorutilitiesdataDuplicateRowsInIdentifierColumns <- function(
   )
 }
 
-messages$errorutilitiesdataDictionarySourceOrFilterMissing <- function(
+messages$errorutilitiesdataDictionaryValueExprMissing <- function(
   env = parent.frame()
 ) {
   eval(
     quote(paste0(
-      'Either sourceColumn or Filter on sourceColumn has to be filled in dictionary "',
+      'valueExpr must be filled in dictionary "',
       sheet,
       '" for targetColumn(s) "',
       paste(tmp$targetColumn, collapse = '", "'),
@@ -694,6 +694,44 @@ messages$errorutilitiesdataFilterEvaluationFailed <- function(
   env = parent.frame()
 ) {
   eval(quote(conditionMessage(err)), envir = env)
+}
+
+messages$errorutilitiesdataSelectorLengthMismatch <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote(
+      "Selector must be logical scalar or logical vector with one entry per row."
+    ),
+    envir = env
+  )
+}
+
+messages$errorutilitiesdataSelectorNumericNotFinite <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote("Numeric selector must contain finite row indices."),
+    envir = env
+  )
+}
+
+messages$errorutilitiesdataSelectorMustBeInteger <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote("Numeric selector must contain integer row indices."),
+    envir = env
+  )
+}
+
+messages$errorutilitiesdataSelectorInvalidType <- function(
+  env = parent.frame()
+) {
+  eval(
+    quote("Selector expression must evaluate to logical or numeric values."),
+    envir = env
+  )
 }
 
 messages$errorutilitiesdataDebugFileNotFound <- function(
@@ -850,11 +888,11 @@ messages$warningutilitiesdataDictionaryFilterContext <- function(
       "tpDictionary: '",
       dictionaryName,
       "'; targetColumn: '",
-      myFilter$targetColumn,
-      "'; filter: '",
-      myFilter$filter,
-      "'; filterValue: '",
-      myFilter$filterValue,
+      targetColumn,
+      "'; conditionExpr: '",
+      conditionExpr,
+      "'; valueExpr: '",
+      valueExpr,
       "'"
     )),
     envir = env

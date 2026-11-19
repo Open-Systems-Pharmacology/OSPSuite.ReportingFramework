@@ -673,6 +673,7 @@ validateObservedData <- function(dataDT, dataClassType) {
     sheetName = sheet,
     skipDescriptionRow = TRUE
   )
+  dict <- .normalizeDictionaryExpressionsSchema(dict)
 
   if (dataClass == DATACLASS$tpIndividual) {
     checkmate::assertNames(
@@ -732,18 +733,93 @@ validateObservedData <- function(dataDT, dataClassType) {
     )
   }
 
-  tmp <- dict[is.na(sourceColumn) & is.na(dict$filter), ]
+  tmp <- dict[is.na(valueExpr) | !nzchar(trimws(as.character(valueExpr))), ]
   if (nrow(tmp) > 0) {
-    stop(messages$errorutilitiesdataDictionarySourceOrFilterMissing())
+    stop(messages$errorutilitiesdataDictionaryValueExprMissing())
   }
 
+  return(dict)
+}
+
+#' Normalize dictionary schema to expression-based mapping columns
+#' @param dict Data dictionary table read from workbook.
+#' @return Dictionary table containing `conditionExpr` and `valueExpr`.
+#' @keywords internal
+#' @noRd
+.normalizeDictionaryExpressionsSchema <- function(dict) {
   checkmate::assertNames(
-    x = dict[!is.na(sourceColumn)]$sourceColumn,
-    subset.of = names(data),
-    .var.name = paste("Source column of", sheet)
+    names(dict),
+    must.include = c("conditionExpr", "valueExpr")
+  )
+
+  dict$conditionExpr <- vapply(
+    dict$conditionExpr,
+    .normalizeDictionaryExpression,
+    defaultExpression = "TRUE",
+    FUN.VALUE = character(1)
+  )
+  dict$valueExpr <- vapply(
+    dict$valueExpr,
+    .normalizeDictionaryExpression,
+    defaultExpression = "",
+    FUN.VALUE = character(1)
   )
 
   return(dict)
+}
+
+#' Normalize dictionary expression strings
+#' @param expression Expression value from workbook cell.
+#' @param defaultExpression Expression used for missing/empty values.
+#' @return Normalized expression string.
+#' @keywords internal
+#' @noRd
+.normalizeDictionaryExpression <- function(expression, defaultExpression = "") {
+  if (length(expression) == 0 || is.na(expression[[1]])) {
+    return(defaultExpression)
+  }
+
+  normalized <- trimws(as.character(expression[[1]]))
+  if (!nzchar(normalized)) {
+    return(defaultExpression)
+  }
+  if (grepl("^TRUE\\s*\\(\\s*\\)$", normalized, ignore.case = TRUE)) {
+    return("TRUE")
+  }
+  if (grepl("^FALSE\\s*\\(\\s*\\)$", normalized, ignore.case = TRUE)) {
+    return("FALSE")
+  }
+
+  return(normalized)
+}
+
+#' Evaluate a row selector expression against a data table
+#' @param dt Data table used as evaluation context.
+#' @param selectorExpr Character scalar expression.
+#' @return Logical or numeric selector accepted by data.table row indexing.
+#' @keywords internal
+#' @noRd
+.evaluateRowSelector <- function(dt, selectorExpr) {
+  selector <- dt[, eval(parse(text = selectorExpr))]
+  out <- NULL
+  if (is.logical(selector)) {
+    if (!(length(selector) %in% c(1, nrow(dt)))) {
+      stop(messages$errorutilitiesdataSelectorLengthMismatch())
+    }
+    out <- selector
+  } else if (is.numeric(selector)) {
+    if (!all(is.finite(selector))) {
+      stop(messages$errorutilitiesdataSelectorNumericNotFinite())
+    }
+    if (!all(selector == floor(selector))) {
+      stop(messages$errorutilitiesdataSelectorMustBeInteger())
+    }
+    out <- as.integer(selector)
+  } else {
+    stop(messages$errorutilitiesdataSelectorInvalidType())
+  }
+
+  return(out)
 }
 
 #' Convert data by dictionary
@@ -766,21 +842,29 @@ validateObservedData <- function(dataDT, dataClassType) {
   dictionaryName,
   debugMode = FALSE
 ) {
+  dict <- .normalizeDictionaryExpressionsSchema(dict)
+
   # Execute data filter
-  if (!is.na(dataFilter) & dataFilter != "") {
-    data <- data[eval(parse(text = dataFilter))]
+  dataFilter <- .normalizeDictionaryExpression(
+    dataFilter,
+    defaultExpression = "TRUE"
+  )
+  if (nzchar(dataFilter)) {
+    data <- data[.evaluateRowSelector(data, dataFilter)]
   }
 
-  # Execute all filters
-  if (any(!is.na(dict$filter))) {
-    dictFilters <- dict[!is.na(dict$filter)]
-
-    for (myFilter in split(dictFilters, seq_len(nrow(dictFilters)))) {
+  # Execute dictionary mapping expressions
+  if (nrow(dict) > 0) {
+    for (myFilter in split(dict, seq_len(nrow(dict)))) {
       tryCatch(
         {
+          targetColumn <- myFilter$targetColumn
+          conditionExpr <- myFilter$conditionExpr
+          valueExpr <- myFilter$valueExpr
+
           data[
-            eval(parse(text = myFilter$filter)),
-            (myFilter$targetColumn) := eval(parse(text = myFilter$filterValue))
+            .evaluateRowSelector(data, conditionExpr),
+            (targetColumn) := eval(parse(text = valueExpr))
           ]
         },
         error = function(err) {
@@ -792,22 +876,6 @@ validateObservedData <- function(dataDT, dataClassType) {
         }
       )
     }
-  }
-
-  # Rename columns to target columns
-  dictColumns <- dict[!is.na(sourceColumn) & sourceColumn != targetColumn]
-
-  checkmate::assertCharacter(
-    dictColumns$targetColumn,
-    unique = TRUE,
-    .var.name = paste("Target columns with source columns of", dictionaryName)
-  )
-
-  # Create new columns for duplicated old names; do not use setnames as source columns may not be unique
-  for (iRow in seq_len(nrow(dictColumns))) {
-    data[,
-      (dictColumns$targetColumn[iRow]) := data[[dictColumns$sourceColumn[iRow]]]
-    ]
   }
 
   # Reduce to defined columns

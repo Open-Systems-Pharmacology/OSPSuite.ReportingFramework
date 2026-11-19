@@ -301,6 +301,76 @@ test_that("readObservedDataByDictionary blocks debug mode during valid runs", {
   )
 })
 
+test_that("convertDataByDictionary uses empty conditionExpr as TRUE", {
+  dt <- data.table::data.table(
+    sourceValue = c("A", "B", "C")
+  )
+  dict <- data.table::data.table(
+    targetColumn = "copiedValue",
+    type = "identifier",
+    sourceUnit = "",
+    conditionExpr = NA_character_,
+    valueExpr = "sourceValue"
+  )
+
+  converted <- ospsuite.reportingframework:::.convertDataByDictionary(
+    data = dt,
+    dataFilter = NA_character_,
+    dict = dict,
+    dictionaryName = "dict",
+    debugMode = FALSE
+  )
+
+  expect_equal(converted$copiedValue, c("A", "B", "C"))
+})
+
+test_that("convertDataByDictionary normalizes TRUE() conditionExpr", {
+  dt <- data.table::data.table(
+    sourceValue = c(10, 20, 30)
+  )
+  dict <- data.table::data.table(
+    targetColumn = "copiedValue",
+    type = "timeprofile",
+    sourceUnit = "",
+    conditionExpr = "TRUE()",
+    valueExpr = "sourceValue"
+  )
+
+  converted <- ospsuite.reportingframework:::.convertDataByDictionary(
+    data = dt,
+    dataFilter = NA_character_,
+    dict = dict,
+    dictionaryName = "dict",
+    debugMode = FALSE
+  )
+
+  expect_equal(converted$copiedValue, c(10, 20, 30))
+})
+
+test_that("convertDataByDictionary keeps numeric selector for special row-index cases", {
+  dt <- data.table::data.table(
+    sourceValue = c(10, 20, 30)
+  )
+  dict <- data.table::data.table(
+    targetColumn = "copiedValue",
+    type = "timeprofile",
+    sourceUnit = "",
+    conditionExpr = "1",
+    valueExpr = "sourceValue"
+  )
+
+  converted <- ospsuite.reportingframework:::.convertDataByDictionary(
+    data = dt,
+    dataFilter = NA_character_,
+    dict = dict,
+    dictionaryName = "dict",
+    debugMode = FALSE
+  )
+
+  expect_equal(converted$copiedValue[[1]], 10)
+  expect_true(all(is.na(converted$copiedValue[-1])))
+})
+
 test_that("getNumericValue returns one numeric scalar", {
   projectConfigurationNumeric <- .makeNumericValuesProjectConfiguration()
   numericValues <- readObservedDataByDictionary(

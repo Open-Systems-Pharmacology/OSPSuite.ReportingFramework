@@ -218,6 +218,7 @@ workbooks:
         Header: {validity: none}
         PlotName: {validity: none}
         Scenario: {validity: none}
+        ReferenceScenario: {validity: none}
         OutputPathIds: {validity: none}
         SensitivityParameterSheet: {validity: none}
         PKParameters: {validity: none}
@@ -242,20 +243,18 @@ workbooks:
         Type:
           validity: list
           valuesFunction: dictionaryTypeValues
-        SourceColumn: {validity: none}
+        ValueExpr: {validity: mixed}
         SourceUnit: {validity: none}
-        Filter: {validity: none}
-        FilterValue: {validity: mixed}
+        ConditionExpr: {validity: none}
         Description: {validity: none}
       pkDictionary:
         TargetColumn: {validity: none}
         Type:
           validity: list
           valuesFunction: dictionaryTypeValues
-        SourceColumn: {validity: none}
+        ValueExpr: {validity: mixed}
         SourceUnit: {validity: none}
-        Filter: {validity: none}
-        FilterValue: {validity: mixed}
+        ConditionExpr: {validity: none}
         Description: {validity: none}
       NumericValues:
         VariableName: {validity: none}

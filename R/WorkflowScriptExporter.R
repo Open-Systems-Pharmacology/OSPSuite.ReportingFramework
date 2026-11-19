@@ -1315,7 +1315,8 @@ WorkflowScriptExporter <- # nolint: cyclocomp_linter, object_name_linter
         dict <- data.table(
           TargetColumn = names(columnsWithAttributes),
           Type = unname(columnsWithAttributes),
-          SourceColumn = names(columnsWithAttributes),
+          ValueExpr = names(columnsWithAttributes),
+          ConditionExpr = NA_character_,
           SourceUnit = ""
         )
 

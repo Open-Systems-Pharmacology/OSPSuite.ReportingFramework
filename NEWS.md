@@ -25,6 +25,7 @@ Key differences vs 1.0.1:
 	- Added `DATACLASS = numericValues` support for scalar numeric configuration entries.
 	- Extended `readObservedDataByDictionary()` to read numeric values.
 	- Added `getNumericValue()` for typed scalar retrieval with optional unit checks.
+	- Refactored dictionary mapping in `DataImportMap.xlsx` from `sourceColumn`/`filter`/`filterValue` to expression-based `valueExpr`/`conditionExpr`.
 
 - Sensitivity workflows and plot generation were expanded.
 	- Added reference-scenario support in sensitivity workflows.

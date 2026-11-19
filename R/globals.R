@@ -101,6 +101,8 @@ utils::globalVariables(
     "type",
     "unitFactor",
     "value",
+    "conditionExpr",
+    "valueExpr",
     "Value",
     "valueBase",
     "Value.base",

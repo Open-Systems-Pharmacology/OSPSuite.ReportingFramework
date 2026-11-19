@@ -279,10 +279,9 @@ The configuration sheet provides two templates for dictionaries: "tpDictionary" 
   - **covariate**: Columns used for covariate analysis. This is the only column type where the name of the target column can be freely assigned by the user. Covariates are optional rows.
   - **metadata**: Columns used to add information in the `DataGroup` sheet in the plot configuration table. The information is used to generate the data import for PK-Sim.
 
-- **sourceColumn**: Name of the column in the source CSV.  
+- **valueExpr**: R expression that defines the assigned value. For unchanged column mapping, set this to the source column name.  
 - **sourceUnit**: Unit of the column in the source CSV.  
-- **filter**: An R executable expression that filters the source rows. Filters are executed in the order of this table.    
-- **filterValue**: An R executable expression to set a value for the filtered rows.  
+- **conditionExpr**: An R executable row selector expression. If empty, all rows are selected (`TRUE`). Rules are applied in table order.  
 
 **!!! ATTENTION: Do not use single quotes (' ') to capture strings. At the beginning of an Excel cell, single quotes will be ignored. Use double quotes (" ").**
 
@@ -291,20 +290,20 @@ The configuration sheet provides two templates for dictionaries: "tpDictionary" 
 This sheet is used for individual data.   
 
 The `individualId` is constructed as a concatenation of study ID and individual ID. 
-As we want to do this for all rows, the filter is set to `TRUE`, and the R expression that performs the concatenation is placed in the column `filterValue`.
+As we want to do this for all rows, `conditionExpr` is `TRUE`, and the R expression that performs the concatenation is placed in `valueExpr`.
 
-The dictionary contains two rows for the target column `population`. For the first entry, all data rows where the source column `RACENAME` is "White" are set to "European_ICRP_2002", while for the second entry, individuals identified as "Asian" are set to "Asian_Tanaka_1996". 
+The dictionary contains two rows for the target column `population`. For the first entry, all data rows where `RACENAME` is "White" are set to "European_ICRP_2002", while for the second entry, individuals identified as "Asian" are set to "Asian_Tanaka_1996". 
 
-Values defined by filters are set sequentially in the order of the dictionary, so if a data row is selected by different filter conditions, the filter value at the bottom will define the final value.
+Values are set sequentially in the order of the dictionary, so if a data row is selected by multiple conditions, the bottom-most matching rule defines the final value.
 
 The data contains the covariate `country` in the column "COUNTRY". Additionally, the metadata `dose` is available.
 
 ```{r, echo=FALSE}
 tpDictionaryInd <- tpDictionary[!(TargetColumn %in% c("yErrorValues", "yErrorType", "nBelowLLOQ", "numberOfIndividuals", "yMin", "yMax", "route"))]
 
-tpDictionaryInd[TargetColumn == "group"]$FilterValue <- 'paste(STUD, GRPNAME, "individual", sep = "_")'
-tpDictionaryInd[TargetColumn == "dose"]$SourceColumn <- "DOSE"
-tpDictionaryInd[TargetColumn == "dose"]$Filter <- NA
+tpDictionaryInd[TargetColumn == "group"]$ValueExpr <- 'paste(STUD, GRPNAME, "individual", sep = "_")'
+tpDictionaryInd[TargetColumn == "dose"]$ValueExpr <- "DOSE"
+tpDictionaryInd[TargetColumn == "dose"]$ConditionExpr <- NA
 
 knitr::kable(tpDictionaryInd)
 ```
