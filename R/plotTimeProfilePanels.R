@@ -1236,7 +1236,8 @@ validateTimeProfilesConfig <- function(
       ),
       timeUnit = list(
         cols = c("timeUnit"),
-        allowedValues = ospsuite::getUnitsForDimension("Time")
+        allowedValues = ospsuite::getUnitsForDimension("Time"),
+        splitAllowed = FALSE
       ),
       facetScale = list(
         cols = c("facetScale"),

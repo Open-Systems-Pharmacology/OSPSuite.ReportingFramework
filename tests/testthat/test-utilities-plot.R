@@ -174,6 +174,27 @@ test_that("validateConfigTablePlots function test", {
   ))
 })
 
+test_that("validateSubsetList preserves bracketed time units when splitting is disabled", {
+  dtTimeUnit <- data.table(timeUnit = c("day(s)", "week(s)"))
+
+  expect_no_error(.validateSubsetList(
+    subsetList = list(list(
+      cols = c("timeUnit"),
+      allowedValues = c("day(s)", "week(s)"),
+      splitAllowed = FALSE
+    )),
+    data = dtTimeUnit
+  ))
+
+  expect_error(.validateSubsetList(
+    subsetList = list(list(
+      cols = c("timeUnit"),
+      allowedValues = c("day(s)", "week(s)")
+    )),
+    data = dtTimeUnit
+  ))
+})
+
 
 # Create example data for testing
 configTablePlots <- data.table(
