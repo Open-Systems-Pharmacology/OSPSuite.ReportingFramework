@@ -545,6 +545,11 @@ exportRandomPopulations <- function(
     individualCharacteristics <- .createIndividualCharacteristics(biomForInd)
     individual <- ospsuite::createIndividual(individualCharacteristics)
 
+    columnsToDelete <- names(biomForInd)[vapply(biomForInd, anyNA, logical(1))]
+    if (length(columnsToDelete) > 0) {
+      biomForInd[, (columnsToDelete) := NULL]
+    }
+
     results <- .processIndividual(
       individual = individual,
       biomForInd = biomForInd,
