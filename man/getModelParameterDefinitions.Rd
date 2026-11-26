@@ -16,11 +16,11 @@ A `data.table` with model parameter definitions.
 This function loads the model parameter definitions from the specified workbook.
 }
 \seealso{
-Other get identifier: 
-\code{\link{getDataGroups}()},
-\code{\link{getOutputPathIds}()},
-\code{\link{getScenarioDefinitions}()},
-\code{\link{getTimeRangeTags}()},
-\code{\link{loadConfigTableEnvironment}()}
+Other get identifier:
+\code{\link[=getDataGroups]{getDataGroups()}},
+\code{\link[=getOutputPathIds]{getOutputPathIds()}},
+\code{\link[=getScenarioDefinitions]{getScenarioDefinitions()}},
+\code{\link[=getTimeRangeTags]{getTimeRangeTags()}},
+\code{\link[=loadConfigTableEnvironment]{loadConfigTableEnvironment()}}
 }
 \concept{get identifier}

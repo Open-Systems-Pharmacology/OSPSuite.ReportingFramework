@@ -22,11 +22,11 @@ based on project configuration and simulation results. It generates output files
 for each scenario in the designated output folder.
 }
 \seealso{
-Other scenario management: 
-\code{\link{createScenarios.wrapped}()},
-\code{\link{loadPKParameter}()},
-\code{\link{loadScenarioResultsToFramework}()},
-\code{\link{runAndSaveScenarios}()},
-\code{\link{runOrLoadScenarios}()}
+Other scenario management:
+\code{\link[=createScenariosWrapped]{createScenariosWrapped()}},
+\code{\link[=loadPKParameter]{loadPKParameter()}},
+\code{\link[=loadScenarioResultsToFramework]{loadScenarioResultsToFramework()}},
+\code{\link[=runAndSaveScenarios]{runAndSaveScenarios()}},
+\code{\link[=runOrLoadScenarios]{runOrLoadScenarios()}}
 }
 \concept{scenario management}
