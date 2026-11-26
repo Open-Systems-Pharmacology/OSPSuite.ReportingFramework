@@ -3,13 +3,21 @@ wb <- openxlsx::createWorkbook()
 
 # Create a sample sheet and write initial data
 openxlsx::addWorksheet(wb, "ExistingSheet")
-openxlsx::writeData(wb, "ExistingSheet", data.table(Name = c("Alice", "Bob"), Age = c(30, 25)))
+openxlsx::writeData(
+  wb,
+  "ExistingSheet",
+  data.table(Name = c("Alice", "Bob"), Age = c(30, 25))
+)
 openxlsx::addWorksheet(wb, "TestSheet")
-openxlsx::writeData(wb, "TestSheet", data.frame(
-  Name = c("Alice", "Bob", "Charlie", ""),
-  Age = c(30, 25, NA, ""),
-  Comment = c("Good", "Average", "Excellent", "N/A")
-))
+openxlsx::writeData(
+  wb,
+  "TestSheet",
+  data.frame(
+    Name = c("Alice", "Bob", "Charlie", ""),
+    Age = c(30, 25, NA, ""),
+    Comment = c("Good", "Average", "Excellent", "N/A")
+  )
+)
 testxlsx <- file.path(tempdir(), "test_workbook.xlsx")
 openxlsx::saveWorkbook(wb, testxlsx, overwrite = TRUE)
 
@@ -71,6 +79,14 @@ test_that("xlsxReadData works correctly", {
   expected <- data.table(
     name = c("Bob", "Charlie", NA),
     age = c(25, NA, NA)
+  )
+  expect_equal(result, expected)
+
+  # Test case 2b: Reading data and skipping the first two rows
+  result <- xlsxReadData(wb, "TestSheet", skipDescriptionRow = 2)
+  expected <- data.table(
+    name = c("Charlie", NA),
+    age = c(NA_real_, NA_real_)
   )
   expect_equal(result, expected)
 
@@ -151,6 +167,185 @@ test_that("xlsxAddSheet works correctly", {
   expect_error(xlsxAddSheet(wb, "AnotherSheets", NULL))
 })
 
+test_that("xlsxWriteOrAddData updates existing sheets and adds missing sheets", {
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "ExistingSheet")
+  openxlsx::writeData(
+    wb,
+    sheet = "ExistingSheet",
+    x = data.frame(Name = "old", Value = "stale", stringsAsFactors = FALSE)
+  )
+
+  xlsxWriteOrAddData(
+    wb = wb,
+    sheetName = "ExistingSheet",
+    dt = data.frame(Name = "updated", Value = "1", stringsAsFactors = FALSE)
+  )
+  xlsxWriteOrAddData(
+    wb = wb,
+    sheetName = "NewSheet",
+    dt = data.frame(Code = "added", stringsAsFactors = FALSE)
+  )
+
+  expect_equal(
+    xlsxReadData(wb, "ExistingSheet", convertHeaders = FALSE),
+    data.table::data.table(Name = "updated", Value = 1)
+  )
+  expect_equal(
+    xlsxReadData(wb, "NewSheet", convertHeaders = FALSE),
+    data.table::data.table(Code = "added")
+  )
+})
+
+test_that("copyConfigSheet copies data to a new target sheet", {
+  td <- withr::local_tempdir()
+  sourceFile <- file.path(td, "Source.xlsx")
+  targetFile <- file.path(td, "Target.xlsx")
+
+  wbSource <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbSource, "Scenarios")
+  openxlsx::writeData(
+    wbSource,
+    "Scenarios",
+    data.table::data.table(Name = c("A", "B"), Value = c(1, 2))
+  )
+  openxlsx::saveWorkbook(wbSource, sourceFile, overwrite = TRUE)
+
+  wbTarget <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbTarget, "Meta")
+  openxlsx::writeData(wbTarget, "Meta", data.table::data.table(Id = 1))
+  openxlsx::saveWorkbook(wbTarget, targetFile, overwrite = TRUE)
+
+  copyConfigSheet(
+    sourceFile = sourceFile,
+    sourceSheetName = "Scenarios",
+    targetFile = targetFile,
+    targetSheetName = "ScenariosCopy"
+  )
+
+  wbResult <- openxlsx::loadWorkbook(targetFile)
+  expect_true("ScenariosCopy" %in% wbResult$sheet_names)
+  expect_equal(
+    xlsxReadData(
+      wb = wbResult,
+      sheetName = "ScenariosCopy",
+      convertHeaders = FALSE,
+      emptyAsNA = FALSE
+    ),
+    data.table::data.table(Name = c("A", "B"), Value = c(1, 2))
+  )
+})
+
+test_that("copyConfigSheet warns when target exists and overwrite is FALSE", {
+  td <- withr::local_tempdir()
+  sourceFile <- file.path(td, "Source.xlsx")
+  targetFile <- file.path(td, "Target.xlsx")
+
+  wbSource <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbSource, "Scenarios")
+  openxlsx::writeData(
+    wbSource,
+    "Scenarios",
+    data.table::data.table(Value = "new")
+  )
+  openxlsx::saveWorkbook(wbSource, sourceFile, overwrite = TRUE)
+
+  wbTarget <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbTarget, "Scenarios")
+  openxlsx::writeData(
+    wbTarget,
+    "Scenarios",
+    data.table::data.table(Value = "old")
+  )
+  openxlsx::saveWorkbook(wbTarget, targetFile, overwrite = TRUE)
+
+  expect_warning(
+    copyConfigSheet(
+      sourceFile = sourceFile,
+      sourceSheetName = "Scenarios",
+      targetFile = targetFile,
+      targetSheetName = "Scenarios",
+      overwrite = FALSE
+    )
+  )
+
+  wbResult <- openxlsx::loadWorkbook(targetFile)
+  expect_equal(
+    xlsxReadData(
+      wb = wbResult,
+      sheetName = "Scenarios",
+      convertHeaders = FALSE,
+      emptyAsNA = FALSE
+    ),
+    data.table::data.table(Value = "old")
+  )
+})
+
+test_that("copyConfigSheet overwrites target sheet when requested", {
+  td <- withr::local_tempdir()
+  sourceFile <- file.path(td, "Source.xlsx")
+  targetFile <- file.path(td, "Target.xlsx")
+
+  wbSource <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbSource, "Scenarios")
+  openxlsx::writeData(
+    wbSource,
+    "Scenarios",
+    data.table::data.table(Value = "new")
+  )
+  openxlsx::saveWorkbook(wbSource, sourceFile, overwrite = TRUE)
+
+  wbTarget <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbTarget, "Scenarios")
+  openxlsx::writeData(
+    wbTarget,
+    "Scenarios",
+    data.table::data.table(Value = "old")
+  )
+  openxlsx::saveWorkbook(wbTarget, targetFile, overwrite = TRUE)
+
+  copyConfigSheet(
+    sourceFile = sourceFile,
+    sourceSheetName = "Scenarios",
+    targetFile = targetFile,
+    targetSheetName = "Scenarios",
+    overwrite = TRUE
+  )
+
+  wbResult <- openxlsx::loadWorkbook(targetFile)
+  expect_equal(
+    xlsxReadData(
+      wb = wbResult,
+      sheetName = "Scenarios",
+      convertHeaders = FALSE,
+      emptyAsNA = FALSE
+    ),
+    data.table::data.table(Value = "new")
+  )
+})
+
+test_that("copyConfigSheet errors for missing source sheet", {
+  td <- withr::local_tempdir()
+  sourceFile <- file.path(td, "Source.xlsx")
+  targetFile <- file.path(td, "Target.xlsx")
+
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "Available")
+  openxlsx::writeData(wb, "Available", data.table::data.table(Value = 1))
+  openxlsx::saveWorkbook(wb, sourceFile, overwrite = TRUE)
+  openxlsx::saveWorkbook(wb, targetFile, overwrite = TRUE)
+
+  expect_error(
+    copyConfigSheet(
+      sourceFile = sourceFile,
+      sourceSheetName = "Missing",
+      targetFile = targetFile,
+      targetSheetName = "Any"
+    ),
+    "does not exist in source workbook"
+  )
+})
+
 # Unit tests for the xlsxAddDataUsingTemplate function
 test_that("xlsxAddDataUsingTemplate works correctly", {
   # Load the workbook for testing
@@ -167,7 +362,12 @@ test_that("xlsxAddDataUsingTemplate works correctly", {
 
   # Test case 2: Attempting to add data using a non-existent template sheet
   expect_error(
-    xlsxAddDataUsingTemplate(wb, "NonExistentTemplate", "AnotherSheet", newData),
+    xlsxAddDataUsingTemplate(
+      wb,
+      "NonExistentTemplate",
+      "AnotherSheet",
+      newData
+    ),
     'Cannot find sheet named "NonExistentTemplate"'
   )
 
@@ -202,39 +402,278 @@ test_that("Splits vectors is working", {
 test_that("separateAndTrimColumn works correctly", {
   # Test case 1: Basic functionality
   dt <- data.table(ID = 1:3, Comments = c("a, b, c", "d, e", "f"))
-  result <- separateAndTrimColumn(dt, "Comments")
-  expected <- data.table(ID = c(1, 1, 1, 2, 2, 3), Comment = c("a", "b", "c", "d", "e", "f"))
+  result <- .separateAndTrimColumn(dt, "Comments")
+  expected <- data.table(
+    ID = c(1, 1, 1, 2, 2, 3),
+    Comment = c("a", "b", "c", "d", "e", "f")
+  )
   expect_equal(result, expected)
 
   # Test case 2: Handling whitespace
   dt <- data.table(ID = 1, Comments = c(" a , b , c "))
-  result <- separateAndTrimColumn(dt, "Comments")
+  result <- .separateAndTrimColumn(dt, "Comments")
   expected <- data.table(ID = 1, Comment = c("a", "b", "c"))
   expect_equal(result, expected)
 
   # Test case 3: Single value without separator
   dt <- data.table(ID = 1, Comments = c("single_value"))
-  result <- separateAndTrimColumn(dt, "Comments")
+  result <- .separateAndTrimColumn(dt, "Comments")
   expected <- data.table(ID = 1, Comment = c("single_value"))
   expect_equal(result, expected)
 
   # Test case 4: Empty string
   dt <- data.table(ID = 1, Comments = c(""))
-  result <- separateAndTrimColumn(dt, "Comments")
+  result <- .separateAndTrimColumn(dt, "Comments")
   expected <- data.table(ID = 1, Comment = c(""))
   expect_equal(result, expected)
 
   # Test case 5: Multiple rows with empty comments
   dt <- data.table(ID = 1:3, Comments = c("a, b", "", "c, d"))
-  result <- separateAndTrimColumn(dt, "Comments")
-  expected <- data.table(ID = c(1, 1, 2, 3, 3), Comment = c("a", "b", "", "c", "d"))
+  result <- .separateAndTrimColumn(dt, "Comments")
+  expected <- data.table(
+    ID = c(1, 1, 2, 3, 3),
+    Comment = c("a", "b", "", "c", "d")
+  )
   expect_equal(result, expected)
 
   # Test case 6: Check for plural removal
   dt <- data.table(ID = 1, Comments = c("a, b, c"))
-  result <- separateAndTrimColumn(dt, "Comments")
+  result <- .separateAndTrimColumn(dt, "Comments")
   expect_true("Comments" %in% names(result) == FALSE) # Ensure the plural 's' is removed
   expect_true("Comment" %in% names(result)) # Ensure the singular 'Comment' exists
+})
+
+test_that("synchronizeScenariosWithPlots adds missing scenarios to reports", {
+  td <- withr::local_tempdir()
+  scFile <- file.path(td, "Scenarios.xlsx")
+  rpFile <- file.path(td, "Reports.xlsx")
+
+  wbSc <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbSc, "Scenarios")
+  openxlsx::writeData(
+    wbSc,
+    "Scenarios",
+    data.table(scenario_name = c("sc_a", "sc_b"))
+  )
+  openxlsx::saveWorkbook(wbSc, scFile, overwrite = TRUE)
+
+  wbRp <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbRp, "Scenarios")
+  openxlsx::writeData(
+    wbRp,
+    "Scenarios",
+    data.table(scenario = "sc_a", longName = "sc a", shortName = "sc a")
+  )
+  openxlsx::saveWorkbook(wbRp, rpFile, overwrite = TRUE)
+
+  projectConfiguration <- list(
+    scenariosFile = scFile,
+    addOns = list(reportsFile = rpFile)
+  )
+
+  .synchronizeScenariosWithPlots(projectConfiguration)
+
+  result <- xlsxReadData(wb = rpFile, sheetName = "Scenarios")
+  expect_true(all(c("sc_a", "sc_b") %in% result$scenario))
+})
+
+test_that("synchronizeScenariosOutputsWithPlots syncs missing outputPath rows", {
+  td <- withr::local_tempdir()
+  scFile <- file.path(td, "Scenarios.xlsx")
+  rpFile <- file.path(td, "Reports.xlsx")
+
+  wbSc <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbSc, "OutputPaths")
+  openxlsx::writeData(
+    wbSc,
+    "OutputPaths",
+    data.table(outputPathId = c("op_1", "op_2"), outputPath = c("A", "B"))
+  )
+  openxlsx::saveWorkbook(wbSc, scFile, overwrite = TRUE)
+
+  wbRp <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wbRp, "Outputs")
+  openxlsx::writeData(
+    wbRp,
+    "Outputs",
+    data.table(
+      outputPathId = c("template", "op_1"),
+      outputPath = c("template", "A")
+    )
+  )
+  openxlsx::saveWorkbook(wbRp, rpFile, overwrite = TRUE)
+
+  projectConfiguration <- list(
+    scenariosFile = scFile,
+    addOns = list(reportsFile = rpFile)
+  )
+
+  .synchronizeScenariosOutputsWithPlots(projectConfiguration)
+
+  outputsScenario <- xlsxReadData(wb = scFile, sheetName = "OutputPaths")
+  outputsReports <- xlsxReadData(wb = rpFile, sheetName = "Outputs")
+
+  expect_true(all(c("op_1", "op_2") %in% outputsScenario$outputPathId))
+  expect_true(all(c("op_1", "op_2") %in% outputsReports$outputPathId))
+})
+
+# Edge case tests for xlsx functions
+test_that("xlsxReadData handles empty sheet", {
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "EmptySheet")
+  testFile <- file.path(tempdir(), "empty_sheet.xlsx")
+  openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
+
+  # Empty sheets cause an error in processing, so we expect an error
+  expect_error(expect_warning(xlsxReadData(
+    wb = testFile,
+    sheetName = "EmptySheet"
+  )))
+
+  file.remove(testFile)
+})
+
+test_that("xlsxReadData handles convertHeaders parameter", {
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "TestHeaders")
+  df <- data.frame(A = c("a", "b"), B = c(1, 2))
+  openxlsx::writeData(wb, "TestHeaders", df)
+  testFile <- file.path(tempdir(), "test_headers.xlsx")
+  openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
+
+  result1 <- xlsxReadData(
+    wb = testFile,
+    sheetName = "TestHeaders",
+    convertHeaders = TRUE
+  )
+  result2 <- xlsxReadData(
+    wb = testFile,
+    sheetName = "TestHeaders",
+    convertHeaders = FALSE
+  )
+  expect_true(is.data.table(result1))
+  expect_true(is.data.table(result2))
+
+  file.remove(testFile)
+})
+
+test_that("xlsxReadData handles emptyAsNA parameter", {
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "NATest")
+  df <- data.frame(A = c("a", "b", "c"), B = c(1, 2, 3))
+  openxlsx::writeData(wb, "NATest", df)
+  testFile <- file.path(tempdir(), "test_na.xlsx")
+  openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
+
+  result1 <- xlsxReadData(wb = testFile, sheetName = "NATest", emptyAsNA = TRUE)
+  result2 <- xlsxReadData(
+    wb = testFile,
+    sheetName = "NATest",
+    emptyAsNA = FALSE
+  )
+  expect_true(is.data.table(result1))
+  expect_true(is.data.table(result2))
+
+  file.remove(testFile)
+})
+
+test_that("setupProject creates a readable scenarios workbook", {
+  projectDir <- withr::local_tempdir()
+
+  initProject(
+    projectDirectory = projectDir,
+    configurationDirectory = projectDir,
+    overwrite = TRUE
+  )
+  projectConfiguration <- createProjectConfiguration(
+    file.path(projectDir, "ProjectConfiguration.xlsx"),
+    ignoreVersionCheck = TRUE
+  )
+
+  expect_true(file.exists(projectConfiguration$scenariosFile))
+  expect_true(
+    "Scenarios" %in% openxlsx::getSheetNames(projectConfiguration$scenariosFile)
+  )
+
+  scenariosData <- xlsxReadData(
+    wb = projectConfiguration$scenariosFile,
+    sheetName = "Scenarios",
+    convertHeaders = FALSE,
+    emptyAsNA = FALSE
+  )
+
+  expect_s3_class(scenariosData, "data.table")
+  expect_gt(nrow(scenariosData), 0)
+  expect_gt(ncol(scenariosData), 0)
+})
+
+test_that("xlsxWriteData preserves structure for edge-case round trips", {
+  tempDir <- withr::local_tempdir()
+  testFile <- file.path(tempDir, "edge_cases.xlsx")
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "EdgeCases")
+  openxlsx::writeData(
+    wb,
+    sheet = "EdgeCases",
+    x = data.frame(
+      scenario = c("seed"),
+      dose = c(1),
+      time = c(0),
+      note = c("seed"),
+      value = c(1),
+      stringsAsFactors = FALSE
+    )
+  )
+
+  testData <- data.table(
+    scenario = c("TestScenario1", NA, "TestScenario3", ""),
+    dose = c(100, NA_real_, 200, 150),
+    time = c(0L, 24L, 48L, NA_integer_),
+    note = c("Normal", "Has spaces   ", NA_character_, "Special chars: @#$"),
+    value = c(1, 1.5, Inf, 2.5)
+  )
+
+  xlsxWriteData(wb = wb, sheetName = "EdgeCases", dt = testData)
+  openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
+
+  readBackData <- xlsxReadData(wb = testFile, sheetName = "EdgeCases")
+
+  expect_equal(dim(readBackData), dim(testData))
+  expect_gte(sum(is.na(readBackData)), 4)
+  expect_equal(readBackData$scenario[[1]], "TestScenario1")
+  expect_equal(readBackData$note[[4]], "Special chars: @#$")
+})
+
+test_that("xlsxWriteData round-trips large datasets", {
+  tempDir <- withr::local_tempdir()
+  testFile <- file.path(tempDir, "large_data.xlsx")
+  wb <- openxlsx::createWorkbook()
+  openxlsx::addWorksheet(wb, "LargeData")
+  openxlsx::writeData(
+    wb,
+    sheet = "LargeData",
+    x = data.frame(
+      id = 1,
+      value = 0,
+      category = "A",
+      timestamp = as.Date("2024-01-01")
+    )
+  )
+
+  largeData <- data.table(
+    id = 1:1000,
+    value = rnorm(1000),
+    category = rep(c("A", "B", "C", "D"), length.out = 1000),
+    timestamp = rep(as.Date("2024-01-01") + 0:99, length.out = 1000)
+  )
+
+  xlsxWriteData(wb = wb, sheetName = "LargeData", dt = largeData)
+  openxlsx::saveWorkbook(wb, testFile, overwrite = TRUE)
+
+  result <- xlsxReadData(wb = testFile, sheetName = "LargeData")
+
+  expect_equal(nrow(result), 1000)
+  expect_equal(ncol(result), ncol(largeData))
 })
 
 # Clean up

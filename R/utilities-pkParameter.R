@@ -14,33 +14,45 @@
 #'
 #' @export
 #' @family scenario management
-calculatePKParameterForScenarios <- function(projectConfiguration,
-                                             scenarioResults) {
-  # initialize parameter to avoid linter message
-  pKParameter <- scenarioName <- NULL
-
-  checkmate::assertClass(projectConfiguration, classes = "ProjectConfiguration")
+calculatePKParameterForScenarios <- function(
+  projectConfiguration,
+  scenarioResults
+) {
+  checkmate::assertClass(
+    projectConfiguration,
+    classes = "ProjectConfigurationRF"
+  )
   checkmate::assertList(scenarioResults, any.missing = FALSE, names = "named")
 
-  outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$pKAnalysisResults)
-  if (!dir.exists(outputFolder)) dir.create(outputFolder)
+  outputFolder <- file.path(
+    projectConfiguration$outputFolder,
+    EXPORTDIR$pKAnalysisResults
+  )
+  if (!dir.exists(outputFolder)) {
+    dir.create(outputFolder)
+  }
 
-  dtScenarios <- getScenarioDefinitions(wbScenarios = projectConfiguration$scenariosFile)
-  dtOutputPaths <- getOutputPathIds(projectConfiguration$plotsFile)
-  if (nrow(dtOutputPaths) == 0) stop("Please define ouputPaths in plot configuration xlsx")
+  dtScenarios <- getScenarioDefinitions(
+    wbScenarios = projectConfiguration$scenariosFile
+  )
+  dtOutputPaths <- getOutputPathIds(projectConfiguration$addOns$reportsFile)
+  if (nrow(dtOutputPaths) == 0) {
+    stop(messages$errorutilitiespkParameterL1MissingOutputPaths())
+  }
 
   for (sc in names(scenarioResults)) {
-    pkParameterSheets <- dtScenarios[scenarioName == sc & !is.na(pKParameter)]$pKParameter
-    initializeParametersOfSheets(projectConfiguration, pkParameterSheets)
+    pkParameterSheets <- dtScenarios[
+      scenarioName == sc & !is.na(pKParameter)
+    ]$pKParameter
+    .initializeParametersOfSheets(projectConfiguration, pkParameterSheets)
 
     if (length(pkParameterSheets) > 0) {
       # Load or calculate PK analyses
-      writeToLog(
-        type = "Info",
-        msg = paste("Calculate  PK analysis result of", sc)
-      )
+      ospsuite.utils::logInfo(paste("Calculate PK analysis result of", sc))
 
-      pkAnalyses <- ospsuite::calculatePKAnalyses(results = scenarioResults[[sc]]$results)
+      pkAnalyses <- ospsuite::calculatePKAnalyses(
+        results = scenarioResults[[sc]]$results
+      )
 
       ospsuite::exportPKAnalysesToCSV(
         pkAnalyses = pkAnalyses,
@@ -64,27 +76,65 @@ calculatePKParameterForScenarios <- function(projectConfiguration,
 #'
 #' @return NULL. The function updates parameters in-place and does not return a value.
 #' @keywords internal
-initializeParametersOfSheets <- function(projectConfiguration, pkParameterSheets) {
+#' @noRd
+.initializeParametersOfSheets <- function(
+  projectConfiguration,
+  pkParameterSheets
+) {
   if (is.null(pkParameterSheets) || length(pkParameterSheets) == 0) {
     return(invisible())
   }
-
   ospsuite::removeAllUserDefinedPKParameters()
 
   # Read user-defined PK parameters and clean the names
-  dtUserdefPKParameter <- readUserDefinedPKParameters(projectConfiguration$addOns$pKParameterFile)
+  dtUserdefPKParameter <- .readUserDefinedPKParameters(
+    projectConfiguration$addOns$pKParameterFile
+  )
 
   # Loop through each PK parameter sheet
-  dtPkParameterDefinition <- data.table()
+  dtPkParameterDefinitionList <- list()
   for (pkParameterSheet in splitInputs(pkParameterSheets)) {
-    dtPkParameterDefinition <- xlsxReadData(
+    dtPkParameterDefinitionSheet <- xlsxReadData(
       wb = projectConfiguration$addOns$pKParameterFile,
       sheetName = pkParameterSheet,
       skipDescriptionRow = TRUE
     )
 
-    userdefinedParameters <- setdiff(dtPkParameterDefinition$name, ospsuite::allPKParameterNames())
-    addUserDefinedParameters(userdefinedParameters, dtUserdefPKParameter)
+    dtPkParameterDefinitionList[[pkParameterSheet]] <-
+      dtPkParameterDefinitionSheet
+
+    userdefinedParameters <- setdiff(
+      dtPkParameterDefinitionSheet$name,
+      ospsuite::allPKParameterNames()
+    )
+    .addUserDefinedParameters(userdefinedParameters, dtUserdefPKParameter)
+  }
+
+  dtPkParameterDefinition <- data.table::rbindlist(
+    dtPkParameterDefinitionList,
+    fill = TRUE,
+    use.names = TRUE
+  )
+
+  dtPkParameterDefinition <- unique(dtPkParameterDefinition[,
+    c(
+      "name",
+      "displayName",
+      "displayUnit"
+    ),
+    with = FALSE
+  ])
+
+  definitionCounts <- stats::aggregate(
+    x = list(definitionCount = seq_len(nrow(dtPkParameterDefinition))),
+    by = list(name = dtPkParameterDefinition$name),
+    FUN = length
+  )
+  conflictingNames <- definitionCounts$name[
+    definitionCounts$definitionCount > 1
+  ]
+  if (length(conflictingNames) > 0) {
+    stop(messages$errorutilitiespkParameterL1ConflictingDisplayDefinitions())
   }
 
   # Update PK parameters in the specified sheets
@@ -108,22 +158,48 @@ initializeParametersOfSheets <- function(projectConfiguration, pkParameterSheets
 #' @return A data frame of validated user-defined PK parameters.
 #' throws Error if validation fails or if required fields are missing.
 #' @keywords internal
-readUserDefinedPKParameters <- function(file) {
+#' @noRd
+.readUserDefinedPKParameters <- function(file) {
   dtUserdefPKParameter <- xlsxReadData(
     wb = file,
     sheetName = "Userdef PK Parameter",
     skipDescriptionRow = TRUE
-  ) %>%
-    stats::setNames(gsub(" \\[.*\\]", "", names(.)))
+  )
 
-  checkmate::assertCharacter(dtUserdefPKParameter$name, any.missing = FALSE, unique = TRUE)
+  names(dtUserdefPKParameter) <- gsub(
+    " \\[.*\\]",
+    "",
+    names(dtUserdefPKParameter)
+  )
+
+  checkmate::assertCharacter(
+    dtUserdefPKParameter$name,
+    any.missing = FALSE,
+    unique = TRUE
+  )
   if (any(is.na(dtUserdefPKParameter[["display Unit"]]))) {
-    stop("empty string is not possible as displayUnit in the sheet 'Userdef PK Parameter',
-    workaround: use % and set displayUnit in sheet derived from template-sheet to empty string")
+    stop(messages$errorutilitiespkParameterEmptyDisplayUnitNotAllowed())
   }
 
   return(dtUserdefPKParameter)
 }
+#' Validate a user-defined PK parameter lookup result
+#' @param iRow Integer indices matching the user-defined parameter table.
+#' @param userPar PK parameter name being resolved.
+#' @return Invisible `NULL`.
+#' @keywords internal
+#' @noRd
+.validateUserDefinedParameterIndex <- function(iRow, userPar) {
+  if (length(iRow) == 0) {
+    stop(messages$errorutilitiespkParameterL1NotDefined())
+  }
+  if (length(iRow) > 1) {
+    stop(messages$errorutilitiespkParameterL1NotUnique())
+  }
+
+  return(invisible(NULL))
+}
+
 #' Add User-Defined PK Parameters to OSP-Suite
 #'
 #' This function adds user-defined pharmacokinetic (PK) parameters to OSP-Suite
@@ -136,24 +212,30 @@ readUserDefinedPKParameters <- function(file) {
 #' @return NULL. The function updates the OSPSuite environment and does not return a value.
 #' throws Error if user-defined parameters are not defined or are not unique.
 #' @keywords internal
-addUserDefinedParameters <- function(userdefinedParameters, dtUserdefPKParameter) {
+#' @details Validation of the parameter lookup index is delegated to
+#'   `.validateUserDefinedParameterIndex()` so registration only handles object
+#'   creation and optional field updates.
+#' @noRd
+.addUserDefinedParameters <- function(
+  userdefinedParameters,
+  dtUserdefPKParameter
+) {
   for (userPar in userdefinedParameters) {
     iRow <- which(dtUserdefPKParameter$name == userPar)
-
-    if (length(iRow) == 0) {
-      stop(paste("pkParameter", userPar, 'is not defined in "Userdef PK Parameter" sheet.'))
-    }
-    if (length(iRow) > 1) {
-      stop(paste("pkParameter", userPar, 'is not unique in "Userdef PK Parameter" sheet.'))
-    }
+    .validateUserDefinedParameterIndex(iRow, userPar)
 
     myPK <- ospsuite::addUserDefinedPKParameter(
       name = dtUserdefPKParameter$name[iRow],
-      standardPKParameter = ospsuite::StandardPKParameter[[dtUserdefPKParameter$`standard PK parameter`[iRow]]],
+      standardPKParameter = ospsuite::StandardPKParameter[[dtUserdefPKParameter$`standard PK parameter`[
+        iRow
+      ]]],
       displayUnit = dtUserdefPKParameter$`display Unit`[iRow]
     )
 
-    for (col in setdiff(intersect(names(myPK), names(dtUserdefPKParameter)), c("name", "dimension"))) {
+    for (col in setdiff(
+      intersect(names(myPK), names(dtUserdefPKParameter)),
+      c("name", "dimension")
+    )) {
       if (!is.na(dtUserdefPKParameter[[col]][iRow])) {
         myPK[[col]] <- dtUserdefPKParameter[[col]][iRow]
       }
@@ -184,30 +266,39 @@ addUserDefinedParameters <- function(userdefinedParameters, dtUserdefPKParameter
 #'
 #' @export
 #' @family scenario management
-loadPKParameter <- function(projectConfiguration,
-                            scenarioListOrResult) {
-  # initialize variable to avoid messages
-  pKParameter <- scenarioName <- NULL
-
-  checkmate::assertList(scenarioListOrResult, any.missing = FALSE, names = "named", null.ok = TRUE)
-  checkmate::assertClass(projectConfiguration, classes = "ProjectConfiguration")
+loadPKParameter <- function(projectConfiguration, scenarioListOrResult) {
+  checkmate::assertList(
+    scenarioListOrResult,
+    any.missing = FALSE,
+    names = "named",
+    null.ok = TRUE
+  )
+  checkmate::assertClass(
+    projectConfiguration,
+    classes = "ProjectConfigurationRF"
+  )
 
   dtScenarios <- getScenarioDefinitions(projectConfiguration$scenariosFile)
 
-  dtOutputPaths <- getOutputPathIds(projectConfiguration$plotsFile)
-  if (nrow(dtOutputPaths) == 0) stop("Please define ouputPaths in plot configuration xlsx")
+  dtOutputPaths <- getOutputPathIds(projectConfiguration$addOns$reportsFile)
+  if (nrow(dtOutputPaths) == 0) {
+    stop(messages$errorutilitiespkParameterL1MissingOutputPaths())
+  }
   # Load or calculate PK analyses for all scenarios
   pkAnalysesList <- lapply(names(scenarioListOrResult), function(sc) {
-    pkParameterSheets <- dtScenarios[scenarioName == sc & !is.na(pKParameter)]$pKParameter
+    pkParameterSheets <- dtScenarios[
+      scenarioName == sc & !is.na(pKParameter)
+    ]$pKParameter
 
-    loadPKAnalysisPerScenario(
+    .loadPKAnalysisPerScenario(
       scenarioName = sc,
       scenarioSimulation = scenarioListOrResult[[sc]]$simulation,
       pkParameterSheets = pkParameterSheets,
       projectConfiguration = projectConfiguration
     )
   })
-  pkParameterDT <- merge(data.table::rbindlist(pkAnalysesList),
+  pkParameterDT <- merge(
+    data.table::rbindlist(pkAnalysesList),
     dtScenarios[, c("scenarioName", "populationId")],
     by.x = "scenario",
     by.y = "scenarioName"
@@ -227,19 +318,21 @@ loadPKParameter <- function(projectConfiguration,
 #'
 #' @return A data.table containing the processed PK analyses for the specified scenario.
 #' @keywords internal
-loadPKAnalysisPerScenario <- function(scenarioName, scenarioSimulation,
-                                      pkParameterSheets, projectConfiguration) {
-  # initialize variable to avoid messages
-  unitFactor <- value <- NULL
-
-  dtPkAnalyses <- loadPkAnalysisRawData(
+#' @noRd
+.loadPKAnalysisPerScenario <- function(
+  scenarioName,
+  scenarioSimulation,
+  pkParameterSheets,
+  projectConfiguration
+) {
+  dtPkAnalyses <- .loadPkAnalysisRawData(
     projectConfiguration = projectConfiguration,
     scenarioName = scenarioName,
     scenarioSimulation = scenarioSimulation
-  ) %>%
+  ) |>
     dplyr::mutate(scenario = scenarioName)
 
-  dtOutputPaths <- getOutputPathIds(projectConfiguration$plotsFile)
+  dtOutputPaths <- getOutputPathIds(projectConfiguration$addOns$reportsFile)
 
   # Process each PK parameter sheet
   resultsList <- list()
@@ -250,7 +343,7 @@ loadPKAnalysisPerScenario <- function(scenarioName, scenarioSimulation,
       skipDescriptionRow = TRUE
     )
 
-    dtPkParameterDefinition <- addUnitFactorsToPKDefinition(
+    dtPkParameterDefinition <- .addUnitFactorsToPKDefinition(
       scenarioSimulation = scenarioSimulation,
       dtOutputPaths = dtOutputPaths,
       dtPkAnalyses = dtPkAnalyses,
@@ -260,13 +353,13 @@ loadPKAnalysisPerScenario <- function(scenarioName, scenarioSimulation,
     resultsList <- append(
       resultsList,
       list(
-        dtPkAnalyses %>%
+        dtPkAnalyses |>
           merge(
             dtPkParameterDefinition,
             by.x = c("parameter", "quantityPath"),
             by.y = c("name", "outputPath")
-          ) %>%
-          dplyr::mutate(value = value * unitFactor) %>%
+          ) |>
+          dplyr::mutate(value = value * unitFactor) |>
           dplyr::select(
             "scenario",
             "parameter",
@@ -275,10 +368,14 @@ loadPKAnalysisPerScenario <- function(scenarioName, scenarioSimulation,
             "outputPathId",
             "displayName",
             "displayUnit"
-          ) %>%
+          ) |>
           setnames(
             old = c("parameter", "displayName", "displayUnit"),
-            new = c("pkParameter", "displayNamePKParameter", "displayUnitPKParameter")
+            new = c(
+              "pkParameter",
+              "displayNamePKParameter",
+              "displayUnitPKParameter"
+            )
           )
       )
     )
@@ -298,37 +395,37 @@ loadPKAnalysisPerScenario <- function(scenarioName, scenarioSimulation,
 #'
 #' @return A data.table containing the PK analyses loaded from the CSV file.
 #' @keywords internal
-loadPkAnalysisRawData <- function(projectConfiguration, scenarioName, scenarioSimulation) {
-  # initialize variables to avoid messages
-  unit <- NULL
-
-  outputFolder <- file.path(projectConfiguration$outputFolder, EXPORTDIR$pKAnalysisResults)
-  if (!dir.exists(outputFolder)) dir.create(outputFolder)
+#' @noRd
+.loadPkAnalysisRawData <- function(
+  projectConfiguration,
+  scenarioName,
+  scenarioSimulation
+) {
+  outputFolder <- file.path(
+    projectConfiguration$outputFolder,
+    EXPORTDIR$pKAnalysisResults
+  )
+  if (!dir.exists(outputFolder)) {
+    dir.create(outputFolder)
+  }
 
   fileName <- file.path(outputFolder, paste0(scenarioName, ".csv"))
   if (!file.exists(fileName)) {
-    stop(paste(
-      "PK Parameter for", scenarioName, "is not calculated!",
-      "Use function calculatePKParameterForCalculation to generate the result"
-    ))
+    stop(messages$errorutilitiespkParameterL1NotCalculated())
   }
 
-  writeToLog(
-    type = "Info",
-    msg = paste("Load PK analysis result of", scenarioName)
-  )
+  ospsuite.utils::logInfo(paste("Load PK analysis result of", scenarioName))
 
   pkAnalyses <- ospsuite::importPKAnalysesFromCSV(
     filePath = fileName,
     simulation = scenarioSimulation
   )
 
-  dtPkAnalyses <- ospsuite::pkAnalysesToDataFrame(pkAnalyses = pkAnalyses) %>%
-    data.table::setDT() %>%
+  dtPkAnalyses <- ospsuite::pkAnalysesToDataFrame(pkAnalyses = pkAnalyses) |>
+    data.table::setDT() |>
     setHeadersToLowerCase()
 
   dtPkAnalyses[is.na(unit), unit := ""]
-
 
   return(dtPkAnalyses)
 }
@@ -345,20 +442,20 @@ loadPkAnalysisRawData <- function(projectConfiguration, scenarioName, scenarioSi
 #'
 #' @return A data.table containing processed PK parameter definitions for the scenario.
 #' @keywords internal
-addUnitFactorsToPKDefinition <- function(scenarioSimulation,
-                                         dtOutputPaths,
-                                         dtPkAnalyses,
-                                         dtPkParameterDefinition) {
-  # Initialize variables to avoid linter messages
-  outputPathIds <- molweight <- outputPath <- NULL
-
+#' @noRd
+.addUnitFactorsToPKDefinition <- function(
+  scenarioSimulation,
+  dtOutputPaths,
+  dtPkAnalyses,
+  dtPkParameterDefinition
+) {
   # Select relevant columns from dtOutputPaths and merge with dtPkAnalyses
   # This creates a dataset (dtO) that contains output path IDs and their associated parameters
-  dtO <- dtOutputPaths %>%
-    dplyr::select(c("outputPathId", "outputPath")) %>%
+  dtO <- dtOutputPaths |>
+    dplyr::select(c("outputPathId", "outputPath")) |>
     merge(
-      dtPkAnalyses %>%
-        dplyr::select("parameter", "quantityPath", "unit") %>%
+      dtPkAnalyses |>
+        dplyr::select("parameter", "quantityPath", "unit") |>
         unique(),
       by.x = "outputPath",
       by.y = "quantityPath"
@@ -372,18 +469,23 @@ addUnitFactorsToPKDefinition <- function(scenarioSimulation,
   }
 
   # Remove descriptions from dtPkParameterDefinition and handle NA outputPathIds
-  dtPkParameterDefinition <- dtPkParameterDefinition %>%
+  dtPkParameterDefinition <- dtPkParameterDefinition |>
     dplyr::select(!dplyr::any_of(c("descriptions")))
 
   # If outputPathIds are NA, concatenate unique outputPathIds from dtO
-  dtPkParameterDefinition[is.na(outputPathIds), outputPathIds := paste(unique(dtO$outputPathId), collapse = ", ")]
+  dtPkParameterDefinition[
+    is.na(outputPathIds),
+    outputPathIds := paste(unique(dtO$outputPathId), collapse = ", ")
+  ]
 
   # Split outputPathIds into a list and merge with dtO to create a comprehensive parameter definition
   dtPkParameterDefinition <-
-    dtPkParameterDefinition[, .(outputPathId = splitInputs(outputPathIds)),
+    dtPkParameterDefinition[,
+      .(outputPathId = splitInputs(outputPathIds)),
       by = c("name", "displayName", "displayUnit")
-    ] %>%
-    merge(dtO,
+    ] |>
+    merge(
+      dtO,
       by.x = c("name", "outputPathId"),
       by.y = c("parameter", "outputPathId")
     )
@@ -394,13 +496,31 @@ addUnitFactorsToPKDefinition <- function(scenarioSimulation,
 
   # Calculate unit factors for each row in dtPkParameterDefinition
   for (iRow in seq_len(nrow(dtPkParameterDefinition))) {
+    sourceUnit <- dtPkParameterDefinition$unit[iRow]
+    targetUnit <- dtPkParameterDefinition$displayUnit[iRow]
+    outputPathId <- dtPkParameterDefinition$outputPathId[iRow]
+    pkParameter <- dtPkParameterDefinition$name[iRow]
+    molWeight <- as.double(dtPkParameterDefinition$molweight[iRow])
+
     dtPkParameterDefinition$unitFactor[iRow] <-
-      ospsuite::toUnit(
-        quantityOrDimension = ospsuite::getDimensionForUnit(dtPkParameterDefinition$unit[iRow]),
-        values = 1,
-        sourceUnit = dtPkParameterDefinition$unit[iRow],
-        targetUnit = dtPkParameterDefinition$displayUnit[iRow],
-        molWeight = as.double(dtPkParameterDefinition$molweight[iRow])
+      tryCatch(
+        {
+          quantityOrDimension <- ospsuite::getDimensionForUnit(sourceUnit)
+          ospsuite::toUnit(
+            quantityOrDimension = quantityOrDimension,
+            values = 1,
+            sourceUnit = sourceUnit,
+            targetUnit = targetUnit,
+            molWeight = molWeight
+          )
+        },
+        error = function(err) {
+          errMsg <- conditionMessage(err)
+          stop(
+            messages$errorutilitiespkParameterL1UnitConversionFailed(),
+            call. = FALSE
+          )
+        }
       )
   }
 
@@ -429,61 +549,84 @@ addUnitFactorsToPKDefinition <- function(scenarioSimulation,
 #'         settings, including any calculated ratios if `asRatio` is TRUE.
 #'
 #' @keywords internal
-mergePKParameterWithConfigTable <- function(onePlotConfig,
-                                            pkParameterDT,
-                                            colorVector = NULL,
-                                            asRatio = FALSE) {
-  # initialize to avoid linter messages
-  isReference <- isReference <- colorIndex <- referenceScenario <- scenario <- NULL
-
+#' @noRd
+.mergePKParameterWithConfigTable <- function(
+  onePlotConfig,
+  pkParameterDT,
+  colorVector = NULL,
+  asRatio = FALSE
+) {
   onePlotConfig <- data.table::copy(onePlotConfig)
   for (col in intersect(
     names(onePlotConfig),
     c("scenarios", "pkParameters", "outputPathIds")
   )) {
-    onePlotConfig <- separateAndTrimColumn(onePlotConfig, col)
+    onePlotConfig <- .separateAndTrimColumn(onePlotConfig, col)
   }
-  mergedData <- onePlotConfig %>%
+  mergedData <- onePlotConfig |>
     dplyr::select(dplyr::any_of(c(
-      "plotName", "scenario", "referenceScenario", "pkParameter", "outputPathId",
-      "scenarioShortName", "scenarioLongName"
-    ))) %>%
+      "plotName",
+      "scenario",
+      "referenceScenario",
+      "pkParameter",
+      "outputPathId",
+      "scenarioShortName",
+      "scenarioLongName"
+    ))) |>
     merge(
-      pkParameterDT %>%
+      pkParameterDT |>
         unique(),
       by = c("scenario", "pkParameter", "outputPathId")
-    ) %>%
-    merge(configEnv$outputPaths[, c("outputPathId", "displayNameOutput")],
+    ) |>
+    merge(
+      configEnv$outputPaths[, c("outputPathId", "displayNameOutput")],
       by = "outputPathId"
     )
 
-  if (nrow(mergedData) == 0) stop(paste("no PK-Parameter available for", onePlotConfig$plotName[1]))
-
+  if (nrow(mergedData) == 0) {
+    stop(messages$errorutilitiespkParameterL1NoDataForPlot())
+  }
 
   if (asRatio) {
-    mergedData <- setValueToRatio(mergedData, pkParameterDT)
+    mergedData <- .setValueToRatio(mergedData, pkParameterDT)
   } else if (!is.null(colorVector)) {
-    mergedData[, isReference := scenario %in% referenceScenario, by = c("plotName")]
-    mergedData[, colorIndex := ifelse(isReference == TRUE, names(colorVector)[2], names(colorVector)[1])]
-    mergedData$colorIndex <- factor(mergedData$colorIndex, levels = names(colorVector))
+    if ("referenceScenario" %in% names(mergedData)) {
+      mergedData[,
+        isReference := scenario %in% referenceScenario,
+        by = c("plotName")
+      ]
+      mergedData[is.na(isReference), isReference := FALSE]
+    } else {
+      mergedData[, isReference := FALSE]
+    }
+    mergedData[,
+      colorIndex := ifelse(
+        isReference == TRUE,
+        names(colorVector)[2],
+        names(colorVector)[1]
+      )
+    ]
+    mergedData$colorIndex <- factor(
+      mergedData$colorIndex,
+      levels = names(colorVector)
+    )
   }
 
   # Ensure order by creating factors
-  mergedData$displayNameOutput <- factor(mergedData$displayNameOutput,
+  mergedData$displayNameOutput <- factor(
+    mergedData$displayNameOutput,
     levels = unique(mergedData$displayNameOutput),
     ordered = TRUE
   )
 
   mergedData$scenarioShortName <- factor(
-    mergedData$
-      scenarioShortName,
+    mergedData$scenarioShortName,
     levels = unique(onePlotConfig$scenarioShortName),
     ordered = TRUE
   )
 
   mergedData$scenarioLongName <- factor(
-    mergedData$
-      scenarioLongName,
+    mergedData$scenarioLongName,
     levels = unique(onePlotConfig$scenarioLongName),
     ordered = TRUE
   )
@@ -506,12 +649,18 @@ mergePKParameterWithConfigTable <- function(onePlotConfig,
 #' @return A data.table containing the merged data with a new column `value`
 #'         representing the ratio of base to reference values.
 #' @keywords internal
-setValueToRatio <- function(mergedData, pkParameterDT) {
-  # initialize variable to avoid messages
-  valueBase <- valueReference <- value <- NULL
-
-  mergedData <- merge(mergedData,
-    pkParameterDT[, c("scenario", "pkParameter", "individualId", "outputPathId", "value", "populationId")] %>%
+#' @noRd
+.setValueToRatio <- function(mergedData, pkParameterDT) {
+  mergedData <- merge(
+    mergedData,
+    pkParameterDT[, c(
+      "scenario",
+      "pkParameter",
+      "individualId",
+      "outputPathId",
+      "value",
+      "populationId"
+    )] |>
       setnames(
         old = c("scenario"),
         new = c("referenceScenario")
@@ -520,7 +669,6 @@ setValueToRatio <- function(mergedData, pkParameterDT) {
     suffixes = c("Base", "Reference")
   )
   mergedData[, value := valueBase / valueReference]
-
 
   return(mergedData)
 }
@@ -540,15 +688,31 @@ setValueToRatio <- function(mergedData, pkParameterDT) {
 #' @return NULL. The function will stop execution if validation fails,
 #'         otherwise returns invisibly.
 #' @keywords internal
-validatePKParameterDT <- function(pkParameterDT) {
+#' @noRd
+.validatePKParameterDT <- function(pkParameterDT) {
   checkmate::assertDataTable(pkParameterDT)
-  checkmate::assertNames(names(pkParameterDT), must.include = c("scenario", "pkParameter", "individualId", "value", "outputPathId", "displayNamePKParameter", "displayUnitPKParameter"))
+  checkmate::assertNames(
+    names(pkParameterDT),
+    must.include = c(
+      "scenario",
+      "pkParameter",
+      "individualId",
+      "value",
+      "outputPathId",
+      "displayNamePKParameter",
+      "displayUnitPKParameter"
+    )
+  )
 
-  tmp <- pkParameterDT[, c("pkParameter", "outputPathId", "displayUnitPKParameter")] %>%
+  tmp <- pkParameterDT[, c(
+    "pkParameter",
+    "outputPathId",
+    "displayUnitPKParameter"
+  )] |>
     unique()
 
   if (any(duplicated(tmp[, c("outputPathId", "pkParameter")]))) {
-    stop("Please check pkParameterDT. It seems that displayUnitPKParameter is not consistent for outputPathId and pkParameter")
+    stop(messages$errorutilitiespkParameterL1InconsistentDisplayUnit())
   }
 
   return(invisible())

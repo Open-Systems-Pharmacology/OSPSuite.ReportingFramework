@@ -16,11 +16,11 @@ A `data.table` with time range tags.
 This function loads the time range tags from the specified workbook.
 }
 \seealso{
-Other get identifier: 
-\code{\link{getDataGroups}()},
-\code{\link{getModelParameterDefinitions}()},
-\code{\link{getOutputPathIds}()},
-\code{\link{getScenarioDefinitions}()},
-\code{\link{loadConfigTableEnvironment}()}
+Other get identifier:
+\code{\link[=getDataGroups]{getDataGroups()}},
+\code{\link[=getModelParameterDefinitions]{getModelParameterDefinitions()}},
+\code{\link[=getOutputPathIds]{getOutputPathIds()}},
+\code{\link[=getScenarioDefinitions]{getScenarioDefinitions()}},
+\code{\link[=loadConfigTableEnvironment]{loadConfigTableEnvironment()}}
 }
 \concept{get identifier}

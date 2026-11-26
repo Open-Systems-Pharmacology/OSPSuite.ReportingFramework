@@ -13,6 +13,9 @@ validateNumericVectorColumns(columns, data, ...)
 
 \item{...}{additionally parameters parsed to checkmate::assertNumeric}
 }
+\value{
+invisible(NULL). Throws an error if validation fails.
+}
 \description{
 Validates numeric range columns in the provided data frame.
 }

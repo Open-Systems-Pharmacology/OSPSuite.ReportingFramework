@@ -16,11 +16,11 @@ An invisible value indicating that the loading was successful.
 This function loads various configuration tables from specified Excel files into a global environment.
 }
 \seealso{
-Other get identifier: 
-\code{\link{getDataGroups}()},
-\code{\link{getModelParameterDefinitions}()},
-\code{\link{getOutputPathIds}()},
-\code{\link{getScenarioDefinitions}()},
-\code{\link{getTimeRangeTags}()}
+Other get identifier:
+\code{\link[=getDataGroups]{getDataGroups()}},
+\code{\link[=getModelParameterDefinitions]{getModelParameterDefinitions()}},
+\code{\link[=getOutputPathIds]{getOutputPathIds()}},
+\code{\link[=getScenarioDefinitions]{getScenarioDefinitions()}},
+\code{\link[=getTimeRangeTags]{getTimeRangeTags()}}
 }
 \concept{get identifier}
