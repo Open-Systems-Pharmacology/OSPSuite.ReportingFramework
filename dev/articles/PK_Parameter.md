@@ -11,8 +11,9 @@ to compare simulated and observed outcomes.
 
 ## Calculate PK Parameters for Scenarios
 
-The PK-parameter calculation is an extension of the `esqlabR` package. A
-new configuration table, `PKParameter.xlsx`, can be accessed via
+PK-parameter calculation extends
+[esqlabsR](https://github.com/esqLABS/esqlabsR) workflows. The
+configuration table `PKParameter.xlsx` is available via
 `projectConfiguration$addOns$pKParameterFile`.
 
 This table contains a template sheet listing all available PK parameters
@@ -38,16 +39,29 @@ The `projectConfiguration$scenariosFile` table, as an extension of the
 Here, you can link each scenario to the corresponding sheet name from
 the `PKParameter.xlsx`.
 
-When calling `runOrLoadScenarios` or `runAndSaveScenarios`, the selected
-PK parameters are automatically calculated and saved in the
-`PKAnalysisResults` folder within the output directory. If simulation
-results already exist and you wish to recalculate the PK parameters
-without initiating a new simulation, use
-`calculatePKParameterForScenarios`.
+When calling
+[`runOrLoadScenarios()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/runOrLoadScenarios.md)
+or
+[`runAndSaveScenarios()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/runAndSaveScenarios.md),
+selected PK parameters are automatically calculated and saved to the
+`PKAnalysisResults` output folder. If simulation results already exist
+and you want to recalculate PK parameters without rerunning simulations,
+call
+[`calculatePKParameterForScenarios()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/calculatePKParameterForScenarios.md)
+explicitly:
+
+``` r
+
+calculatePKParameterForScenarios(
+  projectConfiguration = projectConfiguration,
+  scenarioResults = scenarioResults
+)
+```
 
 To load the PK parameters use:
 
 ``` r
+
 pkParameterDT <- loadPKParameter(
   projectConfiguration = projectConfiguration,
   scenarioListOrResult = scenarioResults
@@ -56,23 +70,23 @@ pkParameterDT <- loadPKParameter(
 
 ## Import Observed Data
 
-If available, you can to import the observed PK data. This can be
-accomplished using a data.table containing the relevant observed
-parameters, which can then be compared against simulated data. The data
-import process is described in detail in the vignette
-`Data_import_by_dictionary`.
+If available, import observed PK data as a data.table so it can be
+compared against simulated PK parameters. In dictionary-based imports,
+PK data classes are represented by `DATACLASS$pkIndividual` and
+`DATACLASS$pkAggregated`. The full data import workflow is described in
+the vignette `DataImport_by_Dictionary`.
 
 ## Available Plot Types
 
 ### Overview of Plot Types
 
-| Plot Type                                                     | Objective                                                                                                        | Simulated Data                                                                        | Observed Data                                | Numeric Values                                                                      | Data Types                                                                                  |
-|:--------------------------------------------------------------|:-----------------------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------|:---------------------------------------------|:------------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------------|
-| [**Box-whisker plots**](#box-whisker-plots)                   | Display and compare distributions of different scenarios.                                                        | Displayed are percentiles as box-whiskers.                                            |                                              | Tables containing the numeric values are exported additionally to each plot as CSV. | Absolute values and ratios of crossover studies.                                            |
-| [**Forest plots of aggregated distributions**](#forest-plots) | Compare aggregated distributions of different scenarios. Compare observed data with simulated values.            | Displayed is point and range (e.g., geometric mean and geometric standard deviation). | Aggregated data can be added as point range. | Tables containing the numeric values are optionally displayed.                      | Absolute values and ratios of crossover studies.                                            |
-| [**Forest plots of point estimators**](#forestestimator)      | Compare point estimators (e.g., DDI Ratios) of different scenarios. Compare observed data with simulated values. | Estimator is displayed as a point.                                                    | Aggregated data can be added as point range. | Tables containing the numeric values are optionally displayed.                      | Absolute values, ratios of crossover studies, and ratios of scenarios if different studies. |
-| [**Histograms**](#histograms)                                 | Display and compare distributions of different scenarios.                                                        | Displayed is the distribution as a histogram.                                         |                                              |                                                                                     | Absolute values and ratios of crossover studies.                                            |
-| [**Range plots**](#rangeplots)                                | Display dependence of PK parameters vs. population parameters (e.g., age).                                       | Displayed is aggregated distribution per bin of population parameter.                 |                                              | Exported are the aggregated values per bin.                                         | Absolute values and ratios of crossover studies.                                            |
+| Plot Type | Objective | Simulated Data | Observed Data | Numeric Values | Data Types |
+|:---|:---|:---|:---|:---|:---|
+| [**Box-whisker plots**](#box-whisker-plots) | Display and compare distributions of different scenarios. | Displayed are percentiles as box-whiskers. |  | Tables containing the numeric values are exported additionally to each plot as CSV. | Absolute values and ratios of crossover studies. |
+| [**Forest plots of aggregated distributions**](#forest-plots) | Compare aggregated distributions of different scenarios. Compare observed data with simulated values. | Displayed is point and range (e.g., geometric mean and geometric standard deviation). | Aggregated data can be added as point range. | Tables containing the numeric values are optionally displayed. | Absolute values and ratios of crossover studies. |
+| [**Forest plots of point estimators**](#forestestimator) | Compare point estimators (e.g., DDI Ratios) of different scenarios. Compare observed data with simulated values. | Estimator is displayed as a point. | Aggregated data can be added as point range. | Tables containing the numeric values are optionally displayed. | Absolute values, ratios of crossover studies, and ratios of scenarios if different studies. |
+| [**Histograms**](#histograms) | Display and compare distributions of different scenarios. | Displayed is the distribution as a histogram. |  |  | Absolute values and ratios of crossover studies. |
+| [**Range plots**](#rangeplots) | Display dependence of PK parameters vs. population parameters (e.g., age). | Displayed is aggregated distribution per bin of population parameter. |  | Exported are the aggregated values per bin. | Absolute values and ratios of crossover studies. |
 
 Please check the corresponding function help for detailed information on
 each plot type and the vignette `Plot and Report Generation`.

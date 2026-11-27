@@ -1,7 +1,6 @@
-# mdTable
+# Insert table from CSV with caption.
 
-Insert a table into a markdown document. Essentially a wrapper for
-\`knitr::kable\` with \`format = "markdown"\` and newlines.
+Insert table from CSV with caption.
 
 ## Usage
 
@@ -23,51 +22,48 @@ mdTable(
 
 - tableNumber:
 
-  number of table for caption prefix
+  Table number for prefix.
 
 - tableCsv:
 
-  path of .csv file
+  CSV file path.
 
 - captionFile:
 
-  file containing caption
+  Caption file.
 
 - footNoteFile:
 
-  file containing footnotes
+  Footnote file.
 
 - subfolder:
 
-  The folder where the file is located relative to Rmd
+  Folder location.
 
 - customStyles:
 
-  list of custom styles usable for figure and table captions and
-  footnotes
+  Custom styles list.
 
 - digitsOfSignificance:
 
-  significance digits to display (default 3)
+  Significant digits (default 3).
 
 - addNewPage:
 
-  boolean if TRUE (default) new page is added after
+  Add page break after (default TRUE).
 
 - ...:
 
-  passed to \`knitr::kable\`
+  Passed to \`knitr::kable\`.
 
 ## Value
 
-\`x\`, invisibly
+Invisible \`NULL\`.
 
 ## See also
 
 Other markdown helper function:
-[`addFiguresAndTables()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addFiguresAndTables.md),
 [`mdBullet()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdBullet.md),
-[`mdBullet0()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdBullet0.md),
 [`mdCaption()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdCaption.md),
 [`mdFigure()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdFigure.md),
 [`mdFootNote()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdFootNote.md),

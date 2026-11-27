@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Population • ospsuite.reportingframework</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Population">
 <meta name="robots" content="noindex">
@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ospsuite.reportingframework</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">1.0.1.9003</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,11 +43,11 @@
     <li><a class="dropdown-item" href="../articles/DataImport_by_Dictionary.html">Data Import by Dictionary</a></li>
     <li><a class="dropdown-item" href="../articles/PK_Parameter.html">PK Parameters</a></li>
     <li><a class="dropdown-item" href="../articles/Population.html">Population</a></li>
-    <li><a class="dropdown-item" href="../articles/Electronic_Package.html">Electronic Package</a></li>
     <li><a class="dropdown-item" href="../articles/Plot_and_Report_Generation.html">Plot_and_Report_Generation</a></li>
+    <li><a class="dropdown-item" href="../articles/Sensitivity_Analysis.html">Sensitivity_Analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/Electronic_Package.html">Electronic Package</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
-    <li><a class="dropdown-item" href="../articles/Workflow.html">Workflow Setup and Execution</a></li>
     <li><a class="dropdown-item" href="../articles/Tutorial_Timeprofiles.html">Tutorial: Time Profile Plotting</a></li>
   </ul>
 </li>
@@ -87,25 +87,65 @@ Virtual Twin Populations in OSPSuite Reporting Framework</h3>
 <div class="float">
 <img src="images/Population.png" alt="Populations within the reporting framework"><div class="figcaption">Populations within the reporting framework</div>
 </div>
-<p>The package recognizes two kinds of populations:</p>
+<p>The package supports two population workflows:</p>
+<ul>
+<li>Use <strong>Virtual Twin Population</strong> when observed
+individual biometrics are available.</li>
+<li>Use <strong>Random Population</strong> when you want synthetic
+populations generated from demographic ranges.</li>
+</ul>
+<p>Both workflows export CSV population files to
+<code>&lt;rootdirectory&gt;/Models/Populations</code>.</p>
+<div class="section level3">
+<h3 id="virtual-twin-population">Virtual Twin Population<a class="anchor" aria-label="anchor" href="#virtual-twin-population"></a>
+</h3>
+<p>Virtual twins are generated from observed individual biometrics.
+Known biometrics are taken from observed data, and missing
+characteristics are completed from model defaults.</p>
+<p>When data are imported with
+<code><a href="../reference/readObservedDataByDictionary.html">readObservedDataByDictionary()</a></code>, the sheet
+<code>VirtualTwinPopulation</code> is added to
+<code>Individual.xlsx</code> automatically. If observed data are loaded
+by another route, create this configuration explicitly:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/setupVirtualTwinPopConfig.html">setupVirtualTwinPopConfig</a></span><span class="op">(</span></span>
+<span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
+<span>  dataObserved <span class="op">=</span> <span class="va">dataObserved</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>You can then export one or more configured virtual twin
+populations:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/exportVirtualTwinPopulations.html">exportVirtualTwinPopulations</a></span><span class="op">(</span></span>
+<span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
+<span>  modelFile <span class="op">=</span> <span class="st">"MyModel.pkml"</span>,</span>
+<span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  populationNames <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>This export adds <code>ObservedIndividualId</code> to preserve the
+mapping to observed individuals.</p>
+<p>Use <code>PopulationName</code> as <code>PopulationId</code> in
+scenario setup and set <code>ReadPopulationFromCSV = TRUE</code>.</p>
+<p>If the same parameters are set by both population and scenario
+configuration, scenario settings take precedence.</p>
+</div>
 <div class="section level3">
 <h3 id="random-population">Random Population<a class="anchor" aria-label="anchor" href="#random-population"></a>
 </h3>
-<p>This population is created from ranges of population characteristics,
-such as age and body weight, along with a set of parameters defined by a
-distribution. A set of n individuals are then generated randomly within
-the given ranges. This is how a population is defined in the OSPSuite
-context.</p>
-<p>The ‘Random Population’ can be configured using the
-<code>Demographics</code> sheet in the <code>Population.xlsx</code>. The
-population identifier is specified in the column
-<code>PopulationName</code>. For each population, a sheet named after
-the population name with distributed parameters can be provided.</p>
-<p>The package <code>ospsuite.reportingframework</code> includes a
-function, <code>exportRandomPopulations</code>, to export the population
-as a CSV file, which is then saved in
-<code>&lt;rootdirectory&gt;/Models/Populations</code>. See the function
-help for more details.</p>
+<p>Random populations are generated from demographic ranges (for example
+age and body weight) and optional parameter distributions.</p>
+<p>Configure random populations in the <code>Demographics</code> sheet
+of <code>Population.xlsx</code>. Population identifiers are defined in
+<code>PopulationName</code>. Optional per-population parameter sheets
+can define distributed parameters.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/exportRandomPopulations.html">exportRandomPopulations</a></span><span class="op">(</span></span>
+<span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
+<span>  populationNames <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>The <code>customParameters</code> argument can be used to set
+model-specific parameter values that are not defined in the demographics
+table.</p>
 <p>In the scenario setup, you can use the <code>PopulationName</code> as
 <code>PopulationId</code> and set the column
 <code>ReadPopulationFromCSV</code> to 1 (TRUE). (With
@@ -114,59 +154,6 @@ generated anew during the scenario setup. The usage of the distributed
 parameters is not yet implemented this way; only the demographics will
 be considered. Additionally, since it is currently not possible to set a
 seed, each scenario setup will produce a new population.)</p>
-</div>
-<div class="section level3">
-<h3 id="virtual-twin-population">Virtual Twin Population<a class="anchor" aria-label="anchor" href="#virtual-twin-population"></a>
-</h3>
-<p>Virtual twins are simulated populations that closely mirror the
-characteristics of your observed data. They consist of a collection of
-individuals generated with the known biometrics extracted from the
-observed data. For all unknown parameters, the mean value of an
-individual defined by these characteristics is used.</p>
-<p>During the data import via the
-<code>readObservedDataByDictionary</code> function, a sheet named
-<code>VirtualTwinPopulation</code> is added to the
-<code>Individual.xlsx</code> with the following columns:</p>
-<ul>
-<li>
-<em><code>PopulationName</code></em>: Identifier for the
-population.</li>
-<li>
-<em><code>DataGroups</code></em>: List of data groups (used for
-informational purposes only).</li>
-<li>
-<em><code>IndividualId</code></em>: Identifier of the individual,
-referencing the <code>IndividualId</code> of the observed data and
-linking to the <code>Individual.xlsx</code>.</li>
-<li>
-<em><code>ModelParameterSheets</code></em>: Reference to the sheet
-in <code>ModelParameters.xlsx</code>.</li>
-<li>
-<em><code>ApplicationProtocol</code></em>: Reference to the sheet in
-<code>ApplicationProtocol.xlsx</code>.</li>
-</ul>
-<p>If you do not use <code>readObservedDataByDictionary</code> for data
-import, you can add the sheet by calling
-<code>setupVirtualTwinPopConfig(projectConfiguration, dataObserved)</code>,
-which configures the virtual twin population based on the observed
-data.</p>
-<p>With this sheet, you define which individuals belong to which virtual
-population. The configuration of the individuals is saved in the tables
-<code>Individual.xlsx</code>, <code>ModelParameters.xlsx</code>, and
-<code>ApplicationProtocol.xlsx</code>.</p>
-<p>The function <code>exportVirtualTwinPopulations</code> is called to
-export this population to a CSV table in
-<code>&lt;rootdirectory&gt;/Models/Populations</code>. It includes an
-additional column, <code>ObservedIndividualId</code>, which contains the
-individual identifier which relates to the observed data.</p>
-<p>The scenario setup is the same as for the ‘Random Population’: use
-the <code>PopulationName</code> as ‘PopulationId’ and set the column
-‘ReadPopulationFromCSV’ to TRUE. Note that
-<code>ReadPopulationFromCSV = FALSE</code> is not possible for this type
-of population.</p>
-<p>If the same parameters are addressed by the Population and the
-Scenario setup (e.g., by referencing different ModelParameter sheets),
-the scenario setup will overwrite the setup of the population.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -179,7 +166,7 @@ the scenario setup will overwrite the setup of the population.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

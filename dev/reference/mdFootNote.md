@@ -1,6 +1,6 @@
-# add footnote lines
+# Add footnote lines from file.
 
-add footnote lines
+Add footnote lines from file.
 
 ## Usage
 
@@ -12,22 +12,24 @@ mdFootNote(subfolder, footNoteFile, footNoteCustomStyle = NULL)
 
 - subfolder:
 
-  The folder where the file is located relative to Rmd
+  Folder location.
 
 - footNoteFile:
 
-  file containing footnotes
+  Footnote file.
 
 - footNoteCustomStyle:
 
-  a character describing custom style footnotes
+  Custom style (optional).
+
+## Value
+
+Invisible \`NULL\`.
 
 ## See also
 
 Other markdown helper function:
-[`addFiguresAndTables()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addFiguresAndTables.md),
 [`mdBullet()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdBullet.md),
-[`mdBullet0()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdBullet0.md),
 [`mdCaption()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdCaption.md),
 [`mdFigure()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdFigure.md),
 [`mdHeading()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdHeading.md),

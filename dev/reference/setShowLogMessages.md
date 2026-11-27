@@ -1,6 +1,6 @@
-# Function to switch the display of log messages on the console on and off
+# Toggle display of log messages on the console
 
-Function to switch the display of log messages on the console on and off
+Toggle display of log messages on the console
 
 ## Usage
 
@@ -12,14 +12,17 @@ setShowLogMessages(verbose = TRUE)
 
 - verbose:
 
-  boolean, if true log message will be shown
+  boolean, if true log messages will be shown
+
+## Value
+
+NULL (invisible).
 
 ## See also
 
 Other log file management:
 [`addMessageToLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addMessageToLog.md),
 [`captureLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/captureLog.md),
-[`initLogfunction()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/initLogfunction.md),
 [`saveSessionInfo()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/saveSessionInfo.md),
-[`writeTableToLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/writeTableToLog.md),
-[`writeToLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/writeToLog.md)
+[`setLogPath()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/setLogPath.md),
+[`writeTableToLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/writeTableToLog.md)

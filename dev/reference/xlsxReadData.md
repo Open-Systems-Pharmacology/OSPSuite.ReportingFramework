@@ -55,15 +55,23 @@ xlsxReadData(
 
 A \`data.table\` containing the sheet data.
 
+## Details
+
+The function accepts \`skipDescriptionRow\` either as a flag
+(\`TRUE\`/\`FALSE\`) or as a non-negative integer indicating exactly how
+many leading rows to skip.
+
 ## See also
 
 Other function to read from and write to xlsx:
+[`copyConfigSheet()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/copyConfigSheet.md),
 [`setHeadersToLowerCase()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/setHeadersToLowerCase.md),
 [`splitInputs()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/splitInputs.md),
 [`xlsxAddDataUsingTemplate()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/xlsxAddDataUsingTemplate.md),
 [`xlsxAddSheet()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/xlsxAddSheet.md),
 [`xlsxCloneAndSet()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/xlsxCloneAndSet.md),
-[`xlsxWriteData()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/xlsxWriteData.md)
+[`xlsxWriteData()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/xlsxWriteData.md),
+[`xlsxWriteOrAddData()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/xlsxWriteOrAddData.md)
 
 ## Examples
 

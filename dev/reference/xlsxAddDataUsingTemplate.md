@@ -12,7 +12,7 @@ xlsxAddDataUsingTemplate(
   templateSheet,
   sheetName,
   dtNewData,
-  templateXlsx = "Plots.xlsx"
+  templateXlsx = "Reports.xlsx"
 )
 ```
 
@@ -37,7 +37,7 @@ xlsxAddDataUsingTemplate(
 - templateXlsx:
 
   A character string specifying the template xlsx file name (default is
-  "Plots.xlsx").
+  "Reports.xlsx").
 
 ## Value
 
@@ -46,12 +46,14 @@ The current configuration file with the added sheet.
 ## See also
 
 Other function to read from and write to xlsx:
+[`copyConfigSheet()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/copyConfigSheet.md),
 [`setHeadersToLowerCase()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/setHeadersToLowerCase.md),
 [`splitInputs()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/splitInputs.md),
 [`xlsxAddSheet()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/xlsxAddSheet.md),
 [`xlsxCloneAndSet()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/xlsxCloneAndSet.md),
 [`xlsxReadData()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/xlsxReadData.md),
-[`xlsxWriteData()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/xlsxWriteData.md)
+[`xlsxWriteData()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/xlsxWriteData.md),
+[`xlsxWriteOrAddData()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/xlsxWriteOrAddData.md)
 
 ## Examples
 

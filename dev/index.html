@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Provides a framework for report generation with the ospsuite • ospsuite.reportingframework</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Provides a framework for report generation with the ospsuite">
 <meta name="description" content="The OSP Suite Reporting Framework, which is based on the esqlabsR package, is a robust tool designed to systematically define simulation scenarios, their inputs and outputs, and standardize data import and matching processes. These functionalities allow for easy and automatable model execution and plot generation, ultimately facilitating the generation of customizable reports for OSP physiologically-based pharmacokinetic (PBPK) models. As a result, this framework significantly enhances reporting efficiency, enabling researchers to create clear, tailored reports that effectively communicate complex modeling results.">
@@ -23,7 +23,7 @@
 
     <a class="navbar-brand me-2" href="index.html">ospsuite.reportingframework</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">1.0.1.9003</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,11 +45,11 @@
     <li><a class="dropdown-item" href="articles/DataImport_by_Dictionary.html">Data Import by Dictionary</a></li>
     <li><a class="dropdown-item" href="articles/PK_Parameter.html">PK Parameters</a></li>
     <li><a class="dropdown-item" href="articles/Population.html">Population</a></li>
-    <li><a class="dropdown-item" href="articles/Electronic_Package.html">Electronic Package</a></li>
     <li><a class="dropdown-item" href="articles/Plot_and_Report_Generation.html">Plot_and_Report_Generation</a></li>
+    <li><a class="dropdown-item" href="articles/Sensitivity_Analysis.html">Sensitivity_Analysis</a></li>
+    <li><a class="dropdown-item" href="articles/Electronic_Package.html">Electronic Package</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
-    <li><a class="dropdown-item" href="articles/Workflow.html">Workflow Setup and Execution</a></li>
     <li><a class="dropdown-item" href="articles/Tutorial_Timeprofiles.html">Tutorial: Time Profile Plotting</a></li>
   </ul>
 </li>
@@ -83,23 +83,14 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-</div>
-</div>
-<div class="section level1">
-<h1 id="ospsuitereportingframework">OSPSuite.ReportingFramework<a class="anchor" aria-label="anchor" href="#ospsuitereportingframework"></a>
-</h1>
-<p>Framework to create R workflows which configures simulations, runs them plots results and creates a report</p>
-<div class="section level2">
-<h2 id="installation-1">Installation<a class="anchor" aria-label="anchor" href="#installation-1"></a>
-</h2>
-<p>The <a href="https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/">ospsuite.reportingframework</a> package is compatible with version 2.10 and higher of R. Please follow the installation instructions below:</p>
+<p>The package <code>DESCRIPTION</code> currently declares <code>R (&gt;= 2.10)</code>. Please follow the installation instructions below:</p>
 <div class="section level3">
 <h3 id="from-github-">From GitHub <img src="https://avatars.githubusercontent.com/github" width="15px"><a class="anchor" aria-label="anchor" href="#from-github-"></a>
 </h3>
 <p>You can install the development version of <a href="https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/">ospsuite.reportingframework</a> from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"Open-Systems-Pharmacology/OSPSuite.ReportingFramework"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"Open-Systems-Pharmacology/OSPSuite.ReportingFramework"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="required-packages">Required packages<a class="anchor" aria-label="anchor" href="#required-packages"></a>
@@ -114,24 +105,24 @@
 <col width="26%">
 <col width="46%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Package</th>
 <th>Version</th>
 <th>Installation Instructions</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><a href="https://github.com/Open-Systems-Pharmacology/OSPSuite.Plots" class="external-link"><code>{ospsuite.plots}</code></a></td>
 <td>latest</td>
 <td>Download and install package bundle <a href="https://github.com/Open-Systems-Pharmacology/OSPSuite.Plots/releases" class="external-link">here 📦</a>
 </td>
 </tr>
-<tr class="even">
+<tr>
 <td><a href="https://github.com/Open-Systems-Pharmacology/OSPSuite-R" class="external-link"><code>{ospsuite}</code></a></td>
 <td>latest</td>
 <td>Download and install package bundle <a href="https://github.com/Open-Systems-Pharmacology/OSPSuite-R/releases" class="external-link">here 📦</a><br>Instructions are available <a href="https://github.com/Open-Systems-Pharmacology/OSPSuite-R#installation" class="external-link">here 📖</a><br>⚠ Visit <a href="https://github.com/Open-Systems-Pharmacology/OSPSuite-R" class="external-link"><code>{ospsuite}</code> Documentation</a> to install its dependencies ⚠</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><a href="https://github.com/Open-Systems-Pharmacology/OSPSuite.RUtils" class="external-link"><code>{ospsuite.utils}</code></a></td>
 <td>latest</td>
 <td>Download and install package bundle <a href="https://github.com/Open-Systems-Pharmacology/OSPSuite.RUtils/releases" class="external-link">here 📦</a>
@@ -148,12 +139,12 @@
 <col width="26%">
 <col width="46%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Package</th>
 <th>Version</th>
 <th>Installation Instructions</th>
 </tr></thead>
-<tbody><tr class="odd">
+<tbody><tr>
 <td><a href="https://github.com/Open-Systems-Pharmacology/esqlabsR" class="external-link"><code>{esqlabsR}</code></a></td>
 <td>latest</td>
 <td>Download and install package bundle <a href="https://github.com/esqLABS/esqlabsR/releases" class="external-link">here 📦</a>
@@ -207,6 +198,57 @@
 </div>
 </div>
 <div class="section level2">
+<h2 id="ai-assisted-workflow-support">AI-assisted workflow support<a class="anchor" aria-label="anchor" href="#ai-assisted-workflow-support"></a>
+</h2>
+<p>The package includes helper functions to support users working with AI assistants.</p>
+<div class="section level3">
+<h3 id="generate-ai-ready-prompts">Generate AI-ready prompts<a class="anchor" aria-label="anchor" href="#generate-ai-ready-prompts"></a>
+</h3>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Create project configuration first</span></span>
+<span><span class="va">projectConfiguration</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/createProjectConfiguration.html">createProjectConfiguration</a></span><span class="op">(</span></span>
+<span>  path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">"ProjectConfiguration.xlsx"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Generic workflow prompt</span></span>
+<span><span class="va">prompt</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/createAIWorkflowPrompt.html">createAIWorkflowPrompt</a></span><span class="op">(</span></span>
+<span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
+<span>  task <span class="op">=</span> <span class="st">"create-workflow"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Task-specific prompt presets</span></span>
+<span><span class="va">promptImport</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/createAIPromptFromTask.html">createAIPromptFromTask</a></span><span class="op">(</span></span>
+<span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
+<span>  task <span class="op">=</span> <span class="st">"import-data"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>Supported task presets in <code><a href="reference/createAIPromptFromTask.html">createAIPromptFromTask()</a></code>:</p>
+<ul>
+<li><code>"create-workflow"</code></li>
+<li><code>"import-data"</code></li>
+<li><code>"build-plots"</code></li>
+<li><code>"debug-run"</code></li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="export-compact-context-for-ai-tools">Export compact context for AI tools<a class="anchor" aria-label="anchor" href="#export-compact-context-for-ai-tools"></a>
+</h3>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/exportWorkflowContext.html">exportWorkflowContext</a></span><span class="op">(</span></span>
+<span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
+<span>  file <span class="op">=</span> <span class="st">"workflow-context.json"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="validate-configuration-before-running-ai-generated-code">Validate configuration before running AI-generated code<a class="anchor" aria-label="anchor" href="#validate-configuration-before-running-ai-generated-code"></a>
+</h3>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">validation</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/validateWorkflowForAI.html">validateWorkflowForAI</a></span><span class="op">(</span><span class="va">projectConfiguration</span><span class="op">)</span></span>
+<span><span class="va">validation</span><span class="op">$</span><span class="va">ok</span></span>
+<span><span class="va">validation</span><span class="op">$</span><span class="va">errors</span></span>
+<span><span class="va">validation</span><span class="op">$</span><span class="va">warnings</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
 <h2 id="ms-word-reports">MS-Word reports<a class="anchor" aria-label="anchor" href="#ms-word-reports"></a>
 </h2>
 <p>It is possible to convert markdown reports to MS-Word (<code>.docx</code> format) from the <a href="https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/">ospsuite.reportingframework</a> package. This conversion requires the installation of an additional software: <a href="https://pandoc.org/" class="external-link">Pandoc</a>.</p>
@@ -229,6 +271,7 @@
 <h2 id="contribution">Contribution<a class="anchor" aria-label="anchor" href="#contribution"></a>
 </h2>
 <p>We encourage contribution to the Open Systems Pharmacology community. Before getting started please read the <a href="https://github.com/Open-Systems-Pharmacology/Suite/blob/master/CONTRIBUTING.md" class="external-link">contribution guidelines</a>. If you are contributing code, please be familiar with the <a href="https://github.com/Open-Systems-Pharmacology/Suite/blob/master/CODING_STANDARDS_R.md" class="external-link">coding standards</a>.</p>
+<p>Integration tests for this package are maintained separately at <a href="https://github.com/Open-Systems-Pharmacology/ReportingFramework-Test-Reports" class="external-link">ReportingFramework-Test-Reports</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
@@ -237,7 +280,6 @@
 <p>All trademarks within this document belong to their legitimate owners.</p>
 </div>
 </div>
-
   </main><aside class="col-md-3"><div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
@@ -284,7 +326,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

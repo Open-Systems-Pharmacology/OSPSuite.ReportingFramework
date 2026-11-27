@@ -12,14 +12,14 @@
 
 ## Citation
 
-Coboeken K (2025). *ospsuite.reportingframework: Provides a framework
-for report generation with the ospsuite*. R package version 1.0.1.9003,
+Coboeken K (2026). *ospsuite.reportingframework: Provides a framework
+for report generation with the ospsuite*. R package version 2.0.0.9001,
 <https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/>.
 
     @Manual{,
       title = {ospsuite.reportingframework: Provides a framework for report generation with the ospsuite},
       author = {Katrin Coboeken},
-      year = {2025},
-      note = {R package version 1.0.1.9003},
+      year = {2026},
+      note = {R package version 2.0.0.9001},
       url = {https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/},
     }

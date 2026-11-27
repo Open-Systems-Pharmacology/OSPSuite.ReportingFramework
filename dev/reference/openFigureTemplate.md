@@ -8,6 +8,11 @@ Opens the template for figure creation as new document
 openFigureTemplate()
 ```
 
+## Value
+
+Invisibly returns \`NULL\` after triggering the template command in
+RStudio.
+
 ## See also
 
 Other Addins Support:

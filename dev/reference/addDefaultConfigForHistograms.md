@@ -20,8 +20,8 @@ addDefaultConfigForHistograms(
 - projectConfiguration:
 
   A ProjectConfiguration class object containing configuration details,
-  including: - \`plotsFile\`: A string representing the file path to the
-  Excel workbook containing the plot configurations.
+  including: - \`addOns\$reportsFile\`: A string representing the file
+  path to the Excel workbook containing the plot configurations.
 
 - pkParameterDT:
 
@@ -40,8 +40,7 @@ addDefaultConfigForHistograms(
 ## Value
 
 NULL This function updates the Excel workbook in place and does not
-return a value. It is called for its side effects. Add Default
-Configuration for Histograms
+return a value.
 
 ## Details
 

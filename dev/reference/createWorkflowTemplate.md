@@ -8,6 +8,10 @@ Opens the workflow template as new document
 createWorkflowTemplate()
 ```
 
+## Value
+
+Invisibly returns a new RStudio document object.
+
 ## See also
 
 Other Addins Support:

@@ -23,17 +23,8 @@ We welcome your feedback as we refine its features and performance.
 
 ## Installation
 
-# OSPSuite.ReportingFramework
-
-Framework to create R workflows which configures simulations, runs them
-plots results and creates a report
-
-## Installation
-
-The
-[ospsuite.reportingframework](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/)
-package is compatible with version 2.10 and higher of R. Please follow
-the installation instructions below:
+The package `DESCRIPTION` currently declares `R (>= 2.10)`. Please
+follow the installation instructions below:
 
 ### From GitHub ![](https://avatars.githubusercontent.com/github)
 
@@ -42,6 +33,7 @@ You can install the development version of
 from [GitHub](https://github.com/) with:
 
 ``` r
+
 # install.packages("remotes")
 remotes::install_github("Open-Systems-Pharmacology/OSPSuite.ReportingFramework")
 ```
@@ -58,14 +50,15 @@ requires following packages to be installed:
 
 - From the [esqLABS](https://github.com/esqLABS) ecosystem:
 
-| Package                                                               | Version | Installation Instructions                                                                   |
-|-----------------------------------------------------------------------|---------|---------------------------------------------------------------------------------------------|
-| [`{esqlabsR}`](https://github.com/Open-Systems-Pharmacology/esqlabsR) | latest  | Download and install package bundle [here 📦](https://github.com/esqLABS/esqlabsR/releases) |
+| Package | Version | Installation Instructions |
+|----|----|----|
+| [`{esqlabsR}`](https://github.com/Open-Systems-Pharmacology/esqlabsR) | latest | Download and install package bundle [here 📦](https://github.com/esqLABS/esqlabsR/releases) |
 
 Once the bundles downloaded, you can install the packages by using the
 code below:
 
 ``` r
+
 # bundlePath <- path/to/osp/bundles
 install.packages(file.path(bundlePath,"ospsuite.plots.zip"), repos = NULL)
 install.packages(file.path(bundlePath,"ospsuite.zip"), repos = NULL)
@@ -92,6 +85,7 @@ install.packages(file.path(bundlePath,"esqlabsR.zip"), repos = NULL)
 To install these packages, use the code below:
 
 ``` r
+
 # Required packages
 install.packages("data.table")
 install.packages("checkmate")
@@ -106,6 +100,61 @@ install.packages("jsonlite")
 # Optional packages
 install.packages("rstudioapi")
 install.packages("cowplot")
+```
+
+## AI-assisted workflow support
+
+The package includes helper functions to support users working with AI
+assistants.
+
+### Generate AI-ready prompts
+
+``` r
+
+# Create project configuration first
+projectConfiguration <- createProjectConfiguration(
+  path = file.path("ProjectConfiguration.xlsx")
+)
+
+# Generic workflow prompt
+prompt <- createAIWorkflowPrompt(
+  projectConfiguration = projectConfiguration,
+  task = "create-workflow"
+)
+
+# Task-specific prompt presets
+promptImport <- createAIPromptFromTask(
+  projectConfiguration = projectConfiguration,
+  task = "import-data"
+)
+```
+
+Supported task presets in
+[`createAIPromptFromTask()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/createAIPromptFromTask.md):
+
+- `"create-workflow"`
+- `"import-data"`
+- `"build-plots"`
+- `"debug-run"`
+
+### Export compact context for AI tools
+
+``` r
+
+exportWorkflowContext(
+  projectConfiguration = projectConfiguration,
+  file = "workflow-context.json"
+)
+```
+
+### Validate configuration before running AI-generated code
+
+``` r
+
+validation <- validateWorkflowForAI(projectConfiguration)
+validation$ok
+validation$errors
+validation$warnings
 ```
 
 ## MS-Word reports
@@ -141,6 +190,9 @@ Before getting started please read the [contribution
 guidelines](https://github.com/Open-Systems-Pharmacology/Suite/blob/master/CONTRIBUTING.md).
 If you are contributing code, please be familiar with the [coding
 standards](https://github.com/Open-Systems-Pharmacology/Suite/blob/master/CODING_STANDARDS_R.md).
+
+Integration tests for this package are maintained separately at
+[ReportingFramework-Test-Reports](https://github.com/Open-Systems-Pharmacology/ReportingFramework-Test-Reports).
 
 ## License
 

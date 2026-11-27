@@ -1,34 +1,40 @@
-# Insert a bulleted item, making sure that there are sufficient newlines to build a bulleted list
+# Insert bulleted item with indentation.
 
-Insert a bulleted item, making sure that there are sufficient newlines
-to build a bulleted list
+Insert bulleted item with indentation.
+
+Insert bulleted item using paste0.
 
 ## Usage
 
 ``` r
 mdBullet(..., bullet = "-", level = 1)
+
+mdBullet0(..., bullet = "-", level = 1)
 ```
 
 ## Arguments
 
 - ...:
 
-  passed to \`mdPaste\`
+  Bullet content.
 
 - bullet:
 
-  \`character\` type of bullet
+  Bullet character (default "-").
 
 - level:
 
-  \`integer\`, specifies the indentation level. \`level=1\` has no
-  indentation
+  Indentation level (default 1).
+
+## Value
+
+Invisible \`NULL\`.
+
+Invisible \`NULL\`.
 
 ## See also
 
 Other markdown helper function:
-[`addFiguresAndTables()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addFiguresAndTables.md),
-[`mdBullet0()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdBullet0.md),
 [`mdCaption()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdCaption.md),
 [`mdFigure()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdFigure.md),
 [`mdFootNote()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdFootNote.md),

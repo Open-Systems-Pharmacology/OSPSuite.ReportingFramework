@@ -1,7 +1,7 @@
-# function that catches messages, warnings, and errors. This function has to be initialized by \`initLogfunction\` function
+# Catch messages, warnings, and errors and route them to the log
 
-function that catches messages, warnings, and errors. This function has
-to be initialized by \`initLogfunction\` function
+Wraps \`ospsuite.utils::logCatch\` and preserves an optional \`finally\`
+expression for backwards compatibility.
 
 ## Usage
 
@@ -17,14 +17,17 @@ captureLog(expr, finallyExpression = invisible())
 
 - finallyExpression:
 
-  The expression to evaluate finally
+  The expression to evaluate finally.
+
+## Value
+
+NULL (invisible).
 
 ## See also
 
 Other log file management:
 [`addMessageToLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addMessageToLog.md),
-[`initLogfunction()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/initLogfunction.md),
 [`saveSessionInfo()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/saveSessionInfo.md),
+[`setLogPath()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/setLogPath.md),
 [`setShowLogMessages()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/setShowLogMessages.md),
-[`writeTableToLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/writeTableToLog.md),
-[`writeToLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/writeToLog.md)
+[`writeTableToLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/writeTableToLog.md)

@@ -3,15 +3,30 @@
 ## Workflow support functions
 
 - [`ProjectConfigurationRF`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/ProjectConfigurationRF.md)
-  : ProjectConfiguration
+  : ProjectConfigurationRF
+- [`createAIPromptFromTask()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/createAIPromptFromTask.md)
+  : Create an AI workflow prompt from a predefined task
+- [`createAIWorkflowPrompt()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/createAIWorkflowPrompt.md)
+  : Create an AI-ready workflow prompt
 - [`createProjectConfiguration()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/createProjectConfiguration.md)
-  : \#' Create a \`ProjectConfiguration\`
+  : Create a \`ProjectConfiguration\`
+- [`exportWorkflowContext()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/exportWorkflowContext.md)
+  : Export workflow context for AI tools
 - [`getQCpassedEnvironmentVariable()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/getQCpassedEnvironmentVariable.md)
   : Get QC Passed Environment Variable
 - [`initProject()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/initProject.md)
-  : Initialize Project Directory
+  : Initialize a ReportingFramework Project Directory
+- [`restoreProjectConfigurationRF()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/restoreProjectConfigurationRF.md)
+  : Restore a ReportingFramework project configuration from a JSON
+  snapshot
 - [`setWorkflowOptions()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/setWorkflowOptions.md)
   : Sets options for a reporting frame work workflow.
+- [`snapshotProjectConfigurationRF()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/snapshotProjectConfigurationRF.md)
+  : Snapshot a ReportingFramework project configuration to JSON
+- [`upgradeToReportingFramework()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/upgradeToReportingFramework.md)
+  : Upgrade an esqlabsR Project to a ReportingFramework Project
+- [`validateWorkflowForAI()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/validateWorkflowForAI.md)
+  : Validate workflow configuration for AI-assisted usage
 - [`exportRandomPopulations()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/exportRandomPopulations.md)
   : Export Random Populations
 - [`exportVirtualTwinPopulations()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/exportVirtualTwinPopulations.md)
@@ -20,7 +35,7 @@
   : Setup Virtual Twin Population Configuration
 - [`calculatePKParameterForScenarios()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/calculatePKParameterForScenarios.md)
   : Calculate Pharmacokinetic (PK) Parameters
-- [`createScenarios.wrapped()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/createScenarios.wrapped.md)
+- [`createScenariosWrapped()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/createScenariosWrapped.md)
   : Create Scenario objects from \`ScenarioConfiguration\` objects
 - [`loadPKParameter()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/loadPKParameter.md)
   : Load Pharmacokinetic (PK) Parameters for Specified Scenarios
@@ -43,6 +58,8 @@
 - [`convertDataTableToDataCombined()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/convertDataTableToDataCombined.md)
   : Converts data.table with observed data to \`ospsuite::DataCombined\`
   object
+- [`getNumericValue()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/getNumericValue.md)
+  : Get one numeric value by variable name
 - [`readObservedDataByDictionary()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/readObservedDataByDictionary.md)
   : Read data by dictionary
 - [`updateDataGroupId()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/updateDataGroupId.md)
@@ -67,13 +84,13 @@ Functions to be used with runPlot
 - [`plotPKBoxwhisker()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/plotPKBoxwhisker.md)
   : Plot PK Box-and-Whisker
 - [`plotPKForestAggregatedAbsoluteValues()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/plotPKForestAggregatedAbsoluteValues.md)
-  : PK Forest Plots
+  : Plot PK Forest Aggregated Absolute Values
 - [`plotPKForestAggregatedRatios()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/plotPKForestAggregatedRatios.md)
-  : PK Forest Plots
+  : Plot PK Forest Aggregated Ratios
 - [`plotPKForestPointEstimateOfAbsoluteValues()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/plotPKForestPointEstimateOfAbsoluteValues.md)
-  : PK Forest Plots
+  : Plot PK Forest Point Estimate of Absolute Values
 - [`plotPKForestPointEstimateOfRatios()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/plotPKForestPointEstimateOfRatios.md)
-  : PK Forest Plots
+  : Plot PK Forest Point Estimate of Ratios
 - [`plotSensitivity()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/plotSensitivity.md)
   : Plot Sensitivity Function
 - [`plotTimeProfiles()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/plotTimeProfiles.md)
@@ -120,10 +137,10 @@ Functions to validate the plot configuration
 
 ## Report generation
 
-- [`mergeRmds()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mergeRmds.md)
-  : Creates Rmd file which include specified .Rmd s
+- [`mergeQmds()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mergeQmds.md)
+  : Merge multiple Qmd files into one.
 - [`renderWord()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/renderWord.md)
-  : converts .Rmd file to word
+  : Convert a .qmd file to Word
 - [`runPlot()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/runPlot.md)
   : Run Plot Function
 - [`setExportAttributes()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/setExportAttributes.md)
@@ -140,6 +157,8 @@ Functions to validate the plot configuration
 
 ## Reading and writing to xlsx
 
+- [`copyConfigSheet()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/copyConfigSheet.md)
+  : Copy a configuration sheet between workbooks
 - [`setHeadersToLowerCase()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/setHeadersToLowerCase.md)
   : Convert Data Table Column Names to Lowercase
 - [`splitInputs()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/splitInputs.md)
@@ -154,25 +173,23 @@ Functions to validate the plot configuration
   : Read data from a worksheet
 - [`xlsxWriteData()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/xlsxWriteData.md)
   : Write data to a worksheet, clearing existing content
+- [`xlsxWriteOrAddData()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/xlsxWriteOrAddData.md)
+  : Write data to a worksheet or add the worksheet if it does not exist
 
 ## Log-file management
 
 - [`addMessageToLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addMessageToLog.md)
-  : Used to add message to log file
+  : Add a message to the log file
 - [`captureLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/captureLog.md)
-  : function that catches messages, warnings, and errors. This function
-  has to be initialized by \`initLogfunction\` function
-- [`initLogfunction()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/initLogfunction.md)
-  : Initializing a Log Function
+  : Catch messages, warnings, and errors and route them to the log
 - [`saveSessionInfo()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/saveSessionInfo.md)
-  : Save Session Info
+  : Save session information to the log
+- [`setLogPath()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/setLogPath.md)
+  : Set log folder and file name
 - [`setShowLogMessages()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/setShowLogMessages.md)
-  : Function to switch the display of log messages on the console on and
-  off
+  : Toggle display of log messages on the console
 - [`writeTableToLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/writeTableToLog.md)
-  : write a table to the logfile
-- [`writeToLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/writeToLog.md)
-  : Writing to Log
+  : Write a data frame to the log
 
 ## Configuration identifier
 
@@ -193,7 +210,7 @@ Functions to retrieve configuration identifier
 
 ## Addin support
 
-Functions to support Addin
+Functions to support template addins
 
 - [`createDocumentFromTemplate()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/createDocumentFromTemplate.md)
   : Opens a template file a new document
@@ -206,14 +223,20 @@ Functions to support Addin
 - [`openWorkflowTemplate()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/openWorkflowTemplate.md)
   : Opens the workflow template as new document
 
-## Miscellaneous
+## Sensitivity analysis
 
-- [`runSensitivityAnalysisForScenarios()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/runSensitivityAnalysisForScenarios.md)
-  : Run Sensitivity Analysis for Specified Scenarios
+Functions for configuring and running sensitivity workflows.
+
 - [`addSensitivityTable()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addSensitivityTable.md)
   : Add Sensitivity Table to Project Configuration
-- [`TestProjectBuilder`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/TestProjectBuilder.md)
-  : TestProjectBuilder
+- [`runRepresentativeSensitivityAnalysisForScenarios()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/runRepresentativeSensitivityAnalysisForScenarios.md)
+  : Run representative-individual sensitivity analysis for population
+  scenarios
+- [`runSensitivityAnalysisForScenarios()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/runSensitivityAnalysisForScenarios.md)
+  : Run Sensitivity Analysis for Specified Scenarios
+
+## Miscellaneous
+
 - [`validateAtleastOneEntry()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/validateAtleastOneEntry.md)
   : check if at least one of the following columns is selected
 - [`validateConfigTablePlots()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/validateConfigTablePlots.md)
@@ -245,6 +268,8 @@ Functions to support Addin
   : Validate Sensitivity Configuration Table
 - [`validateTimeProfilesConfig()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/validateTimeProfilesConfig.md)
   : Validation of config table for time profiles plots
+- [`validateWorkflowForAI()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/validateWorkflowForAI.md)
+  : Validate workflow configuration for AI-assisted usage
 - [`formatPercentiles()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/formatPercentiles.md)
   : This function takes a numeric vector of percentiles and maps
   specific values to their corresponding labels. It also formats other
@@ -266,52 +291,28 @@ scaling.
 
 ## Markdown helpers
 
-Functions that supports writing of a murkdown document
+Functions that supports writing of a markdown document
 
-- [`addFiguresAndTables()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addFiguresAndTables.md)
-  : Loop on figure keys, add figure or table
 - [`mdBullet()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdBullet.md)
-  : Insert a bulleted item, making sure that there are sufficient
-  newlines to build a bulleted list
-- [`mdBullet0()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdBullet0.md)
-  : Insert a bulleted item, making sure that there are sufficient
-  newlines to build a bulleted list
+  [`mdBullet0()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdBullet.md)
+  : Insert bulleted item with indentation.
 - [`mdCaption()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdCaption.md)
-  : add Caption to .Rmd
+  : Add caption with optional custom style.
 - [`mdFigure()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdFigure.md)
-  : mdFigure
+  : Include figure with caption and footnote.
 - [`mdFootNote()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdFootNote.md)
-  : add footnote lines
+  : Add footnote lines from file.
 - [`mdHeading()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdHeading.md)
-  : mdHeading
+  : mdHeading Insert heading with specified level (1-6).
 - [`mdLink()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdLink.md)
-  : mdLink
+  : Insert markdown link.
 - [`mdNewline()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdNewline.md)
   : mdNewline
 - [`mdNewpage()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdNewpage.md)
-  : mdNewpage
+  : mdNewpage Insert page break and newline.
 - [`mdPaste()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdPaste.md)
   : mdPaste
 - [`mdPaste0()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdPaste0.md)
   : mdPaste0
 - [`mdTable()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdTable.md)
-  : mdTable
-
-## Temporary functions
-
-Functions that will be moved to ospsuite.utils
-
-- [`ospsuite_plotPredictedVsObserved()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/ospsuite_plotPredictedVsObserved.md)
-  : Plots predicted vs observed data, grouped by "group".
-- [`ospsuite_plotQuantileQuantilePlot()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/ospsuite_plotQuantileQuantilePlot.md)
-  : Plots a Quantile-Quantile plot, grouped by "group".
-- [`ospsuite_plotResidualsAsHistogram()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/ospsuite_plotResidualsAsHistogram.md)
-  : Plots residuals as a histogram, grouped by "group".
-- [`ospsuite_plotResidualsVsObserved()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/ospsuite_plotResidualsVsObserved.md)
-  : Plots residuals vs observed values, grouped by "group".
-- [`ospsuite_plotResidualsVsTime()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/ospsuite_plotResidualsVsTime.md)
-  : Plots residuals vs Time, grouped by "group".
-- [`ospsuite_plotTimeProfile()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/ospsuite_plotTimeProfile.md)
-  : Creates a time profile plot for given data.
-- [`addPredictedValues()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addPredictedValues.md)
-  : Interpolates observed data based on simulated data.
+  : Insert table from CSV with caption.

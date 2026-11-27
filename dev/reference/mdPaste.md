@@ -1,6 +1,6 @@
 # mdPaste
 
-\`cat\` text using \`paste\` and optionally end with newlines.
+mdPaste
 
 ## Usage
 
@@ -16,22 +16,24 @@ mdPaste(..., sep = " ", collapse = NULL, newlines = 1)
 
 - sep:
 
-  Passed to \`paste\`. Defaults to \`" "\`.
+  Separator (default \`" "\`).
 
 - collapse:
 
-  Passed to \`paste\`. Defaults to \`NULL\`.
+  Collapse argument.
 
 - newlines:
 
-  Number of newlines to insert afterwards. Defaults to 1.
+  Newlines afterwards (default 1).
+
+## Value
+
+Invisible \`NULL\`.
 
 ## See also
 
 Other markdown helper function:
-[`addFiguresAndTables()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addFiguresAndTables.md),
 [`mdBullet()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdBullet.md),
-[`mdBullet0()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdBullet0.md),
 [`mdCaption()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdCaption.md),
 [`mdFigure()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdFigure.md),
 [`mdFootNote()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdFootNote.md),

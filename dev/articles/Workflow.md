@@ -2,11 +2,8 @@
 
 ## Typical Package Workflow
 
-This vignette describes how to set up a workflow file and details the
-different sections of the workflow for the
-[ospsuite.reportingframework](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/)
-package. It serves as a guide for users to effectively utilize the
-package for processing pharmacokinetic data.
+This vignette explains how to set up and run a reporting workflow with
+[ospsuite.reportingframework](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/).
 
 ### Accessing the Workflow Template
 
@@ -14,6 +11,7 @@ To access the default workflow template provided by the package, you can
 use the following function:
 
 ``` r
+
 openWorkflowTemplate()
 ```
 
@@ -30,6 +28,47 @@ use the Addins, simply navigate to the Addins menu in RStudio and select
 [`openWorkflowTemplate()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/openWorkflowTemplate.md)
 function and open the template in a new document.
 
+### AI-Assisted Workflow Setup
+
+If you use an AI assistant to create or refine workflow scripts, you can
+generate project-specific prompts directly from the package.
+
+``` r
+
+prompt <- createAIPromptFromTask(
+  projectConfiguration = projectConfiguration,
+  task = "create-workflow"
+)
+
+cat(prompt, sep = "\n")
+```
+
+Available task presets are:
+
+- `"create-workflow"`
+- `"import-data"`
+- `"build-plots"`
+- `"debug-run"`
+
+You can also export compact context data for other AI tools:
+
+``` r
+
+exportWorkflowContext(
+  projectConfiguration = projectConfiguration,
+  file = "workflow-context.json"
+)
+```
+
+Before running AI-generated code, validate the configuration:
+
+``` r
+
+validation <- validateWorkflowForAI(projectConfiguration)
+validation$ok
+validation$errors
+```
+
 #### Customizing the Workflow Template
 
 By default, the workflow template is loaded from the package’s internal
@@ -41,6 +80,7 @@ templates. If you wish to customize this template, follow these steps:
 3.  Set the path to your custom template by using the following option:
 
 ``` r
+
 options(OSPSuite.RF.PathForWorkflowTemplate = "myTemplateDirectory")
 ```
 
@@ -57,9 +97,192 @@ includes:
 
 - Loading necessary libraries.
 - Setting the workflow options.
-- Setting up the project directory and configuration files using the
-  project structure of [esqlabsR](https://github.com/esqLABS/esqlabsR).
+- Setting up the project directory and configuration files by
+  initializing with [esqlabsR](https://github.com/esqLABS/esqlabsR) and
+  upgrading to ReportingFramework defaults (unless
+  `keepEsqlabsRStructure = TRUE`).
+- Creating or updating `.gitignore` files in configuration folders so
+  `*.xlsx` configuration files are ignored by Git.
 - Initializing the log file.
+
+Set workflow behavior with `setWorkflowOptions(isValidRun)`. This
+controls whether exploratory outputs are allowed (`isValidRun = FALSE`)
+or a QC-passed run is enforced (`isValidRun = TRUE`). If `isValidRun` is
+omitted,
+[`getQCpassedEnvironmentVariable()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/getQCpassedEnvironmentVariable.md)
+reads `QCpassed` from the environment.
+
+``` r
+
+# Exploratory run: enable watermarks and allow helper functions
+setWorkflowOptions(isValidRun = FALSE)
+
+# QC-passed run: disable watermarks and enforce strict execution
+setWorkflowOptions(isValidRun = TRUE)
+```
+
+Initialize the project structure. By default,
+`analysisSubfolderName = "ReportingFramework"` creates
+`Scripts/ReportingFramework` and `Outputs/ReportingFramework`. Set a
+custom name if you want multiple analyses that share the same
+project-level models and data folders.
+
+``` r
+
+analysisSubfolderName <- "RF_Analysis"
+initProject(
+  projectDirectory = ".",
+  analysisSubfolderName = analysisSubfolderName,
+  keepEsqlabsRStructure = FALSE
+)
+
+configurationDirectory <- file.path("Scripts", analysisSubfolderName)
+```
+
+Create and load the project configuration from the project workbook
+path:
+
+``` r
+
+projectConfiguration <- createProjectConfiguration(
+  path = file.path(configurationDirectory, "ProjectConfiguration.xlsx"),
+  ignoreVersionCheck = FALSE
+)
+```
+
+`ProjectConfiguration.xlsx` stores the package versions used to create
+the project: `esqlabsRVersion` (managed by
+[esqlabsR](https://github.com/esqLABS/esqlabsR)) and
+`ospsuiteReportingFrameworkVersion` (managed by this package). When you
+load a configuration, both versions are checked against installed
+packages; mismatches prompt for update in interactive sessions and stop
+execution in non-interactive runs (for example CI) until resolved. New
+projects created with
+[`initProject()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/initProject.md)
+receive the current framework version automatically, and
+`projectConfiguration$save()` updates stored version values.
+
+### Ownership and Side Effects Matrix
+
+The reporting workflow combines base
+[esqlabsR](https://github.com/esqLABS/esqlabsR) configuration with
+reporting add-ons. The table below summarizes ownership and whether
+common functions read or modify each workbook.
+
+| Workbook / Sheet | Primary owner | Typical usage in workflows | Modified by reporting framework functions |
+|----|----|----|----|
+| `ProjectConfiguration.xlsx` | [esqlabsR](https://github.com/esqLABS/esqlabsR) base + RF extension fields | Loaded by [`createProjectConfiguration()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/createProjectConfiguration.md) | `ProjectConfigurationRF$save()` updates stored paths/versions |
+| `ProjectConfiguration.xlsx` (`AddOns`) | Reporting framework extension layer | Stores add-on workbook/folder references such as `dataImportMapFile`, `reportsFile`, `pKParameterFile`, and `electronicPackageFolder` | Initialized/updated by [`upgradeToReportingFramework()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/upgradeToReportingFramework.md) and persisted by `ProjectConfigurationRF$save()` |
+| `Scenarios.xlsx` (`Scenarios`, `OutputPaths`) | [esqlabsR](https://github.com/esqLABS/esqlabsR) | Read by simulation workflow and synchronization helpers | Usually not modified by [`readObservedDataByDictionary()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/readObservedDataByDictionary.md). It may be read to synchronize plot-facing sheets. |
+| `Individuals.xlsx` (`IndividualBiometrics`) | [esqlabsR](https://github.com/esqLABS/esqlabsR) workbook, populated by RF import helpers | Used for individual metadata and population-related workflows | [`addBiometricsToConfig()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addBiometricsToConfig.md) appends/updates observed biometrics |
+| `Individuals.xlsx` (`VirtualTwinPopulation`) | Reporting framework add-on sheet | Used by virtual twin population workflows | [`setupVirtualTwinPopConfig()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/setupVirtualTwinPopConfig.md) creates/updates this sheet |
+| `DataImportMap.xlsx` | Reporting framework add-on workbook | Read by [`readObservedDataByDictionary()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/readObservedDataByDictionary.md) as import dictionary | Not modified by import execution |
+| `Reports.xlsx` (`DataGroups`, `Outputs`, `Scenarios`) | Reporting framework add-on workbook | Read by [`runPlot()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/runPlot.md) and report generation | [`updateDataGroupId()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/updateDataGroupId.md) updates `DataGroups`; [`updateOutputPathId()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/updateOutputPathId.md) updates `Outputs`; scenario rows can be synchronized into `Scenarios` |
+| `PKParameter.xlsx` | Reporting framework add-on workbook | Used for PK parameter selection and user-defined PK settings | Modified only when users edit configuration manually |
+
+For data import, side effects are controlled by `spreadData` in
+[`readObservedDataByDictionary()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/readObservedDataByDictionary.md).
+Set `spreadData = FALSE` for read-only imports (returns imported data
+without propagating identifiers/metadata into configuration workbooks).
+
+### Logging and Diagnostics
+
+Set up logging immediately after loading the project configuration so
+workflow messages, warnings, and errors are written to a predictable
+location.
+
+``` r
+
+setLogPath(
+  logFolder = file.path(projectConfiguration$outputFolder, "logs"),
+  logFileName = "workflow.log"
+)
+```
+
+This creates a log file in `projectConfiguration$outputFolder/logs`. Use
+this log as the primary record for workflow execution in local runs and
+CI.
+
+Wrap workflow steps with
+[`captureLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/captureLog.md)
+when you want messages, warnings, and errors from a code block to be
+routed to the log file while still propagating errors to the caller:
+
+``` r
+
+captureLog({
+  importedData <- readObservedDataFromDataSet(
+    projectConfiguration = projectConfiguration,
+    dataFile = "observed-data.csv"
+  )
+})
+```
+
+Use
+[`addMessageToLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addMessageToLog.md)
+for progress markers or decisions that should appear in the log, and
+[`writeTableToLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/writeTableToLog.md)
+when a data frame snapshot helps with debugging:
+
+``` r
+
+addMessageToLog("Observed data import finished")
+writeTableToLog(head(importedData$data))
+```
+
+If console output becomes too noisy during interactive work, hide
+informational messages while still keeping warnings in the console:
+
+``` r
+
+setShowLogMessages(FALSE)
+```
+
+For reproducibility or support requests, save the current R session
+details next to the workflow log:
+
+``` r
+
+saveSessionInfo()
+```
+
+This writes `sessionInfo.log` into the configured log folder and is
+useful when investigating package version or environment-specific
+issues.
+
+### Configuration in Git: Use JSON Snapshots
+
+Configuration workbooks (`*.xlsx`) are generated working files and are
+ignored by Git in configuration folders. The versioned source of truth
+is the JSON snapshot created from the configuration.
+
+Save current configuration to JSON:
+
+``` r
+
+projectConfiguration <- createProjectConfiguration(
+  path = file.path(configurationDirectory, "ProjectConfiguration.xlsx")
+)
+
+snapshotProjectConfigurationRF(
+  projectConfiguration,
+  outputDir = configurationDirectory
+)
+```
+
+This writes `ProjectConfiguration.json` in `configurationDirectory`.
+Commit this JSON file to Git.
+
+Restore configuration from JSON (for example on another machine or in
+CI):
+
+``` r
+
+projectConfiguration <- restoreProjectConfigurationRF(
+  snapshotFilePath = file.path(configurationDirectory, "ProjectConfiguration.json"),
+  outputDir = configurationDirectory
+)
+```
 
 ## Data Import
 
@@ -70,7 +293,7 @@ time profile data as well as individual and aggregated PK parameter
 data.
 
 For more information, see **[Data Import by
-Dictionary](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/articles/Data_import_by_dictionary.md)**.
+Dictionary](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/articles/DataImport_by_Dictionary.md)**.
 
 ## Setting Up and Running Simulations Including PK Parameter Calculation
 
@@ -86,7 +309,7 @@ package provides additional functionality to:
 - Export random and virtual twin populations (see the
   **[Population](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/articles/Population.md)**).
 - Calculate PK Parameters (see the **[PK
-  Parameters](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/articles/PK-Parameter)**).
+  Parameters](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/articles/PK_Parameter.md)**).
 
 ## Plot and Report Generation
 
@@ -103,9 +326,3 @@ adjust plots and utilize customized plot functions.
 
 For more information, see the **[Plot and Report
 Generation](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/articles/Plot_and_Report_Generation.md)**.
-
-## Conclusion
-
-This vignette has guided you through the setup and execution of
-workflows using the OSPSuite Reporting Framework. For further
-exploration, consult the linked vignettes and documentation.

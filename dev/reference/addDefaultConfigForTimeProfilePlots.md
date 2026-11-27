@@ -20,8 +20,9 @@ addDefaultConfigForTimeProfilePlots(
 - projectConfiguration:
 
   A \`ProjectConfiguration\` class object containing configuration
-  details, including: - \`plotsFile\`: A string representing the file
-  path to the Excel workbook containing the plot configurations.
+  details, including: - \`addOns\$reportsFile\`: A string representing
+  the file path to the Excel workbook containing the plot
+  configurations.
 
 - dataObserved:
 
@@ -39,8 +40,7 @@ addDefaultConfigForTimeProfilePlots(
 
 ## Value
 
-NULL This function updates the Excel workbook in place and does not
-return a value. It is called for its side effects.
+invisible(NULL). Updates the Excel workbook in place.
 
 ## Details
 
@@ -74,3 +74,15 @@ Other plot configuration helper function:
 [`addDefaultConfigForHistograms()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addDefaultConfigForHistograms.md),
 [`addDefaultConfigForPKBoxwhsikerPlots()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addDefaultConfigForPKBoxwhsikerPlots.md),
 [`addDefaultConfigForPKForestPlots()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addDefaultConfigForPKForestPlots.md)
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+addDefaultConfigForTimeProfilePlots(
+  projectConfiguration = projectConfiguration,
+  dataObserved = dataObserved,
+  sheetName = "TimeProfiles"
+)
+} # }
+```

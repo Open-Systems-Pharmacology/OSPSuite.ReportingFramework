@@ -21,6 +21,10 @@ createDocumentFromTemplate(
 
   path of template script
 
+## Value
+
+Invisibly returns a new RStudio document object.
+
 ## See also
 
 Other Addins Support:

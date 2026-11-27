@@ -1,11 +1,11 @@
-# write a table to the logfile
+# Write a data frame to the log
 
-write a table to the logfile
+Write a data frame to the log
 
 ## Usage
 
 ``` r
-writeTableToLog(dt, filename = "run.log")
+writeTableToLog(dt)
 ```
 
 ## Arguments
@@ -14,16 +14,15 @@ writeTableToLog(dt, filename = "run.log")
 
   table to log
 
-- filename:
+## Value
 
-  filename of log
+NULL (invisible).
 
 ## See also
 
 Other log file management:
 [`addMessageToLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addMessageToLog.md),
 [`captureLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/captureLog.md),
-[`initLogfunction()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/initLogfunction.md),
 [`saveSessionInfo()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/saveSessionInfo.md),
-[`setShowLogMessages()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/setShowLogMessages.md),
-[`writeToLog()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/writeToLog.md)
+[`setLogPath()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/setLogPath.md),
+[`setShowLogMessages()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/setShowLogMessages.md)

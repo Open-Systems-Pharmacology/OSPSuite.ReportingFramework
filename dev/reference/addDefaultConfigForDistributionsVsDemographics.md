@@ -21,8 +21,8 @@ addDefaultConfigForDistributionsVsDemographics(
 - projectConfiguration:
 
   A ProjectConfiguration class object containing configuration details,
-  including: - \`plotsFile\`: A string representing the file path to the
-  Excel workbook containing the plot configurations.
+  including: - \`addOns\$reportsFile\`: A string representing the file
+  path to the Excel workbook containing the plot configurations.
 
 - pkParameterDT:
 

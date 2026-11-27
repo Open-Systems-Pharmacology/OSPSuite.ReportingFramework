@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Tutorial: Time Profile Plotting • ospsuite.reportingframework</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Tutorial: Time Profile Plotting">
 <meta name="robots" content="noindex">
@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ospsuite.reportingframework</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">1.0.1.9003</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,11 +43,11 @@
     <li><a class="dropdown-item" href="../articles/DataImport_by_Dictionary.html">Data Import by Dictionary</a></li>
     <li><a class="dropdown-item" href="../articles/PK_Parameter.html">PK Parameters</a></li>
     <li><a class="dropdown-item" href="../articles/Population.html">Population</a></li>
-    <li><a class="dropdown-item" href="../articles/Electronic_Package.html">Electronic Package</a></li>
     <li><a class="dropdown-item" href="../articles/Plot_and_Report_Generation.html">Plot_and_Report_Generation</a></li>
+    <li><a class="dropdown-item" href="../articles/Sensitivity_Analysis.html">Sensitivity_Analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/Electronic_Package.html">Electronic Package</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
-    <li><a class="dropdown-item" href="../articles/Workflow.html">Workflow Setup and Execution</a></li>
     <li><a class="dropdown-item" href="../articles/Tutorial_Timeprofiles.html">Tutorial: Time Profile Plotting</a></li>
   </ul>
 </li>
@@ -79,40 +79,57 @@
 
     
     
-<div class="section level3">
-<h3 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
-</h3>
-<p>Welcome to the Time Profile Plotting Tutorial! This guide will walk
-you through the process of generating time profile plots using the
-<a href="https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/">ospsuite.reportingframework</a> package.</p>
-<p>In this tutorial, we will focus on manually editing the Excel (xlsx)
-configuration tables to customize your plots effectively. By following
-the outlined steps, you will learn how to set up your project, import
-data, create simulations, and visualize results through various plotting
-techniques.</p>
+<pre><code><span><span class="co">#&gt; INFO [2026-11-27 13:20:57] Start simulation of one_individual</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:00] Start simulation of virtual_twin_population</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:04] Start simulation of random_population_po</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:14] Start simulation of random_population_iv</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:25] Add virtual twin population configuration to the Population configuration file:</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:25] populationName     N</span></span>
+<span><span class="co">#&gt;             &lt;char&gt; &lt;int&gt;</span></span>
+<span><span class="co">#&gt; 1: 1234_iv_1234_po     6</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:25] Observed Data:</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:25] group No of data points No of individuals No of outputs</span></span>
+<span><span class="co">#&gt;     &lt;char&gt;             &lt;int&gt;             &lt;int&gt;         &lt;int&gt;</span></span>
+<span><span class="co">#&gt; 1: 1234_iv               198                 6             3</span></span>
+<span><span class="co">#&gt; 2: 1234_po               198                 6             3</span></span></code></pre>
+<div class="section level2">
+<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+</h2>
+<p>This tutorial shows the end-to-end time-profile workflow for
+<code>ospsuite.reportingframework</code>, from project setup to
+plot/report generation.</p>
+<p>Vignettes used in this tutorial:</p>
+<ul>
+<li><code><a href="../articles/Workflow.html">vignette("Workflow", package = "ospsuite.reportingframework")</a></code></li>
+<li><code><a href="../articles/Plot_and_Report_Generation.html">vignette("Plot_and_Report_Generation", package = "ospsuite.reportingframework")</a></code></li>
+<li><code>vignette("Data_import_by_dictionary", package = "ospsuite.reportingframework")</code></li>
+<li><code><a href="../articles/Population.html">vignette("Population", package = "ospsuite.reportingframework")</a></code></li>
+</ul>
+<p>Function help pages used throughout:</p>
+<ul>
+<li>
+<code><a href="../reference/initProject.html">?initProject</a></code>, <code><a href="../reference/setWorkflowOptions.html">?setWorkflowOptions</a></code>,
+<code><a href="../reference/createScenariosWrapped.html">?createScenariosWrapped</a></code>
+</li>
+<li>
+<code><a href="../reference/readObservedDataByDictionary.html">?readObservedDataByDictionary</a></code>, <code><a href="../reference/runPlot.html">?runPlot</a></code>,
+<code><a href="../reference/mergeQmds.html">?mergeQmds</a></code>, <code><a href="../reference/renderWord.html">?renderWord</a></code>
+</li>
+</ul>
 </div>
-<div class="section level3">
-<h3 id="prerequisites">Prerequisites<a class="anchor" aria-label="anchor" href="#prerequisites"></a>
-</h3>
-<p>Before you begin, ensure you have installed the
-<code>ospsuite.reportingframework</code> package. Familiarity with R,
-RStudio, and basic Excel operations will be beneficial as you navigate
-through the tutorial.</p>
-</div>
-<div class="section level3">
-<h3 id="package-materials">Package Materials<a class="anchor" aria-label="anchor" href="#package-materials"></a>
-</h3>
-<p>The package contains the following materials used for the
-tutorial:</p>
+<div class="section level2">
+<h2 id="package-materials">Package Materials<a class="anchor" aria-label="anchor" href="#package-materials"></a>
+</h2>
+<p>Tutorial inputs and final example outputs are available in package
+extdata:</p>
 <ul>
 <li>Data files used for the tutorial:
 <code>timeprofiles_study1234_iv.csv</code>,
 <code>timeprofiles_study1234_po.csv</code>
 </li>
-<li>Final configuration tables:
-<code>DataImportConfiguration.xlsx</code>,
+<li>Final configuration tables: <code>DataImportMap.xlsx</code>,
 <code>Individuals.xlsx</code>, <code>Populations.xlsx</code>,
-<code>Scenario.xlsx</code>, <code>Plots.xlsx</code>
+<code>Scenarios.xlsx</code>, <code>Reports.xlsx</code>
 </li>
 <li>The final workflow: <code>workflow.R</code>
 </li>
@@ -122,133 +139,172 @@ tutorial: <code>TutorialPlots.docx</code>
 </ul>
 <p>You can access the folder containing this material using the command
 below:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
 <span>  <span class="st">"extdata"</span>, <span class="st">"Tutorial"</span>,</span>
 <span>  package <span class="op">=</span> <span class="st">"ospsuite.reportingframework"</span>,</span>
 <span>  mustWork <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>You can access the folder containing the models used in the tutorial
-(“iv_1_mg_5_min.pkml” and “po_3_mg_solution.pkml”) using the command
-below:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<p>The models used in the tutorial (“iv_1_mg_5_min.pkml” and
+“po_3_mg_solution.pkml”) are included in the Tutorial materials.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span></span>
-<span>  <span class="st">"extdata"</span>, <span class="st">"Models"</span>,</span>
+<span>  <span class="st">"extdata"</span>, <span class="st">"Tutorial"</span>,</span>
 <span>  package <span class="op">=</span> <span class="st">"ospsuite.reportingframework"</span>,</span>
 <span>  mustWork <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "/home/runner/work/_temp/Library/ospsuite.reportingframework/extdata/Models"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "/home/runner/work/_temp/Library/ospsuite.reportingframework/extdata/Tutorial"</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="table-of-contents">Table of Contents<a class="anchor" aria-label="anchor" href="#table-of-contents"></a>
-</h3>
+<div class="section level2">
+<h2 id="table-of-contents">Table of Contents<a class="anchor" aria-label="anchor" href="#table-of-contents"></a>
+</h2>
 <ol style="list-style-type: decimal">
 <li><p><a href="#id_1-setting-up-the-project-and-basic-simulations">Setting Up the
 Project and Basic Simulations</a><br>
-Learn how to set up your project, save a template workflow, and
-initialize the project structure for time profile plotting.</p></li>
+Set up project structure and run a first scenario.</p></li>
 <li><p><a href="#id_2-adding-virtual-twin-populations">Adding virtual
 twin populations</a><br>
-Discover how to define and export virtual twin populations for more
-refined simulations.</p></li>
+Add and simulate virtual twin populations.</p></li>
 <li><p><a href="#id_3-adding-random-populations-and-use-of-aggregated-data">Adding
-random populations and Use of aggregated data</a><br>
-Understand how to aggregate individual data and work with aggregated
-random populations for comparative analysis.</p></li>
-<li><p><a href="#id_4-adding-reference-populations">Adding reference
-populations</a><br>
-Learn how to Display reference scenarios by modifying parameters in
-existing random population scenarios.</p></li>
+Random Populations and Use of Aggregated Data</a><br>
+Aggregate observed data and compare to random populations.</p></li>
+<li><p><a href="#id_4-adding-reference-scenarios">Adding Reference
+Scenarios</a><br>
+Add reference scenarios for side-by-side comparison.</p></li>
 <li><p><a href="#id_5-adding-plots-with-different-time-ranges">Adding
 plots with different time ranges</a><br>
-Explore how to visualize pharmacokinetic data across various time ranges
-to reveal different drug behavior aspects.</p></li>
+Configure plots for different time windows.</p></li>
 <li><p><a href="#id_6-report-creation">Report Creation</a><br>
-Explore how to visualize pharmacokinetic data across various time ranges
-to reveal different drug behavior aspects.</p></li>
+Merge and render the final report.</p></li>
 </ol>
 </div>
+<div class="section level2">
+<h2 id="setting-up-the-project-and-basic-simulations">1) Setting Up the Project and Basic Simulations<a class="anchor" aria-label="anchor" href="#setting-up-the-project-and-basic-simulations"></a>
+</h2>
 <div class="section level3">
-<h3 id="setting-up-the-project-and-basic-simulations">1) Setting Up the Project and Basic Simulations<a class="anchor" aria-label="anchor" href="#setting-up-the-project-and-basic-simulations"></a>
+<h3 id="step-1-save-template-workflow">Step 1: Save Template Workflow<a class="anchor" aria-label="anchor" href="#step-1-save-template-workflow"></a>
 </h3>
-<div class="section level4">
-<h4 id="step-1-save-template-workflow">Step 1: Save Template Workflow<a class="anchor" aria-label="anchor" href="#step-1-save-template-workflow"></a>
-</h4>
 <ul>
-<li>Select your project directory (<code>&lt;rootDirectory&gt;</code>).
-In this directory the reporting framework folder structure will be
-established (if not already existing).</li>
-<li>Check if the subfolder
-<code>&lt;rootDirectory&gt;/Scripts/ReportingFramework</code> exist, and
-if not create it. (<code>&lt;configurationDirectory&gt;</code>).</li>
-<li>Open RStudio and navigate to the Addins menu.</li>
-<li>Select “Open Template Workflow” to create a new workflow file. Save
-the template in the <code>&lt;configurationDirectory&gt;</code> as
-<code>workflow.R</code>. At the top of the workflow file, you can add a
-description of the purpose of your workflow.</li>
+<li>Create/select <code>&lt;rootDirectory&gt;</code>.</li>
+<li>Create/select
+<code>&lt;rootDirectory&gt;/Scripts/&lt;analysisSubfolderName&gt;</code>.</li>
+<li>In RStudio Addins, run “Open Template Workflow” and save as
+<code>workflow.R</code> in that folder.</li>
 </ul>
+<p>For full setup context, see
+<code><a href="../articles/Workflow.html">vignette("Workflow", package = "ospsuite.reportingframework")</a></code>.</p>
 </div>
-<div class="section level4">
-<h4 id="step-2-initialize-project-structure">Step 2: Initialize Project Structure<a class="anchor" aria-label="anchor" href="#step-2-initialize-project-structure"></a>
-</h4>
-<p>Execute the first lines (listed below) of your workflow. This
-will:</p>
-<p>Change the working directory to the workflow file location. - Set
-some graphic defaults. - Set some options to switch between final valid
-runs and preliminary runs, such as watermarks. - Initialize the project
-directory. - Load the project configuration. - Set up a logfile to catch
-messages.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Initialization  ----------------------------------------------------------</span></span>
-<span><span class="co"># Load necessary libraries and source project-specific code</span></span>
+<div class="section level3">
+<h3 id="step-2-initialize-project-structure">Step 2: Initialize Project Structure<a class="anchor" aria-label="anchor" href="#step-2-initialize-project-structure"></a>
+</h3>
+<p>Execute the initialization block from your workflow. It sets plotting
+defaults, initializes the project structure, loads the configuration,
+and configures logging.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Workflow template for ospsuite.reportingframework.</span></span>
+<span><span class="co">#</span></span>
+<span><span class="co"># Quick documentation entry points:</span></span>
+<span><span class="co"># - Workflow vignette: vignette("Workflow", package = "ospsuite.reportingframework")</span></span>
+<span><span class="co"># - Plot/report vignette: vignette("Plot_and_Report_Generation", package = "ospsuite.reportingframework")</span></span>
+<span><span class="co"># - Sensitivity vignette: vignette("Sensitivity_Analysis", package = "ospsuite.reportingframework")</span></span>
+<span><span class="co"># - Function help: ?initProject, ?setWorkflowOptions, ?runPlot, ?mergeQmds</span></span>
+<span></span>
+<span><span class="co"># Initialization -------------------------------------------------------------</span></span>
+<span><span class="co"># Load package and set plotting/report defaults.</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/">ospsuite.reportingframework</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Set graphic defaults</span></span>
 <span><span class="co"># (see vignette(package = 'ospsuite.plots', topic = 'ospsuite_plots'))</span></span>
-<span><span class="fu">ospsuite.plots</span><span class="fu">::</span><span class="fu"><a href="https://www.open-systems-pharmacology.org/OSPSuite.Plots/reference/setDefaults.html" class="external-link">setDefaults</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu">theme_update</span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"top"</span><span class="op">)</span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/get_theme.html" class="external-link">theme_set</a></span><span class="op">(</span><span class="fu"><a href="https://www.open-systems-pharmacology.org/OSPSuite.Plots/reference/theme_osp.html" class="external-link">theme_osp</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>knitr.kable.NA <span class="op">=</span> <span class="st">""</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Set this to TRUE if you want to execute the workflow as a final valid run.</span></span>
-<span><span class="co"># (see ?setWorkflowOptions)</span></span>
-<span><span class="fu"><a href="../reference/setWorkflowOptions.html">setWorkflowOptions</a></span><span class="op">(</span>isValidRun <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Setup project structure -------------------------------------------------</span></span>
-<span><span class="co"># Create project directory and initialize the structure</span></span>
-<span><span class="co"># (see ?initProject and https://esqlabs.github.io/esqlabsR/articles/esqlabsR.html)</span></span>
-<span><span class="fu"><a href="../reference/initProject.html">initProject</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Get paths of all relevant project files and folders</span></span>
-<span><span class="va">projectConfiguration</span> <span class="op">&lt;-</span> <span class="fu">ospsuite.reportingframework</span><span class="fu">::</span><span class="fu"><a href="../reference/createProjectConfiguration.html">createProjectConfiguration</a></span><span class="op">(</span></span>
-<span>  path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">"ProjectConfiguration.xlsx"</span><span class="op">)</span></span>
+<span><span class="va">runPlotTheme</span> <span class="op">&lt;-</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
+<span>  legend.position <span class="op">=</span> <span class="st">"top"</span>,</span>
+<span>  legend.title <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Initialize log file</span></span>
-<span><span class="fu"><a href="../reference/initLogfunction.html">initLogfunction</a></span><span class="op">(</span><span class="va">projectConfiguration</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Run mode: see ?setWorkflowOptions.</span></span>
+<span><span class="co"># If isValidRun is NULL (default), QCpassed environment variable is used.</span></span>
+<span><span class="fu"><a href="../reference/setWorkflowOptions.html">setWorkflowOptions</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Setup project structure ----------------------------------------------------</span></span>
+<span><span class="co"># Initialize project structure and configuration snapshot.</span></span>
+<span><span class="co"># See ?initProject for layout options and arguments.</span></span>
+<span><span class="va">analysisSubfolderName</span> <span class="op">&lt;-</span> <span class="st">"ReportingFramework"</span></span>
+<span><span class="va">projectDirectory</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">".."</span>, <span class="st">".."</span><span class="op">)</span></span>
+<span><span class="va">configurationDirectory</span> <span class="op">&lt;-</span> <span class="st">"."</span></span>
+<span><span class="fu"><a href="../reference/initProject.html">initProject</a></span><span class="op">(</span></span>
+<span>  projectDirectory <span class="op">=</span> <span class="va">projectDirectory</span>,</span>
+<span>  configurationDirectory <span class="op">=</span> <span class="va">configurationDirectory</span>,</span>
+<span>  analysisSubfolderName <span class="op">=</span> <span class="va">analysisSubfolderName</span>,</span>
+<span>  overwrite <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  keepEsqlabsRStructure <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Load project configuration from ProjectConfiguration.xlsx.</span></span>
+<span><span class="va">projectConfiguration</span> <span class="op">&lt;-</span> <span class="fu">ospsuite.reportingframework</span><span class="fu">::</span><span class="fu"><a href="../reference/createProjectConfiguration.html">createProjectConfiguration</a></span><span class="op">(</span></span>
+<span>  path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">configurationDirectory</span>, <span class="st">"ProjectConfiguration.xlsx"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># For older ProjectConfiguration.xlsx files without a stored framework version,</span></span>
+<span><span class="co"># use ignoreVersionCheck = TRUE (see ?createProjectConfiguration).</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/setLogPath.html">setLogPath</a></span><span class="op">(</span></span>
+<span>  logFolder <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">projectConfiguration</span><span class="op">$</span><span class="va">outputFolder</span>, <span class="st">"logs"</span><span class="op">)</span>,</span>
+<span>  logFileName <span class="op">=</span> <span class="st">"workflow.log"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>For logging helpers and diagnostics, see <strong><a href="Workflow.html">Workflow</a></strong>.</p>
+<p>When loading an existing project configuration that was created
+before version tracking was introduced, pass
+<code>ignoreVersionCheck = TRUE</code> to
+<code><a href="../reference/createProjectConfiguration.html">createProjectConfiguration()</a></code> or update the file once with
+<code>projectConfiguration$save()</code>.</p>
 </div>
-<div class="section level4">
-<h4 id="step-3-copy-the-sample-data-to-your-project-structure">Step 3: Copy the Sample Data to Your Project Structure<a class="anchor" aria-label="anchor" href="#step-3-copy-the-sample-data-to-your-project-structure"></a>
-</h4>
+<div class="section level3">
+<h3 id="configuration-in-git-save-json-snapshot">Configuration in Git: Save JSON Snapshot<a class="anchor" aria-label="anchor" href="#configuration-in-git-save-json-snapshot"></a>
+</h3>
+<p>Keep <code>*.xlsx</code> files local and commit
+<code>ProjectConfiguration.json</code>. After changing configuration
+tables, refresh the JSON snapshot:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">projectConfiguration</span> <span class="op">&lt;-</span> <span class="fu">ospsuite.reportingframework</span><span class="fu">::</span><span class="fu"><a href="../reference/createProjectConfiguration.html">createProjectConfiguration</a></span><span class="op">(</span></span>
+<span>  path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">configurationDirectory</span>, <span class="st">"ProjectConfiguration.xlsx"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ospsuite.reportingframework</span><span class="fu">::</span><span class="fu"><a href="../reference/snapshotProjectConfigurationRF.html">snapshotProjectConfigurationRF</a></span><span class="op">(</span></span>
+<span>  <span class="va">projectConfiguration</span>,</span>
+<span>  outputDir <span class="op">=</span> <span class="va">configurationDirectory</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>Commit <code>ProjectConfiguration.json</code> to Git.</p>
+<p>To recreate the configuration from JSON:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">projectConfiguration</span> <span class="op">&lt;-</span> <span class="fu">ospsuite.reportingframework</span><span class="fu">::</span><span class="fu"><a href="../reference/restoreProjectConfigurationRF.html">restoreProjectConfigurationRF</a></span><span class="op">(</span></span>
+<span>  snapshotFilePath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">configurationDirectory</span>, <span class="st">"ProjectConfiguration.json"</span><span class="op">)</span>,</span>
+<span>  outputDir <span class="op">=</span> <span class="va">configurationDirectory</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="step-3-copy-the-sample-data-to-your-project-structure">Step 3: Copy the Sample Data to Your Project Structure<a class="anchor" aria-label="anchor" href="#step-3-copy-the-sample-data-to-your-project-structure"></a>
+</h3>
 <p>You have now the complete project structure with all configuration
 files. Copy the model files to the folder
 <code>&lt;rootDirectory&gt;/Models</code> and the data files to
 <code>&lt;rootDirectory&gt;/Data</code>.</p>
 </div>
-<div class="section level4">
-<h4 id="step-4-read-observed-data">Step 4: Read Observed Data<a class="anchor" aria-label="anchor" href="#step-4-read-observed-data"></a>
-</h4>
-<p>(See <strong><a href="Data_import_by_dictionary.html">Data Import by
+<div class="section level3">
+<h3 id="step-4-read-observed-data">Step 4: Read Observed Data<a class="anchor" aria-label="anchor" href="#step-4-read-observed-data"></a>
+</h3>
+<p>(See <strong><a href="DataImport_by_Dictionary.html">Data Import by
 Dictionary</a></strong>)</p>
 <p>Open the
-<code>&lt;configurationDirectory&gt;/DataImportConfiguration.xlsx</code>.</p>
+<code>&lt;configurationDirectory&gt;/DataImportMap.xlsx</code>.</p>
 <ul>
 <li>List in the sheet <code>DataFiles</code> your available data. The
 paths should be relative to the configuration table which is in
-<code>&lt;rootDirectory&gt;/Scripts/ReportingFramework</code>, the data
-are saved in <code>&lt;rootDirectory&gt;/Data</code>, so the correct
-path is <code>../../Data</code>.</li>
+<code>&lt;rootDirectory&gt;/Scripts/&lt;analysisSubfolderName&gt;</code>,
+the data are saved in <code>&lt;rootDirectory&gt;/Data</code>, so the
+correct path is <code>../../Data</code>.</li>
 <li>Each file gets a file identifier, which can be used as a filter in
-the <code>readDataByDictionary</code> function.</li>
+the <code>readObservedDataByDictionary</code> function.</li>
 <li>As dictionary, select <code>tpDictionary</code>.</li>
 <li>We do not need a filter, so ensure the column
 <code>DataFilter</code> is empty.</li>
@@ -275,14 +331,14 @@ profile data).</li>
 <td align="left">tp_iv</td>
 <td align="left">../../Data/timeprofiles_study1234_iv.csv</td>
 <td align="left">tpDictionary</td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left">tp Individual</td>
 </tr>
 <tr class="even">
 <td align="left">tp_po</td>
 <td align="left">../../Data/timeprofiles_study1234_po.csv</td>
 <td align="left">tpDictionary</td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left">tp Individual</td>
 </tr>
 </tbody>
@@ -290,8 +346,9 @@ profile data).</li>
 <ul>
 <li>Match existing columns of the datasets when available.</li>
 <li>For <code>individualId</code> and <code>group</code>, concatenate
-existing columns using the columns <code>Filter</code> and
-<code>FilterValue</code>.</li>
+existing columns by setting <code>ValueExpr</code> to the corresponding
+expression and <code>ConditionExpr</code> to <code>TRUE</code> (or leave
+empty).</li>
 <li>For the ‘time profile’ columns, use the source columns
 <code>Time</code>, <code>DV</code>, <code>DVUNIT</code>, and
 <code>LLOQ</code>.</li>
@@ -299,28 +356,27 @@ existing columns using the columns <code>Filter</code> and
 <code>Age</code>, <code>WGHT0</code>, <code>HGHT0</code>, and
 <code>SEX</code>.</li>
 <li>Set <code>population</code> to <code>European_ICRP_2002</code> by
-the filter option.</li>
-<li>Metadata <code>route</code> is available, and <code>dose</code> is
-set via the filter option like the <code>outputPathId</code> in two
-lines.</li>
+using <code>ConditionExpr</code> and <code>ValueExpr</code> rules.</li>
+<li>Metadata <code>route</code> is available; <code>dose</code> and
+<code>outputPathId</code> are set by dedicated
+<code>ConditionExpr</code>/<code>ValueExpr</code> rules, each occupying
+a separate row in the dictionary.</li>
 </ul>
 <table class="table">
 <colgroup>
 <col width="7%">
-<col width="6%">
 <col width="7%">
+<col width="16%">
 <col width="6%">
-<col width="3%">
-<col width="15%">
-<col width="52%">
+<col width="8%">
+<col width="54%">
 </colgroup>
 <thead><tr class="header">
 <th align="left">TargetColumn</th>
 <th align="left">Type</th>
-<th align="left">SourceColumn</th>
+<th align="left">ValueExpr</th>
 <th align="left">SourceUnit</th>
-<th align="left">Filter</th>
-<th align="left">FilterValue</th>
+<th align="right">ConditionExpr</th>
 <th align="left">Description</th>
 </tr></thead>
 <tbody>
@@ -329,8 +385,7 @@ lines.</li>
 <td align="left">identifier</td>
 <td align="left">STUD</td>
 <td align="left"></td>
-<td align="left"></td>
-<td align="left"></td>
+<td align="right"></td>
 <td align="left">character, study ID</td>
 </tr>
 <tr class="even">
@@ -338,27 +393,24 @@ lines.</li>
 <td align="left">identifier</td>
 <td align="left">SID</td>
 <td align="left"></td>
-<td align="left"></td>
-<td align="left"></td>
+<td align="right"></td>
 <td align="left">character, subject ID</td>
 </tr>
 <tr class="odd">
 <td align="left">individualId</td>
 <td align="left">identifier</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left">TRUE</td>
 <td align="left">paste0(“I”,STUD,SID)</td>
+<td align="left"></td>
+<td align="right"></td>
 <td align="left">character, unique over all studies, ignored by
 aggregated Data</td>
 </tr>
 <tr class="even">
 <td align="left">group</td>
 <td align="left">identifier</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left">TRUE</td>
 <td align="left">paste(STUD,route,sep = ’_’)</td>
+<td align="left"></td>
+<td align="right"></td>
 <td align="left">Must be unique over studies and dataclasses</td>
 </tr>
 <tr class="odd">
@@ -366,8 +418,7 @@ aggregated Data</td>
 <td align="left">identifier</td>
 <td align="left">outputPathId</td>
 <td align="left"></td>
-<td align="left"></td>
-<td align="left"></td>
+<td align="right"></td>
 <td align="left">character, output ID</td>
 </tr>
 <tr class="even">
@@ -375,8 +426,7 @@ aggregated Data</td>
 <td align="left">timeprofile</td>
 <td align="left">TIME</td>
 <td align="left">h</td>
-<td align="left"></td>
-<td align="left"></td>
+<td align="right"></td>
 <td align="left">Time (0 = start of simulation in PK-Sim/Mobi)</td>
 </tr>
 <tr class="odd">
@@ -384,8 +434,7 @@ aggregated Data</td>
 <td align="left">timeprofile</td>
 <td align="left">DV</td>
 <td align="left"></td>
-<td align="left"></td>
-<td align="left"></td>
+<td align="right"></td>
 <td align="left">Units is coded in column “dvUnit”</td>
 </tr>
 <tr class="even">
@@ -393,8 +442,7 @@ aggregated Data</td>
 <td align="left">timeprofile</td>
 <td align="left">DVUNIT</td>
 <td align="left"></td>
-<td align="left"></td>
-<td align="left"></td>
+<td align="right"></td>
 <td align="left">character, dv Unit must be valid PK-Sim unit</td>
 </tr>
 <tr class="odd">
@@ -402,8 +450,7 @@ aggregated Data</td>
 <td align="left">timeprofile</td>
 <td align="left">LLOQ</td>
 <td align="left"></td>
-<td align="left"></td>
-<td align="left"></td>
+<td align="right"></td>
 <td align="left">for values below lloq set dv to lloq/2, if not
 available set to NA</td>
 </tr>
@@ -412,8 +459,7 @@ available set to NA</td>
 <td align="left">biometrics</td>
 <td align="left">AGE</td>
 <td align="left">year(s)</td>
-<td align="left"></td>
-<td align="left"></td>
+<td align="right"></td>
 <td align="left">character, age BI</td>
 </tr>
 <tr class="odd">
@@ -421,8 +467,7 @@ available set to NA</td>
 <td align="left">biometrics</td>
 <td align="left">WGHT0</td>
 <td align="left">kg</td>
-<td align="left"></td>
-<td align="left"></td>
+<td align="right"></td>
 <td align="left">character, weight BI</td>
 </tr>
 <tr class="even">
@@ -430,8 +475,7 @@ available set to NA</td>
 <td align="left">biometrics</td>
 <td align="left">HGHT0</td>
 <td align="left">cm</td>
-<td align="left"></td>
-<td align="left"></td>
+<td align="right"></td>
 <td align="left">character, height BI</td>
 </tr>
 <tr class="odd">
@@ -439,28 +483,25 @@ available set to NA</td>
 <td align="left">biometrics</td>
 <td align="left">SEX</td>
 <td align="left"></td>
-<td align="left"></td>
-<td align="left"></td>
+<td align="right"></td>
 <td align="left">Use characters Male Female (case insensitive) or
 numeric coding 1=male 2= female</td>
 </tr>
 <tr class="even">
 <td align="left">population</td>
 <td align="left">biometrics</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left">TRUE</td>
 <td align="left">“European_ICRP_2002”</td>
+<td align="left"></td>
+<td align="right"></td>
 <td align="left">character, PK Sim population name (get available list
 by calling ospsuite::HumanPopulation)</td>
 </tr>
 <tr class="odd">
 <td align="left">species</td>
 <td align="left">biometrics</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left">TRUE</td>
 <td align="left">“Human”</td>
+<td align="left"></td>
+<td align="right"></td>
 <td align="left">character, PK-Sim Species name (ospsuite::Species)</td>
 </tr>
 <tr class="even">
@@ -468,15 +509,14 @@ by calling ospsuite::HumanPopulation)</td>
 <td align="left">metadata</td>
 <td align="left">route</td>
 <td align="left"></td>
-<td align="left"></td>
-<td align="left"></td>
+<td align="right"></td>
 <td align="left">meta data used for PK-Sim import, if not available,
 delete row or set all values to NA</td>
 </tr>
 </tbody>
 </table>
 <p>Now you can execute the next workflow line:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Read data as data.table</span></span>
 <span><span class="va">dataObserved</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/readObservedDataByDictionary.html">readObservedDataByDictionary</a></span><span class="op">(</span>projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span><span class="op">)</span></span></code></pre></div>
 <p>This will return a data.table with the observed data and add data to
@@ -571,12 +611,12 @@ like ontogeny, must be added manually.</li>
 </tbody>
 </table>
 <ul>
-<li>The identifier for the data groups and - The identifier for the data
-groups and outputs are added to the <code>Plots.xlsx</code>, sheets
-<code>DataGroups</code> and <code>Outputs</code>. These tables configure
-properties for output plots such as <code>DisplayName</code> and
-<code>DisplayUnit</code>. Please add the <code>OutputPaths</code> for
-the <code>OutputPathsIds</code>.</li>
+<li>The identifiers for the data groups and outputs are added to the
+<code>Reports.xlsx</code>, sheets <code>DataGroups</code> and
+<code>Outputs</code>. These tables configure properties for output plots
+such as <code>DisplayName</code> and <code>DisplayUnit</code>. Please
+add the <code>OutputPaths</code> for the
+<code>OutputPathsIds</code>.</li>
 </ul>
 <table class="table">
 <colgroup>
@@ -602,8 +642,8 @@ the <code>OutputPathsIds</code>.</li>
 Venous Blood)</td>
 <td align="left">drugX plasma concentration</td>
 <td align="left">µg/L</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="even">
 <td align="left">CYP3A4total</td>
@@ -611,8 +651,8 @@ Venous Blood)</td>
 fraction of dose-DrugX</td>
 <td align="left">drugX metabolized by CYP3A4</td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="odd">
 <td align="left">CYP3A4Liver</td>
@@ -620,20 +660,20 @@ fraction of dose-DrugX</td>
 Metabolite|Fraction of dose-DrugX</td>
 <td align="left">drugX metabolized by CYP3A4 in liver</td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 </tbody>
 </table>
 </div>
-<div class="section level4">
-<h4 id="step-5-set-up-and-run-scenario">Step 5: Set Up and Run Scenario<a class="anchor" aria-label="anchor" href="#step-5-set-up-and-run-scenario"></a>
-</h4>
+<div class="section level3">
+<h3 id="step-5-set-up-and-run-scenario">Step 5: Set Up and Run Scenario<a class="anchor" aria-label="anchor" href="#step-5-set-up-and-run-scenario"></a>
+</h3>
 <p>We will skip the section on exporting populations and start with a
 simple scenario to simulate one individual, defined by biometrics, with
 an iv application.</p>
-<p>Open the <code>Scenario.xlsx</code> and edit the sheet ‘Scenarios’.
-Fill in the columns:</p>
+<p>Open the <code>Scenarios.xlsx</code> and edit the sheet
+<code>Scenarios</code>. Fill in the columns:</p>
 <ul>
 <li>
 <code>Scenario_name</code>: identifier of the scenario.</li>
@@ -680,23 +720,23 @@ in the configuration table <code>Individuals.xlsx</code>.</li>
 <td align="left">one_individual</td>
 <td align="left">I123413</td>
 <td align="left"></td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left">iv_1_mg_5_min.pkml</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
 </tr></tbody>
 </table>
 <p>Now we can set up the <code>scenarioList</code> and run the
 simulation:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">scenarioList</span> <span class="op">&lt;-</span></span>
-<span>  <span class="fu"><a href="../reference/createScenarios.wrapped.html">createScenarios.wrapped</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/createScenariosWrapped.html">createScenariosWrapped</a></span><span class="op">(</span></span>
 <span>    projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
 <span>    scenarioNames <span class="op">=</span> <span class="cn">NULL</span></span>
 <span>  <span class="op">)</span></span>
@@ -709,27 +749,28 @@ simulation:</p>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>The results are saved in
-<code>&lt;rootDirectory&gt;/Outputs/ReportingFramework/SimulationResults</code>.</p>
+<code>&lt;rootDirectory&gt;/Outputs/&lt;analysisSubfolderName&gt;/SimulationResults</code>.</p>
 </div>
-<div class="section level4">
-<h4 id="step-6-configure-and-generate-plots">Step 6: Configure and Generate Plots<a class="anchor" aria-label="anchor" href="#step-6-configure-and-generate-plots"></a>
-</h4>
+<div class="section level3">
+<h3 id="step-6-configure-and-generate-plots">Step 6: Configure and Generate Plots<a class="anchor" aria-label="anchor" href="#step-6-configure-and-generate-plots"></a>
+</h3>
 <p>For the plot configuration, call a helper function that adds all
 defined scenarios with default settings to the plot configuration table.
 This helper function changes the input configuration of a workflow and
 is not intended to be part of a final workflow.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/addDefaultConfigForTimeProfilePlots.html">addDefaultConfigForTimeProfilePlots</a></span><span class="op">(</span></span>
 <span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
 <span>  sheetName <span class="op">=</span> <span class="st">"TimeProfiles"</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Then we open the <code>Plots.xlsx</code> sheet
+<p>Then we open the <code>Reports.xlsx</code> sheet
 <code>TimeProfiles</code>. It starts with a header line and one line for
 the previously defined scenario.</p>
 <ul>
-<li><p>Add another sub-header for this tutorial section with level
-2.</p></li>
+<li><p>In the <code>Section</code> column, add a level-2 header row
+(e.g., <code>## 1) Basic Individual Simulation</code>). This header will
+appear as a section title in the exported Word report.</p></li>
 <li>
 <p>Edit the columns:</p>
 <ul>
@@ -756,9 +797,10 @@ single dose.</li>
 </ul>
 <p>This line will create a time-profile plot that compares the simulated
 data to the observed data.</p>
-<p>We also want to add goodness of fit plots. Since we have selected two
-outputs with different dimensions, the goodness of fit plots cannot
-handle more than one dimension. We do this in an extra line:</p>
+<p>We also want to add goodness of fit plots. Because the two outputs
+have different physical dimensions (e.g., plasma concentration and AUC),
+goodness of fit plots must be restricted to a single dimension at a time
+to keep the axes consistent. We do this in a separate row:</p>
 <ul>
 <li>Copy the plot line and edit the columns:
 <ul>
@@ -777,7 +819,7 @@ dimension selected.</li>
 </li>
 </ul>
 <p>Check also the sheet <code>Scenarios</code>. Here you can define for
-each scenario a <code>Longname</code> that will be used in captions as
+each scenario a <code>LongName</code> that will be used in captions as
 scenario descriptions.</p>
 <table class="table">
 <colgroup>
@@ -856,26 +898,26 @@ scenario descriptions.</p>
 <td align="left"></td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="even">
 <td align="right">2</td>
@@ -888,29 +930,29 @@ scenario descriptions.</p>
 <td align="left"></td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="odd">
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left">one_individual</td>
 <td align="left">one_individual</td>
@@ -926,24 +968,24 @@ infusion time of 5 minutes.</td>
 <td align="right">0</td>
 <td align="left"></td>
 <td align="left">total</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left">linear, log</td>
 <td align="right">1</td>
 <td align="right">3</td>
 <td align="left">fixed</td>
 <td align="right">1</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="right">0</td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left">one_individual-gof</td>
 <td align="left">one_individual</td>
@@ -959,17 +1001,17 @@ infusion time of 5 minutes.</td>
 <td align="right">0</td>
 <td align="left"></td>
 <td align="left">total</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left">linear, log</td>
 <td align="right">1</td>
 <td align="right">3</td>
 <td align="left">fixed</td>
 <td align="right">0</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="right">1</td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="right">1</td>
 <td align="right">1</td>
 <td align="right">1</td>
@@ -983,38 +1025,41 @@ input parameter
 <code>plotNames = c('one_individual', 'one_individual-gof')</code>.
 <code>runPlot</code> returns a list of ggplot objects. The caption is
 added as an attribute to each plot.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plotList</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runPlot.html">runPlot</a></span><span class="op">(</span></span>
 <span>  nameOfplotFunction <span class="op">=</span> <span class="st">"plotTimeProfiles"</span>,</span>
 <span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
 <span>  configTableSheet <span class="op">=</span> <span class="st">"TimeProfiles"</span>,</span>
 <span>  plotNames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"one_individual"</span>, <span class="st">"one_individual-gof"</span><span class="op">)</span>,</span>
+<span>  theme <span class="op">=</span> <span class="va">runPlotTheme</span>,</span>
 <span>  inputs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    dataObserved <span class="op">=</span> <span class="va">dataObserved</span>,</span>
 <span>    scenarioResults <span class="op">=</span> <span class="va">scenarioResults</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:26] Create Plot one_individual</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:27] Create Plot one_individual-gof</span></span></code></pre></div>
 <p>Below the logarithmic time-profile is displayed. See the Word
 document for the other plots.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">plotList</span><span class="op">[[</span><span class="st">"one_individual-TP-log-total"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Tutorial_Timeprofiles_files/figure-html/plot1figure-1.png" class="r-plt" alt="Logarithmic time-profile plot comparing simulated data to observed data."></p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">plotList</span><span class="op">[[</span><span class="st">"one_individual-TP-log-total"</span><span class="op">]</span><span class="op">]</span>, <span class="st">"caption"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>[1] “Concentration-time profiles for drugX plasma concentration (A),
-drugX metabolized by CYP3A4 (B) and drugX metabolized by CYP3A4 in liver
-(C) for simulation of an 1mg iv application for individual id 13 study
-1234 on a logarithmic y-scale. DrugX was administered as a 1mg Iv
-application with an infusion time of 5 minutes.”</p>
+<p>[1] “Simulated Concentration-time profiles for drugX metabolized by
+CYP3A4 (B), drugX metabolized by CYP3A4 in liver (C) and drugX plasma
+concentration (A) for simulation of an 1mg iv application for individual
+id 13 study 1234 on a logarithmic y-scale. DrugX was administered as a
+1mg Iv application with an infusion time of 5 minutes.”</p>
 </div>
 </div>
+<div class="section level2">
+<h2 id="adding-virtual-twin-populations">2) Adding Virtual Twin Populations<a class="anchor" aria-label="anchor" href="#adding-virtual-twin-populations"></a>
+</h2>
+<p>(See <strong><a href="Population.html">Population</a></strong>).</p>
 <div class="section level3">
-<h3 id="adding-virtual-twin-populations">2) Adding Virtual Twin Populations<a class="anchor" aria-label="anchor" href="#adding-virtual-twin-populations"></a>
+<h3 id="step-1-edit-population-configuration">Step 1: Edit Population Configuration<a class="anchor" aria-label="anchor" href="#step-1-edit-population-configuration"></a>
 </h3>
-<p>(See <strong><a href="Population">Population</a></strong>).</p>
-<div class="section level4">
-<h4 id="step-1-edit-population-configuration">Step 1: Edit Population Configuration<a class="anchor" aria-label="anchor" href="#step-1-edit-population-configuration"></a>
-</h4>
 <p>Manually adjust your Excel configuration to define virtual twin
 populations. The <code>VirtualTwinPopulation</code> sheet within the
 <code>Individuals.xlsx</code> file was created during data import. It
@@ -1043,119 +1088,119 @@ population is suggested for both data groups.</p>
 <td align="left">study_1234_population</td>
 <td align="left">1234_adults_iv, 1234_adults_po</td>
 <td align="left">I123413</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="even">
 <td align="left">study_1234_population</td>
 <td align="left">1234_adults_iv, 1234_adults_po</td>
 <td align="left">I123430</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="odd">
 <td align="left">study_1234_population</td>
 <td align="left">1234_adults_iv, 1234_adults_po</td>
 <td align="left">I123441</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="even">
 <td align="left">study_1234_population</td>
 <td align="left">1234_adults_iv, 1234_adults_po</td>
 <td align="left">I123450</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="odd">
 <td align="left">study_1234_population</td>
 <td align="left">1234_adults_iv, 1234_adults_po</td>
 <td align="left">I123466</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="even">
 <td align="left">study_1234_population</td>
 <td align="left">1234_adults_iv, 1234_adults_po</td>
 <td align="left">I123478</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="odd">
 <td align="left">1234_iv_1234_po</td>
 <td align="left">1234_iv, 1234_po</td>
 <td align="left">I123413</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="even">
 <td align="left">1234_iv_1234_po</td>
 <td align="left">1234_iv, 1234_po</td>
 <td align="left">I123430</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="odd">
 <td align="left">1234_iv_1234_po</td>
 <td align="left">1234_iv, 1234_po</td>
 <td align="left">I123441</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="even">
 <td align="left">1234_iv_1234_po</td>
 <td align="left">1234_iv, 1234_po</td>
 <td align="left">I123450</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="odd">
 <td align="left">1234_iv_1234_po</td>
 <td align="left">1234_iv, 1234_po</td>
 <td align="left">I123466</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="even">
 <td align="left">1234_iv_1234_po</td>
 <td align="left">1234_iv, 1234_po</td>
 <td align="left">I123478</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 </tbody>
 </table>
 </div>
-<div class="section level4">
-<h4 id="step-2-export-population">Step 2: Export Population<a class="anchor" aria-label="anchor" href="#step-2-export-population"></a>
-</h4>
+<div class="section level3">
+<h3 id="step-2-export-population">Step 2: Export Population<a class="anchor" aria-label="anchor" href="#step-2-export-population"></a>
+</h3>
 <ul>
 <li>Go to the Export populations section of the workflow and uncomment
 the lines for the virtualTwin export.</li>
 <li>Adjust the input parameter <code>modelFile</code>. The model file is
-used for unit conversions. As our population contains only parameters
-not related to the application, we can use both available model files,
-the one for oral administration and the iv administration file.</li>
+used for unit conversions. Because the virtual twin population contains
+only individual physiological parameters (height, weight, age, etc.) and
+no dosing-protocol parameters, either model file can be used.</li>
 </ul>
 <p>Now you can execute the following lines:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/exportVirtualTwinPopulations.html">exportVirtualTwinPopulations</a></span><span class="op">(</span></span>
 <span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
 <span>  populationNames <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  modelFile <span class="op">=</span> <span class="st">"po 3 mg solution.pkml"</span>,</span>
+<span>  modelFile <span class="op">=</span> <span class="st">"po_3_mg_solution.pkml"</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>This will create a population based on the configuration table from
 Step 1. It is saved as a CSV file in
 <code>Models/Populations</code>.</p>
 </div>
-<div class="section level4">
-<h4 id="step-3-set-up-and-run-scenario">Step 3: Set Up and Run Scenario<a class="anchor" aria-label="anchor" href="#step-3-set-up-and-run-scenario"></a>
-</h4>
-<p>We open again the <code>Scenario.xlsx</code> and add a new scenario
-to the sheet ‘Scenarios’. Instead of the <code>IndividualId</code>, we
-will now fill the <code>PopulationId</code> with the name of our newly
-created population and set a 1 (TRUE) in the column
+<div class="section level3">
+<h3 id="step-3-set-up-and-run-scenario">Step 3: Set Up and Run Scenario<a class="anchor" aria-label="anchor" href="#step-3-set-up-and-run-scenario"></a>
+</h3>
+<p>Open <code>Scenarios.xlsx</code> again and add a new row to the sheet
+<code>Scenarios</code>. Instead of <code>IndividualId</code>, fill
+<code>PopulationId</code> with the name of the newly created population
+and set the value to <code>1</code> (TRUE) in the column
 <code>ReadPopulationFromCSV</code>.</p>
 <table style="width:100%;" class="table">
 <colgroup>
@@ -1193,15 +1238,15 @@ created population and set a 1 (TRUE) in the column
 <td align="center">one_individual</td>
 <td align="center">I123413</td>
 <td align="center"></td>
-<td align="center">NA</td>
+<td align="center"></td>
 <td align="center">iv_1_mg_5_min.pkml</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
 <td align="center"></td>
 </tr>
 <tr class="even">
@@ -1210,13 +1255,13 @@ created population and set a 1 (TRUE) in the column
 <td align="center">study_1234_population</td>
 <td align="center">1</td>
 <td align="center">iv_1_mg_5_min.pkml</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
-<td align="center">NA</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
 <td align="center"></td>
 </tr>
 </tbody>
@@ -1225,11 +1270,11 @@ created population and set a 1 (TRUE) in the column
 <code>scenarioNames</code> parameter in the <code>scenarioList</code>
 initialization from <code>NULL</code> to the names of the newly created
 scenarios.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">scenarioList</span> <span class="op">&lt;-</span></span>
-<span>  <span class="fu"><a href="../reference/createScenarios.wrapped.html">createScenarios.wrapped</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/createScenariosWrapped.html">createScenariosWrapped</a></span><span class="op">(</span></span>
 <span>    projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
-<span>    scenarioNames <span class="op">=</span> <span class="st">"dtScenarios"</span></span>
+<span>    scenarioNames <span class="op">=</span> <span class="va">dtScenarios</span><span class="op">$</span><span class="va">Scenario_name</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
 <span><span class="va">scenarioResults</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runAndSaveScenarios.html">runAndSaveScenarios</a></span><span class="op">(</span></span>
@@ -1242,9 +1287,9 @@ scenarios.</p>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level4">
-<h4 id="step-4-configure-and-generate-plots">Step 4: Configure and Generate Plots<a class="anchor" aria-label="anchor" href="#step-4-configure-and-generate-plots"></a>
-</h4>
+<div class="section level3">
+<h3 id="step-4-configure-and-generate-plots">Step 4: Configure and Generate Plots<a class="anchor" aria-label="anchor" href="#step-4-configure-and-generate-plots"></a>
+</h3>
 <p>We will add the new scenario to the plot configuration table using
 the helper function
 <code>addDefaultConfigForTimeProfilePlots</code>.</p>
@@ -1293,7 +1338,6 @@ goodness of fit plots, not for the time profile plots.</li>
 <p>Do not forget to edit the columns <code>PlotCaptionAddon</code>,
 <code>TimeRange_firstApplication</code>, and
 <code>TimeRange_lastApplication</code>.</p>
-<p>Add subsections.</p>
 <table class="table">
 <colgroup>
 <col width="0%">
@@ -1371,26 +1415,26 @@ goodness of fit plots, not for the time profile plots.</li>
 <td align="left"></td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="even">
 <td align="right">3</td>
@@ -1403,29 +1447,29 @@ goodness of fit plots, not for the time profile plots.</li>
 <td align="left"></td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="odd">
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left">selected_individuals-1</td>
 <td align="left">virtual_twin_population</td>
@@ -1441,24 +1485,24 @@ infusion time of 5 minutes.</td>
 <td align="right">0</td>
 <td align="left"></td>
 <td align="left">total</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left">linear, log</td>
 <td align="right">1</td>
 <td align="right">3</td>
 <td align="left">fixed</td>
 <td align="right">1</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="right">0</td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left">selected_individuals-2</td>
 <td align="left">virtual_twin_population</td>
@@ -1474,17 +1518,17 @@ infusion time of 5 minutes.</td>
 <td align="right">0</td>
 <td align="left"></td>
 <td align="left">total</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left">linear, log</td>
 <td align="right">1</td>
 <td align="right">3</td>
 <td align="left">fixed</td>
 <td align="right">1</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="right">0</td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
@@ -1501,29 +1545,29 @@ infusion time of 5 minutes.</td>
 <td align="left"></td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="even">
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left">all_individuals</td>
 <td align="left">virtual_twin_population</td>
@@ -1539,24 +1583,24 @@ infusion time of 5 minutes.</td>
 <td align="right">0</td>
 <td align="left"></td>
 <td align="left">total</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left">linear, log</td>
 <td align="right">1</td>
 <td align="right">3</td>
 <td align="left">fixed</td>
 <td align="right">1</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="right">0</td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
 </tr>
 <tr class="odd">
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left">all_individuals-gof</td>
 <td align="left">virtual_twin_population</td>
@@ -1572,17 +1616,17 @@ infusion time of 5 minutes.</td>
 <td align="right">0</td>
 <td align="left"></td>
 <td align="left">total</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left">linear, log</td>
 <td align="right">1</td>
 <td align="right">3</td>
 <td align="left">fixed</td>
 <td align="right">0</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="right">1</td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="right">1</td>
 <td align="right">1</td>
 <td align="right">1</td>
@@ -1593,45 +1637,53 @@ infusion time of 5 minutes.</td>
 <p>Execute the <code>runPlot</code> call again to generate the plots. We
 take the newly generated plot names. The variable <code>plotList</code>
 contains all generated plots.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plotList</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runPlot.html">runPlot</a></span><span class="op">(</span></span>
 <span>  nameOfplotFunction <span class="op">=</span> <span class="st">"plotTimeProfiles"</span>,</span>
 <span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
 <span>  configTableSheet <span class="op">=</span> <span class="st">"TimeProfiles"</span>,</span>
 <span>  plotNames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"selected_individuals-1"</span>, <span class="st">"selected_individuals-2"</span>, <span class="st">"all_individuals"</span>, <span class="st">"all_individuals-gof"</span><span class="op">)</span>,</span>
+<span>  theme <span class="op">=</span> <span class="va">runPlotTheme</span>,</span>
 <span>  inputs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    dataObserved <span class="op">=</span> <span class="va">dataObserved</span>,</span>
 <span>    scenarioResults <span class="op">=</span> <span class="va">scenarioResults</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:31] Create Plot selected_individuals-1</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:31] Create Plot selected_individuals-2</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:32] Create Plot all_individuals</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:33] Create Plot all_individuals-gof</span></span></code></pre></div>
 <p>Below the logarithmic time-profile for all individuals is displayed.
 See the Word document for the other plots.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">plotList</span><span class="op">[[</span><span class="st">"all_individuals-TP-log-total"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Tutorial_Timeprofiles_files/figure-html/plot2figure-1.png" class="r-plt" alt="Logarithmic time-profile plot for all individuals."></p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">plotList</span><span class="op">[[</span><span class="st">"all_individuals-TP-log-total"</span><span class="op">]</span><span class="op">]</span>, <span class="st">"caption"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>[1] “Concentration-time profiles for drugX metabolized by CYP3A4 and
-drugX plasma concentration for simulation of an 1mg iv application for
-individuals of study 1234 for subject I123413 (A), I123430 (B), I123441
-(C), I123450 (D), I123466 (E) and I123478 (F) on a logarithmic y-scale.
-DrugX was administered as a 1mg Iv application with an infusion time of
-5 minutes.”</p>
+<p>[1] “Simulated Concentration-time profiles for drugX metabolized by
+CYP3A4 and drugX plasma concentration for simulation of an 1mg iv
+application for individuals of study 1234 for subject I123413 (A),
+I123430 (B), I123441 (C), I123450 (D), I123466 (E) and I123478 (F) on a
+logarithmic y-scale. DrugX was administered as a 1mg Iv application with
+an infusion time of 5 minutes.”</p>
 </div>
 </div>
+<div class="section level2">
+<h2 id="adding-random-populations-and-use-of-aggregated-data">3) Adding Random Populations and Use of Aggregated Data<a class="anchor" aria-label="anchor" href="#adding-random-populations-and-use-of-aggregated-data"></a>
+</h2>
+<p>In this section, we plot aggregated observed data against aggregated
+simulated random populations.</p>
 <div class="section level3">
-<h3 id="adding-random-populations-and-use-of-aggregated-data">3) Adding Random Populations and Use of Aggregated Data<a class="anchor" aria-label="anchor" href="#adding-random-populations-and-use-of-aggregated-data"></a>
+<h3 id="step-1-data-aggregation">Step 1: Data Aggregation<a class="anchor" aria-label="anchor" href="#step-1-data-aggregation"></a>
 </h3>
-<p>In this section, we want to plot aggregated data vs aggregated random
-populations..</p>
-<div class="section level4">
-<h4 id="step-1-data-aggregation">Step 1: Data Aggregation<a class="anchor" aria-label="anchor" href="#step-1-data-aggregation"></a>
-</h4>
-<p>Since our data set contains only individual data, we will aggregate
-the data as a first step. Adjust your data import in this way:</p>
-<p>To learn more about the aggregation possibilities, check the help of
-the function <code>aggregateObservedDataGroups</code>.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<p>Since the observed data contains only individual-level records, we
+first compute group-level aggregates. Update your data import script as
+follows. The call to <code><a href="../reference/updateDataGroupId.html">updateDataGroupId()</a></code> is required to
+register the new aggregated groups in the <code>Reports.xlsx</code>
+configuration so that the plot function can find them.</p>
+<p>To learn more about the aggregation options, see
+<code><a href="../reference/aggregateObservedDataGroups.html">?aggregateObservedDataGroups</a></code>.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dataObserved</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/readObservedDataByDictionary.html">readObservedDataByDictionary</a></span><span class="op">(</span>projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># add aggregated  groups of data</span></span>
@@ -1642,12 +1694,12 @@ the function <code>aggregateObservedDataGroups</code>.</p>
 <span>  <span class="op">)</span>,</span>
 <span>  fill <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co"># For the manually added groups, the configuration sheet in Plot.xlsx has to be updated</span></span>
+<span><span class="co"># For the manually added groups, the configuration sheet in Reports.xlsx has to be updated</span></span>
 <span><span class="fu"><a href="../reference/updateDataGroupId.html">updateDataGroupId</a></span><span class="op">(</span><span class="va">projectConfiguration</span>, <span class="va">dataObserved</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level4">
-<h4 id="step-2-edit-population-configuration">Step 2: Edit Population Configuration<a class="anchor" aria-label="anchor" href="#step-2-edit-population-configuration"></a>
-</h4>
+<div class="section level3">
+<h3 id="step-2-edit-population-configuration">Step 2: Edit Population Configuration<a class="anchor" aria-label="anchor" href="#step-2-edit-population-configuration"></a>
+</h3>
 <p>Open the sheet <code>Demographics</code> in the
 <code>Populations.xlsx</code>.</p>
 <p>In the example below, the population ‘adults’ is defined. As
@@ -1697,27 +1749,27 @@ ontogeny, “CYP3A4” and “UGT1A4” are added.</p>
 <td align="left">European_ICRP_2002</td>
 <td align="right">100</td>
 <td align="right">50</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left">kg</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left">cm</td>
 <td align="right">20</td>
 <td align="right">40</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left">kg/m²</td>
 <td align="left">CYP3A4:CYP3A4, UGT1A4:UGT1A4</td>
 </tr></tbody>
 </table>
 </div>
-<div class="section level4">
-<h4 id="step-3-export-population">Step 3: Export Population<a class="anchor" aria-label="anchor" href="#step-3-export-population"></a>
-</h4>
+<div class="section level3">
+<h3 id="step-3-export-population">Step 3: Export Population<a class="anchor" aria-label="anchor" href="#step-3-export-population"></a>
+</h3>
 <p>Go to the Export populations section of the workflow and uncomment
 lines to export random populations:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/exportRandomPopulations.html">exportRandomPopulations</a></span><span class="op">(</span></span>
 <span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
 <span>  populationNames <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -1725,11 +1777,11 @@ lines to export random populations:</p>
 <span><span class="op">)</span></span></code></pre></div>
 <p>This will create a population based on the configuration table from
 the previous section. It is saved as a CSV file in
-<code>Models/Poulations</code>.</p>
+<code>Models/Populations</code>.</p>
 </div>
-<div class="section level4">
-<h4 id="step-4-set-up-and-run-scenario">Step 4: Set Up and Run Scenario<a class="anchor" aria-label="anchor" href="#step-4-set-up-and-run-scenario"></a>
-</h4>
+<div class="section level3">
+<h3 id="step-4-set-up-and-run-scenario">Step 4: Set Up and Run Scenario<a class="anchor" aria-label="anchor" href="#step-4-set-up-and-run-scenario"></a>
+</h3>
 <p>Add two more scenarios to the <code>Scenarios</code> sheet:</p>
 <table class="table">
 <colgroup>
@@ -1767,15 +1819,15 @@ the previous section. It is saved as a CSV file in
 <td align="left">one_individual</td>
 <td align="left">I123413</td>
 <td align="left"></td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left">iv_1_mg_5_min.pkml</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
 </tr>
 <tr class="even">
@@ -1784,51 +1836,54 @@ the previous section. It is saved as a CSV file in
 <td align="left">study_1234_population</td>
 <td align="right">1</td>
 <td align="left">iv_1_mg_5_min.pkml</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
 </tr>
 <tr class="odd">
-<td align="left">random_population_iv</td>
-<td align="left"></td>
-<td align="left">random_population</td>
-<td align="right">1</td>
-<td align="left">po_3_mg_solution.pkml</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="left"></td>
-</tr>
-<tr class="even">
 <td align="left">random_population_po</td>
 <td align="left"></td>
 <td align="left">random_population</td>
 <td align="right">1</td>
+<td align="left">po_3_mg_solution.pkml</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">random_population_iv</td>
+<td align="left"></td>
+<td align="left">random_population</td>
+<td align="right">1</td>
 <td align="left">iv_1_mg_5_min.pkml</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
 </tr>
 </tbody>
 </table>
-<p>Reload all scenarios</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<p>Since the simulation results from earlier sections are already cached
+on disk, set <code>scenarioNames = NULL</code> to run all scenarios
+including the new random-population ones. Previously cached results will
+be loaded from disk rather than re-simulated.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">scenarioList</span> <span class="op">&lt;-</span></span>
-<span>  <span class="fu"><a href="../reference/createScenarios.wrapped.html">createScenarios.wrapped</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/createScenariosWrapped.html">createScenariosWrapped</a></span><span class="op">(</span></span>
 <span>    projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
 <span>    scenarioNames <span class="op">=</span> <span class="cn">NULL</span></span>
 <span>  <span class="op">)</span></span>
@@ -1843,9 +1898,9 @@ the previous section. It is saved as a CSV file in
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level4">
-<h4 id="step-5-configure-and-generate-plots">Step 5: Configure and Generate Plots<a class="anchor" aria-label="anchor" href="#step-5-configure-and-generate-plots"></a>
-</h4>
+<div class="section level3">
+<h3 id="step-5-configure-and-generate-plots">Step 5: Configure and Generate Plots<a class="anchor" aria-label="anchor" href="#step-5-configure-and-generate-plots"></a>
+</h3>
 <p>We will add the new scenarios to the plot configuration table using
 the helper function
 <code>addDefaultConfigForTimeProfilePlots</code>.</p>
@@ -1860,9 +1915,8 @@ Step 1: Data Aggregation.</li>
 </ul>
 <p>Do not forget to edit the columns
 <code>TimeRange_firstApplication</code>,
-<code>TimeRange_lastApplication</code>, and add <code>longNames</code>
-in the sheet <code>Scenario</code>.</p>
-<p>Add subsections.</p>
+<code>TimeRange_lastApplication</code>, and add <code>LongName</code>
+entries in the sheet <code>Scenarios</code>.</p>
 <table class="table">
 <colgroup>
 <col width="1%">
@@ -1941,29 +1995,29 @@ data</td>
 <td align="left"></td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="even">
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left">random_population</td>
 <td align="left">random_population_iv</td>
@@ -1978,24 +2032,24 @@ data</td>
 <td align="right">0</td>
 <td align="left"></td>
 <td align="left">total</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left">linear, log</td>
 <td align="right">1</td>
 <td align="right">3</td>
 <td align="left">fixed</td>
 <td align="right">1</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="right">0</td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
 </tr>
 <tr class="odd">
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left">random_population</td>
 <td align="left">random_population_po</td>
@@ -2010,17 +2064,17 @@ data</td>
 <td align="right">0</td>
 <td align="left"></td>
 <td align="left">total</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left">linear, log</td>
 <td align="right">1</td>
 <td align="right">3</td>
 <td align="left">fixed</td>
 <td align="right">1</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="right">0</td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
@@ -2029,56 +2083,58 @@ data</td>
 </tbody>
 </table>
 <p>Execute the <code>runPlot</code> call again to generate the
-plots..</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+plots.</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plotList</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runPlot.html">runPlot</a></span><span class="op">(</span></span>
 <span>  nameOfplotFunction <span class="op">=</span> <span class="st">"plotTimeProfiles"</span>,</span>
 <span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
 <span>  configTableSheet <span class="op">=</span> <span class="st">"TimeProfiles"</span>,</span>
 <span>  plotNames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"random_population"</span><span class="op">)</span>,</span>
+<span>  theme <span class="op">=</span> <span class="va">runPlotTheme</span>,</span>
 <span>  inputs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    dataObserved <span class="op">=</span> <span class="va">dataObserved</span>,</span>
 <span>    scenarioResults <span class="op">=</span> <span class="va">scenarioResults</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:38] Create Plot random_population</span></span></code></pre></div>
 <p>Below the logarithmic time-profile is displayed. See the Word
 document for the other plots.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">plotList</span><span class="op">[[</span><span class="st">"random_population-TP-log-total"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Tutorial_Timeprofiles_files/figure-html/plot3figure-1.png" class="r-plt" alt="Logarithmic time-profile plot for random populations."></p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">plotList</span><span class="op">[[</span><span class="st">"random_population-TP-log-total"</span><span class="op">]</span><span class="op">]</span>, <span class="st">"caption"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>[1] “Concentration-time profiles for drugX plasma concentration (A,
-D), drugX metabolized by CYP3A4 (B, E) and drugX metabolized by CYP3A4
-in liver (C, F) for simulation of an 1mg iv application for an adult
-population (A, B, C) and simulation of an 5mg oral application for an
-adult population (D, E, F) on a logarithmic y-scale.”</p>
+<p>[1] “Simulated Concentration-time profiles for drugX metabolized by
+CYP3A4 (B, E), drugX metabolized by CYP3A4 in liver (C, F) and drugX
+plasma concentration (A, D) for simulation of an 1mg iv application for
+an adult population (A, B, C) and simulation of an 5mg oral application
+for an adult population (D, E, F) on a logarithmic y-scale.”</p>
 </div>
 </div>
+<div class="section level2">
+<h2 id="adding-reference-scenarios">4) Adding Reference Scenarios<a class="anchor" aria-label="anchor" href="#adding-reference-scenarios"></a>
+</h2>
+<p>In this section, we overlay two scenarios on a single plot:
+<code>adults_po</code> as the primary scenario and
+<code>adults_iv</code> as the reference. The reference scenario is
+displayed with a distinct colour so the two curves can be compared
+directly.</p>
 <div class="section level3">
-<h3 id="adding-reference-populations">4) Adding Reference Populations<a class="anchor" aria-label="anchor" href="#adding-reference-populations"></a>
+<h3 id="configure-and-generate-plots">Configure and Generate Plots<a class="anchor" aria-label="anchor" href="#configure-and-generate-plots"></a>
 </h3>
-<p>In this section, we will compare a scenario to a reference scenario.
-We select as the base scenario the <code>adults_po</code> and as a
-reference the <code>adults_iv</code> and compare the metabolization
-rates.</p>
-<div class="section level4">
-<h4 id="step-1-configure-and-generate-plots">Step 1: Configure and Generate Plots<a class="anchor" aria-label="anchor" href="#step-1-configure-and-generate-plots"></a>
-</h4>
 <ul>
-<li>Copy the line with the <code>adults_po</code> scenario and adjust
-<code>plotName</code>.</li>
-<li>Set as <code>ReferenceScenario</code> <code>adults_iv</code>.</li>
-<li>Add the legend labels for the two populations in the columns
-<code>ColorLegend</code>.</li>
-<li>Use the columns <code>ScenarioName</code> for a common name for both
-scenarios (it will overwrite the default <code>LongName</code> saved in
-the sheet <code>Scenarios</code>).</li>
+<li>Copy the <code>adults_po</code> plot row and adjust
+<code>PlotName</code>.</li>
+<li>Set <code>ReferenceScenario</code> to <code>adults_iv</code>.</li>
+<li>Add legend labels for the two scenarios in the
+<code>ColorLegend</code> column.</li>
+<li>Use the <code>ScenarioName</code> column for a shared display name
+for both scenarios (this overrides the default <code>LongName</code>
+from the <code>Scenarios</code> sheet).</li>
 </ul>
 <p>Do not forget to edit the columns <code>DataGroupIds</code>,
 <code>PlotCaptionAddon</code>, <code>TimeRange_firstApplication</code>,
 and <code>TimeRange_lastApplication</code>.</p>
-<p>Add subsections.</p>
 <table class="table">
 <colgroup>
 <col width="0%">
@@ -2160,31 +2216,31 @@ and <code>TimeRange_lastApplication</code>.</p>
 <td align="left"></td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left"></td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="even">
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left">reference</td>
 <td align="left">random_population_po</td>
@@ -2200,8 +2256,8 @@ simulation</td>
 <td align="right">0</td>
 <td align="left">5mg oral administration|1mg iv simulation</td>
 <td align="left">total</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left"></td>
 <td align="left">linear, log</td>
@@ -2209,10 +2265,10 @@ simulation</td>
 <td align="right">3</td>
 <td align="left">fixed</td>
 <td align="right">1</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="right">0</td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
@@ -2220,54 +2276,52 @@ simulation</td>
 </tr>
 </tbody>
 </table>
-<p>Create the figures as before. If you want to adjust the colors, use
-the input variable <code>referenceScaleVector</code> using the labels
-from the column <code>colorLegend</code> in the config table.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<p>To adjust the reference colour, pass
+<code>referenceScaleVector</code> using the labels from the
+<code>colorLegend</code> column.</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plotList</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runPlot.html">runPlot</a></span><span class="op">(</span></span>
 <span>  nameOfplotFunction <span class="op">=</span> <span class="st">"plotTimeProfiles"</span>,</span>
 <span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
 <span>  configTableSheet <span class="op">=</span> <span class="st">"TimeProfiles"</span>,</span>
 <span>  plotNames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"reference"</span><span class="op">)</span>,</span>
+<span>  theme <span class="op">=</span> <span class="va">runPlotTheme</span>,</span>
 <span>  inputs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    dataObserved <span class="op">=</span> <span class="va">dataObserved</span>,</span>
 <span>    scenarioResults <span class="op">=</span> <span class="va">scenarioResults</span>,</span>
 <span>    referenceScaleVector <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="st">"1mg iv simulation"</span> <span class="op">=</span> <span class="st">"grey"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:40] Create Plot reference</span></span></code></pre></div>
 <p>Below the logarithmic time-profile is displayed. See the Word
 document for the other plot.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">plotList</span><span class="op">[[</span><span class="st">"reference-TP-log-total"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Tutorial_Timeprofiles_files/figure-html/plot4figure-1.png" class="r-plt" alt="Logarithmic time-profile plot comparing reference populations."></p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">plotList</span><span class="op">[[</span><span class="st">"reference-TP-log-total"</span><span class="op">]</span><span class="op">]</span>, <span class="st">"caption"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>[1] “Concentration-time profiles for drugX plasma concentration (A),
-drugX metabolized by CYP3A4 (B) and drugX metabolized by CYP3A4 in liver
-(C) for simulation of a 5mg oral administration vs 1mg iv simulation on
-a logarithmic y-scale.”</p>
+<p>[1] “Simulated Concentration-time profiles for drugX metabolized by
+CYP3A4 (B), drugX metabolized by CYP3A4 in liver (C) and drugX plasma
+concentration (A) for simulation of a 5mg oral administration vs 1mg iv
+simulation on a logarithmic y-scale.”</p>
 </div>
 </div>
-<div class="section level3">
-<h3 id="adding-plots-with-different-time-ranges">5) Adding Plots with different Time Ranges<a class="anchor" aria-label="anchor" href="#adding-plots-with-different-time-ranges"></a>
-</h3>
-</div>
-<div class="section level3">
-<h3 id="adding-plots-with-different-time-ranges-1">5) Adding Plots with Different Time Ranges<a class="anchor" aria-label="anchor" href="#adding-plots-with-different-time-ranges-1"></a>
-</h3>
+<div class="section level2">
+<h2 id="adding-plots-with-different-time-ranges">5) Adding Plots with Different Time Ranges<a class="anchor" aria-label="anchor" href="#adding-plots-with-different-time-ranges"></a>
+</h2>
 <p>Visualizing pharmacokinetic data across various time ranges can
 reveal different aspects of drug behavior. A typical example would be to
 show the first and last application in a multi-dosing simulation. As we
 have only a single dose in our example, we show the principle by
 splitting the time range into two slots: 0 - 6 hours and 6 to 24
 hours.</p>
-<div class="section level4">
-<h4 id="step-1-configure-time-ranges">Step 1: Configure Time Ranges<a class="anchor" aria-label="anchor" href="#step-1-configure-time-ranges"></a>
-</h4>
+<div class="section level3">
+<h3 id="step-1-configure-time-ranges">Step 1: Configure Time Ranges<a class="anchor" aria-label="anchor" href="#step-1-configure-time-ranges"></a>
+</h3>
 <p>In your plot configuration Excel file, in the sheet
 <code>TimeRange</code>, specify different time ranges for which you’d
 like to generate plots. This might involve adding new rows or adjusting
-existing settings in the <code>Plot.xlsx</code> file.</p>
+existing settings in the <code>Reports.xlsx</code> file.</p>
 <p>The <code>TimeRange</code> has the columns:</p>
 <ul>
 <li>
@@ -2280,9 +2334,9 @@ configuration sheet beginning with <code>TimeRange_</code>.</li>
 <li>
 <code>TimeShift</code>: An offset used to shift the time axis. If
 you want to display time after the last dose, your timeshift would be
-the time of the last dosing. (This is set for the tags
-<code>firstApplication</code> and <code>lastApplication</code> if
-<code>Timeshift</code> is empty).</li>
+the time of the last dosing. (This is set automatically for the
+<code>firstApplication</code> and <code>lastApplication</code> tags if
+<code>TimeShift</code> is empty).</li>
 </ul>
 <p>In the example below, a new row for the range between 0 and 6 hours
 and a row for the range between 6 and 24 hours have been added.</p>
@@ -2310,13 +2364,13 @@ and a row for the range between 6 and 24 hours have been added.</p>
 <td align="left">firstApplication</td>
 <td align="left">Zoom on the first dose</td>
 <td align="left">Time</td>
-<td align="right">NA</td>
+<td align="right"></td>
 </tr>
 <tr class="odd">
 <td align="left">lastApplication</td>
 <td align="left">Zoom on steady state dose</td>
 <td align="left">Time after dose</td>
-<td align="right">NA</td>
+<td align="right"></td>
 </tr>
 <tr class="even">
 <td align="left">h0_6</td>
@@ -2333,9 +2387,9 @@ and a row for the range between 6 and 24 hours have been added.</p>
 </tbody>
 </table>
 </div>
-<div class="section level4">
-<h4 id="step-2-configure-and-generate-plots">Step 2: Configure and Generate Plots<a class="anchor" aria-label="anchor" href="#step-2-configure-and-generate-plots"></a>
-</h4>
+<div class="section level3">
+<h3 id="step-2-configure-and-generate-plots">Step 2: Configure and Generate Plots<a class="anchor" aria-label="anchor" href="#step-2-configure-and-generate-plots"></a>
+</h3>
 <p>Open the plot configuration table and adjust the plot
 configurations.</p>
 <ul>
@@ -2445,31 +2499,31 @@ plots will have the same y-axis but different x-axes.</li>
 <td align="left"></td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left"></td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="left"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
 </tr>
 <tr class="even">
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left">timeranges</td>
 <td align="left">one_individual</td>
@@ -2485,8 +2539,8 @@ infusion time of 5 minutes.</td>
 <td align="right">0</td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left">c(0,6)</td>
 <td align="left">c(6,24)</td>
 <td align="left">linear, log</td>
@@ -2494,17 +2548,17 @@ infusion time of 5 minutes.</td>
 <td align="right">3</td>
 <td align="left">fixed</td>
 <td align="right">1</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="right">0</td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
 </tr>
 <tr class="odd">
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="left"></td>
 <td align="left">timeranges-split</td>
 <td align="left">one_individual</td>
@@ -2520,8 +2574,8 @@ infusion time of 5 minutes.</td>
 <td align="right">0</td>
 <td align="left"></td>
 <td align="left"></td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="left">c(0,6)</td>
 <td align="left">c(6,24)</td>
 <td align="left">linear, log</td>
@@ -2529,10 +2583,10 @@ infusion time of 5 minutes.</td>
 <td align="right">2</td>
 <td align="left">free_x</td>
 <td align="right">1</td>
-<td align="right">NA</td>
-<td align="right">NA</td>
+<td align="right"></td>
+<td align="right"></td>
 <td align="right">0</td>
-<td align="right">NA</td>
+<td align="right"></td>
 <td align="right">0</td>
 <td align="right">0</td>
 <td align="right">0</td>
@@ -2542,50 +2596,63 @@ infusion time of 5 minutes.</td>
 </table>
 <p>Execute the <code>runPlot</code> call again to generate the plots.
 The variable <code>plotList</code> contains all generated plots. In the
-example below, the input argument <code>xScaleArgs = c(NA, NA)</code> is
-added. This argument is passed to the function
+example below, the input argument
+<code>xScaleArgs = list(limits = c(NA, NA))</code> is added. This
+argument is passed to the function
 <code>ospsuite.plots::plotTimeprofile</code> and overwrites the default
 time-profile x-limits, which is <code>c(0, NA)</code>.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plotList</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/runPlot.html">runPlot</a></span><span class="op">(</span></span>
 <span>  nameOfplotFunction <span class="op">=</span> <span class="st">"plotTimeProfiles"</span>,</span>
 <span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
 <span>  configTableSheet <span class="op">=</span> <span class="st">"TimeProfiles"</span>,</span>
 <span>  plotNames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"timeranges"</span>, <span class="st">"timeranges-split"</span><span class="op">)</span>,</span>
+<span>  theme <span class="op">=</span> <span class="va">runPlotTheme</span>,</span>
 <span>  inputs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    dataObserved <span class="op">=</span> <span class="va">dataObserved</span>,</span>
 <span>    scenarioResults <span class="op">=</span> <span class="va">scenarioResults</span>,</span>
 <span>    xScaleArgs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="cn">NA</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:42] Create Plot timeranges</span></span>
+<span><span class="co">#&gt; INFO [2026-11-27 13:21:44] Create Plot timeranges-split</span></span></code></pre></div>
 <p>Below the logarithmic time-profile for the plot that combines the
 time profiles is displayed. See the Word document for the other
 plots.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">plotList</span><span class="op">[[</span><span class="st">"timeranges-split-TP-log-allTimeRanges"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 <p><img src="Tutorial_Timeprofiles_files/figure-html/plot5figure-1.png" class="r-plt" alt="Logarithmic time-profile plot showing combined time ranges."></p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">plotList</span><span class="op">[[</span><span class="st">"timeranges-split-TP-log-allTimeRanges"</span><span class="op">]</span><span class="op">]</span>, <span class="st">"caption"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>[1] “Concentration-time profiles for drugX plasma concentration (A,
-B), drugX metabolized by CYP3A4 (C, D) and drugX metabolized by CYP3A4
-in liver (E, F) for simulation of an 1mg iv application for individual
-id 13 study 1234 on a logarithmic y-scale. Zoom on first 6 hours (A, C,
-E) and Zoom on time range 6 to 24 hours (B, D, F). DrugX was
-administered as a 1mg Iv application with an infusion time of 5
+<p>[1] “Simulated Concentration-time profiles for drugX metabolized by
+CYP3A4 (C, D), drugX metabolized by CYP3A4 in liver (E, F) and drugX
+plasma concentration (A, B) for simulation of an 1mg iv application for
+individual id 13 study 1234 on a logarithmic y-scale Zoom on first 6
+hours (A, C, E) and Zoom on time range 6 to 24 hours (B, D, F). DrugX
+was administered as a 1mg Iv application with an infusion time of 5
 minutes.”</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="report-creation">6) Report creation<a class="anchor" aria-label="anchor" href="#report-creation"></a>
+<h2 id="report-creation">6) Report Creation<a class="anchor" aria-label="anchor" href="#report-creation"></a>
 </h2>
-<p>In this section, we create a report containing all plots previously
-defined.</p>
-<p>When <code>plotNames</code> is not set, the plots are exported.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<p>In this section, all plots from the previous sections are exported to
+disk and assembled into a single Word document. The workflow has two
+steps:</p>
+<ol style="list-style-type: decimal">
+<li>Call <code><a href="../reference/runPlot.html">runPlot()</a></code> without a <code>plotNames</code>
+argument so that every configured plot is generated and saved as an
+image and an <code>.Rmd</code> fragment.</li>
+<li>Call <code><a href="../reference/mergeQmds.html">mergeQmds()</a></code> to concatenate the individual
+<code>.qmd</code> fragments into one document, then
+<code><a href="../reference/renderWord.html">renderWord()</a></code> to produce the final <code>.docx</code>.</li>
+</ol>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/runPlot.html">runPlot</a></span><span class="op">(</span></span>
 <span>  nameOfplotFunction <span class="op">=</span> <span class="st">"plotTimeProfiles"</span>,</span>
 <span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
 <span>  configTableSheet <span class="op">=</span> <span class="st">"TimeProfiles"</span>,</span>
+<span>  theme <span class="op">=</span> <span class="va">runPlotTheme</span>,</span>
 <span>  inputs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    dataObserved <span class="op">=</span> <span class="va">dataObserved</span>,</span>
 <span>    scenarioResults <span class="op">=</span> <span class="va">scenarioResults</span>,</span>
@@ -2593,12 +2660,12 @@ defined.</p>
 <span>    xScaleArgs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="cn">NA</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>The first step in report creation is to merge all available markdown
-files. As we have only created the Time Profile plots, we will edit the
-workflow accordingly. The resulting <code>appendix.Rmd</code> is
-rendered to a Word document.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/mergeRmds.html">mergeRmds</a></span><span class="op">(</span></span>
+<p>The first step is to run all plots without a <code>plotNames</code>
+filter so every configured plot is generated and saved. The second step
+merges the individual <code>.Qmd</code> fragments into a single document
+and renders it to Word.</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/mergeQmds.html">mergeQmds</a></span><span class="op">(</span></span>
 <span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
 <span>  newName <span class="op">=</span> <span class="st">"TutorialPlots"</span>,</span>
 <span>  title <span class="op">=</span> <span class="st">"Plots generated by tutorial"</span>,</span>
@@ -2606,16 +2673,38 @@ rendered to a Word document.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/renderWord.html">renderWord</a></span><span class="op">(</span>fileName <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">projectConfiguration</span><span class="op">$</span><span class="va">outputFolder</span>, <span class="st">"TutorialPlots.Rmd"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<div class="section level3">
-<h3 id="conclusion">Conclusion<a class="anchor" aria-label="anchor" href="#conclusion"></a>
-</h3>
-<p>We are now at the end of the tutorial.</p>
-<p>You have learned how to generate time profile plots using the
-<code>ospsuite.reportingframework</code> package.</p>
-<p>We encourage you to experiment further with the
-<code>ospsuite.reportingframework</code> package and explore its
-extensive capabilities. Happy plotting!</p>
 </div>
+<div class="section level2">
+<h2 id="conclusion">Conclusion<a class="anchor" aria-label="anchor" href="#conclusion"></a>
+</h2>
+<p>This tutorial covered the core time profile plotting workflow:</p>
+<ul>
+<li>Simulating a single individual and generating basic time profile and
+goodness of fit plots</li>
+<li>Building virtual twin and random populations and plotting aggregated
+results</li>
+<li>Comparing conditions using a reference scenario overlay</li>
+<li>Splitting plots across custom time-range windows</li>
+<li>Assembling all plots into a Word report</li>
+</ul>
+<p>Other package vignettes:</p>
+<ul>
+<li>
+<strong><a href="OSPSuite_ReportingFramework.html">OSPSuite
+Reporting Framework</a></strong> — package overview and entry
+points</li>
+<li>
+<strong><a href="PK_Parameter.html">PK Parameter</a></strong> — PK
+parameter calculation and configuration</li>
+<li>
+<strong><a href="Sensitivity_Analysis.html">Sensitivity
+Analysis</a></strong> — sensitivity workflows, including ratio and
+representative-population modes</li>
+<li>
+<strong><a href="Electronic_Package.html">Electronic
+Package</a></strong> — assembling and validating reporting
+deliverables</li>
+</ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -2628,7 +2717,7 @@ extensive capabilities. Happy plotting!</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

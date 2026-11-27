@@ -6,7 +6,12 @@ and scenario list.
 ## Usage
 
 ``` r
-plotSensitivity(projectConfiguration, onePlotConfig, scenarioList)
+plotSensitivity(
+  projectConfiguration,
+  onePlotConfig,
+  scenarioList,
+  significantDigits = 3
+)
 ```
 
 ## Arguments
@@ -24,6 +29,11 @@ plotSensitivity(projectConfiguration, onePlotConfig, scenarioList)
 
   A list of scenarios for which the sensitivity analysis will be
   performed.
+
+- significantDigits:
+
+  Number of significant digits used for sensitivity values in exported
+  tables.
 
 ## Value
 

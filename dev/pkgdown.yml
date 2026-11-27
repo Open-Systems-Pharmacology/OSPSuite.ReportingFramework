@@ -1,5 +1,5 @@
-pandoc: 3.1.11
-pkgdown: 2.2.0
+pandoc: 3.8.3
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   DataImport_by_Dictionary: DataImport_by_Dictionary.html
@@ -8,9 +8,10 @@ articles:
   PK_Parameter: PK_Parameter.html
   Plot_and_Report_Generation: Plot_and_Report_Generation.html
   Population: Population.html
+  Sensitivity_Analysis: Sensitivity_Analysis.html
   Tutorial_Timeprofiles: Tutorial_Timeprofiles.html
   Workflow: Workflow.html
-last_built: 2025-11-26T13:40Z
+last_built: 2026-11-27T13:19Z
 urls:
   reference: https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/reference
   article: https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/articles

@@ -45,7 +45,7 @@ Manages the export of an ePackage workflow.
 
 ### Public methods
 
-- [`WorkflowScriptExporter$new()`](#method-WorkflowScriptExporter-new)
+- [`WorkflowScriptExporter$new()`](#method-WorkflowScriptExporter-initialize)
 
 - [`WorkflowScriptExporter$extractCodeChunks()`](#method-WorkflowScriptExporter-extractCodeChunks)
 
@@ -67,7 +67,7 @@ Manages the export of an ePackage workflow.
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `WorkflowScriptExporter$new()`
 
 Initialize a new instance of the class.
 
@@ -106,7 +106,7 @@ Initialize a new instance of the class.
 
 ------------------------------------------------------------------------
 
-### Method `extractCodeChunks()`
+### `WorkflowScriptExporter$extractCodeChunks()`
 
 Extract code chunks from the specified R Markdown file. This method
 reads the R Markdown file provided in the \`workflowRmd\` field and
@@ -132,7 +132,7 @@ Invisible NULL. The function does not return any value but populates the
 
 ------------------------------------------------------------------------
 
-### Method `evalCodeChunks()`
+### `WorkflowScriptExporter$evalCodeChunks()`
 
 This function evaluates the code chunks extracted from the R Markdown
 file associated with the workflow. It iterates through the code chunks,
@@ -154,7 +154,7 @@ if any evaluation fails.
 
 ------------------------------------------------------------------------
 
-### Method `addEPackageConfigurationForPlotting()`
+### `WorkflowScriptExporter$addEPackageConfigurationForPlotting()`
 
 Add referenced plotting sheets to Configuration
 
@@ -177,7 +177,7 @@ Invisible NULL.
 
 ------------------------------------------------------------------------
 
-### Method `exportWorkflowText()`
+### `WorkflowScriptExporter$exportWorkflowText()`
 
 Export workflow text to a file.
 
@@ -198,7 +198,7 @@ Invisible NULL.
 
 ------------------------------------------------------------------------
 
-### Method `addEPackageInputfilesForScenarioNames()`
+### `WorkflowScriptExporter$addEPackageInputfilesForScenarioNames()`
 
 Retrieve input files for the ePackage.
 
@@ -221,7 +221,7 @@ Invisible NULL.
 
 ------------------------------------------------------------------------
 
-### Method `addEPackageConfigurationForScenarioNames()`
+### `WorkflowScriptExporter$addEPackageConfigurationForScenarioNames()`
 
 Get E-Package Configuration for Scenario Names. This function retrieves
 the configuration data for specified scenario names from various Excel
@@ -245,7 +245,7 @@ Invisible NULL.
 
 ------------------------------------------------------------------------
 
-### Method `exportInputFiles()`
+### `WorkflowScriptExporter$exportInputFiles()`
 
 Export input files to the electronic package folder.
 
@@ -259,7 +259,7 @@ Invisible NULL.
 
 ------------------------------------------------------------------------
 
-### Method `exportConfigSheets()`
+### `WorkflowScriptExporter$exportConfigSheets()`
 
 Export configuration sheets to the electronic package folder.
 
@@ -273,7 +273,7 @@ Invisible NULL.
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `WorkflowScriptExporter$clone()`
 
 The objects of this class are cloneable with this method.
 

@@ -1,6 +1,6 @@
-# add Caption to .Rmd
+# Add caption with optional custom style.
 
-add Caption to .Rmd
+Add caption with optional custom style.
 
 ## Usage
 
@@ -12,26 +12,28 @@ mdCaption(subfolder, captionFile, captionPrefix, captionStyle = NULL)
 
 - subfolder:
 
-  The folder where the file is located relative to Rmd
+  Folder location.
 
 - captionFile:
 
-  file containing caption
+  Caption file.
 
 - captionPrefix:
 
-  'a character which starts the caption like 'Figure 1:'
+  Prefix (e.g., "Figure 1:").
 
 - captionStyle:
 
-  'custom-style for captions'
+  Custom style (optional).
+
+## Value
+
+Invisible \`NULL\`.
 
 ## See also
 
 Other markdown helper function:
-[`addFiguresAndTables()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addFiguresAndTables.md),
 [`mdBullet()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdBullet.md),
-[`mdBullet0()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdBullet0.md),
 [`mdFigure()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdFigure.md),
 [`mdFootNote()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdFootNote.md),
 [`mdHeading()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdHeading.md),

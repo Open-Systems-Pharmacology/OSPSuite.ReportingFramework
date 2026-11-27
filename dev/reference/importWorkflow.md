@@ -4,17 +4,15 @@ This function imports a workflow from an electronic package (ePackage)
 into a project directory. It initializes the project configuration,
 retrieves relevant project files, and synchronizes scenarios with plots.
 The function ensures that the necessary directories exist and that the
-configuration is set up correctly for further processing.
+configuration is set up correctly for further processing. Files listed
+in the workflow input manifest are restored, including workflow data
+files (for example \`wwfIdentifier_data_numericvalues_csv.txt\`) into
+the workflow-specific data folder used by the exported script.
 
 ## Usage
 
 ``` r
-importWorkflow(
-  projectDirectory,
-  wfIdentifier,
-  ePackageFolder,
-  configurationDirectory
-)
+importWorkflow(projectDirectory, wfIdentifier, ePackageFolder)
 ```
 
 ## Arguments
@@ -34,11 +32,6 @@ importWorkflow(
   A character string representing the path to the electronic package
   folder that contains the workflow files and configurations to be
   imported.
-
-- configurationDirectory:
-
-  A character string representing the directory where the configuration
-  files will be stored.
 
 ## Value
 

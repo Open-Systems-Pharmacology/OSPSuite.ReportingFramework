@@ -47,3 +47,7 @@ validateConfigTablePlots(
 
   list where each entry is a list: list(cols = 'vector with columns',
   allowedValues = vector with allowed values)
+
+## Value
+
+invisible(NULL). Throws an error if validation fails.

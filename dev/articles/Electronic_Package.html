@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Electronic Package • ospsuite.reportingframework</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Electronic Package">
 <meta name="robots" content="noindex">
@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ospsuite.reportingframework</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">1.0.1.9003</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,11 +43,11 @@
     <li><a class="dropdown-item" href="../articles/DataImport_by_Dictionary.html">Data Import by Dictionary</a></li>
     <li><a class="dropdown-item" href="../articles/PK_Parameter.html">PK Parameters</a></li>
     <li><a class="dropdown-item" href="../articles/Population.html">Population</a></li>
-    <li><a class="dropdown-item" href="../articles/Electronic_Package.html">Electronic Package</a></li>
     <li><a class="dropdown-item" href="../articles/Plot_and_Report_Generation.html">Plot_and_Report_Generation</a></li>
+    <li><a class="dropdown-item" href="../articles/Sensitivity_Analysis.html">Sensitivity_Analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/Electronic_Package.html">Electronic Package</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
-    <li><a class="dropdown-item" href="../articles/Workflow.html">Workflow Setup and Execution</a></li>
     <li><a class="dropdown-item" href="../articles/Tutorial_Timeprofiles.html">Tutorial: Time Profile Plotting</a></li>
   </ul>
 </li>
@@ -82,33 +82,10 @@
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p>In the realm of regulatory submissions, the ability to produce
-transparent and reproducible reports is paramount. The
-<code>ePackage</code> functionality within the
-<code>OSPSuite.ReportingFramework</code> addresses this need by allowing
-users to seamlessly export workflows that generate Good Clinical
-Practice (GCP) relevant documents into a structured electronic
-package.</p>
-<p>This functionality is designed to extract essential components from
-the project structure, including models, data, and configuration files,
-ensuring that all critical elements are systematically organized. By
-automating this extraction process, users can focus on their analyses
-without worrying about manual file management, which can lead to errors
-and inconsistencies.</p>
-<p>The outputs for reports are generated through well-defined scripts
-included in the package. These scripts are integral to the workflow,
-allowing for consistent execution of analyses and ensuring that results
-can be easily reproduced. This not only enhances the reliability of the
-findings but also fosters confidence among regulatory agencies, as every
-output is traceable back to a standardized process.</p>
-<p>By providing a comprehensive electronic package that consolidates all
-relevant files in accepted formats, such as CSV, XML, and TXT, the
-<code>OSPSuite.ReportingFramework</code> simplifies the submission
-process. Users can easily share this organized package with regulatory
-bodies, complete with README files that outline its contents and provide
-clear instructions for use. This approach not only streamlines the
-workflow but also upholds the highest standards of transparency and
-reproducibility in clinical research.</p>
+<p>The <code>ePackage</code> workflow exports the files required to
+reproduce simulation and reporting outputs in a structured folder. It is
+intended for transparent handover and reproducible execution of workflow
+scripts.</p>
 </div>
 <div class="section level2">
 <h2 id="typical-workflows-of-an-activity">Typical Workflows of an Activity<a class="anchor" aria-label="anchor" href="#typical-workflows-of-an-activity"></a>
@@ -202,10 +179,10 @@ discussions.</p>
 <div class="section level2">
 <h2 id="electronic-package-folder">Electronic Package Folder<a class="anchor" aria-label="anchor" href="#electronic-package-folder"></a>
 </h2>
-<p>The folder for the electronic package is part of the project
-configuration. You can access it by calling
-<code>projectConfiguration$addOns$electronicPackageFolder</code> and set
-it to another folder by overwriting the default:</p>
+<p>The electronic package folder is part of the project configuration
+and is available as
+<code>projectConfiguration$addOns$electronicPackageFolder</code>. You
+can overwrite this default path:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">projectConfiguration</span><span class="op">$</span><span class="fu">addAddOnFolderToConfiguration</span><span class="op">(</span></span>
 <span>  property <span class="op">=</span> <span class="st">"electronicPackageFolder"</span>,</span>
@@ -255,30 +232,29 @@ files are exported.</p>
 <span>  wfIdentifier <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  scenarioNames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"scenario1"</span>, <span class="st">"scenario2"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>You just need to provide the workflow with an identifier and specify
-the scenarios you want to use. See the function help
-<code><a href="../reference/exportSimulationWorkflowToEPackage.html">? exportSimulationWorkflowToEPackage</a></code> for more
-information.</p>
+<p>Provide a unique <code>wfIdentifier</code> for each exported workflow
+in the same project and the list of scenarios to include. See
+<code><a href="../reference/exportSimulationWorkflowToEPackage.html">? exportSimulationWorkflowToEPackage</a></code> for details.</p>
 <ol start="2" style="list-style-type: decimal">
 <li><strong>Running Simulation Workflows</strong></li>
 </ol>
 <p>Within the electronic package folder, a workflow file will now exist.
-For <code>wfIdentifier = 1</code>, it will be
+For <code>wfIdentifier = 1</code>, the file is
 <code>w1_workflow_r.txt</code>.</p>
 <p>At the beginning of the workflow, a variable
 <code>projectDirectory</code> is defined. By default, it is set to your
 current project directory. If only the package is available, this has to
 be adjusted.</p>
 <p>As shown in the figure below, the workflow consists of three
-steps</p>
+steps:</p>
 <ul>
-<li><p><strong>importWorkflow</strong>: The first step builds a project
-directory with all necessary folders and files to simulate the
-scenarios. The output folder uses the same name as in your project
-configuration, while all other folders are newly generated with the
-suffix <code>_w&lt;wfIdentifier&gt;</code>. This ensures that you do not
-accidentally overwrite existing files like configuration
-tables.</p></li>
+<li><p><strong>importWorkflow</strong>: The script calls
+<code>importWorkflow(projectDirectory, wfIdentifier, ePackageFolder)</code>
+to build a workflow-specific project structure with all required files.
+The output folder name is kept from your original project configuration,
+while other folders are generated with suffix
+<code>_w&lt;wfIdentifier&gt;</code> to avoid overwriting existing
+configuration tables.</p></li>
 <li><p><strong>scenario simulation</strong>: The scenarios are simulated
 and filed as usual. Existing results in the output folder will be
 overwritten.</p></li>
@@ -335,6 +311,14 @@ more information.</p>
 <p>Running a TLF workflow is very similar to running a simulation
 workflow; however, in Step 2, it will produce figures instead of
 simulating scenarios.</p>
+<p>For ePackage exports, <code>DataImportMap.xlsx</code> is reduced to
+<code>DataFiles</code> plus only those dictionary sheets referenced by
+<code>DataFiles</code>, so the exported configuration remains minimal
+and workflow-specific.</p>
+<p>For numeric values in TLF workflows, the exported workflow reads the
+frozen file <code>data_numericvalues_csv.txt</code> directly from the
+workflow data folder (instead of importing numeric values through
+<code>DataImportMap.xlsx</code>).</p>
 </div>
 <div class="section level3">
 <h3 id="step-4-report-generation">Step 4: Report Generation<a class="anchor" aria-label="anchor" href="#step-4-report-generation"></a>
@@ -350,33 +334,6 @@ produced by the <code>ePackage</code>. See vignette ‘Plot and Report
 Generation’ for more information</p>
 </div>
 </div>
-<div class="section level2">
-<h2 id="conclusion">Conclusion<a class="anchor" aria-label="anchor" href="#conclusion"></a>
-</h2>
-<p>In summary, the <code>ePackage</code> functionality of the
-<code>OSPSuite.ReportingFramework</code> is a powerful tool designed to
-enhance the efficiency and reliability of regulatory submissions. By
-automating the extraction and organization of essential components from
-project structures, this feature significantly reduces the risk of error
-and ensures that all necessary files are readily available in a
-standardized format.</p>
-<p>The ability to generate reproducible reports through well-defined
-scripts not only streamlines the workflow but also fosters confidence
-among stakeholders by providing transparency in the analysis process.
-With the inclusion of comprehensive README files and the option to
-customize the electronic package, users can tailor their submissions to
-meet specific regulatory requirements.</p>
-<p>As you explore the capabilities of the
-<code>OSPSuite.ReportingFramework</code>, we encourage you to leverage
-the <code>ePackage</code> functionality to enhance your reporting
-processes. By embracing these tools, you can ensure that your clinical
-research is presented with the highest standards of integrity and
-clarity, ultimately contributing to the advancement of scientific
-knowledge and regulatory compliance.</p>
-<p>For further assistance or to share your experiences with the
-<code>ePackage</code> functionality, please feel free to reach out to
-the community or consult the official documentation.</p>
-</div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>
@@ -388,7 +345,7 @@ the community or consult the official documentation.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

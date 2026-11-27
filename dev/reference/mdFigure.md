@@ -1,6 +1,6 @@
-# mdFigure
+# Include figure with caption and footnote.
 
-Include a figure file with caption
+Include figure with caption and footnote.
 
 ## Usage
 
@@ -20,39 +20,40 @@ mdFigure(
 
 - figureNumber:
 
-  number of figure used in caption prefix
+  Figure number for caption prefix.
 
 - figureFile:
 
-  file of Figure
+  Figure file name.
 
 - captionFile:
 
-  file containing caption
+  Caption file.
 
 - footNoteFile:
 
-  file containing footnotes
+  Footnote file (optional).
 
 - subfolder:
 
-  The folder where the file is located relative to Rmd
+  Folder relative to Rmd.
 
 - addNewPage:
 
-  boolean if TRUE (default) new page is added after
+  Add page break after (default TRUE).
 
 - customStyles:
 
-  list of custom styles usable for figure and table captions and
-  footnotes
+  Custom styles list.
+
+## Value
+
+Invisible \`NULL\`.
 
 ## See also
 
 Other markdown helper function:
-[`addFiguresAndTables()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addFiguresAndTables.md),
 [`mdBullet()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdBullet.md),
-[`mdBullet0()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdBullet0.md),
 [`mdCaption()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdCaption.md),
 [`mdFootNote()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdFootNote.md),
 [`mdHeading()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdHeading.md),

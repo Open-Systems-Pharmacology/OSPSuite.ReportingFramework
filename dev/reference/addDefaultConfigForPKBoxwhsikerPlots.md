@@ -20,8 +20,8 @@ addDefaultConfigForPKBoxwhsikerPlots(
 - projectConfiguration:
 
   A ProjectConfiguration class object containing configuration details,
-  including: - \`plotsFile\`: A string representing the file path to the
-  Excel workbook containing the plot configurations.
+  including: - \`addOns\$reportsFile\`: A string representing the file
+  path to the Excel workbook containing the plot configurations.
 
 - pkParameterDT:
 
@@ -47,8 +47,8 @@ return a value. It is called for its side effects.
 The function retrieves scenario definitions, output path IDs, and data
 groups from the project configuration. It checks if the specified sheet
 already exists and whether to overwrite it. If not, it creates a new
-header and fills in the default configuration values for the time
-profile plots.
+header and fills in the default configuration values for the
+box-and-whisker plots.
 
 Additionally, the function performs a validity check to ensure that it
 is not executed during a context where helper functions are prohibited

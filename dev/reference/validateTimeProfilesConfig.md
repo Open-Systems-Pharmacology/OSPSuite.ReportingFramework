@@ -21,17 +21,19 @@ validateTimeProfilesConfig(
 
 - dataObserved:
 
-  A \`data.table\` (formatted as produced by
-  \`readObservedDataByDictionary\`) or \`DataCombined\` object
-  containing the observed data to be plotted.
+  Optional observed dataset used for group/id validation.
 
 - scenarioResults:
 
-  A list containing simulated scenario results.
+  Named list of loaded scenario results.
 
 - ...:
 
-  Additional arguments passed to \`ospsuite.plots::plotTimeprofile\`.
+  Additional validation arguments forwarded to helper validators.
+
+## Value
+
+NULL (invisible).
 
 ## See also
 

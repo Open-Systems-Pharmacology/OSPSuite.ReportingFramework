@@ -11,6 +11,11 @@ directory and set the path to the template via option
 openWorkflowTemplate()
 ```
 
+## Value
+
+Invisibly returns \`NULL\` after triggering the template command in
+RStudio.
+
 ## See also
 
 Other Addins Support:

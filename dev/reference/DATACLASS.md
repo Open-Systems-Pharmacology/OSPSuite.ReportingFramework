@@ -8,10 +8,6 @@ enumeration keys for \`DataClass\`
 DATACLASS
 ```
 
-## Format
-
-An object of class `list` of length 5.
-
 ## See also
 
 Other enumerations:

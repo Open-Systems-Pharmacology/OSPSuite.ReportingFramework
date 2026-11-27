@@ -1,6 +1,7 @@
 # Introduction to OSPSuite Reporting Framework
 
 ``` r
+
 options(rmarkdown.html_vignette.check_title = FALSE)
 ```
 
@@ -11,12 +12,14 @@ streamline the process of data analysis, visualization, and reporting in
 pharmacokinetic and clinical research contexts. This package offers a
 comprehensive set of tools that facilitate the import of data,
 simulation of scenarios, calculation of pharmacokinetic parameters, and
-generation of insightful visualizations and reports. The package based
-on [esqlabsR](https://github.com/esqLABS/esqlabsR) which facilitates
-modeling and simulation workflows with the OSPSuite relying on a well
-defined project structure based on Excel files. This package is the base
-for other packages such as Bayesian Multi-Level Model Optimization
-package `{OSPSuite.BMLM}`
+generation of insightful visualizations and reports. The package is
+built on [esqlabsR](https://github.com/esqLABS/esqlabsR), which
+facilitates modeling and simulation workflows with the OSPSuite and
+relies on a well-defined project structure based on Excel files. Project
+settings are managed by `ProjectConfigurationRF`, which wraps an
+[esqlabsR](https://github.com/esqLABS/esqlabsR) project configuration
+and adds reporting-framework-specific paths and files (for example PK
+parameter or electronic package folders).
 
 ### Key Features
 
@@ -28,6 +31,24 @@ package `{OSPSuite.BMLM}`
   data and results effectively.
 - **Report Generation**: Compile results into well-structured reports
   for regulatory submissions.
+- **Constants**: Use shared constants such as `DATACLASS`, `TIMERANGE`,
+  `EXPORTDIR`, and `BIOMETRICUNITS` for consistent workflow
+  configuration.
+- **AI Support**: Generate AI-ready prompts and context exports to
+  assist workflow authoring, data-import setup, and troubleshooting.
+
+### AI-Assisted Usage
+
+The package includes helper functions for AI-assisted workflows.
+
+- `createAIWorkflowPrompt(projectConfiguration, task = "create-workflow")`:
+  Creates a project-specific prompt.
+- `createAIPromptFromTask(projectConfiguration, task = "import-data")`:
+  Creates prompts from predefined task presets.
+- `exportWorkflowContext(projectConfiguration)`: Exports compact
+  workflow context for AI tools.
+- `validateWorkflowForAI(projectConfiguration)`: Performs lightweight
+  preflight checks.
 
 ### Available Vignettes
 
@@ -42,16 +63,16 @@ description of each:
     involved in using the framework.
 
 2.  **[Data Import by
-    Dictionary](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/articles/Data_import_by_dictionary.md)**:
+    Dictionary](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/articles/DataImport_by_Dictionary.md)**:
     Learn how to import observed time profile data and PK parameters
     using a configuration dictionary.
 
-3.  **[Population](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/articles/Population)**:
+3.  **[Population](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/articles/Population.md)**:
     Explore the concepts of random and virtual twin populations within
     the framework.
 
 4.  **[PK
-    Parameters](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/articles/PK-Parameter)**:
+    Parameters](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/articles/PK_Parameter.md)**:
     Get insights into calculating and visualizing pharmacokinetic
     parameters across various scenarios.
 
@@ -70,7 +91,5 @@ description of each:
     Understand how to create a structured electronic package for
     regulatory submissions.
 
-Explore the vignettes to familiarize yourself with the package
-functionalities and start your journey with the reporting framework! If
-you have any feedback or suggestions for improvement, please feel free
-to reach out!
+Use the linked vignettes as a step-by-step path from project setup to
+final reporting outputs.

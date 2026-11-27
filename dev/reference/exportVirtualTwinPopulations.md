@@ -36,6 +36,10 @@ exportVirtualTwinPopulations(
   a character vector defining the population which should be exported.
   If NULL (default) all will be exported
 
+## Value
+
+Invisible \`NULL\`.
+
 ## See also
 
 Other population export:

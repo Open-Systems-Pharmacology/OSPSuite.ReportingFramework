@@ -6,25 +6,31 @@ This vignette provides a detailed guide to the data import process
 within the OSPSuite Reporting Framework package. The key aspects of the
 data import functionality are as follows:
 
-- **Data Types**: The package supports importing both observed time
-  profiles and pharmacokinetic (PK) parameters, which can be processed
-  as either aggregated or individual datasets.
+- **Data Types**: The package supports importing observed time profiles,
+  pharmacokinetic (PK) parameters, and scalar numeric values.
 
-- **File Format**: Source files must be formatted as CSV tables.
+- **File Format**: Time profile and PK parameter source files are read
+  from CSV tables. Scalar numeric values can be read from a dedicated
+  sheet in the same Excel configuration workbook.
 
 - **Import Function**: The primary function used for data import is
   `readObservedDataByDictionary`.
 
 - **Configuration File**: Data import configuration is managed through
-  the “DataImportConfiguration.xlsx” file, which consists of:
+  the “DataImportMap.xlsx” file, which consists of:
 
   - A `DataFiles` sheet listing all files to be imported.
   - Dictionary sheets that outline the import specifications and rules.
 
-- **Output**: The import process generates two data.tables:
+- **Output**: `readObservedDataByDictionary` returns one data.table per
+  call, based on `dataClassType`.
 
-  - `dataObserved`: Contains time profile data.
-  - `dataObservedPK`: Contains PK parameter data.
+  - Use `dataClassType = "timeprofile"` to import observed time profile
+    data.
+  - Use `dataClassType = "pkParameter"` to import observed PK parameter
+    data.
+  - Use `dataClassType = "numericValues"` to import scalar numeric
+    values.
 
 - **Data Transfer**: The import function also facilitates the transfer
   of additional data to other configuration sheets:
@@ -36,8 +42,10 @@ data import functionality are as follows:
     generating a virtual twin population (refer to the Population
     vignette for more details).
   - It appends the output identifier and data group identifier, along
-    with all available data, to the corresponding sheets in `Plot.xlsx`
-    and `Scenario.xlsx`.
+    with all available data, to `Reports.xlsx` (sheets `Outputs` and
+    `DataGroups`) and synchronizes scenario display entries in
+    `Reports.xlsx` (sheet `Scenarios`) with `Scenarios.xlsx` when
+    needed.
 
 ![Overview of Data Import](images/DataImport.png)
 
@@ -45,33 +53,90 @@ Overview of Data Import
 
 ## Using the `readObservedDataByDictionary` Function
 
-The `readObservedDataByDictionary` function plays a pivotal role in the
-data import process within our package. It is designed to read and
-process observed data based on the provided project configuration and
-the data dictionary defined in an Excel template. Here’s how to use the
-function and fill the Excel table for effective data import:
+The `readObservedDataByDictionary` function reads and processes observed
+data based on the project configuration and data dictionary. Use these
+arguments to control import behavior:
 
-1.  **Provide Project Configuration**: The function requires the project
-    configuration data to be passed as an argument. This configuration
-    should include the necessary information for data import, such as
-    the data importer configuration file and project configuration
-    directory path.
+- `projectConfiguration`: Project configuration object.
+- `spreadData`: If `TRUE`, imported metadata is propagated to
+  configuration tables (`Individuals.xlsx` and `Reports.xlsx`). If
+  `FALSE`, import is read-only and no configuration workbook is
+  modified.
+- `dataClassType`: Data class to import (`"timeprofile"`,
+  `"pkParameter"`, or `"numericValues"`).
+- `fileIds`: Optional subset of file identifiers from the `DataFiles`
+  sheet.
+- `debugMode`: If `TRUE`, import tries to continue when individual files
+  fail to import and reports failures as warnings. Use for
+  troubleshooting dictionary/filter issues. Default is `FALSE`.
 
-2.  **Data Importer Configuration File**: Ensure that the Excel template
-    containing the data dictionary and data file information is
-    available and accessible to the function. The data dictionary in the
-    Excel template defines the mapping and conversion rules for the
-    observed data.
-
-3.  **Invoke the Function**: Call the `readObservedDataByDictionary`
-    function, passing the project configuration as an argument. The
-    function will read the data files and process the observed data
-    based on the provided dictionary and configuration. It will return
-    the observed data as a data.table, ready for further analysis.
+Typical usage pattern:
 
 ``` r
-# Call the readObservedDataByDictionary function
-observedData <- readObservedDataByDictionary(projectConfiguration)
+
+# Import observed time profiles
+dataObserved <- readObservedDataByDictionary(
+  projectConfiguration = projectConfiguration,
+  dataClassType = "timeprofile",
+  fileIds = NULL,
+  spreadData = TRUE
+)
+
+# Import observed PK parameters
+dataObservedPK <- readObservedDataByDictionary(
+  projectConfiguration = projectConfiguration,
+  dataClassType = "pkParameter",
+  fileIds = NULL,
+  spreadData = TRUE
+)
+
+# Import scalar numeric values
+numericValues <- readObservedDataByDictionary(
+  projectConfiguration = projectConfiguration,
+  dataClassType = "numericValues",
+  fileIds = NULL,
+  spreadData = FALSE
+)
+
+# Troubleshooting mode: continue when one file fails and inspect warnings
+dataObservedDebug <- readObservedDataByDictionary(
+  projectConfiguration = projectConfiguration,
+  dataClassType = "timeprofile",
+  debugMode = TRUE,
+  spreadData = FALSE
+)
+```
+
+In most workflows, `dataObserved` and `dataObservedPK` are imported with
+separate calls as shown above.
+
+When `debugMode = TRUE`, failed files are skipped and processing
+continues with remaining files where possible. This mode is intended for
+diagnostics and should not replace fixing the underlying
+dictionary/filter configuration.
+
+### AI-Assisted Data Import Setup
+
+To prepare data-import requests for an AI assistant, generate a
+task-specific prompt that includes your current project context:
+
+``` r
+
+prompt <- createAIPromptFromTask(
+  projectConfiguration = projectConfiguration,
+  task = "import-data"
+)
+
+cat(prompt, sep = "\n")
+```
+
+Before applying AI-suggested changes, validate the configuration:
+
+``` r
+
+validation <- validateWorkflowForAI(projectConfiguration)
+validation$ok
+validation$errors
 ```
 
 ## Filling the Excel Table
@@ -94,23 +159,57 @@ information:
 - **`DataClass`**: Differentiate between time profiles and PK
   parameters, as well as aggregated and individual data.
 
+`DATACLASS` provides standard values for `DataClass` (for example
+`DATACLASS$tpIndividual`, `DATACLASS$tpAggregated`,
+`DATACLASS$pkIndividual`, `DATACLASS$pkAggregated`,
+`DATACLASS$numericValues`) and should be used in scripts to avoid typos.
+
 #### Example
 
 In the example below, we want to read data from three source files.
 “data1” and “data2” have the same format and use the same dictionary for
 the import, while “data3” uses the dictionary “tpDictionaryAggregated”.
-All used dictionaries must be part of the
-“DataImportConfiguration.xlsx.”
+All used dictionaries must be part of the “DataImportMap.xlsx.”
 
 For `data1`, we need all rows; for the other two files, we have defined
 filters. In `data2`, we want to exclude all flagged with `PKFLAG > 0`,
 and in `data3`, we want to exclude data from study 1234.
 
-| FileIdentifier | DataFile                   | Dictionary             | DataFilter   | DataClass     |
-|:---------------|:---------------------------|:-----------------------|:-------------|:--------------|
-| data1          | relative/path/to/data1.csv | tpDictionary           |              | tp Individual |
-| data2          | relative/path/to/data2.csv | tpDictionary           | PKValue == 1 | tp Individual |
-| data3          | relative/path/to/data3.csv | tpDictionaryAggregated | STUD != 1234 | tp Aggregated |
+| FileIdentifier | DataFile | Dictionary | DataFilter | DataClass |
+|:---|:---|:---|:---|:---|
+| data1 | relative/path/to/data1.csv | tpDictionary |  | tp Individual |
+| data2 | relative/path/to/data2.csv | tpDictionary | PKValue == 1 | tp Individual |
+| data3 | relative/path/to/data3.csv | tpDictionaryAggregated | STUD != 1234 | tp Aggregated |
+
+### `NumericValues` Sheet
+
+Use this sheet when numeric values should be maintained in configuration
+instead of hard-coded in scripts.
+
+- Required columns in the sheet: `VariableName`, `Value`, `Unit`,
+  `Reference`.
+- Returned table columns after import: `variableName`, `value`, `unit`,
+  `reference`.
+- Optional metadata columns (for example `Description`) are ignored by
+  the numeric-values importer.
+- Variable names must be unique across imported numeric-value sheets.
+
+Add a row in `DataFiles` with `DataClass = DATACLASS$numericValues` and
+`Dictionary = "NumericValues"` (or another sheet name if configured).
+
+| VariableName | Value | Unit | Reference | Description |
+|:---|---:|:---|:---|:---|
+| Dose | 100.00 | mg | Study 1234 | Single dose amount |
+| InfusionDuration | 1.50 | h | Protocol | Infusion duration used in protocol |
+| LowerLimit | 0.05 | mg/L | Bioanalytical report | Lower quantification limit |
+
+Retrieve one scalar with optional unit validation:
+
+``` r
+
+dose <- getNumericValue(numericValues, "Dose", expectedUnit = "mg")
+halfLife <- getNumericValue(numericValues, "InfusionDuration", expectedUnit = "h")
+```
 
 The first line of the sheet is not shown above; it contains descriptions
 for the columns. The information for the data import starts at line 2.
@@ -205,20 +304,13 @@ The configuration sheet provides two templates for dictionaries:
     sheet in the plot configuration table. The information is used to
     generate the data import for PK-Sim.
 
-- **sourceColumn**: Name of the column in the source CSV.  
+- **valueExpr**: R expression that defines the assigned value. For
+  unchanged column mapping, set this to the source column name.  
 
 - **sourceUnit**: Unit of the column in the source CSV.  
 
-- **filter**: An R executable expression that filters the source rows.
-  Filters are executed in the order of this table.  
-
-- **filterValue**: An R executable expression to set a value for the
-  filtered rows.
-
-By filling out the Excel table with the required information, you can
-ensure that the `readObservedDataByDictionary` function can effectively
-read and process the observed data based on the provided data dictionary
-and configuration.
+- **conditionExpr**: An R executable row selector expression. If empty,
+  all rows are selected (`TRUE`). Rules are applied in table order.
 
 **!!! ATTENTION: Do not use single quotes (’ ’) to capture strings. At
 the beginning of an Excel cell, single quotes will be ignored. Use
@@ -229,46 +321,46 @@ double quotes (” “).**
 This sheet is used for individual data.
 
 The `individualId` is constructed as a concatenation of study ID and
-individual ID. As we want to do this for all rows, the filter is set to
+individual ID. As we want to do this for all rows, `conditionExpr` is
 `TRUE`, and the R expression that performs the concatenation is placed
-in the column `filterValue`.
+in `valueExpr`.
 
 The dictionary contains two rows for the target column `population`. For
-the first entry, all data rows where the source column `RACENAME` is
-“White” are set to “European_ICRP_2002”, while for the second entry,
-individuals identified as “Asian” are set to “Asian_Tanaka_1996”.
+the first entry, all data rows where `RACENAME` is “White” are set to
+“European_ICRP_2002”, while for the second entry, individuals identified
+as “Asian” are set to “Asian_Tanaka_1996”.
 
-Values defined by filters are set sequentially in the order of the
-dictionary, so if a data row is selected by different filter conditions,
-the filter value at the bottom will define the final value.
+Values are set sequentially in the order of the dictionary, so if a data
+row is selected by multiple conditions, the bottom-most matching rule
+defines the final value.
 
 The data contains the covariate `country` in the column “COUNTRY”.
 Additionally, the metadata `dose` is available.
 
-| TargetColumn | Type        | SourceColumn | SourceUnit | Filter              | FilterValue                                    | Description                                                                                 |
-|:-------------|:------------|:-------------|:-----------|:--------------------|:-----------------------------------------------|:--------------------------------------------------------------------------------------------|
-| studyId      | identifier  | STUD         |            |                     |                                                | character, study ID                                                                         |
-| studyArm     | metadata    | GRPNAME      |            |                     |                                                | character, unique over study, typically study arm                                           |
-| subjectId    | identifier  | SID          |            |                     |                                                | character, subject ID                                                                       |
-| individualId | identifier  |              |            | TRUE                | paste0(“I”,STUD,SID)                           | character, unique over all studies, ignored by aggregated Data                              |
-| group        | identifier  |              |            | TRUE                | paste(STUD, GRPNAME, “individual”, sep = “\_“) | Must be unique over studies and dataclasses                                                 |
-| outputPathId | identifier  | MOLECULE     |            |                     |                                                | character, output ID                                                                        |
-| xValues      | timeprofile | TIME         | h          |                     |                                                | Time (0 = start of simulation in PK-Sim/Mobi)                                               |
-| yValues      | timeprofile | DV           |            |                     |                                                | Units is coded in column “dvUnit”                                                           |
-| yUnit        | timeprofile | DVUNIT       |            |                     |                                                | character, dv Unit must be valid PK-Sim unit                                                |
-| lloq         | timeprofile | LLOQ         |            |                     |                                                | for values below lloq set dv to lloq/2, if not available set to NA                          |
-| age          | biometrics  | AGE          | year(s)    |                     |                                                | optional, please provide source unit                                                        |
-| weight       | biometrics  | WGHT0        | kg         |                     |                                                | optional, please provide source unit                                                        |
-| height       | biometrics  | HGHT0        | cm         |                     |                                                | optional, please provide source unit                                                        |
-| gender       | biometrics  | SEX          |            |                     |                                                | Use characters Male Female (case insensitive) or numeric coding 1=male 2= female            |
-| population   | biometrics  |              |            | RACENAME == “White” | “European_ICRP_2002”                           | character, PK Sim population name (get available list by calling ospsuite::HumanPopulation) |
-| population   | biometrics  |              |            | RACENAME == “Asian” | “Asian_Tanaka_1996”                            | character, PK Sim population name (get available list by calling ospsuite::HumanPopulation) |
-| species      | biometrics  |              |            | TRUE                | “Human”                                        | character, PK-Sim Species name (ospsuite::Species)                                          |
-| country      | covariate   | COUNTRY      |            |                     |                                                | example for covariate, please delete if not used                                            |
-| dose         | metadata    | DOSE         |            | NA                  |                                                | meta data used for PK-Sim import, if not available, delete row or set all values to NA      |
-| molecule     | metadata    |              |            | TRUE                |                                                | meta data used for PK-Sim import, if not available, delete row or set all values to NA      |
-| organ        | metadata    |              |            | TRUE                |                                                | meta data used for PK-Sim import, if not available, delete row or set all values to NA      |
-| compartment  | metadata    |              |            | TRUE                |                                                | meta data used for PK-Sim import, if not available, delete row or set all values to NA      |
+| TargetColumn | Type | ValueExpr | SourceUnit | ConditionExpr | Description |
+|:---|:---|:---|:---|:---|:---|
+| studyId | identifier | STUD |  |  | character, study ID |
+| studyArm | metadata | GRPNAME |  |  | character, unique over study, typically study arm |
+| subjectId | identifier | SID |  |  | character, subject ID |
+| individualId | identifier | paste0(“I”,STUD,SID) |  |  | character, unique over all studies, ignored by aggregated Data |
+| group | identifier | paste(STUD, GRPNAME, “individual”, sep = “\_“) |  |  | Must be unique over studies and dataclasses |
+| outputPathId | identifier | MOLECULE |  |  | character, output ID |
+| xValues | timeprofile | TIME | h |  | Time (0 = start of simulation in PK-Sim/Mobi) |
+| yValues | timeprofile | DV |  |  | Units is coded in column “dvUnit” |
+| yUnit | timeprofile | DVUNIT |  |  | character, dv Unit must be valid PK-Sim unit |
+| lloq | timeprofile | LLOQ |  |  | for values below lloq set dv to lloq/2, if not available set to NA |
+| age | biometrics | AGE | year(s) |  | optional, please provide source unit |
+| weight | biometrics | WGHT0 | kg |  | optional, please provide source unit |
+| height | biometrics | HGHT0 | cm |  | optional, please provide source unit |
+| gender | biometrics | SEX |  |  | Use characters Male Female (case insensitive) or numeric coding 1=male 2= female |
+| population | biometrics | “European_ICRP_2002” |  | RACENAME == “White” | character, PK Sim population name (get available list by calling ospsuite::HumanPopulation) |
+| population | biometrics | “Asian_Tanaka_1996” |  | RACENAME == “Asian” | character, PK Sim population name (get available list by calling ospsuite::HumanPopulation) |
+| species | biometrics | “Human” |  |  | character, PK-Sim Species name (ospsuite::Species) |
+| country | covariate | COUNTRY |  |  | example for covariate, please delete if not used |
+| dose | metadata | DOSE |  | NA | meta data used for PK-Sim import, if not available, delete row or set all values to NA |
+| molecule | metadata |  |  |  | meta data used for PK-Sim import, if not available, delete row or set all values to NA |
+| organ | metadata |  |  |  | meta data used for PK-Sim import, if not available, delete row or set all values to NA |
+| compartment | metadata |  |  |  | meta data used for PK-Sim import, if not available, delete row or set all values to NA |
 
 ## Other Data Formats
 
@@ -281,6 +373,7 @@ The package also provides two functions to convert the data.table format
 to DataCombined and vice versa:
 
 ``` r
+
 # Convert DataCombined back to data.table format
 dataDT <- convertDataCombinedToDataTable(dataCombined)
 

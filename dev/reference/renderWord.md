@@ -1,6 +1,6 @@
-# converts .Rmd file to word
+# Convert a .qmd file to Word
 
-converts .Rmd file to word
+Convert a .qmd file to Word
 
 ## Usage
 
@@ -18,7 +18,7 @@ renderWord(
 
 - fileName:
 
-  name of .Rmd file to convert to word format (".docx")
+  Name of a \`.qmd\` file to convert to Word format (\`.docx\`).
 
 - wordConversionTemplate:
 
@@ -35,13 +35,17 @@ renderWord(
 
   passed to render
 
+## Value
+
+NULL (invisible).
+
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
 # Example with customstyles for Footnotes
 renderWord(
-  fileName = "myReport.Rmd",
+  fileName = "myReport.qmd",
   wordConversionTemplate = "path/to/template/myTemplate.docx",
   customStyles = list(FigureFootnote = "myFootnoteFormat", TableFootnote = "myFootnoteFormat")
 )

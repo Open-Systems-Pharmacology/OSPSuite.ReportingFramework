@@ -29,3 +29,12 @@ formatPercentiles(percentiles, suffix = "", allAsPercentiles = FALSE)
 
 A vector containing the mapped labels for specific percentiles and
 formatted strings for others.
+
+## Examples
+
+``` r
+formatPercentiles(c(0, 0.5, 1))
+#> [1] "min"    "median" "max"   
+formatPercentiles(c(0.05, 0.25, 0.75, 0.95), suffix = " CI")
+#> [1] "5th CI"  "25th CI" "75th CI" "95th CI"
+```

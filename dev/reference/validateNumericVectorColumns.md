@@ -21,3 +21,7 @@ validateNumericVectorColumns(columns, data, ...)
 - ...:
 
   additionally parameters parsed to checkmate::assertNumeric
+
+## Value
+
+invisible(NULL). Throws an error if validation fails.

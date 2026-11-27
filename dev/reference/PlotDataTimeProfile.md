@@ -3,15 +3,10 @@
 An object to collect plot Data and other information to create a time
 profile plot
 
-## Value
-
-RmdPlotManager object Load simulated results for the specified project
-configuration
-
 ## Super class
 
 [`ospsuite.utils::Printable`](https://www.open-systems-pharmacology.org/OSPSuite.RUtils/reference/Printable.html)
--\> `RmdPlotManager`
+-\> `PlotDataTimeProfile`
 
 ## Active bindings
 
@@ -71,43 +66,43 @@ configuration
 
 ### Public methods
 
-- [`PlotDataTimeProfile$new()`](#method-RmdPlotManager-new)
+- [`PlotDataTimeProfile$new()`](#method-PlotDataTimeProfile-initialize)
 
-- [`PlotDataTimeProfile$loadSimulatedResults()`](#method-RmdPlotManager-loadSimulatedResults)
+- [`PlotDataTimeProfile$loadSimulatedResults()`](#method-PlotDataTimeProfile-loadSimulatedResults)
 
-- [`PlotDataTimeProfile$filterObservedDataForPlot()`](#method-RmdPlotManager-filterObservedDataForPlot)
+- [`PlotDataTimeProfile$filterObservedDataForPlot()`](#method-PlotDataTimeProfile-filterObservedDataForPlot)
 
-- [`PlotDataTimeProfile$addTimeRangeTags()`](#method-RmdPlotManager-addTimeRangeTags)
+- [`PlotDataTimeProfile$addTimeRangeTags()`](#method-PlotDataTimeProfile-addTimeRangeTags)
 
-- [`PlotDataTimeProfile$splitDataToPanels()`](#method-RmdPlotManager-splitDataToPanels)
+- [`PlotDataTimeProfile$splitDataToPanels()`](#method-PlotDataTimeProfile-splitDataToPanels)
 
-- [`PlotDataTimeProfile$setOrderAndFactors()`](#method-RmdPlotManager-setOrderAndFactors)
+- [`PlotDataTimeProfile$setOrderAndFactors()`](#method-PlotDataTimeProfile-setOrderAndFactors)
 
-- [`PlotDataTimeProfile$setIndexColumns()`](#method-RmdPlotManager-setIndexColumns)
+- [`PlotDataTimeProfile$setIndexColumns()`](#method-PlotDataTimeProfile-setIndexColumns)
 
-- [`PlotDataTimeProfile$getTimeLabelForTimeRange()`](#method-RmdPlotManager-getTimeLabelForTimeRange)
+- [`PlotDataTimeProfile$getTimeLabelForTimeRange()`](#method-PlotDataTimeProfile-getTimeLabelForTimeRange)
 
-- [`PlotDataTimeProfile$addPredictedForObserved()`](#method-RmdPlotManager-addPredictedForObserved)
+- [`PlotDataTimeProfile$addPredictedForObserved()`](#method-PlotDataTimeProfile-addPredictedForObserved)
 
-- [`PlotDataTimeProfile$getDataForTimeRange()`](#method-RmdPlotManager-getDataForTimeRange)
+- [`PlotDataTimeProfile$getDataForTimeRange()`](#method-PlotDataTimeProfile-getDataForTimeRange)
 
-- [`PlotDataTimeProfile$useColorIndex()`](#method-RmdPlotManager-useColorIndex)
+- [`PlotDataTimeProfile$useColorIndex()`](#method-PlotDataTimeProfile-useColorIndex)
 
-- [`PlotDataTimeProfile$useShapeIndex()`](#method-RmdPlotManager-useShapeIndex)
+- [`PlotDataTimeProfile$useShapeIndex()`](#method-PlotDataTimeProfile-useShapeIndex)
 
-- [`PlotDataTimeProfile$hasSimulatedPop()`](#method-RmdPlotManager-hasSimulatedPop)
+- [`PlotDataTimeProfile$hasSimulatedPop()`](#method-PlotDataTimeProfile-hasSimulatedPop)
 
-- [`PlotDataTimeProfile$hasObservedData()`](#method-RmdPlotManager-hasObservedData)
+- [`PlotDataTimeProfile$hasObservedData()`](#method-PlotDataTimeProfile-hasObservedData)
 
-- [`PlotDataTimeProfile$hasObservedDataRange()`](#method-RmdPlotManager-hasObservedDataRange)
+- [`PlotDataTimeProfile$hasObservedDataRange()`](#method-PlotDataTimeProfile-hasObservedDataRange)
 
-- [`PlotDataTimeProfile$hasReferenceComparison()`](#method-RmdPlotManager-hasReferenceComparison)
+- [`PlotDataTimeProfile$hasReferenceComparison()`](#method-PlotDataTimeProfile-hasReferenceComparison)
 
-- [`PlotDataTimeProfile$clone()`](#method-RmdPlotManager-clone)
+- [`PlotDataTimeProfile$clone()`](#method-PlotDataTimeProfile-clone)
 
 ------------------------------------------------------------------------
 
-### Method `new()`
+### `PlotDataTimeProfile$new()`
 
 Initialize a new instance of the class
 
@@ -137,9 +132,14 @@ Initialize a new instance of the class
 
   function to aggregate simulated data
 
+#### Returns
+
+QmdPlotManager object Load simulated results for the specified project
+configuration
+
 ------------------------------------------------------------------------
 
-### Method `loadSimulatedResults()`
+### `PlotDataTimeProfile$loadSimulatedResults()`
 
 #### Usage
 
@@ -165,7 +165,7 @@ Initialize a new instance of the class
 
 ------------------------------------------------------------------------
 
-### Method `filterObservedDataForPlot()`
+### `PlotDataTimeProfile$filterObservedDataForPlot()`
 
 #### Usage
 
@@ -184,7 +184,7 @@ for each time tag
 
 ------------------------------------------------------------------------
 
-### Method `addTimeRangeTags()`
+### `PlotDataTimeProfile$addTimeRangeTags()`
 
 #### Usage
 
@@ -196,7 +196,7 @@ invisible(NULL) Creates plotId for each scenario outputs group
 
 ------------------------------------------------------------------------
 
-### Method `splitDataToPanels()`
+### `PlotDataTimeProfile$splitDataToPanels()`
 
 #### Usage
 
@@ -210,7 +210,7 @@ invisible(NULL) Creates plotId for each scenario outputs group
 
 ------------------------------------------------------------------------
 
-### Method `setOrderAndFactors()`
+### `PlotDataTimeProfile$setOrderAndFactors()`
 
 #### Usage
 
@@ -222,7 +222,7 @@ invisible(NULL) set columns for aesthetics
 
 ------------------------------------------------------------------------
 
-### Method `setIndexColumns()`
+### `PlotDataTimeProfile$setIndexColumns()`
 
 #### Usage
 
@@ -237,7 +237,7 @@ invisible(NULL) set columns for aesthetics
 
 ------------------------------------------------------------------------
 
-### Method `getTimeLabelForTimeRange()`
+### `PlotDataTimeProfile$getTimeLabelForTimeRange()`
 
 #### Usage
 
@@ -252,7 +252,7 @@ invisible(NULL) set columns for aesthetics
 
 ------------------------------------------------------------------------
 
-### Method `addPredictedForObserved()`
+### `PlotDataTimeProfile$addPredictedForObserved()`
 
 #### Usage
 
@@ -264,7 +264,7 @@ invisible(NULL) Get the data for the filtered time range
 
 ------------------------------------------------------------------------
 
-### Method `getDataForTimeRange()`
+### `PlotDataTimeProfile$getDataForTimeRange()`
 
 #### Usage
 
@@ -300,7 +300,7 @@ legend is needed
 
 ------------------------------------------------------------------------
 
-### Method `useColorIndex()`
+### `PlotDataTimeProfile$useColorIndex()`
 
 #### Usage
 
@@ -312,7 +312,7 @@ Logical Function to determine if shape legend is needed
 
 ------------------------------------------------------------------------
 
-### Method `useShapeIndex()`
+### `PlotDataTimeProfile$useShapeIndex()`
 
 #### Usage
 
@@ -324,7 +324,7 @@ Logical Function to determine if simulation is aggregated
 
 ------------------------------------------------------------------------
 
-### Method `hasSimulatedPop()`
+### `PlotDataTimeProfile$hasSimulatedPop()`
 
 #### Usage
 
@@ -336,7 +336,7 @@ Logical Function to determine if data contains observed data
 
 ------------------------------------------------------------------------
 
-### Method `hasObservedData()`
+### `PlotDataTimeProfile$hasObservedData()`
 
 #### Usage
 
@@ -348,7 +348,7 @@ Logical Function to determine if data contains observed data range
 
 ------------------------------------------------------------------------
 
-### Method `hasObservedDataRange()`
+### `PlotDataTimeProfile$hasObservedDataRange()`
 
 #### Usage
 
@@ -361,7 +361,7 @@ plotted
 
 ------------------------------------------------------------------------
 
-### Method `hasReferenceComparison()`
+### `PlotDataTimeProfile$hasReferenceComparison()`
 
 #### Usage
 
@@ -373,7 +373,7 @@ Logical
 
 ------------------------------------------------------------------------
 
-### Method `clone()`
+### `PlotDataTimeProfile$clone()`
 
 The objects of this class are cloneable with this method.
 

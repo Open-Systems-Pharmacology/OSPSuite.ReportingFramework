@@ -8,10 +8,6 @@ enumeration keys for exportDirectories
 EXPORTDIR
 ```
 
-## Format
-
-An object of class `list` of length 3.
-
 ## See also
 
 Other enumerations:

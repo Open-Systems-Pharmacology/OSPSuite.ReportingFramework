@@ -8,7 +8,7 @@ existence in the output folder.
 ## Usage
 
 ``` r
-validateSensitivityConfig(configTable, ...)
+validateSensitivityConfig(configTable, scenarioList, ...)
 ```
 
 ## Arguments
@@ -16,6 +16,10 @@ validateSensitivityConfig(configTable, ...)
 - configTable:
 
   A data.table containing the configuration for sensitivity analysis.
+
+- scenarioList:
+
+  Named list of loaded scenario results.
 
 - ...:
 

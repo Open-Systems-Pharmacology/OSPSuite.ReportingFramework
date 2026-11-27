@@ -8,10 +8,6 @@ enumeration biometric units
 BIOMETRICUNITS
 ```
 
-## Format
-
-An object of class `list` of length 3.
-
 ## See also
 
 Other enumerations:

@@ -17,3 +17,7 @@ validateAtleastOneEntry(configTablePlots, columnVector)
 - columnVector:
 
   vector of columns to check
+
+## Value
+
+invisible(NULL). Throws an error if validation fails.

@@ -28,5 +28,5 @@ validateGroupConsistency(dt, valueColumns, groupingColumns = "plotName")
 
 ## Value
 
-Returns NULL (invisible) if all checks pass. Raises an error if any
-value column contains inconsistent values within a group.
+invisible(NULL). Raises an error if any value column contains
+inconsistent values within a group.

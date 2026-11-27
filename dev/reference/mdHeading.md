@@ -1,6 +1,6 @@
-# mdHeading
+# mdHeading Insert heading with specified level (1-6).
 
-Insert a heading with a specified level.
+mdHeading Insert heading with specified level (1-6).
 
 ## Usage
 
@@ -12,22 +12,24 @@ mdHeading(..., level = 1, newlines = 2)
 
 - ...:
 
-  passed to mdPaste
+  Content passed to mdPaste.
 
 - level:
 
-  The header level, i.e. the number of \`#\`s. Defaults to 1.
+  Header level (default 1).
 
 - newlines:
 
-  The number of newlines inserted after the heading. Defaults to 2.
+  Newlines after heading (default 2).
+
+## Value
+
+Invisible \`NULL\`.
 
 ## See also
 
 Other markdown helper function:
-[`addFiguresAndTables()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/addFiguresAndTables.md),
 [`mdBullet()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdBullet.md),
-[`mdBullet0()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdBullet0.md),
 [`mdCaption()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdCaption.md),
 [`mdFigure()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdFigure.md),
 [`mdFootNote()`](https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/dev/reference/mdFootNote.md),

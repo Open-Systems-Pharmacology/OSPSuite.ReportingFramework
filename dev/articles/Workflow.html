@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Workflow Setup and Execution • ospsuite.reportingframework</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Workflow Setup and Execution">
 <meta name="robots" content="noindex">
@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">ospsuite.reportingframework</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">1.0.1.9003</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">2.0.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,11 +43,11 @@
     <li><a class="dropdown-item" href="../articles/DataImport_by_Dictionary.html">Data Import by Dictionary</a></li>
     <li><a class="dropdown-item" href="../articles/PK_Parameter.html">PK Parameters</a></li>
     <li><a class="dropdown-item" href="../articles/Population.html">Population</a></li>
-    <li><a class="dropdown-item" href="../articles/Electronic_Package.html">Electronic Package</a></li>
     <li><a class="dropdown-item" href="../articles/Plot_and_Report_Generation.html">Plot_and_Report_Generation</a></li>
+    <li><a class="dropdown-item" href="../articles/Sensitivity_Analysis.html">Sensitivity_Analysis</a></li>
+    <li><a class="dropdown-item" href="../articles/Electronic_Package.html">Electronic Package</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><h6 class="dropdown-header" data-toc-skip>Tutorials</h6></li>
-    <li><a class="dropdown-item" href="../articles/Workflow.html">Workflow Setup and Execution</a></li>
     <li><a class="dropdown-item" href="../articles/Tutorial_Timeprofiles.html">Tutorial: Time Profile Plotting</a></li>
   </ul>
 </li>
@@ -82,11 +82,8 @@
 <div class="section level2">
 <h2 id="typical-package-workflow">Typical Package Workflow<a class="anchor" aria-label="anchor" href="#typical-package-workflow"></a>
 </h2>
-<p>This vignette describes how to set up a workflow file and details the
-different sections of the workflow for the
-<a href="https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/">ospsuite.reportingframework</a> package. It serves as a guide
-for users to effectively utilize the package for processing
-pharmacokinetic data.</p>
+<p>This vignette explains how to set up and run a reporting workflow
+with <a href="https://www.open-systems-pharmacology.org/OSPSuite.ReportingFramework/">ospsuite.reportingframework</a>.</p>
 <div class="section level3">
 <h3 id="accessing-the-workflow-template">Accessing the Workflow Template<a class="anchor" aria-label="anchor" href="#accessing-the-workflow-template"></a>
 </h3>
@@ -107,6 +104,37 @@ select “Open Template Workflow.” This will execute the
 <code><a href="../reference/openWorkflowTemplate.html">openWorkflowTemplate()</a></code> function and open the template in a
 new document.</p>
 </div>
+</div>
+<div class="section level3">
+<h3 id="ai-assisted-workflow-setup">AI-Assisted Workflow Setup<a class="anchor" aria-label="anchor" href="#ai-assisted-workflow-setup"></a>
+</h3>
+<p>If you use an AI assistant to create or refine workflow scripts, you
+can generate project-specific prompts directly from the package.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">prompt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createAIPromptFromTask.html">createAIPromptFromTask</a></span><span class="op">(</span></span>
+<span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
+<span>  task <span class="op">=</span> <span class="st">"create-workflow"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">prompt</span>, sep <span class="op">=</span> <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
+<p>Available task presets are:</p>
+<ul>
+<li><code>"create-workflow"</code></li>
+<li><code>"import-data"</code></li>
+<li><code>"build-plots"</code></li>
+<li><code>"debug-run"</code></li>
+</ul>
+<p>You can also export compact context data for other AI tools:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/exportWorkflowContext.html">exportWorkflowContext</a></span><span class="op">(</span></span>
+<span>  projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
+<span>  file <span class="op">=</span> <span class="st">"workflow-context.json"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>Before running AI-generated code, validate the configuration:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">validation</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/validateWorkflowForAI.html">validateWorkflowForAI</a></span><span class="op">(</span><span class="va">projectConfiguration</span><span class="op">)</span></span>
+<span><span class="va">validation</span><span class="op">$</span><span class="va">ok</span></span>
+<span><span class="va">validation</span><span class="op">$</span><span class="va">errors</span></span></code></pre></div>
 <div class="section level4">
 <h4 id="customizing-the-workflow-template">Customizing the Workflow Template<a class="anchor" aria-label="anchor" href="#customizing-the-workflow-template"></a>
 </h4>
@@ -120,7 +148,7 @@ steps:</p>
 <li>Set the path to your custom template by using the following
 option:</li>
 </ol>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>OSPSuite.RF.PathForWorkflowTemplate <span class="op">=</span> <span class="st">"myTemplateDirectory"</span><span class="op">)</span></span></code></pre></div>
 <p>After setting this option, calling
 <code><a href="../reference/openWorkflowTemplate.html">openWorkflowTemplate()</a></code> or using the Addins will open your
@@ -139,10 +167,236 @@ includes:</p>
 <ul>
 <li>Loading necessary libraries.</li>
 <li>Setting the workflow options.</li>
-<li>Setting up the project directory and configuration files using the
-project structure of <a href="https://github.com/esqLABS/esqlabsR" class="external-link">esqlabsR</a>.</li>
+<li>Setting up the project directory and configuration files by
+initializing with <a href="https://github.com/esqLABS/esqlabsR" class="external-link">esqlabsR</a> and upgrading to
+ReportingFramework defaults (unless
+<code>keepEsqlabsRStructure = TRUE</code>).</li>
+<li>Creating or updating <code>.gitignore</code> files in configuration
+folders so <code>*.xlsx</code> configuration files are ignored by
+Git.</li>
 <li>Initializing the log file.</li>
 </ul>
+<p>Set workflow behavior with
+<code>setWorkflowOptions(isValidRun)</code>. This controls whether
+exploratory outputs are allowed (<code>isValidRun = FALSE</code>) or a
+QC-passed run is enforced (<code>isValidRun = TRUE</code>). If
+<code>isValidRun</code> is omitted,
+<code><a href="../reference/getQCpassedEnvironmentVariable.html">getQCpassedEnvironmentVariable()</a></code> reads
+<code>QCpassed</code> from the environment.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Exploratory run: enable watermarks and allow helper functions</span></span>
+<span><span class="fu"><a href="../reference/setWorkflowOptions.html">setWorkflowOptions</a></span><span class="op">(</span>isValidRun <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># QC-passed run: disable watermarks and enforce strict execution</span></span>
+<span><span class="fu"><a href="../reference/setWorkflowOptions.html">setWorkflowOptions</a></span><span class="op">(</span>isValidRun <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>Initialize the project structure. By default,
+<code>analysisSubfolderName = "ReportingFramework"</code> creates
+<code>Scripts/ReportingFramework</code> and
+<code>Outputs/ReportingFramework</code>. Set a custom name if you want
+multiple analyses that share the same project-level models and data
+folders.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">analysisSubfolderName</span> <span class="op">&lt;-</span> <span class="st">"RF_Analysis"</span></span>
+<span><span class="fu"><a href="../reference/initProject.html">initProject</a></span><span class="op">(</span></span>
+<span>  projectDirectory <span class="op">=</span> <span class="st">"."</span>,</span>
+<span>  analysisSubfolderName <span class="op">=</span> <span class="va">analysisSubfolderName</span>,</span>
+<span>  keepEsqlabsRStructure <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">configurationDirectory</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">"Scripts"</span>, <span class="va">analysisSubfolderName</span><span class="op">)</span></span></code></pre></div>
+<p>Create and load the project configuration from the project workbook
+path:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">projectConfiguration</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createProjectConfiguration.html">createProjectConfiguration</a></span><span class="op">(</span></span>
+<span>  path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">configurationDirectory</span>, <span class="st">"ProjectConfiguration.xlsx"</span><span class="op">)</span>,</span>
+<span>  ignoreVersionCheck <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><code>ProjectConfiguration.xlsx</code> stores the package versions
+used to create the project: <code>esqlabsRVersion</code> (managed by
+<a href="https://github.com/esqLABS/esqlabsR" class="external-link">esqlabsR</a>) and
+<code>ospsuiteReportingFrameworkVersion</code> (managed by this
+package). When you load a configuration, both versions are checked
+against installed packages; mismatches prompt for update in interactive
+sessions and stop execution in non-interactive runs (for example CI)
+until resolved. New projects created with <code><a href="../reference/initProject.html">initProject()</a></code>
+receive the current framework version automatically, and
+<code>projectConfiguration$save()</code> updates stored version
+values.</p>
+<div class="section level3">
+<h3 id="ownership-and-side-effects-matrix">Ownership and Side Effects Matrix<a class="anchor" aria-label="anchor" href="#ownership-and-side-effects-matrix"></a>
+</h3>
+<p>The reporting workflow combines base <a href="https://github.com/esqLABS/esqlabsR" class="external-link">esqlabsR</a>
+configuration with reporting add-ons. The table below summarizes
+ownership and whether common functions read or modify each workbook.</p>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
+</colgroup>
+<thead><tr class="header">
+<th>Workbook / Sheet</th>
+<th>Primary owner</th>
+<th>Typical usage in workflows</th>
+<th>Modified by reporting framework functions</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>ProjectConfiguration.xlsx</code></td>
+<td>
+<a href="https://github.com/esqLABS/esqlabsR" class="external-link">esqlabsR</a> base + RF extension fields</td>
+<td>Loaded by <code><a href="../reference/createProjectConfiguration.html">createProjectConfiguration()</a></code>
+</td>
+<td>
+<code>ProjectConfigurationRF$save()</code> updates stored
+paths/versions</td>
+</tr>
+<tr class="even">
+<td>
+<code>ProjectConfiguration.xlsx</code> (<code>AddOns</code>)</td>
+<td>Reporting framework extension layer</td>
+<td>Stores add-on workbook/folder references such as
+<code>dataImportMapFile</code>, <code>reportsFile</code>,
+<code>pKParameterFile</code>, and
+<code>electronicPackageFolder</code>
+</td>
+<td>Initialized/updated by <code><a href="../reference/upgradeToReportingFramework.html">upgradeToReportingFramework()</a></code>
+and persisted by <code>ProjectConfigurationRF$save()</code>
+</td>
+</tr>
+<tr class="odd">
+<td>
+<code>Scenarios.xlsx</code> (<code>Scenarios</code>,
+<code>OutputPaths</code>)</td>
+<td><a href="https://github.com/esqLABS/esqlabsR" class="external-link">esqlabsR</a></td>
+<td>Read by simulation workflow and synchronization helpers</td>
+<td>Usually not modified by <code><a href="../reference/readObservedDataByDictionary.html">readObservedDataByDictionary()</a></code>.
+It may be read to synchronize plot-facing sheets.</td>
+</tr>
+<tr class="even">
+<td>
+<code>Individuals.xlsx</code>
+(<code>IndividualBiometrics</code>)</td>
+<td>
+<a href="https://github.com/esqLABS/esqlabsR" class="external-link">esqlabsR</a> workbook, populated by RF import
+helpers</td>
+<td>Used for individual metadata and population-related workflows</td>
+<td>
+<code><a href="../reference/addBiometricsToConfig.html">addBiometricsToConfig()</a></code> appends/updates observed
+biometrics</td>
+</tr>
+<tr class="odd">
+<td>
+<code>Individuals.xlsx</code>
+(<code>VirtualTwinPopulation</code>)</td>
+<td>Reporting framework add-on sheet</td>
+<td>Used by virtual twin population workflows</td>
+<td>
+<code><a href="../reference/setupVirtualTwinPopConfig.html">setupVirtualTwinPopConfig()</a></code> creates/updates this
+sheet</td>
+</tr>
+<tr class="even">
+<td><code>DataImportMap.xlsx</code></td>
+<td>Reporting framework add-on workbook</td>
+<td>Read by <code><a href="../reference/readObservedDataByDictionary.html">readObservedDataByDictionary()</a></code> as import
+dictionary</td>
+<td>Not modified by import execution</td>
+</tr>
+<tr class="odd">
+<td>
+<code>Reports.xlsx</code> (<code>DataGroups</code>,
+<code>Outputs</code>, <code>Scenarios</code>)</td>
+<td>Reporting framework add-on workbook</td>
+<td>Read by <code><a href="../reference/runPlot.html">runPlot()</a></code> and report generation</td>
+<td>
+<code><a href="../reference/updateDataGroupId.html">updateDataGroupId()</a></code> updates <code>DataGroups</code>;
+<code><a href="../reference/updateOutputPathId.html">updateOutputPathId()</a></code> updates <code>Outputs</code>; scenario
+rows can be synchronized into <code>Scenarios</code>
+</td>
+</tr>
+<tr class="even">
+<td><code>PKParameter.xlsx</code></td>
+<td>Reporting framework add-on workbook</td>
+<td>Used for PK parameter selection and user-defined PK settings</td>
+<td>Modified only when users edit configuration manually</td>
+</tr>
+</tbody>
+</table>
+<p>For data import, side effects are controlled by
+<code>spreadData</code> in <code><a href="../reference/readObservedDataByDictionary.html">readObservedDataByDictionary()</a></code>.
+Set <code>spreadData = FALSE</code> for read-only imports (returns
+imported data without propagating identifiers/metadata into
+configuration workbooks).</p>
+</div>
+<div class="section level3">
+<h3 id="logging-and-diagnostics">Logging and Diagnostics<a class="anchor" aria-label="anchor" href="#logging-and-diagnostics"></a>
+</h3>
+<p>Set up logging immediately after loading the project configuration so
+workflow messages, warnings, and errors are written to a predictable
+location.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/setLogPath.html">setLogPath</a></span><span class="op">(</span></span>
+<span>  logFolder <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">projectConfiguration</span><span class="op">$</span><span class="va">outputFolder</span>, <span class="st">"logs"</span><span class="op">)</span>,</span>
+<span>  logFileName <span class="op">=</span> <span class="st">"workflow.log"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>This creates a log file in
+<code>projectConfiguration$outputFolder/logs</code>. Use this log as the
+primary record for workflow execution in local runs and CI.</p>
+<p>Wrap workflow steps with <code><a href="../reference/captureLog.html">captureLog()</a></code> when you want
+messages, warnings, and errors from a code block to be routed to the log
+file while still propagating errors to the caller:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/captureLog.html">captureLog</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>  <span class="va">importedData</span> <span class="op">&lt;-</span> <span class="fu">readObservedDataFromDataSet</span><span class="op">(</span></span>
+<span>    projectConfiguration <span class="op">=</span> <span class="va">projectConfiguration</span>,</span>
+<span>    dataFile <span class="op">=</span> <span class="st">"observed-data.csv"</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
+<p>Use <code><a href="../reference/addMessageToLog.html">addMessageToLog()</a></code> for progress markers or decisions
+that should appear in the log, and <code><a href="../reference/writeTableToLog.html">writeTableToLog()</a></code> when a
+data frame snapshot helps with debugging:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/addMessageToLog.html">addMessageToLog</a></span><span class="op">(</span><span class="st">"Observed data import finished"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/writeTableToLog.html">writeTableToLog</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">importedData</span><span class="op">$</span><span class="va">data</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>If console output becomes too noisy during interactive work, hide
+informational messages while still keeping warnings in the console:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/setShowLogMessages.html">setShowLogMessages</a></span><span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<p>For reproducibility or support requests, save the current R session
+details next to the workflow log:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/saveSessionInfo.html">saveSessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>This writes <code>sessionInfo.log</code> into the configured log
+folder and is useful when investigating package version or
+environment-specific issues.</p>
+</div>
+<div class="section level3">
+<h3 id="configuration-in-git-use-json-snapshots">Configuration in Git: Use JSON Snapshots<a class="anchor" aria-label="anchor" href="#configuration-in-git-use-json-snapshots"></a>
+</h3>
+<p>Configuration workbooks (<code>*.xlsx</code>) are generated working
+files and are ignored by Git in configuration folders. The versioned
+source of truth is the JSON snapshot created from the configuration.</p>
+<p>Save current configuration to JSON:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">projectConfiguration</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createProjectConfiguration.html">createProjectConfiguration</a></span><span class="op">(</span></span>
+<span>  path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">configurationDirectory</span>, <span class="st">"ProjectConfiguration.xlsx"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/snapshotProjectConfigurationRF.html">snapshotProjectConfigurationRF</a></span><span class="op">(</span></span>
+<span>  <span class="va">projectConfiguration</span>,</span>
+<span>  outputDir <span class="op">=</span> <span class="va">configurationDirectory</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>This writes <code>ProjectConfiguration.json</code> in
+<code>configurationDirectory</code>. Commit this JSON file to Git.</p>
+<p>Restore configuration from JSON (for example on another machine or in
+CI):</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">projectConfiguration</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/restoreProjectConfigurationRF.html">restoreProjectConfigurationRF</a></span><span class="op">(</span></span>
+<span>  snapshotFilePath <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">configurationDirectory</span>, <span class="st">"ProjectConfiguration.json"</span><span class="op">)</span>,</span>
+<span>  outputDir <span class="op">=</span> <span class="va">configurationDirectory</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="data-import">Data Import<a class="anchor" aria-label="anchor" href="#data-import"></a>
@@ -152,7 +406,7 @@ The input format for data is CSV files, which can be imported using a
 dictionary. The imported data types include individual and aggregated
 time profile data as well as individual and aggregated PK parameter
 data.</p>
-<p>For more information, see <strong><a href="Data_import_by_dictionary.html">Data Import by
+<p>For more information, see <strong><a href="DataImport_by_Dictionary.html">Data Import by
 Dictionary</a></strong>.</p>
 </div>
 <div class="section level2">
@@ -167,8 +421,7 @@ Documentation</a>.</p>
 additional functionality to:</p>
 <ul>
 <li>Export random and virtual twin populations (see the <strong><a href="Population.html">Population</a></strong>).</li>
-<li>Calculate PK Parameters (see the <strong><a href="PK-Parameter">PK
-Parameters</a></strong>).</li>
+<li>Calculate PK Parameters (see the <strong><a href="PK_Parameter.html">PK Parameters</a></strong>).</li>
 </ul>
 </div>
 <div class="section level2">
@@ -186,13 +439,6 @@ adjust plots and utilize customized plot functions.</p>
 <p>For more information, see the <strong><a href="Plot_and_Report_Generation.html">Plot and Report
 Generation</a></strong>.</p>
 </div>
-<div class="section level2">
-<h2 id="conclusion">Conclusion<a class="anchor" aria-label="anchor" href="#conclusion"></a>
-</h2>
-<p>This vignette has guided you through the setup and execution of
-workflows using the OSPSuite Reporting Framework. For further
-exploration, consult the linked vignettes and documentation.</p>
-</div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
 </div>
@@ -204,7 +450,7 @@ exploration, consult the linked vignettes and documentation.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>
